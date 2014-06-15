@@ -109,12 +109,6 @@ public class CircularReferenceTest extends ComponentTestBase
         String componentNameB = "4.B.0.n.dynamic";
         final ComponentConfigurationDTO componentB = findComponentConfigurationByName( componentNameB, ComponentConfigurationDTO.SATISFIED );
 
-//        ServiceReference[] serviceReferences = bundleContext.getServiceReferences( A.class.getName(), "(service.pid=" + componentNameA + ")" );
-//        TestCase.assertEquals( 1, serviceReferences.length );
-//        ServiceReference serviceReference = serviceReferences[0];
-//        Object service = bundleContext.getService( serviceReference );
-//        assertNotNull( service );
-
         delay();
 
         A a = getServiceFromConfiguration(componentA, A.class);
@@ -160,11 +154,6 @@ public class CircularReferenceTest extends ComponentTestBase
         delay();
         enableAndCheck(componentA.description);
         delay();
-//        ServiceReference[] serviceReferencesA1 = bundleContext.getServiceReferences( A.class.getName(), "(service.pid=" + componentNameA + ")" );
-//        TestCase.assertEquals( 1, serviceReferencesA1.length );
-//        ServiceReference serviceReferenceA1 = serviceReferencesA1[0];
-//        Object serviceA1 = bundleContext.getService( serviceReferenceA1 );
-//        assertNotNull( serviceA1 );
 
         //new component.id, refetch configuration.
         componentA = findComponentConfigurationByName( componentNameA, ComponentConfigurationDTO.ACTIVE );
@@ -270,11 +259,6 @@ public class CircularReferenceTest extends ComponentTestBase
         delay();
         enableAndCheck(componentA.description);
         delay();
-//        ServiceReference[] serviceReferencesA1 = bundleContext.getServiceReferences( A.class.getName(), "(service.pid=" + componentNameA + ")" );
-//        TestCase.assertEquals( 1, serviceReferencesA1.length );
-//        ServiceReference serviceReferenceA1 = serviceReferencesA1[0];
-//        Object serviceA1 = bundleContext.getService( serviceReferenceA1 );
-//        assertNotNull( serviceA1 );
 
         //new component.id, refetch configuration.
         componentA = findComponentConfigurationByName( componentNameA, ComponentConfigurationDTO.ACTIVE );

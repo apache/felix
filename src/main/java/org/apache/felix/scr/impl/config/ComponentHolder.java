@@ -57,7 +57,7 @@ public interface ComponentHolder<S>
      * Configuration Admin service.
      *
      * @param pid The PID of the deleted configuration
-     * @param factoryPid TODO
+     * @param factoryPid The factory PID of the deleted configuration
      */
     void configurationDeleted( TargetedPID pid, TargetedPID factoryPid );
 
@@ -85,7 +85,7 @@ public interface ComponentHolder<S>
     /**
      * Returns the targeted PID used to configure this component
      * @param pid a targetedPID containing the service pid for the component desired (the rest of the targeted pid is ignored)
-     * @param factoryPid TODO
+     * @param factoryPid a targetedPID containing the factory pid for the component desired.
      * @return the complete targeted pid actually used to configure the comonent.
      */
     TargetedPID getConfigurationTargetedPID(TargetedPID pid, TargetedPID factoryPid);

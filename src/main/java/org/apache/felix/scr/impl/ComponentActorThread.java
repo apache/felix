@@ -46,12 +46,12 @@ class ComponentActorThread implements Runnable
     };
 
     // the queue of Runnable instances  to be run
-    private LinkedList tasks;
+    private LinkedList<Runnable> tasks;
 
 
     ComponentActorThread()
     {
-        tasks = new LinkedList();
+        tasks = new LinkedList<Runnable>();
     }
 
 
@@ -82,7 +82,7 @@ class ComponentActorThread implements Runnable
                     }
                 }
 
-                task = ( Runnable ) tasks.removeFirst();
+                task = tasks.removeFirst();
             }
 
             try

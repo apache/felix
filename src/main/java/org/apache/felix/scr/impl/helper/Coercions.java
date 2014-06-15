@@ -373,7 +373,7 @@ public class Coercions
         {
             throw new ComponentException("Not a collection: " + raw);
         }
-        Collection c = ( Collection ) raw;
+        Collection<?> c = ( Collection<?> ) raw;
         if (c.isEmpty())
         {
             return defaultValue;

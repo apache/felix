@@ -21,7 +21,6 @@
 package org.apache.felix.scr.impl.helper;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
@@ -37,9 +36,9 @@ public class ComponentMethods
     private ModifiedMethod m_modifiedMethod;
     private DeactivateMethod m_deactivateMethod;
 
-    private final Map bindMethodMap = new HashMap();//<String, BindMethods>
+    private final Map<String, BindMethods> bindMethodMap = new HashMap<String, BindMethods>();
 
-    public synchronized void initComponentMethods( ComponentMetadata componentMetadata, Class implementationObjectClass )
+    public synchronized void initComponentMethods( ComponentMetadata componentMetadata, Class<?> implementationObjectClass )
     {
         if (m_activateMethod != null)
         {

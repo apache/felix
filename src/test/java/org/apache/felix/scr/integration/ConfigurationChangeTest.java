@@ -268,7 +268,6 @@ public class ConfigurationChangeTest extends ComponentTestBase
         configure( pid );
 
         getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.ACTIVE); //?????? Not clear what should happen.
-//        TestCase.assertEquals( Component.STATE_FACTORY, component.getState() );
         
         // create a component instance
         final ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(), "("

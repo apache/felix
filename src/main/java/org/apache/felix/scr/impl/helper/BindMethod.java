@@ -37,7 +37,7 @@ import org.osgi.service.packageadmin.PackageAdmin;
 public class BindMethod extends BaseMethod
 {
 
-    private static final Class OBJECT_CLASS = Object.class;
+    private static final Class<?> OBJECT_CLASS = Object.class;
 
     private final String m_referenceClassName;
 
@@ -49,7 +49,7 @@ public class BindMethod extends BaseMethod
 
 
     public BindMethod( final String methodName,
-            final Class componentClass, final String referenceClassName, final boolean isDS11, final boolean isDS12Felix )
+            final Class<?> componentClass, final String referenceClassName, final boolean isDS11, final boolean isDS12Felix )
     {
         super( methodName, componentClass, isDS11, isDS12Felix );
         m_referenceClassName = referenceClassName;
@@ -74,7 +74,7 @@ public class BindMethod extends BaseMethod
      * @throws InvocationTargetException If an unexpected Throwable is caught
      *      trying to find the requested method.
      */
-    protected Method doFindMethod( Class targetClass, boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger )
+    protected Method doFindMethod( Class<?> targetClass, boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger )
         throws SuitableMethodNotAccessibleException, InvocationTargetException
     {
         // 112.3.1 The method is searched for using the following priority
@@ -114,7 +114,7 @@ public class BindMethod extends BaseMethod
         }
 
         // for further methods we need the class of the service object
-        final Class parameterClass = getParameterClass( targetClass, logger );
+        final Class<?> parameterClass = getParameterClass( targetClass, logger );
         if ( parameterClass != null )
         {
 
@@ -230,7 +230,7 @@ public class BindMethod extends BaseMethod
      *      if the class loader of the <code>targetClass</code> cannot see that
      *      class.
      */
-    private Class getParameterClass( final Class targetClass, SimpleLogger logger )
+    private Class<?> getParameterClass( final Class<?> targetClass, SimpleLogger logger )
     {
         if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
         {
@@ -250,7 +250,7 @@ public class BindMethod extends BaseMethod
                 loader = ClassLoader.getSystemClassLoader();
             }
 
-            final Class referenceClass = loader.loadClass( m_referenceClassName );
+            final Class<?> referenceClass = loader.loadClass( m_referenceClassName );
             if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
             {
                 logger.log( LogService.LOG_DEBUG,
@@ -291,7 +291,7 @@ public class BindMethod extends BaseMethod
                                     new Object[] {pkg[i].getExportingBundle().getSymbolicName(), pkg[i].getExportingBundle().getBundleId()}, null );
                         }
 
-                        Class referenceClass = pkg[i].getExportingBundle().loadClass( m_referenceClassName );
+                        Class<?> referenceClass = pkg[i].getExportingBundle().loadClass( m_referenceClassName );
                         if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
                         {
                             logger.log( LogService.LOG_DEBUG,
@@ -347,7 +347,7 @@ public class BindMethod extends BaseMethod
      * @throws InvocationTargetException If an unexpected Throwable is caught
      *      trying to find the requested method.
      */
-    private Method getServiceReferenceMethod( final Class targetClass, boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger )
+    private Method getServiceReferenceMethod( final Class<?> targetClass, boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger )
         throws SuitableMethodNotAccessibleException, InvocationTargetException
     {
         return getMethod( targetClass, getMethodName(), new Class[]
@@ -374,7 +374,7 @@ public class BindMethod extends BaseMethod
      * @throws InvocationTargetException If an unexpected Throwable is caught
      *      trying to find the requested method.
      */
-    private Method getServiceObjectMethod( final Class targetClass, final Class parameterClass, boolean acceptPrivate,
+    private Method getServiceObjectMethod( final Class<?> targetClass, final Class<?> parameterClass, boolean acceptPrivate,
             boolean acceptPackage, SimpleLogger logger ) throws SuitableMethodNotAccessibleException, InvocationTargetException
     {
         return getMethod( targetClass, getMethodName(), new Class[]
@@ -400,7 +400,7 @@ public class BindMethod extends BaseMethod
      * @throws SuitableMethodNotAccessibleException If a suitable method was
      *      found which is not accessible
      */
-    private Method getServiceObjectAssignableMethod( final Class targetClass, final Class parameterClass,
+    private Method getServiceObjectAssignableMethod( final Class<?> targetClass, final Class<?> parameterClass,
             boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger ) throws SuitableMethodNotAccessibleException
     {
         // Get all potential bind methods
@@ -439,7 +439,7 @@ public class BindMethod extends BaseMethod
                 }
 
                 // Get the parameter type
-                final Class theParameter = parameters[0];
+                final Class<?> theParameter = parameters[0];
 
                 // Check if the parameter type is ServiceReference
                 // or is assignable from the type specified by the
@@ -497,7 +497,7 @@ public class BindMethod extends BaseMethod
      * @throws InvocationTargetException If an unexpected Throwable is caught
      *      trying to find the requested method.
      */
-    private Method getServiceObjectWithMapMethod( final Class targetClass, final Class parameterClass,
+    private Method getServiceObjectWithMapMethod( final Class<?> targetClass, final Class<?> parameterClass,
             boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger ) throws SuitableMethodNotAccessibleException,
         InvocationTargetException
     {
@@ -523,7 +523,7 @@ public class BindMethod extends BaseMethod
      * @throws SuitableMethodNotAccessibleException If a suitable method was
      *      found which is not accessible
      */
-    private Method getServiceObjectAssignableWithMapMethod( final Class targetClass, final Class parameterClass,
+    private Method getServiceObjectAssignableWithMapMethod( final Class<?> targetClass, final Class<?> parameterClass,
         boolean acceptPrivate, boolean acceptPackage ) throws SuitableMethodNotAccessibleException
     {
         // Get all potential bind methods
@@ -563,13 +563,13 @@ public class BindMethod extends BaseMethod
         return null;
     }
 
-    public boolean getServiceObject( RefPair refPair, BundleContext context, SimpleLogger logger )
+    public <T> boolean getServiceObject( RefPair<T> refPair, BundleContext context, SimpleLogger logger )
     {
         //??? this resolves which we need.... better way?
         if ( refPair.getServiceObject() == null && methodExists( logger ) )
         {
             if (m_paramStyle == SERVICE_OBJECT || m_paramStyle == SERVICE_OBJECT_AND_MAP) {
-                Object service = context.getService( refPair.getRef() );
+                T service = context.getService( refPair.getRef() );
                 if ( service == null )
                 {
                     refPair.setFailed();
@@ -591,7 +591,7 @@ public class BindMethod extends BaseMethod
 
     protected Object[] getParameters( Method method, Object rawParameter )
     {
-        RefPair refPair = ( RefPair ) rawParameter;
+        RefPair<?> refPair = ( RefPair<?> ) rawParameter;
         if (m_paramStyle == SERVICE_REFERENCE )
         {
             return new Object[] {refPair.getRef()};
@@ -602,7 +602,7 @@ public class BindMethod extends BaseMethod
         }
         if (m_paramStyle == SERVICE_OBJECT_AND_MAP  )
         {
-            return new Object[] {refPair.getServiceObject(), new ReadOnlyDictionary( refPair.getRef() )};
+            return new Object[] {refPair.getServiceObject(), new ReadOnlyDictionary<String, Object>( refPair.getRef() )};
         }
         throw new IllegalStateException( "Unexpected m_paramStyle of " + m_paramStyle );
     }

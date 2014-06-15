@@ -23,7 +23,7 @@ public class ModifiedMethod extends ActivateMethod
 {
 
     public ModifiedMethod( final String methodName,
-            final Class componentClass, final boolean isDS11, final boolean isDS12Felix )
+            final Class<?> componentClass, final boolean isDS11, final boolean isDS12Felix )
     {
         super( methodName, methodName != null, componentClass, isDS11, isDS12Felix );
     }

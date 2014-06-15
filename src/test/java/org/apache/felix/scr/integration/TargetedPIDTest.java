@@ -46,7 +46,6 @@ public class TargetedPIDTest extends ComponentTestBase
     private static final String TARGETED_PID = "targetedPID";
     private static final String COMPONENT_NAME = "SimpleComponent.configuration.require";
     private static final String REGION = "?foo";
-//    private boolean eventReceived;
 
     static
     {
@@ -95,7 +94,6 @@ public class TargetedPIDTest extends ComponentTestBase
         
         final ComponentConfigurationDTO component = findComponentConfigurationByName( COMPONENT_NAME, ComponentConfigurationDTO.ACTIVE );
         known.add( component );
-//        component.enable();
 
         TestCase.assertNotNull( SimpleComponent.INSTANCE );
         SimpleComponent sc = SimpleComponent.INSTANCE;
@@ -107,33 +105,19 @@ public class TargetedPIDTest extends ComponentTestBase
         findComponentConfigurationByName( bSN, pid, ComponentConfigurationDTO.ACTIVE );
 
         
-//        cSN.enable();
-//        delay();
-//        TestCase.assertEquals( Component.STATE_ACTIVE, cSN.getState() );
         SimpleComponent scSN = SimpleComponent.INSTANCE;
         TestCase.assertEquals( pidSN, scSN.getProperty( TARGETED_PID ) );
         
         Bundle bSNV = installBundle( descriptorFile, COMPONENT_PACKAGE, "simplecomponent2", "0.0.12", null );
         bSNV.start();
         findComponentConfigurationByName( bSNV, pid, ComponentConfigurationDTO.ACTIVE );
-//        TestCase.assertEquals( 3, components.size() );
-//        ComponentConfigurationDTO cSNV = getNewComponent( known, components ); 
-        
-//        cSNV.enable();
-//        delay();
-//        TestCase.assertEquals( Component.STATE_ACTIVE, cSNV.getState() );
         SimpleComponent scSNV = SimpleComponent.INSTANCE;
         TestCase.assertEquals( pidSNV, scSNV.getProperty( TARGETED_PID ) );
         
         Bundle bSNVL = installBundle( descriptorFile, COMPONENT_PACKAGE, "simplecomponent2", "0.0.12", "bundleLocation" );
         bSNVL.start();
         findComponentConfigurationsByName( bSNVL, pid, ComponentConfigurationDTO.ACTIVE );
-//        TestCase.assertEquals( 4, components.size() );
-//        ComponentConfigurationDTO cSNVL = getNewComponent( known, components ); 
-        
-//        cSNVL.enable();
-//        delay();
-//        TestCase.assertEquals( Component.STATE_ACTIVE, cSNVL.getState() );
+
         SimpleComponent scSNVL = SimpleComponent.INSTANCE;
         TestCase.assertEquals( pidSNVL, scSNVL.getProperty( TARGETED_PID ) );
         
@@ -142,42 +126,25 @@ public class TargetedPIDTest extends ComponentTestBase
         configSNVL.delete();
         delay();
         findComponentConfigurationsByName( bSNVL, pid, ComponentConfigurationDTO.ACTIVE );
-//        TestCase.assertEquals( Component.STATE_ACTIVE, cSNVL.getState() );
         TestCase.assertEquals( pidSNV, scSNVL.getProperty( TARGETED_PID ) );
         
         configSNV.delete();
         delay();
         findComponentConfigurationsByName( bSNVL, pid, ComponentConfigurationDTO.ACTIVE );
-//        TestCase.assertEquals( Component.STATE_ACTIVE, cSNVL.getState() );
         TestCase.assertEquals( pidSN, scSNVL.getProperty( TARGETED_PID ) );
         findComponentConfigurationByName( bSNV, pid, ComponentConfigurationDTO.ACTIVE );
-//        TestCase.assertEquals( Component.STATE_ACTIVE, cSNV.getState() );
         TestCase.assertEquals( pidSN, scSNV.getProperty( TARGETED_PID ) );
         
         configSN.delete();
         delay();
         findComponentConfigurationsByName( bSNVL, pid, ComponentConfigurationDTO.ACTIVE );
-//        TestCase.assertEquals( Component.STATE_ACTIVE, cSNVL.getState() );
         TestCase.assertEquals( pid, scSNVL.getProperty( TARGETED_PID ) );
         findComponentConfigurationByName( bSNV, pid, ComponentConfigurationDTO.ACTIVE );
-//        TestCase.assertEquals( Component.STATE_ACTIVE, cSNV.getState() );
         TestCase.assertEquals( pid, scSNV.getProperty( TARGETED_PID ) );
         findComponentConfigurationByName( bSN, pid, ComponentConfigurationDTO.ACTIVE );
-//        TestCase.assertEquals( Component.STATE_ACTIVE, cSN.getState() );
         TestCase.assertEquals( pid, scSN.getProperty( TARGETED_PID ) );
         
         
     }
-
-
-//    private ComponentConfigurationDTO getNewComponent(Set<ComponentConfigurationDTO> known, Collection<ComponentConfigurationDTO> components)
-//    {
-//        List<ComponentConfigurationDTO> cs = new ArrayList(Arrays.asList( components )); 
-//        cs.removeAll( known );
-//        ComponentConfigurationDTO c = cs.get( 0 );
-//        known.add(c);
-//        return c;
-//    }
-
 
 }

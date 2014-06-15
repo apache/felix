@@ -63,7 +63,7 @@ class EdgeInfo
         return openLatch;
     }
     
-    public void waitForOpen(AbstractComponentManager m_componentManager, String componentName, String methodName)
+    public void waitForOpen(AbstractComponentManager<?> m_componentManager, String componentName, String methodName)
     {
         
         CountDownLatch latch = getOpenLatch();
@@ -71,7 +71,7 @@ class EdgeInfo
         waitForLatch( m_componentManager, latch, componentName, methodName, latchName );
     }
 
-    public void waitForClose(AbstractComponentManager m_componentManager, String componentName, String methodName)
+    public void waitForClose(AbstractComponentManager<?> m_componentManager, String componentName, String methodName)
     {
         
         CountDownLatch latch = getCloseLatch();
@@ -79,7 +79,7 @@ class EdgeInfo
         waitForLatch( m_componentManager, latch, componentName, methodName, latchName );
     }
 
-    private void waitForLatch(AbstractComponentManager m_componentManager, CountDownLatch latch, String componentName,
+    private void waitForLatch(AbstractComponentManager<?> m_componentManager, CountDownLatch latch, String componentName,
             String methodName, String latchName)
     {
         try

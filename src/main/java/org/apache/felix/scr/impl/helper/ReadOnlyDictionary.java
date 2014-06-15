@@ -66,7 +66,7 @@ public class ReadOnlyDictionary<S, T> extends Dictionary<S, T> implements Map<S,
      * Creates a wrapper for the given service reference providing read only
      * access to the reference properties.
      */
-    public ReadOnlyDictionary( final ServiceReference serviceReference )
+    public ReadOnlyDictionary( final ServiceReference<?> serviceReference )
     {
         Hashtable properties = new Hashtable();
         final String[] keys = serviceReference.getPropertyKeys();
@@ -159,25 +159,25 @@ public class ReadOnlyDictionary<S, T> extends Dictionary<S, T> implements Map<S,
     }
 
 
-    public Set entrySet()
+    public Set<Entry<S, T>> entrySet()
     {
         return Collections.unmodifiableSet( m_delegate.entrySet() );
     }
 
 
-    public Set keySet()
+    public Set<S> keySet()
     {
         return Collections.unmodifiableSet( m_delegate.keySet() );
     }
 
 
-    public void putAll( Map m )
+    public void putAll( Map<? extends S, ? extends T> m )
     {
         // nop, this map is read only
     }
 
 
-    public Collection values()
+    public Collection<T> values()
     {
         return Collections.unmodifiableCollection( m_delegate.values() );
     }

@@ -68,19 +68,11 @@ public class LocationTest extends ComponentTestBase
         Bundle b2 = installBundle( descriptorFile, COMPONENT_PACKAGE, "simplecomponent2", "0.0.11", null );
         b2.start();
         checkConfigurationCount(b2, pid, 0, -1);
-//        Component[] components = findComponentConfigurationsByName( pid, -1 );
-//        TestCase.assertEquals( 2, components.length );
-//        Component c2 = components[0] == component? components[1]: components[0];
-//        
-//        c2.enable();
-//        delay();
-//        TestCase.assertEquals( Component.STATE_UNSATISFIED, c2.getState() );
         
         bundle.stop();
         delay();
         
         checkConfigurationCount(b2, pid, 0, -1);
-//        TestCase.assertEquals( Component.STATE_UNSATISFIED, c2.getState() );
 
         ConfigurationListener listener = new ConfigurationListener() {
 
@@ -118,7 +110,6 @@ public class LocationTest extends ComponentTestBase
         delay();
 
         findComponentConfigurationByName(pid, ComponentConfigurationDTO.ACTIVE);
-//        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
         TestCase.assertNotNull( SimpleComponent.INSTANCE );
         TestCase.assertEquals( PROP_NAME, SimpleComponent.INSTANCE.getProperty( PROP_NAME ) );
         
@@ -126,19 +117,11 @@ public class LocationTest extends ComponentTestBase
         Bundle b2 = installBundle( descriptorFile, COMPONENT_PACKAGE, "simplecomponent2", "0.0.11", null );
         b2.start();
         checkConfigurationCount(b2, pid, 0, -1);
-//        Component[] components = findComponentConfigurationsByName( pid, -1 );
-//        TestCase.assertEquals( 2, components.length );
-//        Component c2 = components[0] == component? components[1]: components[0];
-//        
-//        c2.enable();
-//        delay();
-//        TestCase.assertEquals( Component.STATE_UNSATISFIED, c2.getState() );
         
         bundle.stop();
         delay();
         
         checkConfigurationCount(b2, pid, 0, -1);
-//        TestCase.assertEquals( Component.STATE_UNSATISFIED, c2.getState() );
 
         ConfigurationListener listener = new ConfigurationListener() {
 
@@ -158,7 +141,6 @@ public class LocationTest extends ComponentTestBase
         if ( eventReceived )
         {
             checkConfigurationCount(b2, pid, 1, ComponentConfigurationDTO.ACTIVE);
-//            TestCase.assertEquals( Component.STATE_ACTIVE, c2.getState() );
         }
         
         sr.unregister();
@@ -187,22 +169,14 @@ public class LocationTest extends ComponentTestBase
         delay();
 
         findComponentConfigurationByName(pid,  ComponentConfigurationDTO.ACTIVE);
-//        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
         TestCase.assertNotNull( SimpleComponent.INSTANCE );
         TestCase.assertEquals( PROP_NAME, SimpleComponent.INSTANCE.getProperty( PROP_NAME ) );
         
         
         Bundle b2 = installBundle( descriptorFile, COMPONENT_PACKAGE, "simplecomponent2", "0.0.11", null );
         b2.start();
-//        Component[] components = findComponentConfigurationsByName( pid, -1 );
-//        TestCase.assertEquals( 2, components.length );
-//        Component c2 = components[0] == component? components[1]: components[0];
-//        
-//        c2.enable();
-//        delay();
         checkConfigurationCount(b2, pid, 1, ComponentConfigurationDTO.ACTIVE);
-//        getDisabledConfigurationAndEnable(b2, pid, ComponentConfigurationDTO.ACTIVE);
-//        TestCase.assertEquals( Component.STATE_ACTIVE, c2.getState() );
+
     }
 
 }

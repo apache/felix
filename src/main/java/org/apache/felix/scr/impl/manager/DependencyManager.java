@@ -1557,7 +1557,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
      *      be handed over to the bind method but the service cannot be
      *      retrieved using the service reference.
      */
-    boolean invokeBindMethod( S componentInstance, RefPair refPair, int trackingCount, EdgeInfo info )
+    boolean invokeBindMethod( S componentInstance, RefPair<T> refPair, int trackingCount, EdgeInfo info )
     {
         // The bind method is only invoked if the implementation object is not
         // null. This is valid for both immediate and delayed components
@@ -1585,7 +1585,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         }
     }
 
-    private boolean doInvokeBindMethod(S componentInstance, RefPair refPair)
+    private boolean doInvokeBindMethod(S componentInstance, RefPair<T> refPair)
     {
         MethodResult result = m_bindMethods.getBind().invoke( componentInstance, refPair, MethodResult.VOID, m_componentManager );
         if ( result == null )
@@ -1712,12 +1712,6 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         }
     }
     
-    private long getLockTimeout()
-    {
-        return m_componentManager.getLockTimeout();
-    }
-
-
     //------------- Service target filter support -----------------------------
 
     /**

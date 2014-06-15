@@ -386,22 +386,6 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     //---------- Asynchronous frontend to state change methods ----------------
     private static final AtomicLong taskCounter = new AtomicLong( );
 
-//    /**
-//     * Enables this component and - if satisfied - also activates it. If
-//     * enabling the component fails for any reason, the component ends up
-//     * disabled.
-//     * <p>
-//     * This method ignores the <i>enabled</i> flag of the component metadata
-//     * and just enables as requested.
-//     * <p>
-//     * This method enables and activates the component immediately.
-//     */
-//    public final void enable()
-//    {
-//        enable( true );
-//    }
-
-
     public final void enable( final boolean async )
     {
         if (m_enabled)
@@ -661,14 +645,8 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         }
 
         registerComponentId();
-        // Before creating the implementation object, we are going to
-        // test if we have configuration if such is required
-//        if ( hasConfiguration() || !getComponentMetadata().isConfigurationRequired() )
-//        {
-            // Update our target filters.
-            log( LogService.LOG_DEBUG, "Updating target filters", null );
-            updateTargets( getProperties() );
-//        }
+        log( LogService.LOG_DEBUG, "Updating target filters", null );
+        updateTargets( getProperties() );
 
         m_internalEnabled = true;
         log( LogService.LOG_DEBUG, "Component enabled", null );
@@ -703,15 +681,6 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         }
 
         log( LogService.LOG_DEBUG, "Activating component from state {0}", new Object[] {getState()},  null );
-
-        // Before creating the implementation object, we are going to
-        // test if we have configuration if such is required
-        //TODO this should not be needed, no configuration >>> no manager
-//        if ( !hasConfiguration() && getComponentMetadata().isConfigurationRequired() )
-//        {
-//            log( LogService.LOG_DEBUG, "Missing required configuration, cannot activate", null );
-//            return;
-//        }
 
         // Before creating the implementation object, we are going to
         // test that the bundle has enough permissions to register services
@@ -1284,7 +1253,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 	 */
     public abstract Map<String, Object> getProperties();
 
-    public abstract void setServiceProperties( Dictionary<String, Object> serviceProperties );
+    public abstract void setServiceProperties( Dictionary<String, ?> serviceProperties );
 
     /**
      * Returns the subset of component properties to be used as service
@@ -1419,10 +1388,6 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         if ( !m_satisfied )
         {
             return STATE_UNSATISFIED;
-        }
-        if ( isFactory() && !m_factoryInstance )
-        {
-            return STATE_FACTORY;
         }
         if ( hasInstance() )
         {

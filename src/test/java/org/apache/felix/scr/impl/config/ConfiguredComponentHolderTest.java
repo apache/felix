@@ -50,9 +50,6 @@ public class ConfiguredComponentHolderTest extends TestCase
         final SingleComponentManager cmgr = getSingleManager( holder );
         assertNotNull( "Expect single component manager", cmgr );
         assertEquals( "Expect no other component manager list", 1, getComponentManagers( holder ).size());
-
-//        // assert no configuration of single component
-//        assertFalse( "Expect no configuration", cmgr.hasConfiguration() );
     }
 
 
@@ -69,9 +66,6 @@ public class ConfiguredComponentHolderTest extends TestCase
         assertNotNull( "Expect single component manager", cmgr );
         assertEquals( "Expect no other component manager list", 1, getComponentManagers( holder ).size());
 
-//        // assert no configuration of single component
-//        assertFalse( "Expect no configuration", cmgr.hasConfiguration() );
-
         // configure with the singleton configuration
         final Dictionary config = new Hashtable();
         config.put( "value", name );
@@ -84,7 +78,6 @@ public class ConfiguredComponentHolderTest extends TestCase
         assertEquals( "Expect no other component manager list", 1, getComponentManagers( holder ).size());
 
 //        // assert configuration of single component
-//        assertTrue( "Expect configuration after updating it", cmgrAfterConfig.hasConfiguration() );
         final Map componentConfig = ( ( MockImmediateComponentManager ) cmgrAfterConfig ).getConfiguration();
         assertEquals( "Expect exact configuration set", config, componentConfig );
 
@@ -115,9 +108,6 @@ public class ConfiguredComponentHolderTest extends TestCase
         assertNotNull( "Expect single component manager", cmgr );
         assertEquals( "Expect no other component manager list", 1, getComponentManagers( holder ).size());
 
-//        // assert no configuration of single component
-//        assertFalse( "Expect no configuration", cmgr.hasConfiguration() );
-
         // configure with configuration
         final String pid1 = "test.factory.0001";
         final Dictionary config1 = new Hashtable();
@@ -140,20 +130,14 @@ public class ConfiguredComponentHolderTest extends TestCase
         TargetedPID targetedPid2 = new TargetedPID(pid2);
 		holder.configurationUpdated( targetedPid2, targetedFactoryPid, config2, 1 );
 
-        // assert single component and single-entry map
-//        final SingleComponentManager cmgrAfterConfig2 = getSingleManager( holder );
         final List<SingleComponentManager> cmgrsAfterConfig2 = getComponentManagers( holder );
-//        assertNotNull( "Expect single component manager", cmgrAfterConfig2 );
         assertNotNull( "Expect component manager list", cmgrsAfterConfig2 );
         assertEquals( "Expect two component manager in list", 2, cmgrsAfterConfig2.size() );
 
         // remove second configuration
         holder.configurationDeleted( targetedPid2, targetedFactoryPid );
 
-        // assert single component and single-entry map
-//        final SingleComponentManager cmgrAfterUnConfig2 = getSingleManager( holder );
         final List<SingleComponentManager> cmgrsAfterUnConfig2 = getComponentManagers( holder );
-//        assertNotNull( "Expect single component manager", cmgrAfterUnConfig2 );
         assertNotNull( "Expect component manager list", cmgrsAfterUnConfig2 );
 //TODO Multipids fix correct assertion        assertEquals( "Expect one component manager in list", 1, cmgrsAfterUnConfig2.size() );
 
@@ -162,9 +146,7 @@ public class ConfiguredComponentHolderTest extends TestCase
         holder.configurationDeleted( targetedPid1, targetedFactoryPid );
 
         // assert single component and single-entry map
-//        final SingleComponentManager cmgrAfterConfigUnconfig = getSingleManager( holder );
         final List<SingleComponentManager> cmgrsAfterConfigUnconfig = getComponentManagers( holder );
-//        assertNotNull( "Expect single component manager", cmgrAfterConfigUnconfig );
         assertNotNull( "Expect component manager list", cmgrsAfterConfigUnconfig );
 //TODO Multipids fix correct assertion        assertEquals( "Expect one component manager in list", 1, cmgrsAfterConfigUnconfig.size() );
 
@@ -172,7 +154,6 @@ public class ConfiguredComponentHolderTest extends TestCase
         holder.configurationDeleted( targetedPid2, targetedFactoryPid );
 
         // assert single component and single-entry map
-//        final SingleComponentManager cmgrAfterAllUnconfig = getSingleManager( holder );
         final List<SingleComponentManager> cmgrsAfterAllUnconfig = getComponentManagers( holder );
         assertNotNull( "Expect single component manager", cmgrsAfterAllUnconfig );
 //TODO Multipids fix correct assertion        assertEquals( "Expect no component manager list", 1, cmgrsAfterAllUnconfig.size() );
@@ -196,36 +177,12 @@ public class ConfiguredComponentHolderTest extends TestCase
     	List<SingleComponentManager> managers = getComponentManagers(holder);
     	assertEquals(1, managers.size());
     	return managers.get(0);
-//        try
-//        {
-//            final Field f = ConfigurableComponentHolder.class.getDeclaredField( "m_singleComponent" );
-//            f.setAccessible( true );
-//            return ( SingleComponentManager ) f.get( holder );
-//        }
-//        catch ( Throwable t )
-//        {
-//            fail( "Cannot access getComponentManagers method: " + t );
-//            return null; // compiler does not know about "fail" throwing
-//        }
     }
 
 
     private static List<SingleComponentManager> getComponentManagers( ConfigurableComponentHolder holder )
     {
     	return holder.getComponentManagers(false);
-//        try
-//        {
-//            final Method m = ConfigurableComponentHolder.class.getDeclaredMethod( "getComponentManagers", new Class[]
-//                { Boolean.TYPE } );
-//            m.setAccessible( true );
-//            return ( SingleComponentManager[] ) m.invoke( holder, new Object[]
-//                { Boolean.FALSE } );
-//        }
-//        catch ( Throwable t )
-//        {
-//            fail( "Cannot access getComponentManagers method: " + t );
-//            return null; // compiler does not know about "fail" throwing
-//        }
     }
 
     private static class TestingConfiguredComponentHolder extends ConfigurableComponentHolder

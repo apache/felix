@@ -144,7 +144,7 @@ public class TargetedPID
      * @return <code>true</code> if the referenced service matches the
      *      target of this PID.
      */
-    public boolean matchesTarget( ComponentHolder holder )
+    public boolean matchesTarget( ComponentHolder<?> holder )
     {
         // already unregistered
         final Bundle serviceBundle = holder.getActivator().getBundleContext().getBundle();

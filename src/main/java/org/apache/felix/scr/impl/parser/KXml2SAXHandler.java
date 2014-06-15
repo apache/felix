@@ -18,8 +18,6 @@
  */
 package org.apache.felix.scr.impl.parser;
 
-import java.util.Properties;
-
 import org.apache.felix.scr.impl.parser.KXml2SAXParser.Attributes;
 
 /**

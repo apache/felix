@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.felix.scr.impl.ComponentRegistry;
-import org.apache.felix.scr.impl.config.ComponentContainer;
 import org.apache.felix.scr.impl.config.ComponentHolder;
 import org.apache.felix.scr.impl.config.ComponentManager;
 import org.apache.felix.scr.impl.config.ReferenceManager;
