@@ -20,6 +20,8 @@ package org.apache.felix.scr.impl.metadata;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -28,6 +30,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.felix.scr.impl.TargetedPID;
 import org.apache.felix.scr.impl.helper.Logger;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata.Scope;
 import org.osgi.service.component.ComponentException;
@@ -96,7 +99,7 @@ public class ComponentMetadata
     private String m_configurationPolicy = null;
 
     // 112.4.4 configuration-pid (since DS 1.2)
-    private String m_configurationPid;
+    private List<String> m_configurationPid;
 
     // Associated properties (0..*)
     private Dictionary<String, Object> m_properties = new Hashtable<String, Object>();
@@ -143,13 +146,13 @@ public class ComponentMetadata
      * Setter for the configuration-pid component (since DS 1.2)
      * @param configurationPid
      */
-    public void setConfigurationPid( String configurationPid )
+    public void setConfigurationPid( String[] configurationPid )
     {
         if ( m_validated )
         {
             return;
         }
-        m_configurationPid = configurationPid;
+        m_configurationPid = new ArrayList<String>( Arrays.asList( configurationPid ) );
     }
 
     /**
@@ -502,13 +505,22 @@ public class ComponentMetadata
      * component's configuration-pid DS 1.2 attribute, if specified. Else the component name is used
      * as the pid by default.
      */
-    public String getConfigurationPid()
+    public List<String> getConfigurationPid()
     {
-        if (m_configurationPid != null) 
+        if ( !m_validated )
         {
-            return m_configurationPid;
+            throw new IllegalStateException("not yet validated");
         }
-        return getName();
+        return m_configurationPid;
+    }
+    
+    public int getPidIndex(TargetedPID pid)
+    {
+        if ( !m_validated )
+        {
+            throw new IllegalStateException("not yet validated");
+        }
+    	return m_configurationPid == null? -1: m_configurationPid.indexOf(pid.getServicePid());
     }
 
     /**
@@ -853,9 +865,39 @@ public class ComponentMetadata
         }
 
         // 112.4.4 configuration-pid can be specified since DS 1.2
-        if ( m_configurationPid != null && m_namespaceCode < XmlHandler.DS_VERSION_1_2 )
+        if ( m_configurationPid == null )
         {
-            throw validationFailure( "configuration-pid attribute requires DS 1.2 or later namespace " );
+            m_configurationPid = Collections.singletonList( getName() );
+        }
+        else
+        {
+            if ( m_namespaceCode < XmlHandler.DS_VERSION_1_2 )
+            {
+                throw validationFailure( "configuration-pid attribute requires DS 1.2 or later namespace " );
+            }
+            if (m_configurationPid.isEmpty())
+            {
+                throw validationFailure( "configuration-pid nust not be empty string " );
+            }
+            if (m_configurationPid.size() > 1 && m_namespaceCode < XmlHandler.DS_VERSION_1_3)
+            {
+                throw validationFailure( "multiple configuration-pid requires DS 1.3 or later namespace " );
+            }
+            for (int i = 0; i < m_configurationPid.size(); i++)
+            {
+                if ("$".equals( m_configurationPid.get(i)))
+                {
+                    if (m_namespaceCode < XmlHandler.DS_VERSION_1_3)
+                    {
+                        throw validationFailure( "Use of '$' configuration-pid wildcard requires DS 1.3 or later namespace " );                        
+                    }
+                    m_configurationPid.set( i, getName() );
+                }
+            }
+            if ( new HashSet<String>( m_configurationPid ).size() != m_configurationPid.size())
+            {
+                throw validationFailure( "Duplicate pids not allowed: " + m_configurationPid );
+            }
         }
 
         // Next check if the properties are valid (and extract property values)
@@ -878,7 +920,7 @@ public class ComponentMetadata
 
         // Check that the references are ok
         Set<String> refs = new HashSet<String>();
-        for  ( ReferenceMetadata refMeta: m_references )
+        for ( ReferenceMetadata refMeta: m_references )
         {
             refMeta.validate( this, logger );
 

@@ -271,9 +271,11 @@ public class XmlHandler implements KXml2SAXHandler
                     }
 
                     // configuration-pid attribute is optional (since DS 1.2)
-                    if (attributes.getAttribute("configuration-pid") != null)
+                    String configurationPidString = attributes.getAttribute( "configuration-pid" );
+                    if (configurationPidString != null)
                     {
-                        m_currentComponent.setConfigurationPid( attributes.getAttribute( "configuration-pid" ) );
+                        String[] configurationPid = configurationPidString.split( " " );
+                        m_currentComponent.setConfigurationPid( configurationPid );
                     }
                     
                     m_currentComponent.setConfigurableServiceProperties("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, CONFIGURABLE_SERVICE_PROPERTIES)));

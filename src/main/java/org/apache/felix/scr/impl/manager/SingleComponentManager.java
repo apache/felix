@@ -19,8 +19,12 @@
 package org.apache.felix.scr.impl.manager;
 
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -58,6 +62,9 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     // the component holder responsible for managing this component
     private final ComponentHolder m_componentHolder;
 
+    // Merged properties from xml descriptor and all configurations
+    private Map<String, Object> m_configurationProperties;
+    
     // optional properties provided in the ComponentFactory.newInstance method
     private Dictionary<String, Object> m_factoryProperties;
 
@@ -67,14 +74,6 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     // properties supplied ot ExtComponentContext.updateProperties
     // null if properties are not to be overwritten
     private Dictionary<String, Object> m_serviceProperties;
-
-    // the component properties from the Configuration Admin Service
-    // this is null, if none exist or none are provided
-    private Dictionary<String, Object> m_configurationProperties;
-    
-    private volatile long m_changeCount = -1;
-    private TargetedPID m_targetedPID;
-
 
     private final ThreadLocal<Boolean> m_circularReferences = new ThreadLocal<Boolean>();
     
@@ -446,26 +445,19 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         if ( m_properties == null )
         {
 
-            // 1. the properties from the component descriptor
-            Dictionary<String, Object> props = copyTo( null, getComponentMetadata().getProperties() );
-
-            // 2. add target properties of references
-            // 112.6 Component Properties, target properties (p. 302)
-            for ( ReferenceMetadata rm : getComponentMetadata().getDependencies() )
-            {
-                if ( rm.getTarget() != null )
-                {
-                    props.put( rm.getTargetPropertyName(), rm.getTarget() );
-                }
-            }
-
-            // 3. overlay with Configuration Admin properties
-            copyTo( props, m_configurationProperties );
-
-            // 4. copy any component factory properties, not supported yet
-            copyTo( props, m_factoryProperties );
-
-            // 5. set component.name and component.id
+        	
+            // 1. Merge all the config properties
+        	Hashtable<String, Object> props = new Hashtable<String, Object>();
+        	if ( m_configurationProperties != null ) 
+        	{
+				props.putAll(m_configurationProperties);
+			}
+			if ( m_factoryProperties != null)
+        	{
+        		copyTo(props, m_factoryProperties);
+        	}
+                    
+            // 2. set component.name and component.id
             props.put( ComponentConstants.COMPONENT_NAME, getComponentMetadata().getName() );
             props.put( ComponentConstants.COMPONENT_ID, getId() );
 
@@ -549,34 +541,34 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
      * @param changeCount Change count for the configuration
      * @param targetedPID TargetedPID for the configuration
      */
-    public void reconfigure( Dictionary<String, Object> configuration, long changeCount, TargetedPID targetedPID )
+    public void reconfigure( Map<String, Object> configuration )
     {
-        if ( targetedPID == null || !targetedPID.equals( m_targetedPID ) )
-        {
-            m_targetedPID = targetedPID;
-            m_changeCount = -1;
-        }
-        if ( configuration != null )
-        {
-            if ( changeCount <= m_changeCount )
-            {
-                log( LogService.LOG_DEBUG,
-                        "ImmediateComponentHolder out of order configuration updated for pid {0} with existing count {1}, new count {2}",
-                        new Object[] { getConfigurationPid(), m_changeCount, changeCount }, null );
-                return;
-            }
-            m_changeCount = changeCount;
-        }
-        else 
-        {
-            m_changeCount = -1;
-        }
-        // nothing to do if there is no configuration (see FELIX-714)
-        if ( configuration == null && m_configurationProperties == null )
-        {
-            log( LogService.LOG_DEBUG, "No configuration provided (or deleted), nothing to do", null );
-            return;
-        }
+//        if ( targetedPID == null || !targetedPID.equals( m_targetedPID ) )
+//        {
+//            m_targetedPID = targetedPID;
+//            m_changeCount = -1;
+//        }
+//        if ( configuration != null )
+//        {
+//            if ( changeCount <= m_changeCount )
+//            {
+//                log( LogService.LOG_DEBUG,
+//                        "ImmediateComponentHolder out of order configuration updated for pid {0} with existing count {1}, new count {2}",
+//                        new Object[] { getConfigurationPid(), m_changeCount, changeCount }, null );
+//                return;
+//            }
+//            m_changeCount = changeCount;
+//        }
+//        else 
+//        {
+//            m_changeCount = -1;
+//        }
+//        // nothing to do if there is no configuration (see FELIX-714)
+//        if ( configuration == null && m_configurationProperties == null )
+//        {
+//            log( LogService.LOG_DEBUG, "No configuration provided (or deleted), nothing to do", null );
+//            return;
+//        }
 
         // store the properties
         m_configurationProperties = configuration;
@@ -603,6 +595,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 return;
             }
 
+            //TODO should be handled in Holder, not here
             // if the configuration has been deleted but configuration is required
             // this component must be deactivated
             if ( m_configurationProperties == null && getComponentMetadata().isConfigurationRequired() )
@@ -945,13 +938,4 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         return getComponentMetadata().isDelayedKeepInstances();
     }
 
-    public long getChangeCount()
-    {
-        return m_changeCount;
-    }
-
-    public TargetedPID getConfigurationTargetedPID()
-    {
-        return m_targetedPID;
-    }
 }

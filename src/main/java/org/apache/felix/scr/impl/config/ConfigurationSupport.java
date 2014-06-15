@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -113,7 +114,7 @@ public class ConfigurationSupport implements ConfigurationListener
             {
                 return false;// bundle was stopped concurrently with configuration deletion
             }
-            final String confPid = holder.getComponentMetadata().getConfigurationPid();
+            final List<String> confPids = holder.getComponentMetadata().getConfigurationPid();
 
             final ServiceReference<?> caRef = bundleContext.getServiceReference(ComponentRegistry.CONFIGURATION_ADMIN);
             if (caRef != null)
@@ -126,37 +127,48 @@ public class ConfigurationSupport implements ConfigurationListener
                         if ( cao instanceof ConfigurationAdmin )
                         {
                             final ConfigurationAdmin ca = ( ConfigurationAdmin ) cao;
-                            final Collection<Configuration> factory = findFactoryConfigurations(ca, confPid, bundleContext.getBundle());
-                            if (!factory.isEmpty())
+                            for (String confPid: confPids )
                             {
-                                boolean created = false;
-                                for (Configuration config: factory)
+                                final Collection<Configuration> factory = findFactoryConfigurations( ca, confPid,
+                                        bundleContext.getBundle() );
+                                if ( !factory.isEmpty() )
                                 {
-                                    Activator.log( LogService.LOG_DEBUG, null, "Configuring holder {0} with factory configuration {1}",
-                                            new Object[] {holder, config}, null );
-                                    config = getConfiguration( ca, config.getPid() );
-                                    if ( checkBundleLocation( config, bundleContext.getBundle() ))
+                                    boolean created = false;
+                                    for ( Configuration config: factory )
                                     {
-                                        long changeCount = changeCounter.getChangeCount( config, false, -1 );
-                                        created |= holder.configurationUpdated(config.getPid(), config.getProperties(), changeCount, new TargetedPID(config.getFactoryPid()));
+                                        Activator.log( LogService.LOG_DEBUG, null,
+                                                "Configuring holder {0} with factory configuration {1}", new Object[] {
+                                                        holder, config }, null );
+                                        config = getConfiguration( ca, config.getPid() );
+                                        if ( checkBundleLocation( config, bundleContext.getBundle() ) )
+                                        {
+                                            long changeCount = changeCounter.getChangeCount( config, false, -1 );
+                                            created |= holder.configurationUpdated( new TargetedPID( config.getFactoryPid() ),
+                                                    null, config.getProperties(),
+                                                    changeCount );
+                                        }
                                     }
+                                    return created;
                                 }
-                                return created;
-                            }
-                            else
-                            {
-                                // check for configuration and configure the holder
-                                Configuration singleton = findSingletonConfiguration(ca, confPid, bundleContext.getBundle());
-                                if (singleton != null)
+                                else
                                 {
-                                    singleton = getConfiguration( ca, singleton.getPid() );
-                                    Activator.log( LogService.LOG_DEBUG, null, "Configuring holder {0} with configuration {1}",
-                                            new Object[] {holder, singleton}, null );
-                                    if ( singleton != null && checkBundleLocation( singleton, bundleContext.getBundle() ))
+                                    // check for configuration and configure the holder
+                                    Configuration singleton = findSingletonConfiguration( ca, confPid,
+                                            bundleContext.getBundle() );
+                                    if ( singleton != null )
                                     {
-                                        long changeCount = changeCounter.getChangeCount( singleton, false, -1 );
-                                        holder.configurationUpdated(confPid, singleton.getProperties(), changeCount, new TargetedPID(singleton.getPid()));
-                                        return true;
+                                        singleton = getConfiguration( ca, singleton.getPid() );
+                                        Activator.log( LogService.LOG_DEBUG, null,
+                                                "Configuring holder {0} with configuration {1}", new Object[] { holder,
+                                                        singleton }, null );
+                                        if ( singleton != null
+                                                && checkBundleLocation( singleton, bundleContext.getBundle() ) )
+                                        {
+                                            long changeCount = changeCounter.getChangeCount( singleton, false, -1 );
+                                            holder.configurationUpdated( new TargetedPID( singleton.getPid() ), null,
+                                                    singleton.getProperties(), changeCount );
+                                            return true;
+                                        }
                                     }
                                 }
                             }
@@ -276,18 +288,18 @@ public class ConfigurationSupport implements ConfigurationListener
                     }
 
                     TargetedPID targetedPid = factoryPid == null? pid: factoryPid;
-                    TargetedPID oldTargetedPID = componentHolder.getConfigurationTargetedPID(pid);
-                    if ( targetedPid.equals(oldTargetedPID) || targetedPid.bindsStronger( oldTargetedPID ))
+                    TargetedPID oldTargetedPID = componentHolder.getConfigurationTargetedPID(pid, factoryPid);
+                    if ( factoryPid != null || targetedPid.equals(oldTargetedPID) || targetedPid.bindsStronger( oldTargetedPID ))
                     {
                         final ConfigurationInfo configInfo = getConfigurationInfo( pid, componentHolder, bundleContext );
                         if ( checkBundleLocation( configInfo.getBundleLocation(), bundleContext.getBundle() ) )
                         {
                             //If this is replacing a weaker targetedPID delete the old one.
-                            if ( !targetedPid.equals(oldTargetedPID) && oldTargetedPID != null)
+                            if ( factoryPid == null && !targetedPid.equals(oldTargetedPID) && oldTargetedPID != null)
                             {
                                 componentHolder.configurationDeleted( pid.getServicePid() );
                             }
-                            componentHolder.configurationUpdated( pid.getServicePid(), configInfo.getProps(), configInfo.getChangeCount(), targetedPid );
+                            componentHolder.configurationUpdated( pid, factoryPid, configInfo.getProps(), configInfo.getChangeCount() );
                         }
                     }
 
@@ -309,7 +321,7 @@ public class ConfigurationSupport implements ConfigurationListener
                     }
 
                     TargetedPID targetedPid = factoryPid == null? pid: factoryPid;
-                    TargetedPID oldTargetedPID = componentHolder.getConfigurationTargetedPID(pid);
+                    TargetedPID oldTargetedPID = componentHolder.getConfigurationTargetedPID(pid, factoryPid);
                     if ( targetedPid.equals(oldTargetedPID))
                     {
                         //this sets the location to this component's bundle if not already set.  OK here
@@ -357,8 +369,8 @@ public class ConfigurationSupport implements ConfigurationListener
                                 //this is a better match, delete old before setting new
                                 componentHolder.configurationDeleted( pid.getServicePid() );
                             }
-                            componentHolder.configurationUpdated( pid.getServicePid(), configInfo.getProps(),
-                                    configInfo.getChangeCount(), pid );
+                            componentHolder.configurationUpdated( pid, factoryPid,
+                                    configInfo.getProps(), configInfo.getChangeCount() );
                         }
                     }
                     //else worse match, do nothing
@@ -459,7 +471,7 @@ public class ConfigurationSupport implements ConfigurationListener
                             final ConfigurationAdmin ca = ( ConfigurationAdmin ) cao;
                             final Configuration config = getConfiguration( ca, pid.getRawPid() );
                             return new ConfigurationInfo(config.getProperties(), config.getBundleLocation(),
-                                    changeCounter.getChangeCount( config, true, componentHolder.getChangeCount( pid.getServicePid() ) ) );
+                                    changeCounter.getChangeCount( config, true, componentHolder.getChangeCount( pid ) ) );
                         }
                         else
                         {

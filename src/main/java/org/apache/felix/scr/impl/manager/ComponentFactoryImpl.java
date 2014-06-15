@@ -77,7 +77,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
      * supplied as the base configuration for each component instance created
      * by the {@link #newInstance(Dictionary)} method.
      */
-    private volatile Dictionary<String, Object> m_configuration;
+    private volatile Map<String, Object> m_configuration;
     
     /**
      * Flag telling if our component factory is currently configured from config admin.
@@ -127,7 +127,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
 
         cm.setFactoryProperties( dictionary );
         //configure the properties
-        cm.reconfigure( m_configuration, m_changeCount, m_targetedPID );
+        cm.reconfigure( m_configuration );
         // enable
         cm.enableInternal();
         //activate immediately
@@ -267,7 +267,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         }
 
         // add target properties from configuration (if we have one)        
-        for ( String key : Collections.list( m_configuration.keys() ) )
+        for ( String key :  m_configuration.keySet() )
         {
             if ( key.endsWith( ".target" ) )
             {
@@ -368,15 +368,16 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     }
 
 
-    public boolean configurationUpdated( String pid, Dictionary<String, Object> configuration, long changeCount, TargetedPID targetedPid )
+    public boolean configurationUpdated( TargetedPID pid, TargetedPID factoryPid, Dictionary<String, Object> configuration, long changeCount )
     {
-        if ( m_targetedPID != null && !m_targetedPID.equals( targetedPid ))
+    	//TODO this needs somehow to be the same code as in ConfigurableComponentHolder.
+        if ( m_targetedPID != null && !m_targetedPID.equals( pid ))
         {
             log( LogService.LOG_ERROR, "ImmediateComponentHolder unexpected change in targetedPID from {0} to {1}",
-                    new Object[] {m_targetedPID, targetedPid}, null);
+                    new Object[] {m_targetedPID, pid}, null);
             throw new IllegalStateException("Unexpected targetedPID change");
         }
-        m_targetedPID = targetedPid;
+        m_targetedPID = pid;
         if ( configuration != null )
         {
             if ( changeCount <= m_changeCount )
@@ -403,7 +404,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
             }
 
             // Store the config admin configuration
-            m_configuration = configuration;
+//            m_configuration = configuration;
 
             // We are now configured from config admin.
             m_hasConfiguration = true;
@@ -450,16 +451,15 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     }
 
 
-    public synchronized long getChangeCount( String pid)
+    public synchronized long getChangeCount( TargetedPID pid)
     {
         
         return m_changeCount;
     }
 
-    public Component[] getComponents()
+    public List<? extends Component> getComponents()
     {
-        List<AbstractComponentManager<S>> cms = getComponentList();
-        return cms.toArray( new Component[ cms.size() ] );
+        return getComponentList();
     }
 
     protected List<AbstractComponentManager<S>> getComponentList()
@@ -516,7 +516,6 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     }
 
 
-    @Override
     public void disposed( SingleComponentManager<S> component )
     {
         synchronized ( m_componentInstances )
@@ -552,7 +551,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         }
     }
 
-    public TargetedPID getConfigurationTargetedPID(TargetedPID pid)
+    public TargetedPID getConfigurationTargetedPID(TargetedPID pid, TargetedPID factoryPid)
     {
         return m_targetedPID;
     }

@@ -20,6 +20,8 @@ package org.apache.felix.scr.impl.metadata;
 
 
 import java.lang.reflect.Array;
+import java.util.List;
+
 import junit.framework.TestCase;
 
 import org.apache.felix.scr.impl.MockLogger;
@@ -715,7 +717,7 @@ public class ComponentMetadataTest extends TestCase
       ComponentMetadata cm = createComponentMetadata11( null, null );
         try
         {
-          cm.setConfigurationPid( "configurationPid" );
+          cm.setConfigurationPid( new String[] {"configurationPid"} );
           cm.validate( logger );
           fail( "Expect validation failure for illegal configuration-pid usage in ds 1.1 namespace" );
         }
@@ -727,7 +729,7 @@ public class ComponentMetadataTest extends TestCase
         cm = createComponentMetadata12( null, null );
         try
         {
-          cm.setConfigurationPid( "configurationPid" );
+          cm.setConfigurationPid( new String[] {"configurationPid"} );
           cm.validate( logger );
         }
         catch ( ComponentException ce )
@@ -761,10 +763,10 @@ public class ComponentMetadataTest extends TestCase
             {
                 fail( "Expect correct validation for unnamed component" );
             }
-            String pid = cm.getConfigurationPid();
-            assertNotNull( "Expect non-null configuration pid when component name is not specified", pid );
+            List<String> pid = cm.getConfigurationPid();
+            assertFalse( "Expect non-null configuration pid when component name is not specified", pid.isEmpty() );
             assertEquals( "Expect configuration-pid to be equals to component implementation",
-                          "implementation.class", cm.getConfigurationPid() );
+                          "implementation.class", pid.get( 0 ) );
         }
 
         // Make sure that getConfigurationPid returns the name of the component, if specified
@@ -779,10 +781,10 @@ public class ComponentMetadataTest extends TestCase
         {
             fail( "Expect correct validation for named component" );
         }
-        String pid = cm.getConfigurationPid();
-        assertNotNull( "Expect non-null configuration pid when component name is specified", pid );
+        List<String> pid = cm.getConfigurationPid();
+        assertFalse( "Expect non-null configuration pid when component name is not specified", pid.isEmpty() );
         assertEquals( "Expect configuration-pid to be equals to component name",
-                      "my.component.name", cm.getConfigurationPid() );
+                      "my.component.name", pid.get( 0 ) );
     }
 
     public void test_property_character_ds11() throws ComponentException

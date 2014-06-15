@@ -141,58 +141,59 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
     }
 
 
-    public boolean configurationUpdated( String pid, Dictionary<String, Object> configuration, long changeCount, TargetedPID targetedPid )
+    public boolean configurationUpdated( TargetedPID targetedPid, TargetedPID factoryTargetedPid, Dictionary<String, Object> configuration, long changeCount )
     {
-        if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
-        {
-            return super.configurationUpdated( pid, configuration, changeCount, targetedPid );
-        }
-        else   //non-spec backwards compatible
-        {
-            SingleComponentManager<S> cm;
-            synchronized ( m_configuredServices )
-            {
-                cm = m_configuredServices.get( pid );
-            }
-
-            if ( cm == null )
-            {
-                // create a new instance with the current configuration
-                cm = createConfigurationComponentManager();
-
-                // this should not call component reactivation because it is
-                // not active yet
-                cm.reconfigure( configuration, changeCount, m_targetedPID );
-
-                // enable asynchronously if components are already enabled
-                if ( getState() == STATE_FACTORY )
-                {
-                    cm.enable( false );
-                }
-
-                synchronized ( m_configuredServices )
-                {
-                    // keep a reference for future updates
-                    m_configuredServices.put( pid, cm );
-                }
-                return true;
-
-            }
-            else
-            {
-                // update the configuration as if called as ManagedService
-                cm.reconfigure( configuration, changeCount, m_targetedPID );
-                return false;
-            }
-        }
+    	return false;
+//        if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
+//        {
+//            return super.configurationUpdated( targetedPid, factoryTargetedPid, configuration, changeCount );
+//        }
+//        else   //non-spec backwards compatible
+//        {
+//            SingleComponentManager<S> cm;
+//            synchronized ( m_configuredServices )
+//            {
+//                cm = m_configuredServices.get( pid );
+//            }
+//
+//            if ( cm == null )
+//            {
+//                // create a new instance with the current configuration
+//                cm = createConfigurationComponentManager();
+//
+//                // this should not call component reactivation because it is
+//                // not active yet
+//                cm.reconfigure( configuration, changeCount, m_targetedPID );
+//
+//                // enable asynchronously if components are already enabled
+//                if ( getState() == STATE_FACTORY )
+//                {
+//                    cm.enable( false );
+//                }
+//
+//                synchronized ( m_configuredServices )
+//                {
+//                    // keep a reference for future updates
+//                    m_configuredServices.put( pid, cm );
+//                }
+//                return true;
+//
+//            }
+//            else
+//            {
+//                // update the configuration as if called as ManagedService
+//                cm.reconfigure( configuration, changeCount, m_targetedPID );
+//                return false;
+//            }
+//        }
     }
 
 
-    public Component[] getComponents()
+    public List<? extends Component> getComponents()
     {
         List<AbstractComponentManager<S>> cms = getComponentList();
         getComponentManagers( m_configuredServices, cms );
-        return cms.toArray( new Component[ cms.size() ] );
+        return cms;
     }
 
 
@@ -229,7 +230,7 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
         synchronized ( m_configuredServices )
         {
             SingleComponentManager icm = m_configuredServices.get( pid );
-            return icm == null? -1: icm.getChangeCount();
+            return icm == null? -1: -2; //TODO fix this icm.getChangeCount();
         }
     }
 

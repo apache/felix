@@ -195,11 +195,7 @@ public class ComponentRegistry implements ScrService, ServiceListener
         {
             if ( holder != null )
             {
-                Component[] components = holder.getComponents();
-                for ( Component component: components )
-                {
-                    list.add( component );
-                }
+                list.addAll(holder.getComponents());
             }
         }
 
@@ -216,19 +212,15 @@ public class ComponentRegistry implements ScrService, ServiceListener
     public Component[] getComponents( Bundle bundle )
     {
         ComponentHolder[] holders = getComponentHolders();
-        ArrayList<Component> list = new ArrayList<Component>();
-        for ( ComponentHolder holder: holders )
+        List<Component> list = new ArrayList<Component>();
+        for ( ComponentHolder<?> holder: holders )
         {
             if ( holder != null )
             {
                 BundleComponentActivator activator = holder.getActivator();
                 if ( activator != null && activator.getBundleContext().getBundle() == bundle )
                 {
-                    Component[] components = holder.getComponents();
-                    for ( Component component: components )
-                    {
-                        list.add( component );
-                    }
+                    list.addAll(holder.getComponents());
                 }
             }
         }
@@ -257,11 +249,11 @@ public class ComponentRegistry implements ScrService, ServiceListener
         List<Component> list = new ArrayList<Component>();
         synchronized ( m_componentHoldersByName )
         {
-            for ( ComponentHolder c: m_componentHoldersByName.values() )
+            for ( ComponentHolder<?> c: m_componentHoldersByName.values() )
             {
                 if ( c.getComponentMetadata().getName().equals( componentName ) )
                 {
-                    list.addAll( Arrays.<Component>asList( c.getComponents() ) );
+                    list.addAll( c.getComponents() );
                 }
             }
         }
@@ -407,18 +399,21 @@ public class ComponentRegistry implements ScrService, ServiceListener
         synchronized (m_componentHoldersByPid)
         {
             // See if the component declares a specific configuration pid (112.4.4 configuration-pid)
-            String configurationPid = componentHolder.getComponentMetadata().getConfigurationPid();
+            List<String> configurationPids = componentHolder.getComponentMetadata().getConfigurationPid();
 
-            // Since several components may refer to the same configuration pid, we have to
-            // store the component holder in a Set, in order to be able to lookup every
-            // components from a given pid.
-            Set<ComponentHolder> set = m_componentHoldersByPid.get(configurationPid);
-            if (set == null)
+            for ( String configurationPid: configurationPids )
             {
-                set = new HashSet<ComponentHolder>();
-                m_componentHoldersByPid.put(configurationPid, set);
+                // Since several components may refer to the same configuration pid, we have to
+                // store the component holder in a Set, in order to be able to lookup every
+                // components from a given pid.
+                Set<ComponentHolder> set = m_componentHoldersByPid.get( configurationPid );
+                if ( set == null )
+                {
+                    set = new HashSet<ComponentHolder>();
+                    m_componentHoldersByPid.put( configurationPid, set );
+                }
+                set.add( componentHolder );
             }
-            set.add(componentHolder);
         }
         
         if (configurationSupport != null)
@@ -515,14 +510,17 @@ public class ComponentRegistry implements ScrService, ServiceListener
                     new Object[] {component.getComponentMetadata().getConfigurationPid(), key.getBundleId()}, null);
             synchronized (m_componentHoldersByPid)
             {
-                String configurationPid = component.getComponentMetadata().getConfigurationPid();
-                Set<ComponentHolder> componentsForPid = m_componentHoldersByPid.get(configurationPid);
-                if (componentsForPid != null)
+                List<String> configurationPids = component.getComponentMetadata().getConfigurationPid();
+                for ( String configurationPid: configurationPids )
                 {
-                    componentsForPid.remove(component);
-                    if (componentsForPid.size() == 0)
+                    Set<ComponentHolder> componentsForPid = m_componentHoldersByPid.get( configurationPid );
+                    if ( componentsForPid != null )
                     {
-                        m_componentHoldersByPid.remove(configurationPid);
+                        componentsForPid.remove( component );
+                        if ( componentsForPid.size() == 0 )
+                        {
+                            m_componentHoldersByPid.remove( configurationPid );
+                        }
                     }
                 }
             }

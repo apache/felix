@@ -29,6 +29,7 @@ import org.apache.felix.scr.impl.manager.components.T1a;
 import org.apache.felix.scr.impl.manager.components.T3;
 import org.apache.felix.scr.impl.manager.components2.T2;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
+import org.apache.felix.scr.impl.metadata.XmlHandler;
 import org.easymock.EasyMock;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -427,11 +428,7 @@ public class BindMethodTest extends TestCase
     private void testMethod( final String methodName, final T1 component, final boolean isDS11,
         final String expectCallPerformed )
     {
-        ComponentMetadata metadata = new ComponentMetadata( 0 ) {
-            public boolean isDS11() {
-                return isDS11;
-            }
-        };
+        ComponentMetadata metadata = newMetadata();
         SingleComponentManager icm = new SingleComponentManager( null, null, metadata, new ComponentMethods() );
         BindMethod bm = new BindMethod( methodName, component.getClass(),
                 FakeService.class.getName(), isDS11, false );
@@ -440,4 +437,13 @@ public class BindMethodTest extends TestCase
         bm.invoke( component, refPair, null, icm );
         assertEquals( expectCallPerformed, component.callPerformed );
     }
+    
+	private ComponentMetadata newMetadata() {
+		ComponentMetadata metadata = new ComponentMetadata( XmlHandler.DS_VERSION_1_1 );
+        metadata.setName("foo");
+        metadata.setImplementationClassName(Object.class.getName());
+        metadata.validate(null);
+		return metadata;
+	}
+
 }

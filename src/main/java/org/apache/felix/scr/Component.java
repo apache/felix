@@ -20,6 +20,7 @@ package org.apache.felix.scr;
 
 
 import java.util.Dictionary;
+import java.util.List;
 
 import org.osgi.framework.Bundle;
 import org.osgi.service.component.ComponentInstance;
@@ -360,7 +361,7 @@ public interface Component
      *
      * @since 1.2
      */
-    String getConfigurationPid();
+    List<String> getConfigurationPid();
 
     /**
      * Returns whether the configuration-pid has been declared in the descriptor
