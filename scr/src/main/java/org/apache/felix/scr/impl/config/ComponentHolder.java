@@ -100,7 +100,7 @@ public interface ComponentHolder<S>
     List<? extends ComponentManager<?>> getComponents();
 
     /**
-     * Enables all components of this holder and if satisifed activates
+     * Enables all components of this holder and if satisfied activates
      * them.
      *
      * @param async Whether the actual activation should take place

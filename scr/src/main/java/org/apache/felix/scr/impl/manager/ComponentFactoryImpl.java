@@ -561,4 +561,11 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
 	}
 
 
+	@Override
+	public void reconfigure(Map<String, Object> value, boolean b) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
 }
