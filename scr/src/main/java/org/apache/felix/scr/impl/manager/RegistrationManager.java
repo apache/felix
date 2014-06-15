@@ -19,7 +19,6 @@
 package org.apache.felix.scr.impl.manager;
 
 import java.util.ArrayList;
-import java.util.Dictionary;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;

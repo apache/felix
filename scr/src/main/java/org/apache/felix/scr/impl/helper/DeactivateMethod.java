@@ -27,7 +27,7 @@ public class DeactivateMethod extends ActivateMethod
 
 
     public DeactivateMethod( final String methodName,
-            final boolean methodRequired, final Class componentClass, final boolean isDS11, final boolean isDS12Felix )
+            final boolean methodRequired, final Class<?> componentClass, final boolean isDS11, final boolean isDS12Felix )
     {
         super( methodName, methodRequired, componentClass, isDS11, isDS12Felix );
     }

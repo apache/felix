@@ -63,10 +63,10 @@ public class Activator extends AbstractExtender
     private static Bundle m_bundle;
 
     // the log service to log messages to
-    private static volatile ServiceTracker m_logService;
+    private static volatile ServiceTracker<LogService, LogService> m_logService;
 
     // the package admin service (see BindMethod.getParameterClass)
-    private static volatile ServiceTracker m_packageAdmin;
+    private static volatile ServiceTracker<?, ?> m_packageAdmin;
 
     // map of BundleComponentActivator instances per Bundle indexed by Bundle id
     private Map<Long, BundleComponentActivator> m_componentBundles;
@@ -96,7 +96,7 @@ public class Activator extends AbstractExtender
         m_context = context;
         m_bundle = context.getBundle();
         // require the log service
-        m_logService = new ServiceTracker( m_context, LOGSERVICE_CLASS, null );
+        m_logService = new ServiceTracker<LogService, LogService>( m_context, LOGSERVICE_CLASS, null );
         m_logService.open();
         // get the configuration
         m_configuration.start( m_context ); //this will call restart, which calls super.start.
@@ -310,6 +310,7 @@ public class Activator extends AbstractExtender
         {
             BundleComponentActivator ga = new BundleComponentActivator( m_componentRegistry, m_componentActor, context,
                 m_configuration );
+            ga.initialEnable();
 
             // replace bundle activator in the map
             synchronized ( m_componentBundles )
@@ -419,8 +420,8 @@ public class Activator extends AbstractExtender
     {
         if ( isLogEnabled( level ) )
         {
-            ServiceTracker t = m_logService;
-            Object logger = ( t != null ) ? t.getService() : null;
+            ServiceTracker<LogService, LogService> t = m_logService;
+            LogService logger = ( t != null ) ? t.getService() : null;
             if ( logger == null )
             {
                 // output depending on level
@@ -471,7 +472,7 @@ public class Activator extends AbstractExtender
             }
             else
             {
-                ( ( LogService ) logger ).log( level, message, ex );
+                logger.log( level, message, ex );
             }
         }
     }

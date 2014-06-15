@@ -50,6 +50,6 @@ public interface ExtComponentContext extends ComponentContext
      * @throws IllegalStateException if this method is called for a
      *      Component Factory component
      */
-    void setServiceProperties( Dictionary properties );
+    void setServiceProperties( Dictionary<String, ?> properties );
 
 }

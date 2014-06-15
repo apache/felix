@@ -406,7 +406,7 @@ public class ConfigurationSupport implements ConfigurationListener
     {
         private final Dictionary<String, Object> props;
         private final String bundleLocation;
-        private long changeCount;
+        private final long changeCount;
         
         public ConfigurationInfo(Dictionary<String, Object> props, String bundleLocation, long changeCount)
         {
@@ -418,11 +418,6 @@ public class ConfigurationSupport implements ConfigurationListener
         public long getChangeCount()
         {
             return changeCount;
-        }
-
-        public void setChangeCount(long changeCount)
-        {
-            this.changeCount = changeCount;
         }
 
         public Dictionary<String, Object> getProps()

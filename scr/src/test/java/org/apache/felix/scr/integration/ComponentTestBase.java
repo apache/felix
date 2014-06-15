@@ -286,11 +286,6 @@ public abstract class ComponentTestBase
     {
     	return findComponentConfigurationByName( bundle, name, expected );
     }
-//    protected ComponentConfigurationDTO checkState( String name, int expected)
-//    {
-//    	ComponentConfigurationDTO cc = findComponentConfigurationByName( name, expected);
-//    	return cc;
-//    }
     
     static final Map<Integer, String> STATES = new HashMap<Integer, String>();
     

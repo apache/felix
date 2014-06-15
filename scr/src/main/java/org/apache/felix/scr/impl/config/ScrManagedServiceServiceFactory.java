@@ -36,7 +36,7 @@ import org.osgi.service.log.LogService;
  * core OSGi API and thus may be instantiated without the Configuration Admin
  * and/or MetaType Service API actually available at the time of instantiation.
  */
-public class ScrManagedServiceServiceFactory implements ServiceFactory
+public class ScrManagedServiceServiceFactory implements ServiceFactory<ScrManagedService>
 {
     private final ScrConfiguration scrConfiguration;
 
@@ -45,7 +45,7 @@ public class ScrManagedServiceServiceFactory implements ServiceFactory
         this.scrConfiguration = scrConfiguration;
     }
 
-    public Object getService(Bundle bundle, ServiceRegistration registration)
+    public ScrManagedService getService(Bundle bundle, ServiceRegistration<ScrManagedService> registration)
     {
         try
         {
@@ -64,7 +64,7 @@ public class ScrManagedServiceServiceFactory implements ServiceFactory
         return new ScrManagedService( this.scrConfiguration );
     }
 
-    public void ungetService(Bundle bundle, ServiceRegistration registration, Object service)
+    public void ungetService(Bundle bundle, ServiceRegistration<ScrManagedService> registration, ScrManagedService service)
     {
         // nothing really todo; GC will do the rest
     }

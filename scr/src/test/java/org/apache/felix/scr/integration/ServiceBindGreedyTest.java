@@ -183,7 +183,6 @@ public class ServiceBindGreedyTest extends ComponentTestBase
         // no delay, should be immediate
 
         findComponentConfigurationByName(name, ComponentConfigurationDTO.UNSATISFIED);
-//        findComponentConfigurationByName(name, ComponentConfigurationDTO.UNSATISFIED);
         final SimpleComponent comp11 = SimpleComponent.INSTANCE;
         TestCase.assertNull( comp11 );
 

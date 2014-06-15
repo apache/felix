@@ -19,7 +19,6 @@
 package org.apache.felix.scr.impl.manager;
 
 
-import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -128,7 +127,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         m_componentManager.obtainActivationReadLock( "locate.services" );
         try
         {
-            DependencyManager dm = m_componentManager.getDependencyManager( name );
+            DependencyManager<S, ?> dm = m_componentManager.getDependencyManager( name );
             return ( dm != null ) ? dm.getServices() : null;
         }
         finally
@@ -184,7 +183,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
 
     //---------- Speculative MutableProperties interface ------------------------------
 
-    public void setServiceProperties(Dictionary properties)
+    public void setServiceProperties(Dictionary<String, ?> properties)
     {
         getComponentManager().setServiceProperties(properties );
     }
@@ -223,11 +222,11 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         return null;
     }
     
-    private static class ComponentInstanceImpl implements ComponentInstance
+    private static class ComponentInstanceImpl<S> implements ComponentInstance
     {
-        private final ComponentContextImpl m_componentContext;
+        private final ComponentContextImpl<S> m_componentContext;
 
-        private ComponentInstanceImpl(ComponentContextImpl m_componentContext)
+        private ComponentInstanceImpl(ComponentContextImpl<S> m_componentContext)
         {
             this.m_componentContext = m_componentContext;
         }

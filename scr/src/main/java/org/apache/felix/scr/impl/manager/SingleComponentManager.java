@@ -213,7 +213,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     }
 
 
-    protected S createImplementationObject( Bundle usingBundle, SetImplementationObject setter )
+    protected S createImplementationObject( Bundle usingBundle, SetImplementationObject<S> setter )
     {
         final Class<S> implementationObjectClass;
         final S implementationObject;
@@ -244,7 +244,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             return null;
         }
         
-        ComponentContextImpl componentContext = new ComponentContextImpl(this, usingBundle, implementationObject);
+        ComponentContextImpl<S> componentContext = new ComponentContextImpl<S>(this, usingBundle, implementationObject);
 
         // 3. set the implementation object prematurely
         setter.presetComponentContext( componentContext );
@@ -278,7 +278,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         {
             // make sure, we keep no bindings. Only close the dm's we opened.
             boolean skip = true;
-            for ( DependencyManager md: getReversedDependencyManagers() )
+            for ( DependencyManager<S, ?> md: getReversedDependencyManagers() )
             {
                 if ( skip && failedDm == md )
                 {
@@ -303,7 +303,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         {
             // 112.5.8 If the activate method throws an exception, SCR must log an error message
             // containing the exception with the Log Service and activation fails
-            for ( DependencyManager md: getReversedDependencyManagers() )
+            for ( DependencyManager<S, ?> md: getReversedDependencyManagers() )
             {
                 md.close( implementationObject, componentContext.getEdgeInfo( md ) );
             }
@@ -344,7 +344,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 setServiceProperties( result );
             }
             // 2. Unbind any bound services
-            for ( DependencyManager md: getReversedDependencyManagers() )
+            for ( DependencyManager<S, ?> md: getReversedDependencyManagers() )
             {
                 md.close( implementationObject, componentContext.getEdgeInfo( md ) );
             }
@@ -460,7 +460,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         return m_properties;
     }
 
-    public void setServiceProperties( Dictionary<String, Object> serviceProperties )
+    public void setServiceProperties( Dictionary<String, ?> serviceProperties )
     {
         if ( serviceProperties == null || serviceProperties.isEmpty() )
         {
@@ -488,7 +488,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
     private void updateServiceRegistration()
     {
-        ServiceRegistration<?> sr = getServiceRegistration();
+        ServiceRegistration<S> sr = getServiceRegistration();
         if ( sr != null )
         {
             try
@@ -537,33 +537,6 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
      */
     public void reconfigure( Map<String, Object> configuration, boolean configurationDeleted )
     {
-//        if ( targetedPID == null || !targetedPID.equals( m_targetedPID ) )
-//        {
-//            m_targetedPID = targetedPID;
-//            m_changeCount = -1;
-//        }
-//        if ( configuration != null )
-//        {
-//            if ( changeCount <= m_changeCount )
-//            {
-//                log( LogService.LOG_DEBUG,
-//                        "ImmediateComponentHolder out of order configuration updated for pid {0} with existing count {1}, new count {2}",
-//                        new Object[] { getConfigurationPid(), m_changeCount, changeCount }, null );
-//                return;
-//            }
-//            m_changeCount = changeCount;
-//        }
-//        else 
-//        {
-//            m_changeCount = -1;
-//        }
-//        // nothing to do if there is no configuration (see FELIX-714)
-//        if ( configuration == null && m_configurationProperties == null )
-//        {
-//            log( LogService.LOG_DEBUG, "No configuration provided (or deleted), nothing to do", null );
-//            return;
-//        }
-
         // store the properties
         m_configurationProperties = configuration;
 
@@ -588,18 +561,6 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 //enabling the component will set the target properties, do nothing now.
                 return;
             }
-
-//            //TODO should be handled in Holder, not here
-//            // if the configuration has been deleted but configuration is required
-//            // this component must be deactivated
-//            if ( m_configurationProperties == null && getComponentMetadata().isConfigurationRequired() )
-//            {
-//                //deactivate and remove service listeners
-//                deactivateInternal( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED, true, false );
-//                //do not reset targets as that will reinstall the service listeners which may activate the component.
-//                //when a configuration arrives the properties will get set based on the new configuration.
-//                return;
-//            }
 
             // unsatisfied component and non-ignored configuration may change targets
             // to satisfy references
@@ -674,7 +635,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         // 3. check whether we can dynamically apply the configuration if
         // any target filters influence the bound services
         final Map<String, Object> props = getProperties();
-        for ( DependencyManager dm: getDependencyManagers() )
+        for ( DependencyManager<S, ?> dm: getDependencyManagers() )
         {
             if ( !dm.canUpdateDynamically( props ) )
             {
@@ -755,7 +716,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
      * @return <code>true</code> if the registration service properties equals
      *         the prop properties, false if not.
      */
-    private boolean servicePropertiesMatches( ServiceRegistration reg, Dictionary<String, Object> props )
+    private boolean servicePropertiesMatches( ServiceRegistration<S> reg, Dictionary<String, Object> props )
     {
         Dictionary<String, Object> regProps = new Hashtable<String, Object>();
         String[] keys = reg.getReference().getPropertyKeys();

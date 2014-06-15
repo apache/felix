@@ -89,15 +89,11 @@ public class Felix4350Test extends ComponentTestBase
         dep1Reg.unregister();
         delay(2000); //dep2 getService has returned
 
-//        ComponentInstance mainCompInst = main.getComponentInstance();
-//        TestCase.assertNull(mainCompInst);
         Felix4350Component.check(0, 0, false);
 
         dep1Reg = register(new SimpleComponent(), 0);
         delay(300);
 
-//        mainCompInst = main.getComponentInstance();
-//        TestCase.assertNotNull(mainCompInst);
         Felix4350Component.check(1, 0, true);
 
         disableAndCheck(main);  //does not need to be asyncv??
@@ -116,8 +112,6 @@ public class Felix4350Test extends ComponentTestBase
         dep1Reg = register(new SimpleComponent(), 0);
         delay(2000);
 
-//        mainCompInst = main.getComponentInstance();
-//        TestCase.assertNotNull(mainCompInst);
         Felix4350Component.check(2, 1, true); //n.b. counts are cumulative
     }
     

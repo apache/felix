@@ -44,7 +44,7 @@ class ScrManagedServiceMetaTypeProvider extends ScrManagedService
     implements MetaTypeProvider
 {
 
-    static ManagedService create(final ScrConfiguration scrConfiguration)
+    static ScrManagedService create(final ScrConfiguration scrConfiguration)
     {
         return new ScrManagedServiceMetaTypeProvider(scrConfiguration);
     }

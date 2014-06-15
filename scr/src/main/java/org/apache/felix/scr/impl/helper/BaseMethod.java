@@ -40,17 +40,17 @@ abstract class BaseMethod
 {
 
     // class references to simplify parameter checking
-    protected static final Class COMPONENT_CONTEXT_CLASS = ComponentContext.class;
-    protected static final Class BUNDLE_CONTEXT_CLASS = BundleContext.class;
-    protected static final Class SERVICE_REFERENCE_CLASS = ServiceReference.class;
-    protected static final Class MAP_CLASS = Map.class;
-    protected static final Class INTEGER_CLASS = Integer.class;
+    protected static final Class<?> COMPONENT_CONTEXT_CLASS = ComponentContext.class;
+    protected static final Class<?> BUNDLE_CONTEXT_CLASS = BundleContext.class;
+    protected static final Class<?> SERVICE_REFERENCE_CLASS = ServiceReference.class;
+    protected static final Class<?> MAP_CLASS = Map.class;
+    protected static final Class<?> INTEGER_CLASS = Integer.class;
 
     private final boolean isDS11;
     private final boolean isDS12Felix;
 
     private final String m_methodName;
-    private final Class m_componentClass;
+    private final Class<?> m_componentClass;
 
     private volatile Method m_method;
 
@@ -59,14 +59,14 @@ abstract class BaseMethod
     private volatile State m_state;
 
     protected BaseMethod( final String methodName,
-            final Class componentClass, final boolean ds11, final boolean ds12Felix )
+            final Class<?> componentClass, final boolean ds11, final boolean ds12Felix )
     {
         this( methodName, methodName != null, componentClass, ds11, ds12Felix );
     }
 
 
     protected BaseMethod( final String methodName,
-            final boolean methodRequired, final Class componentClass, final boolean ds11, final boolean ds12Felix )
+            final boolean methodRequired, final Class<?> componentClass, final boolean ds11, final boolean ds12Felix )
     {
         m_methodName = methodName;
         m_methodRequired = methodRequired;
@@ -105,7 +105,7 @@ abstract class BaseMethod
         return m_method;
     }
 
-    protected final Class getComponentClass()
+    protected final Class<?> getComponentClass()
     {
         return m_componentClass;
     }
@@ -161,10 +161,10 @@ abstract class BaseMethod
         boolean acceptPrivate = isDS11();
         boolean acceptPackage = isDS11();
 
-        final Class targetClass = getComponentClass();
+        final Class<?> targetClass = getComponentClass();
         final ClassLoader targetClasslLoader = targetClass.getClassLoader();
         final String targetPackage = getPackageName( targetClass );
-        Class theClass = targetClass;
+        Class<?> theClass = targetClass;
 
         while (true) 
         {
@@ -214,7 +214,7 @@ abstract class BaseMethod
     }
 
 
-    protected abstract Method doFindMethod( final Class targetClass, final boolean acceptPrivate,
+    protected abstract Method doFindMethod( final Class<?> targetClass, final boolean acceptPrivate,
             final boolean acceptPackage, SimpleLogger logger ) throws SuitableMethodNotAccessibleException, InvocationTargetException;
 
 
@@ -231,7 +231,7 @@ abstract class BaseMethod
                 Object result = m_method.invoke(componentInstance, params);
                 logger.log( LogService.LOG_DEBUG, "invoked {0}: {1}", new Object[]
                     { getMethodNamePrefix(), getMethodName() }, null );
-                return new MethodResult((m_method.getReturnType() != Void.TYPE), (Map) result);
+                return new MethodResult((m_method.getReturnType() != Void.TYPE), (Map<String, Object>) result);
             }
             else
             {
@@ -315,7 +315,7 @@ abstract class BaseMethod
      * @throws InvocationTargetException If an unexpected Throwable is caught
      *      trying to access the desired method.
      */
-    public /* static */ Method getMethod( Class clazz, String name, Class[] parameterTypes, boolean acceptPrivate,
+    public /* static */ Method getMethod( Class<?> clazz, String name, Class[] parameterTypes, boolean acceptPrivate,
             boolean acceptPackage, SimpleLogger logger ) throws SuitableMethodNotAccessibleException,
         InvocationTargetException
     {
@@ -469,7 +469,7 @@ abstract class BaseMethod
      * Returns the name of the package to which the class belongs or an
      * empty string if the class is in the default package.
      */
-    public static String getPackageName( Class clazz )
+    public static String getPackageName( Class<?> clazz )
     {
         String name = clazz.getName();
         int dot = name.lastIndexOf( '.' );

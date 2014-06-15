@@ -26,6 +26,7 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -66,10 +67,10 @@ public class BundleComponentActivator implements Logger
     private final BundleContext m_context;
 
     // This is a list of component instance managers that belong to a particular bundle
-    private List<ComponentHolder> m_managers = new ArrayList<ComponentHolder>();
+    private final List<ComponentHolder<?>> m_managers = new ArrayList<ComponentHolder<?>>();
 
     // The Configuration Admin tracker providing configuration for components
-    private final ServiceTracker m_logService;
+    private final ServiceTracker<LogService, LogService> m_logService;
 
     // thread acting upon configurations
     private final ComponentActorThread m_componentActor;
@@ -103,7 +104,7 @@ public class BundleComponentActivator implements Logger
         m_bundle = context.getBundle();
 
         // have the LogService handy (if available)
-        m_logService = new ServiceTracker( context, Activator.LOGSERVICE_CLASS, null );
+        m_logService = new ServiceTracker<LogService, LogService>( context, Activator.LOGSERVICE_CLASS, null );
         m_logService.open();
         m_configuration = configuration;
 
@@ -158,8 +159,17 @@ public class BundleComponentActivator implements Logger
                 loadDescriptor( descriptorURL );
             }
         }
+    }
+
+
+    /**
+     * Called outside the constructor so that the m_managers field is completely initialized.  
+     * A component might possibly start a thread to enable other components, which could access m_managers
+     */
+    void initialEnable()
+    {
         //enable all the enabled components
-        for ( ComponentHolder componentHolder : m_managers )
+        for ( ComponentHolder<?> componentHolder : m_managers )
         {
             log( LogService.LOG_DEBUG, "BundleComponentActivator : Bundle [{0}] May enable component holder {1}",
                     new Object[] {m_bundle.getBundleId(), componentHolder.getComponentMetadata().getName()}, null, null, null );
@@ -262,7 +272,7 @@ public class BundleComponentActivator implements Logger
                     metadata.validate( this );
 
                     // Request creation of the component manager
-                    ComponentHolder holder = m_componentRegistry.createComponentHolder( this, metadata );
+                    ComponentHolder<?> holder = m_componentRegistry.createComponentHolder( this, metadata );
 
                     // register the component after validation
                     m_componentRegistry.registerComponentHolder( key, holder );
@@ -326,12 +336,10 @@ public class BundleComponentActivator implements Logger
             log( LogService.LOG_DEBUG, "BundleComponentActivator : Bundle [{0}] will destroy {1} instances", new Object[]
                     { m_bundle.getBundleId(), m_managers.size() }, null, null, null );
 
-            while ( m_managers.size() != 0 )
+            for (ComponentHolder<?> holder: m_managers )
             {
-                ComponentHolder holder = m_managers.get( 0 );
                 try
                 {
-                    m_managers.remove( holder );
                     holder.disposeComponents( reason );
                 }
                 catch ( Exception e )
@@ -409,13 +417,8 @@ public class BundleComponentActivator implements Logger
      */
     public void enableComponent( final String name )
     {
-        final ComponentHolder[] holder = getSelectedComponents( name );
-        if ( holder == null )
-        {
-            return;
-        }
-
-        for ( ComponentHolder aHolder : holder )
+        final List<ComponentHolder<?>> holder = getSelectedComponents( name );
+        for ( ComponentHolder<?> aHolder : holder )
         {
             try
             {
@@ -441,13 +444,8 @@ public class BundleComponentActivator implements Logger
      */
     public void disableComponent( final String name )
     {
-        final ComponentHolder[] holder = getSelectedComponents( name );
-        if ( holder == null )
-        {
-            return;
-        }
-
-        for ( ComponentHolder aHolder : holder )
+        final List<ComponentHolder<?>> holder = getSelectedComponents( name );
+        for ( ComponentHolder<?> aHolder : holder )
         {
             try
             {
@@ -477,32 +475,32 @@ public class BundleComponentActivator implements Logger
      *      to the <code>name</code> parameter or <code>null</code> if no
      *      component manager with the given name is currently registered.
      */
-    private ComponentHolder[] getSelectedComponents( String name )
+    private List<ComponentHolder<?>> getSelectedComponents( String name )
     {
         // if all components are selected
         if ( name == null )
         {
-            return m_managers.toArray( new ComponentHolder[m_managers.size()] );
+            return m_managers;
         }
 
-        ComponentHolder componentHolder = m_componentRegistry.getComponentHolder( m_bundle, name );
+        ComponentHolder<?> componentHolder = m_componentRegistry.getComponentHolder( m_bundle, name );
         if (componentHolder != null)
         {
-            return new ComponentHolder[] { componentHolder };
+            return Collections.<ComponentHolder<?>>singletonList( componentHolder );
         }
 
         // if the component is not known
-        return null;
+        return Collections.emptyList();
     }
 
 
     //---------- Component ID support
 
-    public long registerComponentId(AbstractComponentManager componentManager) {
+    public long registerComponentId(AbstractComponentManager<?> componentManager) {
         return m_componentRegistry.registerComponentId(componentManager);
     }
 
-    public void unregisterComponentId(AbstractComponentManager componentManager) {
+    public void unregisterComponentId(AbstractComponentManager<?> componentManager) {
         m_componentRegistry.unregisterComponentId(componentManager.getId());
     }
 
@@ -607,17 +605,17 @@ public class BundleComponentActivator implements Logger
                 }
             }
 
-            ServiceTracker logService = m_logService;
+            ServiceTracker<LogService, LogService> logService = m_logService;
             if ( logService != null )
             {
-                Object logger = logService.getService();
+                LogService logger = logService.getService();
                 if ( logger == null )
                 {
                     Activator.log( level, m_bundle, message, ex );
                 }
                 else
                 {
-                    ( ( LogService ) logger ).log( level, message, ex );
+                    logger.log( level, message, ex );
                 }
             }
             else
@@ -628,12 +626,12 @@ public class BundleComponentActivator implements Logger
         }
     }
 
-    public void missingServicePresent( ServiceReference serviceReference )
+    public void missingServicePresent( ServiceReference<?> serviceReference )
     {
         m_componentRegistry.missingServicePresent( serviceReference, m_componentActor );
     }
 
-    public void registerMissingDependency( DependencyManager dependencyManager, ServiceReference serviceReference, int trackingCount )
+    public <T> void registerMissingDependency( DependencyManager<?, T> dependencyManager, ServiceReference<T> serviceReference, int trackingCount )
     {
         m_componentRegistry.registerMissingDependency(dependencyManager, serviceReference, trackingCount );
     }

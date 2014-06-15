@@ -20,12 +20,9 @@ package org.apache.felix.scr.impl.parser;
 
 
 import java.io.Reader;
-import java.util.Properties;
 import java.util.Stack;
 
-import org.apache.felix.scr.impl.helper.Logger;
 import org.kxml2.io.KXmlParser;
-import org.osgi.service.log.LogService;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 

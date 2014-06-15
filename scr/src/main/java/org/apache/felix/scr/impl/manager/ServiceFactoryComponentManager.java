@@ -22,7 +22,6 @@ package org.apache.felix.scr.impl.manager;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.IdentityHashMap;
-import java.util.Iterator;
 
 import org.apache.felix.scr.impl.config.ComponentContainer;
 import org.apache.felix.scr.impl.helper.ActivateMethod;
@@ -32,7 +31,6 @@ import org.apache.felix.scr.impl.helper.ModifiedMethod;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentConstants;
-import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.ComponentInstance;
 import org.osgi.service.log.LogService;
 
@@ -46,13 +44,13 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
 
     // maintain the map of ComponentContext objects created for the
     // service instances
-    private IdentityHashMap<S, ComponentContextImpl> serviceContexts = new IdentityHashMap<S, ComponentContextImpl>();
+    private IdentityHashMap<S, ComponentContextImpl<S>> serviceContexts = new IdentityHashMap<S, ComponentContextImpl<S>>();
 
     /**
      * @param container ComponentHolder for configuration management
      * @param componentMethods
      */
-    public ServiceFactoryComponentManager( ComponentContainer container, ComponentMethods componentMethods )
+    public ServiceFactoryComponentManager( ComponentContainer<S> container, ComponentMethods componentMethods )
     {
         super( container, componentMethods );
     }
@@ -77,7 +75,7 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
         {
             throw new IllegalStateException( "need write lock (deleteComponent)" );
         }
-        for (ComponentContextImpl componentContext: getComponentContexts() )
+        for (ComponentContextImpl<S> componentContext: getComponentContexts() )
         {
             disposeImplementationObject( componentContext, reason );
             log( LogService.LOG_DEBUG, "Unset implementation object for component {0} in deleteComponent for reason {1}", new Object[] { getName(), REASONS[ reason ] },  null );
@@ -188,11 +186,11 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
         }
     }
 
-    private Collection<ComponentContextImpl> getComponentContexts()
+    private Collection<ComponentContextImpl<S>> getComponentContexts()
     {
         synchronized ( serviceContexts )
         {
-            return new ArrayList<ComponentContextImpl>( serviceContexts.values() );
+            return new ArrayList<ComponentContextImpl<S>>( serviceContexts.values() );
         }
     }
 
@@ -224,9 +222,9 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
     {
         ModifiedMethod modifiedMethod = getComponentMethods().getModifiedMethod();
         MethodResult result = MethodResult.VOID;
-        for ( ComponentContextImpl componentContext : getComponentContexts() )
+        for ( ComponentContextImpl<S> componentContext : getComponentContexts() )
         {
-            Object instance = componentContext.getImplementationObject(true);
+            S instance = componentContext.getImplementationObject(true);
             result = modifiedMethod.invoke( instance,
                     new ActivateMethod.ActivatorParameter( componentContext, -1 ), MethodResult.VOID, this );
 

@@ -41,6 +41,7 @@ import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentException;
 import org.osgi.service.log.LogService;
@@ -114,17 +115,11 @@ public class ComponentRegistry implements ServiceListener
      */
     private long m_componentCounter = -1;
 
-    /**
-     * The OSGi service registration for the ScrService provided by this
-     * instance.
-     */
-    private ServiceRegistration m_registration;
-
     // ConfigurationAdmin support -- created on demand upon availability of
     // the ConfigurationAdmin service
     private ConfigurationSupport configurationSupport;
 
-    private final Map<ServiceReference<?>, List<Entry>> m_missingDependencies = new HashMap<ServiceReference<?>, List<Entry>>( );
+    private final Map<ServiceReference<?>, List<Entry<?, ?>>> m_missingDependencies = new HashMap<ServiceReference<?>, List<Entry<?, ?>>>( );
 
     protected ComponentRegistry( BundleContext context )
     {
@@ -150,12 +145,6 @@ public class ComponentRegistry implements ServiceListener
             getOrCreateConfigurationSupport();
         }
 
-        // register as ScrService
-//        Dictionary<String, Object> props = new Hashtable<String, Object>();
-//        props.put( Constants.SERVICE_DESCRIPTION, "Declarative Services Management Agent" );
-//        props.put( Constants.SERVICE_VENDOR, "The Apache Software Foundation" );
-//        m_registration = context.registerService( new String[]
-//            { ScrService.class.getName(), }, this, props );
     }
 
 
@@ -169,89 +158,7 @@ public class ComponentRegistry implements ServiceListener
             configurationSupport = null;
         }
 
-        if ( m_registration != null )
-        {
-            m_registration.unregister();
-            m_registration = null;
-        }
     }
-
-
-    //---------- ScrService interface
-
-//    public Component[] getComponents()
-//    {
-//        List<ComponentHolder<?>> holders = getComponentHolders();
-//        ArrayList<Component> list = new ArrayList<Component>();
-//        for ( ComponentHolder holder: holders )
-//        {
-//            if ( holder != null )
-//            {
-//                list.addAll(holder.getComponents());
-//            }
-//        }
-//
-//        // nothing to return
-//        if ( list.isEmpty() )
-//        {
-//            return null;
-//        }
-//
-//        return ( Component[] ) list.toArray( new Component[list.size()] );
-//    }
-
-
-//    public Component[] getComponents( Bundle bundle )
-//    {
-//        List<ComponentHolder<?>> holders = getComponentHolders();
-//        List<Component> list = new ArrayList<Component>();
-//        for ( ComponentHolder<?> holder: holders )
-//        {
-//            if ( holder != null )
-//            {
-//                BundleComponentActivator activator = holder.getActivator();
-//                if ( activator != null && activator.getBundleContext().getBundle() == bundle )
-//                {
-//                    list.addAll(holder.getComponents());
-//                }
-//            }
-//        }
-//
-//        // nothing to return
-//        if ( list.isEmpty() )
-//        {
-//            return null;
-//        }
-//
-//        return list.toArray( new Component[list.size()] );
-//    }
-//
-//
-//    public Component getComponent( long componentId )
-//    {
-//        synchronized ( m_componentsById )
-//        {
-//            return m_componentsById.get( componentId );
-//        }
-//    }
-
-
-//    public Component[] getComponents( String componentName )
-//    {
-//        List<Component> list = new ArrayList<Component>();
-//        synchronized ( m_componentHoldersByName )
-//        {
-//            for ( ComponentHolder<?> c: m_componentHoldersByName.values() )
-//            {
-//                if ( c.getComponentMetadata().getName().equals( componentName ) )
-//                {
-//                    list.addAll( c.getComponents() );
-//                }
-//            }
-//        }
-//
-//        return ( list.isEmpty() ) ? null : list.toArray( new Component[list.size()] );
-//    }
 
 
     //---------- ComponentManager registration by component Id
@@ -369,7 +276,7 @@ public class ComponentRegistry implements ServiceListener
      * @throws ComponentException if the name has not been reserved through
      *      {@link #checkComponentName(String)} yet.
      */
-    final void registerComponentHolder( final ComponentRegistryKey key, ComponentHolder componentHolder )
+    final void registerComponentHolder( final ComponentRegistryKey key, ComponentHolder<?> componentHolder )
     {
         Activator.log(LogService.LOG_DEBUG, null, 
                 "Registering component with pid {0} for bundle {1}",
@@ -419,7 +326,7 @@ public class ComponentRegistry implements ServiceListener
      * Returns the component registered under the given name or <code>null</code>
      * if no component is registered yet.
      */
-    public final ComponentHolder getComponentHolder( final Bundle bundle, final String name )
+    public final ComponentHolder<?> getComponentHolder( final Bundle bundle, final String name )
     {
         synchronized ( m_componentHoldersByName )
         {
@@ -443,7 +350,7 @@ public class ComponentRegistry implements ServiceListener
             // only return the entry if non-null and not a reservation
             if (set != null)
             {
-                for (ComponentHolder holder: set)
+                for (ComponentHolder<?> holder: set)
                 {
                     if (targetedPid.matchesTarget(holder))
                     {
@@ -549,9 +456,9 @@ public class ComponentRegistry implements ServiceListener
      * Factory method to issue {@link ComponentHolder} instances to manage
      * components described by the given component <code>metadata</code>.
      */
-    public ComponentHolder createComponentHolder( BundleComponentActivator activator, ComponentMetadata metadata )
+    public <S> ComponentHolder<S> createComponentHolder( BundleComponentActivator activator, ComponentMetadata metadata )
     {
-        return new ConfigurableComponentHolder(activator, metadata);
+        return new ConfigurableComponentHolder<S>(activator, metadata);
     }
 
 
@@ -571,8 +478,8 @@ public class ComponentRegistry implements ServiceListener
         {
             ConfigurationSupport configurationSupport = getOrCreateConfigurationSupport();
 
-            final ServiceReference caRef = event.getServiceReference();
-            final Object service = m_bundleContext.getService(caRef);
+            final ServiceReference<ConfigurationAdmin> caRef = (ServiceReference<ConfigurationAdmin>) event.getServiceReference();
+            final ConfigurationAdmin service = m_bundleContext.getService(caRef);
             if (service != null)
             {
                 try
@@ -653,9 +560,9 @@ public class ComponentRegistry implements ServiceListener
         }
     }
 
-    public synchronized void missingServicePresent( final ServiceReference serviceReference, ComponentActorThread actor )
+    public synchronized <T> void missingServicePresent( final ServiceReference<T> serviceReference, ComponentActorThread actor )
     {
-        final List<Entry> dependencyManagers = m_missingDependencies.remove( serviceReference );
+        final List<Entry<?, ?>> dependencyManagers = m_missingDependencies.remove( serviceReference );
         if ( dependencyManagers != null )
         {
             actor.schedule( new Runnable()
@@ -663,9 +570,9 @@ public class ComponentRegistry implements ServiceListener
 
                 public void run()
                 {
-                    for ( Entry entry : dependencyManagers )
+                    for ( Entry<?, ?> entry : dependencyManagers )
                     {
-                        entry.getDm().invokeBindMethodLate( serviceReference, entry.getTrackingCount() );
+                        ((DependencyManager<?, T>)entry.getDm()).invokeBindMethodLate( serviceReference, entry.getTrackingCount() );
                     }
                 }
 
@@ -679,34 +586,34 @@ public class ComponentRegistry implements ServiceListener
         }
     }
 
-    public synchronized void registerMissingDependency( DependencyManager<?,?> dependencyManager, ServiceReference serviceReference, int trackingCount )
+    public synchronized <S, T> void registerMissingDependency( DependencyManager<S, T> dependencyManager, ServiceReference<T> serviceReference, int trackingCount )
     {
         //check that the service reference is from scr
         if ( serviceReference.getProperty( ComponentConstants.COMPONENT_NAME ) == null || serviceReference.getProperty( ComponentConstants.COMPONENT_ID ) == null )
         {
             return;
         }
-        List<Entry> dependencyManagers = m_missingDependencies.get( serviceReference );
+        List<Entry<?, ?>> dependencyManagers = m_missingDependencies.get( serviceReference );
         if ( dependencyManagers == null )
         {
-            dependencyManagers = new ArrayList<Entry>();
+            dependencyManagers = new ArrayList<Entry<?, ?>>();
             m_missingDependencies.put( serviceReference, dependencyManagers );
         }
-        dependencyManagers.add( new Entry( dependencyManager, trackingCount ) );
+        dependencyManagers.add( new Entry<S, T>( dependencyManager, trackingCount ) );
     }
 
-    private static class Entry
+    private static class Entry<S,T>
     {
-        private final DependencyManager<?,?> dm;
+        private final DependencyManager<S, T> dm;
         private final int trackingCount;
 
-        private Entry( DependencyManager<?,?> dm, int trackingCount )
+        private Entry( DependencyManager<S, T> dm, int trackingCount )
         {
             this.dm = dm;
             this.trackingCount = trackingCount;
         }
 
-        public DependencyManager<?,?> getDm()
+        public DependencyManager<S, T> getDm()
         {
             return dm;
         }

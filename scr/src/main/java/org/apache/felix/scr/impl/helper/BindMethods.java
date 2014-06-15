@@ -32,7 +32,7 @@ public class BindMethods
     private final UpdatedMethod m_updated;
     private final UnbindMethod m_unbind;
 
-    BindMethods( ReferenceMetadata m_dependencyMetadata, Class instanceClass,
+    BindMethods( ReferenceMetadata m_dependencyMetadata, Class<?> instanceClass,
             final boolean isDS11, final boolean isDS12Felix )
     {
         m_bind = new BindMethod(

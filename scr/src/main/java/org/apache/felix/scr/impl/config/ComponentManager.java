@@ -29,8 +29,6 @@ public interface ComponentManager<S> {
 	int STATE_SATISFIED = ComponentConfigurationDTO.SATISFIED;
 	int STATE_UNSATISFIED = ComponentConfigurationDTO.UNSATISFIED;
 	int STATE_ACTIVE = ComponentConfigurationDTO.ACTIVE;
-	int STATE_FACTORY = 8;
-	int STATE_FACTORY_INSTANCE = 16;
 	int STATE_DISPOSED = 32;
 	int STATE_DISABLED = 64; //TODO????
 

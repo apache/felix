@@ -234,11 +234,6 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
 
         synchronized ( m_components )
         {
-            //            // FELIX-2231: nothing to do any more, all components have been disposed off
-            //            if (m_singleComponent == null) 
-            //            {
-            //                return;
-            //            }
             if (factoryPid != null) {
                 checkFactoryPidIndex(factoryPid);
                 String servicePid = pid.getServicePid();
@@ -632,11 +627,6 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
             m_enabled = false;
 
             cms = getComponentManagers( true );
-            //       		if (m_singleComponent != null && m_factoryPidIndex == null && 
-            //    				(m_componentMetadata.isConfigurationIgnored() || m_componentMetadata.isConfigurationOptional()))
-            //    		{
-            //    			m_singleComponent = null;
-            //    		}
         }
         for ( AbstractComponentManager<S> cm : cms )
         {

@@ -28,11 +28,11 @@ public class AbstractComponentManagerTest extends TestCase
 
     public void test_copyTo_withoutExclusions()
     {
-        final Hashtable ht = new Hashtable();
+        final Hashtable<String, String> ht = new Hashtable<String, String>();
         ht.put( "p1", "v1" );
         ht.put( "p.2", "v2" );
         ht.put( ".p3", "v3" );
-        final Map dict = AbstractComponentManager.copyToMap( ht, true );
+        final Map<String, Object> dict = AbstractComponentManager.copyToMap( ht, true );
         assertNotNull( "Copy result is not null", dict );
         assertEquals( "Number of items", 3, dict.size() );
         assertEquals( "Value for key p1", "v1", dict.get( "p1" ) );
@@ -42,11 +42,11 @@ public class AbstractComponentManagerTest extends TestCase
 
     public void test_copyTo_excludingStartingWithDot()
     {
-        final Hashtable ht = new Hashtable();
+        final Hashtable<String, String> ht = new Hashtable<String, String>();
         ht.put( "p1", "v1" );
         ht.put( "p.2", "v2" );
         ht.put( ".p3", "v3" );
-        final Map dict = AbstractComponentManager.copyToMap( ht, false );
+        final Map<String, Object> dict = AbstractComponentManager.copyToMap( ht, false );
         assertNotNull( "Copy result is not null", dict );
         assertEquals( "Number of items", 2, dict.size() );
         assertEquals( "Value for key p1", "v1", dict.get( "p1" ) );

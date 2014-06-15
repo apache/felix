@@ -155,15 +155,6 @@ public class ServiceComponentTest extends ComponentTestBase
     public void test_DelayedSimpleComponent_service_keep_instance() throws IOException
     {
         // configure SCR to keep instances
-//        Configuration scrConfig = getConfigurationAdmin().getConfiguration( ScrConfiguration.PID, null );
-//        Dictionary props = scrConfig.getProperties();
-//        if ( props == null )
-//        {
-//            props = new Hashtable();
-//        }
-//        props.put( ScrConfiguration.PROP_DELAYED_KEEP_INSTANCES, Boolean.TRUE.toString() );
-//        scrConfig.update( props );
-//        delay();
 
         final String pid = "DelayedKeepInstancesServiceComponent";
 
@@ -194,7 +185,5 @@ public class ServiceComponentTest extends ComponentTestBase
         findComponentConfigurationByName(pid, ComponentConfigurationDTO.ACTIVE);
         TestCase.assertNotNull( SimpleComponent.INSTANCE );
 
-        // delete the SCR configuration again
-//        scrConfig.delete();
     }
 }
