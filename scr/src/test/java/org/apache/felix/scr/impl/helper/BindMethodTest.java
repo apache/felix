@@ -21,6 +21,8 @@ package org.apache.felix.scr.impl.helper;
 
 import junit.framework.TestCase;
 
+import org.apache.felix.scr.impl.BundleComponentActivator;
+import org.apache.felix.scr.impl.config.ComponentContainer;
 import org.apache.felix.scr.impl.manager.SingleComponentManager;
 import org.apache.felix.scr.impl.manager.RefPair;
 import org.apache.felix.scr.impl.manager.components.FakeService;
@@ -428,8 +430,8 @@ public class BindMethodTest extends TestCase
     private void testMethod( final String methodName, final T1 component, final boolean isDS11,
         final String expectCallPerformed )
     {
-        ComponentMetadata metadata = newMetadata();
-        SingleComponentManager icm = new SingleComponentManager( null, null, metadata, new ComponentMethods() );
+        ComponentContainer container = newContainer();
+        SingleComponentManager icm = new SingleComponentManager( container, new ComponentMethods() );
         BindMethod bm = new BindMethod( methodName, component.getClass(),
                 FakeService.class.getName(), isDS11, false );
         RefPair refPair = new RefPair( m_serviceReference );
@@ -438,6 +440,29 @@ public class BindMethodTest extends TestCase
         assertEquals( expectCallPerformed, component.callPerformed );
     }
     
+    private ComponentContainer newContainer()
+    {
+        final ComponentMetadata metadata = newMetadata();
+        ComponentContainer container = new ComponentContainer() {
+
+            public BundleComponentActivator getActivator()
+            {
+                return null;
+            }
+
+            public ComponentMetadata getComponentMetadata()
+            {
+                return metadata;
+            }
+
+            public void disposed(SingleComponentManager component)
+            {
+            }
+            
+        };
+        return container;
+    }
+
 	private ComponentMetadata newMetadata() {
 		ComponentMetadata metadata = new ComponentMetadata( XmlHandler.DS_VERSION_1_1 );
         metadata.setName("foo");

@@ -22,10 +22,8 @@ package org.apache.felix.scr.impl.config;
 import java.util.Dictionary;
 import java.util.List;
 
-import org.apache.felix.scr.Component;
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.TargetedPID;
-import org.apache.felix.scr.impl.manager.SingleComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 
 
@@ -44,17 +42,15 @@ public interface ComponentHolder<S>
 
     /**
      * Returns the {@link BundleComponentActivator} owning this component
-     * holder.
+     * holder. (overlaps ComponentContaienr)
      */
     BundleComponentActivator getActivator();
 
-
     /**
      * Returns the {@link ComponentMetadata} describing and declaring this
-     * component.
+     * component. (overlaps ComponentContaienr)
      */
     ComponentMetadata getComponentMetadata();
-
 
     /**
      * The configuration with the given PID has been deleted from the
@@ -129,11 +125,4 @@ public interface ComponentHolder<S>
      * @param reason
      */
     void disposeComponents( int reason );
-
-
-    /**
-     * Informs the holder that the component has been disposed as a result of
-     * calling the dispose method.
-     */
-    void disposed( SingleComponentManager<S> component );
 }

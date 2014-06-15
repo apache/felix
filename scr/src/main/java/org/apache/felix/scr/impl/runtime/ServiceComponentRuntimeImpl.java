@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.felix.scr.impl.ComponentRegistry;
+import org.apache.felix.scr.impl.config.ComponentContainer;
 import org.apache.felix.scr.impl.config.ComponentHolder;
 import org.apache.felix.scr.impl.config.ComponentManager;
 import org.apache.felix.scr.impl.config.ReferenceManager;
@@ -58,7 +59,7 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime {
 	}
 
 	public ComponentDescriptionDTO getComponentDescriptionDTO(Bundle bundle, String name) {
-		ComponentHolder<?> holder = componentRegistry.getComponentHolder(bundle, name);
+	    ComponentHolder<?> holder = componentRegistry.getComponentHolder(bundle, name);
 		if ( holder != null )
 		{
 			return holderToDescription(holder);

@@ -31,14 +31,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.TargetedPID;
-import org.apache.felix.scr.impl.config.ComponentHolder;
+import org.apache.felix.scr.impl.config.ComponentContainer;
 import org.apache.felix.scr.impl.config.ComponentManager;
 import org.apache.felix.scr.impl.config.ReferenceManager;
 import org.apache.felix.scr.impl.helper.ActivateMethod.ActivatorParameter;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.helper.MethodResult;
 import org.apache.felix.scr.impl.helper.ModifiedMethod;
-import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceFactory;
@@ -62,9 +61,6 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     // The context that will be passed to the implementationObject
     private volatile ComponentContextImpl<S> m_componentContext;
 
-    // the component holder responsible for managing this component
-    private final ComponentHolder m_componentHolder;
-
     // Merged properties from xml descriptor and all configurations
     private Map<String, Object> m_configurationProperties;
     
@@ -82,31 +78,22 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     
    /**
      * The constructor receives both the activator and the metadata
-     *
-     * @param activator
-     * @param metadata
-     * @param componentMethods
+ * @param componentMethods
      */
-    public SingleComponentManager( BundleComponentActivator activator, ComponentHolder componentHolder,
-            ComponentMetadata metadata, ComponentMethods componentMethods )
+    public SingleComponentManager( ComponentContainer container, ComponentMethods componentMethods )
     {
-        this(activator, componentHolder, metadata, componentMethods, false);
+        this(container, componentMethods, false);
     }
     
-    public SingleComponentManager( BundleComponentActivator activator, ComponentHolder componentHolder,
-            ComponentMetadata metadata, ComponentMethods componentMethods, boolean factoryInstance )
+    public SingleComponentManager( ComponentContainer container, ComponentMethods componentMethods,
+            boolean factoryInstance )
     {
-        super( activator, metadata, componentMethods, factoryInstance );
-
-        m_componentHolder = componentHolder;
+        super( container, componentMethods, factoryInstance );
     }
 
     void clear()
     {
-        if ( m_componentHolder != null )
-        {
-            m_componentHolder.disposed( this );
-        }
+        m_container.disposed( this );
 
         super.clear();
     }

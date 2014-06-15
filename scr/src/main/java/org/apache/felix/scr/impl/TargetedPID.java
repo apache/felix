@@ -21,7 +21,6 @@ package org.apache.felix.scr.impl;
 import org.apache.felix.scr.impl.config.ComponentHolder;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
 
 /**

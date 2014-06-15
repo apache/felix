@@ -33,6 +33,7 @@ import java.util.Set;
 
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.ScrService;
+import org.apache.felix.scr.impl.config.ComponentContainer;
 import org.apache.felix.scr.impl.config.ComponentHolder;
 import org.apache.felix.scr.impl.config.ConfigurationSupport;
 import org.apache.felix.scr.impl.config.ConfigurableComponentHolder;
@@ -323,7 +324,7 @@ public class ComponentRegistry implements ServiceListener
     {
         // register the name if no registration for that name exists already
         final ComponentRegistryKey key = new ComponentRegistryKey( bundle, name );
-        ComponentHolder existingRegistration = null;
+        ComponentHolder<?> existingRegistration = null;
         boolean present;
         synchronized ( m_componentHoldersByName )
         {
@@ -559,7 +560,7 @@ public class ComponentRegistry implements ServiceListener
      */
     public ComponentHolder createComponentHolder( BundleComponentActivator activator, ComponentMetadata metadata )
     {
-        ComponentHolder holder;
+        ComponentHolder holder = null;//TODO not null
 
         if (metadata.isFactory())
         {
@@ -568,11 +569,11 @@ public class ComponentRegistry implements ServiceListener
             // as soon as the component factory is satisfied
             if ( !metadata.isObsoleteFactoryComponentFactory() )
             {
-                holder = new ComponentFactoryImpl(activator, metadata );
+//TODO                holder = new ComponentFactoryImpl(this );
             }
             else
             {
-                holder = new ConfigurationComponentFactoryImpl(activator, metadata );
+//TODO                holder = new ConfigurationComponentFactoryImpl(activator );
             }
         }
         else

@@ -42,6 +42,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.felix.scr.impl.Activator;
 import org.apache.felix.scr.impl.BundleComponentActivator;
+import org.apache.felix.scr.impl.config.ComponentContainer;
 import org.apache.felix.scr.impl.config.ComponentManager;
 import org.apache.felix.scr.impl.config.ReferenceManager;
 import org.apache.felix.scr.impl.config.ScrConfiguration;
@@ -77,13 +78,12 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         "Configuration deleted",
         "Component disabled",
         "Bundle stopped"};
+    
+    protected final ComponentContainer m_container;
 
     private final boolean m_factoryInstance;
     // the ID of this component
     private long m_componentId;
-
-    // The metadata
-    private final ComponentMetadata m_componentMetadata;
 
     private final ComponentMethods m_componentMethods;
 
@@ -95,9 +95,6 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     private volatile boolean m_dependenciesCollected;
 
     private final AtomicInteger m_trackingCount = new AtomicInteger( );
-
-    // A reference to the BundleComponentActivator
-    private BundleComponentActivator m_activator;
 
     // The ServiceRegistration is now tracked in the RegistrationManager
     
@@ -132,22 +129,22 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     /**
      * The constructor receives both the activator and the metadata
      *
-     * @param activator
-     * @param metadata
+     * @param container
      * @param componentMethods
      */
-    protected AbstractComponentManager( BundleComponentActivator activator, ComponentMetadata metadata, ComponentMethods componentMethods )
+    protected AbstractComponentManager( ComponentContainer container, ComponentMethods componentMethods )
     {
-        this( activator, metadata, componentMethods, false );
+        this( container, componentMethods, false );
     }
     
-    protected AbstractComponentManager( BundleComponentActivator activator, ComponentMetadata metadata, ComponentMethods componentMethods, boolean factoryInstance )
+    protected AbstractComponentManager( ComponentContainer container, ComponentMethods componentMethods, boolean factoryInstance )
     {
         m_factoryInstance = factoryInstance;
-        m_activator = activator;
-        m_componentMetadata = metadata;
+        m_container = container;
         this.m_componentMethods = componentMethods;
         m_componentId = -1;
+        
+        ComponentMetadata metadata = container.getComponentMetadata();
 
         m_dependencyManagers = loadDependencyManagers( metadata );
 
@@ -434,7 +431,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         if ( async )
         {
             final CountDownLatch latch = enableLatch;
-            m_activator.schedule( new Runnable()
+            getActivator().schedule( new Runnable()
             {
 
                 long count = taskCounter.incrementAndGet();
@@ -537,7 +534,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         if ( async )
         {
             final CountDownLatch latch = enableLatch;
-            m_activator.schedule( new Runnable()
+            getActivator().schedule( new Runnable()
             {
 
                 long count = taskCounter.incrementAndGet();
@@ -598,9 +595,9 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     {
         return m_componentId;
     }
-
-    public String getName() {
-        return m_componentMetadata.getName();
+    
+    protected String getName() {
+        return getComponentMetadata().getName();
     }
 
     /**
@@ -637,81 +634,10 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     }
 
 
-    public String getClassName()
+    protected boolean isImmediate()
     {
-        return m_componentMetadata.getImplementationClassName();
-    }
+        return getComponentMetadata().isImmediate();
 
-    public String getFactory()
-    {
-        return m_componentMetadata.getFactoryIdentifier();
-    }
-
-    public boolean isImmediate()
-    {
-        return m_componentMetadata.isImmediate();
-
-    }
-
-    public boolean isDefaultEnabled()
-    {
-        return m_componentMetadata.isEnabled();
-    }
-
-
-    public String getActivate()
-    {
-        return m_componentMetadata.getActivate();
-    }
-
-
-    public boolean isActivateDeclared()
-    {
-        return m_componentMetadata.isActivateDeclared();
-    }
-
-
-    public String getDeactivate()
-    {
-        return m_componentMetadata.getDeactivate();
-    }
-
-
-    public boolean isDeactivateDeclared()
-    {
-        return m_componentMetadata.isDeactivateDeclared();
-    }
-
-
-    public String getModified()
-    {
-        return m_componentMetadata.getModified();
-    }
-
-
-    public String getConfigurationPolicy()
-    {
-        return m_componentMetadata.getConfigurationPolicy();
-    }
-
-    public List<String> getConfigurationPid()
-    {
-        return m_componentMetadata.getConfigurationPid();
-    }
-
-    public boolean isConfigurationPidDeclared()
-    {
-        return m_componentMetadata.isConfigurationPidDeclared();
-    }
-
-    public boolean isServiceFactory()
-    {
-        return m_componentMetadata.getServiceScope() == Scope.bundle;
-    }
-    
-    public String getServiceScope()
-    {
-    	return m_componentMetadata.getServiceScope().name();
     }
 
     public boolean isFactory()
@@ -719,15 +645,6 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         return false;
     }
 
-    public String[] getServices()
-    {
-        if ( m_componentMetadata.getServiceMetadata() != null )
-        {
-            return m_componentMetadata.getServiceMetadata().getProvides();
-        }
-
-        return null;
-    }
 
     //-------------- atomic transition methods -------------------------------
 
@@ -1092,7 +1009,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
             throw new IllegalStateException("Could not load implementation object class "
                     + getComponentMetadata().getImplementationClassName());
         }
-        m_componentMethods.initComponentMethods( m_componentMetadata, implementationObjectClass );
+        m_componentMethods.initComponentMethods( getComponentMetadata(), implementationObjectClass );
 
         for ( DependencyManager dependencyManager : m_dependencyManagers )
         {
@@ -1148,7 +1065,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     //**********************************************************************************************************
     public BundleComponentActivator getActivator()
     {
-        return m_activator;
+        return m_container.getActivator();
     }
 
 
@@ -1168,9 +1085,9 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     synchronized void clear()
     {
         // for some testing, the activator may be null
-        if ( m_activator != null )
+        if ( m_container.getActivator() != null )
         {
-            m_activator.unregisterComponentId( this );
+            m_container.getActivator().unregisterComponentId( this );
         }
     }
 
@@ -1484,7 +1401,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
      */
     public ComponentMetadata getComponentMetadata()
     {
-        return m_componentMetadata;
+        return m_container.getComponentMetadata();
     }
 
     /**

@@ -26,12 +26,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.scr.Component;
-import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.TargetedPID;
-import org.apache.felix.scr.impl.config.ComponentHolder;
+import org.apache.felix.scr.impl.config.ComponentContainer;
 import org.apache.felix.scr.impl.config.ComponentManager;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
-import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.osgi.framework.Constants;
 import org.osgi.service.log.LogService;
 
@@ -55,9 +53,9 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
      */
     private final Map<String, SingleComponentManager<S>> m_configuredServices = new HashMap<String, SingleComponentManager<S>>();
 
-    public ConfigurationComponentFactoryImpl( BundleComponentActivator activator, ComponentMetadata metadata )
+    public ConfigurationComponentFactoryImpl( ComponentContainer container )
     {
-        super( activator, metadata );
+        super( container );
     }
 
 
@@ -247,15 +245,14 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
      */
     private SingleComponentManager<S> createConfigurationComponentManager()
     {
-        return new ComponentFactoryConfiguredInstance<S>( getActivator(), this, getComponentMetadata(), getComponentMethods() );
+        return new ComponentFactoryConfiguredInstance<S>( this, getComponentMethods() );
     }
 
     static class ComponentFactoryConfiguredInstance<S> extends SingleComponentManager<S> {
 
-        public ComponentFactoryConfiguredInstance( BundleComponentActivator activator, ComponentHolder componentHolder,
-                ComponentMetadata metadata, ComponentMethods componentMethods )
+        public ComponentFactoryConfiguredInstance( ComponentContainer container, ComponentMethods componentMethods )
         {
-            super( activator, componentHolder, metadata, componentMethods, true );
+            super( container, componentMethods, true );
         }
 
         public boolean isImmediate()

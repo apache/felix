@@ -24,13 +24,11 @@ import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 
-import org.apache.felix.scr.impl.BundleComponentActivator;
-import org.apache.felix.scr.impl.config.ComponentHolder;
+import org.apache.felix.scr.impl.config.ComponentContainer;
 import org.apache.felix.scr.impl.helper.ActivateMethod;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.helper.MethodResult;
 import org.apache.felix.scr.impl.helper.ModifiedMethod;
-import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentConstants;
@@ -51,15 +49,12 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
     private IdentityHashMap<S, ComponentContextImpl> serviceContexts = new IdentityHashMap<S, ComponentContextImpl>();
 
     /**
-     * @param activator BundleComponentActivator for this DS implementation
-	 * @param componentHolder ComponentHolder for configuration management
-     * @param metadata ComponentMetadata for this component
+     * @param container ComponentHolder for configuration management
      * @param componentMethods
      */
-    public ServiceFactoryComponentManager( BundleComponentActivator activator, ComponentHolder componentHolder,
-            ComponentMetadata metadata, ComponentMethods componentMethods )
+    public ServiceFactoryComponentManager( ComponentContainer container, ComponentMethods componentMethods )
     {
-        super( activator, componentHolder, metadata, componentMethods );
+        super( container, componentMethods );
     }
 
 
