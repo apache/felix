@@ -25,6 +25,8 @@ import java.util.Hashtable;
 
 import junit.framework.TestCase;
 
+import org.apache.felix.scr.impl.BundleComponentActivator;
+import org.apache.felix.scr.impl.config.ComponentContainer;
 import org.apache.felix.scr.impl.manager.SingleComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.XmlHandler;
@@ -264,14 +266,38 @@ public class ActivateMethodTest extends TestCase
      */
     private void checkMethod( BaseObject obj, String methodName, String methodDesc )
     {
-        ComponentMetadata metadata = newMetadata();
-        SingleComponentManager icm = new SingleComponentManager( null, null, metadata, new ComponentMethods() );
+        ComponentContainer container = newContainer();
+        SingleComponentManager icm = new SingleComponentManager( container, new ComponentMethods() );
         ActivateMethod am = new ActivateMethod( methodName, methodName != null, obj.getClass(), true, false );
         am.invoke( obj, new ActivateMethod.ActivatorParameter( m_ctx, -1 ), null, icm );
         Method m = get(am, "m_method");
         assertNotNull( m );
         assertEquals( methodName, m.getName() );
         assertEquals( methodDesc, obj.getCalledMethod() );
+    }
+
+
+    private ComponentContainer newContainer()
+    {
+        final ComponentMetadata metadata = newMetadata();
+        ComponentContainer container = new ComponentContainer() {
+
+            public BundleComponentActivator getActivator()
+            {
+                return null;
+            }
+
+            public ComponentMetadata getComponentMetadata()
+            {
+                return metadata;
+            }
+
+            public void disposed(SingleComponentManager component)
+            {
+            }
+            
+        };
+        return container;
     }
 
 
@@ -295,8 +321,8 @@ public class ActivateMethodTest extends TestCase
      */
     private void ensureMethodNotFoundMethod( BaseObject obj, String methodName )
     {
-        ComponentMetadata metadata = newMetadata();
-        SingleComponentManager icm = new SingleComponentManager( null, null, metadata, new ComponentMethods() );
+        ComponentContainer container = newContainer();
+        SingleComponentManager icm = new SingleComponentManager( container, new ComponentMethods() );
         ActivateMethod am = new ActivateMethod( methodName, methodName != null, obj.getClass(), true, false );
         am.invoke( obj, new ActivateMethod.ActivatorParameter( m_ctx, -1 ), null, icm );
         assertNull( get( am, "m_method" ) );

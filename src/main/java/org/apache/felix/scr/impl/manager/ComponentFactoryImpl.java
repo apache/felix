@@ -31,7 +31,7 @@ import org.apache.felix.scr.Component;
 import org.apache.felix.scr.component.ExtFactoryComponentInstance;
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.TargetedPID;
-import org.apache.felix.scr.impl.config.ComponentHolder;
+import org.apache.felix.scr.impl.config.ComponentContainer;
 import org.apache.felix.scr.impl.config.ComponentManager;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
@@ -58,7 +58,7 @@ import org.osgi.service.log.LogService;
  * not all dependencies are present and the created components also persist whether or 
  * not the dependencies are present to allow the component instance to exist.
  */
-public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> implements ComponentFactory, ComponentHolder<S>
+public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> implements ComponentFactory, ComponentContainer<S>
 {
 
     /**
@@ -94,9 +94,9 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     
     protected TargetedPID m_targetedPID;
 
-    public ComponentFactoryImpl( BundleComponentActivator activator, ComponentMetadata metadata )
+    public ComponentFactoryImpl( ComponentContainer container )
     {
-        super( activator, metadata, new ComponentMethods() );
+        super( container, new ComponentMethods() );
         m_componentInstances = new IdentityHashMap<SingleComponentManager<S>, SingleComponentManager<S>>();
         m_configuration = new Hashtable<String, Object>();
     }
@@ -389,7 +389,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
             {
                 log( LogService.LOG_DEBUG,
                         "ImmediateComponentHolder out of order configuration updated for pid {0} with existing count {1}, new count {2}",
-                        new Object[] { getConfigurationPid(), m_changeCount, changeCount }, null );
+                        new Object[] { getComponentMetadata().getConfigurationPid(), m_changeCount, changeCount }, null );
                 return false;
             }
             m_changeCount = changeCount;
@@ -535,7 +535,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
      */
     private SingleComponentManager<S> createComponentManager()
     {
-        return new SingleComponentManager<S>( getActivator(), this, getComponentMetadata(), getComponentMethods(), !getComponentMetadata().isPersistentFactoryComponent() );
+        return new SingleComponentManager<S>( this, getComponentMethods(), !getComponentMetadata().isPersistentFactoryComponent() );
     }
 
 

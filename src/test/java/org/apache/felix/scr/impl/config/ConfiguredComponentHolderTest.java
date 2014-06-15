@@ -28,7 +28,6 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
-import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.TargetedPID;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.manager.SingleComponentManager;
@@ -239,7 +238,7 @@ public class ConfiguredComponentHolderTest extends TestCase
 
         protected SingleComponentManager createComponentManager()
         {
-            return new MockImmediateComponentManager( getActivator(), this, getComponentMetadata() );
+            return new MockImmediateComponentManager( this );
         }
     }
 
@@ -249,9 +248,9 @@ public class ConfiguredComponentHolderTest extends TestCase
         private Map<String, Object> m_configuration;
 
 
-        public MockImmediateComponentManager( BundleComponentActivator activator, ComponentHolder componentHolder, ComponentMetadata metadata )
+        public MockImmediateComponentManager( ComponentContainer container )
         {
-            super( activator, componentHolder, metadata, new ComponentMethods() );
+            super( container, new ComponentMethods() );
         }
 
 
