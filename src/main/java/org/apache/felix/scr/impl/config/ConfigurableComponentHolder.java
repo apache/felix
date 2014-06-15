@@ -39,6 +39,7 @@ import org.apache.felix.scr.impl.manager.SingleComponentManager;
 import org.apache.felix.scr.impl.manager.ServiceFactoryComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata.Scope;
+import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.log.LogService;
 
@@ -417,18 +418,39 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
     }
 
     private Map<String, Object> mergeProperties(String servicePid) {
-        Map<String, Object> properties;
-        properties = new HashMap<String, Object>(m_componentMetadata.getProperties());
+        Map<String, Object> properties = new HashMap<String, Object>(m_componentMetadata.getProperties());
+        List<String> pids = null;
+        boolean isDS13 = m_componentMetadata.isDS13();
+        if (isDS13)
+        {
+            pids = new ArrayList<String>();
+            if (properties.get(Constants.SERVICE_PID) instanceof String)
+            {
+                pids.add((String) properties.get(Constants.SERVICE_PID));
+            }
+        }
         for (int i = 0; i < m_configurations.length; i++)
         {
             if ( m_factoryPidIndex != null && i == m_factoryPidIndex)
             {
                 copyTo(properties, m_factoryConfigurations.get(servicePid));
+                if (isDS13)
+                {
+                    pids.add((String) m_factoryConfigurations.get(servicePid).get(Constants.SERVICE_PID));
+                }
             }
             else if ( m_configurations[i] != null )
             {
                 copyTo(properties, m_configurations[i]);
+                if (isDS13)
+                {
+                    pids.add((String) m_configurations[i].get(Constants.SERVICE_PID));
+                }
             }
+        }
+        if (isDS13 && !pids.isEmpty())
+        {
+            properties.put(Constants.SERVICE_PID, pids);
         }
         return properties;
     }
