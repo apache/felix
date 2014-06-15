@@ -43,17 +43,21 @@ import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.inject.Inject;
 
+import junit.framework.Assert;
 import junit.framework.TestCase;
 
 import org.apache.felix.scr.Component;
@@ -76,6 +80,9 @@ import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.component.runtime.ServiceComponentRuntime;
+import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
+import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -88,9 +95,9 @@ public abstract class ComponentTestBase
 
     protected Bundle bundle;
 
-    protected ServiceTracker scrTracker;
+    protected ServiceTracker<ServiceComponentRuntime, ServiceComponentRuntime> scrTracker;
 
-    protected ServiceTracker configAdminTracker;
+    protected ServiceTracker<ConfigurationAdmin, ConfigurationAdmin> configAdminTracker;
 
     // the name of the system property providing the bundle file to be installed and tested
     protected static final String BUNDLE_JAR_SYS_PROP = "project.bundle.file";
@@ -184,9 +191,9 @@ public abstract class ComponentTestBase
         bundleContext.addFrameworkListener( log );
         bundleContext.registerService( LogService.class.getName(), log, null );
         
-        scrTracker = new ServiceTracker( bundleContext, "org.apache.felix.scr.ScrService", null );
+        scrTracker = new ServiceTracker<ServiceComponentRuntime, ServiceComponentRuntime>( bundleContext, ServiceComponentRuntime.class, null );
         scrTracker.open();
-        configAdminTracker = new ServiceTracker( bundleContext, "org.osgi.service.cm.ConfigurationAdmin", null );
+        configAdminTracker = new ServiceTracker<ConfigurationAdmin, ConfigurationAdmin>( bundleContext, ConfigurationAdmin.class, null );
         configAdminTracker.open();
 
         bundle = installBundle( descriptorFile, COMPONENT_PACKAGE );
@@ -217,41 +224,204 @@ public abstract class ComponentTestBase
     }
 
 
-    protected Component[] getComponents()
+    protected Collection<ComponentDescriptionDTO> getComponentDescriptions()
     {
-        ScrService scr = ( ScrService ) scrTracker.getService();
+        ServiceComponentRuntime scr = scrTracker.getService();
+        if ( scr == null )
+        {
+        	TestCase.fail("no ServiceComponentRuntime");
+        }
+            return scr.getComponentDescriptionDTOs();
+    }
+
+
+    protected ComponentDescriptionDTO findComponentDescriptorByName( String name )
+    {
+        ServiceComponentRuntime scr = scrTracker.getService();
+        if ( scr == null )
+        {
+        	TestCase.fail("no ServiceComponentRuntime");
+        }
+            return scr.getComponentDescriptionDTO(bundle, name);
+    }
+
+
+    protected Collection<ComponentConfigurationDTO> findComponentConfigurationsByName( Bundle b, String name, int expected )
+    {
+        ServiceComponentRuntime scr = scrTracker.getService();
+        if ( scr == null )
+        {
+        	TestCase.fail("no ServiceComponentRuntime");
+        }
+        	ComponentDescriptionDTO cd = scr.getComponentDescriptionDTO(bundle, name);
+        	Collection<ComponentConfigurationDTO> ccs = scr.getComponentConfigurationDTOs(cd);
+        	if (expected != -1)
+        	{
+        		for (ComponentConfigurationDTO cc: ccs)
+        		{
+        	    	Assert.assertEquals( "for ComponentConfiguration name: " + cc.description.name + " properties" + cc.properties + "Expected state " + STATES.get(expected) + " but was " + STATES.get(cc.state), expected, cc.state);        			
+        		}
+        	}
+        	return ccs;
+    }
+    
+    protected Collection<ComponentConfigurationDTO> findComponentConfigurationsByName( String name, int expected )
+    {
+    	return findComponentConfigurationsByName(bundle, name, expected);
+    }
+
+    protected ComponentConfigurationDTO findComponentConfigurationByName( Bundle b, String name, int expected )
+    {
+    	Collection<ComponentConfigurationDTO> ccs = findComponentConfigurationsByName( b, name, expected);
+    	Assert.assertEquals(1, ccs.size());
+    	return ccs.iterator().next();
+    }
+
+    protected ComponentConfigurationDTO findComponentConfigurationByName( String name, int expected )
+    {
+    	return findComponentConfigurationByName( bundle, name, expected );
+    }
+//    protected ComponentConfigurationDTO checkState( String name, int expected)
+//    {
+//    	ComponentConfigurationDTO cc = findComponentConfigurationByName( name, expected);
+//    	return cc;
+//    }
+    
+    static final Map<Integer, String> STATES = new HashMap<Integer, String>();
+    
+    static {
+    	STATES.put(ComponentConfigurationDTO.UNSATISFIED, "Unsatisfied (" + ComponentConfigurationDTO.UNSATISFIED + ")" );
+    	STATES.put(ComponentConfigurationDTO.SATISFIED, "Satisified (" + ComponentConfigurationDTO.SATISFIED + ")" );
+    	STATES.put(ComponentConfigurationDTO.ACTIVE, "Active (" + ComponentConfigurationDTO.ACTIVE + ")" );
+    }
+    
+    protected ComponentConfigurationDTO getDisabledConfigurationAndEnable( Bundle b, String name, int initialState )
+    {
+    	int count = 1;
+        Collection<ComponentConfigurationDTO> ccs = getConfigurationsDisabledThenEnable(
+				b, name, count, initialState);
+		ComponentConfigurationDTO cc = ccs.iterator().next();
+    	return cc;
+    }
+    
+    protected ComponentConfigurationDTO getDisabledConfigurationAndEnable( String name, int initialState )
+    {
+    	return getDisabledConfigurationAndEnable( bundle, name, initialState );
+    }
+
+    protected Collection<ComponentConfigurationDTO> getConfigurationsDisabledThenEnable( Bundle b, String name, int count, int initialState) 
+    {
+		ServiceComponentRuntime scr = scrTracker.getService();
+        if ( scr == null )
+        {
+        	TestCase.fail("no ServiceComponentRuntime");
+        }
+    	ComponentDescriptionDTO cd = scr.getComponentDescriptionDTO(b, name);
+    	Assert.assertFalse("Expected component disabled", scr.isComponentEnabled(cd));
+    	scr.enableComponent(cd);
+    	delay();//??
+    	Assert.assertTrue("Expected component enabled", scr.isComponentEnabled(cd));
+    	
+    	Collection<ComponentConfigurationDTO> ccs = scr.getComponentConfigurationDTOs(cd);
+    	Assert.assertEquals(count, ccs.size());
+    	for (ComponentConfigurationDTO cc: ccs) {
+			Assert.assertEquals("Expected state " + STATES.get(initialState)
+					+ " but was " + STATES.get(cc.state), initialState,
+					cc.state);
+		}
+		return ccs;
+	}
+    
+    protected Collection<ComponentConfigurationDTO> getConfigurationsDisabledThenEnable( String name, int count, int initialState) 
+    {
+    	return getConfigurationsDisabledThenEnable(bundle, name, count, initialState);
+    }
+    
+    protected ComponentDescriptionDTO checkConfigurationCount( Bundle b, String name, int count, int expectedState )
+    {		
+    	ServiceComponentRuntime scr = scrTracker.getService();
+    	if ( scr == null )
+    	{
+    		TestCase.fail("no ServiceComponentRuntime");
+    	}
+    	ComponentDescriptionDTO cd = scr.getComponentDescriptionDTO(b, name);
+    	Assert.assertTrue("Expected component enabled", scr.isComponentEnabled(cd));
+
+    	Collection<ComponentConfigurationDTO> ccs = scr.getComponentConfigurationDTOs(cd);
+    	Assert.assertEquals(count, ccs.size());
+    	if (expectedState != -1)
+    	{
+    		for (ComponentConfigurationDTO cc: ccs)
+    		{
+    			Assert.assertEquals("Expected state " + STATES.get(expectedState)
+    					+ " but was " + STATES.get(cc.state), expectedState,
+    					cc.state);
+    		}
+    	}
+    	return cd;
+    }
+    
+    protected ComponentDescriptionDTO checkConfigurationCount( String name, int count, int expectedState )
+    {	
+    	return checkConfigurationCount(bundle, name, count, expectedState);
+    }
+    
+    protected <S> S getServiceFromConfiguration( ComponentConfigurationDTO dto, Class<S> clazz )
+    {
+    	long id = dto.id;
+    	String filter = "(component.id=" + id + ")";
+    	Collection<ServiceReference<S>> srs;
+		try {
+			srs = bundleContext.getServiceReferences(clazz, filter);
+	    	Assert.assertEquals(1, srs.size());
+	    	ServiceReference<S> sr = srs.iterator().next();
+	    	S s = bundleContext.getService(sr);
+	    	Assert.assertNotNull(s);
+	    	return s;
+		} catch (InvalidSyntaxException e) {
+			TestCase.fail(e.getMessage());
+			return null;//unreachable in fact
+		}
+    }
+    
+    protected void enableAndCheck( ComponentDescriptionDTO cd )
+    {
+        ServiceComponentRuntime scr = scrTracker.getService();
         if ( scr != null )
         {
-            return scr.getComponents();
+        	scr.enableComponent(cd);
+        	Assert.assertTrue("Expected component enabled", scr.isComponentEnabled(cd));
         }
-
-        return null;
-    }
-
-
-    protected Component findComponentByName( String name )
-    {
-        Component[] components = findComponentsByName( name );
-        if ( components != null && components.length > 0 )
+        else 
         {
-            return components[0];
+        	throw new NullPointerException("no ServiceComponentRuntime");
         }
-
-        return null;
+    	
     }
 
-
-    protected Component[] findComponentsByName( String name )
+    protected void disableAndCheck( ComponentConfigurationDTO cc )
     {
-        ScrService scr = ( ScrService ) scrTracker.getService();
+    	ComponentDescriptionDTO cd = cc.description;
+        disableAndCheck(cd);
+    }
+
+	protected void disableAndCheck(ComponentDescriptionDTO cd) {
+		ServiceComponentRuntime scr = scrTracker.getService();
         if ( scr != null )
         {
-            return scr.getComponents( name );
+        	scr.disableComponent(cd);
+        	Assert.assertFalse("Expected component disabled", scr.isComponentEnabled(cd));
         }
+        else 
+        {
+        	throw new NullPointerException("no ServiceComponentRuntime");
+        }
+	}
 
-        return null;
-    }
-
+	protected void disableAndCheck(String name) {
+		ComponentDescriptionDTO cd = findComponentDescriptorByName(name);
+		disableAndCheck(cd);		
+	}
 
     protected static void delay()
     {
@@ -469,126 +639,126 @@ public abstract class ComponentTestBase
 
     void info( PrintStream out )
     {
-        Component[] components = getComponents();
-        if ( components == null )
-        {
-            return;
-        }
-
-        for ( int j = 0; j < components.length; j++ )
-        {
-            Component component = components[j];
-            out.print( "ID: " );
-            out.println( component.getId() );
-            out.print( "Name: " );
-            out.println( component.getName() );
-            out.print( "Bundle: " );
-            out.println( component.getBundle().getSymbolicName() + " (" + component.getBundle().getBundleId() + ")" );
-            out.print( "State: " );
-            out.println( toStateString( component.getState() ) );
-            out.print( "Default State: " );
-            out.println( component.isDefaultEnabled() ? "enabled" : "disabled" );
-            out.print( "Activation: " );
-            out.println( component.isImmediate() ? "immediate" : "delayed" );
-
-            // DS 1.1 new features
-            out.print( "Configuration Policy: " );
-            out.println( component.getConfigurationPolicy() );
-            out.print( "Activate Method: " );
-            out.print( component.getActivate() );
-            if ( component.isActivateDeclared() )
-            {
-                out.print( " (declared in the descriptor)" );
-            }
-            out.println();
-            out.print( "Deactivate Method: " );
-            out.print( component.getDeactivate() );
-            if ( component.isDeactivateDeclared() )
-            {
-                out.print( " (declared in the descriptor)" );
-            }
-            out.println();
-            out.print( "Modified Method: " );
-            if ( component.getModified() != null )
-            {
-                out.print( component.getModified() );
-            }
-            else
-            {
-                out.print( "-" );
-            }
-            out.println();
-
-            if ( component.getFactory() != null )
-            {
-                out.print( "Factory: " );
-                out.println( component.getFactory() );
-            }
-
-            String[] services = component.getServices();
-            if ( services != null )
-            {
-                out.print( "Services: " );
-                out.println( services[0] );
-                for ( int i = 1; i < services.length; i++ )
-                {
-                    out.print( "          " );
-                    out.println( services[i] );
-                }
-                out.print( "Service Scope: " );
-                out.println( component.getServiceScope() );
-            }
-
-            Reference[] refs = component.getReferences();
-            if ( refs != null )
-            {
-                for ( int i = 0; i < refs.length; i++ )
-                {
-                    out.print( "Reference: " );
-                    out.println( refs[i].getName() );
-                    out.print( "    Satisfied: " );
-                    out.println( refs[i].isSatisfied() ? "satisfied" : "unsatisfied" );
-                    out.print( "    Service Name: " );
-                    out.println( refs[i].getServiceName() );
-                    if ( refs[i].getTarget() != null )
-                    {
-                        out.print( "    Target Filter: " );
-                        out.println( refs[i].getTarget() );
-                    }
-                    out.print( "    Multiple: " );
-                    out.println( refs[i].isMultiple() ? "multiple" : "single" );
-                    out.print( "    Optional: " );
-                    out.println( refs[i].isOptional() ? "optional" : "mandatory" );
-                    out.print( "    Policy: " );
-                    out.println( refs[i].isStatic() ? "static" : "dynamic" );
-                    out.print( "    Policy option: " );
-                    out.println( refs[i].isReluctant() ? "reluctant" : "greedy" );
-                }
-            }
-
-            Dictionary props = component.getProperties();
-            if ( props != null )
-            {
-                out.println( "Properties:" );
-                TreeSet keys = new TreeSet( Collections.list( props.keys() ) );
-                for ( Iterator ki = keys.iterator(); ki.hasNext(); )
-                {
-                    Object key = ki.next();
-                    out.print( "    " );
-                    out.print( key );
-                    out.print( " = " );
-
-                    Object prop = props.get( key );
-                    if ( prop.getClass().isArray() )
-                    {
-                        prop = Arrays.asList( ( Object[] ) prop );
-                    }
-                    out.print( prop );
-
-                    out.println();
-                }
-            }
-        }
+//        Component[] components = getComponentDescriptions();
+//        if ( components == null )
+//        {
+//            return;
+//        }
+//
+//        for ( int j = 0; j < components.length; j++ )
+//        {
+//            Component component = components[j];
+//            out.print( "ID: " );
+//            out.println( component.getId() );
+//            out.print( "Name: " );
+//            out.println( component.getName() );
+//            out.print( "Bundle: " );
+//            out.println( component.getBundle().getSymbolicName() + " (" + component.getBundle().getBundleId() + ")" );
+//            out.print( "State: " );
+//            out.println( toStateString( component.getState() ) );
+//            out.print( "Default State: " );
+//            out.println( component.isDefaultEnabled() ? "enabled" : "disabled" );
+//            out.print( "Activation: " );
+//            out.println( component.isImmediate() ? "immediate" : "delayed" );
+//
+//            // DS 1.1 new features
+//            out.print( "Configuration Policy: " );
+//            out.println( component.getConfigurationPolicy() );
+//            out.print( "Activate Method: " );
+//            out.print( component.getActivate() );
+//            if ( component.isActivateDeclared() )
+//            {
+//                out.print( " (declared in the descriptor)" );
+//            }
+//            out.println();
+//            out.print( "Deactivate Method: " );
+//            out.print( component.getDeactivate() );
+//            if ( component.isDeactivateDeclared() )
+//            {
+//                out.print( " (declared in the descriptor)" );
+//            }
+//            out.println();
+//            out.print( "Modified Method: " );
+//            if ( component.getModified() != null )
+//            {
+//                out.print( component.getModified() );
+//            }
+//            else
+//            {
+//                out.print( "-" );
+//            }
+//            out.println();
+//
+//            if ( component.getFactory() != null )
+//            {
+//                out.print( "Factory: " );
+//                out.println( component.getFactory() );
+//            }
+//
+//            String[] services = component.getServices();
+//            if ( services != null )
+//            {
+//                out.print( "Services: " );
+//                out.println( services[0] );
+//                for ( int i = 1; i < services.length; i++ )
+//                {
+//                    out.print( "          " );
+//                    out.println( services[i] );
+//                }
+//                out.print( "Service Scope: " );
+//                out.println( component.getServiceScope() );
+//            }
+//
+//            Reference[] refs = component.getReferences();
+//            if ( refs != null )
+//            {
+//                for ( int i = 0; i < refs.length; i++ )
+//                {
+//                    out.print( "Reference: " );
+//                    out.println( refs[i].getName() );
+//                    out.print( "    Satisfied: " );
+//                    out.println( refs[i].isSatisfied() ? "satisfied" : "unsatisfied" );
+//                    out.print( "    Service Name: " );
+//                    out.println( refs[i].getServiceName() );
+//                    if ( refs[i].getTarget() != null )
+//                    {
+//                        out.print( "    Target Filter: " );
+//                        out.println( refs[i].getTarget() );
+//                    }
+//                    out.print( "    Multiple: " );
+//                    out.println( refs[i].isMultiple() ? "multiple" : "single" );
+//                    out.print( "    Optional: " );
+//                    out.println( refs[i].isOptional() ? "optional" : "mandatory" );
+//                    out.print( "    Policy: " );
+//                    out.println( refs[i].isStatic() ? "static" : "dynamic" );
+//                    out.print( "    Policy option: " );
+//                    out.println( refs[i].isReluctant() ? "reluctant" : "greedy" );
+//                }
+//            }
+//
+//            Dictionary props = component.getProperties();
+//            if ( props != null )
+//            {
+//                out.println( "Properties:" );
+//                TreeSet keys = new TreeSet( Collections.list( props.keys() ) );
+//                for ( Iterator ki = keys.iterator(); ki.hasNext(); )
+//                {
+//                    Object key = ki.next();
+//                    out.print( "    " );
+//                    out.print( key );
+//                    out.print( " = " );
+//
+//                    Object prop = props.get( key );
+//                    if ( prop.getClass().isArray() )
+//                    {
+//                        prop = Arrays.asList( ( Object[] ) prop );
+//                    }
+//                    out.print( prop );
+//
+//                    out.println();
+//                }
+//            }
+//        }
     }
     
     protected boolean isAtLeastR5() 

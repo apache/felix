@@ -18,13 +18,10 @@
  */
 package org.apache.felix.scr.integration;
 
-import javax.inject.Inject;
-
 import junit.framework.TestCase;
-import org.apache.felix.scr.Component;
+import org.apache.felix.scr.integration.components.Felix4350Component;
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.apache.felix.scr.integration.components.SimpleComponent2;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
@@ -32,7 +29,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.component.ComponentInstance;
+import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 
 /**
  * This test validates the FELIX-4350 issue.
@@ -81,40 +78,56 @@ public class Felix4350Test extends ComponentTestBase
 
     protected void doTest(String componentName)
     {
-        final Component main = findComponentByName(componentName);
-        TestCase.assertNotNull(main);
-
         ServiceRegistration dep1Reg = register(new SimpleComponent(), 0);
         ServiceRegistration dep2Reg = register(new SimpleComponent2(), 1000);
-        main.enable();
-        delay(300);
-        dep1Reg.unregister();
-        delay(2000);
+        
+        final ComponentDescriptionDTO main = findComponentDescriptorByName(componentName);
+        TestCase.assertNotNull(main);
 
-        ComponentInstance mainCompInst = main.getComponentInstance();
-        TestCase.assertNull(mainCompInst);
+        asyncEnable(main); //needs to be async
+        delay(300); //dep2 getService has not yet returned
+        dep1Reg.unregister();
+        delay(2000); //dep2 getService has returned
+
+//        ComponentInstance mainCompInst = main.getComponentInstance();
+//        TestCase.assertNull(mainCompInst);
+        Felix4350Component.check(0, 0, false);
 
         dep1Reg = register(new SimpleComponent(), 0);
         delay(300);
 
-        mainCompInst = main.getComponentInstance();
-        TestCase.assertNotNull(mainCompInst);
+//        mainCompInst = main.getComponentInstance();
+//        TestCase.assertNotNull(mainCompInst);
+        Felix4350Component.check(1, 0, true);
 
-        main.disable();
+        disableAndCheck(main);  //does not need to be asyncv??
         dep1Reg.unregister();
         dep2Reg.unregister();
 
+        Felix4350Component.check(1, 1, false);
         dep1Reg = register(new SimpleComponent(), 0);
         dep2Reg = register(new SimpleComponent2(), 1000);
-        main.enable();
+        Felix4350Component.check(1, 1, false);
+        
+        asyncEnable(main); //needs to be async
         delay(300);
         dep1Reg.unregister();
         delay(100);
         dep1Reg = register(new SimpleComponent(), 0);
         delay(2000);
 
-        mainCompInst = main.getComponentInstance();
-        TestCase.assertNotNull(mainCompInst);
+//        mainCompInst = main.getComponentInstance();
+//        TestCase.assertNotNull(mainCompInst);
+        Felix4350Component.check(2, 1, true); //n.b. counts are cumulative
+    }
+    
+    protected void asyncEnable( final ComponentDescriptionDTO cd )
+    {
+    	new Thread( new Runnable() {
+
+			public void run() {
+				enableAndCheck( cd );
+			}}).start();
     }
 
     protected ServiceRegistration register(final Object service, final int delay) {

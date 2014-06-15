@@ -22,16 +22,12 @@ import static org.junit.Assert.*;
 
 import java.util.Hashtable;
 
-import junit.framework.TestCase;
-
-import org.apache.felix.scr.Component;
-import org.apache.felix.scr.integration.components.SimpleServiceImpl;
-import org.apache.felix.scr.integration.components.deadlock.Consumer;
 import org.apache.felix.scr.integration.components.deadlock.TestComponent;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.service.cm.Configuration;
+import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
 @RunWith(JUnit4TestRunner.class)
 public class LocateTest extends ComponentTestBase
@@ -50,9 +46,7 @@ public class LocateTest extends ComponentTestBase
     {
         bundleContext.registerService( Object.class, new Object(), null );
         
-        final Component consumerComponent = findComponentByName( "AsyncLocate" );
-        TestCase.assertNotNull( consumerComponent );
-        TestCase.assertEquals( Component.STATE_ACTIVE, consumerComponent.getState() );
+        findComponentConfigurationByName( "AsyncLocate", ComponentConfigurationDTO.ACTIVE );
         
         final String pid = "SimpleComponent";
         Configuration config = getConfigurationAdmin().getConfiguration( pid, null );
@@ -61,16 +55,14 @@ public class LocateTest extends ComponentTestBase
         config.update(props);
         delay();
         
-        final Component component = findComponentByName( pid );
-        TestCase.assertNotNull( component );
         //when deadlock is present the state is actually unsatisfied.
-        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+        ComponentConfigurationDTO cc = findComponentConfigurationByName( pid, ComponentConfigurationDTO.ACTIVE );
         delay();
         props.put( "target", "foo" );
         config.update(props);
         delay();
        
-        TestComponent tc = (TestComponent) component.getComponentInstance().getInstance();
+        TestComponent tc = getServiceFromConfiguration(cc, TestComponent.class);
         assertTrue(tc.isSuccess1());
         assertTrue(tc.isSuccess2());
     }

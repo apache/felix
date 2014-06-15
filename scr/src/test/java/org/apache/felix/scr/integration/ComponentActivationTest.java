@@ -21,14 +21,13 @@ package org.apache.felix.scr.integration;
 
 import junit.framework.TestCase;
 
-import org.apache.felix.scr.Component;
 import org.apache.felix.scr.integration.components.ActivatorComponent;
-import org.apache.felix.scr.integration.components.SimpleService;
 import org.apache.felix.scr.integration.components.SimpleServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
 
 @RunWith(JUnit4TestRunner.class)
@@ -50,47 +49,21 @@ public class ComponentActivationTest extends ComponentTestBase
     {
         final String componentname = "ActivatorComponent.no.decl";
 
-        final Component component = findComponentByName( componentname );
+        ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname, ComponentConfigurationDTO.ACTIVE);
 
-        TestCase.assertNotNull( component );
-        TestCase.assertFalse( component.isDefaultEnabled() );
-
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
-
-        component.enable();
-        delay();
-
-        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
-
-        component.disable();
-
-        delay();
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+        disableAndCheck( cc );
     }
 
 
-//    @Test  I think this test is wrong.  Failure to activate does not mean that the state changes from Registered.
+    @Test //Changed to expect SATISFIED rather than unsatisfied
     public void test_activate_missing()
     {
         final String componentname = "ActivatorComponent.activate.missing";
 
-        final Component component = findComponentByName( componentname );
+        // activate must fail, so state remains SATISFIED
+        ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname, ComponentConfigurationDTO.SATISFIED);
 
-        TestCase.assertNotNull( component );
-        TestCase.assertFalse( component.isDefaultEnabled() );
-
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
-
-        component.enable();
-        delay();
-
-        // activate must fail
-        TestCase.assertEquals( Component.STATE_UNSATISFIED, component.getState() );
-
-        component.disable();
-
-        delay();
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+        disableAndCheck( cc );
     }
 
 
@@ -99,22 +72,9 @@ public class ComponentActivationTest extends ComponentTestBase
     {
         final String componentname = "ActivatorComponent.deactivate.missing";
 
-        final Component component = findComponentByName( componentname );
+        ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname, ComponentConfigurationDTO.ACTIVE);
 
-        TestCase.assertNotNull( component );
-        TestCase.assertFalse( component.isDefaultEnabled() );
-
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
-
-        component.enable();
-        delay();
-
-        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
-
-        component.disable();
-
-        delay();
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+        disableAndCheck( cc );
     }
 
 
@@ -123,47 +83,21 @@ public class ComponentActivationTest extends ComponentTestBase
     {
         final String componentname = "ActivatorComponent.decl";
 
-        final Component component = findComponentByName( componentname );
+        ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname, ComponentConfigurationDTO.ACTIVE);
 
-        TestCase.assertNotNull( component );
-        TestCase.assertFalse( component.isDefaultEnabled() );
-
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
-
-        component.enable();
-        delay();
-
-        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
-
-        component.disable();
-
-        delay();
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+        disableAndCheck( cc );
     }
 
 
-//    @Test  Failure to activate does not mean the state should change to unsatisfied.
+    @Test // Failure to activate does not mean the state should change to unsatisfied.
     public void test_activate_fail()
     {
         final String componentname = "ActivatorComponent.activate.fail";
 
-        final Component component = findComponentByName( componentname );
+        // activate must fail, so state remains SATISFIED
+        ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname, ComponentConfigurationDTO.SATISFIED);
 
-        TestCase.assertNotNull( component );
-        TestCase.assertFalse( component.isDefaultEnabled() );
-
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
-
-        component.enable();
-        delay();
-
-        // activate has failed
-        TestCase.assertEquals( Component.STATE_UNSATISFIED, component.getState() );
-
-        component.disable();
-
-        delay();
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+        disableAndCheck( cc );
     }
 
 
@@ -172,22 +106,9 @@ public class ComponentActivationTest extends ComponentTestBase
     {
         final String componentname = "ActivatorComponent.deactivate.fail";
 
-        final Component component = findComponentByName( componentname );
+        ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname, ComponentConfigurationDTO.ACTIVE);
 
-        TestCase.assertNotNull( component );
-        TestCase.assertFalse( component.isDefaultEnabled() );
-
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
-
-        component.enable();
-        delay();
-
-        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
-
-        component.disable();
-
-        delay();
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+        disableAndCheck( cc );
     }
 
 
@@ -196,25 +117,14 @@ public class ComponentActivationTest extends ComponentTestBase
     {
         final String componentname = "ActivatorComponent.activate.with.bind";
 
-        final Component component = findComponentByName( componentname );
+        ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname, ComponentConfigurationDTO.ACTIVE);
 
-        TestCase.assertNotNull( component );
-        TestCase.assertFalse( component.isDefaultEnabled() );
-
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
-
-        component.enable();
-        delay();
-
-        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
-
-        ActivatorComponent ac = (ActivatorComponent) component.getComponentInstance().getInstance();
+        ActivatorComponent ac = ActivatorComponent.getInstance();
         TestCase.assertNotNull( ac.getSimpleService() );
-
-        component.disable();
-
-        delay();
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+        
+        disableAndCheck( cc );
+        
+        TestCase.assertNull( ac.getSimpleService() );
     }
 
 
@@ -223,28 +133,13 @@ public class ComponentActivationTest extends ComponentTestBase
     {
         final String componentname = "ActivatorComponent.activate.delayed.with.bind";
 
-        final Component component = findComponentByName( componentname );
+        ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname, ComponentConfigurationDTO.SATISFIED);
 
-        TestCase.assertNotNull( component );
-        TestCase.assertFalse( component.isDefaultEnabled() );
+        getServiceFromConfiguration(cc, ActivatorComponent.class);
 
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+        findComponentConfigurationByName(componentname, ComponentConfigurationDTO.ACTIVE);
 
-        component.enable();
-        delay();
-
-        TestCase.assertEquals( Component.STATE_REGISTERED, component.getState() );
-
-        ServiceReference<ActivatorComponent> ref = bundleContext.getServiceReference( ActivatorComponent.class );
-        ActivatorComponent ac = bundleContext.getService( ref );
-        TestCase.assertNotNull( ac.getSimpleService() );
-
-        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
-
-        component.disable();
-
-        delay();
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+        disableAndCheck( cc );
     }
     
     @Test
@@ -252,28 +147,13 @@ public class ComponentActivationTest extends ComponentTestBase
     {
         final String componentname = "ActivatorComponent.activate.service.factory.with.bind";
 
-        final Component component = findComponentByName( componentname );
+        ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname, ComponentConfigurationDTO.SATISFIED);
 
-        TestCase.assertNotNull( component );
-        TestCase.assertFalse( component.isDefaultEnabled() );
+        getServiceFromConfiguration(cc, ActivatorComponent.class);
 
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+        findComponentConfigurationByName(componentname, ComponentConfigurationDTO.ACTIVE);
 
-        component.enable();
-        delay();
-
-        TestCase.assertEquals( Component.STATE_REGISTERED, component.getState() );
-
-        ServiceReference<ActivatorComponent> ref = bundleContext.getServiceReference( ActivatorComponent.class );
-        ActivatorComponent ac = bundleContext.getService( ref );
-        TestCase.assertNotNull( ac.getSimpleService() );
-
-        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
-
-        component.disable();
-
-        delay();
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+        disableAndCheck( cc );
     }
     
     @Test
@@ -319,26 +199,17 @@ public class ComponentActivationTest extends ComponentTestBase
 
     private void testRequiredDependency(final String componentname)
     {
-        final Component component = findComponentByName( componentname );
+        ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname, ComponentConfigurationDTO.UNSATISFIED);
 
-        TestCase.assertNotNull( component );
-        TestCase.assertFalse( component.isDefaultEnabled() );
-
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
-
-        component.enable();
-        delay();
-
-        TestCase.assertEquals( Component.STATE_UNSATISFIED, component.getState() );
-        
         SimpleServiceImpl ss = SimpleServiceImpl.create( bundleContext, "foo" );
         
-        TestCase.assertEquals( Component.STATE_REGISTERED, component.getState() );
+        findComponentConfigurationByName(componentname, ComponentConfigurationDTO.SATISFIED);
 
         ServiceReference<ActivatorComponent> ref = bundleContext.getServiceReference( ActivatorComponent.class );
         
         ss.drop();
-        TestCase.assertEquals( Component.STATE_UNSATISFIED, component.getState() );
+        findComponentConfigurationByName(componentname, ComponentConfigurationDTO.UNSATISFIED);
+
         
         TestCase.assertNull(bundleContext.getServiceReference( ActivatorComponent.class ));
         ss = SimpleServiceImpl.create( bundleContext, "foo" );
@@ -346,12 +217,10 @@ public class ComponentActivationTest extends ComponentTestBase
         ActivatorComponent ac = bundleContext.getService( ref );
         TestCase.assertNotNull( ac.getSimpleService() );
 
-        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+        findComponentConfigurationByName(componentname, ComponentConfigurationDTO.ACTIVE);
 
-        component.disable();
 
-        delay();
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+        disableAndCheck( cc );
     }
 
 }

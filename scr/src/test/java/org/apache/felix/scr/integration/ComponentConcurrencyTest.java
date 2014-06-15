@@ -16,11 +16,11 @@ import javax.inject.Inject;
 
 import junit.framework.TestCase;
 
-import org.apache.felix.scr.Component;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.framework.BundleContext;
+import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
 @RunWith(JUnit4TestRunner.class)
 public class ComponentConcurrencyTest extends ComponentTestBase
@@ -52,15 +52,8 @@ public class ComponentConcurrencyTest extends ComponentTestBase
     {
 
 
-        final Component AFactory =
-                findComponentByName( "org.apache.felix.scr.integration.components.concurrency.AFactory" );
-        TestCase.assertNotNull( AFactory );
-        AFactory.enable();
-
-        final Component CFactory =
-                findComponentByName( "org.apache.felix.scr.integration.components.concurrency.CFactory" );
-        TestCase.assertNotNull( CFactory );
-        CFactory.enable();
+    	ComponentConfigurationDTO ccA = getDisabledConfigurationAndEnable( "org.apache.felix.scr.integration.components.concurrency.AFactory", ComponentConfigurationDTO.ACTIVE );
+    	ComponentConfigurationDTO ccC = getDisabledConfigurationAndEnable( "org.apache.felix.scr.integration.components.concurrency.CFactory", ComponentConfigurationDTO.ACTIVE );
 
         delay( 30 );
         for ( Iterator it = log.foundWarnings().iterator(); it.hasNext();)

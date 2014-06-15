@@ -33,6 +33,7 @@ import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
 
 @RunWith(JUnit4TestRunner.class)
@@ -52,9 +53,7 @@ public class MutablePropertiesTest extends ComponentTestBase
     public void test_mutable_properties() throws InvalidSyntaxException
     {
         String componentName = "components.mutable.properties";
-        final Component component = findComponentByName( componentName );
-        TestCase.assertNotNull( component );
-        TestCase.assertEquals( Component.STATE_REGISTERED, component.getState() );
+        findComponentConfigurationByName(componentName, ComponentConfigurationDTO.SATISFIED);
 
         ServiceReference[] serviceReferences = bundleContext.getServiceReferences( MutatingService.class.getName(), "(service.pid=" + componentName + ")" );
         TestCase.assertEquals( 1, serviceReferences.length );
@@ -64,7 +63,7 @@ public class MutablePropertiesTest extends ComponentTestBase
         //update theValue
         MutatingService s = ( MutatingService ) bundleContext.getService(serviceReference );
         Assert.assertNotNull(s);
-        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+        findComponentConfigurationByName(componentName, ComponentConfigurationDTO.ACTIVE);
         Dictionary d = new Hashtable(Collections.singletonMap( PROP_NAME, "anotherValue" ));
         s.updateProperties(d);
         checkProperties(serviceReference, 5, "anotherValue", "p1", "p2");
@@ -86,9 +85,7 @@ public class MutablePropertiesTest extends ComponentTestBase
     public void test_mutable_properties_returned() throws InvalidSyntaxException
     {
         String componentName = "components.mutable.properties.return";
-        final Component component = findComponentByName( componentName );
-        TestCase.assertNotNull( component );
-        TestCase.assertEquals( Component.STATE_REGISTERED, component.getState() );
+        findComponentConfigurationByName(componentName, ComponentConfigurationDTO.SATISFIED);
 
         ServiceReference[] serviceReferences = bundleContext.getServiceReferences( MutatingService.class.getName(), "(service.pid=" + componentName + ")" );
         TestCase.assertEquals( 1, serviceReferences.length );
@@ -99,7 +96,7 @@ public class MutablePropertiesTest extends ComponentTestBase
         MutatingService s = ( MutatingService ) bundleContext.getService( serviceReference );
         Assert.assertNotNull(s);
         checkProperties( serviceReference, 8, "anotherValue1", "p1", "p2" );
-        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+        findComponentConfigurationByName(componentName, ComponentConfigurationDTO.ACTIVE);
         Dictionary d = new Hashtable(Collections.singletonMap( PROP_NAME, "anotherValue" ));
         s.updateProperties(d);
         checkProperties(serviceReference, 5, "anotherValue", "p1", "p2");
@@ -122,9 +119,7 @@ public class MutablePropertiesTest extends ComponentTestBase
     public void test_mutable_properties_returned_public() throws InvalidSyntaxException
     {
         String componentName = "components.mutable.properties.return.public";
-        final Component component = findComponentByName( componentName );
-        TestCase.assertNotNull( component );
-        TestCase.assertEquals( Component.STATE_REGISTERED, component.getState() );
+        findComponentConfigurationByName(componentName, ComponentConfigurationDTO.SATISFIED);
 
         ServiceReference[] serviceReferences = bundleContext.getServiceReferences( MutatingService.class.getName(), "(service.pid=" + componentName + ")" );
         TestCase.assertEquals( 1, serviceReferences.length );
@@ -135,7 +130,7 @@ public class MutablePropertiesTest extends ComponentTestBase
         MutatingService s = ( MutatingService ) bundleContext.getService( serviceReference );
         Assert.assertNotNull(s);
         checkProperties( serviceReference, 8, "anotherValue1", "p1", "p2" );
-        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+        findComponentConfigurationByName(componentName, ComponentConfigurationDTO.ACTIVE);
         Dictionary d = new Hashtable(Collections.singletonMap( PROP_NAME, "anotherValue" ));
         s.updateProperties(d);
         checkProperties(serviceReference, 5, "anotherValue", "p1", "p2");
@@ -158,9 +153,7 @@ public class MutablePropertiesTest extends ComponentTestBase
     public void test_mutable_properties_bind_returned() throws InvalidSyntaxException
     {
         String componentName = "components.mutable.properties.bind";
-        final Component component = findComponentByName( componentName );
-        TestCase.assertNotNull( component );
-        TestCase.assertEquals( Component.STATE_REGISTERED, component.getState() );
+        findComponentConfigurationByName(componentName, ComponentConfigurationDTO.SATISFIED);
 
         ServiceReference[] serviceReferences = bundleContext.getServiceReferences( MutatingService.class.getName(), "(service.pid=" + componentName + ")" );
         TestCase.assertEquals( 1, serviceReferences.length );

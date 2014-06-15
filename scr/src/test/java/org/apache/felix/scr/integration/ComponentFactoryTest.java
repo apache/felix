@@ -62,7 +62,7 @@ public class ComponentFactoryTest extends ComponentTestBase
         final String componentname = "factory.component";
         final String componentfactory = "factory.component.factory";
 
-        final Component component = findComponentByName( componentname );
+        final Component component = findComponentDescriptorByName( componentname );
 
         TestCase.assertNotNull( component );
         TestCase.assertFalse( component.isDefaultEnabled() );
@@ -100,7 +100,7 @@ public class ComponentFactoryTest extends ComponentTestBase
         TestCase.assertTrue( instanceMap.containsValue( instanceManager ) );
 
         // check registered components
-        final Component[] allFactoryComponents = findComponentsByName( componentname );
+        final Component[] allFactoryComponents = findComponentConfigurationsByName( componentname, -1 );
         TestCase.assertNotNull( allFactoryComponents );
         TestCase.assertEquals( 2, allFactoryComponents.length );
         for ( int i = 0; i < allFactoryComponents.length; i++ )
@@ -137,7 +137,7 @@ public class ComponentFactoryTest extends ComponentTestBase
         final String componentname = "factory.component";
         final String componentfactory = "factory.component.factory";
 
-        final Component component = findComponentByName( componentname );
+        final Component component = findComponentDescriptorByName( componentname );
 
         TestCase.assertNotNull( component );
         TestCase.assertFalse( component.isDefaultEnabled() );
@@ -199,7 +199,7 @@ public class ComponentFactoryTest extends ComponentTestBase
         final String componentname = "factory.component";
         final String componentfactory = "factory.component.factory";
 
-        final Component component = findComponentByName( componentname );
+        final Component component = findComponentDescriptorByName( componentname );
 
         TestCase.assertNotNull( component );
         TestCase.assertFalse( component.isDefaultEnabled() );
@@ -251,7 +251,7 @@ public class ComponentFactoryTest extends ComponentTestBase
         deleteConfig( componentname );
         delay();
 
-        final Component component = findComponentByName( componentname );
+        final Component component = findComponentDescriptorByName( componentname );
 
         TestCase.assertNotNull( component );
         TestCase.assertFalse( component.isDefaultEnabled() );
@@ -334,7 +334,7 @@ public class ComponentFactoryTest extends ComponentTestBase
 
         SimpleServiceImpl.create( bundleContext, "ignored" ).setFilterProperty( "ignored" );
 
-        final Component component = findComponentByName( componentname );
+        final Component component = findComponentDescriptorByName( componentname );
 
         TestCase.assertNotNull( component );
         TestCase.assertFalse( component.isDefaultEnabled() );
@@ -383,7 +383,7 @@ public class ComponentFactoryTest extends ComponentTestBase
         TestCase.assertTrue( instanceMap.containsValue( instanceManager ) );
 
         // check registered components
-        final Component[] allFactoryComponents = findComponentsByName( componentname );
+        final Component[] allFactoryComponents = findComponentConfigurationsByName( componentname, -1 );
         TestCase.assertNotNull( allFactoryComponents );
         TestCase.assertEquals( 2, allFactoryComponents.length );
         for ( int i = 0; i < allFactoryComponents.length; i++ )
@@ -440,7 +440,7 @@ public class ComponentFactoryTest extends ComponentTestBase
         TestCase.assertTrue( SimpleComponent.INSTANCE.m_multiRef.contains( noMatch ) );
 
         // check registered components
-        final Component[] allFactoryComponents2 = findComponentsByName( componentname );
+        final Component[] allFactoryComponents2 = findComponentConfigurationsByName( componentname, -1 );
         TestCase.assertNotNull( allFactoryComponents2 );
         TestCase.assertEquals( 2, allFactoryComponents2.length );
         for ( int i = 0; i < allFactoryComponents2.length; i++ )
@@ -464,7 +464,7 @@ public class ComponentFactoryTest extends ComponentTestBase
         delay();
 
         // check registered components (ComponentFactory aint no longer)
-        final Component[] allFactoryComponents3 = findComponentsByName( componentname );
+        final Component[] allFactoryComponents3 = findComponentConfigurationsByName( componentname, -1 );
         TestCase.assertNotNull( allFactoryComponents3 );
         TestCase.assertEquals( 2, allFactoryComponents3.length );
         for ( int i = 0; i < allFactoryComponents3.length; i++ )
@@ -489,7 +489,7 @@ public class ComponentFactoryTest extends ComponentTestBase
         delay();
 
         // check registered components (ComponentFactory aint no longer)
-        final Component[] allFactoryComponents4 = findComponentsByName( componentname );
+        final Component[] allFactoryComponents4 = findComponentConfigurationsByName( componentname, -1 );
         TestCase.assertNotNull( allFactoryComponents4 );
         TestCase.assertEquals( 1, allFactoryComponents4.length );
         for ( int i = 0; i < allFactoryComponents4.length; i++ )
@@ -520,7 +520,7 @@ public class ComponentFactoryTest extends ComponentTestBase
     {
         //set up the component that refers to the service the factory will create.
         final String referringComponentName = "ComponentReferringToFactoryObject";
-        final Component referringComponent = findComponentByName( referringComponentName );
+        final Component referringComponent = findComponentDescriptorByName( referringComponentName );
         TestCase.assertNotNull( referringComponent );
         referringComponent.enable();
         delay();
@@ -532,7 +532,7 @@ public class ComponentFactoryTest extends ComponentTestBase
         final String componentname = "factory.component.referred";
         final String componentfactory = "factory.component.factory.referred";
 
-        final Component component = findComponentByName( componentname );
+        final Component component = findComponentDescriptorByName( componentname );
 
         TestCase.assertNotNull( component );
         TestCase.assertFalse( component.isDefaultEnabled() );
@@ -575,7 +575,7 @@ public class ComponentFactoryTest extends ComponentTestBase
     public void test_component_factory_with_target_filters() throws InvalidSyntaxException
     {
         final String componentfactory = "factory.component.reference.targetfilter";
-        final Component component = findComponentByName( componentfactory );
+        final Component component = findComponentDescriptorByName( componentfactory );
 
         TestCase.assertNotNull( component );
         TestCase.assertFalse( component.isDefaultEnabled() );
@@ -629,7 +629,7 @@ public class ComponentFactoryTest extends ComponentTestBase
     public void test_component_factory_set_bundle_location_null() throws Exception
     {
         final String componentfactory = "factory.component.reference.targetfilter";
-        final Component component = findComponentByName( componentfactory );
+        final Component component = findComponentDescriptorByName( componentfactory );
 
         TestCase.assertNotNull( component );
         TestCase.assertFalse( component.isDefaultEnabled() );
