@@ -637,7 +637,7 @@ public class ServiceBindGreedyTest extends ComponentTestBase
         srv1.drop();
         delay();
 
-        findComponentConfigurationByName(name, ComponentConfigurationDTO.UNSATISFIED);
+        checkConfigurationCount(name, 0, -1);
         TestCase.assertNull( instance.getInstance() );
 
         // assert component factory only managed
