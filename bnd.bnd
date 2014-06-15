@@ -1,0 +1,43 @@
+Bundle-Category: osgi
+Bundle-SymbolicName: ${project.artifactId}
+Bundle-Vendor: The Apache Software Foundation
+Bundle-DocURL: http://felix.apache.org/site/apache-felix-service-component-runtime.html
+Bundle-Activator: org.apache.felix.scr.impl.Activator
+Bundle-Version: 2.0.0
+
+
+Export-Package: org.apache.felix.scr;version=2.0, \
+ org.apache.felix.scr.component;version=1.1.0;mandatory:="status"; status="provisional", \
+ org.osgi.service.component, \
+ org.osgi.service.component.runtime.*;version=1.8, \
+ org.osgi.dto;version=1.8, \
+ org.osgi.framework.dto;version=1.8
+
+Private-Package: org.apache.felix.scr.impl.*, \
+ org.osgi.util.tracker, \
+ org.apache.felix.utils.extender
+
+#  Configuration Admin is optional and dynamic, but allow eager wiring by importing it
+#  Metatype import is optional and dynamic, but allow eager wiring by importing it
+# optional import for Gogo annotations 
+# The Felix Shell support is optional 
+# Framework version 1.4 (from R4.1) is required because we depend on ServiceReference being
+# Comparable and Bundle.getBundleContext method being available.
+# LogService is optional but if present the R4.0 version 1.3 is sufficient.
+# PackageAdmin is used to find reference types if the component's bundle does not import it.
+# See BindMethod.getParameterClass(Class) for details. R4.0 version 1.2 is sufficient. 
+Import-Package: \
+ org.osgi.service.cm;version="[1.2,2)";resolution:=optional, \
+ org.osgi.service.metatype;version="[1.1,2)";resolution:=optional, \
+ org.apache.felix.service.command;resolution:=optional, \
+ org.apache.felix.shell;provide:=true;resolution:=optional, \
+ org.osgi.framework;version="[1.4,2)", \
+ org.osgi.service.log;version="[1.3,2)";resolution:=optional, \
+ org.osgi.service.packageadmin;version="[1.2,2)";resolution:=optional, \
+ org.osgi.service.component;provide:=true, \
+
+DynamicImport-Package: \
+ org.osgi.service.cm;version="[1.2,2)", \
+ org.osgi.service.metatype;version="[1.1,2)"
+
+Embed-Dependency: kxml2;inline=org/kxml2/io/KXmlParser.class|org/xmlpull/v1/XmlPull**
