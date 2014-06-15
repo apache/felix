@@ -1530,5 +1530,8 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     {
         return m_internalEnabled;
     }
+
+    //TODO NEW!!
+	public abstract void reconfigure(Map<String, Object> value, boolean b);
     
 }

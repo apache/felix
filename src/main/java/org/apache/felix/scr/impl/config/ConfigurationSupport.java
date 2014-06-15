@@ -137,8 +137,9 @@ public class ConfigurationSupport implements ConfigurationListener
                                         if ( checkBundleLocation( config, bundleContext.getBundle() ) )
                                         {
                                             long changeCount = changeCounter.getChangeCount( config, false, -1 );
-                                            created |= holder.configurationUpdated( new TargetedPID( config.getFactoryPid() ),
-                                                    null, config.getProperties(),
+                                            created |= holder.configurationUpdated( new TargetedPID( config.getPid() ), 
+                                            		new TargetedPID( config.getFactoryPid() ),
+                                                    config.getProperties(),
                                                     changeCount );
                                         }
                                     }

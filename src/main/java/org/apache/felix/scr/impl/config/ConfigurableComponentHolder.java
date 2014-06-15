@@ -20,6 +20,7 @@ package org.apache.felix.scr.impl.config;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
@@ -35,6 +36,7 @@ import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.TargetedPID;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.helper.SimpleLogger;
+import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.apache.felix.scr.impl.manager.SingleComponentManager;
 import org.apache.felix.scr.impl.manager.ServiceFactoryComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
@@ -108,7 +110,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Simpl
      * The values are the {@link SingleComponentManager<S> component instances}
      * created on behalf of the configurations.
      */
-    private final Map<String, SingleComponentManager<S>> m_components;
+    private final Map<String, AbstractComponentManager<S>> m_components;
 
     /**
      * The special component used if there is no configuration or a singleton
@@ -126,7 +128,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Simpl
      * by this field is also contained in the map</li>
      * <ul>
      */
-    private SingleComponentManager<S> m_singleComponent;
+    private AbstractComponentManager<S> m_singleComponent;
     
     /**
      * Whether components have already been enabled by calling the
@@ -147,7 +149,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Simpl
 		this.m_targetedPids = new TargetedPID[pidCount];
         this.m_configurations = new Dictionary[pidCount];
         this.m_changeCount = new Long[pidCount];
-        this.m_components = new HashMap<String, SingleComponentManager<S>>();
+        this.m_components = new HashMap<String, AbstractComponentManager<S>>();
         this.m_componentMethods = new ComponentMethods();
         this.m_enabled = false;
     }
@@ -177,10 +179,6 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Simpl
             manager = new SingleComponentManager<S>( m_activator, this, m_componentMetadata, m_componentMethods );
         }
 
-        if ( m_enabled )
-        {
-        	manager.enable( false );
-        }
         return manager;
     }
 
@@ -223,7 +221,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Simpl
                 new Object[] {pid}, null);
 
         // component to deconfigure or dispose of
-        final Map<SingleComponentManager<S>, Map<String, Object>> scms = new HashMap<SingleComponentManager<S>, Map<String, Object>>();
+        final Map<AbstractComponentManager<S>, Map<String, Object>> scms = new HashMap<AbstractComponentManager<S>, Map<String, Object>>();
         boolean reconfigure = false;
 
         synchronized ( m_components )
@@ -239,7 +237,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Simpl
 				m_factoryTargetedPids.remove(servicePid);
 				m_factoryChangeCount.remove(servicePid);
 				m_factoryConfigurations.remove(servicePid);
-				SingleComponentManager<S> scm = m_components.remove(servicePid);
+				AbstractComponentManager<S> scm = m_components.remove(servicePid);
 				if ( m_factoryConfigurations.isEmpty() )
 				{
 					m_factoryPidIndex = null;
@@ -286,13 +284,13 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Simpl
 				else
 				{
 					if (reconfigure) {
-						for (Map.Entry<String, SingleComponentManager<S>> entry : m_components.entrySet()) {
+						for (Map.Entry<String, AbstractComponentManager<S>> entry : m_components.entrySet()) {
 							scms.put(entry.getValue(), mergeProperties(entry.getKey()));
 						}
 					}
 					else
 					{
-						for (Map.Entry<String, SingleComponentManager<S>> entry : m_components.entrySet()) {
+						for (Map.Entry<String, AbstractComponentManager<S>> entry : m_components.entrySet()) {
 							scms.put(entry.getValue(), null );
 						}	
 						m_components.clear();
@@ -302,7 +300,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Simpl
 			}
         }
 
-        for ( Map.Entry<SingleComponentManager<S>,Map<String, Object>> entry: scms.entrySet())
+        for ( Map.Entry<AbstractComponentManager<S>,Map<String, Object>> entry: scms.entrySet())
         {
 			if ( reconfigure ) {
 				entry.getKey().reconfigure( entry.getValue(), true);
@@ -333,9 +331,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Simpl
                 new Object[] {pid, props}, null);
 
         // component to update or create
-        final Map<SingleComponentManager<S>, Map<String, Object>> scms = new HashMap< SingleComponentManager<S>, Map<String, Object>>();
-        final String message;
-        Object[] notEnabledArguments = null;
+        final Map<AbstractComponentManager<S>, Map<String, Object>> scms = new HashMap< AbstractComponentManager<S>, Map<String, Object>>();
         boolean created = false;
         
         //TODO better change count tracking
@@ -348,14 +344,14 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Simpl
 				m_factoryChangeCount.put(pid.getServicePid(), changeCount);
 				if (m_enabled && isSatisfied()) {
 					if (m_singleComponent != null) {
-						SingleComponentManager<S> scm = m_singleComponent;
+						AbstractComponentManager<S> scm = m_singleComponent;
 						scms.put( scm, mergeProperties( pid.getServicePid() ) );
 						m_singleComponent = null;
 						m_components.put(pid.getServicePid(), scm);
 					} else if (m_components.containsKey(pid.getServicePid())) {
 						scms.put( m_components.get(pid.getServicePid()), mergeProperties( pid.getServicePid())  );
 					} else {
-						SingleComponentManager<S> scm = createComponentManager();
+						AbstractComponentManager<S> scm = createComponentManager();
 						m_components.put(pid.getServicePid(), scm);
 						scms.put( scm, mergeProperties( pid.getServicePid())  );
 						created = true;
@@ -376,7 +372,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Simpl
 					} 
 					else if ( m_factoryPidIndex != null) 
 					{
-						for (Map.Entry<String, SingleComponentManager<S>> entry: m_components.entrySet()) 
+						for (Map.Entry<String, AbstractComponentManager<S>> entry: m_components.entrySet()) 
 						{
 							scms.put(entry.getValue(), mergeProperties( entry.getKey()));
 						}
@@ -400,7 +396,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Simpl
         //properties is all the configs merged together (without any possible component factory info.
 
         final boolean enable = created && m_enabled;// TODO WTF?? && getComponentMetadata().isEnabled();
-        for ( Map.Entry<SingleComponentManager<S>,Map<String, Object>> entry: scms.entrySet())
+        for ( Map.Entry<AbstractComponentManager<S>,Map<String, Object>> entry: scms.entrySet())
         {
 			// configure the component
 			entry.getKey().reconfigure(entry.getValue(), false);
@@ -443,7 +439,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Simpl
 		int index = m_componentMetadata.getPidIndex(pid);
 		if (index == -1) {
 			log(LogService.LOG_ERROR,
-					"Unrecognized pid {0], expected one of {1}",
+					"Unrecognized pid {0}, expected one of {1}",
 					new Object[] { pid,
 							m_componentMetadata.getConfigurationPid() },
 					null);
@@ -452,7 +448,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Simpl
 		}
 		if (m_factoryPidIndex != null && index == m_factoryPidIndex) {
 			log(LogService.LOG_ERROR,
-					"singleton pid {0] supplied, but matches an existing factory pid at index: {1}",
+					"singleton pid {0} supplied, but matches an existing factory pid at index: {1}",
 					new Object[] { pid, m_factoryPidIndex }, null);
 			throw new IllegalStateException(
 					"Singleton pid supplied matching a previous factory pid "
@@ -466,7 +462,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Simpl
 		int index = m_componentMetadata.getPidIndex(factoryPid);
 		if (index == -1) {
 			log(LogService.LOG_ERROR,
-					"Unrecognized factory pid {0], expected one of {1}",
+					"Unrecognized factory pid {0}, expected one of {1}",
 					new Object[] { factoryPid,
 							m_componentMetadata.getConfigurationPid() },
 					null);
@@ -475,8 +471,8 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Simpl
 		}
 		if (m_configurations[index] != null) {
 			log(LogService.LOG_ERROR,
-					"factory pid {0], but this pids already supplied as a singleton: {1}",
-					new Object[] { factoryPid, m_targetedPids }, null);
+					"factory pid {0}, but this pid is already supplied as a singleton: {1} at index {2}",
+					new Object[] { factoryPid, Arrays.asList(m_targetedPids), index }, null);
 			throw new IllegalStateException(
 					"Factory pid supplied after all non-factory configurations supplied "
 							+ factoryPid);
@@ -485,7 +481,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Simpl
 			m_factoryPidIndex = index;
 		} else if (index != m_factoryPidIndex) {
 			log(LogService.LOG_ERROR,
-					"factory pid {0] supplied for index {1}, but a factory pid previously supplied at index {2}",
+					"factory pid {0} supplied for index {1}, but a factory pid previously supplied at index {2}",
 					new Object[] { factoryPid, index, m_factoryPidIndex },
 					null);
 			throw new IllegalStateException(
@@ -568,7 +564,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Simpl
 
     public void enableComponents( final boolean async )
     {
-    	List<SingleComponentManager<S>> cms = new ArrayList<SingleComponentManager<S>>();
+    	List<AbstractComponentManager<S>> cms = new ArrayList<AbstractComponentManager<S>>();
     	synchronized ( m_components )
     	{
     		if ( isSatisfied() )
@@ -583,6 +579,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Simpl
     			{
     				for (String pid: m_factoryConfigurations.keySet()) {
     					SingleComponentManager<S> scm = createComponentManager();
+						m_components.put(pid, scm);
     					scm.reconfigure( mergeProperties( pid ), false);
     					cms.add( scm );
     				}
@@ -590,7 +587,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Simpl
     		}
     		m_enabled = true;
     	}
-    	for ( SingleComponentManager<S> cm : cms )
+    	for ( AbstractComponentManager<S> cm : cms )
     	{
     		cm.enable( async );
     	}
@@ -599,7 +596,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Simpl
 
     public void disableComponents( final boolean async )
     {
-        List<SingleComponentManager<S>> cms;
+        List<AbstractComponentManager<S>> cms;
         synchronized ( m_components )
         {
             m_enabled = false;
@@ -611,7 +608,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Simpl
 //    			m_singleComponent = null;
 //    		}
         }
-        for ( SingleComponentManager<S> cm : cms )
+        for ( AbstractComponentManager<S> cm : cms )
         {
             cm.disable( async );
         }
@@ -620,12 +617,12 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Simpl
 
     public void disposeComponents( final int reason )
     {
-        List<SingleComponentManager<S>> cms;
+        List<AbstractComponentManager<S>> cms;
         synchronized ( m_components )
         {
             cms = getComponentManagers( true );
         }
-        for ( SingleComponentManager<S> cm : cms )
+        for ( AbstractComponentManager<S> cm : cms )
         {
             cm.dispose( reason );
         }
@@ -639,7 +636,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Simpl
         {
             if ( !m_components.isEmpty() )
             {
-                for ( Iterator<SingleComponentManager<S>> vi = m_components.values().iterator(); vi.hasNext(); )
+                for ( Iterator<AbstractComponentManager<S>> vi = m_components.values().iterator(); vi.hasNext(); )
                 {
                     if ( component == vi.next() )
                     {
@@ -712,9 +709,9 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Simpl
      * 
      * @param clear If true, clear the map and the single component manager.
      */
-   List<SingleComponentManager<S>> getComponentManagers( final boolean clear )
+   List<AbstractComponentManager<S>> getComponentManagers( final boolean clear )
    {
-	   List<SingleComponentManager<S>> cm;
+	   List<AbstractComponentManager<S>> cm;
        if ( m_components.isEmpty() )
        {
            if ( m_singleComponent != null)
@@ -729,7 +726,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Simpl
 
        else
        {
-           cm = new ArrayList<SingleComponentManager<S>>(m_components.values());
+           cm = new ArrayList<AbstractComponentManager<S>>(m_components.values());
        }
        if ( clear )
        {
