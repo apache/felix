@@ -20,7 +20,7 @@
 			cardinality='0..1' bind='bindA' unbind='unbindA' policy='dynamic' />
 		<reference name='logService' interface='org.osgi.service.log.LogService'
 			bind='bindLogService' />
-		<reference name='sCR' interface='org.apache.felix.scr.ScrService'
+		<reference name='sCR' interface='org.osgi.service.component.runtime.ServiceComponentRuntime'
 			bind='bindSCR' />
 	</scr:component>
 

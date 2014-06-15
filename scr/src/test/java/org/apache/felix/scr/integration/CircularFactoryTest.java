@@ -22,7 +22,6 @@ import java.util.Iterator;
 
 import junit.framework.TestCase;
 
-import org.apache.felix.scr.Component;
 import org.apache.felix.scr.integration.components.circularFactory.FactoryClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;

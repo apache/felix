@@ -23,24 +23,25 @@ import java.io.PrintWriter;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
-import org.apache.felix.scr.Component;
-import org.apache.felix.scr.Reference;
 import org.apache.felix.scr.ScrInfo;
-import org.apache.felix.scr.ScrService;
 import org.apache.felix.scr.impl.config.ScrConfiguration;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.runtime.ServiceComponentRuntime;
+import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 
 /**
  * The <code>ScrCommand</code> class provides the implementations for the
@@ -52,12 +53,12 @@ public class ScrCommand implements ScrInfo
 {
 
     private final BundleContext bundleContext;
-    private final ScrService scrService;
+    private final ServiceComponentRuntime scrService;
     private final ScrConfiguration scrConfiguration;
     
     private ServiceRegistration reg;
 
-    static ScrCommand register(BundleContext bundleContext, ScrService scrService, ScrConfiguration scrConfiguration)
+    static ScrCommand register(BundleContext bundleContext, ServiceComponentRuntime scrService, ScrConfiguration scrConfiguration)
     {
         final ScrCommand cmd = new ScrCommand(bundleContext, scrService, scrConfiguration);
 
@@ -110,7 +111,7 @@ public class ScrCommand implements ScrInfo
         return cmd;
     }
 
-    private ScrCommand(BundleContext bundleContext, ScrService scrService, ScrConfiguration scrConfiguration)
+    private ScrCommand(BundleContext bundleContext, ServiceComponentRuntime scrService, ScrConfiguration scrConfiguration)
     {
         this.bundleContext = bundleContext;
         this.scrService = scrService;
@@ -147,7 +148,7 @@ public class ScrCommand implements ScrInfo
      */
     public void list(final String bundleIdentifier, final PrintWriter out)
     {
-        Component[] components;
+        List<ComponentDescriptionDTO> components;
 
         if (bundleIdentifier != null)
         {
@@ -177,7 +178,7 @@ public class ScrCommand implements ScrInfo
             }
             if (ComponentRegistry.isBundleActive(bundle))
             {
-                components = scrService.getComponents(bundle);
+                components = new ArrayList<ComponentDescriptionDTO>(scrService.getComponentDescriptionDTOs(bundle));
                 if (components == null)
                 {
                     out.println("Bundle " + bundleIdentifier + " declares no components");
@@ -192,7 +193,7 @@ public class ScrCommand implements ScrInfo
         }
         else
         {
-            components = scrService.getComponents();
+            components = new ArrayList<ComponentDescriptionDTO>(scrService.getComponentDescriptionDTOs());
             if (components == null)
             {
                 out.println("No components registered");
@@ -200,20 +201,20 @@ public class ScrCommand implements ScrInfo
             }
         }
 
-        Arrays.sort( components, new Comparator<Component>() 
+        Collections.sort( components, new Comparator<ComponentDescriptionDTO>() 
                 {
 
-                    public int compare(Component c1, Component c2)
+                    public int compare(ComponentDescriptionDTO c1, ComponentDescriptionDTO c2)
                     {
-                        return Long.signum(c1.getId() - c2.getId());
+                        return c1.name.compareTo(c2.name);
                     }
             
                 });
         
         out.println(" Id   State BundleId Name");
-        for ( Component component : components )
+        for ( ComponentDescriptionDTO component : components )
         {
-            out.println( String.format( "[%1$4d] [%2$s] [%3$4d] %4$s", component.getId(), toStateString( component.getState() ), component.getBundle().getBundleId(), component.getName() ) );
+            out.println( String.format( "[%4$s] [%4$s] [%3$4d]", component.name,  component.defaultEnabled , component.bundle.id ) );
         }
         out.flush();
    }
@@ -223,7 +224,7 @@ public class ScrCommand implements ScrInfo
      */
     public void info(final String componentId, PrintWriter out)
     {
-        Component[] components = getComponentFromArg(componentId);
+/*        Component[] components = getComponentFromArg(componentId);
         if (components == null)
         {
             return;
@@ -396,10 +397,12 @@ public class ScrCommand implements ScrInfo
             }
         }
         out.flush();
+        */
     }
 
     void change(final String componentIdentifier, PrintWriter out, boolean enable)
     {
+        /*
         Component[] components = getComponentFromArg(componentIdentifier);
         ArrayList<String> disposed = new ArrayList<String>();
         if (components == null)
@@ -444,6 +447,7 @@ public class ScrCommand implements ScrInfo
             throw new IllegalArgumentException( "Components " + disposed + " already disposed, cannot change state" );
 
         }
+        */
     }
 
     /* (non-Javadoc)
@@ -462,7 +466,7 @@ public class ScrCommand implements ScrInfo
         out.print("Info Service registered: ");
         out.println(scrConfiguration.infoAsService() ? "Supported" : "Unsupported");
     }
-
+/*
     private String toStateString(int state)
     {
         switch (state) {
@@ -546,5 +550,5 @@ public class ScrCommand implements ScrInfo
 
         return components;
     }
-
+*/
 }

@@ -28,10 +28,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.felix.scr.Component;
-import org.apache.felix.scr.ScrService;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.runtime.ServiceComponentRuntime;
+import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 import org.osgi.service.log.LogService;
 
 public class Main implements Runnable
@@ -46,9 +46,9 @@ public class Main implements Runnable
     private volatile AtomicInteger _counter = new AtomicInteger();
     private volatile Random _rnd = new Random();
     private volatile LogService _logService;
-    private ScrService _scr;
     private volatile Thread _thread;
     private volatile boolean _running;
+    private ServiceComponentRuntime _scr;
 
     /**
      * Helper used to randomly enable or disable a list of components.
@@ -120,7 +120,7 @@ public class Main implements Runnable
         }
     }
 
-    void bindSCR(ScrService scr)
+    void bindSCR(ServiceComponentRuntime scr)
     {
         _scr = scr;
     }
@@ -246,48 +246,11 @@ public class Main implements Runnable
 
     private void dumpState(StringWriter sw, String name)
     {
-        org.apache.felix.scr.Component[] comps = _scr.getComponents(name);
-        if (comps == null || comps.length == 0) 
-        {
-            _logService.log(LogService.LOG_ERROR, "could not find component state " + name, null);
-            return;
-        }
-        org.apache.felix.scr.Component c = comps[0];
+        ComponentDescriptionDTO c = _scr.getComponentDescriptionDTO(_ctx.getBundleContext().getBundle(), name);
         if ( c != null )
         {
-            sw.append( name ).append( "[" ).append( getState( c ) ).append( "] " );
+            sw.append( name ).append( "[" ).append( _scr.isComponentEnabled(c)? "enabled":"disabled" ).append( "] " );
         }
     }
 
-    private CharSequence getState(org.apache.felix.scr.Component c)
-    {
-        switch (c.getState()) {
-        case org.apache.felix.scr.Component.STATE_ACTIVATING:
-            return "activating";
-        case org.apache.felix.scr.Component.STATE_ACTIVE:
-            return "active";
-        case org.apache.felix.scr.Component.STATE_DEACTIVATING:
-            return "deactivating";
-        case org.apache.felix.scr.Component.STATE_DISABLED:
-            return "disabled";
-        case org.apache.felix.scr.Component.STATE_DISABLING:
-            return "disabling";
-        case org.apache.felix.scr.Component.STATE_DISPOSED:
-            return "disposed";
-        case org.apache.felix.scr.Component.STATE_DISPOSING:
-            return "disposing";
-        case org.apache.felix.scr.Component.STATE_ENABLED:
-            return "enabled";
-        case org.apache.felix.scr.Component.STATE_ENABLING:
-            return "enabling";
-        case org.apache.felix.scr.Component.STATE_FACTORY:
-            return "factory";
-        case org.apache.felix.scr.Component.STATE_REGISTERED:
-            return "registered";
-        case org.apache.felix.scr.Component.STATE_UNSATISFIED:
-            return "unsatisfied";
-        default:
-            return "?";
-        }
-    }
 }

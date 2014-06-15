@@ -23,21 +23,14 @@ import java.security.Permission;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Dictionary;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.felix.scr.Component;
-import org.apache.felix.scr.Reference;
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.config.ReferenceManager;
 import org.apache.felix.scr.impl.helper.BindMethod;
@@ -63,9 +56,6 @@ import org.osgi.service.log.LogService;
  */
 public class DependencyManager<S, T> implements ReferenceManager<S, T> 
 {
-    // mask of states ok to send events
-    private static final int STATE_MASK = 
-         Component.STATE_ACTIVE | Component.STATE_REGISTERED | Component.STATE_FACTORY;
 
     // the component to which this dependency belongs
     private final AbstractComponentManager<S> m_componentManager;
@@ -1116,19 +1106,17 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         }
     }
 
-    //---------- Reference interface ------------------------------------------
-
-    public String getServiceName()
+    private String getServiceName()
     {
         return m_dependencyMetadata.getInterface();
     }
 
-    public boolean isOptional()
+    boolean isOptional()
     {
         return m_dependencyMetadata.isOptional();
     }
 
-    public boolean isEffectivelyOptional()
+    private boolean isEffectivelyOptional()
     {
         return m_minCardinality == 0;
     }
@@ -1143,39 +1131,21 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         return m_minCardinality == serviceCount;
     }
     
-    public boolean isMultiple()
+    private boolean isMultiple()
     {
         return m_dependencyMetadata.isMultiple();
     }
 
 
-    public boolean isStatic()
+    private boolean isStatic()
     {
         return m_dependencyMetadata.isStatic();
     }
 
-    public boolean isReluctant()
+    private boolean isReluctant()
     {
         return m_dependencyMetadata.isReluctant();
     }
-
-    public String getBindMethodName()
-    {
-        return m_dependencyMetadata.getBind();
-    }
-
-
-    public String getUnbindMethodName()
-    {
-        return m_dependencyMetadata.getUnbind();
-    }
-
-
-    public String getUpdatedMethodName()
-    {
-        return m_dependencyMetadata.getUpdated();
-    }
-
 
     //---------- Service tracking support -------------------------------------
 
