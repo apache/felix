@@ -25,7 +25,6 @@ import java.util.Hashtable;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
-import org.apache.felix.scr.Component;
 import org.apache.felix.scr.integration.components.MutatingService;
 import org.apache.felix.scr.integration.components.SimpleServiceImpl;
 import org.junit.Test;

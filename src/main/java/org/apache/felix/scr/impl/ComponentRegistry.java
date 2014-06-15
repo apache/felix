@@ -20,26 +20,17 @@ package org.apache.felix.scr.impl;
 
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.felix.scr.Component;
-import org.apache.felix.scr.ScrService;
-import org.apache.felix.scr.impl.config.ComponentContainer;
 import org.apache.felix.scr.impl.config.ComponentHolder;
 import org.apache.felix.scr.impl.config.ConfigurationSupport;
 import org.apache.felix.scr.impl.config.ConfigurableComponentHolder;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
-import org.apache.felix.scr.impl.manager.ComponentFactoryImpl;
-import org.apache.felix.scr.impl.manager.ConfigurationComponentFactoryImpl;
 import org.apache.felix.scr.impl.manager.DependencyManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.osgi.framework.Bundle;

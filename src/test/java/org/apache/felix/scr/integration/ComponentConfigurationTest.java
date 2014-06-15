@@ -24,7 +24,6 @@ import java.util.Collection;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
-import org.apache.felix.scr.Component;
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.apache.felix.scr.integration.components.SimpleServiceImpl;
 import org.junit.Test;

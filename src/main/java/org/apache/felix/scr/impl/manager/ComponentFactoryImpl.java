@@ -19,7 +19,6 @@
 package org.apache.felix.scr.impl.manager;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -27,7 +26,6 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.scr.Component;
 import org.apache.felix.scr.component.ExtFactoryComponentInstance;
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.TargetedPID;

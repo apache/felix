@@ -22,7 +22,6 @@ package org.apache.felix.scr.integration;
 import java.util.Hashtable;
 import junit.framework.TestCase;
 
-import org.apache.felix.scr.Component;
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.apache.felix.scr.integration.components.SimpleComponent2;
 import org.apache.felix.scr.integration.components.SimpleService2Impl;

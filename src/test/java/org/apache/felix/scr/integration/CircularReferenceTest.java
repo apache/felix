@@ -21,7 +21,6 @@
 package org.apache.felix.scr.integration;
 
 import junit.framework.TestCase;
-import org.apache.felix.scr.Component;
 import org.apache.felix.scr.integration.components.circular.A;
 import org.apache.felix.scr.integration.components.circular.B;
 import org.junit.Test;

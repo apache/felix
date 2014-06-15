@@ -25,7 +25,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.scr.Component;
 import org.apache.felix.scr.impl.TargetedPID;
 import org.apache.felix.scr.impl.config.ComponentContainer;
 import org.apache.felix.scr.impl.config.ComponentManager;

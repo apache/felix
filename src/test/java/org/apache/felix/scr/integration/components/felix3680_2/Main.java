@@ -29,12 +29,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.felix.scr.ScrService;
 import org.apache.felix.scr.impl.manager.ThreadDump;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.runtime.ServiceComponentRuntime;
+import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 import org.osgi.service.log.LogService;
 
 
@@ -46,7 +47,7 @@ public class Main implements Runnable
     private volatile CountDownLatch m_enabledLatch;
     private volatile CountDownLatch m_disabledLatch;
     private volatile LogService m_logService;
-    private ScrService m_scr;
+    private ServiceComponentRuntime m_scr;
     private final Executor m_exec = Executors.newFixedThreadPool( 12 );
     private volatile BundleContext m_bctx;
     volatile ConcurrentHashMap<Class, ServiceRegistration> m_registrations = new ConcurrentHashMap<Class, ServiceRegistration>();
@@ -146,7 +147,7 @@ public class Main implements Runnable
     }
 
 
-    void bindSCR( ScrService scr )
+    void bindSCR( ServiceComponentRuntime scr )
     {
         m_scr = scr;
     }
@@ -300,42 +301,10 @@ public class Main implements Runnable
 
     private void dumpA()
     {
-        org.apache.felix.scr.Component c = m_scr
-            .getComponents( "org.apache.felix.scr.integration.components.felix3680_2.A" )[0];
-        m_logService.log( LogService.LOG_WARNING, "State of " + c + ":" + getState( c ) + "\n" );
+        ComponentDescriptionDTO c = m_scr
+            .getComponentDescriptionDTO(m_bctx.getBundle(), "org.apache.felix.scr.integration.components.felix3680_2.A" );
+        m_logService.log( LogService.LOG_WARNING, "State of " + c.name + " enabled:" + m_scr.isComponentEnabled(c) + "\n" );
     }
 
 
-    private CharSequence getState( org.apache.felix.scr.Component c )
-    {
-        switch ( c.getState() )
-        {
-            case org.apache.felix.scr.Component.STATE_ACTIVATING:
-                return "activating";
-            case org.apache.felix.scr.Component.STATE_ACTIVE:
-                return "active";
-            case org.apache.felix.scr.Component.STATE_DEACTIVATING:
-                return "deactivating";
-            case org.apache.felix.scr.Component.STATE_DISABLED:
-                return "disabled";
-            case org.apache.felix.scr.Component.STATE_DISABLING:
-                return "disabling";
-            case org.apache.felix.scr.Component.STATE_DISPOSED:
-                return "disposed";
-            case org.apache.felix.scr.Component.STATE_DISPOSING:
-                return "disposing";
-            case org.apache.felix.scr.Component.STATE_ENABLED:
-                return "enabled";
-            case org.apache.felix.scr.Component.STATE_ENABLING:
-                return "enabling";
-            case org.apache.felix.scr.Component.STATE_FACTORY:
-                return "factory";
-            case org.apache.felix.scr.Component.STATE_REGISTERED:
-                return "registered";
-            case org.apache.felix.scr.Component.STATE_UNSATISFIED:
-                return "unsatisfied";
-            default:
-                return "?";
-        }
-    }
 }

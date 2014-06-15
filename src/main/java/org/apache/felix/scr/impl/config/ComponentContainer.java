@@ -18,31 +18,29 @@
  */
 package org.apache.felix.scr.impl.config;
 
-import java.util.List;
+import org.apache.felix.scr.impl.BundleComponentActivator;
+import org.apache.felix.scr.impl.manager.SingleComponentManager;
+import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 
-import org.osgi.framework.ServiceReference;
+public interface ComponentContainer<S>
+{
 
-public interface ReferenceManager<S, T> {
+    /**
+     * Returns the {@link BundleComponentActivator} owning this component
+     * holder.  (overlaps ComponentHolder)
+     */
+    BundleComponentActivator getActivator();
 
-	/**
-	 * Returns an array of <code>ServiceReference</code> instances of all
-	 * services this instance is bound to or <code>null</code> if no services
-	 * are actually bound.
-	 */
-	List<ServiceReference<?>> getServiceReferences();
+    /**
+     * Returns the {@link ComponentMetadata} describing and declaring this
+     * component. (overlaps ComponentHolder)
+     */
+    ComponentMetadata getComponentMetadata();
 
-	/**
-	 * Returns the name of the service reference.
-	 */
-	String getName();
-
-	/**
-	 * Returns the target filter of this dependency as a string or
-	 * <code>null</code> if this dependency has no target filter set.
-	 *
-	 * @return The target filter of this dependency or <code>null</code> if
-	 *      none is set.
-	 */
-	String getTarget();
+    /**
+     * Informs the holder that the component has been disposed as a result of
+     * calling the dispose method.
+     */
+    void disposed(SingleComponentManager<S> component);
 
 }
