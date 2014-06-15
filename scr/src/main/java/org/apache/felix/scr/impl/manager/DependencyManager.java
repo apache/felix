@@ -431,7 +431,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                     trackingCount.set( lastRefPairTrackingCount );
                     return Collections.emptyList();                    
                 }
-                return getTracker().getTracked( true, trackingCount ).values();
+                return getTracker().getTracked( null, trackingCount ).values();
             }
             else
             {
