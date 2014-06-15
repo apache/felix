@@ -465,7 +465,6 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
 	public List<? extends ComponentManager<S>> getComponents()
     {
         List<AbstractComponentManager<S>> cms = new ArrayList<AbstractComponentManager<S>>( );
-        cms.add( this );
         getComponentManagers( m_componentInstances, cms );
         return cms;
     }
