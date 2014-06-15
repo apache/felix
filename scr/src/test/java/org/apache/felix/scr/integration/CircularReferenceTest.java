@@ -120,6 +120,7 @@ public class CircularReferenceTest extends ComponentTestBase
 
         A a = getServiceFromConfiguration(componentA, A.class);
         assertEquals( 1, a.getBs().size());
+        delay(); //async binding of a to b after circular ref detected
         B b = getServiceFromConfiguration(componentB, B.class);
         assertEquals( 1, b.getAs().size() );
     }
@@ -130,7 +131,7 @@ public class CircularReferenceTest extends ComponentTestBase
     public void test_A11_B0n_delayed_B_first() throws InvalidSyntaxException
     {
         String componentNameA = "4.A.1.1.dynamic";
-        final ComponentConfigurationDTO componentA = findComponentConfigurationByName( componentNameA, ComponentConfigurationDTO.SATISFIED );
+        ComponentConfigurationDTO componentA = findComponentConfigurationByName( componentNameA, ComponentConfigurationDTO.SATISFIED );
 
         String componentNameB = "4.B.0.n.dynamic";
         final ComponentConfigurationDTO componentB = findComponentConfigurationByName( componentNameB, ComponentConfigurationDTO.SATISFIED);
@@ -166,6 +167,8 @@ public class CircularReferenceTest extends ComponentTestBase
 //        Object serviceA1 = bundleContext.getService( serviceReferenceA1 );
 //        assertNotNull( serviceA1 );
 
+        //new component.id, refetch configuration.
+        componentA = findComponentConfigurationByName( componentNameA, ComponentConfigurationDTO.ACTIVE );
         a = getServiceFromConfiguration(componentA, A.class);
         assertEquals( 1, a.getBs().size());
         b = getServiceFromConfiguration(componentB, B.class);
@@ -237,7 +240,7 @@ public class CircularReferenceTest extends ComponentTestBase
     public void test_A11_B01_delayed_B_first() throws InvalidSyntaxException
     {
         String componentNameA = "7.A.1.1.dynamic";
-        final ComponentConfigurationDTO componentA = findComponentConfigurationByName( componentNameA, ComponentConfigurationDTO.SATISFIED );
+        ComponentConfigurationDTO componentA = findComponentConfigurationByName( componentNameA, ComponentConfigurationDTO.SATISFIED );
 
         String componentNameB = "7.B.0.1.dynamic";
         final ComponentConfigurationDTO componentB = findComponentConfigurationByName( componentNameB, ComponentConfigurationDTO.SATISFIED );
@@ -274,6 +277,8 @@ public class CircularReferenceTest extends ComponentTestBase
 //        Object serviceA1 = bundleContext.getService( serviceReferenceA1 );
 //        assertNotNull( serviceA1 );
 
+        //new component.id, refetch configuration.
+        componentA = findComponentConfigurationByName( componentNameA, ComponentConfigurationDTO.ACTIVE );
         a = getServiceFromConfiguration(componentA, A.class);
         assertEquals( 1, a.getBs().size());
         b = getServiceFromConfiguration(componentB, B.class);

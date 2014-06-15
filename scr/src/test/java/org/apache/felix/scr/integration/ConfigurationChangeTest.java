@@ -110,7 +110,8 @@ public class ConfigurationChangeTest extends ComponentTestBase
 
         theConfig.put("ref.target", "(value=srv1)");
         configure( pid );
-
+        delay();//all cm event to complete
+        
 		getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.ACTIVE);
         final SimpleComponent comp10 = SimpleComponent.INSTANCE;
         TestCase.assertNotNull( comp10 );
@@ -212,7 +213,8 @@ public class ConfigurationChangeTest extends ComponentTestBase
 
         theConfig.put("ref.target", "(value=srv1)");
         configure( pid );
-
+        delay();//let cm thread finish before enabling.
+        
         getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.ACTIVE);
 
         final SimpleComponent comp10 = SimpleComponent.INSTANCE;

@@ -88,6 +88,8 @@ public class TargetedPIDTest extends ComponentTestBase
         Configuration configSNVL = configure( pidSNVL );
         configSNVL.setBundleLocation( REGION );
         
+        delay();
+        
         //Add more and more specific components to check that they pick up the appropriate configuration
         Set<ComponentConfigurationDTO> known = new HashSet<ComponentConfigurationDTO>();
         

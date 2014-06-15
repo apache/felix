@@ -49,9 +49,9 @@ public class Felix4188Test extends ComponentTestBase
     static
     {
         // uncomment to enable debugging of this test class
-        //        paxRunnerVmOption = DEBUG_VM_OPTION;
+//                paxRunnerVmOption = DEBUG_VM_OPTION;
         descriptorFile = "/integration_test_FELIX_4188.xml";
-        restrictedLogging = true;
+//        restrictedLogging = true;
         //comment to get debug logging if the test fails.
 //        DS_LOGLEVEL = "warn";
     }
@@ -62,19 +62,19 @@ public class Felix4188Test extends ComponentTestBase
     @Test
     public void test_concurrent_deactivation() throws Exception
     {
-        final Bundle bundle1 = installBundle("/integration_test_FELIX_4188_1.xml", "", "simplecomponent1");
+        final Bundle bundle1 = installBundle("/integration_test_FELIX_4188_1.xml", "org.apache.felix.scr.integration.components", "simplecomponent1");
         bundle1.start();
 
-        final Bundle bundle2 = installBundle("/integration_test_FELIX_4188_2.xml", "", "simplecomponent2");
+        final Bundle bundle2 = installBundle("/integration_test_FELIX_4188_2.xml", "org.apache.felix.scr.integration.components", "simplecomponent2");
         bundle2.start();
 
         final ComponentConfigurationDTO aComp1 =
-                findComponentConfigurationByName( bundle1, "org.apache.felix.scr.integration.components.Felix4188Component-1", ComponentConfigurationDTO.ACTIVE);
-        final Felix4188Component aInst1 = getServiceFromConfiguration(aComp1, Felix4188Component.class);
+                findComponentConfigurationByName( bundle1, "org.apache.felix.scr.integration.components.Felix4188Component-1", ComponentConfigurationDTO.SATISFIED);
+        final Object aInst1 = getServiceFromConfiguration(aComp1, Felix4188Component.class);
 
         final ComponentConfigurationDTO aComp2 =
-                findComponentConfigurationByName( bundle1, "org.apache.felix.scr.integration.components.Felix4188Component-2", ComponentConfigurationDTO.ACTIVE);
-        final Felix4188Component aInst2 = getServiceFromConfiguration(aComp2, Felix4188Component.class);
+                findComponentConfigurationByName( bundle2, "org.apache.felix.scr.integration.components.Felix4188Component-2", ComponentConfigurationDTO.SATISFIED);
+        final Object aInst2 = getServiceFromConfiguration(aComp2, Felix4188Component.class);
 
         final CountDownLatch latch = new CountDownLatch(1);
 
