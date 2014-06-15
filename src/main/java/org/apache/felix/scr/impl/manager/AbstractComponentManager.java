@@ -111,6 +111,8 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     protected volatile boolean m_enabled;
     protected volatile boolean m_internalEnabled;
     
+	private volatile boolean m_satisfied;
+    
     protected volatile boolean m_disposed;
     
     //service event tracking
@@ -744,12 +746,12 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         registerComponentId();
         // Before creating the implementation object, we are going to
         // test if we have configuration if such is required
-        if ( hasConfiguration() || !getComponentMetadata().isConfigurationRequired() )
-        {
+//        if ( hasConfiguration() || !getComponentMetadata().isConfigurationRequired() )
+//        {
             // Update our target filters.
             log( LogService.LOG_DEBUG, "Updating target filters", null );
             updateTargets( getProperties() );
-        }
+//        }
 
         m_internalEnabled = true;
         log( LogService.LOG_DEBUG, "Component enabled", null );
@@ -787,11 +789,12 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
         // Before creating the implementation object, we are going to
         // test if we have configuration if such is required
-        if ( !hasConfiguration() && getComponentMetadata().isConfigurationRequired() )
-        {
-            log( LogService.LOG_DEBUG, "Missing required configuration, cannot activate", null );
-            return;
-        }
+        //TODO this should not be needed, no configuration >>> no manager
+//        if ( !hasConfiguration() && getComponentMetadata().isConfigurationRequired() )
+//        {
+//            log( LogService.LOG_DEBUG, "Missing required configuration, cannot activate", null );
+//            return;
+//        }
 
         // Before creating the implementation object, we are going to
         // test that the bundle has enough permissions to register services
@@ -897,6 +900,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
             obtainStateLock( "AbstractComponentManager.State.doDeactivate.1" );
             try
             {
+            	m_satisfied = false;
                 m_activated = false;
                 deleteComponent( reason );
                 deactivateDependencyManagers();
@@ -1023,7 +1027,6 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         }
         
     };
-    
 
     /**
      * Registers the service on behalf of the component.
@@ -1289,6 +1292,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
             }
         }
 
+        m_satisfied = satisfied;
         return satisfied;
     }
 
@@ -1350,8 +1354,6 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
             dm.unregisterServiceListener( trackingCount );
         }
     }
-
-    public abstract boolean hasConfiguration();
 
     /* (non-Javadoc)
 	 * @see org.apache.felix.scr.impl.manager.ComponentManager#getProperties()
@@ -1490,7 +1492,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         {
             return STATE_DISABLED;
         }
-        if ( getServiceRegistration() == null && (getProvidedServices() != null || !hasInstance()))
+        if ( !m_satisfied )
         {
             return STATE_UNSATISFIED;
         }

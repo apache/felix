@@ -128,7 +128,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
 
         cm.setFactoryProperties( dictionary );
         //configure the properties
-        cm.reconfigure( m_configuration );
+        cm.reconfigure( m_configuration, false );
         // enable
         cm.enableInternal();
         //activate immediately
@@ -181,7 +181,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         public void modify(Dictionary<String, ?> properties)
         {
             cm.setFactoryProperties( properties );
-            cm.reconfigure();            
+            cm.reconfigure(false);            
         }
         
     }
