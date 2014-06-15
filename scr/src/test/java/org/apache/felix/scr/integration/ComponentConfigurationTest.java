@@ -19,7 +19,9 @@
 package org.apache.felix.scr.integration;
 
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
@@ -178,7 +180,8 @@ public class ComponentConfigurationTest extends ComponentTestBase
     {
         final String pid = "DynamicConfigurationComponent";
         boolean pre13 = true;
-        dynamicConfigTest(pid, pre13);
+        boolean recreateOnDelete = true;
+        dynamicConfigTest(pid, pre13, recreateOnDelete);
     }
 
     @Test
@@ -186,19 +189,33 @@ public class ComponentConfigurationTest extends ComponentTestBase
     {
         final String pid = "DynamicConfigurationComponent13";
         boolean pre13 = false;
-        dynamicConfigTest(pid, pre13);
+        boolean recreateOnDelete = false;
+        dynamicConfigTest(pid, pre13, recreateOnDelete);
     }
     
     @Test
     public void test_SimpleComponent_dynamic_configuration_flag()
     {
         final String pid = "DynamicConfigurationComponentFlag";
-        boolean pre13 = false;
-        dynamicConfigTest(pid, pre13);
+        boolean pre13 = true;
+        boolean recreateOnDelete = false;
+        dynamicConfigTest(pid, pre13, recreateOnDelete);
     }
 
 
-	private void dynamicConfigTest(final String pid, boolean pre13) {
+	private void dynamicConfigTest(final String pid, boolean pre13, boolean recreateOnDelete) {
+	    Object pidWithout;
+	    Object pidWith;
+	    if (pre13)
+	    {
+	        pidWithout = pid + ".description";
+	        pidWith = pid;
+	    }
+	    else 
+	    {
+	        pidWithout = Collections.singletonList(pid + ".description");
+	        pidWith = Arrays.asList(new String[] {pid + ".description", pid});
+	    }
         deleteConfig( pid );
         delay();
 
@@ -206,7 +223,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
 
         TestCase.assertNotNull( SimpleComponent.INSTANCE );
         TestCase.assertNull( SimpleComponent.INSTANCE.getProperty( PROP_NAME ) );
-        TestCase.assertEquals( pid, SimpleComponent.INSTANCE.getProperty( Constants.SERVICE_PID ) );
+        TestCase.assertEquals(pidWithout, SimpleComponent.INSTANCE.getProperty(Constants.SERVICE_PID));
 
         final SimpleComponent instance = SimpleComponent.INSTANCE;
 
@@ -216,13 +233,13 @@ public class ComponentConfigurationTest extends ComponentTestBase
         findComponentConfigurationByName(pid, ComponentConfigurationDTO.ACTIVE);
         TestCase.assertEquals( instance, SimpleComponent.INSTANCE );
         TestCase.assertEquals( PROP_NAME, SimpleComponent.INSTANCE.getProperty( PROP_NAME ) );
-        TestCase.assertEquals( pid, SimpleComponent.INSTANCE.getProperty( Constants.SERVICE_PID ) );
+        TestCase.assertEquals(pidWith, SimpleComponent.INSTANCE.getProperty(Constants.SERVICE_PID));
 
         deleteConfig( pid );
         delay();
 
         findComponentConfigurationByName(pid, ComponentConfigurationDTO.ACTIVE);
-        if (pre13)
+        if (recreateOnDelete)
         {
             TestCase.assertNotSame( instance, SimpleComponent.INSTANCE );
         }
@@ -231,7 +248,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
             TestCase.assertSame( instance, SimpleComponent.INSTANCE );
         }
         TestCase.assertNull( SimpleComponent.INSTANCE.getProperty( PROP_NAME ) );
-        TestCase.assertEquals( pid, SimpleComponent.INSTANCE.getProperty( Constants.SERVICE_PID ) );
+        TestCase.assertEquals(pidWithout, SimpleComponent.INSTANCE.getProperty(Constants.SERVICE_PID));
 
         disableAndCheck( cc );
         TestCase.assertNull( SimpleComponent.INSTANCE );

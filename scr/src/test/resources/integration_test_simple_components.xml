@@ -47,20 +47,20 @@
     <scr:component name="DynamicConfigurationComponent"
         enabled="false" modified="configure">
         <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
-        <property name="service.pid" value="DynamicConfigurationComponent" />
+        <property name="service.pid" value="DynamicConfigurationComponent.description" />
     </scr:component>
 
     <scr13:component xmlns:scr13="http://www.osgi.org/xmlns/scr/v1.3.0" name="DynamicConfigurationComponent13"
         enabled="false" modified="configure">
         <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
-        <property name="service.pid" value="DynamicConfigurationComponent13" />
+        <property name="service.pid" value="DynamicConfigurationComponent13.description" />
     </scr13:component>
 
     <scr:component xmlns:felix="http://felix.apache.org/xmlns/scr/extensions/v1.0.0" name="DynamicConfigurationComponentFlag"
         enabled="false" modified="configure"
         felix:deleteCallsModify="true">
         <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
-        <property name="service.pid" value="DynamicConfigurationComponentFlag" />
+        <property name="service.pid" value="DynamicConfigurationComponentFlag.description" />
     </scr:component>
 
     <!-- component dynamically updates configuration with a required reference plus target-->

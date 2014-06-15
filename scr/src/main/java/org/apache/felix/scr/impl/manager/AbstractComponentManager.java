@@ -52,7 +52,6 @@ import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata;
-import org.apache.felix.scr.impl.metadata.ServiceMetadata.Scope;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceException;
@@ -79,7 +78,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         "Component disabled",
         "Bundle stopped"};
     
-    protected final ComponentContainer m_container;
+    protected final ComponentContainer<S> m_container;
 
     private final boolean m_factoryInstance;
     // the ID of this component
@@ -132,16 +131,16 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
      * @param container
      * @param componentMethods
      */
-    protected AbstractComponentManager( ComponentContainer container, ComponentMethods componentMethods )
+    protected AbstractComponentManager( ComponentContainer<S> container, ComponentMethods componentMethods )
     {
         this( container, componentMethods, false );
     }
     
-    protected AbstractComponentManager( ComponentContainer container, ComponentMethods componentMethods, boolean factoryInstance )
+    protected AbstractComponentManager( ComponentContainer<S> container, ComponentMethods componentMethods, boolean factoryInstance )
     {
         m_factoryInstance = factoryInstance;
         m_container = container;
-        this.m_componentMethods = componentMethods;
+        m_componentMethods = componentMethods;
         m_componentId = -1;
         
         ComponentMetadata metadata = container.getComponentMetadata();
@@ -1448,7 +1447,8 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         return m_internalEnabled;
     }
 
-    //TODO NEW!!
-	public abstract void reconfigure(Map<String, Object> value, boolean b);
+	public abstract void reconfigure(Map<String, Object> configuration, boolean configurationDeleted);
+	
+	public abstract void getComponentManagers(List<AbstractComponentManager<S>> cms);
     
 }

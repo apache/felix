@@ -20,7 +20,6 @@ package org.apache.felix.scr.impl.manager;
 
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -30,20 +29,17 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.felix.scr.impl.BundleComponentActivator;
-import org.apache.felix.scr.impl.TargetedPID;
 import org.apache.felix.scr.impl.config.ComponentContainer;
-import org.apache.felix.scr.impl.config.ComponentManager;
 import org.apache.felix.scr.impl.config.ReferenceManager;
 import org.apache.felix.scr.impl.helper.ActivateMethod.ActivatorParameter;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.helper.MethodResult;
 import org.apache.felix.scr.impl.helper.ModifiedMethod;
-import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentConstants;
-import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.ComponentInstance;
 import org.osgi.service.log.LogService;
 
@@ -80,12 +76,12 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
      * The constructor receives both the activator and the metadata
  * @param componentMethods
      */
-    public SingleComponentManager( ComponentContainer container, ComponentMethods componentMethods )
+    public SingleComponentManager( ComponentContainer<S> container, ComponentMethods componentMethods )
     {
         this(container, componentMethods, false);
     }
     
-    public SingleComponentManager( ComponentContainer container, ComponentMethods componentMethods,
+    public SingleComponentManager( ComponentContainer<S> container, ComponentMethods componentMethods,
             boolean factoryInstance )
     {
         super( container, componentMethods, factoryInstance );
@@ -429,18 +425,31 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         if ( m_properties == null )
         {
 
-        	
+
             // 1. Merge all the config properties
-        	Map<String, Object> props = new HashMap<String, Object>();
-        	if ( m_configurationProperties != null ) 
-        	{
-				props.putAll(m_configurationProperties);
-			}
-			if ( m_factoryProperties != null)
-        	{
-        		props.putAll(m_factoryProperties);
-        	}
-                    
+            Map<String, Object> props = new HashMap<String, Object>();
+            if ( m_configurationProperties != null ) 
+            {
+                props.putAll(m_configurationProperties);
+            }
+            if ( m_factoryProperties != null)
+            {
+                props.putAll(m_factoryProperties);
+                if (getComponentMetadata().isDS13() && m_factoryProperties.containsKey(Constants.SERVICE_PID))
+                {
+                    List<String> servicePids = (List<String>) m_configurationProperties.get(Constants.SERVICE_PID);
+                    if (servicePids == null) 
+                    {
+                        servicePids = new ArrayList<String>();
+                    }
+                    if (m_factoryProperties.get(Constants.SERVICE_PID) instanceof String)
+                    {
+                        servicePids.add((String)m_factoryProperties.get(Constants.SERVICE_PID));
+                    }
+                    props.put(Constants.SERVICE_PID, servicePids);
+                }
+            }
+
             // 2. set component.name and component.id
             props.put( ComponentConstants.COMPONENT_NAME, getComponentMetadata().getName() );
             props.put( ComponentConstants.COMPONENT_ID, getId() );
@@ -626,7 +635,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                     }
                     finally
                     {
-                        releaseActivationWriteeLock( "reconfigure.deactivate.activate" );;
+                        releaseActivationWriteeLock( "reconfigure.deactivate.activate" );
                     }
                     activateInternal( getTrackingCount().get() );
                 }
@@ -921,6 +930,12 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     private boolean keepInstances()
     {
         return getComponentMetadata().isDelayedKeepInstances();
+    }
+
+    @Override
+    public void getComponentManagers(List<AbstractComponentManager<S>> cms)
+    {
+        cms.add(this);
     }
 
 }
