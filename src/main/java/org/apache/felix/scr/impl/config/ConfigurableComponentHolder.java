@@ -244,7 +244,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Simpl
 				{
 					m_factoryPidIndex = null;
 				}
-				if ( !m_enabled )
+				if ( !m_enabled || scm == null )
 				{
 					return;
 				}
@@ -274,14 +274,13 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Simpl
 
 				if ( m_factoryPidIndex == null)
 				{
-					if ( reconfigure)
-					{
-						scms.put(m_singleComponent, mergeProperties( null ));
-					}
-					else
-					{
-						scms.put( m_singleComponent, null);
-						m_singleComponent = null;
+					if ( m_singleComponent != null ) {
+						if (reconfigure) {
+							scms.put(m_singleComponent, mergeProperties(null));
+						} else {
+							scms.put(m_singleComponent, null);
+							m_singleComponent = null;
+						}
 					}
 				}
 				else
