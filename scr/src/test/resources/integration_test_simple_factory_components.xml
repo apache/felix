@@ -22,6 +22,7 @@
     <!-- Component Factory Instances -->
     <scr:component name="factory.component"
         enabled="false"
+        modified="modified"
         factory="factory.component.factory" >
         <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
     </scr:component>

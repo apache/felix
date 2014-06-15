@@ -236,7 +236,7 @@ public class ConfiguredComponentHolderTest extends TestCase
         }
 
 
-        protected SingleComponentManager createComponentManager()
+        protected SingleComponentManager createComponentManager(boolean factoryConfiguration)
         {
             return new MockImmediateComponentManager( this );
         }

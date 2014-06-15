@@ -36,7 +36,6 @@ import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.apache.felix.scr.impl.manager.ComponentFactoryImpl;
-import org.apache.felix.scr.impl.manager.ConfigurationComponentFactoryImpl;
 import org.apache.felix.scr.impl.manager.SingleComponentManager;
 import org.apache.felix.scr.impl.manager.ServiceFactoryComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
@@ -155,19 +154,20 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
         this.m_enabled = false;
     }
 
-    protected AbstractComponentManager<S> createComponentManager()
+    protected AbstractComponentManager<S> createComponentManager(boolean factoryConfiguration)
     {
 
         AbstractComponentManager<S> manager;
         if ( m_componentMetadata.isFactory() )
         {
-            if ( !m_componentMetadata.isObsoleteFactoryComponentFactory() )
+            //TODO is there any check to make sure factory component factories are enabled before creating them?
+            if ( !m_componentMetadata.isObsoleteFactoryComponentFactory() || !factoryConfiguration )
             {
                 manager = new ComponentFactoryImpl<S>(this );
             }
             else
             {
-                manager = new ConfigurationComponentFactoryImpl<S>(this );
+                manager = new SingleComponentManager<S>(this, m_componentMethods, true );
             }
         }
         else if ( m_componentMetadata.getServiceScope() == Scope.bundle )
@@ -351,7 +351,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
                 m_factoryTargetedPids.put(pid.getServicePid(), factoryPid);
                 m_factoryChangeCount.put(pid.getServicePid(), changeCount);
                 if (m_enabled && isSatisfied()) {
-                    if (m_singleComponent != null) {
+                    if (m_singleComponent != null && !m_componentMetadata.isObsoleteFactoryComponentFactory()) {
                         AbstractComponentManager<S> scm = m_singleComponent;
                         scms.put( scm, mergeProperties( pid.getServicePid() ) );
                         m_singleComponent = null;
@@ -359,7 +359,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
                     } else if (m_components.containsKey(pid.getServicePid())) {
                         scms.put( m_components.get(pid.getServicePid()), mergeProperties( pid.getServicePid())  );
                     } else {
-                        AbstractComponentManager<S> scm = createComponentManager();
+                        AbstractComponentManager<S> scm = createComponentManager(true);
                         m_components.put(pid.getServicePid(), scm);
                         scms.put( scm, mergeProperties( pid.getServicePid())  );
                         created = true;
@@ -387,7 +387,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
                     }
                     else
                     {
-                        m_singleComponent = createComponentManager();
+                        m_singleComponent = createComponentManager(false);
                         scms.put( m_singleComponent, mergeProperties( pid.getServicePid() ) );
                         created = true;
                     }
@@ -440,7 +440,8 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
         }
         for (int i = 0; i < m_configurations.length; i++)
         {
-            if ( m_factoryPidIndex != null && i == m_factoryPidIndex)
+            if ( m_factoryPidIndex != null && i == m_factoryPidIndex
+                && !( m_componentMetadata.isObsoleteFactoryComponentFactory() && servicePid == null)) //obsolete special case
             {
                 copyTo(properties, m_factoryConfigurations.get(servicePid));
                 if (isDS13)
@@ -598,16 +599,16 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
         {
             if ( isSatisfied() )
             {
-                if ( m_factoryPidIndex == null)
+                if ( m_factoryPidIndex == null || m_componentMetadata.isObsoleteFactoryComponentFactory())
                 {
-                    m_singleComponent = createComponentManager();
+                    m_singleComponent = createComponentManager(false);
                     cms.add( m_singleComponent );
                     m_singleComponent.reconfigure(mergeProperties( null ), false);
                 }
-                else
+                if ( m_factoryPidIndex != null)
                 {
                     for (String pid: m_factoryConfigurations.keySet()) {
-                        AbstractComponentManager<S> scm = createComponentManager();
+                        AbstractComponentManager<S> scm = createComponentManager(true);
                         m_components.put(pid, scm);
                         scm.reconfigure( mergeProperties( pid ), false);
                         cms.add( scm );
