@@ -45,7 +45,7 @@ public class ReadOnlyDictionary<S, T> extends Dictionary<S, T> implements Map<S,
      * Creates a wrapper for the given delegate dictionary providing read
      * only access to the data.
      */
-    public ReadOnlyDictionary( final Dictionary<S, T> delegate )
+    public ReadOnlyDictionary( final Map<S, T> delegate )
     {
         if ( delegate instanceof Hashtable )
         {
@@ -54,10 +54,9 @@ public class ReadOnlyDictionary<S, T> extends Dictionary<S, T> implements Map<S,
         else
         {
             this.m_delegate = new Hashtable<S, T>();
-            for ( Enumeration<S> ke = delegate.keys(); ke.hasMoreElements(); )
+            for ( Map.Entry<S, T> entry: delegate.entrySet() )
             {
-                S key = ke.nextElement();
-                this.m_delegate.put( key, delegate.get( key ) );
+                this.m_delegate.put( entry.getKey(), entry.getValue() );
             }
         }
     }

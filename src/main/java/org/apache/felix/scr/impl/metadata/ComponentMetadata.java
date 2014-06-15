@@ -23,10 +23,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -102,7 +104,7 @@ public class ComponentMetadata
     private List<String> m_configurationPid;
 
     // Associated properties (0..*)
-    private Dictionary<String, Object> m_properties = new Hashtable<String, Object>();
+    private Map<String, Object> m_properties = new HashMap<String, Object>();
 
     // List of Property metadata - used while building the meta data
     // while validating the properties contained in the PropertyMetadata
@@ -520,7 +522,11 @@ public class ComponentMetadata
         {
             throw new IllegalStateException("not yet validated");
         }
-    	return m_configurationPid == null? -1: m_configurationPid.indexOf(pid.getServicePid());
+        if (m_configurationPid == null )
+        {
+        	throw new IllegalStateException( "Apparently trying to configure a component " + m_name + " without a configurationPid using " + pid);
+        }
+    	return m_configurationPid.indexOf(pid.getServicePid());
     }
 
     /**
@@ -695,7 +701,7 @@ public class ComponentMetadata
      *
      * @return the properties as a Dictionary
      */
-    public Dictionary<String, Object> getProperties()
+    public Map<String, Object> getProperties()
     {
         return m_properties;
     }

@@ -24,26 +24,26 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.apache.felix.scr.Component;
-import org.apache.felix.scr.Reference;
 import org.apache.felix.scr.impl.Activator;
 import org.apache.felix.scr.impl.BundleComponentActivator;
+import org.apache.felix.scr.impl.config.ComponentManager;
+import org.apache.felix.scr.impl.config.ReferenceManager;
 import org.apache.felix.scr.impl.config.ScrConfiguration;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.helper.MethodResult;
@@ -54,7 +54,6 @@ import org.apache.felix.scr.impl.metadata.ServiceMetadata;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata.Scope;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -67,7 +66,7 @@ import org.osgi.service.log.LogService;
  * implementation object's lifecycle.
  *
  */
-public abstract class AbstractComponentManager<S> implements Component, SimpleLogger
+public abstract class AbstractComponentManager<S> implements SimpleLogger, ComponentManager<S>
 {
     //useful text for deactivation reason numbers
     static final String[] REASONS = {"Unspecified",
@@ -388,20 +387,20 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     //---------- Asynchronous frontend to state change methods ----------------
     private static final AtomicLong taskCounter = new AtomicLong( );
 
-    /**
-     * Enables this component and - if satisfied - also activates it. If
-     * enabling the component fails for any reason, the component ends up
-     * disabled.
-     * <p>
-     * This method ignores the <i>enabled</i> flag of the component metadata
-     * and just enables as requested.
-     * <p>
-     * This method enables and activates the component immediately.
-     */
-    public final void enable()
-    {
-        enable( true );
-    }
+//    /**
+//     * Enables this component and - if satisfied - also activates it. If
+//     * enabling the component fails for any reason, the component ends up
+//     * disabled.
+//     * <p>
+//     * This method ignores the <i>enabled</i> flag of the component metadata
+//     * and just enables as requested.
+//     * <p>
+//     * This method enables and activates the component immediately.
+//     */
+//    public final void enable()
+//    {
+//        enable( true );
+//    }
 
 
     public final void enable( final boolean async )
@@ -645,17 +644,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         return m_componentMetadata.getFactoryIdentifier();
     }
 
-    public Reference[] getReferences()
-    {
-        if ( m_dependencyManagers != null && m_dependencyManagers.size() > 0 )
-        {
-            return (Reference[]) m_dependencyManagers.toArray(
-                    new Reference[m_dependencyManagers.size()] );
-        }
-
-        return null;
-    }
-
     public boolean isImmediate()
     {
         return m_componentMetadata.isImmediate();
@@ -782,7 +770,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
                     null );
             return;
         }
-        if ( !isEnabled())
+        if ( !isInternalEnabled())
         {
             log( LogService.LOG_DEBUG, "Component is not enabled; not activating component",
                     null );
@@ -829,7 +817,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
                         null );
                 return;
             }
-            if ( !isEnabled() )
+            if ( !isInternalEnabled() )
             {
                 log( LogService.LOG_DEBUG, "Component is not enabled; not activating component",
                         null );
@@ -1259,7 +1247,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         return depMgrList;
     }
 
-    final void updateTargets(Dictionary<String, Object> properties)
+    final void updateTargets(Map<String, Object> properties)
     {
         for ( DependencyManager<S, ?> dm: getDependencyManagers() )
         {
@@ -1312,6 +1300,11 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     {
         return m_dependencyManagers;
     }
+    
+    public List<? extends ReferenceManager<S, ?>> getReferenceManagers()
+    {
+    	return m_dependencyManagers;
+    }
 
     /**
      * Returns an iterator over the {@link DependencyManager} objects
@@ -1327,11 +1320,11 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
     DependencyManager<S, ?> getDependencyManager(String name)
     {
-        for ( DependencyManager<S, ?> dm: getDependencyManagers() )
+        for ( ReferenceManager<S, ?> dm: getDependencyManagers() )
         {
             if ( name.equals(dm.getName()) )
             {
-                return dm;
+                return (DependencyManager<S, ?>) dm;
             }
         }
 
@@ -1360,7 +1353,10 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
     public abstract boolean hasConfiguration();
 
-    public abstract Dictionary<String, Object> getProperties();
+    /* (non-Javadoc)
+	 * @see org.apache.felix.scr.impl.manager.ComponentManager#getProperties()
+	 */
+    public abstract Map<String, Object> getProperties();
 
     public abstract void setServiceProperties( Dictionary<String, Object> serviceProperties );
 
@@ -1373,25 +1369,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     public Dictionary<String, Object> getServiceProperties()
     {
         return copyTo( null, getProperties(), false );
-    }
-
-    /**
-     * Copies the properties from the <code>source</code> <code>Dictionary</code>
-     * into the <code>target</code> <code>Dictionary</code>.
-     *
-     * @param target The <code>Dictionary</code> into which to copy the
-     *      properties. If <code>null</code> a new <code>Hashtable</code> is
-     *      created.
-     * @param source The <code>Dictionary</code> providing the properties to
-     *      copy. If <code>null</code> or empty, nothing is copied.
-     *
-     * @return The <code>target</code> is returned, which may be empty if
-     *      <code>source</code> is <code>null</code> or empty and
-     *      <code>target</code> was <code>null</code>.
-     */
-    protected static Dictionary<String, Object> copyTo( Dictionary<String, Object> target, Dictionary<String, ?> source )
-    {
-        return copyTo( target, source, true );
     }
 
     /**
@@ -1413,7 +1390,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
      *         <code>target</code> was <code>null</code> or all properties are
      *         private and had not to be copied
      */
-    protected static Dictionary<String, Object> copyTo( Dictionary<String, Object> target, final Dictionary<String, ?> source, final boolean allProps )
+    protected static Dictionary<String, Object> copyTo( Dictionary<String, Object> target, final Map<String, ?> source, final boolean allProps )
     {
         if ( target == null )
         {
@@ -1422,10 +1399,65 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
         if ( source != null && !source.isEmpty() )
         {
-            for ( Enumeration ce = source.keys(); ce.hasMoreElements(); )
+            for ( Map.Entry<String, ?> entry: source.entrySet() )
             {
                 // cast is save, because key must be a string as per the spec
-                String key = ( String ) ce.nextElement();
+                String key = entry.getKey();
+                if ( allProps || key.charAt( 0 ) != '.' )
+                {
+                    target.put( key, entry.getValue() );
+                }
+            }
+        }
+
+        return target;
+    }
+
+    /**
+     * Copies the properties from the <code>source</code> <code>Dictionary</code>
+     * into the <code>target</code> <code>Dictionary</code> except for private
+     * properties (whose name has a leading dot) which are only copied if the
+     * <code>allProps</code> parameter is <code>true</code>.
+     * @param source    The <code>Dictionary</code> providing the properties to
+     *                  copy. If <code>null</code> or empty, nothing is copied.
+     * @param allProps  Whether all properties (<code>true</code>) or only the
+     *                  public properties (<code>false</code>) are to be copied.
+     *
+     * @return The <code>target</code> is returned, which may be empty if
+     *         <code>source</code> is <code>null</code> or empty and
+     *         <code>target</code> was <code>null</code> or all properties are
+     *         private and had not to be copied
+     */
+    protected static Map<String, Object> copyToMap( final Dictionary<String, ?> source, final boolean allProps )
+    {
+        Map<String, Object> target = new HashMap<String, Object>();
+
+        if ( source != null && !source.isEmpty() )
+        {
+            for ( Enumeration<String> ce = source.keys(); ce.hasMoreElements(); )
+            {
+                // cast is save, because key must be a string as per the spec
+                String key = ce.nextElement();
+                if ( allProps || key.charAt( 0 ) != '.' )
+                {
+                    target.put( key, source.get( key ) );
+                }
+            }
+        }
+
+        return target;
+    }
+
+    protected static Dictionary<String, Object> copyToDictionary( final Dictionary<String, ?> source, final boolean allProps )
+    {
+        Hashtable<String, Object> target = new Hashtable<String, Object>();
+
+        if ( source != null && !source.isEmpty() )
+        {
+            for ( Enumeration<String> ce = source.keys(); ce.hasMoreElements(); )
+            {
+                // cast is save, because key must be a string as per the spec
+                String key = ce.nextElement();
                 if ( allProps || key.charAt( 0 ) != '.' )
                 {
                     target.put( key, source.get( key ) );
@@ -1445,29 +1477,32 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         return m_componentMetadata;
     }
 
+    /**
+     * TODO now returning bizarre mix of values!!
+     */
     public int getState()
     {
         if (m_disposed)
         {
-            return Component.STATE_DISPOSED;
+            return STATE_DISPOSED;
         }
         if ( !m_internalEnabled)
         {
-            return Component.STATE_DISABLED;
+            return STATE_DISABLED;
         }
         if ( getServiceRegistration() == null && (getProvidedServices() != null || !hasInstance()))
         {
-            return Component.STATE_UNSATISFIED;
+            return STATE_UNSATISFIED;
         }
         if ( isFactory() && !m_factoryInstance )
         {
-            return Component.STATE_FACTORY;
+            return STATE_FACTORY;
         }
         if ( hasInstance() )
         {
-            return Component.STATE_ACTIVE;
+            return STATE_ACTIVE;
         }
-        return Component.STATE_REGISTERED;
+        return STATE_SATISFIED;
     }
 
     abstract boolean hasInstance();
@@ -1481,7 +1516,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         }
     }
 
-    boolean isEnabled()
+    boolean isInternalEnabled()
     {
         return m_internalEnabled;
     }

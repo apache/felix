@@ -19,19 +19,13 @@
 package org.apache.felix.scr.impl.config;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.felix.scr.impl.Activator;
 import org.apache.felix.scr.impl.BundleComponentActivator;
@@ -58,7 +52,7 @@ public class ConfigurationSupport implements ConfigurationListener
         ChangeCount cc = null;
         try
         {
-            Configuration.class.getMethod( "getChangeCount", null );
+            Configuration.class.getMethod( "getChangeCount", (Class<?>[]) null );
             cc = new R5ChangeCount();
         }
         catch ( SecurityException e )
@@ -78,14 +72,14 @@ public class ConfigurationSupport implements ConfigurationListener
     private final ComponentRegistry m_registry;
 
     // the service m_registration of the ConfigurationListener service
-    private ServiceRegistration m_registration;
+    private ServiceRegistration<?> m_registration;
     
     public ConfigurationSupport(final BundleContext bundleContext, final ComponentRegistry registry)
     {
         this.m_registry = registry;
 
         // register as listener for configurations
-        Dictionary props = new Hashtable();
+        Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(Constants.SERVICE_DESCRIPTION, "Declarative Services Configuration Support Listener");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         this.m_registration = bundleContext.registerService(new String[]
@@ -103,7 +97,7 @@ public class ConfigurationSupport implements ConfigurationListener
 
     // ---------- BaseConfigurationSupport overwrites
 
-    public boolean configureComponentHolder(final ComponentHolder holder)
+    public boolean configureComponentHolder(final ComponentHolder<?> holder)
     {
 
         // 112.7 configure unless configuration not required
@@ -246,7 +240,7 @@ public class ConfigurationSupport implements ConfigurationListener
 
         // iterate over all components which must be configured with this pid
         // (since DS 1.2, components may specify a specific configuration PID (112.4.4 configuration-pid)
-        Collection<ComponentHolder> holders;
+        Collection<ComponentHolder<?>> holders;
 
         if (factoryPid == null)
         {
@@ -261,7 +255,7 @@ public class ConfigurationSupport implements ConfigurationListener
                 new Object[] {getEventType(event), pid, holders},
                 null);
 
-        for  ( ComponentHolder componentHolder: holders )
+        for  ( ComponentHolder<?> componentHolder: holders )
         {
             if (!componentHolder.getComponentMetadata().isConfigurationIgnored())
             {
@@ -269,7 +263,7 @@ public class ConfigurationSupport implements ConfigurationListener
                 case ConfigurationEvent.CM_DELETED:
                     if ( factoryPid != null || !configureComponentHolder( componentHolder ) )
                     {
-                        componentHolder.configurationDeleted( pid.getServicePid() );
+                        componentHolder.configurationDeleted( pid, factoryPid );
                     }
                     break;
 
@@ -291,13 +285,13 @@ public class ConfigurationSupport implements ConfigurationListener
                     TargetedPID oldTargetedPID = componentHolder.getConfigurationTargetedPID(pid, factoryPid);
                     if ( factoryPid != null || targetedPid.equals(oldTargetedPID) || targetedPid.bindsStronger( oldTargetedPID ))
                     {
-                        final ConfigurationInfo configInfo = getConfigurationInfo( pid, componentHolder, bundleContext );
+                        final ConfigurationInfo configInfo = getConfigurationInfo( pid, targetedPid, componentHolder, bundleContext );
                         if ( checkBundleLocation( configInfo.getBundleLocation(), bundleContext.getBundle() ) )
                         {
                             //If this is replacing a weaker targetedPID delete the old one.
                             if ( factoryPid == null && !targetedPid.equals(oldTargetedPID) && oldTargetedPID != null)
                             {
-                                componentHolder.configurationDeleted( pid.getServicePid() );
+                                componentHolder.configurationDeleted( pid, factoryPid );
                             }
                             componentHolder.configurationUpdated( pid, factoryPid, configInfo.getProps(), configInfo.getChangeCount() );
                         }
@@ -326,7 +320,7 @@ public class ConfigurationSupport implements ConfigurationListener
                     {
                         //this sets the location to this component's bundle if not already set.  OK here
                         //since it used to be set to this bundle, ok to reset it
-                        final ConfigurationInfo configInfo = getConfigurationInfo( pid, componentHolder, bundleContext );
+                        final ConfigurationInfo configInfo = getConfigurationInfo( pid, targetedPid, componentHolder, bundleContext );
                         Activator.log(LogService.LOG_DEBUG, null, "LocationChanged event, same targetedPID {0}, location now {1}",
                                 new Object[] {targetedPid, configInfo.getBundleLocation()},
                                 null);
@@ -339,7 +333,7 @@ public class ConfigurationSupport implements ConfigurationListener
                         if (!checkBundleLocation( configInfo.getBundleLocation(), bundleContext.getBundle() ))
                         {
                             //no, delete it
-                            componentHolder.configurationDeleted( pid.getServicePid() );
+                            componentHolder.configurationDeleted( pid, factoryPid );
                             //maybe there's another match
                             configureComponentHolder(componentHolder);
                             
@@ -352,7 +346,7 @@ public class ConfigurationSupport implements ConfigurationListener
                     {
                         //this sets the location to this component's bundle if not already set.  OK here
                         //because if it is set to this bundle we will use it.
-                        final ConfigurationInfo configInfo = getConfigurationInfo( pid, componentHolder, bundleContext );
+                        final ConfigurationInfo configInfo = getConfigurationInfo( pid, targetedPid, componentHolder, bundleContext );
                         Activator.log(LogService.LOG_DEBUG, null, "LocationChanged event, better targetedPID {0} compared to {1}, location now {2}",
                                 new Object[] {targetedPid, oldTargetedPID, configInfo.getBundleLocation()},
                                 null);
@@ -367,7 +361,7 @@ public class ConfigurationSupport implements ConfigurationListener
                             if ( oldTargetedPID != null )
                             {
                                 //this is a better match, delete old before setting new
-                                componentHolder.configurationDeleted( pid.getServicePid() );
+                                componentHolder.configurationDeleted( pid, factoryPid );
                             }
                             componentHolder.configurationUpdated( pid, factoryPid,
                                     configInfo.getProps(), configInfo.getChangeCount() );
@@ -448,12 +442,13 @@ public class ConfigurationSupport implements ConfigurationListener
      * are ungot.  Extracting the info we need into "configInfo" solves this problem.
      * 
      * @param pid TargetedPID for the desired configuration
+     * @param targetedPid the targeted factory pid for a factory configuration or the pid for a singleton configuration
      * @param componentHolder ComponentHolder that holds the old change count (for r4 fake change counting)
      * @param bundleContext BundleContext to get the CA from
      * @return ConfigurationInfo object containing the info we need from the configuration.
      */
-    private ConfigurationInfo getConfigurationInfo(final TargetedPID pid, ComponentHolder componentHolder,
-            final BundleContext bundleContext)
+    private ConfigurationInfo getConfigurationInfo(final TargetedPID pid, TargetedPID targetedPid,
+            ComponentHolder<?> componentHolder, final BundleContext bundleContext)
     {
         final ServiceReference caRef = bundleContext
             .getServiceReference(ComponentRegistry.CONFIGURATION_ADMIN);
@@ -471,7 +466,7 @@ public class ConfigurationSupport implements ConfigurationListener
                             final ConfigurationAdmin ca = ( ConfigurationAdmin ) cao;
                             final Configuration config = getConfiguration( ca, pid.getRawPid() );
                             return new ConfigurationInfo(config.getProperties(), config.getBundleLocation(),
-                                    changeCounter.getChangeCount( config, true, componentHolder.getChangeCount( pid ) ) );
+                                    changeCounter.getChangeCount( config, true, componentHolder.getChangeCount( pid, targetedPid ) ) );
                         }
                         else
                         {

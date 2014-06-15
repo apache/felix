@@ -39,6 +39,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.Reference;
 import org.apache.felix.scr.impl.BundleComponentActivator;
+import org.apache.felix.scr.impl.config.ReferenceManager;
 import org.apache.felix.scr.impl.helper.BindMethod;
 import org.apache.felix.scr.impl.helper.BindMethods;
 import org.apache.felix.scr.impl.helper.Coercions;
@@ -60,7 +61,7 @@ import org.osgi.service.log.LogService;
  * declared by a single <code>&lt;reference&gt;</code element in component
  * descriptor.
  */
-public class DependencyManager<S, T> implements Reference
+public class DependencyManager<S, T> implements ReferenceManager<S, T> 
 {
     // mask of states ok to send events
     private static final int STATE_MASK = 
@@ -1303,36 +1304,20 @@ public class DependencyManager<S, T> implements Reference
 
     //---------- bound services maintenance -----------------------------------
 
-    /**
-     * Returns an array of <code>ServiceReference</code> instances of all
-     * services this instance is bound to or <code>null</code> if no services
-     * are actually bound.
-     */
-    public ServiceReference<T>[] getServiceReferences()
+    /* (non-Javadoc)
+	 * @see org.apache.felix.scr.impl.manager.ReferenceManager#getServiceReferences()
+	 */
+    public List<ServiceReference<?>> getServiceReferences()
     {
         Collection<RefPair<T>> bound = m_customizer.getRefs(  new AtomicInteger( ) );
-        if ( bound.isEmpty() )
-        {
-            return null;
-        }
-        ServiceReference<T>[] result = new ServiceReference[bound.size()];
-        int i = 0;
+        List<ServiceReference<?>> result = new ArrayList<ServiceReference<?>>(bound.size());
         for (RefPair<T> ref: bound)
         {
-            result[i++] = ref.getRef();
+            result.add(ref.getRef());
         }
         return result;
     }
 
-    /**
-     * a mistake, use getServiceReferences instead
-     */
-    @Deprecated
-    public ServiceReference[] getBoundServiceReferences() 
-    {
-        return getServiceReferences();
-    }
-    
     /**
      * Returns the RefPair containing the given service reference and the bound service
      * or <code>null</code> if this is instance is not currently bound to that
@@ -1424,9 +1409,9 @@ public class DependencyManager<S, T> implements Reference
 
     //---------- DependencyManager core ---------------------------------------
 
-    /**
-     * Returns the name of the service reference.
-     */
+    /* (non-Javadoc)
+	 * @see org.apache.felix.scr.impl.manager.ReferenceManager#getName()
+	 */
     public String getName()
     {
         return m_dependencyMetadata.getName();
@@ -1785,7 +1770,7 @@ public class DependencyManager<S, T> implements Reference
      * apply.</li>
      * </ol>
      */
-    boolean canUpdateDynamically( Dictionary<String, Object> properties )
+    boolean canUpdateDynamically( Map<String, Object> properties )
     {
         // 1. no target filter change
         final String newTarget = ( String ) properties.get( m_dependencyMetadata.getTargetPropertyName() );
@@ -1845,14 +1830,14 @@ public class DependencyManager<S, T> implements Reference
      * @param properties The properties containing the optional target service
      *      filter property
      */
-    void setTargetFilter( Dictionary<String, Object> properties )
+    void setTargetFilter( Map<String, Object> properties )
     {
         Integer minimumCardinality = getMinimumCardinality( properties );
         setTargetFilter( ( String ) properties.get( m_dependencyMetadata.getTargetPropertyName() ),
                 minimumCardinality);
     }
 
-    private int getMinimumCardinality(Dictionary<String, Object> properties)
+    private int getMinimumCardinality(Map<String, Object> properties)
     {
         Integer minimumCardinality = null;
         try
@@ -2043,13 +2028,9 @@ public class DependencyManager<S, T> implements Reference
     }
 
 
-    /**
-     * Returns the target filter of this dependency as a string or
-     * <code>null</code> if this dependency has no target filter set.
-     *
-     * @return The target filter of this dependency or <code>null</code> if
-     *      none is set.
-     */
+    /* (non-Javadoc)
+	 * @see org.apache.felix.scr.impl.manager.ReferenceManager#getTarget()
+	 */
     public String getTarget()
     {
         return m_target;

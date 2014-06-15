@@ -22,6 +22,7 @@ package org.apache.felix.scr.impl.manager;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +32,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.TargetedPID;
 import org.apache.felix.scr.impl.config.ComponentHolder;
+import org.apache.felix.scr.impl.config.ComponentManager;
+import org.apache.felix.scr.impl.config.ReferenceManager;
 import org.apache.felix.scr.impl.helper.ActivateMethod.ActivatorParameter;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.helper.MethodResult;
@@ -66,10 +69,10 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     private Map<String, Object> m_configurationProperties;
     
     // optional properties provided in the ComponentFactory.newInstance method
-    private Dictionary<String, Object> m_factoryProperties;
+    private Map<String, Object> m_factoryProperties;
 
     // the component properties, also used as service properties
-    private Dictionary<String, Object> m_properties;
+    private Map<String, Object> m_properties;
 
     // properties supplied ot ExtComponentContext.updateProperties
     // null if properties are not to be overwritten
@@ -265,7 +268,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
         // 4. Bind the target services
 
-        DependencyManager<S, ?> failedDm = null;
+        ReferenceManager<S, ?> failedDm = null;
         for ( DependencyManager<S, ?> dm: getDependencyManagers())
         {
             if ( failedDm == null )
@@ -406,7 +409,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
     protected void setFactoryProperties( Dictionary<String, ?> dictionary )
     {
-        m_factoryProperties = copyTo( null, dictionary );
+        m_factoryProperties = copyToMap( dictionary, true );
     }
 
 
@@ -437,9 +440,9 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
      * Method implements the Component Properties provisioning as described
      * in 112.6, Component Properties.
      *
-     * @return a private Hashtable of component properties
+     * @return a private map of component properties
      */
-    public Dictionary<String, Object> getProperties()
+    public Map<String, Object> getProperties()
     {
 
         if ( m_properties == null )
@@ -447,14 +450,14 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
         	
             // 1. Merge all the config properties
-        	Hashtable<String, Object> props = new Hashtable<String, Object>();
+        	Map<String, Object> props = new HashMap<String, Object>();
         	if ( m_configurationProperties != null ) 
         	{
 				props.putAll(m_configurationProperties);
 			}
 			if ( m_factoryProperties != null)
         	{
-        		copyTo(props, m_factoryProperties);
+        		props.putAll(m_factoryProperties);
         	}
                     
             // 2. set component.name and component.id
@@ -475,7 +478,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         }
         else
         {
-            m_serviceProperties = copyTo( null, serviceProperties, false );
+            m_serviceProperties = copyToDictionary( serviceProperties, false );
             // set component.name and component.id
             m_serviceProperties.put( ComponentConstants.COMPONENT_NAME, getComponentMetadata().getName() );
             m_serviceProperties.put( ComponentConstants.COMPONENT_ID, getId() );
@@ -679,7 +682,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
         // 3. check whether we can dynamically apply the configuration if
         // any target filters influence the bound services
-        final Dictionary<String, Object> props = getProperties();
+        final Map<String, Object> props = getProperties();
         for ( DependencyManager dm: getDependencyManagers() )
         {
             if ( !dm.canUpdateDynamically( props ) )
@@ -867,7 +870,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     private S getService()
     {
         //should be write locked
-        if (!isEnabled())
+        if (!isInternalEnabled())
         {
             return null;
         }
