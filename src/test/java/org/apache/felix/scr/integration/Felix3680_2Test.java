@@ -25,11 +25,11 @@ import javax.inject.Inject;
 
 import junit.framework.TestCase;
 
-import org.apache.felix.scr.Component;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.framework.BundleContext;
+import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 
 
 @RunWith(JUnit4TestRunner.class)
@@ -68,11 +68,10 @@ public class Felix3680_2Test extends ComponentTestBase
     {
         for ( int i = 0; i < 6; i++ )
         {
-            final Component main = findComponentByName( "org.apache.felix.scr.integration.components.felix3680_2.Main" );
-            TestCase.assertNotNull( main );
-            main.enable();
+            final ComponentDescriptionDTO main = findComponentDescriptorByName( "org.apache.felix.scr.integration.components.felix3680_2.Main" );
+            enableAndCheck(main);
             delay( 5 ); //run test for 30 seconds
-            main.disable();
+            disableAndCheck(main);
             delay(); //async deactivate
             if ( log.getFirstFrameworkThrowable() != null )
             {

@@ -20,6 +20,10 @@ package org.apache.felix.scr.integration.components;
 
 public class Felix4350Component {
 
+	private static Felix4350Component m_instance;
+	private static int m_activateCount;
+	private static int m_deactivateCount;
+	
     private SimpleComponent component1;
     private SimpleComponent2 component2;
 
@@ -40,9 +44,27 @@ public class Felix4350Component {
     }
 
     public void start() {
+    	m_instance = this;
+    	m_activateCount++;
     }
 
     public void stop() {
+    	m_instance = null;
+    	m_deactivateCount++;
     }
-
+    
+    public static void check(int activateCount, int deactivateCount, boolean activated)
+    {
+    	if (activateCount != m_activateCount ||
+    			deactivateCount != m_deactivateCount ||
+    			activated == (m_instance == null))
+    	{
+    		String message = "activation: expected " + activateCount + " actual " + m_activateCount +
+    				" deactivation: expected " + deactivateCount + " actual " + m_deactivateCount +
+    				" activated: expected " + activated + " actual " + (m_instance != null);
+    		throw new IllegalStateException( message );
+    		
+    	}
+    }
+    
 }

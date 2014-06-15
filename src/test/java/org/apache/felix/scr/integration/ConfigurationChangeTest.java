@@ -22,7 +22,6 @@ import java.util.Hashtable;
 
 import junit.framework.TestCase;
 
-import org.apache.felix.scr.Component;
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.apache.felix.scr.integration.components.SimpleServiceImpl;
 import org.junit.Test;
@@ -33,6 +32,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentFactory;
 import org.osgi.service.component.ComponentInstance;
+import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
 @RunWith(JUnit4TestRunner.class)
 public class ConfigurationChangeTest extends ComponentTestBase
@@ -105,20 +105,13 @@ public class ConfigurationChangeTest extends ComponentTestBase
 
     private void singleTest(String pid, boolean dynamic)
     {
-        final Component component = findComponentByName( pid );
-        TestCase.assertNotNull( component );
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
-
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
         final SimpleServiceImpl srv2 = SimpleServiceImpl.create( bundleContext, "srv2" );
 
         theConfig.put("ref.target", "(value=srv1)");
         configure( pid );
-        // async enabling
-        component.enable();
-        delay();
 
-        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+		getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.ACTIVE);
         final SimpleComponent comp10 = SimpleComponent.INSTANCE;
         TestCase.assertNotNull( comp10 );
         TestCase.assertEquals( srv1, comp10.m_singleRef );
@@ -150,7 +143,7 @@ public class ConfigurationChangeTest extends ComponentTestBase
             TestCase.assertEquals( 0, comp20.m_singleRefUnbind);
             TestCase.assertEquals( 1, comp10.m_singleRefUnbind);
         }
-        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+        findComponentConfigurationByName(pid, ComponentConfigurationDTO.ACTIVE);
         TestCase.assertEquals( srv2, comp20.m_singleRef );
         TestCase.assertTrue( comp20.m_multiRef.isEmpty() );
     }
@@ -214,20 +207,14 @@ public class ConfigurationChangeTest extends ComponentTestBase
 
     private void multipleTest(String pid, boolean dynamic)
     {
-        final Component component = findComponentByName( pid );
-        TestCase.assertNotNull( component );
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
-
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
         final SimpleServiceImpl srv2 = SimpleServiceImpl.create( bundleContext, "srv2" );
 
         theConfig.put("ref.target", "(value=srv1)");
         configure( pid );
-        // async enabling
-        component.enable();
-        delay();
 
-        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+        getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.ACTIVE);
+
         final SimpleComponent comp10 = SimpleComponent.INSTANCE;
         TestCase.assertNotNull( comp10 );
         TestCase.assertEquals( 1, comp10.m_multiRef.size() );
@@ -259,7 +246,7 @@ public class ConfigurationChangeTest extends ComponentTestBase
             TestCase.assertEquals( 0, comp20.m_multiRefUnbind);
             TestCase.assertEquals( 1, comp10.m_multiRefUnbind);
         }
-        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+        findComponentConfigurationByName(pid, ComponentConfigurationDTO.ACTIVE);
         TestCase.assertEquals( 1, comp20.m_multiRef.size() );
         TestCase.assertEquals( srv2, comp20.m_multiRef.iterator().next() );
     }
@@ -271,20 +258,15 @@ public class ConfigurationChangeTest extends ComponentTestBase
         String pid = "test_required_single_dynamic_factory";
         final String factoryPid = "factory_" + pid;
         boolean dynamic = true;
-        final Component component = findComponentByName( pid );
-        TestCase.assertNotNull( component );
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
 
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
         final SimpleServiceImpl srv2 = SimpleServiceImpl.create( bundleContext, "srv2" );
 
         theConfig.put("ref.target", "(value=srv1)");
         configure( pid );
-        // async enabling
-        component.enable();
-        delay();
 
-        TestCase.assertEquals( Component.STATE_FACTORY, component.getState() );
+        getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.ACTIVE); //?????? Not clear what should happen.
+//        TestCase.assertEquals( Component.STATE_FACTORY, component.getState() );
         
         // create a component instance
         final ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(), "("
@@ -333,7 +315,7 @@ public class ConfigurationChangeTest extends ComponentTestBase
             TestCase.assertEquals( 0, comp20.m_singleRefUnbind);
             TestCase.assertEquals( 1, comp10.m_singleRefUnbind);
         }
-        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+        findComponentConfigurationByName(pid, ComponentConfigurationDTO.ACTIVE);
         TestCase.assertEquals( srv2, comp20.m_singleRef );
         TestCase.assertTrue( comp20.m_multiRef.isEmpty() );
     }

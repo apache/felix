@@ -13,5 +13,8 @@
 	<scr:component xmlns:scr='http://www.osgi.org/xmlns/scr/v1.1.0'
 		name='org.apache.felix.scr.integration.components.Felix4188Component-1' activate='start' deactivate='stop'>
         <implementation class="org.apache.felix.scr.integration.components.felix4188.Felix4188Component" />
+        <service>
+            <provide>org.apache.felix.scr.integration.components.felix4188.Felix4188Component</provide>
+        </service>
 	</scr:component>
 </components>

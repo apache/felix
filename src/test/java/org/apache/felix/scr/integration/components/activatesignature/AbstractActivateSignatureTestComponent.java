@@ -19,6 +19,7 @@
 package org.apache.felix.scr.integration.components.activatesignature;
 
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.osgi.service.component.ComponentConstants;
@@ -27,6 +28,13 @@ import org.osgi.service.component.ComponentContext;
 
 public abstract class AbstractActivateSignatureTestComponent
 {
+	
+	private static final  Map<String, AbstractActivateSignatureTestComponent> instances = new HashMap<String, AbstractActivateSignatureTestComponent>();
+	
+	public static  AbstractActivateSignatureTestComponent getInstance(String name)
+	{
+		return instances.get(name);
+	}
 
     private String methodCalled;
 
@@ -40,6 +48,7 @@ public abstract class AbstractActivateSignatureTestComponent
     protected void setMethodCalled( String methodCalled )
     {
         this.methodCalled = methodCalled;
+        instances.put(methodCalled, this);
     }
 
 

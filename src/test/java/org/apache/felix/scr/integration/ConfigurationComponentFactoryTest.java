@@ -68,7 +68,7 @@ public class ConfigurationComponentFactoryTest extends ComponentTestBase
         final String componentname = "factory.component";
         final String componentfactory = "factory.component.factory";
 
-        final Component component = findComponentByName( componentname );
+        final Component component = findComponentDescriptorByName( componentname );
 
         TestCase.assertNotNull( component );
         TestCase.assertFalse( component.isDefaultEnabled() );
@@ -104,7 +104,7 @@ public class ConfigurationComponentFactoryTest extends ComponentTestBase
 
 
         // check registered components
-        Component[] allFactoryComponents = findComponentsByName( componentname );
+        Component[] allFactoryComponents = findComponentConfigurationsByName( componentname, -1 );
         TestCase.assertNotNull( allFactoryComponents );
         TestCase.assertEquals( 2, allFactoryComponents.length );
         for ( int i = 0; i < allFactoryComponents.length; i++ )
@@ -136,7 +136,7 @@ public class ConfigurationComponentFactoryTest extends ComponentTestBase
         TestCase.assertEquals( PROP_NAME_FACTORY, SimpleComponent.INSTANCE.getProperty( PROP_NAME ) );
 
         // check registered components
-        allFactoryComponents = findComponentsByName( componentname );
+        allFactoryComponents = findComponentConfigurationsByName( componentname, -1 );
         TestCase.assertNotNull( allFactoryComponents );
         TestCase.assertEquals( 2, allFactoryComponents.length );
         for ( int i = 0; i < allFactoryComponents.length; i++ )
@@ -175,7 +175,7 @@ public class ConfigurationComponentFactoryTest extends ComponentTestBase
         TestCase.assertEquals( 1, instanceMap.size() );
 
         // check registered components
-        allFactoryComponents = findComponentsByName( componentname );
+        allFactoryComponents = findComponentConfigurationsByName( componentname, -1 );
         TestCase.assertNotNull( allFactoryComponents );
         TestCase.assertEquals( 2, allFactoryComponents.length );
         for ( int i = 0; i < allFactoryComponents.length; i++ )
@@ -205,7 +205,7 @@ public class ConfigurationComponentFactoryTest extends ComponentTestBase
         TestCase.assertEquals( 0, instanceMap.size() );
 
         // check registered components
-        allFactoryComponents = findComponentsByName( componentname );
+        allFactoryComponents = findComponentConfigurationsByName( componentname, -1 );
         TestCase.assertNotNull( allFactoryComponents );
         TestCase.assertEquals( 1, allFactoryComponents.length );
         for ( int i = 0; i < allFactoryComponents.length; i++ )

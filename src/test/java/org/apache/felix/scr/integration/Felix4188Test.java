@@ -26,7 +26,6 @@ import java.util.concurrent.CountDownLatch;
 import javax.inject.Inject;
 
 import junit.framework.TestCase;
-import org.apache.felix.scr.Component;
 import org.apache.felix.scr.integration.components.felix4188.Felix4188Component;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,6 +34,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
+import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
 import static org.ops4j.pax.tinybundles.core.TinyBundles.bundle;
 import static org.ops4j.pax.tinybundles.core.TinyBundles.withBnd;
@@ -68,15 +68,13 @@ public class Felix4188Test extends ComponentTestBase
         final Bundle bundle2 = installBundle("/integration_test_FELIX_4188_2.xml", "", "simplecomponent2");
         bundle2.start();
 
-        final Component aComp1 =
-                findComponentByName("org.apache.felix.scr.integration.components.Felix4188Component-1");
-        aComp1.enable();
-        final Object aInst1 = aComp1.getComponentInstance().getInstance();
+        final ComponentConfigurationDTO aComp1 =
+                findComponentConfigurationByName( bundle1, "org.apache.felix.scr.integration.components.Felix4188Component-1", ComponentConfigurationDTO.ACTIVE);
+        final Felix4188Component aInst1 = getServiceFromConfiguration(aComp1, Felix4188Component.class);
 
-        final Component aComp2 =
-                findComponentByName("org.apache.felix.scr.integration.components.Felix4188Component-2");
-        aComp2.enable();
-        final Object aInst2 = aComp2.getComponentInstance().getInstance();
+        final ComponentConfigurationDTO aComp2 =
+                findComponentConfigurationByName( bundle1, "org.apache.felix.scr.integration.components.Felix4188Component-2", ComponentConfigurationDTO.ACTIVE);
+        final Felix4188Component aInst2 = getServiceFromConfiguration(aComp2, Felix4188Component.class);
 
         final CountDownLatch latch = new CountDownLatch(1);
 

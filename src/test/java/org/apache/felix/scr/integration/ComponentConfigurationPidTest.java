@@ -21,11 +21,12 @@ package org.apache.felix.scr.integration;
 
 import junit.framework.TestCase;
 
-import org.apache.felix.scr.Component;
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
+import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 
 
 @RunWith(JUnit4TestRunner.class)
@@ -43,40 +44,28 @@ public class ComponentConfigurationPidTest extends ComponentTestBase
     {
         final String pid = "ConfigurationPid.otherPid";
         final String name = "ConfigurationPid.componentName";
-        final Component component = findComponentByName( name );
-
         deleteConfig( pid );
         delay();
-
-        TestCase.assertNotNull( component );
-        TestCase.assertFalse( component.isDefaultEnabled() );
-
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
-        component.enable();
-        delay();
+        getConfigurationsDisabledThenEnable(name, 0, ComponentConfigurationDTO.UNSATISFIED);
 
-        TestCase.assertEquals( Component.STATE_UNSATISFIED, component.getState() );
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
         configure( pid );
         delay();
 
-        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+        findComponentConfigurationByName( name, ComponentConfigurationDTO.ACTIVE);
         TestCase.assertNotNull( SimpleComponent.INSTANCE );
         TestCase.assertEquals( PROP_NAME, SimpleComponent.INSTANCE.getProperty( PROP_NAME ) );
 
         deleteConfig( pid );
         delay();
 
-        TestCase.assertEquals( Component.STATE_UNSATISFIED, component.getState() );
+        ComponentDescriptionDTO cd = checkConfigurationCount(name, 0, -1);
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
-        component.disable();
-        delay();
-
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+        disableAndCheck( cd );
         TestCase.assertNull( SimpleComponent.INSTANCE );
     }
     
@@ -85,29 +74,21 @@ public class ComponentConfigurationPidTest extends ComponentTestBase
     {
         final String name = "ConfigurationPid.componentName";
         final String pid = name;
-        final Component component = findComponentByName( name );
-
         deleteConfig( pid );
         delay();
 
-        TestCase.assertNotNull( component );
-        TestCase.assertFalse( component.isDefaultEnabled() );
-
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
-        TestCase.assertNull( SimpleComponent.INSTANCE );
-
-        component.enable();
-        delay();
-
-        TestCase.assertEquals( Component.STATE_UNSATISFIED, component.getState() );
+        getConfigurationsDisabledThenEnable(name, 0, ComponentConfigurationDTO.UNSATISFIED);
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
         configure( pid );
         delay();
 
-        TestCase.assertEquals( Component.STATE_UNSATISFIED, component.getState() );
+        ComponentDescriptionDTO cd = checkConfigurationCount(name, 0, -1);
+        TestCase.assertNull( SimpleComponent.INSTANCE );
 
         deleteConfig( pid );
         delay();
+        
+        disableAndCheck( cd );
     }
 }

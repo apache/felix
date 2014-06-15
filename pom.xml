@@ -252,7 +252,10 @@
                             org.apache.felix.scr;version=1.8,
                             org.apache.felix.scr.component;version=1.0;
                                 mandatory:="status"; status="provisional",
-                            org.osgi.service.component
+                            org.osgi.service.component,
+                            org.osgi.service.component.runtime.*,
+                            org.osgi.dto,
+                            org.osgi.framework.dto
                         </Export-Package>
                         <Private-Package>
                             org.apache.felix.scr.impl.*,
