@@ -61,14 +61,15 @@ public interface ComponentHolder<S>
      * Configuration Admin service.
      *
      * @param pid The PID of the deleted configuration
+     * @param factoryPid TODO
      */
-    void configurationDeleted( String pid );
+    void configurationDeleted( TargetedPID pid, TargetedPID factoryPid );
 
 
     /**
      * Configure a component with configuration from the given PID.
      * @param targetedPid Targeted PID for the configuration
-     * @param factoryTargetedPid TODO
+     * @param factoryTargetedPid the (targeted) factory pid or null for a singleton pid
      * @param props the property dictionary from the configuration.
      * @param changeCount change count of the configuration, or R4 imitation.
      *
@@ -79,10 +80,11 @@ public interface ComponentHolder<S>
     
     /**
      * Change count (or fake R4 imitation)
-     * @param pid PID of the component we are interested in.
+     * @param pid a PID for the component we are interested in.
+     * @param targetedPid For a singleton pid, same as "pid"; for a factory pid, the factory pid.
      * @return the last change count from a configurationUpdated call for the given pid.
      */
-    long getChangeCount( TargetedPID pid );
+    long getChangeCount( TargetedPID pid, TargetedPID targetedPid );
     
     /**
      * Returns the targeted PID used to configure this component
@@ -95,7 +97,7 @@ public interface ComponentHolder<S>
     /**
      * Returns all <code>Component</code> instances held by this holder.
      */
-    List<? extends Component> getComponents();
+    List<? extends ComponentManager<?>> getComponents();
 
     /**
      * Enables all components of this holder and if satisifed activates
@@ -114,6 +116,12 @@ public interface ComponentHolder<S>
      *      asynchronously or not.
      */
     void disableComponents( boolean async );
+    
+    /**
+     * whether the component is currently enabled
+     * @return whether the component is enabled
+     */
+    boolean isEnabled();
 
 
     /**

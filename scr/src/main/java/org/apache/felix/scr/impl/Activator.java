@@ -27,12 +27,15 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.scr.impl.config.ScrConfiguration;
+import org.apache.felix.scr.impl.runtime.ServiceComponentRuntimeImpl;
 import org.apache.felix.utils.extender.AbstractExtender;
 import org.apache.felix.utils.extender.Extension;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentConstants;
+import org.osgi.service.component.runtime.ServiceComponentRuntime;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -73,6 +76,8 @@ public class Activator extends AbstractExtender
 
     //  thread acting upon configurations
     private ComponentActorThread m_componentActor;
+    
+    private ServiceRegistration<ServiceComponentRuntime> m_runtime_reg;
 
     public Activator() {
         m_configuration = new ScrConfiguration( this );
@@ -136,7 +141,8 @@ public class Activator extends AbstractExtender
         // prepare component registry
         m_componentBundles = new HashMap<Long, BundleComponentActivator>();
         m_componentRegistry = new ComponentRegistry( m_context );
-
+        ServiceComponentRuntime runtime = new ServiceComponentRuntimeImpl(m_context, m_componentRegistry);
+        m_runtime_reg = m_context.registerService(ServiceComponentRuntime.class, runtime, null);
 
         // log SCR startup
         log( LogService.LOG_INFO, m_bundle, " Version = {0}",
@@ -150,9 +156,10 @@ public class Activator extends AbstractExtender
 
         super.doStart();
 
+        //TODO register runtime.  Possibly register obsolete stuff too.
         // register the Gogo and old Shell commands
-        ScrCommand scrCommand = ScrCommand.register(m_context, m_componentRegistry, m_configuration);
-        m_configuration.setScrCommand( scrCommand );
+//        ScrCommand scrCommand = ScrCommand.register(m_context, m_componentRegistry, m_configuration);
+//        m_configuration.setScrCommand( scrCommand );
     }
     
     public void stop(BundleContext context) throws Exception
@@ -173,7 +180,12 @@ public class Activator extends AbstractExtender
         // stop tracking
         super.doStop();
 
-        // dispose component registry
+    	if (m_runtime_reg != null)
+    	{
+			m_runtime_reg.unregister();
+			m_runtime_reg = null;
+		}
+		// dispose component registry
         m_componentRegistry.dispose();
 
         // terminate the actor thread

@@ -29,6 +29,7 @@ import org.apache.felix.scr.Component;
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.TargetedPID;
 import org.apache.felix.scr.impl.config.ComponentHolder;
+import org.apache.felix.scr.impl.config.ComponentManager;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.osgi.framework.Constants;
@@ -117,11 +118,11 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
 
     //---------- ComponentHolder interface
 
-    public void configurationDeleted( String pid )
+    public void configurationDeleted( TargetedPID pid, TargetedPID factoryPid )
     {
         if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
         {
-            super.configurationDeleted( pid );
+            super.configurationDeleted( pid, factoryPid );
         }
         else
         {
@@ -189,9 +190,9 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
     }
 
 
-    public List<? extends Component> getComponents()
+    public List<? extends ComponentManager<S>> getComponents()
     {
-        List<AbstractComponentManager<S>> cms = getComponentList();
+        List<AbstractComponentManager<S>> cms = (List<AbstractComponentManager<S>>) super.getComponents();
         getComponentManagers( m_configuredServices, cms );
         return cms;
     }

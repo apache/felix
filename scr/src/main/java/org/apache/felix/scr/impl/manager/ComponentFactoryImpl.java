@@ -32,6 +32,7 @@ import org.apache.felix.scr.component.ExtFactoryComponentInstance;
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.TargetedPID;
 import org.apache.felix.scr.impl.config.ComponentHolder;
+import org.apache.felix.scr.impl.config.ComponentManager;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
@@ -252,9 +253,13 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     }
 
 
-    public Dictionary<String, Object> getProperties()
+    /** 
+     * For ComponentFactoryImpl, this is used only for updating targets on the dependency managers, so we don't need any other 
+     * properties.
+     */
+    public Map<String, Object> getProperties()
     {
-        Dictionary<String, Object> props = getServiceProperties();
+        Map<String, Object> props = new HashMap<String, Object>();
 
         // add target properties of references
         List<ReferenceMetadata> depMetaData = getComponentMetadata().getDependencies();
@@ -332,7 +337,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
 
     //---------- ComponentHolder interface
 
-    public void configurationDeleted( String pid )
+    public void configurationDeleted( TargetedPID pid, TargetedPID factoryPid )
     {
         m_targetedPID = null;
         if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
@@ -451,18 +456,13 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     }
 
 
-    public synchronized long getChangeCount( TargetedPID pid)
+    public synchronized long getChangeCount( TargetedPID pid, TargetedPID targetedPid)
     {
         
         return m_changeCount;
     }
 
-    public List<? extends Component> getComponents()
-    {
-        return getComponentList();
-    }
-
-    protected List<AbstractComponentManager<S>> getComponentList()
+	public List<? extends ComponentManager<S>> getComponents()
     {
         List<AbstractComponentManager<S>> cms = new ArrayList<AbstractComponentManager<S>>( );
         cms.add( this );
@@ -555,6 +555,11 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     {
         return m_targetedPID;
     }
+
+
+	public boolean isEnabled() {
+		return isInternalEnabled();
+	}
 
 
 }
