@@ -102,6 +102,14 @@ public class ServiceMetadata {
             throw componentMetadata
                 .validationFailure( "At least one provided interface must be declared in the service element" );
         }
+        for ( String provide: m_provides )
+        {
+        	if ( provide == null )
+        	{
+                throw componentMetadata
+                    .validationFailure( "Null provides.  Possibly service is not specified as value of attribute 'interface'" );
+        	}
+        }
         if (m_serviceFactory != null)
         {
         	if (componentMetadata.getNamespaceCode() >= XmlHandler.DS_VERSION_1_3)
