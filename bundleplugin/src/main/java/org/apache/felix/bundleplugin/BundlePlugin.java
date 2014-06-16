@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -231,8 +232,10 @@ public class BundlePlugin extends AbstractMojo
 
     private static final String MAVEN_SYMBOLICNAME = "maven-symbolicname";
     private static final String MAVEN_RESOURCES = "{maven-resources}";
+    private static final String MAVEN_TEST_RESOURCES = "{maven-test-resources}";
     private static final String LOCAL_PACKAGES = "{local-packages}";
     private static final String MAVEN_SOURCES = "{maven-sources}";
+    private static final String MAVEN_TEST_SOURCES = "{maven-test-sources}";
 
     private static final String[] EMPTY_STRING_ARRAY =
         {};
@@ -695,37 +698,28 @@ public class BundlePlugin extends AbstractMojo
     protected static void includeMavenResources( MavenProject currentProject, Analyzer analyzer, Log log )
     {
         // pass maven resource paths onto BND analyzer
-        final String mavenResourcePaths = getMavenResourcePaths( currentProject );
-        final String includeResource = ( String ) analyzer.getProperty( Analyzer.INCLUDE_RESOURCE );
+        final String mavenResourcePaths = getMavenResourcePaths( currentProject, false );
+        final String mavenTestResourcePaths = getMavenResourcePaths( currentProject, true );
+        final String includeResource = analyzer.getProperty( Analyzer.INCLUDE_RESOURCE );
         if ( includeResource != null )
         {
-            if ( includeResource.indexOf( MAVEN_RESOURCES ) >= 0 )
+            if ( includeResource.contains( MAVEN_RESOURCES ) || includeResource.contains( MAVEN_TEST_RESOURCES ) )
             {
-                // if there is no maven resource path, we do a special treatment and replace
-                // every occurance of MAVEN_RESOURCES and a following comma with an empty string
-                if ( mavenResourcePaths.length() == 0 )
+                String combinedResource = StringUtils.replace( includeResource, MAVEN_RESOURCES, mavenResourcePaths );
+                combinedResource = StringUtils.replace( combinedResource, MAVEN_TEST_RESOURCES, mavenTestResourcePaths );
+                if ( combinedResource.length() > 0 )
                 {
-                    String cleanedResource = removeTagFromInstruction( includeResource, MAVEN_RESOURCES );
-                    if ( cleanedResource.length() > 0 )
-                    {
-                        analyzer.setProperty( Analyzer.INCLUDE_RESOURCE, cleanedResource );
-                    }
-                    else
-                    {
-                        analyzer.unsetProperty( Analyzer.INCLUDE_RESOURCE );
-                    }
+                    analyzer.setProperty( Analyzer.INCLUDE_RESOURCE, combinedResource );
                 }
                 else
                 {
-                    String combinedResource = StringUtils
-                        .replace( includeResource, MAVEN_RESOURCES, mavenResourcePaths );
-                    analyzer.setProperty( Analyzer.INCLUDE_RESOURCE, combinedResource );
+                    analyzer.unsetProperty( Analyzer.INCLUDE_RESOURCE );
                 }
             }
             else if ( mavenResourcePaths.length() > 0 )
             {
                 log.warn( Analyzer.INCLUDE_RESOURCE + ": overriding " + mavenResourcePaths + " with " + includeResource
-                    + " (add " + MAVEN_RESOURCES + " if you want to include the maven resources)" );
+                        + " (add " + MAVEN_RESOURCES + " if you want to include the maven resources)" );
             }
         }
         else if ( mavenResourcePaths.length() > 0 )
@@ -1421,9 +1415,9 @@ public class BundlePlugin extends AbstractMojo
     }
 
 
-    private static List getMavenResources( MavenProject currentProject )
+    private static List getMavenResources( MavenProject currentProject, boolean test )
     {
-        List resources = new ArrayList( currentProject.getResources() );
+        List resources = new ArrayList( test ? currentProject.getTestResources() : currentProject.getResources() );
 
         if ( currentProject.getCompileSourceRoots() != null )
         {
@@ -1443,12 +1437,12 @@ public class BundlePlugin extends AbstractMojo
     }
 
 
-    protected static String getMavenResourcePaths( MavenProject currentProject )
+    protected static String getMavenResourcePaths( MavenProject currentProject, boolean test )
     {
         final String basePath = currentProject.getBasedir().getAbsolutePath();
 
         Set pathSet = new LinkedHashSet();
-        for ( Iterator i = getMavenResources( currentProject ).iterator(); i.hasNext(); )
+        for ( Iterator i = getMavenResources( currentProject, test ).iterator(); i.hasNext(); )
         {
             Resource resource = ( Resource ) i.next();
 
@@ -1563,47 +1557,51 @@ public class BundlePlugin extends AbstractMojo
     {
         // pass maven source paths onto BND analyzer
         StringBuilder mavenSourcePaths = new StringBuilder();
-        if ( currentProject.getCompileSourceRoots() != null )
+        StringBuilder mavenTestSourcePaths = new StringBuilder();
+        Map<StringBuilder, List<?>> map = new HashMap<StringBuilder, List<?>>(2);
+        map.put(mavenSourcePaths, currentProject.getCompileSourceRoots() );
+        map.put(mavenTestSourcePaths, currentProject.getTestCompileSourceRoots() );
+        for ( Map.Entry<StringBuilder, List<?>> entry : map.entrySet() )
         {
-            for ( Iterator i = currentProject.getCompileSourceRoots().iterator(); i.hasNext(); )
+            List<?> compileSourceRoots = entry.getValue();
+            if ( compileSourceRoots != null )
             {
-                if ( mavenSourcePaths.length() > 0 )
+                StringBuilder sourcePaths = entry.getKey();
+                for ( Iterator i = compileSourceRoots.iterator(); i.hasNext(); )
                 {
-                    mavenSourcePaths.append( ',' );
+                    if ( sourcePaths.length() > 0 )
+                    {
+                        sourcePaths.append( ',' );
+                    }
+                    sourcePaths.append( ( String ) i.next() );
                 }
-                mavenSourcePaths.append( ( String ) i.next() );
             }
         }
-        final String sourcePath = ( String ) analyzer.getProperty( Analyzer.SOURCEPATH );
+        final String sourcePath = analyzer.getProperty( Analyzer.SOURCEPATH );
         if ( sourcePath != null )
         {
-            if ( sourcePath.indexOf( MAVEN_SOURCES ) >= 0 )
+            if ( sourcePath.contains(MAVEN_SOURCES) || sourcePath.contains(MAVEN_TEST_RESOURCES) )
             {
-                // if there is no maven source path, we do a special treatment and replace
-                // every occurance of MAVEN_SOURCES and a following comma with an empty string
-                if ( mavenSourcePaths.length() == 0 )
+                String combinedSource = StringUtils.replace( sourcePath, MAVEN_SOURCES, mavenSourcePaths.toString() );
+                combinedSource = StringUtils.replace( combinedSource, MAVEN_TEST_SOURCES, mavenTestSourcePaths.toString() );
+                if ( combinedSource.length() > 0 )
                 {
-                    String cleanedSource = removeTagFromInstruction( sourcePath, MAVEN_SOURCES );
-                    if ( cleanedSource.length() > 0 )
-                    {
-                        analyzer.setProperty( Analyzer.SOURCEPATH, cleanedSource );
-                    }
-                    else
-                    {
-                        analyzer.unsetProperty( Analyzer.SOURCEPATH );
-                    }
+                    analyzer.setProperty( Analyzer.SOURCEPATH, combinedSource );
                 }
                 else
                 {
-                    String combinedSource = StringUtils
-                        .replace( sourcePath, MAVEN_SOURCES, mavenSourcePaths.toString() );
-                    analyzer.setProperty( Analyzer.SOURCEPATH, combinedSource );
+                    analyzer.unsetProperty( Analyzer.SOURCEPATH );
                 }
             }
             else if ( mavenSourcePaths.length() > 0 )
             {
                 log.warn( Analyzer.SOURCEPATH + ": overriding " + mavenSourcePaths + " with " + sourcePath + " (add "
                     + MAVEN_SOURCES + " if you want to include the maven sources)" );
+            }
+            else if ( mavenTestSourcePaths.length() > 0 )
+            {
+                log.warn( Analyzer.SOURCEPATH + ": overriding " + mavenTestSourcePaths + " with " + sourcePath + " (add "
+                        + MAVEN_TEST_SOURCES + " if you want to include the maven sources)" );
             }
         }
         else if ( mavenSourcePaths.length() > 0 )
