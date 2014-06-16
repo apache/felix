@@ -164,10 +164,10 @@ public class ManifestPlugin extends BundlePlugin
             return buildOSGiBundle( project, instructions, properties, classpath );
         }
 
-        File file = project.getArtifact().getFile();
+        File file = getOutputDirectory();
         if ( file == null )
         {
-            file = getOutputDirectory();
+            file = project.getArtifact().getFile();
         }
 
         if ( !file.exists() )

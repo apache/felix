@@ -209,7 +209,7 @@ public class BundlePluginTest extends AbstractBundlePluginTest
         MavenProject project = getMavenProjectStub();
         project.addCompileSourceRoot( getBasedir() + "/src/test/java" );
 
-        String resourcePaths = plugin.getMavenResourcePaths( project );
+        String resourcePaths = plugin.getMavenResourcePaths( project, false );
 
         assertEquals( "org/apache/felix/bundleplugin/packageinfo="
             + "src/test/java/org/apache/felix/bundleplugin/packageinfo", resourcePaths );
