@@ -57,6 +57,7 @@ public class TrackedTest {
 		};
 		tracked.setInitial(initialReferences);
 		tracked.trackInitial();
+		tracked.getExecutor().execute();
 		assertArrayEquals(new Long[] { 2L, 5L }, customizer.getServiceReferenceIds());
 	}
 	
@@ -78,6 +79,7 @@ public class TrackedTest {
 		};
 		tracked.setInitial(initialReferences);
 		tracked.trackInitial();
+		tracked.getExecutor().execute();
 		assertArrayEquals(new Long[] { 2L, 5L }, customizer.getServiceReferenceIds());
 		
 		// create a service event that unregisters service with id 2, we would expect it to be swapped with 4.
@@ -108,6 +110,7 @@ public class TrackedTest {
 		};
 		tracked.setInitial(initialReferences);
 		tracked.trackInitial();
+		tracked.getExecutor().execute();
 		assertArrayEquals(new Long[] { 2L, 5L }, customizer.getServiceReferenceIds());
 		
 		// create a service event that registers another but lower ranked aspect for service with id 1. 
@@ -149,6 +152,7 @@ public class TrackedTest {
 		};
 		tracked.setInitial(initialReferences);
 		tracked.trackInitial();
+		tracked.getExecutor().execute();
 		assertArrayEquals(new Long[] { 1L, 2L, 3L }, customizer.getServiceReferenceIds());
 	}	
 	
