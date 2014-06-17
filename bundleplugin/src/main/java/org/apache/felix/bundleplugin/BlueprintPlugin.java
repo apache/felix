@@ -300,9 +300,13 @@ public class BlueprintPlugin implements AnalyzerPlugin
             else
             {
                 Set<String> merge = Create.set();
-                for (Clause clause : parseHeader(analyzer.getProperty(header)))
+                String org = analyzer.getProperty(header);
+                if (org != null && !org.isEmpty())
                 {
-                    merge.add(clause.toString());
+                    for (Clause clause : parseHeader(org))
+                    {
+                        merge.add(clause.toString());
+                    }
                 }
                 for (Clause clause : hdrs.get(header))
                 {
