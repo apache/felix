@@ -88,7 +88,21 @@
                 </xsl:otherwise>
             </xsl:choose>
             <xsl:for-each select="bp:service-properties/bp:entry">
-                <xsl:value-of select="concat(';', @key, '=&quot;', @value, '&quot;')" />
+                <xsl:choose>
+                    <xsl:when test="@value">
+                        <xsl:value-of select="concat(';', @key, '=&quot;', @value, '&quot;')" />
+                    </xsl:when>
+                    <xsl:when test="(bp:list|bp:array|bp:set)/bp:value/text()">
+                        <xsl:value-of select="concat(';', @key, ':List&lt;String>=&quot;')" />
+                        <xsl:for-each select="(bp:list|bp:array|bp:set)/bp:value/text()">
+                            <xsl:value-of select="."/>
+                            <xsl:if test="position() != last()">
+                                <xsl:value-of select="','" />
+                            </xsl:if>
+                        </xsl:for-each>
+                        <xsl:value-of select="'&quot;'" />
+                    </xsl:when>
+                </xsl:choose>
             </xsl:for-each>
             <xsl:text>
             </xsl:text>
