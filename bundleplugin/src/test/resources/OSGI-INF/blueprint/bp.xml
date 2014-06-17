@@ -47,7 +47,12 @@
 
     <service interface="p6.Foo">
         <service-properties>
-            <entry key="k" value="v2" />
+            <entry key="k">
+                <array>
+                    <value>v1</value>
+                    <value>v2</value>
+                </array>
+            </entry>
         </service-properties>
     </service>
 

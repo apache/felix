@@ -48,7 +48,7 @@ public class BlueprintComponentTest extends TestCase
 
     public void testBlueprintServices() throws Exception
     {
-        test( "services" );
+        test( "service" );
     }
 
     public void testBlueprintGeneric() throws Exception
