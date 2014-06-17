@@ -79,7 +79,7 @@ public class BlueprintPlugin implements AnalyzerPlugin
     {
         String mode = analyzer.getProperty("service_mode");
         if (mode == null) {
-            mode = "generic";
+            mode = "service";
         }
 
         transformer.setParameter( "nsh_interface",
