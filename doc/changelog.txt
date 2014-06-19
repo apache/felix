@@ -1,3 +1,17 @@
+Changes from 1.6.6 to 2.0.0
+---------------------------
+
+** New Feature
+    * [FELIX-4368] - Support OSGi Repository 1.0 Specification
+    ** [FELIX-4369] - Support repository.xml as defined by OSGi Repository spec
+    ** [FELIX-4370] - Support Repository service as defined by OSGi spec
+    ** [FELIX-4371] - Pass the Repository 1.0 OSGi CT
+
+** Bug
+    * [FELIX-3257] - OBR resolver unable to pick up the highest bundle version when selecting the best candidate
+    * [FELIX-2465] - system.bundle should be automatically wired to the relevant bundle
+    * [FELIX-3842] - NPE in LocalRepositoryImpl
+
 Changes from 1.6.4 to 1.6.6
 ---------------------------
 
