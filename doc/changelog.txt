@@ -1,3 +1,17 @@
+Changes from 2.4.0 to 2.5.0
+---------------------------
+
+** Improvement
+    * [FELIX-3381] - Support for {maven-test-resources} and {maven-test-sources} placeholders
+    * [FELIX-4205] - "null" Bundle-Activator causes bundle to fail
+    * [FELIX-4518] - Provide a way to disable some plugins
+    * [FELIX-4539] - Update to Bndlib 2.3.0
+
+** New Feature
+    * [FELIX-3462] - Nicer Manifest formatting
+    * [FELIX-4512] - Add a new Mojo to invoke the BND Baseline tool
+    * [FELIX-4517] - Generate generic capabilities and requirements for services from blueprint and scr descriptors
+
 Changes from 2.3.7 to 2.4.0
 ---------------------------
 
