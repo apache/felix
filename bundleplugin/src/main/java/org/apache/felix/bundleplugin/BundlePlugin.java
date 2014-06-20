@@ -226,6 +226,8 @@ public class BundlePlugin extends AbstractMojo
     private MavenSession m_mavenSession;
 
     /**
+     * Output a nicely formatted manifest that still respects the 72 character line limit.
+     *
      * @parameter
      */
     private boolean niceManifest = false;

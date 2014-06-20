@@ -23,6 +23,8 @@ import org.apache.maven.plugin.MojoExecutionException;
 
 
 /**
+ * Create OSGi bundles from the direct dependencies of the Maven project.
+ *
  * @goal wrap
  * @phase package
  * @requiresDependencyResolution test
