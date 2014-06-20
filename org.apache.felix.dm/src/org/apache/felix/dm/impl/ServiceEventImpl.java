@@ -18,22 +18,69 @@
  */
 package org.apache.felix.dm.impl;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
 public class ServiceEventImpl extends EventImpl implements Comparable {
-	private final ServiceReference m_reference;
-	private final Object m_service;
-
+    /**
+     * The service reference on which a service dependency depends on
+     */
+	private final ServiceReference m_reference; 
+	
+	/**
+	 * The service instance on which the service dependency depends on
+	 */
+	private final Object m_service; 
+	
+    /**
+     * The bundle context of the bundle which has created the service dependency. If not null, 
+     * will be used in close method when ugetting the service reference of the dependency.
+     */
+	private final BundleContext m_bundleContext;
+	
+    /**
+     * The bundle which has created the service dependency. If not null, will be used to ensure that the bundle is still active before
+     * ungetting the service reference of the dependency. (ungetting a service reference on a bundle which is not
+     * active triggers an exception, and this may degrade performance, especially when doing some benchmarks).
+     */
+	private final Bundle m_bundle;
+	
 	public ServiceEventImpl(ServiceReference reference, Object service) {
+	    this(null, null, reference, service);
+	}
+
+	public ServiceEventImpl(Bundle bundle, BundleContext bundleContext, ServiceReference reference, Object service) {
+	    m_bundle = bundle;
+	    m_bundleContext = bundleContext;
 		m_reference = reference;
 		m_service = service;
 	}
 	
+	/**
+	 * Returns the bundle which has declared a service dependency.
+	 */
+	public Bundle getBundle() {
+	    return m_bundle;
+	}
+	
+    /**
+     * Returns the context of the bundle which has declared a service dependency.
+     */
+	public BundleContext getBundleContext() {
+	    return m_bundleContext;
+	}
+
+	/**
+	 * Returns the reference service dependency.
+	 */
 	public ServiceReference getReference() {
 		return m_reference;
 	}
 	
+	/**
+	 * Returns the service dependency instance.
+	 */
 	public Object getService() {
 		return m_service;
 	}
@@ -62,9 +109,16 @@ public class ServiceEventImpl extends EventImpl implements Comparable {
     }
 
     @Override
-    public void close(BundleContext context) {
-        if (context != null) {
-            context.ungetService(m_reference);
+    public void close() {
+        if (m_bundleContext != null) {
+            try {
+                // Optimization: don't call ungetService if the bundle referring to the service is not active. 
+                // This optim is important when doing benchmarks where the referring bundle is being stopped 
+                // while some dependencies are lost concurrently (here we want to avoid having many exception thrown).
+                if (m_bundle == null || m_bundle.getState() == Bundle.ACTIVE) {
+                    m_bundleContext.ungetService(m_reference);
+                }
+            } catch (IllegalStateException e) {}
         }
     }
 }
