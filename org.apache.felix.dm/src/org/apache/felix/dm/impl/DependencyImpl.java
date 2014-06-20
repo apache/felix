@@ -25,6 +25,7 @@ import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.context.ComponentContext;
 import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
 public class DependencyImpl<T extends Dependency> implements Dependency, DependencyContext {
@@ -44,6 +45,7 @@ public class DependencyImpl<T extends Dependency> implements Dependency, Depende
     protected volatile Object m_propagateCallbackInstance;
     protected volatile String m_propagateCallbackMethod;
     protected final BundleContext m_context;
+    protected final Bundle m_bundle;
 
 	public DependencyImpl() {	
         this(true, null);
@@ -52,6 +54,7 @@ public class DependencyImpl<T extends Dependency> implements Dependency, Depende
 	public DependencyImpl(boolean autoConfig, BundleContext bc) {	
         m_autoConfig = autoConfig;
         m_context = bc;
+        m_bundle = m_context != null ? m_context.getBundle() : null;
 	}
 	
 	public DependencyImpl(DependencyImpl<T> prototype) {
@@ -69,6 +72,7 @@ public class DependencyImpl<T extends Dependency> implements Dependency, Depende
         m_propagateCallbackInstance = prototype.m_propagateCallbackInstance;
         m_propagateCallbackMethod = prototype.m_propagateCallbackMethod;
         m_context = prototype.m_context;
+        m_bundle = prototype.m_bundle;
 	}
 	
 	public void add(final Event e) {
@@ -105,7 +109,7 @@ public class DependencyImpl<T extends Dependency> implements Dependency, Depende
 			    try {
 			        m_component.handleRemoved(DependencyImpl.this, e);	
 			    } finally {
-			        e.close(m_context);
+			        e.close();
 			    }
 			}
 		});
@@ -121,7 +125,7 @@ public class DependencyImpl<T extends Dependency> implements Dependency, Depende
                 try {
                     m_component.handleSwapped(DependencyImpl.this, event, newEvent);  
                 } finally {
-                    event.close(m_context);
+                    event.close();
                 }
             }
         });
