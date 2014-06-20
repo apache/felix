@@ -31,6 +31,8 @@ import org.apache.maven.shared.osgi.Maven2OsgiConverter;
 
 
 /**
+ * Convert a group of versions to OSGi format.
+ *
  * @goal cleanVersions
  * @description clean OSGi versions
  * @threadSafe
