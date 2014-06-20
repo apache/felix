@@ -35,6 +35,7 @@ import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
 import org.apache.felix.dm.tracker.ServiceTracker;
 import org.apache.felix.dm.tracker.ServiceTrackerCustomizer;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
@@ -246,17 +247,17 @@ public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> imp
 		if (debug) {
 			System.out.println(debugKey + " addedService");
 		}
-		add(new ServiceEventImpl(reference, service));
+		add(new ServiceEventImpl(m_bundle, m_context, reference, service));
 	}
 
 	@Override
 	public void modifiedService(ServiceReference reference, Object service) {
-		change(new ServiceEventImpl(reference, service));
+		change(new ServiceEventImpl(m_bundle, m_context, reference, service));
 	}
 
 	@Override
 	public void removedService(ServiceReference reference, Object service) {
-		remove(new ServiceEventImpl(reference, service));
+		remove(new ServiceEventImpl(m_bundle, m_context, reference, service));
 	}
 	
 	@Override
@@ -506,7 +507,7 @@ public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> imp
 			// getting out of order.		    		    
 		    // We delegate the swap handling to the ComponentImpl, which is the class responsible for state management.
 		    // The ComponentImpl will first check if the component is in the proper state so the swap method can be invoked.		    
-		    swap(new ServiceEventImpl(reference, service), new ServiceEventImpl(newReference, newService));
+		    swap(new ServiceEventImpl(m_bundle, m_context, reference, service), new ServiceEventImpl(m_bundle, m_context, newReference, newService));
 		} else {
 			addedService(newReference, newService);
 			removedService(reference, service);
