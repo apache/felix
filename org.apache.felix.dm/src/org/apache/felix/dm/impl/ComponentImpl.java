@@ -53,6 +53,7 @@ import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.context.ComponentContext;
 import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
@@ -81,14 +82,16 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     private final long m_id;
     private static AtomicLong m_idGenerator = new AtomicLong();
     private final Map<DependencyContext, ConcurrentSkipListSet<Event>> m_dependencyEvents = new HashMap<>();
+    private volatile boolean m_active;
     
     private boolean debug = false;
     private String debugKey;
     
-    public void setDebug(String debugKey) {
+    public Component setDebug(String debugKey) {
     	System.out.println("*" + debugKey + " set debug");
     	this.debugKey = debugKey;
     	this.debug = true;
+    	return this;
     }
 
     // configuration (static)
@@ -106,6 +109,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	private volatile Object m_compositionManager;
 	private volatile String m_compositionManagerGetMethod;
 	private volatile Object m_compositionManagerInstance;
+    private final Bundle m_bundle;
 	
     static class SCDImpl implements ComponentDependencyDeclaration {
         private final String m_name;
@@ -137,6 +141,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	
     public ComponentImpl(BundleContext context, DependencyManager manager, Logger logger) {
         m_context = context;
+        m_bundle = context != null ? context.getBundle() : null;
         m_manager = manager;
         m_logger = logger;
         m_autoConfig.put(BundleContext.class, Boolean.TRUE);
@@ -150,10 +155,11 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         m_id = m_idGenerator.getAndIncrement();
     }
 
-	public Executor getExecutor() {
+    @Override
+    public Executor getExecutor() {
 		return m_executor;
 	}
-	
+		
 	@Override
 	public Component add(final Dependency ... dependencies) {
 		getExecutor().execute(new Runnable() {
@@ -200,6 +206,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	}
 
 	public void start() {
+	    m_active = true;
 		getExecutor().execute(new Runnable() {
 			@Override
 			public void run() {
@@ -215,13 +222,14 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 			public void run() {
 				m_isStarted = false;
 				handleChange();
+				m_active = false;
 			}
 		});
 	}
 
 	@Override
 	public Component setInterface(String serviceName, Dictionary properties) {
-		// ensureNotActive(); // TODO
+		ensureNotActive();
 	    m_serviceName = serviceName;
 	    m_serviceProperties = properties;
 	    return this;
@@ -229,7 +237,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 
 	@Override
 	public Component setInterface(String[] serviceName, Dictionary properties) {
-	    // ensureNotActive(); // TODO
+	    ensureNotActive();
 	    m_serviceName = serviceName;
 	    m_serviceProperties = properties;
 	    return this;
@@ -598,7 +606,11 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 
     private void unregisterService() {
         if (m_serviceName != null && m_registration != null) {
-            m_registration.unregister();
+            try {
+                if (m_bundle == null || m_bundle.getState() == Bundle.ACTIVE) {
+                    m_registration.unregister();
+                }
+            } catch (IllegalStateException e) { /* Should we really log this ? */}
             configureImplementation(ServiceRegistration.class, NULL_REGISTRATION);
             m_registration = null;
         }
@@ -948,7 +960,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	}
 	
 	public Component setCallbacks(String init, String start, String stop, String destroy) {
-	    // ensureNotActive(); // TODO
+	    ensureNotActive();
 	    m_callbackInit = init;
 	    m_callbackStart = start;
 	    m_callbackStop = stop;
@@ -957,7 +969,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	}
 	
     public synchronized Component setCallbacks(Object instance, String init, String start, String stop, String destroy) {
-	    // ensureNotActive(); // TODO
+	    ensureNotActive();
         m_callbackInstance = instance;
         m_callbackInit = init;
         m_callbackStart = start;
@@ -968,7 +980,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 
 	@Override
 	public Component setFactory(Object factory, String createMethod) {
-	    // ensureNotActive(); // TODO
+	    ensureNotActive();
 		m_instanceFactory = factory;
 		m_instanceFactoryCreateMethod = createMethod;
 		return this;
@@ -981,7 +993,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 
 	@Override
 	public Component setComposition(Object instance, String getMethod) {
-	    // ensureNotActive(); // TODO
+	    ensureNotActive();
 		m_compositionManager = instance;
 		m_compositionManagerGetMethod = getMethod;
 		return this;
@@ -1160,7 +1172,9 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     }
 
     public void ensureNotActive() {
-        // TODO Auto-generated method stub
+        if (m_active) {
+            throw new IllegalStateException("Can't modify an already started component.");
+        }
     }
     
     public ComponentDeclaration getComponentDeclaration() {
