@@ -278,5 +278,5 @@ public interface Component {
 	 * using osgi log service, our to standard output if no log service is currently available.
 	 * @param label
 	 */
-	public void setDebug(String label);
+	public Component setDebug(String label);
 }
