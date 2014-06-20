@@ -19,6 +19,7 @@
 package org.apache.felix.dm.impl;
 
 import org.apache.felix.dm.context.Event;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
 /* in real life, this event might contain a service reference and service instance
@@ -63,6 +64,6 @@ public class EventImpl implements Event {
     }
     
     @Override
-    public void close(BundleContext m_context) {
+    public void close() {
     }
 }
