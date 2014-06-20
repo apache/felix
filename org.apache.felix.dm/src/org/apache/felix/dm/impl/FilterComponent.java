@@ -22,6 +22,7 @@ import java.util.Dictionary;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentDeclaration;
@@ -280,7 +281,7 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     public Executor getExecutor() {
         return m_component.getExecutor();
     }
-    
+        
     @Override
     public boolean isAvailable() {
         return m_component.isAvailable();
@@ -319,7 +320,8 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     }
 
 	@Override
-	public void setDebug(String label) {
+	public Component setDebug(String label) {
 		m_component.setDebug(label);
+		return this;
 	}
 }
