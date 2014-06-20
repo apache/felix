@@ -219,7 +219,7 @@
 <a name="209" href="#209">209</a>         MavenProject project = getMavenProjectStub();
 <a name="210" href="#210">210</a>         project.addCompileSourceRoot( getBasedir() + <span class="jxr_string">"/src/test/java"</span> );
 <a name="211" href="#211">211</a> 
-<a name="212" href="#212">212</a>         String resourcePaths = plugin.getMavenResourcePaths( project );
+<a name="212" href="#212">212</a>         String resourcePaths = plugin.getMavenResourcePaths( project, false );
 <a name="213" href="#213">213</a> 
 <a name="214" href="#214">214</a>         assertEquals( <span class="jxr_string">"org/apache/felix/bundleplugin/packageinfo="</span>
 <a name="215" href="#215">215</a>             + <span class="jxr_string">"src/test/java/org/apache/felix/bundleplugin/packageinfo"</span>, resourcePaths );
