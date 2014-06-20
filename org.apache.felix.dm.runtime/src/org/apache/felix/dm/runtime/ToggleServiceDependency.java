@@ -25,6 +25,7 @@ import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.context.ComponentContext;
 import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -61,7 +62,7 @@ public class ToggleServiceDependency implements Dependency, ComponentDependencyD
         }
 
         @Override
-        public void close(BundleContext context) {
+        public void close() {
         }
     }
 
