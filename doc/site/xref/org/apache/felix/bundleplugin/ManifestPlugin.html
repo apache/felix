@@ -174,10 +174,10 @@
 <a name="164" href="#164">164</a>             <strong class="jxr_keyword">return</strong> buildOSGiBundle( project, instructions, properties, classpath );
 <a name="165" href="#165">165</a>         }
 <a name="166" href="#166">166</a> 
-<a name="167" href="#167">167</a>         File file = project.getArtifact().getFile();
+<a name="167" href="#167">167</a>         File file = getOutputDirectory();
 <a name="168" href="#168">168</a>         <strong class="jxr_keyword">if</strong> ( file == <strong class="jxr_keyword">null</strong> )
 <a name="169" href="#169">169</a>         {
-<a name="170" href="#170">170</a>             file = getOutputDirectory();
+<a name="170" href="#170">170</a>             file = project.getArtifact().getFile();
 <a name="171" href="#171">171</a>         }
 <a name="172" href="#172">172</a> 
 <a name="173" href="#173">173</a>         <strong class="jxr_keyword">if</strong> ( !file.exists() )
