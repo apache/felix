@@ -97,7 +97,7 @@ abstract class AbstractTracked {
 	 */
 	private final LinkedList	initial;
 	
-	private SerialExecutor m_executor = new SerialExecutor(null); 
+	private final SerialExecutor m_executor = new SerialExecutor(null); 
 
 	/**
 	 * AbstractTracked constructor.
