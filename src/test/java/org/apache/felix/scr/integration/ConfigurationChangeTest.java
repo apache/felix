@@ -48,62 +48,62 @@ public class ConfigurationChangeTest extends ComponentTestBase
     }
 
     @Test
-    public void test_optional_single_dynamic()
+    public void test_optional_single_dynamic() throws Exception
     {
         String pid = "test_optional_single_dynamic";
         singleTest( pid, true );
     }
 
     @Test
-    public void test_required_single_dynamic()
+    public void test_required_single_dynamic() throws Exception
     {
         String pid = "test_required_single_dynamic";
         singleTest( pid, true );
     }
 
     @Test
-    public void test_optional_single_static()
+    public void test_optional_single_static() throws Exception
     {
         String pid = "test_optional_single_static";
         singleTest( pid, false );
     }
 
     @Test
-    public void test_required_single_static()
+    public void test_required_single_static() throws Exception
     {
         String pid = "test_required_single_static";
         singleTest( pid, false );
     }
 
     @Test
-    public void test_optional_single_dynamic_greedy()
+    public void test_optional_single_dynamic_greedy() throws Exception
     {
         String pid = "test_optional_single_dynamic_greedy";
         singleTest( pid, true );
     }
 
     @Test
-    public void test_required_single_dynamic_greedy()
+    public void test_required_single_dynamic_greedy() throws Exception
     {
         String pid = "test_required_single_dynamic_greedy";
         singleTest( pid, true );
     }
 
     @Test
-    public void test_optional_single_static_greedy()
+    public void test_optional_single_static_greedy() throws Exception
     {
         String pid = "test_optional_single_static_greedy";
         singleTest( pid, false );
     }
 
     @Test
-    public void test_required_single_static_greedy()
+    public void test_required_single_static_greedy() throws Exception
     {
         String pid = "test_required_single_static_greedy";
         singleTest( pid, false );
     }
 
-    private void singleTest(String pid, boolean dynamic)
+    private void singleTest(String pid, boolean dynamic) throws Exception
     {
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
         final SimpleServiceImpl srv2 = SimpleServiceImpl.create( bundleContext, "srv2" );
@@ -150,7 +150,7 @@ public class ConfigurationChangeTest extends ComponentTestBase
     }
 
     @Test
-    public void test_optional_multiple_dynamic()
+    public void test_optional_multiple_dynamic() throws Exception
     {
         String pid = "test_optional_multiple_dynamic";
         multipleTest( pid, true );
@@ -158,55 +158,55 @@ public class ConfigurationChangeTest extends ComponentTestBase
 
 
     @Test
-    public void test_required_multiple_dynamic()
+    public void test_required_multiple_dynamic() throws Exception
     {
         String pid = "test_required_multiple_dynamic";
         multipleTest( pid, true );
     }
 
     @Test
-    public void test_optional_multiple_static()
+    public void test_optional_multiple_static() throws Exception
     {
         String pid = "test_optional_multiple_static";
         multipleTest( pid, false );
     }
 
     @Test
-    public void test_required_multiple_static()
+    public void test_required_multiple_static() throws Exception
     {
         String pid = "test_required_multiple_static";
         multipleTest( pid, false );
     }
 
     @Test
-    public void test_optional_multiple_dynamic_greedy()
+    public void test_optional_multiple_dynamic_greedy() throws Exception
     {
         String pid = "test_optional_multiple_dynamic_greedy";
         multipleTest( pid, true );
     }
 
     @Test
-    public void test_required_multiple_dynamic_greedy()
+    public void test_required_multiple_dynamic_greedy() throws Exception
     {
         String pid = "test_required_multiple_dynamic_greedy";
         multipleTest( pid, true );
     }
 
     @Test
-    public void test_optional_multiple_static_greedy()
+    public void test_optional_multiple_static_greedy() throws Exception
     {
         String pid = "test_optional_multiple_static_greedy";
         multipleTest( pid, false );
     }
 
     @Test
-    public void test_required_multiple_static_greedy()
+    public void test_required_multiple_static_greedy() throws Exception
     {
         String pid = "test_required_multiple_static_greedy";
         multipleTest( pid, false );
     }
 
-    private void multipleTest(String pid, boolean dynamic)
+    private void multipleTest(String pid, boolean dynamic) throws Exception
     {
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
         final SimpleServiceImpl srv2 = SimpleServiceImpl.create( bundleContext, "srv2" );
@@ -255,7 +255,7 @@ public class ConfigurationChangeTest extends ComponentTestBase
  
     //I'm not sure what should happen in this case, asking on dev list.
 //    @Test
-    public void testSingleDynamicRequiredFactory() throws InvalidSyntaxException
+    public void testSingleDynamicRequiredFactory() throws Exception
     {
         String pid = "test_required_single_dynamic_factory";
         final String factoryPid = "factory_" + pid;

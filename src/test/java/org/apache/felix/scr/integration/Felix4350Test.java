@@ -18,6 +18,8 @@
  */
 package org.apache.felix.scr.integration;
 
+import java.lang.reflect.InvocationTargetException;
+
 import junit.framework.TestCase;
 import org.apache.felix.scr.integration.components.Felix4350Component;
 import org.apache.felix.scr.integration.components.SimpleComponent;
@@ -47,36 +49,36 @@ public class Felix4350Test extends ComponentTestBase
     }
 
     @Test
-    public void test_unbind_while_activating_single_static()
+    public void test_unbind_while_activating_single_static() throws Exception
     {
         doTest("SingleStatic");
     }
 
     @Test
-    public void test_unbind_while_activating_single_dynamic()
+    public void test_unbind_while_activating_single_dynamic() throws Exception
     {
         doTest("SingleDynamic");
     }
 
     @Test
-    public void test_unbind_while_activating_multiple_dynamic()
+    public void test_unbind_while_activating_multiple_dynamic() throws Exception
     {
         doTest("MultipleDynamic");
     }
 
     @Test
-    public void test_unbind_while_activating_multiple_static_greedy()
+    public void test_unbind_while_activating_multiple_static_greedy() throws Exception
     {
         doTest("MultipleStaticGreedy");
     }
 
     @Test
-    public void test_unbind_while_activating_multiple_static_reluctant()
+    public void test_unbind_while_activating_multiple_static_reluctant() throws Exception
     {
         doTest("MultipleStaticReluctant");
     }
 
-    protected void doTest(String componentName)
+    protected void doTest(String componentName) throws Exception
     {
         ServiceRegistration dep1Reg = register(new SimpleComponent(), 0);
         ServiceRegistration dep2Reg = register(new SimpleComponent2(), 1000);
@@ -115,12 +117,21 @@ public class Felix4350Test extends ComponentTestBase
         Felix4350Component.check(2, 1, true); //n.b. counts are cumulative
     }
     
-    protected void asyncEnable( final ComponentDescriptionDTO cd )
+    protected void asyncEnable( final ComponentDescriptionDTO cd ) throws Exception
     {
     	new Thread( new Runnable() {
 
 			public void run() {
-				enableAndCheck( cd );
+				try
+                {
+                    enableAndCheck( cd );
+                }
+                catch (InvocationTargetException e)
+                {
+                }
+                catch (InterruptedException e)
+                {
+                }
 			}}).start();
     }
 

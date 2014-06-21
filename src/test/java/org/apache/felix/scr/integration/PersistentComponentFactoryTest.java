@@ -52,7 +52,7 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
     }
 
     @Test
-    public void test_component_factory() throws InvalidSyntaxException
+    public void test_component_factory() throws Exception
     {
         final String componentname = "factory.component";
         final String componentfactory = "factory.component.factory";
@@ -76,7 +76,7 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
 
 
     @Test
-    public void test_component_factory_disable_factory() throws InvalidSyntaxException
+    public void test_component_factory_disable_factory() throws Exception
     {
         // tests components remain alive after factory has been disabled
 
@@ -106,7 +106,7 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
 
 
     @Test
-    public void test_component_factory_newInstance_failure() throws InvalidSyntaxException
+    public void test_component_factory_newInstance_failure() throws Exception
     {
         final String componentname = "factory.component";
         final String componentfactory = "factory.component.factory";
@@ -128,7 +128,7 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
 
 
     @Test
-    public void test_component_factory_require_configuration() throws InvalidSyntaxException
+    public void test_component_factory_require_configuration() throws Exception
     {
         final String componentname = "factory.component.configuration";
         final String componentfactory = "factory.component.factory.configuration";
@@ -184,7 +184,7 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
 
 
     @Test
-    public void test_component_factory_reference() throws InvalidSyntaxException
+    public void test_component_factory_reference() throws Exception
     {
         final String componentname = "factory.component.reference";
         final String componentfactory = "factory.component.factory.reference";
@@ -260,7 +260,7 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
     }
 
     @Test
-    public void test_component_factory_referredTo() throws InvalidSyntaxException
+    public void test_component_factory_referredTo() throws Exception
     {
         //set up the component that refers to the service the factory will create.
         final String referringComponentName = "ComponentReferringToFactoryObject";
@@ -292,7 +292,7 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
     }
 
     @Test
-    public void test_component_factory_with_target_filters() throws InvalidSyntaxException
+    public void test_component_factory_with_target_filters() throws Exception
     {
         final String componentfactory = "factory.component.reference.targetfilter";
         getConfigurationsDisabledThenEnable(componentfactory, 0, -1);

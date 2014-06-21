@@ -62,7 +62,7 @@ public class Felix3680Test extends ComponentTestBase
     }
 
     @Test
-    public void test_concurrent_reference_bindings()
+    public void test_concurrent_reference_bindings() throws Exception
     {
         final ComponentDescriptionDTO main = findComponentDescriptorByName( "org.apache.felix.scr.integration.components.felix3680.Main" );
         enableAndCheck(main);

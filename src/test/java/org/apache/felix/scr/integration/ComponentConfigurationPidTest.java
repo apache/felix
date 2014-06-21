@@ -40,7 +40,7 @@ public class ComponentConfigurationPidTest extends ComponentTestBase
     }
 
     @Test
-    public void test_configurationpid_use_other_pid()
+    public void test_configurationpid_use_other_pid() throws Exception
     {
         final String pid = "ConfigurationPid.otherPid";
         final String name = "ConfigurationPid.componentName";
@@ -70,7 +70,7 @@ public class ComponentConfigurationPidTest extends ComponentTestBase
     }
     
     @Test
-    public void test_configurationpid_must_not_use_name_as_pid()
+    public void test_configurationpid_must_not_use_name_as_pid() throws Exception
     {
         final String name = "ConfigurationPid.componentName";
         final String pid = name;

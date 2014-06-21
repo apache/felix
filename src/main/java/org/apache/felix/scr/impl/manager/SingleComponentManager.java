@@ -42,6 +42,8 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentInstance;
 import org.osgi.service.log.LogService;
+import org.osgi.util.promise.Deferred;
+import org.osgi.util.promise.Promise;
 
 
 /**
@@ -545,7 +547,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
     void reconfigure(boolean configurationDeleted)
     {
-        CountDownLatch enableLatch = enableLatchWait();
+        Deferred<Void> enableLatch = enableLatchWait();
         try
         {
             // clear the current properties to force using the configuration data
@@ -609,7 +611,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         }
         finally
         {
-            enableLatch.countDown();
+            enableLatch.resolve(null);
         }
     }
 

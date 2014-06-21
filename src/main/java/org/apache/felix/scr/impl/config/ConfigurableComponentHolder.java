@@ -43,6 +43,9 @@ import org.apache.felix.scr.impl.metadata.ServiceMetadata.Scope;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.log.LogService;
+import org.osgi.util.promise.Deferred;
+import org.osgi.util.promise.Promise;
+import org.osgi.util.promise.Promises;
 
 
 /**
@@ -587,7 +590,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
         return m_enabled;
     }
 
-    public void enableComponents( final boolean async )
+    public Promise<Void> enableComponents( final boolean async )
     {
         List<AbstractComponentManager<S>> cms = new ArrayList<AbstractComponentManager<S>>();
         synchronized ( m_components )
@@ -612,14 +615,16 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
             }
             m_enabled = true;
         }
+        List<Promise<Void>> promises = new ArrayList<Promise<Void>>();
         for ( AbstractComponentManager<S> cm : cms )
         {
-            cm.enable( async );
+            promises.add(cm.enable( async ));
         }
+        return new Deferred().resolveWith(Promises.all(promises));
     }
 
 
-    public void disableComponents( final boolean async )
+    public Promise<Void> disableComponents( final boolean async )
     {
         List<AbstractComponentManager<S>> cms;
         synchronized ( m_components )
@@ -628,10 +633,12 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
 
             cms = getComponentManagers( true );
         }
+        List<Promise<Void>> promises = new ArrayList<Promise<Void>>();
         for ( AbstractComponentManager<S> cm : cms )
         {
-            cm.disable( async );
+            promises.add(cm.disable( async ));
         }
+        return new Deferred().resolveWith(Promises.all(promises));
     }
 
 

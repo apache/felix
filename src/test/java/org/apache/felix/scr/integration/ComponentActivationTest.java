@@ -45,7 +45,7 @@ public class ComponentActivationTest extends ComponentTestBase
 
 
     @Test
-    public void test_activator_not_declared()
+    public void test_activator_not_declared() throws Exception
     {
         final String componentname = "ActivatorComponent.no.decl";
 
@@ -56,7 +56,7 @@ public class ComponentActivationTest extends ComponentTestBase
 
 
     @Test //Changed to expect SATISFIED rather than unsatisfied
-    public void test_activate_missing()
+    public void test_activate_missing() throws Exception
     {
         final String componentname = "ActivatorComponent.activate.missing";
 
@@ -68,7 +68,7 @@ public class ComponentActivationTest extends ComponentTestBase
 
 
     @Test
-    public void test_deactivate_missing()
+    public void test_deactivate_missing() throws Exception
     {
         final String componentname = "ActivatorComponent.deactivate.missing";
 
@@ -79,7 +79,7 @@ public class ComponentActivationTest extends ComponentTestBase
 
 
     @Test
-    public void test_activator_declared()
+    public void test_activator_declared() throws Exception
     {
         final String componentname = "ActivatorComponent.decl";
 
@@ -90,7 +90,7 @@ public class ComponentActivationTest extends ComponentTestBase
 
 
     @Test // Failure to activate does not mean the state should change to unsatisfied.
-    public void test_activate_fail()
+    public void test_activate_fail() throws Exception
     {
         final String componentname = "ActivatorComponent.activate.fail";
 
@@ -102,7 +102,7 @@ public class ComponentActivationTest extends ComponentTestBase
 
 
     @Test
-    public void test_deactivate_fail()
+    public void test_deactivate_fail() throws Exception
     {
         final String componentname = "ActivatorComponent.deactivate.fail";
 
@@ -113,7 +113,7 @@ public class ComponentActivationTest extends ComponentTestBase
 
 
     @Test
-    public void test_activate_register_service()
+    public void test_activate_register_service() throws Exception
     {
         final String componentname = "ActivatorComponent.activate.with.bind";
 
@@ -129,7 +129,7 @@ public class ComponentActivationTest extends ComponentTestBase
 
 
     @Test
-    public void test_activate_register_service_delayed()
+    public void test_activate_register_service_delayed() throws Exception
     {
         final String componentname = "ActivatorComponent.activate.delayed.with.bind";
 
@@ -143,7 +143,7 @@ public class ComponentActivationTest extends ComponentTestBase
     }
     
     @Test
-    public void test_activate_service_factory_register_service()
+    public void test_activate_service_factory_register_service() throws Exception
     {
         final String componentname = "ActivatorComponent.activate.service.factory.with.bind";
 
@@ -157,7 +157,7 @@ public class ComponentActivationTest extends ComponentTestBase
     }
     
     @Test
-    public void test_activate_register_service_single_static_dependency()
+    public void test_activate_register_service_single_static_dependency() throws Exception
     {
         final String componentname = "ActivatorComponent.bind.single.static";
 
@@ -165,7 +165,7 @@ public class ComponentActivationTest extends ComponentTestBase
     }
 
     @Test
-    public void test_activate_register_service_multiple_static_reluctant_dependency()
+    public void test_activate_register_service_multiple_static_reluctant_dependency() throws Exception
     {
         final String componentname = "ActivatorComponent.bind.multiple.static.reluctant";
 
@@ -173,7 +173,7 @@ public class ComponentActivationTest extends ComponentTestBase
     }
 
     @Test
-    public void test_activate_register_service_multiple_static_greedy_dependency()
+    public void test_activate_register_service_multiple_static_greedy_dependency() throws Exception
     {
         final String componentname = "ActivatorComponent.bind.multiple.static.greedy";
 
@@ -181,7 +181,7 @@ public class ComponentActivationTest extends ComponentTestBase
     }
 
     @Test
-    public void test_activate_register_service_single_dynamic_dependency()
+    public void test_activate_register_service_single_dynamic_dependency() throws Exception
     {
         final String componentname = "ActivatorComponent.bind.single.dynamic";
 
@@ -189,7 +189,7 @@ public class ComponentActivationTest extends ComponentTestBase
     }
 
     @Test
-    public void test_activate_register_service_multiple_dynamic_dependency()
+    public void test_activate_register_service_multiple_dynamic_dependency() throws Exception
     {
         final String componentname = "ActivatorComponent.bind.multiple.dynamic";
 
@@ -197,7 +197,7 @@ public class ComponentActivationTest extends ComponentTestBase
     }
 
 
-    private void testRequiredDependency(final String componentname)
+    private void testRequiredDependency(final String componentname) throws Exception
     {
         ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname, ComponentConfigurationDTO.UNSATISFIED);
 

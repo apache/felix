@@ -52,7 +52,7 @@ public class ComponentConcurrencyTest extends ComponentTestBase
     }
 
     @Test
-    public void test_concurrent_component_activation_using_componentFactories()
+    public void test_concurrent_component_activation_using_componentFactories() throws Exception
     {
 
 

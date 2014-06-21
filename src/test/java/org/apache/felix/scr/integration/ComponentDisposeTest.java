@@ -45,7 +45,7 @@ public class ComponentDisposeTest extends ComponentTestBase
 
 
     @Test
-    public void test_SimpleComponent_factory_configuration()
+    public void test_SimpleComponent_factory_configuration() throws Exception
     {
         final String factoryPid = "FactoryConfigurationComponent";
 

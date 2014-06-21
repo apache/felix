@@ -43,7 +43,7 @@ public class ServiceComponentTest extends ComponentTestBase
 
 
     @Test
-    public void test_SimpleComponent_service()
+    public void test_SimpleComponent_service() throws Exception
     {
         final String pid = "ServiceComponent";
 
@@ -83,7 +83,7 @@ public class ServiceComponentTest extends ComponentTestBase
 
 
     @Test
-    public void test_DelayedSimpleComponent_service_single_use()
+    public void test_DelayedSimpleComponent_service_single_use() throws Exception
     {
         final String pid = "DelayedServiceComponent";
 
@@ -116,7 +116,7 @@ public class ServiceComponentTest extends ComponentTestBase
 
 
     @Test
-    public void test_DelayedSimpleComponent_service_multi_use()
+    public void test_DelayedSimpleComponent_service_multi_use() throws Exception
     {
         final String pid = "DelayedServiceComponent";
 
@@ -152,7 +152,7 @@ public class ServiceComponentTest extends ComponentTestBase
     }
 
     @Test
-    public void test_DelayedSimpleComponent_service_keep_instance() throws IOException
+    public void test_DelayedSimpleComponent_service_keep_instance() throws Exception
     {
         // configure SCR to keep instances
 

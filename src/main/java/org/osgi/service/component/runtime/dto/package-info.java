@@ -35,8 +35,8 @@
  * @author $Id: d7d82da09d67a3ce4274ad8554966c1952a2b4de $
  */
 
-//@Version("1.3")
+@Version("1.3")
 package org.osgi.service.component.runtime.dto;
 
-//import org.osgi.annotation.versioning.Version;
+import org.osgi.annotation.versioning.Version;
 

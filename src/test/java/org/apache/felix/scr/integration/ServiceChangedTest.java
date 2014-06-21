@@ -42,7 +42,7 @@ public class ServiceChangedTest extends ComponentTestBase
 
 
     @Test
-    public void test_optional_single_dynamic()
+    public void test_optional_single_dynamic() throws Exception
     {
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
         String name = "test_optional_single_dynamic_target";
@@ -103,7 +103,7 @@ public class ServiceChangedTest extends ComponentTestBase
 
 
     @Test
-    public void test_required_single_dynamic()
+    public void test_required_single_dynamic() throws Exception
     {
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
         String name = "test_required_single_dynamic_target";
@@ -162,7 +162,7 @@ public class ServiceChangedTest extends ComponentTestBase
 
 
     @Test
-    public void test_optional_multiple_dynamic()
+    public void test_optional_multiple_dynamic() throws Exception
     {
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
         String name = "test_optional_multiple_dynamic_target";
@@ -225,7 +225,7 @@ public class ServiceChangedTest extends ComponentTestBase
 
 
     @Test
-    public void test_required_multiple_dynamic()
+    public void test_required_multiple_dynamic() throws Exception
     {
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
         String name = "test_required_multiple_dynamic_target";
@@ -288,7 +288,7 @@ public class ServiceChangedTest extends ComponentTestBase
 
 
     @Test
-    public void test_optional_single_static()
+    public void test_optional_single_static() throws Exception
     {
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
         String name = "test_optional_single_static_target";
@@ -359,7 +359,7 @@ public class ServiceChangedTest extends ComponentTestBase
 
 
     @Test
-    public void test_required_single_static()
+    public void test_required_single_static() throws Exception
     {
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
         String name = "test_required_single_static_target";
@@ -425,7 +425,7 @@ public class ServiceChangedTest extends ComponentTestBase
 
 
     @Test
-    public void test_optional_multiple_static()
+    public void test_optional_multiple_static() throws Exception
     {
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
         String name = "test_optional_multiple_static_target";
@@ -501,7 +501,7 @@ public class ServiceChangedTest extends ComponentTestBase
 
 
     @Test
-    public void test_required_multiple_static()
+    public void test_required_multiple_static() throws Exception
     {
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
         String name = "test_required_multiple_static_target";
