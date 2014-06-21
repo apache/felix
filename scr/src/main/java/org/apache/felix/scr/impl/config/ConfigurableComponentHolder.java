@@ -36,6 +36,7 @@ import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.apache.felix.scr.impl.manager.ComponentFactoryImpl;
+import org.apache.felix.scr.impl.manager.PrototypeServiceFactoryComponentManager;
 import org.apache.felix.scr.impl.manager.SingleComponentManager;
 import org.apache.felix.scr.impl.manager.ServiceFactoryComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
@@ -180,8 +181,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
 
         else if ( m_componentMetadata.getServiceScope() == Scope.prototype )
         {
-            manager = null;// NYI
-            //            manager = new ServiceFactoryComponentManager<S>( m_activator, this, m_componentMetadata, m_componentMethods );
+            manager = PSFLoader.newPSFComponentManager(this, m_componentMethods);
         }
 
         else
@@ -191,6 +191,14 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
         }
 
         return manager;
+    }
+    
+    private static class PSFLoader 
+    {
+        static <S> AbstractComponentManager<S> newPSFComponentManager(ConfigurableComponentHolder<S> holder, ComponentMethods methods) 
+        {
+            return new PrototypeServiceFactoryComponentManager<S>( holder, methods );
+        }
     }
 
 
