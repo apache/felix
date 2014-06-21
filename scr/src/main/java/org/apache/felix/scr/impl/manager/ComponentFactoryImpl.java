@@ -217,15 +217,6 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
    }
 
     /**
-     * The component factory does not have a component to create.
-     */
-    protected boolean createComponent()
-    {
-        return true;
-    }
-
-
-    /**
      * The component factory does not have a component to delete.
      * <p>
      * But in the backwards compatible case any instances created for factory

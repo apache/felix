@@ -103,7 +103,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     // 4. Call the activate method, if present
     // if this method is overwritten, the deleteComponent method should
     // also be overwritten
-    protected boolean createComponent()
+    private boolean createComponent()
     {
         if ( !isStateLocked() )
         {
@@ -181,7 +181,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
      *
      * @return the object that implements the services
      */
-    S getInstance()
+    private S getInstance()
     {
         return m_componentContext == null? null: m_componentContext.getImplementationObject( true );
     }

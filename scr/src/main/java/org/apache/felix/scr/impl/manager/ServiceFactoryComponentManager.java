@@ -57,16 +57,6 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
 
 
     /* (non-Javadoc)
-     * @see org.apache.felix.scr.AbstractComponentManager#createComponent()
-     */
-    protected boolean createComponent()
-    {
-        // nothing to do, this is handled by getService
-        return true;
-    }
-
-
-    /* (non-Javadoc)
      * @see org.apache.felix.scr.AbstractComponentManager#deleteComponent()
      */
     protected void deleteComponent( int reason )
@@ -82,17 +72,6 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
         }
         serviceContexts.clear();
         clearServiceProperties();
-    }
-
-
-    /* (non-Javadoc)
-     * @see org.apache.felix.scr.AbstractComponentManager#getInstance()
-     */
-    S getInstance()
-    {
-        // this method is not expected to be called as the base call is
-        // overwritten in the ComponentContextImpl class
-        return null;
     }
 
 

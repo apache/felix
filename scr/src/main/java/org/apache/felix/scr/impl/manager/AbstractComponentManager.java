@@ -839,15 +839,6 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     }
 
     //---------- Component handling methods ----------------------------------
-    /**
-     * Method is called by {@link State#activate(AbstractComponentManager)} in STATE_ACTIVATING or by
-     * {@link DelayedComponentManager#getService(Bundle, ServiceRegistration)}
-     * in STATE_REGISTERED.
-     *
-     * @return <code>true</code> if creation of the component succeeded. If
-     *       <code>false</code> is returned, the cause should have been logged.
-     */
-    protected abstract boolean createComponent();
 
     protected abstract void deleteComponent( int reason );
 
