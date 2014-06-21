@@ -39,6 +39,7 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -297,7 +298,7 @@ public abstract class ComponentTestBase
     	STATES.put(ComponentConfigurationDTO.ACTIVE, "Active (" + ComponentConfigurationDTO.ACTIVE + ")" );
     }
     
-    protected ComponentConfigurationDTO getDisabledConfigurationAndEnable( Bundle b, String name, int initialState )
+    protected ComponentConfigurationDTO getDisabledConfigurationAndEnable( Bundle b, String name, int initialState ) throws InvocationTargetException, InterruptedException
     {
     	int count = 1;
         Collection<ComponentConfigurationDTO> ccs = getConfigurationsDisabledThenEnable(
@@ -306,12 +307,12 @@ public abstract class ComponentTestBase
     	return cc;
     }
     
-    protected ComponentConfigurationDTO getDisabledConfigurationAndEnable( String name, int initialState )
+    protected ComponentConfigurationDTO getDisabledConfigurationAndEnable( String name, int initialState ) throws InvocationTargetException, InterruptedException
     {
     	return getDisabledConfigurationAndEnable( bundle, name, initialState );
     }
 
-    protected Collection<ComponentConfigurationDTO> getConfigurationsDisabledThenEnable( Bundle b, String name, int count, int initialState) 
+    protected Collection<ComponentConfigurationDTO> getConfigurationsDisabledThenEnable( Bundle b, String name, int count, int initialState) throws InvocationTargetException, InterruptedException 
     {
 		ServiceComponentRuntime scr = scrTracker.getService();
         if ( scr == null )
@@ -320,8 +321,7 @@ public abstract class ComponentTestBase
         }
     	ComponentDescriptionDTO cd = scr.getComponentDescriptionDTO(b, name);
     	Assert.assertFalse("Expected component disabled", scr.isComponentEnabled(cd));
-    	scr.enableComponent(cd);
-    	delay();//??
+    	scr.enableComponent(cd).getValue();
     	Assert.assertTrue("Expected component enabled", scr.isComponentEnabled(cd));
     	
     	Collection<ComponentConfigurationDTO> ccs = scr.getComponentConfigurationDTOs(cd);
@@ -334,7 +334,7 @@ public abstract class ComponentTestBase
 		return ccs;
 	}
     
-    protected Collection<ComponentConfigurationDTO> getConfigurationsDisabledThenEnable( String name, int count, int initialState) 
+    protected Collection<ComponentConfigurationDTO> getConfigurationsDisabledThenEnable( String name, int count, int initialState) throws InvocationTargetException, InterruptedException 
     {
     	return getConfigurationsDisabledThenEnable(bundle, name, count, initialState);
     }
@@ -386,12 +386,12 @@ public abstract class ComponentTestBase
 		}
     }
     
-    protected void enableAndCheck( ComponentDescriptionDTO cd )
+    protected void enableAndCheck( ComponentDescriptionDTO cd ) throws InvocationTargetException, InterruptedException
     {
         ServiceComponentRuntime scr = scrTracker.getService();
         if ( scr != null )
         {
-        	scr.enableComponent(cd);
+            scr.enableComponent(cd).getValue();
         	Assert.assertTrue("Expected component enabled", scr.isComponentEnabled(cd));
         }
         else 
@@ -401,17 +401,17 @@ public abstract class ComponentTestBase
     	
     }
 
-    protected void disableAndCheck( ComponentConfigurationDTO cc )
+    protected void disableAndCheck( ComponentConfigurationDTO cc ) throws InvocationTargetException, InterruptedException
     {
     	ComponentDescriptionDTO cd = cc.description;
         disableAndCheck(cd);
     }
 
-	protected void disableAndCheck(ComponentDescriptionDTO cd) {
+	protected void disableAndCheck(ComponentDescriptionDTO cd) throws InvocationTargetException, InterruptedException {
 		ServiceComponentRuntime scr = scrTracker.getService();
         if ( scr != null )
         {
-        	scr.disableComponent(cd);
+        	scr.disableComponent(cd).getValue();
         	Assert.assertFalse("Expected component disabled", scr.isComponentEnabled(cd));
         }
         else 
@@ -420,7 +420,7 @@ public abstract class ComponentTestBase
         }
 	}
 
-	protected void disableAndCheck(String name) {
+	protected void disableAndCheck(String name) throws InvocationTargetException, InterruptedException {
 		ComponentDescriptionDTO cd = findComponentDescriptorByName(name);
 		disableAndCheck(cd);		
 	}

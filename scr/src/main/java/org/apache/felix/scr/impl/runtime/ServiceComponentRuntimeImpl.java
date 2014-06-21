@@ -40,6 +40,7 @@ import org.osgi.service.component.runtime.dto.BoundReferenceDTO;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 import org.osgi.service.component.runtime.dto.ReferenceDTO;
+import org.osgi.util.promise.Promise;
 
 public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime {
 	
@@ -110,14 +111,14 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime {
 		return holder.isEnabled();
 	}
 
-	public void enableComponent(ComponentDescriptionDTO description) {
+	public Promise<Void> enableComponent(ComponentDescriptionDTO description) {
 		ComponentHolder<?> holder = getHolderFromDescription( description);
-		holder.enableComponents(false); //synchronous
+		return holder.enableComponents(true);
 	}
 
-	public void disableComponent(ComponentDescriptionDTO description) {
+	public Promise<Void> disableComponent(ComponentDescriptionDTO description) {
 		ComponentHolder<?> holder = getHolderFromDescription( description);
-		holder.disableComponents(false); //synchronous
+		return holder.disableComponents(true); //synchronous
 	}
 	
 	private ComponentConfigurationDTO managerToConfiguration(

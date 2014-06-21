@@ -26,7 +26,7 @@ import org.osgi.service.component.ComponentContext;
  * 
  * @since 1.3
  * @NotThreadSafe
- * @author $Id: b3f49d694f497e55dc7ffed0e7d910fb3bab83da $
+ * @author $Id: e852b2edb4d364069d01ca41130aac4a3b3112a3 $
  */
 public class ComponentConfigurationDTO extends DTO {
 	/**
@@ -69,6 +69,15 @@ public class ComponentConfigurationDTO extends DTO {
 	public ComponentDescriptionDTO	description;
 
 	/**
+	 * The id of the component configuration.
+	 * 
+	 * <p>
+	 * The id is a non-persistent, unique value assigned at runtime. The id is
+	 * also available as the {@code component.id} component property.
+	 */
+	public long						id;
+
+	/**
 	 * The current state of the component configuration.
 	 * 
 	 * <p>
@@ -93,13 +102,4 @@ public class ComponentConfigurationDTO extends DTO {
 	 * component configuration has no bound references.
 	 */
 	public BoundReferenceDTO[]		boundReferences;
-	
-	/**
-	 * The id of the component description.
-	 * 
-	 * <p>
-	 * The id is a non-persistent, unique value assigned at runtime. The id is
-	 * also available as the {@code component.id} component property.
-	 */
-	public long					id;
 }

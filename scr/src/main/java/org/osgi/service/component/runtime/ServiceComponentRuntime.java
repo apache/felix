@@ -17,11 +17,12 @@
 package org.osgi.service.component.runtime;
 
 import java.util.Collection;
-//import org.osgi.annotation.versioning.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.framework.Bundle;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
+import org.osgi.util.promise.Promise;
 
 /**
  * The {@code ServiceComponentRuntime} service represents the Declarative
@@ -45,9 +46,9 @@ import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
  * 
  * @ThreadSafe
  * @since 1.3
- * @author $Id: 0b736eb18ed9ae337ef04765d1c006049a246c56 $
+ * @author $Id: 2b9c69ef323cb6b4be2601f893bea8505c984980 $
  */
-//@ProviderType
+@ProviderType
 public interface ServiceComponentRuntime {
 
 	/**
@@ -124,11 +125,20 @@ public interface ServiceComponentRuntime {
 	 * If the specified component description is currently enabled, this method
 	 * has no effect.
 	 * 
+	 * <p>
+	 * This method must return after changing the enabled state of the specified
+	 * component description. Any actions that result from this, such as
+	 * activating or deactivating a component configuration, must occur
+	 * asynchronously to this method call.
+	 * 
 	 * @param description The component description to enable. Must not be
 	 *        {@code null}.
+	 * @return A promise that will be resolved when the actions that result from
+	 *         changing the enabled state of the specified component have
+	 *         completed.
 	 * @see #isComponentEnabled(ComponentDescriptionDTO)
 	 */
-	void enableComponent(ComponentDescriptionDTO description);
+	Promise<Void> enableComponent(ComponentDescriptionDTO description);
 
 	/**
 	 * Disables the specified component description.
@@ -137,9 +147,18 @@ public interface ServiceComponentRuntime {
 	 * If the specified component description is currently disabled, this method
 	 * has no effect.
 	 * 
+	 * <p>
+	 * This method must return after changing the enabled state of the specified
+	 * component description. Any actions that result from this, such as
+	 * activating or deactivating a component configuration, must occur
+	 * asynchronously to this method call.
+	 * 
 	 * @param description The component description to disable. Must not be
 	 *        {@code null}.
+	 * @return A promise that will be resolved when the actions that result from
+	 *         changing the enabled state of the specified component have
+	 *         completed.
 	 * @see #isComponentEnabled(ComponentDescriptionDTO)
 	 */
-	void disableComponent(ComponentDescriptionDTO description);
+	Promise<Void> disableComponent(ComponentDescriptionDTO description);
 }

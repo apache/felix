@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.TargetedPID;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
+import org.osgi.util.promise.Promise;
 
 
 /**
@@ -102,7 +103,7 @@ public interface ComponentHolder<S>
      * @param async Whether the actual activation should take place
      *      asynchronously or not.
      */
-    void enableComponents( boolean async );
+    Promise<Void> enableComponents( boolean async );
 
 
     /**
@@ -111,7 +112,7 @@ public interface ComponentHolder<S>
      * @param async Whether the actual deactivation should take place
      *      asynchronously or not.
      */
-    void disableComponents( boolean async );
+    Promise<Void> disableComponents( boolean async );
     
     /**
      * whether the component is currently enabled

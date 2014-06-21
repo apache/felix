@@ -121,7 +121,7 @@ public class CircularReferenceTest extends ComponentTestBase
      * A > 1.1 > B > 0..n > A Both should start, but B should not have an A reference.
      */
     @Test
-    public void test_A11_B0n_delayed_B_first() throws InvalidSyntaxException
+    public void test_A11_B0n_delayed_B_first() throws Exception
     {
         String componentNameA = "4.A.1.1.dynamic";
         ComponentConfigurationDTO componentA = findComponentConfigurationByName( componentNameA, ComponentConfigurationDTO.SATISFIED );
@@ -225,7 +225,7 @@ public class CircularReferenceTest extends ComponentTestBase
      * A > 1.1 > B > 0..1 > A Both should start, but B should not have an A reference.
      */
     @Test
-    public void test_A11_B01_delayed_B_first() throws InvalidSyntaxException
+    public void test_A11_B01_delayed_B_first() throws Exception
     {
         String componentNameA = "7.A.1.1.dynamic";
         ComponentConfigurationDTO componentA = findComponentConfigurationByName( componentNameA, ComponentConfigurationDTO.SATISFIED );

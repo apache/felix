@@ -46,7 +46,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
 
 
     @Test
-    public void test_SimpleComponent_configuration_ignore()
+    public void test_SimpleComponent_configuration_ignore() throws Exception
     {
         final String pid = "SimpleComponent.configuration.ignore";
         TestCase.assertNull( SimpleComponent.INSTANCE );
@@ -79,7 +79,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
 
 
     @Test
-    public void test_SimpleComponent_configuration_optional()
+    public void test_SimpleComponent_configuration_optional() throws Exception
     {
         final String pid = "SimpleComponent.configuration.optional";
         ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.ACTIVE);
@@ -116,7 +116,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
 
 
     @Test
-    public void test_SimpleComponent_configuration_require()
+    public void test_SimpleComponent_configuration_require() throws Exception
     {
         final String pid = "SimpleComponent.configuration.require";
 
@@ -149,7 +149,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
      * same as test_SimpleComponent_configuration_require except configuration is present when component is enabled.
      */
     @Test
-    public void test_SimpleComponent_configuration_require_initialize()
+    public void test_SimpleComponent_configuration_require_initialize() throws Exception
     {
         final String pid = "SimpleComponent.configuration.require";
 
@@ -176,7 +176,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
 
 
     @Test
-    public void test_SimpleComponent_dynamic_configuration()
+    public void test_SimpleComponent_dynamic_configuration() throws Exception
     {
         final String pid = "DynamicConfigurationComponent";
         boolean pre13 = true;
@@ -185,7 +185,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
     }
 
     @Test
-    public void test_SimpleComponent_dynamic_configuration_13()
+    public void test_SimpleComponent_dynamic_configuration_13() throws Exception
     {
         final String pid = "DynamicConfigurationComponent13";
         boolean pre13 = false;
@@ -194,7 +194,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
     }
     
     @Test
-    public void test_SimpleComponent_dynamic_configuration_flag()
+    public void test_SimpleComponent_dynamic_configuration_flag() throws Exception
     {
         final String pid = "DynamicConfigurationComponentFlag";
         boolean pre13 = true;
@@ -203,7 +203,8 @@ public class ComponentConfigurationTest extends ComponentTestBase
     }
 
 
-	private void dynamicConfigTest(final String pid, boolean pre13, boolean recreateOnDelete) {
+	private void dynamicConfigTest(final String pid, boolean pre13, boolean recreateOnDelete)  throws Exception
+	{
 	    Object pidWithout;
 	    Object pidWith;
 	    if (pre13)
@@ -256,7 +257,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
 
 
     @Test
-    public void test_SimpleComponent_dynamic_optional_configuration_with_required_service()
+    public void test_SimpleComponent_dynamic_optional_configuration_with_required_service() throws Exception
     {
         final String targetProp = "ref.target";
         final String filterProp = "required";
@@ -331,7 +332,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
      * to (still) match the other one.  2nd service should remain bound.
      */
     @Test
-    public void test_SimpleComponent_dynamic_optional_configuration_with_required_service2()
+    public void test_SimpleComponent_dynamic_optional_configuration_with_required_service2() throws Exception
     {
         final String targetProp = "ref.target";
         final String filterProp1 = "one";
@@ -494,7 +495,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
 
 
     @Test
-    public void test_SimpleComponent_factory_configuration()
+    public void test_SimpleComponent_factory_configuration() throws Exception
     {
         final String factoryPid = "FactoryConfigurationComponent";
 
@@ -530,7 +531,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
      * component is enabled to test initialization.
      */
     @Test
-    public void test_SimpleComponent_factory_configuration_initialize()
+    public void test_SimpleComponent_factory_configuration_initialize() throws Exception
     {
         final String factoryPid = "FactoryConfigurationComponent";
 
@@ -558,7 +559,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
     }
 
     @Test
-    public void test_SimpleComponent_factory_configuration_enabled()
+    public void test_SimpleComponent_factory_configuration_enabled() throws Exception
     {
         final String factoryPid = "FactoryConfigurationComponent_enabled";
 

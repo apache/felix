@@ -25,7 +25,7 @@ import org.osgi.framework.dto.BundleDTO;
  * 
  * @since 1.3
  * @NotThreadSafe
- * @author $Id: f0bf3f3036179db049645595e631489455affe8a $
+ * @author $Id: 5ed89a27964e91018c55dc9e72434eb92a438fa6 $
  */
 public class ComponentDescriptionDTO extends DTO {
 	/**
@@ -58,7 +58,8 @@ public class ComponentDescriptionDTO extends DTO {
 	 * 
 	 * <p>
 	 * This is declared in the {@code scope} attribute of the {@code service}
-	 * element.
+	 * element. This will be {@code null} if the component description does not
+	 * declare any service interfaces.
 	 */
 	public String				scope;
 
@@ -159,13 +160,12 @@ public class ComponentDescriptionDTO extends DTO {
 	public String				configurationPolicy;
 
 	/**
-	 * The configuration pid.
+	 * The configuration pids.
 	 * 
 	 * <p>
-	 * This is declared in the {@code configuration-pid} attribute of the
-	 * {@code component} element. This will be the default configuration pid if
-	 * the component description does not declare a configuration pid.
+	 * These are declared in the {@code configuration-pid} attribute of the
+	 * {@code component} element. This will contain the default configuration
+	 * pid if the component description does not declare a configuration pid.
 	 */
 	public String[]				configurationPid;
-
 }

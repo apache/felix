@@ -53,7 +53,7 @@ public class ServiceBindGreedyTest extends ComponentTestBase
 
 
     @Test
-    public void test_optional_single_dynamic()
+    public void test_optional_single_dynamic() throws Exception
     {
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
 
@@ -167,7 +167,7 @@ public class ServiceBindGreedyTest extends ComponentTestBase
 
 
     @Test
-    public void test_required_single_dynamic()
+    public void test_required_single_dynamic() throws Exception
     {
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1", 1 );
 
@@ -282,7 +282,7 @@ public class ServiceBindGreedyTest extends ComponentTestBase
 
 
     @Test
-    public void test_optional_multiple_dynamic()
+    public void test_optional_multiple_dynamic() throws Exception
     {
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
 
@@ -411,7 +411,7 @@ public class ServiceBindGreedyTest extends ComponentTestBase
 
 
     @Test
-    public void test_required_multiple_dynamic()
+    public void test_required_multiple_dynamic() throws Exception
     {
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
 
@@ -544,7 +544,7 @@ public class ServiceBindGreedyTest extends ComponentTestBase
 
 
     @Test
-    public void test_required_multiple_dynamic_factory() throws InvalidSyntaxException
+    public void test_required_multiple_dynamic_factory() throws Exception
     {
         String name ="test_required_multiple_dynamic_factory"; //also pid
         final String factoryPid = "factory_" + name;
@@ -685,7 +685,7 @@ public class ServiceBindGreedyTest extends ComponentTestBase
 
 
     @Test
-    public void test_optional_single_static()
+    public void test_optional_single_static() throws Exception
     {
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
 
@@ -817,7 +817,7 @@ public class ServiceBindGreedyTest extends ComponentTestBase
 
 
     @Test
-    public void test_required_single_static()
+    public void test_required_single_static() throws Exception
     {
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
 
@@ -945,7 +945,7 @@ public class ServiceBindGreedyTest extends ComponentTestBase
 
 
     @Test
-    public void test_optional_multiple_static()
+    public void test_optional_multiple_static() throws Exception
     {
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
 
@@ -1089,7 +1089,7 @@ public class ServiceBindGreedyTest extends ComponentTestBase
 
 
     @Test
-    public void test_required_multiple_static()
+    public void test_required_multiple_static() throws Exception
     {
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
 
@@ -1227,7 +1227,7 @@ public class ServiceBindGreedyTest extends ComponentTestBase
     }
 
     @Test
-    public void test_multi_service_bind_unbind_order()
+    public void test_multi_service_bind_unbind_order() throws Exception
     {
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
         final SimpleService2Impl srv2 = SimpleService2Impl.create( bundleContext, "srv2" );

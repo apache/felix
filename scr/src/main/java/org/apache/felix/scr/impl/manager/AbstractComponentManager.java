@@ -18,6 +18,7 @@
  */
 package org.apache.felix.scr.impl.manager;
 
+import java.lang.reflect.InvocationTargetException;
 import java.security.Permission;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,6 +61,9 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.log.LogService;
+import org.osgi.util.promise.Deferred;
+import org.osgi.util.promise.Promise;
+import org.osgi.util.promise.Promises;
 
 
 /**
@@ -103,7 +107,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
      * This latch prevents concurrent enable, disable, and reconfigure.  Since the enable and disable operations may use 
      * two threads and the initiating thread does not wait for the operation to complete, we can't use a regular lock.
      */
-    private final AtomicReference< CountDownLatch> m_enabledLatchRef = new AtomicReference<CountDownLatch>( new CountDownLatch(0) );
+    private final AtomicReference< Deferred<Void>> m_enabledLatchRef = new AtomicReference<Deferred<Void>>( new Deferred<Void>() );
 
     protected volatile boolean m_enabled;
     protected volatile boolean m_internalEnabled;
@@ -138,6 +142,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     
     protected AbstractComponentManager( ComponentContainer<S> container, ComponentMethods componentMethods, boolean factoryInstance )
     {
+        m_enabledLatchRef.get().resolve(null);
         m_factoryInstance = factoryInstance;
         m_container = container;
         m_componentMethods = componentMethods;
@@ -386,13 +391,13 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     //---------- Asynchronous frontend to state change methods ----------------
     private static final AtomicLong taskCounter = new AtomicLong( );
 
-    public final void enable( final boolean async )
+    public final Promise<Void> enable( final boolean async )
     {
         if (m_enabled)
         {
-            return;
+            return Promises.resolved(null);
         }
-        CountDownLatch enableLatch = null;
+        Deferred<Void> enableLatch = null;
         try
         {
             enableLatch = enableLatchWait();
@@ -406,14 +411,14 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         {
             if ( !async )
             {
-                enableLatch.countDown();
+                enableLatch.resolve(null);
             }
             m_enabled = true;
         }
 
         if ( async )
         {
-            final CountDownLatch latch = enableLatch;
+            final Deferred<Void> latch = enableLatch;
             getActivator().schedule( new Runnable()
             {
 
@@ -427,7 +432,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
                     }
                     finally
                     {
-                        latch.countDown();
+                        latch.resolve(null);
                     }
                 }
 
@@ -437,6 +442,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
                 }
             } );
         }
+        return enableLatch.getPromise();
     }
 
     /**
@@ -446,10 +452,10 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
      * @return the latch to count down when the operation is complete (in the calling or another thread)
      * @throws InterruptedException
      */
-    CountDownLatch enableLatchWait()
+    Deferred<Void> enableLatchWait()
     {
-        CountDownLatch enabledLatch;
-        CountDownLatch newEnabledLatch;
+        Deferred<Void> enabledLatch;
+        Deferred<Void> newEnabledLatch;
         do
         {
             enabledLatch = m_enabledLatchRef.get();
@@ -459,19 +465,23 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
             {
                 try
                 {
-                    enabledLatch.await();
+                    enabledLatch.getPromise().getValue();
                     waited = true;
                 }
                 catch ( InterruptedException e )
                 {
                     interrupted = true;
                 }
+                catch (InvocationTargetException e)
+                {
+                    //this is not going to happen
+                }
             }
             if ( interrupted )
             {
                 Thread.currentThread().interrupt();
             }
-            newEnabledLatch = new CountDownLatch(1);
+            newEnabledLatch = new Deferred<Void>();
         }
         while ( !m_enabledLatchRef.compareAndSet( enabledLatch, newEnabledLatch) );
         return newEnabledLatch;  
@@ -489,13 +499,13 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     }
 
 
-    public final void disable( final boolean async )
+    public final Promise<Void> disable( final boolean async )
     {
         if (!m_enabled)
         {
-            return;
+            return Promises.resolved(null);
         }
-        CountDownLatch enableLatch = null;
+        Deferred<Void> enableLatch = null;
         try
         {
             enableLatch = enableLatchWait();
@@ -509,14 +519,14 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         {
             if (!async)
             {
-                enableLatch.countDown();
+                enableLatch.resolve(null);
             }
             m_enabled = false;
         }
 
         if ( async )
         {
-            final CountDownLatch latch = enableLatch;
+            final Deferred<Void> latch = enableLatch;
             getActivator().schedule( new Runnable()
             {
 
@@ -530,7 +540,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
                     }
                     finally
                     {
-                        latch.countDown();
+                        latch.resolve(null);
                     }
                 }
 
@@ -541,6 +551,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
             } );
         }
+        return enableLatch.getPromise();
     }
 
     // supports the ComponentInstance.dispose() method
