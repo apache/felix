@@ -92,7 +92,7 @@ public class ManifestPlugin extends BundlePlugin
 
         try
         {
-            writeManifest( manifest, outputFile );
+            writeManifest( manifest, outputFile, niceManifest );
         }
         catch ( IOException e )
         {
@@ -219,7 +219,7 @@ public class ManifestPlugin extends BundlePlugin
     }
 
 
-    public static void writeManifest( Manifest manifest, File outputFile ) throws IOException
+    public static void writeManifest( Manifest manifest, File outputFile, boolean niceManifest ) throws IOException
     {
         outputFile.getParentFile().mkdirs();
 
@@ -227,7 +227,7 @@ public class ManifestPlugin extends BundlePlugin
         os = new FileOutputStream( outputFile );
         try
         {
-            Jar.writeManifest( manifest, os );
+            ManifestWriter.outputManifest( manifest, os, niceManifest );
         }
         finally
         {

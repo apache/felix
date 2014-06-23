@@ -101,6 +101,13 @@ public class BundlePlugin extends AbstractMojo
     protected File manifestLocation;
 
     /**
+     * Output a nicely formatted manifest that still respects the 72 character line limit.
+     *
+     * @parameter expression="${niceManifest}" default-value="false"
+     */
+    protected boolean niceManifest;
+
+    /**
      * File where the BND instructions will be dumped
      *
      * @parameter expression="${dumpInstructions}"
@@ -224,13 +231,6 @@ public class BundlePlugin extends AbstractMojo
      * @readonly
      */
     private MavenSession m_mavenSession;
-
-    /**
-     * Output a nicely formatted manifest that still respects the 72 character line limit.
-     *
-     * @parameter
-     */
-    private boolean niceManifest = false;
 
     private static final String MAVEN_SYMBOLICNAME = "maven-symbolicname";
     private static final String MAVEN_RESOURCES = "{maven-resources}";
@@ -430,15 +430,7 @@ public class BundlePlugin extends AbstractMojo
                 try
                 {
                     Manifest manifest = builder.getJar().getManifest();
-                    FileOutputStream fos = new FileOutputStream( outputFile );
-                    try
-                    {
-                        ManifestWriter.outputManifest( manifest, fos, niceManifest );
-                    }
-                    finally
-                    {
-                        fos.close();
-                    }
+                    ManifestPlugin.writeManifest( manifest, outputFile, niceManifest );
                 }
                 catch ( IOException e )
                 {
