@@ -23,7 +23,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Array;
@@ -671,7 +670,7 @@ public class BundlePlugin extends AbstractMojo
     }
 
 
-    protected StringBuilder dumpManifest( Manifest manifest, StringBuilder buf )
+    protected static StringBuilder dumpManifest( Manifest manifest, StringBuilder buf )
     {
         try
         {
