@@ -12,7 +12,7 @@ setting configured with Java 8.
 Scenario:
 --------
 
-For sake of simplicify, a simple scenario domain is used (actually, this example domain has been inspired from the "Java8 Lambdas" book, Oreilly):
+For sake of simplicity, a simple scenario domain is used (actually, this example domain has been inspired from the "Java8 Lambdas" book, Oreilly):
 We have the following services: 
 
 "Artist" service: An Artist is an individual or group of musicians, who creates some "Albums". One Artist service depends on several Album services.

@@ -16,7 +16,7 @@ public interface Artist {
      * Each Artist creates the following number of musical Albums.
      * (you have to regenerate the SCR xml descriptor if you modify this, see README)
      */
-    public final int ALBUMS = 5;
+    public final int ALBUMS = 10;
     
     /**
      * Each Album contains the following number of musical Tracks.
