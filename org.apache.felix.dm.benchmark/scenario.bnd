@@ -1,0 +1,4 @@
+
+Export-Package:  \
+	org.apache.felix.dm.benchmark.scenario.impl,\
+	org.apache.felix.dm.benchmark.scenario

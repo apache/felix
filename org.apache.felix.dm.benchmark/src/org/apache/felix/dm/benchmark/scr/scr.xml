@@ -1,0 +1,1543 @@
+<?xml version='1.0' encoding='utf-8'?>
+<components>
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.ArtistImpl1' activate='start' deactivate='stop' immediate='true'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.ArtistImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Artist'/>
+    </service>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='album1' interface='org.apache.felix.dm.benchmark.scenario.Album' bind='addAlbum' target='(id=1)'/>
+    <reference name='album2' interface='org.apache.felix.dm.benchmark.scenario.Album' bind='addAlbum' target='(id=2)'/>
+    <reference name='album3' interface='org.apache.felix.dm.benchmark.scenario.Album' bind='addAlbum' target='(id=3)'/>
+    <reference name='album4' interface='org.apache.felix.dm.benchmark.scenario.Album' bind='addAlbum' target='(id=4)'/>
+    <reference name='album5' interface='org.apache.felix.dm.benchmark.scenario.Album' bind='addAlbum' target='(id=5)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.ArtistImpl2' activate='start' deactivate='stop' immediate='true'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.ArtistImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Artist'/>
+    </service>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='album1' interface='org.apache.felix.dm.benchmark.scenario.Album' bind='addAlbum' target='(id=6)'/>
+    <reference name='album2' interface='org.apache.felix.dm.benchmark.scenario.Album' bind='addAlbum' target='(id=7)'/>
+    <reference name='album3' interface='org.apache.felix.dm.benchmark.scenario.Album' bind='addAlbum' target='(id=8)'/>
+    <reference name='album4' interface='org.apache.felix.dm.benchmark.scenario.Album' bind='addAlbum' target='(id=9)'/>
+    <reference name='album5' interface='org.apache.felix.dm.benchmark.scenario.Album' bind='addAlbum' target='(id=10)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.ArtistImpl3' activate='start' deactivate='stop' immediate='true'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.ArtistImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Artist'/>
+    </service>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='album1' interface='org.apache.felix.dm.benchmark.scenario.Album' bind='addAlbum' target='(id=11)'/>
+    <reference name='album2' interface='org.apache.felix.dm.benchmark.scenario.Album' bind='addAlbum' target='(id=12)'/>
+    <reference name='album3' interface='org.apache.felix.dm.benchmark.scenario.Album' bind='addAlbum' target='(id=13)'/>
+    <reference name='album4' interface='org.apache.felix.dm.benchmark.scenario.Album' bind='addAlbum' target='(id=14)'/>
+    <reference name='album5' interface='org.apache.felix.dm.benchmark.scenario.Album' bind='addAlbum' target='(id=15)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.ArtistImpl4' activate='start' deactivate='stop' immediate='true'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.ArtistImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Artist'/>
+    </service>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='album1' interface='org.apache.felix.dm.benchmark.scenario.Album' bind='addAlbum' target='(id=16)'/>
+    <reference name='album2' interface='org.apache.felix.dm.benchmark.scenario.Album' bind='addAlbum' target='(id=17)'/>
+    <reference name='album3' interface='org.apache.felix.dm.benchmark.scenario.Album' bind='addAlbum' target='(id=18)'/>
+    <reference name='album4' interface='org.apache.felix.dm.benchmark.scenario.Album' bind='addAlbum' target='(id=19)'/>
+    <reference name='album5' interface='org.apache.felix.dm.benchmark.scenario.Album' bind='addAlbum' target='(id=20)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.ArtistImpl5' activate='start' deactivate='stop' immediate='true'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.ArtistImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Artist'/>
+    </service>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='album1' interface='org.apache.felix.dm.benchmark.scenario.Album' bind='addAlbum' target='(id=21)'/>
+    <reference name='album2' interface='org.apache.felix.dm.benchmark.scenario.Album' bind='addAlbum' target='(id=22)'/>
+    <reference name='album3' interface='org.apache.felix.dm.benchmark.scenario.Album' bind='addAlbum' target='(id=23)'/>
+    <reference name='album4' interface='org.apache.felix.dm.benchmark.scenario.Album' bind='addAlbum' target='(id=24)'/>
+    <reference name='album5' interface='org.apache.felix.dm.benchmark.scenario.Album' bind='addAlbum' target='(id=25)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl1' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Album'/>
+    </service>
+    <property name='id' value='1'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='track26' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=26)'/>
+    <reference name='track27' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=27)'/>
+    <reference name='track28' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=28)'/>
+    <reference name='track29' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=29)'/>
+    <reference name='track30' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=30)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl2' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Album'/>
+    </service>
+    <property name='id' value='2'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='track31' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=31)'/>
+    <reference name='track32' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=32)'/>
+    <reference name='track33' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=33)'/>
+    <reference name='track34' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=34)'/>
+    <reference name='track35' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=35)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl3' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Album'/>
+    </service>
+    <property name='id' value='3'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='track36' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=36)'/>
+    <reference name='track37' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=37)'/>
+    <reference name='track38' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=38)'/>
+    <reference name='track39' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=39)'/>
+    <reference name='track40' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=40)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl4' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Album'/>
+    </service>
+    <property name='id' value='4'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='track41' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=41)'/>
+    <reference name='track42' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=42)'/>
+    <reference name='track43' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=43)'/>
+    <reference name='track44' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=44)'/>
+    <reference name='track45' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=45)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl5' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Album'/>
+    </service>
+    <property name='id' value='5'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='track46' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=46)'/>
+    <reference name='track47' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=47)'/>
+    <reference name='track48' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=48)'/>
+    <reference name='track49' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=49)'/>
+    <reference name='track50' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=50)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl6' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Album'/>
+    </service>
+    <property name='id' value='6'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='track51' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=51)'/>
+    <reference name='track52' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=52)'/>
+    <reference name='track53' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=53)'/>
+    <reference name='track54' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=54)'/>
+    <reference name='track55' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=55)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl7' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Album'/>
+    </service>
+    <property name='id' value='7'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='track56' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=56)'/>
+    <reference name='track57' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=57)'/>
+    <reference name='track58' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=58)'/>
+    <reference name='track59' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=59)'/>
+    <reference name='track60' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=60)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl8' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Album'/>
+    </service>
+    <property name='id' value='8'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='track61' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=61)'/>
+    <reference name='track62' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=62)'/>
+    <reference name='track63' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=63)'/>
+    <reference name='track64' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=64)'/>
+    <reference name='track65' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=65)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl9' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Album'/>
+    </service>
+    <property name='id' value='9'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='track66' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=66)'/>
+    <reference name='track67' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=67)'/>
+    <reference name='track68' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=68)'/>
+    <reference name='track69' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=69)'/>
+    <reference name='track70' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=70)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl10' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Album'/>
+    </service>
+    <property name='id' value='10'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='track71' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=71)'/>
+    <reference name='track72' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=72)'/>
+    <reference name='track73' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=73)'/>
+    <reference name='track74' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=74)'/>
+    <reference name='track75' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=75)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl11' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Album'/>
+    </service>
+    <property name='id' value='11'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='track76' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=76)'/>
+    <reference name='track77' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=77)'/>
+    <reference name='track78' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=78)'/>
+    <reference name='track79' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=79)'/>
+    <reference name='track80' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=80)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl12' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Album'/>
+    </service>
+    <property name='id' value='12'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='track81' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=81)'/>
+    <reference name='track82' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=82)'/>
+    <reference name='track83' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=83)'/>
+    <reference name='track84' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=84)'/>
+    <reference name='track85' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=85)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl13' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Album'/>
+    </service>
+    <property name='id' value='13'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='track86' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=86)'/>
+    <reference name='track87' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=87)'/>
+    <reference name='track88' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=88)'/>
+    <reference name='track89' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=89)'/>
+    <reference name='track90' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=90)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl14' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Album'/>
+    </service>
+    <property name='id' value='14'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='track91' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=91)'/>
+    <reference name='track92' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=92)'/>
+    <reference name='track93' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=93)'/>
+    <reference name='track94' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=94)'/>
+    <reference name='track95' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=95)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl15' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Album'/>
+    </service>
+    <property name='id' value='15'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='track96' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=96)'/>
+    <reference name='track97' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=97)'/>
+    <reference name='track98' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=98)'/>
+    <reference name='track99' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=99)'/>
+    <reference name='track100' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=100)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl16' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Album'/>
+    </service>
+    <property name='id' value='16'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='track101' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=101)'/>
+    <reference name='track102' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=102)'/>
+    <reference name='track103' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=103)'/>
+    <reference name='track104' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=104)'/>
+    <reference name='track105' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=105)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl17' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Album'/>
+    </service>
+    <property name='id' value='17'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='track106' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=106)'/>
+    <reference name='track107' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=107)'/>
+    <reference name='track108' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=108)'/>
+    <reference name='track109' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=109)'/>
+    <reference name='track110' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=110)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl18' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Album'/>
+    </service>
+    <property name='id' value='18'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='track111' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=111)'/>
+    <reference name='track112' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=112)'/>
+    <reference name='track113' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=113)'/>
+    <reference name='track114' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=114)'/>
+    <reference name='track115' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=115)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl19' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Album'/>
+    </service>
+    <property name='id' value='19'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='track116' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=116)'/>
+    <reference name='track117' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=117)'/>
+    <reference name='track118' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=118)'/>
+    <reference name='track119' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=119)'/>
+    <reference name='track120' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=120)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl20' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Album'/>
+    </service>
+    <property name='id' value='20'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='track121' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=121)'/>
+    <reference name='track122' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=122)'/>
+    <reference name='track123' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=123)'/>
+    <reference name='track124' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=124)'/>
+    <reference name='track125' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=125)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl21' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Album'/>
+    </service>
+    <property name='id' value='21'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='track126' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=126)'/>
+    <reference name='track127' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=127)'/>
+    <reference name='track128' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=128)'/>
+    <reference name='track129' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=129)'/>
+    <reference name='track130' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=130)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl22' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Album'/>
+    </service>
+    <property name='id' value='22'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='track131' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=131)'/>
+    <reference name='track132' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=132)'/>
+    <reference name='track133' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=133)'/>
+    <reference name='track134' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=134)'/>
+    <reference name='track135' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=135)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl23' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Album'/>
+    </service>
+    <property name='id' value='23'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='track136' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=136)'/>
+    <reference name='track137' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=137)'/>
+    <reference name='track138' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=138)'/>
+    <reference name='track139' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=139)'/>
+    <reference name='track140' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=140)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl24' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Album'/>
+    </service>
+    <property name='id' value='24'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='track141' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=141)'/>
+    <reference name='track142' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=142)'/>
+    <reference name='track143' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=143)'/>
+    <reference name='track144' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=144)'/>
+    <reference name='track145' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=145)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl25' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Album'/>
+    </service>
+    <property name='id' value='25'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+    <reference name='track146' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=146)'/>
+    <reference name='track147' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=147)'/>
+    <reference name='track148' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=148)'/>
+    <reference name='track149' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=149)'/>
+    <reference name='track150' interface='org.apache.felix.dm.benchmark.scenario.Track' bind='addTrack' target='(id=150)'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl26' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='26'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl27' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='27'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl28' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='28'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl29' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='29'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl30' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='30'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl31' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='31'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl32' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='32'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl33' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='33'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl34' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='34'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl35' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='35'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl36' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='36'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl37' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='37'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl38' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='38'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl39' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='39'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl40' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='40'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl41' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='41'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl42' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='42'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl43' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='43'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl44' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='44'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl45' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='45'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl46' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='46'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl47' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='47'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl48' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='48'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl49' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='49'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl50' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='50'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl51' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='51'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl52' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='52'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl53' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='53'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl54' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='54'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl55' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='55'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl56' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='56'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl57' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='57'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl58' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='58'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl59' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='59'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl60' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='60'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl61' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='61'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl62' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='62'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl63' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='63'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl64' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='64'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl65' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='65'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl66' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='66'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl67' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='67'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl68' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='68'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl69' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='69'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl70' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='70'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl71' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='71'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl72' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='72'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl73' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='73'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl74' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='74'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl75' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='75'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl76' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='76'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl77' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='77'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl78' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='78'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl79' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='79'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl80' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='80'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl81' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='81'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl82' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='82'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl83' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='83'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl84' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='84'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl85' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='85'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl86' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='86'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl87' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='87'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl88' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='88'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl89' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='89'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl90' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='90'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl91' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='91'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl92' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='92'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl93' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='93'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl94' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='94'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl95' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='95'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl96' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='96'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl97' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='97'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl98' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='98'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl99' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='99'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl100' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='100'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl101' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='101'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl102' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='102'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl103' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='103'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl104' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='104'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl105' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='105'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl106' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='106'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl107' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='107'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl108' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='108'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl109' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='109'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl110' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='110'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl111' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='111'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl112' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='112'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl113' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='113'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl114' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='114'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl115' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='115'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl116' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='116'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl117' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='117'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl118' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='118'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl119' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='119'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl120' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='120'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl121' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='121'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl122' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='122'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl123' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='123'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl124' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='124'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl125' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='125'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl126' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='126'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl127' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='127'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl128' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='128'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl129' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='129'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl130' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='130'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl131' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='131'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl132' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='132'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl133' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='133'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl134' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='134'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl135' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='135'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl136' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='136'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl137' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='137'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl138' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='138'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl139' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='139'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl140' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='140'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl141' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='141'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl142' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='142'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl143' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='143'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl144' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='144'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl145' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='145'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl146' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='146'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl147' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='147'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl148' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='148'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl149' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='149'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+  <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl150' activate='start' deactivate='stop'>
+    <implementation class='org.apache.felix.dm.benchmark.scenario.impl.TrackImpl'/>
+    <service>
+      <provide interface='org.apache.felix.dm.benchmark.scenario.Track'/>
+    </service>
+    <property name='id' value='150'/>
+    <reference name='Controller' interface='org.apache.felix.dm.benchmark.controller.ScenarioController' bind='bindController'/>
+  </scr:component>
+
+</components>

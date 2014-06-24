@@ -1,0 +1,3 @@
+Private-Package:  \
+	org.apache.felix.dm.benchmark.scr
+Service-Component: org/apache/felix/dm/benchmark/scr/scr.xml

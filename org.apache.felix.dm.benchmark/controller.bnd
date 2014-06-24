@@ -1,0 +1,5 @@
+Private-Package:  \
+	org.apache.felix.dm.benchmark.controller.impl
+Bundle-Activator: org.apache.felix.dm.benchmark.controller.impl.Activator
+Export-Package:  \
+	org.apache.felix.dm.benchmark.controller

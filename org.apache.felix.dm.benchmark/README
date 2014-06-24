@@ -1,0 +1,68 @@
+This is a benchmark bndtools project used to do some stress tests on the Dependency Manager 4.0
+Other Apache Felix DI framework are also supported (Felix SCR and Felix iPOJO).
+
+Requirement:
+-----------
+
+DM4 compiles with jdk7, but the org.apache.felix.dm.benchmark project required java 8, so you have to configure a specific 
+setting configured with Java 8. 
+
+(I'm using Eclipse Kepler SR2 + Java 8 support for it).
+
+Scenario:
+--------
+
+For sake of simplicify, a simple scenario domain is used (actually, this example domain has been inspired from the "Java8 Lambdas" book, Oreilly):
+We have the following services: 
+
+"Artist" service: An Artist is an individual or group of musicians, who creates some "Albums". One Artist service depends on several Album services.
+"Album" service: is a single release of musics, comprising several music Tracks. One Album depends on several Track services.
+"Track" service: A piece of music.
+
+The scenario is implemented in the following bundles
+
+- org.apache.felix.dm.benchmark.scenario: defines the interfaces.
+- org.apache.felix.dm.benchmark.scenario.impl: defines the basic implementations for the services.
+
+The Scenario Controller (see org.apache.felix.dm.benchmark.scenario/org.apache.felix.dm.benchmark.scenario.impl) is in charge of starting/stopping many times
+some DI specific bundles (DM4, SCR, iPOJO), which are expected to create all expected Artist/Album/Track services.
+
+By default, when a tested bundle is started, it will create 5 Artists (see Artists.ARTISTS constant). each Artist depends on 5 Albums (see Artists.ALBUMS constant),
+and each Album depends on 5 music Tracks (see Artists.TRACKS constants).
+
+Here is the list of bundles which are testing dependency manager, scr, or iPojo:
+
+- org.apache.felix.dm.benchmark.dependencymanager: 
+It contains a simple activator, which creates the various services.
+
+- org.apache.felix.dm.benchmark.dependencymanager.parallel: 
+same as above, but using parallel dependency manager (Warning: This is a new feature, not yet committed, still under discussion with Marcel and Xander).
+
+- org.apache.felix.dm.benchmark.scr: 
+contains a DS xml descriptor for declaring the Artist/Album/Track services. If you change the constants values of Artists.ARTISTS/Artists.ALBUMS/Artists.TRACKS in order to
+support more or less services, then you have to regenerate the xml descriptor in ./src/org/apache/felix/dm/benchmark/scr/scr.xml.
+To do so, you can modify the constants (in the Artists interface), then you have to run under eclipse the src/org/apache/felix/dm/benchmark/scr/XMLGenerator.java class.
+It will generate in /tmp/scr.xml the new xml descriptor, which you have to copy to ./src/org/apache/felix/dm/benchmark/scr/scr.xml.
+
+- org.apache.felix.dm.benchmark.ipojo:
+contains an iPojo Activator, using the iPojo API for declaring all the services.
+
+The org.apache.felix.dm.benchmark.controller bundle, when starting, first stops all tested bundles.
+Then for each one, it performs the following test (multiple times):
+
+- register the ScenarioController service (using the OSGi BundleContext API)
+- start the tested bundle
+- wait for all expected services to be registered
+- unregister the ScenarioController service (this will trigger a full deactivation of services, because all services are expected to depend on it).
+- wait for all expected sercices to be unregistered
+- stop the tested bundle.
+
+All the elapsed time (nanoseconds) used to execute each iteration is then recorded in a list.
+When enough iterations are done, the list is sorted (that is : the first entry in the list corresponds to the fastest execution time, and the
+last entry corresponds to the slowest execution time).
+Then, we display some meaningful entries in the list (like the first entry, the entry in the midle of the list (average), and the last entry (slowest).
+
+We don't do an average, because usually, when running benchmark, measurements does not reflect reality, especially, when there is a full GC or when the JVM is warming up.
+(we actually do the same as in Java Chronicle: https://github.com/peter-lawrey/Java-Chronicle).
+
+/Pierre
