@@ -1,6 +1,7 @@
 package org.apache.felix.dm.benchmark.ipojo;
 
 import org.apache.felix.dm.benchmark.scenario.Helper;
+import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.api.Dependency;
 import org.apache.felix.ipojo.api.PrimitiveComponentType;
 import org.osgi.framework.Bundle;
@@ -8,7 +9,7 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
 public class Activator implements BundleActivator {   
-    volatile PrimitiveComponentType m_pct;
+    volatile ComponentInstance m_componentInstance;
     
     @Override
     public void start(BundleContext context) throws Exception {
@@ -22,7 +23,7 @@ public class Activator implements BundleActivator {
         }
 
         // Wait for the ScenarioController, before starting the actual stress test.
-        new PrimitiveComponentType()
+        m_componentInstance = new PrimitiveComponentType()
             .setBundleContext(context)
             .setClassName(IpojoScenario.class.getName())
             .addDependency(new Dependency().setField("m_controller"))
@@ -34,5 +35,6 @@ public class Activator implements BundleActivator {
     @Override
     public void stop(BundleContext context) throws Exception {
         Helper.debug(() -> Activator.class.getName() + ".stop()");
+        m_componentInstance.dispose();
     }
 }
