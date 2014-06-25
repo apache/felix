@@ -1,18 +1,81 @@
-This is a benchmark bndtools project used to do some stress tests on the Dependency Manager 4.0
-Other Apache Felix DI framework are also supported (Felix SCR and Felix iPOJO).
+Installation:
+============
 
-Requirement:
------------
+- Eclipse Kepler SR2 + java8 support + latest bndtools
+- Install java7 + java8 JREs in eclipse, and set default Jvm to java 7. For java 8, i'm using 1.8.05 Jvm from Oracle
+- checkout DM4: checkout http://svn.apache.org/repos/asf/felix/sandbox/pderop/dependencymanager-prototype dependencymanager-prototype
+- import dependencymanager-prototype in Eclipse. Check if the org.apache.felix.dm.benchmark bundle compiles correctly (if not, possibly
+adjust the project specific setting and check if it's using your installed java 8.
+- build all the projects, the restart eclipse.
 
-DM4 compiles with jdk7, but the org.apache.felix.dm.benchmark project required java 8, so you have to configure a specific 
-setting configured with Java 8. 
+How to launch the stress test under bndtools:
+============================================
 
-(I'm using Eclipse Kepler SR2 + Java 8 support for it).
+The stress test performs two kind of tests on different Felix DI framework (currently, we support Felix DM4, Felix SCR, Felix iPOJO):
 
-Scenario:
---------
+1) first kind of test: starts/stops several times each tested bundles. When started, the test bundle is expected to register/unregister several services.
+And no processing is done at all in each component activation/deactivation methods (start/stop methods).
 
-For sake of simplicity, a simple scenario domain is used (actually, this example domain has been inspired from the "Java8 Lambdas" book, Oreilly):
+2) second kind of test: same test, but this time, some processing is done in each component start/stop methods.
+
+To launch the stress test under BndTools, click on the bnd.bnd file of the "org.apache.felix.dm.benchmark" project, 
+then click on "Run", then in "Run OSGi".
+
+You should see something like that in the eclipse console:
+
+-----------------------------------------------------------------------------------------------------------------
+Welcome to Apache Felix Gogo
+
+g! 
+	+++++ Starting benchmarks without processing done in components start/stop methods.
+
+Benchmarking bundle:
+  org.apache.felix.dm.benchmark.dependencymanager:..............................
+  results=165645599,240534693,250335703,276343059,458505648
+
+Benchmarking bundle:
+  org.apache.felix.dm.benchmark.scr:..............................
+  results=193493527,203784076,257764377,365117336,469242290
+
+Benchmarking bundle:
+  org.apache.felix.dm.benchmark.ipojo:..............................
+  results=3996621923,5619860774,10963277969,19170373702,27043085149
+
+	+++++ Starting benchmarks with processing done in components start/stop methods.
+
+Benchmarking bundle:
+  org.apache.felix.dm.benchmark.dependencymanager:.....
+  results=3228612945,3230318727,3244609156,3272021057,3275854755
+
+Benchmarking bundle:
+  org.apache.felix.dm.benchmark.scr:.....
+  results=3293150735,3293724043,3297981700,3325328872,3347331154
+
+Benchmarking bundle:
+  org.apache.felix.dm.benchmark.ipojo:.....
+  results=29970616791,30866086557,31311315987,32831635310,33242710589
+-----------------------------------------------------------------------------------------------------------------
+
+How to interpret results:
+========================
+
+for each tested bundle, the time spent is displayed in nanos.
+for example: 
+
+  results=165645599,240534693,250335703,276343059,458505648
+
+Here is how to interpret the results: when testing a bundle, the benchmark controller starts/stops it many times, then the 
+elapsed time consumed to 1- start the bundle; 2- activate all services; 3- deactivate all services; 4- stop the bundle is recorded in a list.
+Then this list is sorted: the first entry is the fastest execution time, the last entry is the slowest. the middle one is the
+average.
+We display the first entry (fastest), the entry at 1/4 of the list, the middle of the list (average), the entry at 3/4 of the list, 
+and the last entry (slowest time)
+
+
+Stress test scenario description
+--------------------------------
+
+For sake of simplicity, a simple scenario domain is used (actually, this example domain has been inspired from the "Java8 Lambdas" book, O'reilly):
 We have the following services: 
 
 "Artist" service: An Artist is an individual or group of musicians, who creates some "Albums". One Artist service depends on several Album services.
@@ -27,8 +90,8 @@ The scenario is implemented in the following bundles
 The Scenario Controller (see org.apache.felix.dm.benchmark.scenario/org.apache.felix.dm.benchmark.scenario.impl) is in charge of starting/stopping many times
 some DI specific bundles (DM4, SCR, iPOJO), which are expected to create all expected Artist/Album/Track services.
 
-By default, when a tested bundle is started, it will create 5 Artists (see Artists.ARTISTS constant). each Artist depends on 5 Albums (see Artists.ALBUMS constant),
-and each Album depends on 5 music Tracks (see Artists.TRACKS constants).
+By default, when a tested bundle is started, it will create several Artists (see Artists.ARTISTS constant). each Artist depends on several Albums (see Artists.ALBUMS constant),
+and each Album depends on several music Tracks (see Artists.TRACKS constants).
 
 Here is the list of bundles which are testing dependency manager, scr, or iPojo:
 
@@ -54,15 +117,13 @@ Then for each one, it performs the following test (multiple times):
 - start the tested bundle
 - wait for all expected services to be registered
 - unregister the ScenarioController service (this will trigger a full deactivation of services, because all services are expected to depend on it).
-- wait for all expected sercices to be unregistered
+- wait for all expected services to be unregistered
 - stop the tested bundle.
 
 All the elapsed time (nanoseconds) used to execute each iteration is then recorded in a list.
 When enough iterations are done, the list is sorted (that is : the first entry in the list corresponds to the fastest execution time, and the
 last entry corresponds to the slowest execution time).
-Then, we display some meaningful entries in the list (like the first entry, the entry in the midle of the list (average), and the last entry (slowest).
+Then, we display some meaningful entries in the list (like the first entry, the entry in the middle of the list (average), and the last entry (slowest).
 
-We don't do an average, because usually, when running benchmark, measurements does not reflect reality, especially, when there is a full GC or when the JVM is warming up.
+We don't do an average, because usually, when running benchmark, some measurements does not reflect reality, especially, when there is a full GC or when the JVM is warming up.
 (we actually do the same as in Java Chronicle: https://github.com/peter-lawrey/Java-Chronicle).
-
-/Pierre
