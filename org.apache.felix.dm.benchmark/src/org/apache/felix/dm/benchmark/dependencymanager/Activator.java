@@ -88,7 +88,7 @@ public class Activator extends DependencyActivatorBase {
 
         DependencyManager dm = c.getDependencyManager();
         if (m_useThreadPool) {
-            // dm.setThreadPool(Helper.getThreadPool());
+            dm.setThreadPool(Helper.getThreadPool());
         }
         
         // Create many artists.
