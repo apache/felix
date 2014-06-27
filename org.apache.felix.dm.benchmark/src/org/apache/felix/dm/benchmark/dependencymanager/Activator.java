@@ -1,6 +1,5 @@
 package org.apache.felix.dm.benchmark.dependencymanager;
 
-import static java.util.stream.Collectors.toList;
 import static org.apache.felix.dm.benchmark.scenario.Artist.ALBUMS;
 import static org.apache.felix.dm.benchmark.scenario.Artist.ARTISTS;
 import static org.apache.felix.dm.benchmark.scenario.Artist.TRACKS;
@@ -29,21 +28,6 @@ import org.osgi.framework.BundleContext;
  * We'll create many Artists, each one is depending on many Albums, and each Album depends on many Tracks.
  */
 public class Activator extends DependencyActivatorBase {
-    /**
-     * List of "Artist" components, each one depending on some Albums.
-     */
-    List<Component> m_artists = new ArrayList<>();
-    
-    /**
-     * List of "Albums" components, each one depending on some Tracks.
-     */
-    List<Component> m_albums= new ArrayList<>();
-    
-    /**
-     * List of "Tracks".
-     */
-    List<Component> m_tracks= new ArrayList<>();
-    
     /**
      * Our BenchMark controller. We only depend on it in order to not start if the controller is not available
      */
@@ -91,22 +75,16 @@ public class Activator extends DependencyActivatorBase {
             dm.setThreadPool(Helper.getThreadPool());
         }
         
-        // Create many artists.
-        m_artists = Stream.iterate(0, i -> i + 1).limit(ARTISTS)
-            .map(i -> createArtists(dm)).collect(toList());
-        
-        // Each artist has some albums.
-        m_albums = m_artists.stream()
-            .flatMap(artist -> createAlbums(dm, artist)).collect(toList());
-        
-        // Each album has tracks
-        m_tracks = m_albums.stream()
-            .flatMap(album -> createTracks(dm, album)).collect(toList());
-        
-        // add all components
-        m_artists.stream().forEach(dm::add);
-        m_albums.stream().forEach(dm::add);
-        m_tracks.stream().forEach(dm::add);
+        // Create the list of Artists, Albums, and music Tracks services.
+        List<Component> components = new ArrayList<>();
+        IntStream.range(0, ARTISTS)
+            .mapToObj(i -> createArtists(dm)).peek(components::add)
+            .flatMap(artist -> createAlbums(dm, artist)).peek(components::add)
+            .flatMap(album -> createTracks(dm, album)).forEach(components::add);
+             
+                
+        // And add them all in our depednency manager.
+        components.stream().forEach(dm::add);
     }
 
     private Component createArtists(DependencyManager dm) {
