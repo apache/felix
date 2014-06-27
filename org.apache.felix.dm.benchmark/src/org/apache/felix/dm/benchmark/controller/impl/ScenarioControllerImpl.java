@@ -96,12 +96,12 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
 
     @Override
     public void artistAdded(Artist artist) {
-        componentAdded();
         int size = artist.getAlbums().size();
         if (size != Artist.ALBUMS) {
             throw new IllegalStateException("Artist has not created expected number of albums:" + size);
         }
         artist.play();
+        componentAdded();
     }
     
     @Override
@@ -149,7 +149,7 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
 
     private void displaySortedResults(List<Long> sortedResults, int iterations) {
         // We don't display an average of the duration times; Instead, we sort the results,
-        // and we display the significant results (the first entry is the fastest, the midle entry is the
+        // and we display the significant results (the first entry is the fastest, the middle entry is the
         // average, the last entry is the slowest ...)
         out.println("\n  results=" +  
             Stream.of(0f, 24.99f, 49.99f, 74.99f, 99.99f)
