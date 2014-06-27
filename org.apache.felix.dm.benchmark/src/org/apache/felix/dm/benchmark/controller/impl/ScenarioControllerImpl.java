@@ -86,7 +86,7 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
         // Start/stop 30 times the tested bundles. (no processing done in components start/stop methods).
         m_doProcessingInStartStop = false;
         out.println("\n\t+++++ Starting benchmarks without processing done in components start/stop methods.");
-        startStopScenarioBundles(30);
+        startStopScenarioBundles(10);
        
         // Start/stop 5 times the tested bundles (processing is done in components start/stop methods).
         m_doProcessingInStartStop = true;
