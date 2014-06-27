@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executor;
 
 import org.apache.felix.dm.context.ComponentContext;
 import org.apache.felix.dm.impl.AdapterServiceImpl;
@@ -66,6 +67,7 @@ public class DependencyManager {
     private final BundleContext m_context;
     private final Logger m_logger;
     private final List<Component> m_components = new CopyOnWriteArrayList<>();
+    private volatile Executor m_threadPool;
 
     // service registry cache
     private static ServiceRegistryCache m_serviceRegistryCache;
@@ -121,6 +123,15 @@ public class DependencyManager {
             m_dependencyManagers.add(new WeakReference(this));
         }
     }
+    
+    /**
+     * Sets a threadpool to this dependency manager. All added/removed components will then be handled
+     * in parallel, using the provided threadpool.
+     */
+    public DependencyManager setThreadPool(Executor threadPool) {
+        m_threadPool = threadPool;
+        return this;
+    }
 
     /**
      * Returns the list of currently created dependency managers.
@@ -160,11 +171,14 @@ public class DependencyManager {
      * Adds a new component to the dependency manager. After the service is added
      * it will be started immediately.
      * 
-     * @param service the service to add
+     * @param c the service to add
      */
-    public void add(Component service) {
-        m_components.add(service);
-        ((ComponentContext) service).start();
+    public void add(Component c) {
+        m_components.add(c);
+        if (m_threadPool != null) {
+            ((ComponentContext) c).setThreadPool(m_threadPool);
+        }
+        ((ComponentContext) c).start();
     }
 
     /**

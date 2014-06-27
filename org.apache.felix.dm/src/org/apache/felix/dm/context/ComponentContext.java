@@ -21,9 +21,12 @@ package org.apache.felix.dm.context;
 import java.util.List;
 import java.util.concurrent.Executor;
 
+import org.apache.felix.dm.Component;
+
 //TODO should this interface extend Component ?
 public interface ComponentContext {
     public Executor getExecutor(); // shared between a component and its dependencies
+    public Component setThreadPool(Executor threadPool);
     public void start();
     public void stop();
     public boolean isAvailable();

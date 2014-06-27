@@ -1188,4 +1188,11 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     	}
     	return super.toString();
     }
+    
+    @Override
+    public Component setThreadPool(Executor threadPool) {
+        ensureNotActive();
+        m_executor = new DispatchExecutor(threadPool, m_logger);
+        return this;
+    }
 }

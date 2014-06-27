@@ -324,4 +324,10 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
 		m_component.setDebug(label);
 		return this;
 	}
+	
+    @Override
+    public Component setThreadPool(Executor threadPool) {
+        m_component.setThreadPool(threadPool);
+        return this;
+    }
 }
