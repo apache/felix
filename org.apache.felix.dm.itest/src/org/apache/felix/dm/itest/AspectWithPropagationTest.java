@@ -25,7 +25,7 @@ public class AspectWithPropagationTest extends TestBase {
     private final Random _rnd = new Random();
     private static Ensure m_invokeStep;
     private static Ensure m_changeStep;
-    
+        
     /**
      * This test does the following:
      * 
@@ -39,7 +39,7 @@ public class AspectWithPropagationTest extends TestBase {
      */
     public void testAspectsWithPropagation() {
         System.out.println("----------- Running testAspectsWithPropagation ...");
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         m_invokeStep = new Ensure(); 
         
@@ -157,7 +157,7 @@ public class AspectWithPropagationTest extends TestBase {
      */
     public void testAspectsWithPropagationAndNoCallbacks() {
         System.out.println("----------- Running testAspectsWithPropagation ...");
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         m_invokeStep = new Ensure(); 
         
@@ -258,7 +258,7 @@ public class AspectWithPropagationTest extends TestBase {
     public void testAdapterWithAspectsAndPropagation() {
         System.out.println("----------- Running testAdapterWithAspectsAndPropagation ...");
 
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         m_invokeStep = new Ensure(); 
         
         // Create our original "S" service.
@@ -354,7 +354,7 @@ public class AspectWithPropagationTest extends TestBase {
     public void testAdapterWithAspectsAndPropagationNoCallbacks() {
         System.out.println("----------- Running testAdapterWithAspectsAndPropagationNoCallbacks ...");
 
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         m_invokeStep = new Ensure(); 
         
         // Create our original "S" service.

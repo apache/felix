@@ -4,6 +4,9 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import junit.framework.TestCase;
 
@@ -25,6 +28,10 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     // Default OSGI log service level.
     protected final static int LOG_LEVEL = LogService.LOG_WARNING;
     
+    // optional thread pool used by parallel dependency managers
+    private final static ExecutorService m_threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    private boolean m_useThreadPool = false;
+    
     // By default, we clear all dependendency managers when a test is done. Overriden by runtime tests, 
     // where we must not clear managers created by the runtime itself.
     protected final boolean m_autoClearDependencyManagers;
@@ -45,6 +52,10 @@ public abstract class TestBase extends TestCase implements LogService, Framework
         m_autoClearDependencyManagers = autoClearDependencyManagers;
     }
     
+    protected void setParallel(boolean parallel) {
+        m_useThreadPool = parallel;
+    }
+    
     public void setUp() throws Exception {
     	warn("Setting up test " + getClass().getName());
     	context = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
@@ -59,6 +70,14 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     	if (m_autoClearDependencyManagers) {
     	    clearAllManagers();
     	}
+    }
+    
+    protected DependencyManager getDM() {
+        DependencyManager dm = new DependencyManager(context);
+        if (m_useThreadPool) {        
+            dm.setThreadPool(m_threadPool);
+        }
+        return dm;
     }
     
     protected void clearAllManagers() {
