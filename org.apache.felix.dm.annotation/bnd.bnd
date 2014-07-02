@@ -1,8 +1,8 @@
 Bundle-Version:0.0.0.${tstamp}
--buildpath: \
+-buildpath:  \
 	osgi.core;version=4.2,\
-	biz.aQute.bndlib;version=2.2,\
-	de.twentyeleven.skysail.org.json-osgi;version=20080701.0
+	de.twentyeleven.skysail.org.json-osgi;version=20080701.0,\
+	biz.aQute.bndlib;version=2.3
 Private-Package: \
 	org.apache.felix.dm.annotation.plugin.bnd, \
 	org.json.*
