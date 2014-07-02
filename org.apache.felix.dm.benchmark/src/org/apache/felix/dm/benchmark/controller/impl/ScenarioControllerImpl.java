@@ -83,12 +83,12 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
             bundle.stop();
         }));
         
-        // Start/stop 30 times the tested bundles. (no processing done in components start/stop methods).
+        // Start/stop several times the tested bundles. (no processing done in components start/stop methods).
         m_doProcessingInStartStop = false;
         out.println("\n\t+++++ Starting benchmarks without processing done in components start/stop methods.");
-        startStopScenarioBundles(10);
+        startStopScenarioBundles(30);
        
-        // Start/stop 5 times the tested bundles (processing is done in components start/stop methods).
+        // Start/stop several times the tested bundles (processing is done in components start/stop methods).
         m_doProcessingInStartStop = true;
         out.println("\n\t+++++ Starting benchmarks with processing done in components start/stop methods.");
         startStopScenarioBundles(5);
@@ -142,18 +142,18 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
                 .peek(i -> out.print("."))
                 .map(n -> durationOf(() -> startAndStop(bundle)))
                 .sorted().boxed().collect(toList());
-            displaySortedResults(sortedResults, iterations);
+            displaySortedResults(sortedResults);
             Unchecked.run(() -> Thread.sleep(500));
         });        
     }
 
-    private void displaySortedResults(List<Long> sortedResults, int iterations) {
+    private void displaySortedResults(List<Long> sortedResults) {
         // We don't display an average of the duration times; Instead, we sort the results,
         // and we display the significant results (the first entry is the fastest, the middle entry is the
         // average, the last entry is the slowest ...)
         out.println("\n  results=" +  
             Stream.of(0f, 24.99f, 49.99f, 74.99f, 99.99f)
-                .mapToInt(perc -> (int) (perc * iterations / 100))
+                .mapToInt(perc -> (int) (perc * sortedResults.size() / 100))
                 .mapToObj(sortedResults::get).map(Object::toString)
                 .collect(joining(",")));
     }

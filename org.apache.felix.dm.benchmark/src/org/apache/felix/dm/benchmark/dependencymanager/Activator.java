@@ -75,15 +75,12 @@ public class Activator extends DependencyActivatorBase {
             dm.setThreadPool(Helper.getThreadPool());
         }
         
-        // Create the list of Artists, Albums, and music Tracks services.
         List<Component> components = new ArrayList<>();
         IntStream.range(0, ARTISTS)
             .mapToObj(i -> createArtists(dm)).peek(components::add)
             .flatMap(artist -> createAlbums(dm, artist)).peek(components::add)
             .flatMap(album -> createTracks(dm, album)).forEach(components::add);
-             
-                
-        // And add them all in our depednency manager.
+                            
         components.stream().forEach(dm::add);
     }
 
@@ -97,7 +94,7 @@ public class Activator extends DependencyActivatorBase {
     }
     
     private Stream<Component> createAlbums(DependencyManager dm, Component artist) {
-        return IntStream.iterate(0, n -> n+1).limit(ALBUMS).mapToObj(i -> {
+        return IntStream.range(0, ALBUMS).mapToObj(i -> {
             long id = Helper.generateId();
             String filter = "(id=" + id + ")";
             artist.add(dm.createServiceDependency().setService(Album.class, filter).setRequired(true)
@@ -115,7 +112,7 @@ public class Activator extends DependencyActivatorBase {
     }
         
     private Stream<Component> createTracks(DependencyManager dm, Component album) {
-        return IntStream.iterate(0, n -> n+1).limit(TRACKS).mapToObj(i -> {
+        return IntStream.range(0, TRACKS).mapToObj(i -> {
             long id = Helper.generateId();
             String f = "(id=" + String.valueOf(id) + ")";
             album.add(dm.createServiceDependency()
