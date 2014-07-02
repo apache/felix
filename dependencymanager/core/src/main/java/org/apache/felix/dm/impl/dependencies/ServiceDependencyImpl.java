@@ -41,7 +41,7 @@ import org.apache.felix.dm.DependencyService;
 import org.apache.felix.dm.InvocationUtil;
 import org.apache.felix.dm.ServiceDependency;
 import org.apache.felix.dm.ServiceUtil;
-import org.apache.felix.dm.impl.BlockingSerialExecutor;
+import org.apache.felix.dm.impl.SerialExecutor;
 import org.apache.felix.dm.impl.DefaultNullObject;
 import org.apache.felix.dm.impl.Logger;
 import org.apache.felix.dm.tracker.ServiceTracker;
@@ -89,7 +89,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
     /**
      * Executor used to ensure proper synchronization without holding locks. 
      */
-    private final BlockingSerialExecutor m_serial = new BlockingSerialExecutor();
+    private final SerialExecutor m_serial;
 
     // ----------------------- Inner classes --------------------------------------------------------------
 
@@ -232,11 +232,13 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         super(logger);
         m_context = context;
         m_autoConfig = true;
+        m_serial = new SerialExecutor(logger);
     }
 
     /** Copying constructor that clones an existing instance. */
     public ServiceDependencyImpl(ServiceDependencyImpl prototype) {
         super(prototype);
+        m_serial = new SerialExecutor(m_logger);
         synchronized (prototype) {
             m_context = prototype.m_context;
             m_autoConfig = prototype.m_autoConfig;
