@@ -268,9 +268,6 @@ public class ComponentLifeCycleTest extends TestBase {
     
     @Test
     public void testDynamicComponentStateListingLifeCycle2() {
-        
-        // TODO this test still fails (starting is not invoked...)
-        
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
