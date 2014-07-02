@@ -572,11 +572,7 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
                         listener.stopping(ComponentImpl.this);
                         break;
                     case LISTENER_STOPPED:
-                        // this new listener missed the starting/started/stopping/stopped cb
-                        listener.starting(ComponentImpl.this);
-                        listener.started(ComponentImpl.this);
-                        listener.stopping(ComponentImpl.this);
-                        listener.stopped(ComponentImpl.this);
+                        // no need to call missed listener callbacks
                         break;
                 }
             }
