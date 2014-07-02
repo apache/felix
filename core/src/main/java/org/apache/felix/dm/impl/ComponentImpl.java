@@ -90,7 +90,7 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
     private final List m_stateListeners = new ArrayList();
 
     // work queue
-    private final SerialExecutor m_executor = new SerialExecutor();
+    private final SerialExecutor m_executor;
 
     // instance factory
 	private volatile Object m_instanceFactory;
@@ -108,8 +108,27 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
     private final Map m_autoConfigInstance = new HashMap();
     
     private boolean m_isStarted = false;
+    
+    // Used to track what state listener callback we have already called 
+    private int m_stateListener = LISTENER_IDLE;
+    
+    // We have not yet called any state listener callbacks
+    private final static int LISTENER_IDLE = 0;
+    
+    // We have already called the "starting" state listener callback.
+    private final static int LISTENER_STARTING = 1;
+
+    // We have already called the "started" state listener callback.
+    private final static int LISTENER_STARTED = 2;
+    
+    // We have already called the "stopping" state listener callback.
+    private final static int LISTENER_STOPPING = 3;
+    
+    // We have already called the "stopped" state listener callback.
+    private final static int LISTENER_STOPPED = 4;
 
     public ComponentImpl(BundleContext context, DependencyManager manager, Logger logger) {
+        m_executor = new SerialExecutor(logger);
         synchronized (VOID) {
             m_id = HIGHEST_ID++;
         }
@@ -530,27 +549,63 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
 	}
 
 	// service state listener methods
-	public void addStateListener(ComponentStateListener listener) {
-    	synchronized (m_stateListeners) {
-		    m_stateListeners.add(listener);
-    	}
-    	// when we register as a listener and the service is already started
-    	// make sure we invoke the right callbacks so the listener knows
-    	State state;
-    	synchronized (m_dependencies) {
-    		state = m_state;
-    	}
-    	if (state.isBound()) {
-    		listener.starting(this);
-    		listener.started(this);
-    	}
+	public void addStateListener(final ComponentStateListener listener) {
+	    m_executor.execute(new Runnable() {
+            public void run() { // executed immediately if we are already being executed from the executor
+                synchronized (m_stateListeners) {
+                    m_stateListeners.add(listener);
+                }
+                switch (m_stateListener) {
+                    case LISTENER_STARTING:
+                        // this new listener missed the starting cb
+                        listener.starting(ComponentImpl.this);
+                        break;
+                    case LISTENER_STARTED:
+                        // this new listener missed the starting/started cb
+                        listener.starting(ComponentImpl.this);
+                        listener.started(ComponentImpl.this);
+                        break;
+                    case LISTENER_STOPPING:
+                        // this new listener missed the starting/started/stopping cb
+                        listener.starting(ComponentImpl.this);
+                        listener.started(ComponentImpl.this);
+                        listener.stopping(ComponentImpl.this);
+                        break;
+                    case LISTENER_STOPPED:
+                        // this new listener missed the starting/started/stopping/stopped cb
+                        listener.starting(ComponentImpl.this);
+                        listener.started(ComponentImpl.this);
+                        listener.stopping(ComponentImpl.this);
+                        listener.stopped(ComponentImpl.this);
+                        break;
+                }
+            }
+        });
 	}
 
-	public void removeStateListener(ComponentStateListener listener) {
-    	synchronized (m_stateListeners) {
-    		m_stateListeners.remove(listener);
-    	}
-	}
+    public void removeStateListener(final ComponentStateListener listener) {
+        m_executor.execute(new Runnable() { 
+            public void run() { // executed immediately if we are already being executed from the executor
+                switch (m_stateListener) {
+                    case LISTENER_STARTING:
+                        // The listener has been previously called in starting cb;
+                        // so we should call the listener started cb, before unregistering it.
+                        listener.started(ComponentImpl.this);
+                        break;
+
+                    case LISTENER_STOPPING: 
+                        // The listener has been previously called in stopping cb;
+                        // so we should call the listener stopped cb, before unregistering it.
+                        listener.stopped(ComponentImpl.this);
+                        break;
+                }
+                synchronized (m_stateListeners) {
+                    m_stateListeners.remove(listener);
+                }
+            }
+        });
+        m_executor.execute();
+    }
 
 	public void removeStateListeners() {
     	synchronized (m_stateListeners) {
@@ -558,7 +613,9 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
     	}
 	}
 
-	private void stateListenersStarting() {
+	private void stateListenersStarting() { 
+	    // called from our serial executor
+        m_stateListener = LISTENER_STARTING;
 		ComponentStateListener[] list = getListeners();
 		for (int i = 0; i < list.length; i++) {
 		    try {
@@ -571,7 +628,9 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
 	}
 
 	private void stateListenersStarted() {
-        ComponentStateListener[] list = getListeners();
+	    // called from our serial executor
+        m_stateListener = LISTENER_STARTED;
+	    ComponentStateListener[] list = getListeners();
         for (int i = 0; i < list.length; i++) {
             try {
                 list[i].started(this);
@@ -583,6 +642,8 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
     }
 
     private void stateListenersStopping() {
+        // called from our serial executor
+        m_stateListener = LISTENER_STOPPING;
         ComponentStateListener[] list = getListeners();
         for (int i = 0; i < list.length; i++) {
             try {
@@ -595,6 +656,8 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
     }
 
     private void stateListenersStopped() {
+        // called from our serial executor
+        m_stateListener = LISTENER_STOPPED;
         ComponentStateListener[] list = getListeners();
         for (int i = 0; i < list.length; i++) {
             try {
