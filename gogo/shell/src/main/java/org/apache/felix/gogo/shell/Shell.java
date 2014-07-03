@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URI;
+import java.net.URL;
 import java.net.URLConnection;
 import java.nio.CharBuffer;
 import java.util.ArrayList;
@@ -106,11 +107,19 @@ public class Shell
             URI uri = baseURI.resolve("etc/gosh_profile");
             if (!new File(uri).exists())
             {
-                uri = getClass().getResource("/gosh_profile").toURI();
-            }
-            if (uri != null)
-            {
-                source(session, uri.toString());
+            	URL url = context.getBundle().getResource("ext/gosh_profile");
+            	
+            	if (url != null){
+            		sourceContributed(session, url);
+            	}
+            	else
+            	{
+           			uri = getClass().getResource("/gosh_profile").toURI();
+           			if (uri != null)
+           			{
+           				source(session, uri.toString());
+           			}
+            	}
             }
         }
 
@@ -201,6 +210,20 @@ public class Shell
         }
     }
 
+    public Object sourceContributed(CommandSession session, URL script) throws Exception
+    {
+    	URI uri = cwd(session).resolve(script.toURI());
+    	session.put("0", uri);
+    	try
+    	{
+    		return session.execute(readScript(script));
+    	}
+    	finally
+    	{
+    		session.put("0", null); // API doesn't support remove
+    	}
+    }
+
     private Object console(CommandSession session)
     {
         Console console = new Console(session, history);
@@ -211,24 +234,34 @@ public class Shell
     private CharSequence readScript(URI script) throws Exception
     {
         URLConnection conn = script.toURL().openConnection();
-        int length = conn.getContentLength();
-
-        if (length == -1)
-        {
-            System.err.println("eek! unknown Contentlength for: " + script);
-            length = 10240;
-        }
-
-        InputStream in = conn.getInputStream();
-        CharBuffer cbuf = CharBuffer.allocate(length);
-        Reader reader = new InputStreamReader(in);
-        reader.read(cbuf);
-        in.close();
-        cbuf.rewind();
-
-        return cbuf;
+        return readScript(conn, script.toString());
     }
 
+    private CharSequence readScript(URL script) throws Exception
+    {
+    	URLConnection conn = script.openConnection();
+    	return readScript(conn, script.toString());
+    }
+
+    private CharSequence readScript(URLConnection conn, String script) throws Exception
+    {
+    	int length = conn.getContentLength();
+    	if (length == -1)
+    	{
+    		System.err.println("eek! unknown Contentlength for: " + script);
+    		length = 10240;
+    	}
+    	
+    	InputStream in = conn.getInputStream();
+    	CharBuffer cbuf = CharBuffer.allocate(length);
+    	Reader reader = new InputStreamReader(in);
+    	reader.read(cbuf);
+    	in.close();
+    	cbuf.rewind();
+    	
+    	return cbuf;
+    }
+    
     @SuppressWarnings("unchecked")
     static Set<String> getVariables(CommandSession session)
     {
