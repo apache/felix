@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URI;
+import java.net.URL;
 import java.net.URLConnection;
 import java.nio.CharBuffer;
 import java.util.ArrayList;
@@ -106,7 +107,11 @@ public class Shell
             URI uri = baseURI.resolve("etc/gosh_profile");
             if (!new File(uri).exists())
             {
-                uri = getClass().getResource("/gosh_profile").toURI();
+                URL url = getClass().getResource("/ext/gosh_profile");
+                if (url == null) {
+                    url = getClass().getResource("/gosh_profile");
+                }
+                uri = (url == null) ? null : url.toURI();
             }
             if (uri != null)
             {
