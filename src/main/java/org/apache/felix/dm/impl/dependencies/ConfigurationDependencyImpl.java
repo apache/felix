@@ -86,6 +86,9 @@ public class ConfigurationDependencyImpl extends DependencyBase implements Confi
 	    m_pid = prototype.m_pid;
 	    m_propagate = prototype.m_propagate;
 	    m_callback = prototype.m_callback;
+	    m_metaType = prototype.m_metaType;
+	    m_propagateCallbackInstance = prototype.m_propagateCallbackInstance;
+	    m_propagateCallbackMethod = prototype.m_propagateCallbackMethod;
 	}
 	
 	public Dependency createCopy() {
