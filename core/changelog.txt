@@ -7,6 +7,7 @@ FELIX-4285: Remove abstract modifier from DependencyActivatorBase.destroy()
 FELIX-4294: Dependency Manager Shell improvements
 FELIX-4305: DependencyMananer Adapters - service properties propagation
 FELIX-4002: ComponentStateListener.started is invoked twice when the listener is added in the start method.
+FELIX-4395: DependencyManager Configuration Dependency does not clone some class fields.
 
 Release 3.1.0
 -------------
