@@ -1,4 +1,4 @@
-Release 3.1.1:
+Release 3.2.0:
 --------------
 
 FELIX-3910: Race conditions in DependencyManager
@@ -8,6 +8,13 @@ FELIX-4294: Dependency Manager Shell improvements
 FELIX-4305: DependencyMananer Adapters - service properties propagation
 FELIX-4002: ComponentStateListener.started is invoked twice when the listener is added in the start method.
 FELIX-4395: DependencyManager Configuration Dependency does not clone some class fields.
+FELIX-4014: handleAspectAwareRemoved in ServiceDependencyImpl can cause a possible deadlock
+FELIX-4097: Allow debug logging for specific instances of service dependencies to debug wiring issues.
+FELIX-4098: Aspect swap sometimes invokes the callbacks in the wrong order in a multithreaded application.
+FELIX-4099: Add support for negations in the multi property filter index.
+FELIX-4186: NPE in DependencyManager Logger
+FELIX-4226: Add option to have the dependency manager log against a single BundleContext's LogService.
+FELIX-4361: Possible ConcurrentModificationException in DependencyManager.getComponents()
 
 Release 3.1.0
 -------------
