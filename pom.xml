@@ -19,7 +19,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>1.2.0</version>
+        <version>2.1</version>
         <relativePath>../../pom/pom.xml</relativePath>
     </parent>
     <properties>
@@ -29,6 +29,13 @@
     <artifactId>org.apache.felix.dependencymanager.runtime</artifactId>
     <version>3.1.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
+
+    <scm>
+      <connection>scm:svn:file:///home/nxuser/work/maven/repos/trunk/dependencymanager/runtime</connection>
+      <developerConnection>scm:svn:file:///home/nxuser/work/maven/repos/trunk/dependencymanager/runtime</developerConnection>
+      <url>file:///home/nxuser/work/maven/repos/trunk/dependencymanager/runtime</url>
+    </scm>  
+
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
@@ -43,7 +50,7 @@
         <dependency>
             <groupId>${pom.groupId}</groupId>
             <artifactId>org.apache.felix.dependencymanager</artifactId>
-            <version>3.1.0</version>
+            <version>3.1.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.json</groupId>
