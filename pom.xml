@@ -31,9 +31,9 @@
     <packaging>bundle</packaging>
 
     <scm>
-      <connection>scm:svn:file:///home/nxuser/work/maven/repos/trunk/dependencymanager/runtime</connection>
-      <developerConnection>scm:svn:file:///home/nxuser/work/maven/repos/trunk/dependencymanager/runtime</developerConnection>
-      <url>file:///home/nxuser/work/maven/repos/trunk/dependencymanager/runtime</url>
+      <connection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/dependencymanager/runtime</connection>
+      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/dependencymanager/runtime</developerConnection>
+      <url>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/dependencymanager/runtime</url>
     </scm>  
 
     <dependencies>
