@@ -34,9 +34,9 @@
     <packaging>bundle</packaging>
 
     <scm>
-      <connection>scm:svn:file:///home/nxuser/work/maven/repos/trunk/dependencymanager/core</connection>
-      <developerConnection>scm:svn:file:///home/nxuser/work/maven/repos/trunk/dependencymanager/core</developerConnection>
-      <url>file:///home/nxuser/work/maven/repos/trunk/dependencymanager/core</url>
+      <connection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/dependencymanager/core</connection>
+      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/dependencymanager/core</developerConnection>
+      <url>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/dependencymanager/core</url>
     </scm>  
 
     <dependencies>
