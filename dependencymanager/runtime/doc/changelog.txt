@@ -7,6 +7,7 @@ Trunk
 
 ** Improvement
     * [FELIX-3869] - Fragment support for DependencyManager-Component
+    * [FELIX-4357] - Support types beside String/String[] in @Property annotation.
 
 Release 3.1.0
 -------------
