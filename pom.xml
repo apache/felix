@@ -34,10 +34,10 @@
     <packaging>bundle</packaging>
 
     <scm>
-      <connection>scm:svn:file:///home/nxuser/work/maven/repos/trunk/dependencymanager/shell</connection>
-      <developerConnection>scm:svn:file:///home/nxuser/work/maven/repos/trunk/dependencymanager/shell</developerConnection>
-      <url>file:///home/nxuser/work/maven/repos/trunk/dependencymanager/shell</url>
-    </scm>  
+        <connection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/dependencymanager/shell</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/dependencymanager/shell</developerConnection>
+        <url>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/dependencymanager/shell</url>
+    </scm>
 
     <dependencies>
         <dependency>
