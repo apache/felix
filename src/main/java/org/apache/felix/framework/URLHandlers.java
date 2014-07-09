@@ -87,7 +87,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
 
     // This maps classloaders of URLHandlers in other classloaders to lists of
     // their frameworks.
-    private static Map m_classloaderToFrameworkLists = new HashMap();
+    private final static Map m_classloaderToFrameworkLists = new HashMap();
 
     // The list to hold all enabled frameworks registered with this handlers
     private static final List m_frameworks = new ArrayList();
@@ -586,6 +586,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
     **/
     public static void registerFrameworkInstance(Object framework, boolean enable)
     {
+        boolean register = false;
         synchronized (m_frameworks)
         {
             // If the URL Handlers service is not going to be enabled,
@@ -595,13 +596,38 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
                 // We need to create an instance if this is the first
                 // time this method is called, which will set the handler
                 // factories.
-                if (m_handler == null)
+                if (m_handler == null )
                 {
-                    m_handler = new URLHandlers();
+                    register = true;
                 }
-                m_frameworks.add(framework);
+                else
+                {
+                    m_frameworks.add(framework);
+                    m_counter++;
+                }
             }
-            m_counter++;
+            else
+            {
+                m_counter++;
+            }
+        }
+        if (register)
+        {
+            synchronized (URL.class)
+            {
+                synchronized (m_classloaderToFrameworkLists)
+                {
+                    synchronized (m_frameworks)
+                    {
+                        if (m_handler == null )
+                        {
+                            m_handler = new URLHandlers();
+                        }
+                        m_frameworks.add(framework);
+                        m_counter++;
+                    }
+                }
+            }
         }
     }
 
@@ -618,32 +644,55 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
         boolean unregister = false;
         synchronized (m_frameworks)
         {
-            m_counter--;
-            if (m_frameworks.remove(framework))
+            if (m_frameworks.contains(framework))
             {
-                if (m_frameworks.isEmpty())
+                if (m_frameworks.size() == 1 && m_handler != null)
                 {
                     unregister = true;
-                    m_handler = null;
                 }
+                else
+                {
+                    m_frameworks.remove(framework);
+                    m_counter--;
+                }
+            }
+            else
+            {
+                m_counter--;
             }
         }
         if (unregister)
         {
-             try
-             {
-                 m_secureAction.invoke(m_secureAction.getDeclaredMethod(
-                     m_rootURLHandlers.getClass(),
-                     "unregisterFrameworkListsForContextSearch",
-                     new Class[]{ ClassLoader.class}),
-                     m_rootURLHandlers,
-                     new Object[] {URLHANDLERS_CLASS.getClassLoader()});
-             }
-             catch (Exception e)
-             {
-                 // This should not happen
-                 e.printStackTrace();
-             }
+            synchronized (URL.class)
+            {
+                synchronized (m_classloaderToFrameworkLists)
+                {
+                    synchronized (m_frameworks)
+                    {
+                        m_frameworks.remove(framework);
+                        m_counter--;
+                        if (m_frameworks.isEmpty() && m_handler != null)
+                        {
+
+                            m_handler = null;
+                            try
+                            {
+                                m_secureAction.invoke(m_secureAction.getDeclaredMethod(
+                                    m_rootURLHandlers.getClass(),
+                                    "unregisterFrameworkListsForContextSearch",
+                                    new Class[]{ ClassLoader.class}),
+                                    m_rootURLHandlers,
+                                    new Object[] {URLHANDLERS_CLASS.getClassLoader()});
+                            }
+                            catch (Exception e)
+                            {
+                                // This should not happen
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
