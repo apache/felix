@@ -1,3 +1,30 @@
+Changes 0.12.0 to 0.12.1
+------------------------
+
+** Bug
+    * [FELIX-4533] - Gogo runtime does not advertise published services
+
+
+Changes 0.10.0 to 0.12.0
+------------------------
+
+** Bug
+    * [FELIX-4336] - The use of inheritable thread locals in ThreadIO can cause problems
+
+** Improvement
+    * [FELIX-3590] - Add system property resolution to CommandSessionImpl
+    * [FELIX-4363] - The CommandSession get/set methods are not thread safe
+
+
+Changes 0.8.0 to 0.10.0
+-----------------------
+
+** Bug
+    * [FELIX-2870] - ConcurrentModificationException in gogo runtime
+    * [FELIX-2894] - Gogo does not handles options but not parameters
+    * [FELIX-2927] - [gogo] coercion mechanism invokes foo(String) instead
+      of foo(int) - even with explicit int argument
+
 Changes 0.6.1 to 0.8.0
 ----------------------
 
