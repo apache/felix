@@ -1,3 +1,15 @@
+Changes form 4.4.0 to 4.4.1
+---------------------------
+** Bug
+    * [FELIX-3239] - PackageAdmin#getExportedPackages does not work on packages exported by attached fragments
+    * [FELIX-3309] - Dashes in qualifier get replaced by periods causing framework not to start up
+    * [FELIX-3701] - Intermittent CNFE with embedded jars in Fragment Bundles
+    * [FELIX-4220] - BundleException type is always set to 0 
+    * [FELIX-4281] - Security Warning: Felix with Java Web Start
+    * [FELIX-4515] - BundleRevision for system extension has no capabilities
+    * [FELIX-4523] - Deadlock in URLHandlers when Felix.init and Felix.stop are called concurrently
+    * [FELIX-4534] - Bundles containing native code fails to start on Windows 7
+
 Changes from 4.2.1 to 4.4.0
 ---------------------------
 ** Bug
