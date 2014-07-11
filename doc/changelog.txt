@@ -1,5 +1,5 @@
-Trunk
-------
+Release 3.2.0
+-------------
 
 ** Bug
     * [FELIX-4050] Named dependencies are not injected if new dependencies are added at init phase.
