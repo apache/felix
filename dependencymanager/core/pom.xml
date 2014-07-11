@@ -34,10 +34,10 @@
     <packaging>bundle</packaging>
 
     <scm>
-      <connection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/dependencymanager/core</connection>
-      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/dependencymanager/core</developerConnection>
-      <url>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/dependencymanager/core</url>
-    </scm>  
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/dependencymanager/core</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/dependencymanager/core</developerConnection>
+        <url>http://svn.apache.org/repos/asf/felix/dependencymanager/core</url>
+    </scm>
 
     <dependencies>
         <dependency>

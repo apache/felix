@@ -31,10 +31,10 @@
     <packaging>bundle</packaging>
 
     <scm>
-      <connection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/dependencymanager/runtime</connection>
-      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/dependencymanager/runtime</developerConnection>
-      <url>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/dependencymanager/runtime</url>
-    </scm>  
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/dependencymanager/runtime</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/dependencymanager/runtime</developerConnection>
+        <url>http://svn.apache.org/repos/asf/felix/dependencymanager/runtime</url>
+    </scm>
 
     <dependencies>
         <dependency>
