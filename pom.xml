@@ -32,10 +32,10 @@
 	<packaging>maven-plugin</packaging>
 
     <scm>
-      <connection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/dependencymanager/annotation</connection>
-      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/dependencymanager/annotation</developerConnection>
-      <url>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/dependencymanager/annotation</url>
-    </scm>  
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/dependencymanager/annotation</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/dependencymanager/annotation</developerConnection>
+        <url>http://svn.apache.org/repos/asf/felix/dependencymanager/annotation</url>
+    </scm>
 
 	<dependencies>
 		<dependency>
