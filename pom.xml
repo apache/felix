@@ -34,9 +34,9 @@
     <packaging>bundle</packaging>
 
     <scm>
-        <connection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/dependencymanager/shell</connection>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/dependencymanager/shell</connection>
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/dependencymanager/shell</developerConnection>
-        <url>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/dependencymanager/shell</url>
+        <url>http://svn.apache.org/repos/asf/felix/dependencymanager/shell</url>
     </scm>
 
     <dependencies>
