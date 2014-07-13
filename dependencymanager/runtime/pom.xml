@@ -19,7 +19,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>2.1</version>
+        <version>1.2.0</version>
         <relativePath>../../pom/pom.xml</relativePath>
     </parent>
     <properties>
@@ -77,7 +77,7 @@
                 <plugin>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-bundle-plugin</artifactId>
-                    <version>2.5.0</version>
+                    <version>2.3.4</version>
                     <extensions>true</extensions>
                 </plugin>
             </plugins>
