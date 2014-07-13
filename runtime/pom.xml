@@ -27,13 +27,13 @@
     </properties>
     <name>Apache Felix Dependency Manager Runtime</name>
     <artifactId>org.apache.felix.dependencymanager.runtime</artifactId>
-    <version>3.2.0</version>
+    <version>3.2.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.dependencymanager.runtime-3.2.0</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.dependencymanager.runtime-3.2.0</developerConnection>
-        <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.dependencymanager.runtime-3.2.0</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/dependencymanager/runtime</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/dependencymanager/runtime</developerConnection>
+        <url>http://svn.apache.org/repos/asf/felix/dependencymanager/runtime</url>
     </scm>
 
     <dependencies>
@@ -50,7 +50,7 @@
         <dependency>
             <groupId>${pom.groupId}</groupId>
             <artifactId>org.apache.felix.dependencymanager</artifactId>
-            <version>3.2.0</version>
+            <version>3.2.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.json</groupId>
