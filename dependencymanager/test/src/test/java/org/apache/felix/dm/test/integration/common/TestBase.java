@@ -72,7 +72,7 @@ public abstract class TestBase implements LogService, FrameworkListener {
     protected static final String TESTBUNDLE_FILE = "project.bundle.file";
     
     // The default bundle jar file name
-    protected static final String TESTBUNDLE_FILE_DEF = "target/org.apache.felix.dependencymanager.test-3.0.1-SNAPSHOT.jar";
+    protected static final String TESTBUNDLE_FILE_DEF = "target/org.apache.felix.dependencymanager.test-3.2.0-SNAPSHOT.jar";
 
     // The name of the system property providing the test bundle symbolic name.
     protected static final String TESTBUNDLE_SN = "project.bundle.symbolicName";
@@ -147,9 +147,9 @@ public abstract class TestBase implements LogService, FrameworkListener {
                 mavenBundle("org.apache.felix", "org.apache.felix.gogo.runtime", "0.10.0"),
                 mavenBundle("org.apache.felix", "org.apache.felix.deploymentadmin", "0.9.0").start(false),
                 mavenBundle("org.ops4j.pax.tinybundles", "tinybundles", "1.0.0"),
-                mavenBundle("org.apache.felix", "org.apache.felix.dependencymanager","3.1.1-SNAPSHOT"),
-                mavenBundle("org.apache.felix", "org.apache.felix.dependencymanager.shell", "3.0.2-SNAPSHOT"),
-                mavenBundle("org.apache.felix", "org.apache.felix.dependencymanager.runtime", "3.1.1-SNAPSHOT"),
+                mavenBundle("org.apache.felix", "org.apache.felix.dependencymanager","3.2.0-SNAPSHOT"),
+                mavenBundle("org.apache.felix", "org.apache.felix.dependencymanager.shell", "3.2.0-SNAPSHOT"),
+                mavenBundle("org.apache.felix", "org.apache.felix.dependencymanager.runtime", "3.2.0-SNAPSHOT"),
                 bundle(testBundleFile.toURI().toString()).start(m_startTestBundle));
         final Option option = (paxRunnerVmOption != null) ? vmOption(paxRunnerVmOption) : null;
         return OptionUtils.combine(base, option);
