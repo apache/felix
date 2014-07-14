@@ -36,6 +36,7 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
 
     private SimpleWebConsolePlugin plugin;
     private ServiceRegistration printerRegistration;
+    private ServiceRegistration infoRegistration;
 
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
@@ -77,8 +78,10 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
         if (plugin == null)
         {
             this.plugin = plugin = new WebConsolePlugin().register(context);
+            final Object service = context.getService(reference);
             printerRegistration = context.registerService(ConfigurationPrinter.SERVICE,
-                new ComponentConfigurationPrinter(context.getService(reference)), null);
+                new ComponentConfigurationPrinter(service), null);
+            infoRegistration = new InfoProvider(context.getBundle(), service).register(context);
         }
 
         return context.getService(reference);
@@ -103,6 +106,13 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
             {
                 reg.unregister();
                 printerRegistration = null;
+            }
+            // unregister info provider too
+            reg = infoRegistration;
+            if (reg != null)
+            {
+                reg.unregister();
+                infoRegistration = null;
             }
         }
 
