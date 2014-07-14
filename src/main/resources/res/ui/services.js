@@ -102,7 +102,7 @@ function renderObjectAsTable(/* Object*/ details) {
 		txt += '<tr><td class="aligntop" noWrap="true" style="border:0px none">'
 				+ prop.key
 				+ '</td><td class="aligntop" style="border:0px none">';
-		if (prop.value) {
+		if (typeof prop.value !== 'undefined') {
 			if ($.isArray(prop.value)) {
 				var i = 0;
 				for ( var pi in prop.value) {
