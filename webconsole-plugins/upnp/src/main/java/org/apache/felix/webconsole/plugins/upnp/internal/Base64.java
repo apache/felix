@@ -342,7 +342,7 @@ public class Base64 {
         this.decodeSize = this.encodeSize - 1;
         if (containsBase64Byte(lineSeparator)) {
             String sep = newStringUtf8(lineSeparator);
-            throw new IllegalArgumentException("lineSeperator must not contain base64 characters: [" + sep + "]");
+            throw new IllegalArgumentException("lineSeperator must not contain base64 characters: [" + sep + "]"); //$NON-NLS-1$ //$NON-NLS-2$
         }
         this.encodeTable = urlSafe ? URL_SAFE_ENCODE_TABLE : STANDARD_ENCODE_TABLE;
     }
@@ -720,7 +720,7 @@ public class Base64 {
         } else if (pObject instanceof String) {
             return decode((String) pObject);
         } else {
-            throw new IllegalArgumentException("Parameter supplied to Base64 decode is not a byte[] or a String");
+            throw new IllegalArgumentException("Parameter supplied to Base64 decode is not a byte[] or a String"); //$NON-NLS-1$
         }
     }
 
@@ -821,9 +821,9 @@ public class Base64 {
 
         long len = getEncodeLength(binaryData, MIME_CHUNK_SIZE, CHUNK_SEPARATOR);
         if (len > maxResultSize) {
-            throw new IllegalArgumentException("Input array too big, the output array would be bigger (" +
+            throw new IllegalArgumentException("Input array too big, the output array would be bigger (" + //$NON-NLS-1$
                 len +
-                ") than the specified maxium size of " +
+                ") than the specified maxium size of " + //$NON-NLS-1$
                 maxResultSize);
         }
 
@@ -914,7 +914,7 @@ public class Base64 {
      */
     public Object encode(Object pObject) throws IllegalArgumentException {
         if (!(pObject instanceof byte[])) {
-            throw new IllegalArgumentException("Parameter supplied to Base64 encode is not a byte[]");
+            throw new IllegalArgumentException("Parameter supplied to Base64 encode is not a byte[]"); //$NON-NLS-1$
         }
         return encode((byte[]) pObject);
     }
@@ -1017,7 +1017,7 @@ public class Base64 {
      */
     public static byte[] encodeInteger(BigInteger bigInt) {
         if (bigInt == null) {
-            throw new NullPointerException("encodeInteger called with null parameter");
+            throw new NullPointerException("encodeInteger called with null parameter"); //$NON-NLS-1$
         }
         return encodeBase64(toIntegerBytes(bigInt), false);
     }
@@ -1070,9 +1070,10 @@ public class Base64 {
             return null;
         }
         try {
-            return new String(bytes, "UTF-8");
+            return new String(bytes, "UTF-8"); //$NON-NLS-1$
         } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException("UTF-8", e);
+            // cannot use 'new Exception(message, throwable)' because it's not supported by pre-java5
+            throw new IllegalStateException(e.toString());
         }
     }
 
@@ -1081,9 +1082,9 @@ public class Base64 {
             return null;
         }
         try {
-            return string.getBytes("UTF-8");
+            return string.getBytes("UTF-8"); //$NON-NLS-1$
         } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException("UTF-8", e);
+            throw new IllegalStateException(e.toString());
         }
     }
 

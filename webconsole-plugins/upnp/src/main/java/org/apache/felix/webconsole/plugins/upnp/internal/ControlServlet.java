@@ -21,12 +21,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Constructor;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -60,7 +62,10 @@ public final class ControlServlet extends HttpServlet
 
     private final HashMap/*<String,UPnPDevice>*/ devices = new HashMap(10);
     private final HashMap/*<String,UPnPIcon>*/ icons = new HashMap(10);
-    private final HashMap/*<String,SessionObject>*/ sessions = new HashMap(10);
+    // holds lock for the devices & icons cache above
+    private final Object cacheLock = new Object();
+
+    private final Map/*<String,SessionObject>*/ sessions = Collections.synchronizedMap(new HashMap(10)); 
 
     private final ServiceTracker tracker;
     private final BundleContext bc;
@@ -377,14 +382,21 @@ public final class ControlServlet extends HttpServlet
 
     private final UPnPIcon getIcon(final String udn)
     {
-        fillCache();
-        return (UPnPIcon) icons.get(udn);
+        synchronized (cacheLock)
+        {
+          fillCache();
+          return (UPnPIcon) icons.get(udn);
+        }
     }
 
     private final UPnPDevice getDevice(String udn)
     {
-        fillCache();
-        final UPnPDevice device = (UPnPDevice) devices.get(udn);
+        final UPnPDevice device;
+        synchronized (cacheLock)
+        {
+          fillCache();
+          device = (UPnPDevice) devices.get(udn);
+        }
         if (null == device)
         {
             throw new IllegalArgumentException("Device '" + udn + "' not found!");
@@ -426,12 +438,18 @@ public final class ControlServlet extends HttpServlet
      */
     void close()
     {
-        icons.clear();
-        for (Iterator i = sessions.values().iterator(); i.hasNext();)
+        synchronized (cacheLock)
         {
-            ((SessionObject) i.next()).unsubscribe();
+          icons.clear();
         }
-        sessions.clear();
+        synchronized (sessions) 
+        {
+          for (Iterator i = sessions.values().iterator(); i.hasNext();)
+          {
+              ((SessionObject) i.next()).unsubscribe();
+          }
+          sessions.clear();
+        }
     }
 
     /* ---------- BEGIN SERVICE TRACKER */
@@ -442,8 +460,11 @@ public final class ControlServlet extends HttpServlet
     final void removedService(ServiceReference ref)
     {
         final Object udn = ref.getProperty(UPnPDevice.UDN);
-        icons.remove(udn);
-        devices.remove(udn);
+        synchronized (cacheLock)
+        {
+          icons.remove(udn);
+          devices.remove(udn);
+        }
     }
 
 }
