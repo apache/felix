@@ -16,7 +16,9 @@
  */
 package org.apache.felix.webconsole.plugins.ds.internal;
 
-import org.apache.felix.webconsole.ConfigurationPrinter;
+import java.util.Hashtable;
+
+import org.apache.felix.inventory.InventoryPrinter;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -79,8 +81,14 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
         {
             this.plugin = plugin = new WebConsolePlugin().register(context);
             final Object service = context.getService(reference);
-            printerRegistration = context.registerService(ConfigurationPrinter.SERVICE,
-                new ComponentConfigurationPrinter(service), null);
+
+            final Hashtable props = new Hashtable();
+            final String name = "Declarative Services Components";
+            props.put(InventoryPrinter.NAME, name.replace(' ', '_'));
+            props.put(InventoryPrinter.TITLE, name);
+            printerRegistration = context.registerService(InventoryPrinter.SERVICE,
+                new ComponentConfigurationPrinter(service), props);
+
             infoRegistration = new InfoProvider(context.getBundle(), service).register(context);
         }
 
