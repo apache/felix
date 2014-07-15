@@ -25,10 +25,11 @@ import java.util.Iterator;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import org.apache.felix.inventory.Format;
+import org.apache.felix.inventory.InventoryPrinter;
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.Reference;
 import org.apache.felix.scr.ScrService;
-import org.apache.felix.webconsole.ConfigurationPrinter;
 import org.apache.felix.webconsole.WebConsoleUtil;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -37,7 +38,7 @@ import org.osgi.service.component.ComponentConstants;
 /**
  * ComponentConfigurationPrinter prints the available SCR services. 
  */
-class ComponentConfigurationPrinter implements ConfigurationPrinter
+class ComponentConfigurationPrinter implements InventoryPrinter
 {
 
     private final ScrService scrService;
@@ -48,21 +49,14 @@ class ComponentConfigurationPrinter implements ConfigurationPrinter
     }
 
     /**
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
+     * @see org.apache.felix.inventory.InventoryPrinter#print(java.io.PrintWriter, org.apache.felix.inventory.Format, boolean)
      */
-    public String getTitle()
-    {
-        return "Declarative Services Components";
-    }
-
-    /**
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
-     */
-    public void printConfiguration(PrintWriter pw)
+    public void print(PrintWriter pw, Format format, boolean isZip)
     {
         printComponents(pw, scrService.getComponents());
     }
-
+    
+    
     private static final void printComponents(final PrintWriter pw,
         final Component[] components)
     {
@@ -222,6 +216,8 @@ class ComponentConfigurationPrinter implements ConfigurationPrinter
         {
             case Component.STATE_DISABLED:
                 return "disabled";
+            case Component.STATE_ENABLING:
+                return "enabling";
             case Component.STATE_ENABLED:
                 return "enabled";
             case Component.STATE_UNSATISFIED:
@@ -236,10 +232,16 @@ class ComponentConfigurationPrinter implements ConfigurationPrinter
                 return "factory";
             case Component.STATE_DEACTIVATING:
                 return "deactivating";
+            case Component.STATE_DISABLING:
+                return "disabling";
+            case Component.STATE_DISPOSING:
+                return "disposing";
             case Component.STATE_DESTROYED:
-                return "destroyed";
+                return "destroyed/disposed";
             default:
                 return String.valueOf(state);
         }
     }
+
+
 }
