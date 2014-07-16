@@ -187,6 +187,7 @@ public abstract class ComponentTestBase
 
         );
         final Option vmOption = ( paxRunnerVmOption != null ) ? CoreOptions.vmOption( paxRunnerVmOption ) : null;
+        NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR = false;
         return OptionUtils.combine( base, vmOption );
     }
 

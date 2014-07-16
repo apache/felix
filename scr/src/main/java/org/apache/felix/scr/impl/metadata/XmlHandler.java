@@ -390,8 +390,15 @@ public class XmlHandler implements KXml2SAXHandler
                         ref.setScope( attributes.getAttribute( "scope" ) );
                     }
 
-                    //if
-                    ref.setTarget( attributes.getAttribute( "target" ) );
+                    if ( attributes.getAttribute( "target" ) != null)
+                    {
+                        ref.setTarget( attributes.getAttribute( "target" ) );
+                        PropertyMetadata prop = new PropertyMetadata();
+                        prop.setName( (ref.getName() == null? ref.getInterface(): ref.getName()) + ".target");
+                        prop.setValue( attributes.getAttribute( "target" ) );
+                        m_currentComponent.addProperty( prop );
+                                               
+                    }
                     ref.setBind( attributes.getAttribute( "bind" ) );
                     ref.setUpdated( attributes.getAttribute( "updated" ) );
                     ref.setUnbind( attributes.getAttribute( "unbind" ) );
