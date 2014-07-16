@@ -583,7 +583,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 {
                     // SCR 112.7.1 - deactivate if configuration is deleted or no modified method declared
                     log( LogService.LOG_DEBUG, "Deactivating and Activating to reconfigure from configuration", null );
-                    int reason = ( m_configurationProperties == null ) ? ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED
+                    int reason = configurationDeleted ? ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED
                             : ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_MODIFIED;
 
                     // FELIX-2368: cycle component immediately, reconfigure() is
