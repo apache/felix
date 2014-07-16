@@ -277,7 +277,13 @@ public final class LicenseServlet extends SimpleWebConsolePlugin implements Osgi
 
         if ( pathInfo.innerJar == null )
         {
-            final URL resource = bundle.getResource( pathInfo.licenseFile );
+            URL resource = bundle.getEntry( pathInfo.licenseFile );
+            if ( resource == null)
+            {
+                resource = bundle.getResource( pathInfo.licenseFile );
+            }
+        
+            
             if ( resource != null )
             {
                 final InputStream input = resource.openStream();
