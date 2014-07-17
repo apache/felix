@@ -21,13 +21,15 @@ package org.apache.felix.webconsole.plugins.obr.internal;
 
 import java.io.IOException;
 import java.net.URL;
+
 import javax.servlet.ServletException;
+
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
+import org.osgi.framework.Version;
 import org.osgi.service.obr.Capability;
 import org.osgi.service.obr.Repository;
 import org.osgi.service.obr.RepositoryAdmin;
@@ -193,14 +195,17 @@ class OsgiBundleRepositoryRenderHelper extends AbstractBundleRepositoryRenderHel
     private final JSONObject toJSON( Resource resource, Bundle[] bundles, boolean details ) throws JSONException
     {
         final String symbolicName = resource.getSymbolicName();
-        final String version = resource.getVersion().toString();
-        boolean installed = false;
-        for ( int i = 0; symbolicName != null && !installed && bundles != null && i < bundles.length; i++ )
+        final Version version = resource.getVersion();
+        String installed = "";
+        for ( int i = 0; symbolicName != null && installed.length() == 0 && bundles != null && i < bundles.length; i++ )
         {
-            final String ver = ( String ) bundles[i].getHeaders( "" ).get( Constants.BUNDLE_VERSION ); //$NON-NLS-1$
-            installed = symbolicName.equals( bundles[i].getSymbolicName() ) && version.equals( ver );
+            final Version ver = bundles[i].getVersion();
+            if ( symbolicName.equals(bundles[i].getSymbolicName()))
+            {
+                installed = ver.toString();
+            }
         }
-        JSONObject json = new JSONObject( resource.getProperties() ) //
+        JSONObject json = new JSONObject()
             .put( "id", resource.getId() ) // //$NON-NLS-1$
             .put( "presentationname", resource.getPresentationName() ) // //$NON-NLS-1$
             .put( "symbolicname", symbolicName ) // //$NON-NLS-1$

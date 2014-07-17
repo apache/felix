@@ -149,7 +149,7 @@ function renderResource(res) {
 
         _tr = tr( null, { 'id' : 'row' + _id } , [
             td( null, null, [ blockElement ] ),
-            td( null, null, [ text(res.installed ? res.version : '') ] )
+            td( null, null, [ text(res.installed) ] )
         ]);
         resTable.append( _tr );
     }
