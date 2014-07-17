@@ -26,6 +26,10 @@ import org.apache.felix.ipojo.api.Service;
 import org.apache.felix.ipojo.api.ServiceProperty;
 import org.osgi.framework.BundleContext;
 
+/**
+ * *Caution*: this test seems invalid and has to be reworked because it creates too much
+ * PrimitiveComponentType instances.
+ */
 public class IpojoScenario {
     /**
      * Our Scenario controller. We only depend on it, in order to not start if the controller is not yet available
