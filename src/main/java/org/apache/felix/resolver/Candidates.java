@@ -1060,6 +1060,8 @@ class Candidates
                     if (actual == null)
                     {
                         actual = new ArrayList<Requirement>();
+                        if (resVersion == null)
+                            resVersion = new Version(0, 0, 0);
                         fragmentVersions.put(resVersion, actual);
                     }
                     actual.add(req);
