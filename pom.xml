@@ -101,6 +101,12 @@
 							<transformers>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
 							</transformers>
+							<!-- Don't include anything from bndlib -->
+							<artifactSet>
+								<excludes>
+									<exclude>biz.aQute.bnd:bndlib</exclude>
+								</excludes>
+							</artifactSet>
 						</configuration>
 					</execution>
 				</executions>
