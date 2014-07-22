@@ -414,16 +414,29 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                     // we ignore this
                 }
 
+                if ( getBundleContext() == null ) {
+                  System.out.println("BundlesServlet.doPost()1");
+                  return;
+                }
+
                 // write the state only
                 resp.setContentType( "application/json" ); //$NON-NLS-1$
                 resp.setCharacterEncoding( "UTF-8" ); //$NON-NLS-1$
-                resp.getWriter().print( "{\"fragment\":" + isFragmentBundle( bundle ) // //$NON-NLS-1$
-                    + ",\"stateRaw\":" + bundle.getState() + "}" ); //$NON-NLS-1$ //$NON-NLS-2$
+                if ( null == getBundleContext() )
+                {
+                  // refresh package on the web console itself or some of it's dependencies
+                  resp.getWriter().print("false"); //$NON-NLS-1$
+                }
+                else
+                {
+                  resp.getWriter().print( "{\"fragment\":" + isFragmentBundle( bundle ) //$NON-NLS-1$
+                      + ",\"stateRaw\":" + bundle.getState() + "}" ); //$NON-NLS-1$ //$NON-NLS-2$
+                }
                 return;
             }
         }
 
-        if ( success )
+        if ( success && null != getBundleContext() )
         {
             // let's wait a little bit to give the framework time
             // to process our request
@@ -448,7 +461,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             super.doPost( req, resp );
         }
     }
-
+    
     private String getServicesRoot(HttpServletRequest request)
     {
         return ( ( String ) request.getAttribute( WebConsoleConstants.ATTR_APP_ROOT ) ) +
