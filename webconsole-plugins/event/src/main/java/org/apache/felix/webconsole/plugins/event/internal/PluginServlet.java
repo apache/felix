@@ -356,7 +356,11 @@ public class PluginServlet extends HttpServlet
                 first = false;
                 jsonKey(jw, current.getKey().toString() );
                 final Object value = current.getValue();
-                if ( value.getClass().isArray() )
+                if ( null == value )
+                {
+                  jw.write("null"); //$NON-NLS-1$
+                }
+                else if ( value.getClass().isArray() )
                 {
                     // as we can't use 1.5 functionality we have to print the array ourselves
                     final StringBuffer b = new StringBuffer("[");
