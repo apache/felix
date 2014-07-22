@@ -68,7 +68,14 @@
             </xsl:choose>
             <xsl:choose>
                 <xsl:when test="@target">
-                    <xsl:value-of select="concat('filter:=&quot;(&amp;(objectClass=', @interface, ')', @target, ')&quot;')"/>
+                    <xsl:choose>
+                        <xsl:when test="starts-with(@target, '(')">
+                            <xsl:value-of select="concat('filter:=&quot;(&amp;(objectClass=', @interface, ')', @target, ')&quot;')"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="concat('filter:=&quot;(&amp;(objectClass=', @interface, ')(', @target, '))&quot;')"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
                 </xsl:when>
                 <xsl:otherwise>
                     <xsl:value-of select="concat('filter:=&quot;(objectClass=', @interface, ')&quot;')"/>
