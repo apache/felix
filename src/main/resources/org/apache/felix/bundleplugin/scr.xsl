@@ -17,12 +17,17 @@
     limitations under the License.
 
 -->
-<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0">
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                xmlns:scr10="http://www.osgi.org/xmlns/scr/v1.0.0"
+                xmlns:scr11="http://www.osgi.org/xmlns/scr/v1.1.0"
+                xmlns:scr12="http://www.osgi.org/xmlns/scr/v1.2.0">
     <xsl:output method="text" />
 
     <xsl:template match="/">
 
-        <xsl:for-each select="//scr:component[service/provide/@interface]">
+        <xsl:for-each select="//scr10:component[service/provide/@interface] |
+                              //scr11:component[service/provide/@interface] |
+                              //scr12:component[service/provide/@interface]">
             <xsl:value-of select="'Provide-Capability: osgi.service;effective:=active;'" />
             <xsl:choose>
                 <xsl:when test="count(service/provide/@interface) = 1">
@@ -52,7 +57,9 @@
             </xsl:text>
         </xsl:for-each>
 
-        <xsl:for-each select="//scr:component/reference">
+        <xsl:for-each select="//scr10:component/reference |
+                              //scr11:component/reference |
+                              //scr12:component/reference">
             <xsl:value-of select="'Require-Capability: osgi.service;effective:=active;'" />
             <xsl:choose>
                 <xsl:when test="@cardinality = '0..1' or @cardinality = '0..n'">
