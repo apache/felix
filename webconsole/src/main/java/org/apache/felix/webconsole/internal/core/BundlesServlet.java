@@ -414,11 +414,6 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                     // we ignore this
                 }
 
-                if ( getBundleContext() == null ) {
-                  System.out.println("BundlesServlet.doPost()1");
-                  return;
-                }
-
                 // write the state only
                 resp.setContentType( "application/json" ); //$NON-NLS-1$
                 resp.setCharacterEncoding( "UTF-8" ); //$NON-NLS-1$
