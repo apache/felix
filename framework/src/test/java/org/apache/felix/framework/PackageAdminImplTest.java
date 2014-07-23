@@ -149,9 +149,13 @@ public class PackageAdminImplTest extends TestCase
     {
         if (root.isDirectory())
         {
-            for (File file : root.listFiles())
+            File[] files = root.listFiles();
+            if (files != null)
             {
-                deleteDir(file);
+                for (File file : files)
+                {
+                    deleteDir(file);
+                }
             }
         }
         root.delete();

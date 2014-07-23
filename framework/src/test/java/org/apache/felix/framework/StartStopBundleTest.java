@@ -119,6 +119,7 @@ public class StartStopBundleTest extends TestCase
             assertTrue((t1 - t0) > DELAY / 2);
         } finally {
             f.stop();
+            Thread.sleep(DELAY);
             deleteDir(cacheDir);
         }
     }
