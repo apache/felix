@@ -89,7 +89,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
             "1.9.0");
 
     /**
-     * @parameter expression="${project.build.directory}/classes"
+     * @parameter expression="${project.build.outputDirectory}"
      * @required
      * @readonly
      */
@@ -219,9 +219,11 @@ public class SCRDescriptorMojo extends AbstractMojo {
             this.removePossiblyStaleFiles(scanner.getSources(), options);
 
             final Result result = generator.execute();
-            this.setServiceComponentHeader();
+            this.setServiceComponentHeader(options);
 
-            this.updateProjectResources();
+            if ( !this.updateProjectResources() ) {
+                this.setIncludeResourceHeader(options);
+            }
             this.cleanUpDeletedSources(scanner.getDeletedSources(), options);
 
             this.refreshMessages(result.getProcessedSourceFiles());
@@ -377,9 +379,11 @@ public class SCRDescriptorMojo extends AbstractMojo {
     /**
      * Set the service component header based on the files in the output directory
      */
-    private void setServiceComponentHeader() {
-        final File osgiInfDir = new File(this.outputDirectory, "OSGI-INF");
-        if ( osgiInfDir.exists() ) {
+    private void setServiceComponentHeader(final Options options) {
+        final int outputDirLength = options.getOutputDirectory().getAbsolutePath().length() +1;
+        final File componentDir = options.getComponentDescriptorDirectory();
+        final String cmpPrefix = componentDir.getAbsolutePath().substring(outputDirLength).replace(File.separatorChar, '/');
+        if ( componentDir.exists() ) {
             final String svcHeader = project.getProperties().getProperty("Service-Component");
             final Set<String> xmlFiles = new HashSet<String>();
             if ( svcHeader != null ) {
@@ -390,11 +394,13 @@ public class SCRDescriptorMojo extends AbstractMojo {
                 }
             }
 
-            for(final File f : osgiInfDir.listFiles()) {
+            for(final File f : componentDir.listFiles()) {
                 if ( f.isFile() && f.getName().endsWith(".xml") ) {
-                    xmlFiles.add("OSGI-INF/" + f.getName());
+                    final String entry = cmpPrefix + '/' + f.getName();
+                    xmlFiles.add(entry);
                 }
             }
+
             final StringBuilder sb = new StringBuilder();
             boolean first = true;
             for(final String entry : xmlFiles) {
@@ -410,22 +416,81 @@ public class SCRDescriptorMojo extends AbstractMojo {
     }
 
     /**
-     * Update the Maven project resources.
+     * Set the include resource header for bnd
+     * @param options
      */
-    private void updateProjectResources() {
-        // now add the descriptor directory to the maven resources
-        final String ourRsrcPath = this.outputDirectory.getAbsolutePath();
-        boolean found = false;
-        @SuppressWarnings("unchecked")
-        final Iterator<Resource> rsrcIterator = this.project.getResources().iterator();
-        while (!found && rsrcIterator.hasNext()) {
-            final Resource rsrc = rsrcIterator.next();
-            found = rsrc.getDirectory().equals(ourRsrcPath);
+    private void setIncludeResourceHeader(final Options options) {
+        final int outputDirLength = options.getOutputDirectory().getAbsolutePath().length() +1;
+
+        // make sure to either include the current settings or the default
+        final StringBuilder resourcesEntry = new StringBuilder();
+        final String includeResources = project.getProperties().getProperty("Include-Resource");
+        if ( includeResources != null ) {
+            resourcesEntry.append(includeResources);
+        } else {
+            resourcesEntry.append("{maven-resources}");
         }
-        if (!found) {
-            final Resource resource = new Resource();
-            resource.setDirectory(this.outputDirectory.getAbsolutePath());
-            this.project.addResource(resource);
+
+        // process components
+        final File componentDir = options.getComponentDescriptorDirectory();
+        final String cmpPrefix = componentDir.getAbsolutePath().substring(outputDirLength).replace(File.separatorChar, '/');
+        if ( componentDir.exists() ) {
+            for(final File f : componentDir.listFiles()) {
+                if ( f.isFile() && f.getName().endsWith(".xml") ) {
+                    final String entry = cmpPrefix + '/' + f.getName();
+
+                    resourcesEntry.append(",");
+                    resourcesEntry.append(entry);
+                    resourcesEntry.append("=");
+                    resourcesEntry.append(this.outputDirectory);
+                    resourcesEntry.append("/");
+                    resourcesEntry.append(entry);
+                }
+            }
         }
+        // process metatype
+        final File mtDir = options.getMetaTypeDirectory();
+        final String mtPrefix = mtDir.getAbsolutePath().substring(outputDirLength).replace(File.separatorChar, '/');
+        if ( mtDir.exists() ) {
+            for(final File f : mtDir.listFiles()) {
+                if ( f.isFile() && (f.getName().endsWith(".xml") || f.getName().endsWith(".properties")) ) {
+                    final String entry = mtPrefix + '/' + f.getName();
+
+                    resourcesEntry.append(",");
+                    resourcesEntry.append(entry);
+                    resourcesEntry.append("=");
+                    resourcesEntry.append(this.outputDirectory);
+                    resourcesEntry.append("/");
+                    resourcesEntry.append(entry);
+                }
+            }
+        }
+        project.getProperties().setProperty("Include-Resource", resourcesEntry.toString());
+    }
+
+    /**
+     * Update the Maven project resources if not target/classes (or the
+     * configured build output directory) is used for output
+     */
+    private boolean updateProjectResources() {
+        final String classesDir = this.project.getBuild().getOutputDirectory().replace(File.separatorChar, '/');
+        final String ourRsrcPath = this.outputDirectory.getAbsolutePath().replace(File.separatorChar, '/');
+        if ( !classesDir.equals(ourRsrcPath) ) {
+            // now add the descriptor directory to the maven resources
+            boolean found = false;
+            @SuppressWarnings("unchecked")
+            final Iterator<Resource> rsrcIterator = this.project.getResources().iterator();
+            while (!found && rsrcIterator.hasNext()) {
+                final Resource rsrc = rsrcIterator.next();
+                found = rsrc.getDirectory().equals(ourRsrcPath);
+            }
+            if (!found) {
+                final Resource resource = new Resource();
+                resource.setDirectory(this.outputDirectory.getAbsolutePath());
+                this.project.addResource(resource);
+            }
+            return true;
+        }
+        return false;
     }
 }
