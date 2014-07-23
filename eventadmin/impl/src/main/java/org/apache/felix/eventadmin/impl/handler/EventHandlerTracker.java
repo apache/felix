@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -285,7 +284,13 @@ public class EventHandlerTracker extends ServiceTracker<EventHandler, EventHandl
 		final Set<EventHandlerProxy> handlers = new HashSet<EventHandlerProxy>();
 
 		// Add all handlers matching everything
-		handlers.addAll(this.matchingAllEvents);
+		for(final EventHandlerProxy p : this.matchingAllEvents)
+		{
+		    if ( p.canDeliver(event) )
+		    {
+		        handlers.add(p);
+		    }
+		}
 
 		// Now check for prefix matches
 		if ( !this.matchingPrefixTopic.isEmpty() )
@@ -297,7 +302,13 @@ public class EventHandlerTracker extends ServiceTracker<EventHandler, EventHandl
 				List<EventHandlerProxy> proxies = this.matchingPrefixTopic.get(prefix);
 				if (proxies != null)
 				{
-					handlers.addAll(proxies);
+			        for(final EventHandlerProxy p : proxies)
+			        {
+			            if ( p.canDeliver(event) )
+			            {
+			                handlers.add(p);
+			            }
+			        }
 				}
 
 				pos = prefix.lastIndexOf('/');
@@ -306,18 +317,17 @@ public class EventHandlerTracker extends ServiceTracker<EventHandler, EventHandl
 
 		// Add the handlers for matching topic names
 		List<EventHandlerProxy> proxies = this.matchingTopic.get(topic);
-		if (proxies != null) {
-			handlers.addAll(proxies);
+		if (proxies != null)
+		{
+            for(final EventHandlerProxy p : proxies)
+            {
+                if ( p.canDeliver(event) )
+                {
+                    handlers.add(p);
+                }
+            }
 		}
 
-		// now check permission and filters
-		final Iterator<EventHandlerProxy> i = handlers.iterator();
-		while ( i.hasNext() ) {
-		    final EventHandlerProxy proxy = i.next();
-		    if ( !proxy.canDeliver(event) ) {
-		        i.remove();
-		    }
-		}
 		return handlers;
 	}
 
