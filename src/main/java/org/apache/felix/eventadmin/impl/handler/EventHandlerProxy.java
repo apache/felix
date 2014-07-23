@@ -43,7 +43,7 @@ import org.osgi.service.event.EventHandler;
 public class EventHandlerProxy {
 
     /** The service reference for the event handler. */
-    private final ServiceReference reference;
+    private final ServiceReference<EventHandler> reference;
 
     /** The handler context. */
     private final EventHandlerTracker.HandlerContext handlerContext;
@@ -73,7 +73,7 @@ public class EventHandlerProxy {
      * @param reference Reference to the EventHandler
      */
     public EventHandlerProxy(final EventHandlerTracker.HandlerContext context,
-                    final ServiceReference reference)
+                    final ServiceReference<EventHandler> reference)
     {
         this.handlerContext = context;
         this.reference = reference;
@@ -283,7 +283,7 @@ public class EventHandlerProxy {
         {
             try
             {
-                this.handler = (EventHandler)this.handlerContext.bundleContext.getService(this.reference);
+                this.handler = this.handlerContext.bundleContext.getService(this.reference);
                 if ( this.handler != null )
                 {
                     this.checkTimeout(this.handler.getClass().getName());
