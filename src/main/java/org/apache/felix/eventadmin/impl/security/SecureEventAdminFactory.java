@@ -18,7 +18,9 @@
  */
 package org.apache.felix.eventadmin.impl.security;
 
-import org.osgi.framework.*;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.EventAdmin;
 
 /**
@@ -30,7 +32,7 @@ import org.osgi.service.event.EventAdmin;
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class SecureEventAdminFactory implements ServiceFactory
+public class SecureEventAdminFactory implements ServiceFactory<EventAdmin>
 {
     // The EventAdmin to secure
     private final EventAdmin m_admin;
@@ -62,8 +64,9 @@ public class SecureEventAdminFactory implements ServiceFactory
      * @see org.osgi.framework.ServiceFactory#getService(org.osgi.framework.Bundle,
      *      org.osgi.framework.ServiceRegistration)
      */
-    public Object getService(final Bundle bundle,
-        final ServiceRegistration registration)
+    @Override
+    public EventAdmin getService(final Bundle bundle,
+        final ServiceRegistration<EventAdmin> registration)
     {
         // We don't need to cache this objects since the framework already does this.
         return new EventAdminSecurityDecorator(bundle, m_admin);
@@ -79,8 +82,9 @@ public class SecureEventAdminFactory implements ServiceFactory
      * @see org.osgi.framework.ServiceFactory#ungetService(org.osgi.framework.Bundle,
      *      org.osgi.framework.ServiceRegistration, java.lang.Object)
      */
+    @Override
     public void ungetService(final Bundle bundle,
-        final ServiceRegistration registration, final Object service)
+        final ServiceRegistration<EventAdmin> registration, final EventAdmin service)
     {
         // We don't need to do anything here since we hand-out a new instance with
         // any call to getService hence, it is o.k. to just wait for the next gc.
