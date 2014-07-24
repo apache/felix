@@ -133,10 +133,12 @@ public class DSAnnotationProcessor implements AnnotationProcessor {
 
         // services
         final List<String> listedInterfaces = new ArrayList<String>();
-        if (cad.getValue("service") != null) {
+        if (cad.hasValue("service") ) {
             final String[] interfaces = (String[]) cad.getValue("service");
-            for (final String t : interfaces) {
-                listedInterfaces.add(t);
+            if ( interfaces != null ) {
+                for (final String t : interfaces) {
+                    listedInterfaces.add(t);
+                }
             }
         } else {
             // scan directly implemented interfaces
