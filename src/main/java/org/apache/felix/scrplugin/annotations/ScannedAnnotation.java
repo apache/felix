@@ -58,6 +58,20 @@ public abstract class ScannedAnnotation {
     }
 
     /**
+     * Check if a value exists for this annotation.
+     * This method can be used to check whether a value exists,
+     * even if the value is <code>null</code>.
+     * @param paramName The property name
+     * @return <code>true</code> If a value exists.
+     */
+    public boolean hasValue(final String paramName) {
+        if ( values != null ) {
+            return values.containsKey(paramName);
+        }
+        return false;
+    }
+
+    /**
      * Get a property value of the annotation.
      * @param paramName The property name.
      * @return The value of the property or <code>null</code>
