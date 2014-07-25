@@ -37,7 +37,7 @@ import java.lang.annotation.Target;
  * OSGi Service Platform Service Compendium Specification for more information.
  */
 @Target( { ElementType.TYPE, ElementType.FIELD })
-@Retention(RetentionPolicy.CLASS)
+@Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface Property {
 
