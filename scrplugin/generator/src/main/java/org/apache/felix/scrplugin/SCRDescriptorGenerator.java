@@ -280,6 +280,9 @@ public class SCRDescriptorGenerator {
                                     this.project.getClassLoader(),
                                     this.project.getClassesDirectory(),
                                     this.logger);
+                    // set a flag for validation
+                    ref.setBindMethodCreated(createBind);
+                    ref.setUnbindMethodCreated(createUnbind);
                 }
             }
         }

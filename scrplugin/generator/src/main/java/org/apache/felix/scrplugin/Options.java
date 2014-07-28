@@ -46,6 +46,9 @@ public class Options {
     /** Is this an incremental build? */
     private boolean incremental = false;
 
+    /** Skip volatile check. */
+    private boolean skipVolatileCheck = false;
+
     /**
      * @see #setGenerateAccessors(boolean)
      * @return Whether accessor methods should be generated.
@@ -173,5 +176,19 @@ public class Options {
      */
     public void setIncremental(final boolean incremental) {
         this.incremental = incremental;
+    }
+
+    /**
+     * Should the check for volatile fields be skipped?
+     */
+    public boolean isSkipVolatileCheck() {
+        return skipVolatileCheck;
+    }
+
+    /**
+     * Set whether the check should be skipped
+     */
+    public void setSkipVolatileCheck(final boolean skipVolatileCheck) {
+        this.skipVolatileCheck = skipVolatileCheck;
     }
 }

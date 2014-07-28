@@ -164,6 +164,13 @@ public class SCRDescriptorMojo extends AbstractMojo {
     private boolean scanClasses;
 
     /**
+     * Skip volatile check for fields.
+     *
+     * @parameter default-value="false"
+     */
+    private boolean skipVolatileCheck;
+
+    /**
      * @component
      */
     private BuildContext buildContext;
@@ -202,6 +209,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
         options.setProperties(properties);
         options.setSpecVersion(SpecVersion.fromName(specVersion));
         options.setIncremental(this.buildContext.isIncremental());
+        options.setSkipVolatileCheck(this.skipVolatileCheck);
 
         if ( specVersion != null && options.getSpecVersion() == null ) {
             throw new MojoExecutionException("Unknown spec version specified: " + specVersion);

@@ -480,7 +480,7 @@ public class Validator {
                 if ( bindName != null ) {
                     bindName = this.validateMethod(ref, bindName, componentIsAbstract);
                     if ( bindName == null && ref.getField() != null ) {
-                        iLog.addError("Something went wrong: " + canGenerate + " - " + this.options.isGenerateAccessors() + " - " + ref.getCardinality(), ref.getField().getName());
+                        this.logError(ref, "Something went wrong: " + canGenerate + " - " + this.options.isGenerateAccessors() + " - " + ref.getCardinality());
                     }
                 } else {
                     bindName = "bind" + Character.toUpperCase(ref.getName().charAt(0)) + ref.getName().substring(1);
@@ -491,10 +491,32 @@ public class Validator {
                     unbindName = "unbind" + Character.toUpperCase(ref.getName().charAt(0)) + ref.getName().substring(1);
                 }
 
+                // check for volatile on dynamic field reference with cardinality unary
+                if ( !this.options.isSkipVolatileCheck() ) {
+                    if ( ref.getField() != null
+                         && (ref.getCardinality() == ReferenceCardinality.OPTIONAL_UNARY || ref.getCardinality() == ReferenceCardinality.MANDATORY_UNARY)
+                         && ref.getPolicy() == ReferencePolicy.DYNAMIC ) {
+                        final boolean fieldIsVolatile = Modifier.isVolatile(ref.getField().getModifiers());
+
+                        if ( ref.isBindMethodCreated() || ref.isUnbindMethodCreated() ) {
+                            // field must be volatile
+                            if (!fieldIsVolatile) {
+                                this.logError(ref, "Dynamic field must be declared volatile for unary references");
+                            }
+                        } else {
+                            // field should be volatile
+                            if (!fieldIsVolatile) {
+                                this.logError(ref, "Dynamic field should be declared volatile for unary references");
+                            }
+                        }
+                    }
+                }
+
                 if (iLog.getNumberOfErrors() == currentIssueCount) {
                     ref.setBind(bindName);
                     ref.setUnbind(unbindName);
                 }
+
             } else {
                 ref.setBind(null);
                 ref.setUnbind(null);

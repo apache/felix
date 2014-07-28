@@ -62,6 +62,9 @@ public class ReferenceDescription extends AbstractDescription {
     private String unbind;
     private String updated;
 
+    private boolean bindMethodCreated = false;
+    private boolean unbindMethodCreated = false;
+
     public ReferenceDescription(final ScannedAnnotation annotation) {
         super(annotation);
     }
@@ -154,6 +157,23 @@ public class ReferenceDescription extends AbstractDescription {
         this.field = field;
     }
 
+    public boolean isBindMethodCreated() {
+        return bindMethodCreated;
+    }
+
+    public void setBindMethodCreated(final boolean bindMethodCreated) {
+        this.bindMethodCreated = bindMethodCreated;
+    }
+
+    public boolean isUnbindMethodCreated() {
+        return unbindMethodCreated;
+    }
+
+    public void setUnbindMethodCreated(final boolean unbindMethodCreated) {
+        this.unbindMethodCreated = unbindMethodCreated;
+    }
+
+
     @Override
     public String toString() {
         return "ReferenceDescription [name=" + name + ", interfaceName="
@@ -163,6 +183,15 @@ public class ReferenceDescription extends AbstractDescription {
                 + ", unbind=" + unbind + ", updated=" + updated + ", strategy="
                 + strategy + ", field=" + field + ", annotation=" + annotation
                 + "]";
+    }
+
+
+    @Override
+    public String getIdentifier() {
+        if ( this.getField() != null ) {
+            return super.getIdentifier() + "(" + this.getField().getName() + ")";
+        }
+        return super.getIdentifier();
     }
 
     @Override
@@ -179,6 +208,8 @@ public class ReferenceDescription extends AbstractDescription {
         cd.setBind(this.getBind());
         cd.setUnbind(this.getUnbind());
         cd.setUpdated(this.getUpdated());
+        cd.setBindMethodCreated(this.isBindMethodCreated());
+        cd.setUnbindMethodCreated(this.isUnbindMethodCreated());
 
         return cd;
     }
