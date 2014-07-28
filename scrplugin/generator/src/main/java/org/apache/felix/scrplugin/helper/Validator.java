@@ -528,6 +528,7 @@ public class Validator {
                     this.logError(ref, "Updated method declaration requires version "
                                     + SpecVersion.VERSION_1_1_FELIX.getName() + ", " + SpecVersion.VERSION_1_2.getName() + " or newer");
                 }
+                this.validateMethod(ref, ref.getUpdated(), componentIsAbstract);
             }
         }
     }

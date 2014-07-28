@@ -4,6 +4,7 @@ Changes from 1.12.0 to 1.11.0
     * [FELIX-4586] - A field must be volatile if methods are generated for a dynamic reference
 ** Bug
     * [FELIX-4296] - Cannot deactivate service interface detection in DS annotations
+    * [FELIX-4587] - Update method is not verified
 
 
 Changes from 1.11.0 to 1.10.0

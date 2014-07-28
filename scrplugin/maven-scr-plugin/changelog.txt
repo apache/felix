@@ -5,6 +5,7 @@ Changes from 1.18.0 to 1.17.0
     * [FELIX-4530] - Revisit setting the default output to target/classes
 ** Bug
     * [FELIX-4296] - Cannot deactivate service interface detection in DS annotations
+    * [FELIX-4587] - Update method is not verified
 
 
 Changes from 1.17.0 to 1.16.0
