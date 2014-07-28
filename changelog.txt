@@ -1,3 +1,9 @@
+Changes from 1.2.8 to 1.2.4
+---------------------------
+** Bug
+    * [FELIX-4296] - Cannot deactivate service interface detection in DS annotations
+
+
 Changes from 1.2.4 to 1.2.2
 ---------------------------
 ** Bug
