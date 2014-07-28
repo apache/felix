@@ -1,3 +1,13 @@
+Changes from 1.2.0 to 1.1.0
+---------------------------
+** Improvement
+    * [FELIX-4586] - A field must be volatile if methods are generated for a dynamic reference
+** Bug
+    * [FELIX-4567] - scr bnd plugin incompatible with maven-bundle-plugin 2.5.0
+    * [FELIX-4296] - Cannot deactivate service interface detection in DS annotations
+    * [FELIX-4587] - Update method is not verified
+
+
 Changes from 1.1.0 to 1.0.0
 ----------------------------
 ** Improvement
