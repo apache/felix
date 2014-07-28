@@ -503,11 +503,6 @@ public class Validator {
                             if (!fieldIsVolatile) {
                                 this.logError(ref, "Dynamic field must be declared volatile for unary references");
                             }
-                        } else {
-                            // field should be volatile
-                            if (!fieldIsVolatile) {
-                                this.logError(ref, "Dynamic field should be declared volatile for unary references");
-                            }
                         }
                     }
                 }
