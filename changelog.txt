@@ -1,4 +1,4 @@
-Changes from 1.12.0 to 1.11.0
+Changes from 1.13.0 to 1.11.0
 -----------------------------
 ** Improvement
     * [FELIX-4586] - A field must be volatile if methods are generated for a dynamic reference
