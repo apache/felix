@@ -28,6 +28,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import aQute.bnd.differ.Baseline;
+import aQute.bnd.differ.Baseline.Info;
+import aQute.bnd.differ.DiffPluginImpl;
+import aQute.bnd.osgi.Instructions;
+import aQute.bnd.osgi.Jar;
+import aQute.bnd.osgi.Processor;
+import aQute.bnd.service.diff.Delta;
+import aQute.bnd.service.diff.Diff;
+import aQute.bnd.version.Version;
+import aQute.service.reporter.Reporter;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.metadata.ArtifactMetadataRetrievalException;
@@ -45,17 +55,6 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.StringUtils;
-
-import aQute.bnd.differ.Baseline;
-import aQute.bnd.differ.Baseline.Info;
-import aQute.bnd.differ.DiffPluginImpl;
-import aQute.bnd.osgi.Instructions;
-import aQute.bnd.osgi.Jar;
-import aQute.bnd.osgi.Processor;
-import aQute.bnd.service.diff.Delta;
-import aQute.bnd.service.diff.Diff;
-import aQute.bnd.version.Version;
-import aQute.service.reporter.Reporter;
 
 /**
  * Abstract BND Baseline check between two bundles.
@@ -336,7 +335,7 @@ abstract class AbstractBaselinePlugin
             }
         }
 
-        getLog().info( String.format( "Baseline analisys complete, %s error(s), %s warning(s)",
+        getLog().info( String.format( "Baseline analysis complete, %s error(s), %s warning(s)",
                                       reporter.getErrors().size(),
                                       reporter.getWarnings().size() ) );
 
