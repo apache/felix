@@ -529,8 +529,11 @@ class BundleContextImpl implements FelixBundleContext
     /**
      * @see org.osgi.framework.BundleContext#getServiceObjects(org.osgi.framework.ServiceReference)
      */
-    public <S> ServiceObjects<S> getServiceObjects(ServiceReference<S> reference)
+    public <S> ServiceObjects<S> getServiceObjects(final ServiceReference<S> ref)
     {
-        throw new UnsupportedOperationException(); // TODO
+        // Get the service registration.
+        final ServiceRegistrationImpl reg =
+            ((ServiceRegistrationImpl.ServiceReferenceImpl) ref).getRegistration();
+        return reg.getServiceObjects(m_bundle);
     }
 }

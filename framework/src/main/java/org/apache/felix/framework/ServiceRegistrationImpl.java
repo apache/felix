@@ -38,6 +38,7 @@ import org.osgi.framework.BundleReference;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceException;
 import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.wiring.BundleCapability;
@@ -401,6 +402,14 @@ class ServiceRegistrationImpl implements ServiceRegistration
             }
             return null;
         }
+    }
+
+    /**
+     * Get the service objects for the provided bundle
+     */
+    public ServiceObjects getServiceObjects(Bundle bundle)
+    {
+        throw new UnsupportedOperationException();
     }
 
     //
