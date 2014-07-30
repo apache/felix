@@ -28,16 +28,16 @@
   <name>Apache Felix Framework</name>
   <artifactId>org.apache.felix.framework</artifactId>
   <version>4.5.0-SNAPSHOT</version>
-  <dependencies>
-  </dependencies>
+
   <properties>
     <dollar>$</dollar>
   </properties>
-    <scm>
+  <scm>
       <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/framework</connection>
       <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/framework</developerConnection>
       <url>http://svn.apache.org/repos/asf/felix/framework</url>
-    </scm>
+  </scm>
+
   <build>
     <plugins>
       <plugin>
@@ -60,7 +60,14 @@
             <Bundle-Name>Apache Felix Framework</Bundle-Name>
             <Bundle-Description>OSGi R5 framework implementation.</Bundle-Description>
             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
-            <Export-Package>org.osgi.framework.*;-split-package:=merge-first,org.osgi.resource,org.osgi.service.*,org.osgi.util.tracker</Export-Package>
+            <Export-Package>
+                org.osgi.framework.*;-split-package:=merge-first,
+                org.osgi.resource,
+                org.osgi.resource.dto,
+                org.osgi.service.*,
+                org.osgi.util.tracker,
+                org.osgi.dto
+            </Export-Package>
             <Private-Package>org.apache.felix.framework.*</Private-Package>
             <Import-Package>!*</Import-Package>
           </instructions>
@@ -116,4 +123,12 @@
       </resource>
     </resources>
   </build>
+  <dependencies>
+    <dependency>
+       <groupId>org.osgi</groupId>
+       <artifactId>org.osgi.annotation</artifactId>
+       <version>6.0.0</version>
+       <scope>provided</scope>
+    </dependency>
+  </dependencies>
 </project>

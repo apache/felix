@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2012). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2013). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,8 +42,8 @@ import java.util.Set;
  * A bundle's authority to register or get a service.
  * <ul>
  * <li>The {@code register} action allows a bundle to register a service on the
- * specified names.
- * <li>The {@code get} action allows a bundle to detect a service and get it.
+ * specified names.</li>
+ * <li>The {@code get} action allows a bundle to detect a service and get it.</li>
  * </ul>
  * Permission to get a service is required in order to detect events regarding
  * the service. Untrusted bundles should not be able to detect the presence of
@@ -51,7 +51,7 @@ import java.util.Set;
  * to get the specific service.
  * 
  * @ThreadSafe
- * @version $Id: 96438ad164d7f0f4273787226298bf8208cf0034 $
+ * @author $Id: ff7fc46dd623c0a09b49965048dd6faa2b111b39 $
  */
 
 public final class ServicePermission extends BasicPermission {
@@ -207,7 +207,7 @@ public final class ServicePermission extends BasicPermission {
 		if (reference == null) {
 			throw new IllegalArgumentException("reference must not be null");
 		}
-		StringBuffer sb = new StringBuffer("(service.id=");
+		StringBuffer sb = new StringBuffer("(" + Constants.SERVICE_ID + "=");
 		sb.append(reference.getProperty(Constants.SERVICE_ID));
 		sb.append(")");
 		return sb.toString();
@@ -364,6 +364,7 @@ public final class ServicePermission extends BasicPermission {
 	 * @return {@code true} if the specified permission is implied by this
 	 *         object; {@code false} otherwise.
 	 */
+	@Override
 	public boolean implies(Permission p) {
 		if (!(p instanceof ServicePermission)) {
 			return false;
@@ -438,6 +439,7 @@ public final class ServicePermission extends BasicPermission {
 	 * 
 	 * @return The canonical string representation of the actions.
 	 */
+	@Override
 	public String getActions() {
 		String result = actions;
 		if (result == null) {
@@ -469,6 +471,7 @@ public final class ServicePermission extends BasicPermission {
 	 * @return A new {@code PermissionCollection} object suitable for storing
 	 *         {@code ServicePermission} objects.
 	 */
+	@Override
 	public PermissionCollection newPermissionCollection() {
 		return new ServicePermissionCollection();
 	}
@@ -484,6 +487,7 @@ public final class ServicePermission extends BasicPermission {
 	 *         class name and actions as this {@code ServicePermission} object;
 	 *         {@code false} otherwise.
 	 */
+	@Override
 	public boolean equals(Object obj) {
 		if (obj == this) {
 			return true;
@@ -503,6 +507,7 @@ public final class ServicePermission extends BasicPermission {
 	 * 
 	 * @return Hash code value for this object.
 	 */
+	@Override
 	public int hashCode() {
 		int h = 31 * 17 + getName().hashCode();
 		h = 31 * h + getActions().hashCode();
@@ -538,9 +543,8 @@ public final class ServicePermission extends BasicPermission {
 	}
 
 	/**
-	 * Called by {@code <@link ServicePermission#implies(Permission)>}. This
-	 * method is only called on a requested permission which cannot have a
-	 * filter set.
+	 * Called by {@link ServicePermission#implies(Permission)}. This method is
+	 * only called on a requested permission which cannot have a filter set.
 	 * 
 	 * @return a map of properties for this permission.
 	 */
@@ -557,8 +561,8 @@ public final class ServicePermission extends BasicPermission {
 		final Map<String, Object> props = new HashMap<String, Object>(4);
 		final Bundle bundle = service.getBundle();
 		if (bundle != null) {
-			AccessController.doPrivileged(new PrivilegedAction<Object>() {
-				public Object run() {
+			AccessController.doPrivileged(new PrivilegedAction<Void>() {
+				public Void run() {
 					props.put("id", new Long(bundle.getBundleId()));
 					props.put("location", bundle.getLocation());
 					String name = bundle.getSymbolicName();
@@ -587,6 +591,7 @@ public final class ServicePermission extends BasicPermission {
 			entries = null;
 		}
 
+		@Override
 		public Object get(Object k) {
 			if (!(k instanceof String)) {
 				return null;
@@ -639,14 +644,17 @@ public final class ServicePermission extends BasicPermission {
 				throw new UnsupportedOperationException();
 			}
 
+			@Override
 			public String toString() {
 				return k + "=" + v;
 			}
 
+			@Override
 			public int hashCode() {
 				return ((k == null) ? 0 : k.hashCode()) ^ ((v == null) ? 0 : v.hashCode());
 			}
 
+			@Override
 			public boolean equals(Object obj) {
 				if (obj == this) {
 					return true;
@@ -717,6 +725,7 @@ final class ServicePermissionCollection extends PermissionCollection {
 	 * @throws SecurityException If this {@code ServicePermissionCollection}
 	 *         object has been marked read-only.
 	 */
+	@Override
 	public void add(final Permission permission) {
 		if (!(permission instanceof ServicePermission)) {
 			throw new IllegalArgumentException("invalid permission: " + permission);
@@ -771,6 +780,7 @@ final class ServicePermissionCollection extends PermissionCollection {
 	 * @return {@code true} if {@code permission} is a proper subset of a
 	 *         permission in the set; {@code false} otherwise.
 	 */
+	@Override
 	public boolean implies(final Permission permission) {
 		if (!(permission instanceof ServicePermission)) {
 			return false;
@@ -877,6 +887,7 @@ final class ServicePermissionCollection extends PermissionCollection {
 	 * 
 	 * @return Enumeration of all the ServicePermission objects.
 	 */
+	@Override
 	public synchronized Enumeration<Permission> elements() {
 		List<Permission> all = new ArrayList<Permission>(permissions.values());
 		Map<String, ServicePermission> pc = filterPermissions;
@@ -901,9 +912,11 @@ final class ServicePermissionCollection extends PermissionCollection {
 
 	private synchronized void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
 		ObjectInputStream.GetField gfields = in.readFields();
+		@SuppressWarnings("unchecked")
 		Hashtable<String, ServicePermission> hashtable = (Hashtable<String, ServicePermission>) gfields.get("permissions", null);
 		permissions = new HashMap<String, ServicePermission>(hashtable);
 		all_allowed = gfields.get("all_allowed", false);
+		@SuppressWarnings("unchecked")
 		HashMap<String, ServicePermission> fp = (HashMap<String, ServicePermission>) gfields.get("filterPermissions", null);
 		filterPermissions = fp;
 	}

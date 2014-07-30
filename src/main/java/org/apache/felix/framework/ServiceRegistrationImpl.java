@@ -21,14 +21,25 @@ package org.apache.felix.framework;
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.felix.framework.util.MapToDictionary;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
-import org.osgi.framework.*;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleReference;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceException;
+import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
@@ -307,6 +318,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
         // Add the framework assigned properties.
         props.put(Constants.OBJECTCLASS, m_classes);
         props.put(Constants.SERVICE_ID, m_serviceId);
+        props.put("service.bundleid", m_bundle.getBundleId()); // TODO use constants once available
 
         // Update the service property map.
         m_propMap = props;
@@ -470,6 +482,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
             return ServiceRegistrationImpl.this.getUsingBundles();
         }
 
+        @Override
         public String toString()
         {
             String[] ocs = (String[]) getProperty("objectClass");

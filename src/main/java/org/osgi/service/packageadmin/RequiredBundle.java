@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2004, 2010). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2004, 2013). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ import org.osgi.framework.Version;
  * @noimplement
  * @deprecated The PackageAdmin service has been replaced by the
  *             <code>org.osgi.framework.wiring</code> package.
- * @version $Id: 1606b0422cae6769b7eedc2d565df61841da1e22 $
+ * @author $Id: 08ab9c1a6f4a9af2060293d2c2972e4e07e2a238 $
  */
 public interface RequiredBundle {
 	/**

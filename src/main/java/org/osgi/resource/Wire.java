@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2011, 2012). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2011, 2013). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 
 package org.osgi.resource;
 
+import org.osgi.annotation.versioning.ConsumerType;
+
 /**
  * A wire connecting a {@link Capability} to a {@link Requirement}.
  * 
@@ -25,8 +27,9 @@ package org.osgi.resource;
  * always return the same result.
  * 
  * @ThreadSafe
- * @version $Id: d7ca9a5d3e8dd2277f8243a750e40fbcf79185bd $
+ * @author $Id: 6c248ea2b9b24f3610a14e5e8deec9cd0b7aa1c9 $
  */
+@ConsumerType
 public interface Wire {
 	/**
 	 * Returns the {@link Capability} for this wire.

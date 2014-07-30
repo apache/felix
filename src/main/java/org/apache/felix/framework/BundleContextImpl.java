@@ -34,7 +34,9 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceListener;
+import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -512,5 +514,20 @@ class BundleContextImpl implements FelixBundleContext
         }
 
         throw new IllegalStateException("Invalid BundleContext.");
+    }
+
+    /* (non-Javadoc)
+     * @see org.osgi.framework.BundleContext#registerService(java.lang.Class, org.osgi.framework.ServiceFactory, java.util.Dictionary)
+     */
+    public <S> ServiceRegistration<S> registerService(Class<S> clazz,
+            ServiceFactory<S> factory, Dictionary<String, ?> properties) {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    /* (non-Javadoc)
+     * @see org.osgi.framework.BundleContext#getServiceObjects(org.osgi.framework.ServiceReference)
+     */
+    public <S> ServiceObjects<S> getServiceObjects(ServiceReference<S> reference) {
+        throw new UnsupportedOperationException(); // TODO
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2009, 2010). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2009, 2013). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,16 @@
 
 package org.osgi.framework;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * A reference to a Bundle.
  * 
  * @since 1.5
  * @ThreadSafe
- * @noimplement
- * @version $Id: e61bd3e020264b04022a430fe09a85ee3aabf1a3 $
+ * @author $Id: ad4e0b99177540205a1a8f37f9075989434cc59f $
  */
+@ProviderType
 public interface BundleReference {
 	/**
 	 * Returns the {@code Bundle} object associated with this
