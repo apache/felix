@@ -318,7 +318,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
         // Add the framework assigned properties.
         props.put(Constants.OBJECTCLASS, m_classes);
         props.put(Constants.SERVICE_ID, m_serviceId);
-        props.put("service.bundleid", m_bundle.getBundleId()); // TODO use constants once available
+        props.put(Constants.SERVICE_BUNDLEID, m_bundle.getBundleId());
 
         // Update the service property map.
         m_propMap = props;
