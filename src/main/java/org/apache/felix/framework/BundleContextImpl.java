@@ -516,18 +516,21 @@ class BundleContextImpl implements FelixBundleContext
         throw new IllegalStateException("Invalid BundleContext.");
     }
 
-    /* (non-Javadoc)
+    /**
      * @see org.osgi.framework.BundleContext#registerService(java.lang.Class, org.osgi.framework.ServiceFactory, java.util.Dictionary)
      */
     public <S> ServiceRegistration<S> registerService(Class<S> clazz,
-            ServiceFactory<S> factory, Dictionary<String, ?> properties) {
-        throw new UnsupportedOperationException(); // TODO
+            ServiceFactory<S> factory, Dictionary<String, ?> properties)
+    {
+        return (ServiceRegistration<S>)
+                registerService(new String[] { clazz.getName() }, factory, properties);
     }
 
-    /* (non-Javadoc)
+    /**
      * @see org.osgi.framework.BundleContext#getServiceObjects(org.osgi.framework.ServiceReference)
      */
-    public <S> ServiceObjects<S> getServiceObjects(ServiceReference<S> reference) {
+    public <S> ServiceObjects<S> getServiceObjects(ServiceReference<S> reference)
+    {
         throw new UnsupportedOperationException(); // TODO
     }
 }
