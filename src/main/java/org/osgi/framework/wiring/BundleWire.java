@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2011, 2012). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2011, 2013). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,16 @@
 
 package org.osgi.framework.wiring;
 
+import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.resource.Wire;
 
 /**
  * A wire connecting a {@link BundleCapability} to a {@link BundleRequirement}.
  * 
  * @ThreadSafe
- * @noimplement
- * @version $Id: 02e7cd6ec0fa9fdb73f782a6890984d5d4e7ca21 $
+ * @author $Id: f51255c8510d4b513dc2bb70c2274d9c51e9b9e5 $
  */
+@ProviderType
 public interface BundleWire extends Wire {
 	/**
 	 * Returns the {@link BundleCapability} for this wire.

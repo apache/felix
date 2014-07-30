@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2012). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2013). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import java.util.EventObject;
  * @Immutable
  * @see BundleListener
  * @see SynchronousBundleListener
- * @version $Id: 9e2102212eb526b5f11fdde4b0fc5c171a0b39c8 $
+ * @author $Id: cd49848213816c4f76541b70be12ac3af7900972 $
  */
 
 public class BundleEvent extends EventObject {
@@ -201,16 +201,16 @@ public class BundleEvent extends EventObject {
 	/**
 	 * Returns the type of lifecyle event. The type values are:
 	 * <ul>
-	 * <li>{@link #INSTALLED}
-	 * <li>{@link #RESOLVED}
-	 * <li>{@link #LAZY_ACTIVATION}
-	 * <li>{@link #STARTING}
-	 * <li>{@link #STARTED}
-	 * <li>{@link #STOPPING}
-	 * <li>{@link #STOPPED}
-	 * <li>{@link #UPDATED}
-	 * <li>{@link #UNRESOLVED}
-	 * <li>{@link #UNINSTALLED}
+	 * <li>{@link #INSTALLED}</li>
+	 * <li>{@link #RESOLVED}</li>
+	 * <li>{@link #LAZY_ACTIVATION}</li>
+	 * <li>{@link #STARTING}</li>
+	 * <li>{@link #STARTED}</li>
+	 * <li>{@link #STOPPING}</li>
+	 * <li>{@link #STOPPED}</li>
+	 * <li>{@link #UPDATED}</li>
+	 * <li>{@link #UNRESOLVED}</li>
+	 * <li>{@link #UNINSTALLED}</li>
 	 * </ul>
 	 * 
 	 * @return The type of lifecycle event.

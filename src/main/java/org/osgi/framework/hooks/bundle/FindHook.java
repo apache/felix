@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2011, 2012). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2011, 2013). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package org.osgi.framework.hooks.bundle;
 
 import java.util.Collection;
+import org.osgi.annotation.versioning.ConsumerType;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -29,8 +30,9 @@ import org.osgi.framework.BundleException;
  * (get bundles) operations.
  * 
  * @ThreadSafe
- * @version $Id: ae6bf5fc5cf999ac39dfc195c99ef7e223e3b847 $
+ * @author $Id: 1029e10212f150304095fc99433197083cc00e9e $
  */
+@ConsumerType
 public interface FindHook {
 	/**
 	 * Find hook method. This method is called for the following:

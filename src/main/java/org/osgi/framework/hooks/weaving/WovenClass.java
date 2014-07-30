@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2010, 2012). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2010, 2013). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.osgi.framework.hooks.weaving;
 
 import java.security.ProtectionDomain;
 import java.util.List;
+import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.framework.wiring.BundleWiring;
 
 /**
@@ -29,25 +30,92 @@ import org.osgi.framework.wiring.BundleWiring;
  * should be added to the bundle as dynamic imports.
  * 
  * <p>
- * After weaving is {@link #isWeavingComplete() complete}, this object becomes
- * effectively immutable.
+ * Upon entering one of the terminal states, this object becomes effectively
+ * immutable.
  * 
  * @NotThreadSafe
- * @noimplement
- * @version $Id: 549caef41027c8f0d0fdb4deae756eae6b69d1ee $
+ * @author $Id: b86db7713c738ae7147fe86f754302e2e324676b $
  */
+@ProviderType
 public interface WovenClass {
+	/**
+	 * The woven class is being transformed.
+	 * 
+	 * <p>
+	 * The woven class is in this state while {@link WeavingHook weaving hooks}
+	 * are being called. The woven class is mutable so the {@link #getBytes()
+	 * class bytes} may be {@link #setBytes(byte[]) modified} and
+	 * {@link #getDynamicImports() dynamic imports} may be added. If a weaving
+	 * hook throws an exception the state transitions to
+	 * {@link #TRANSFORMING_FAILED}. Otherwise, after the last weaving hook has
+	 * been successfully called, the state transitions to {@link #TRANSFORMED}.
+	 * 
+	 * @since 1.1
+	 */
+	int	TRANSFORMING		= 0x00000001;
+
+	/**
+	 * The woven class has been transformed.
+	 * 
+	 * <p>
+	 * The woven class is in this state after {@link WeavingHook weaving hooks}
+	 * have been called and before the class is defined. The woven class cannot
+	 * be further transformed. The woven class is in this state while defining
+	 * the class. If a failure occurs while defining the class, the state
+	 * transitions to {@link #DEFINE_FAILED}. Otherwise, after the class has
+	 * been defined, the state transitions to {@link #DEFINED}.
+	 * 
+	 * @since 1.1
+	 */
+	int	TRANSFORMED			= 0x00000002;
+
+	/**
+	 * The woven class has been defined.
+	 * <p>
+	 * The woven class is in this state after the class is defined. The woven
+	 * class cannot be further transformed. This is a terminal state. Upon
+	 * entering this state, this object is effectively immutable, the
+	 * {@link #getBundleWiring() bundle wiring} has been updated with the
+	 * {@link #getDynamicImports() dynamic import requirements} and the class
+	 * has been {@link #getDefinedClass() defined}.
+	 * 
+	 * @since 1.1
+	 */
+	int	DEFINED				= 0x00000004;
+
+	/**
+	 * The woven class failed to transform.
+	 * <p>
+	 * The woven class is in this state if a {@link WeavingHook weaving hook}
+	 * threw an exception. The woven class cannot be further transformed or
+	 * defined. This is a terminal state. Upon entering this state, this object
+	 * is effectively immutable.
+	 * 
+	 * @since 1.1
+	 */
+	int	TRANSFORMING_FAILED	= 0x00000008;
+
+	/**
+	 * The woven class failed to define.
+	 * <p>
+	 * The woven class is in this state when a failure occurs while defining the
+	 * class. The woven class cannot be further transformed or defined. This is
+	 * a terminal state. Upon entering this state, this object is effectively
+	 * immutable.
+	 * 
+	 * @since 1.1
+	 */
+	int	DEFINE_FAILED		= 0x00000010;
 
 	/**
 	 * Returns the class file bytes to be used to define the
 	 * {@link WovenClass#getClassName() named} class.
 	 * 
 	 * <p>
-	 * While weaving is not {@link #isWeavingComplete() complete}, this method
-	 * returns a reference to the class files byte array contained in this
-	 * object. After weaving is {@link #isWeavingComplete() complete}, this
-	 * object becomes effectively immutable and a copy of the class file byte
-	 * array is returned.
+	 * While in the {@link #TRANSFORMING} state, this method returns a reference
+	 * to the class files byte array contained in this object. After leaving the
+	 * {@link #TRANSFORMING} state, this woven class can no longer be
+	 * transformed and a copy of the class file byte array is returned.
 	 * 
 	 * @return The bytes to be used to define the
 	 *         {@link WovenClass#getClassName() named} class.
@@ -64,10 +132,10 @@ public interface WovenClass {
 	 * weave} method by the framework.
 	 * 
 	 * <p>
-	 * While weaving is not {@link #isWeavingComplete() complete}, this method
-	 * replaces the reference to the array contained in this object with the
-	 * specified array. After weaving is {@link #isWeavingComplete() complete},
-	 * this object becomes effectively immutable and this method will throw an
+	 * While in the {@link #TRANSFORMING} state, this method replaces the
+	 * reference to the array contained in this object with the specified array.
+	 * After leaving the {@link #TRANSFORMING} state, this woven class can no
+	 * longer be transformed and this method will throw an
 	 * {@link IllegalStateException}.
 	 * 
 	 * @param newBytes The new classfile that will be used to define the
@@ -75,8 +143,9 @@ public interface WovenClass {
 	 *        is retained by this object and the caller must not modify the
 	 *        specified array.
 	 * @throws NullPointerException If newBytes is {@code null}.
-	 * @throws IllegalStateException If weaving is {@link #isWeavingComplete()
-	 *         complete}.
+	 * @throws IllegalStateException If state is {@link #TRANSFORMED},
+	 *         {@link #DEFINED}, {@link #TRANSFORMING_FAILED} or
+	 *         {@link #DEFINE_FAILED}.
 	 * @throws SecurityException If the caller does not have
 	 *         {@code AdminPermission[bundle,WEAVE]} and the Java runtime
 	 *         environment supports permissions.
@@ -92,12 +161,14 @@ public interface WovenClass {
 	 * weave} method by the framework.
 	 * 
 	 * <p>
-	 * After weaving is {@link #isWeavingComplete() complete}, this object
-	 * becomes effectively immutable and the returned list will be unmodifiable.
+	 * After leaving the {@link #TRANSFORMING} state, this woven class can no
+	 * longer be transformed and the returned list will be unmodifiable.
 	 * 
 	 * <p>
-	 * If the Java runtime environment supports permissions, the caller must
-	 * have {@code AdminPermission[bundle,WEAVE]} to modify the returned list.
+	 * If the Java runtime environment supports permissions, any modification to
+	 * the returned list requires {@code AdminPermission[bundle,WEAVE]}.
+	 * Additionally, any add or set modification requires
+	 * {@code PackagePermission[package,IMPORT]}.
 	 * 
 	 * @return A list containing zero or more dynamic import package
 	 *         descriptions to add to the bundle wiring for this woven class.
@@ -109,13 +180,11 @@ public interface WovenClass {
 
 	/**
 	 * Returns whether weaving is complete in this woven class. Weaving is
-	 * complete after the last {@link WeavingHook weaving hook} is called and
-	 * the class is defined.
+	 * complete after the class is defined.
 	 * 
-	 * <p>
-	 * After weaving is complete, this object becomes effectively immutable.
-	 * 
-	 * @return {@code true} weaving is complete, {@code false} otherwise.
+	 * @return {@code true} if {@link #getState() state} is {@link #DEFINED},
+	 *         {@link #TRANSFORMING_FAILED} or {@link #DEFINE_FAILED};
+	 *         {@code false} otherwise.
 	 */
 	public boolean isWeavingComplete();
 
@@ -154,4 +223,16 @@ public interface WovenClass {
 	 * @return The bundle wiring whose class loader will define the woven class.
 	 */
 	public BundleWiring getBundleWiring();
+
+	/**
+	 * Returns the current state of this woven class.
+	 * <p>
+	 * A woven class can be in only one state at any time.
+	 * 
+	 * @return Either {@link #TRANSFORMING}, {@link #TRANSFORMED},
+	 *         {@link #DEFINED}, {@link #TRANSFORMING_FAILED} or
+	 *         {@link #DEFINE_FAILED}.
+	 * @since 1.1
+	 */
+	public int getState();
 }

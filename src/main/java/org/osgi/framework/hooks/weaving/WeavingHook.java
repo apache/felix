@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2010). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2010, 2013). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 
 package org.osgi.framework.hooks.weaving;
+
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * OSGi Framework Weaving Hook Service.
@@ -34,9 +36,9 @@ package org.osgi.framework.hooks.weaving;
  * bytes as modified by previously called weaving hooks.
  * 
  * @ThreadSafe
- * @version $Id: d1985029024baba2db1c56aab1e06ee953fd6365 $
+ * @author $Id: 8d99df5b0f3e7ffa9573695923afe86de9835fde $
  */
-
+@ConsumerType
 public interface WeavingHook {
 	/**
 	 * Weaving hook method.

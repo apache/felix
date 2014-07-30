@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2012). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2013). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package org.osgi.framework;
 
 import java.util.EventListener;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * A {@code ServiceEvent} listener. {@code ServiceListener} is a listener
@@ -49,9 +50,9 @@ import java.util.EventListener;
  * @see ServiceEvent
  * @see ServicePermission
  * @ThreadSafe
- * @version $Id: 601dfda6183ab7f18cd3916958a39734ea141c25 $
+ * @author $Id: 8468dbc769382269184c932d41e084cb2fa58eb9 $
  */
-
+@ConsumerType
 public interface ServiceListener extends EventListener {
 	/**
 	 * Receives notification that a service has had a lifecycle change.

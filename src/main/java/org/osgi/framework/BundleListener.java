@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2011). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2013). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package org.osgi.framework;
 
 import java.util.EventListener;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * A {@code BundleEvent} listener. {@code BundleListener} is a listener
@@ -34,9 +35,9 @@ import java.util.EventListener;
  * 
  * @see BundleEvent
  * @NotThreadSafe
- * @version $Id: d48b4a8a59c839466a3d749dde23980d236f58c6 $
+ * @author $Id: 2c27d37a3a77e1c80f9b022f8dc2f614dff5f5ef $
  */
-
+@ConsumerType
 public interface BundleListener extends EventListener {
 	/**
 	 * Receives notification that a bundle has had a lifecycle change.

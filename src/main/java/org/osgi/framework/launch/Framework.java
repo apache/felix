@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2008, 2012). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2008, 2014). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,12 @@ package org.osgi.framework.launch;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Enumeration;
+import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkEvent;
+import org.osgi.framework.FrameworkListener;
 
 /**
  * A Framework instance. A Framework is also known as a System Bundle.
@@ -33,10 +35,27 @@ import org.osgi.framework.FrameworkEvent;
  * instance.
  * 
  * @ThreadSafe
- * @noimplement
- * @version $Id: e76240d5de584d1666880d9bc358571a76cbd8fb $
+ * @author $Id: 25b603f31ba381c47a8db8a9f2e006e13588877a $
  */
+@ProviderType
 public interface Framework extends Bundle {
+
+	/**
+	 * Initialize this Framework.
+	 * <p>
+	 * This method performs the same function as calling
+	 * {@link #init(FrameworkListener...)} with no framework listeners.
+	 * 
+	 * @throws BundleException If this Framework could not be initialized.
+	 * @throws SecurityException If the Java Runtime Environment supports
+	 *         permissions and the caller does not have the appropriate
+	 *         {@code AdminPermission[this,EXECUTE]} or if there is a security
+	 *         manager already installed and the
+	 *         {@link Constants#FRAMEWORK_SECURITY} configuration property is
+	 *         set.
+	 * @see #init(FrameworkListener...)
+	 */
+	void init() throws BundleException;
 
 	/**
 	 * Initialize this Framework. After calling this method, this Framework
@@ -53,6 +72,8 @@ public interface Framework extends Bundle {
 	 * {@code ConditionalPermissionAdmin}.</li>
 	 * <li>Be {@link #adapt(Class) adaptable} to the OSGi defined types to which
 	 * a system bundle can be adapted.</li>
+	 * <li>Have called the {@code start} method of the extension bundle
+	 * activator for all resolved extension bundles.</li>
 	 * </ul>
 	 * 
 	 * <p>
@@ -63,6 +84,17 @@ public interface Framework extends Bundle {
 	 * This method does nothing if called when this Framework is in the
 	 * {@link #STARTING}, {@link #ACTIVE} or {@link #STOPPING} states.
 	 * 
+	 * <p>
+	 * All framework events fired by this method method are also delivered to
+	 * the specified FrameworkListeners in the order they are specified before
+	 * returning from this method. After returning from this method the
+	 * specified listeners are no longer notified of framework events.
+	 * 
+	 * @param listeners Zero or more listeners to be notified when framework
+	 *        events occur while initializing the framework. The specified
+	 *        listeners do not need to be otherwise registered with the
+	 *        framework. If a specified listener is registered with the
+	 *        framework, it will be notified twice for each framework event.
 	 * @throws BundleException If this Framework could not be initialized.
 	 * @throws SecurityException If the Java Runtime Environment supports
 	 *         permissions and the caller does not have the appropriate
@@ -70,9 +102,9 @@ public interface Framework extends Bundle {
 	 *         manager already installed and the
 	 *         {@link Constants#FRAMEWORK_SECURITY} configuration property is
 	 *         set.
-	 * 
+	 * @since 1.2
 	 */
-	void init() throws BundleException;
+	void init(FrameworkListener... listeners) throws BundleException;
 
 	/**
 	 * Wait until this Framework has completely stopped. The {@code stop} and
@@ -326,6 +358,20 @@ public interface Framework extends Bundle {
 	 *         bundle from which to return an entry.
 	 */
 	URL getEntry(String path);
+
+	/**
+	 * Returns the time when the set of bundles in this framework was last
+	 * modified. The set of bundles is considered to be modified when a bundle
+	 * is installed, updated or uninstalled.
+	 * 
+	 * <p>
+	 * The time value is the number of milliseconds since January 1, 1970,
+	 * 00:00:00 UTC.
+	 * 
+	 * @return The time when the set of bundles in this framework was last
+	 *         modified.
+	 */
+	long getLastModified();
 
 	/**
 	 * Returns {@code null} as a framework implementation does not have a proper

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2011, 2012). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2011, 2013). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import java.util.StringTokenizer;
  * 
  * @since 1.7
  * @Immutable
- * @version $Id: d0c21e6a5015a7fa0b33179a29122ea7d137145a $
+ * @author $Id: 1f5fa660a1a42e83371fe0d2c61ae79ce1cb1710 $
  */
 
 public class VersionRange {
@@ -123,7 +123,7 @@ public class VersionRange {
 	 * 
 	 * @param range String representation of the version range. The versions in
 	 *        the range must contain no whitespace. Other whitespace in the
-	 *        range string is ignored.
+	 *        range string is ignored. Must not be {@code null}.
 	 * @throws IllegalArgumentException If {@code range} is improperly
 	 *         formatted.
 	 */
@@ -191,7 +191,7 @@ public class VersionRange {
 	 */
 	private static Version parseVersion(String version, String range) {
 		try {
-			return Version.parseVersion(version);
+			return Version.valueOf(version);
 		} catch (IllegalArgumentException e) {
 			IllegalArgumentException iae = new IllegalArgumentException("invalid range \"" + range + "\": " + e.getMessage());
 			iae.initCause(e);
@@ -377,9 +377,11 @@ public class VersionRange {
 	 * 
 	 * @return The string representation of this version range.
 	 */
+	@Override
 	public String toString() {
-		if (versionRangeString != null) {
-			return versionRangeString;
+		String s = versionRangeString;
+		if (s != null) {
+			return s;
 		}
 		String leftVersion = left.toString();
 		if (right == null) {
@@ -402,14 +404,16 @@ public class VersionRange {
 	 * 
 	 * @return An integer which is a hash code value for this object.
 	 */
+	@Override
 	public int hashCode() {
-		if (hash != 0) {
-			return hash;
+		int h = hash;
+		if (h != 0) {
+			return h;
 		}
 		if (empty) {
 			return hash = 31;
 		}
-		int h = 31 + (leftClosed ? 7 : 5);
+		h = 31 + (leftClosed ? 7 : 5);
 		h = 31 * h + left.hashCode();
 		if (right != null) {
 			h = 31 * h + right.hashCode();
@@ -430,6 +434,7 @@ public class VersionRange {
 	 * @return {@code true} if {@code object} is a {@code VersionRange} and is
 	 *         equal to this object; {@code false} otherwise.
 	 */
+	@Override
 	public boolean equals(Object object) {
 		if (object == this) { // quicktest
 			return true;
@@ -471,8 +476,15 @@ public class VersionRange {
 		}
 
 		StringBuffer result = new StringBuffer(128);
-		if (right != null) {
+		final boolean needPresence = !leftClosed && ((right == null) || !rightClosed);
+		final boolean multipleTerms = needPresence || (right != null);
+		if (multipleTerms) {
 			result.append("(&");
+		}
+		if (needPresence) {
+			result.append('(');
+			result.append(attributeName);
+			result.append("=*)");
 		}
 		if (leftClosed) {
 			result.append('(');
@@ -501,9 +513,31 @@ public class VersionRange {
 				result.append(right.toString0());
 				result.append("))");
 			}
+		}
+		if (multipleTerms) {
 			result.append(')');
 		}
 
 		return result.toString();
+	}
+
+	/**
+	 * Returns a {@code VersionRange} object holding the version range in the
+	 * specified {@code String}.
+	 * 
+	 * <p>
+	 * See {@link #VersionRange(String)} for the format of the version range
+	 * string.
+	 * 
+	 * @param range String representation of the version range. The versions in
+	 *        the range must contain no whitespace. Other whitespace in the
+	 *        range string is ignored. Must not be {@code null}.
+	 * @return A {@code VersionRange} object representing the version range.
+	 * @throws IllegalArgumentException If {@code range} is improperly
+	 *         formatted.
+	 * @since 1.8
+	 */
+	public static VersionRange valueOf(String range) {
+		return new VersionRange(range);
 	}
 }

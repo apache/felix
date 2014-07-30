@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2004, 2012). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2004, 2013). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ import java.util.Map;
  * 
  * @since 1.3
  * @ThreadSafe
- * @version $Id: ccba905e3373800dfdb080118e97145abf778da2 $
+ * @author $Id: 5d3a115a2622919f564e2a2f46d70090ad9859cb $
  */
 
 public final class BundlePermission extends BasicPermission {
@@ -287,6 +287,7 @@ public final class BundlePermission extends BasicPermission {
 	 * @return {@code true} if the specified {@code BundlePermission} action is
 	 *         implied by this object; {@code false} otherwise.
 	 */
+	@Override
 	public boolean implies(Permission p) {
 		if (!(p instanceof BundlePermission)) {
 			return false;
@@ -309,6 +310,7 @@ public final class BundlePermission extends BasicPermission {
 	 * @return Canonical string representation of the {@code BundlePermission
 	 *         } actions.
 	 */
+	@Override
 	public String getActions() {
 		String result = actions;
 		if (result == null) {
@@ -351,6 +353,7 @@ public final class BundlePermission extends BasicPermission {
 	 * 
 	 * @return A new {@code PermissionCollection} object.
 	 */
+	@Override
 	public PermissionCollection newPermissionCollection() {
 		return new BundlePermissionCollection();
 	}
@@ -368,6 +371,7 @@ public final class BundlePermission extends BasicPermission {
 	 *         has the same bundle symbolic name and actions as this
 	 *         {@code BundlePermission} object; {@code false} otherwise.
 	 */
+	@Override
 	public boolean equals(Object obj) {
 		if (obj == this) {
 			return true;
@@ -387,6 +391,7 @@ public final class BundlePermission extends BasicPermission {
 	 * 
 	 * @return A hash code value for this object.
 	 */
+	@Override
 	public int hashCode() {
 		int h = 31 * 17 + getName().hashCode();
 		h = 31 * h + getActions().hashCode();
@@ -461,6 +466,7 @@ final class BundlePermissionCollection extends PermissionCollection {
 	 * @throws SecurityException If this {@code BundlePermissionCollection}
 	 *         object has been marked read-only.
 	 */
+	@Override
 	public void add(final Permission permission) {
 		if (!(permission instanceof BundlePermission)) {
 			throw new IllegalArgumentException("invalid permission: " + permission);
@@ -500,6 +506,7 @@ final class BundlePermissionCollection extends PermissionCollection {
 	 * @return {@code true} if {@code permission} is a proper subset of a
 	 *         permission in the set; {@code false} otherwise.
 	 */
+	@Override
 	public boolean implies(final Permission permission) {
 		if (!(permission instanceof BundlePermission)) {
 			return false;
@@ -559,6 +566,7 @@ final class BundlePermissionCollection extends PermissionCollection {
 	 * 
 	 * @return Enumeration of all {@code BundlePermission} objects.
 	 */
+	@Override
 	public synchronized Enumeration<Permission> elements() {
 		List<Permission> all = new ArrayList<Permission>(permissions.values());
 		return Collections.enumeration(all);
@@ -577,6 +585,7 @@ final class BundlePermissionCollection extends PermissionCollection {
 
 	private synchronized void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
 		ObjectInputStream.GetField gfields = in.readFields();
+		@SuppressWarnings("unchecked")
 		Hashtable<String, BundlePermission> hashtable = (Hashtable<String, BundlePermission>) gfields.get("permissions", null);
 		permissions = new HashMap<String, BundlePermission>(hashtable);
 		all_allowed = gfields.get("all_allowed", false);

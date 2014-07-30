@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2005, 2012). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2005, 2013). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ import javax.security.auth.x500.X500Principal;
  * 
  * @since 1.3
  * @ThreadSafe
- * @version $Id: 1f46ea2bbbe2a1242fdaf0877709fb9c02eefae1 $
+ * @author $Id: e93d15cef98c0e7f425f3b076d317c46ebb9a52a $
  */
 public class FrameworkUtil {
 	/**
@@ -539,6 +539,7 @@ public class FrameworkUtil {
 		 * 
 		 * @return This {@code Filter}'s filter string.
 		 */
+		@Override
 		public String toString() {
 			String result = filterString;
 			if (result == null) {
@@ -661,6 +662,7 @@ public class FrameworkUtil {
 		 *         {@code this.toString().equals(obj.toString()}; {@code false}
 		 *         otherwise.
 		 */
+		@Override
 		public boolean equals(Object obj) {
 			if (obj == this) {
 				return true;
@@ -682,6 +684,7 @@ public class FrameworkUtil {
 		 * 
 		 * @return The hashCode of this {@code Filter}.
 		 */
+		@Override
 		public int hashCode() {
 			return this.toString().hashCode();
 		}
@@ -768,6 +771,7 @@ public class FrameworkUtil {
 				return compare_Boolean(operation, ((Boolean) value1).booleanValue(), value2);
 			}
 			if (value1 instanceof Comparable<?>) {
+				@SuppressWarnings("unchecked")
 				Comparable<Object> comparable = (Comparable<Object>) value1;
 				return compare_Comparable(operation, comparable, value2);
 			}
@@ -1615,6 +1619,7 @@ public class FrameworkUtil {
 			this.keys = keyList.toArray(new String[keyList.size()]);
 		}
 
+		@Override
 		public Object get(Object o) {
 			String k = (String) o;
 			for (String key : keys) {
@@ -1643,6 +1648,7 @@ public class FrameworkUtil {
 			this.reference = reference;
 		}
 
+		@Override
 		public Object get(Object key) {
 			if (reference == null) {
 				return null;
@@ -1655,14 +1661,14 @@ public class FrameworkUtil {
 		}
 	}
 
-	static private final class SetAccessibleAction implements PrivilegedAction<Object> {
+	static private final class SetAccessibleAction implements PrivilegedAction<Void> {
 		private final AccessibleObject	accessible;
 
 		SetAccessibleAction(AccessibleObject accessible) {
 			this.accessible = accessible;
 		}
 
-		public Object run() {
+		public Void run() {
 			accessible.setAccessible(true);
 			return null;
 		}
@@ -1772,45 +1778,51 @@ public class FrameworkUtil {
 		 * wildcard ("*"), or a List of Strings, each String representing a
 		 * name/value pair in the RDN.
 		 * 
-		 * @param dnChain
+		 * @param pattern
 		 * @return a list of DNs.
 		 * @throws IllegalArgumentException
 		 */
-		private static List<Object> parseDNchainPattern(String dnChain) {
-			if (dnChain == null) {
-				throw new IllegalArgumentException("The DN chain must not be null.");
+		private static List<Object> parseDNchainPattern(String pattern) {
+			if (pattern == null) {
+				throw new IllegalArgumentException("The pattern must not be null.");
 			}
 			List<Object> parsed = new ArrayList<Object>();
-			int startIndex = 0;
-			startIndex = skipSpaces(dnChain, startIndex);
-			while (startIndex < dnChain.length()) {
+			final int length = pattern.length();
+			char c = ';'; // start with semi-colon to detect empty pattern
+			for (int startIndex = skipSpaces(pattern, 0); startIndex < length;) {
+				int cursor = startIndex;
 				int endIndex = startIndex;
-				boolean inQuote = false;
-				out: while (endIndex < dnChain.length()) {
-					char c = dnChain.charAt(endIndex);
+				out: for (boolean inQuote = false; cursor < length; cursor++) {
+					c = pattern.charAt(cursor);
 					switch (c) {
 						case '"' :
 							inQuote = !inQuote;
 							break;
 						case '\\' :
-							endIndex++; // skip the escaped char
+							cursor++; // skip the escaped char
+							if (cursor == length) {
+								throw new IllegalArgumentException("unterminated escape");
+							}
 							break;
 						case ';' :
-							if (!inQuote)
-								break out;
+							if (!inQuote) {
+								break out; // end of pattern
+							}
+							break;
 					}
-					endIndex++;
+					if (c != ' ') { // ignore trailing whitespace
+						endIndex = cursor + 1;
+					}
 				}
-				if (endIndex > dnChain.length()) {
-					throw new IllegalArgumentException("unterminated escape");
-				}
-				parsed.add(dnChain.substring(startIndex, endIndex));
-				startIndex = endIndex + 1;
-				startIndex = skipSpaces(dnChain, startIndex);
+				parsed.add(pattern.substring(startIndex, endIndex));
+				startIndex = skipSpaces(pattern, cursor + 1);
+			}
+			if (c == ';') { // last non-whitespace character was a semi-colon
+				throw new IllegalArgumentException("empty pattern");
 			}
 
-			// Now we parse is a list of strings, lets make List of rdn out
-			// of them
+			// Now we have parsed into a list of strings, lets make List of rdn
+			// out of them
 			for (int i = 0; i < parsed.size(); i++) {
 				String dn = (String) parsed.get(i);
 				if (dn.equals(STAR_WILDCARD) || dn.equals(MINUS_WILDCARD)) {
@@ -1818,20 +1830,18 @@ public class FrameworkUtil {
 				}
 				List<Object> rdns = new ArrayList<Object>();
 				if (dn.charAt(0) == '*') {
-					if (dn.charAt(1) != ',') {
+					int index = skipSpaces(dn, 1);
+					if (dn.charAt(index) != ',') {
 						throw new IllegalArgumentException("invalid wildcard prefix");
 					}
 					rdns.add(STAR_WILDCARD);
-					dn = new X500Principal(dn.substring(2)).getName(X500Principal.CANONICAL);
+					dn = new X500Principal(dn.substring(index + 1)).getName(X500Principal.CANONICAL);
 				} else {
 					dn = new X500Principal(dn).getName(X500Principal.CANONICAL);
 				}
 				// Now dn is a nice CANONICAL DN
 				parseDN(dn, rdns);
 				parsed.set(i, rdns);
-			}
-			if (parsed.size() == 0) {
-				throw new IllegalArgumentException("empty DN chain");
 			}
 			return parsed;
 		}
@@ -2056,7 +2066,7 @@ public class FrameworkUtil {
 		 *        "cn=me,c=US;*;cn=you" will match
 		 *        "cn=me,c=US";cn=you" and "cn=me,c=US;cn=her;cn=you". The
 		 *        pattern "cn=me,c=US;-;cn=you" will match "cn=me,c=US";cn=you"
-		 *        and "cn=me,c=US;cn=her;cn=him;cn=you".
+		 *        and "cn=me,c=US;cn=her;cn=him;cn=you".</li>
 		 *        <li>As a DN prefix. In this case, the DN must start with "*,".
 		 *        The wild card will match zero or more RDNs at the start of a
 		 *        DN. For example, "*,cn=me,c=US;cn=you" will match

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2008, 2012). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2008, 2013). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@
 package org.osgi.framework.hooks.service;
 
 import java.util.Collection;
+import org.osgi.annotation.versioning.ConsumerType;
+import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -27,9 +29,9 @@ import org.osgi.framework.BundleContext;
  * addition and removal.
  * 
  * @ThreadSafe
- * @version $Id: 94029e2b70119793b3e7d77d6e1d5052d9ee1723 $
+ * @author $Id: 34bd086f723505e6ec22dadd9f0e47e92f80352b $
  */
-
+@ConsumerType
 public interface ListenerHook {
 	/**
 	 * Added listeners hook method. This method is called to provide the hook
@@ -66,8 +68,8 @@ public interface ListenerHook {
 	 * which added the Service Listener and the filter with which it was added.
 	 * 
 	 * @ThreadSafe
-	 * @noimplement
 	 */
+	@ProviderType
 	public interface ListenerInfo {
 		/**
 		 * Return the context of the bundle which added the listener.

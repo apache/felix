@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+
 import org.apache.felix.framework.util.ImmutableList;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
 import org.osgi.framework.AdminPermission;
@@ -373,4 +374,12 @@ class WovenClassImpl implements WovenClass, List<String>
         }
         return bytes;
     }
+
+    /* (non-Javadoc)
+     * @see org.osgi.framework.hooks.weaving.WovenClass#getState()
+     */
+    public int getState() {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
 }

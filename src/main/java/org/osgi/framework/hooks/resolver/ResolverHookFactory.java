@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2011, 2012). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2011, 2013). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package org.osgi.framework.hooks.resolver;
 
 import java.util.Collection;
+import org.osgi.annotation.versioning.ConsumerType;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.FrameworkWiring;
@@ -31,8 +32,9 @@ import org.osgi.framework.wiring.FrameworkWiring;
  * 
  * @ThreadSafe
  * @see ResolverHook
- * @version $Id: e0a2f3ad081c31bbb682fa366c15a3080bf6da2b $
+ * @author $Id: d073890a9814291f258c9326f720323d7f4d7d90 $
  */
+@ConsumerType
 public interface ResolverHookFactory {
 	/**
 	 * This method is called by the framework each time a resolve process begins

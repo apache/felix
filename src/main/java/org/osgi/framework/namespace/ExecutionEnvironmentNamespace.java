@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2012). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2012, 2013). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import org.osgi.resource.Namespace;
  * {@code String}, unless otherwise indicated.
  * 
  * @Immutable
- * @version $Id: e1c30aac8efacc1b21ab20ffebcc1af30a1054a8 $
+ * @author $Id: 45a233050d35a5debc8a7d1be1f7e81178916984 $
  */
 public final class ExecutionEnvironmentNamespace extends Namespace {
 
