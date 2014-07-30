@@ -5297,11 +5297,36 @@ public class Felix extends BundleImpl implements Framework
         return m_urlHandlersActivator.getContentHandlerService(mimeType);
     }
 
-    /* (non-Javadoc)
+    /**
      * @see org.osgi.framework.launch.Framework#init(org.osgi.framework.FrameworkListener[])
      */
-    public void init(FrameworkListener... listeners) throws BundleException {
-        this.init(); // TODO
-    }
+    public void init(final FrameworkListener... listeners) throws BundleException
+    {
+        // add framework listeners
+        if ( listeners != null )
+        {
+            for(final FrameworkListener fl : listeners)
+            {
+                addFrameworkListener(this, fl);
+            }
+        }
 
+        // call init
+        try
+        {
+            this.init();
+        }
+
+        // remove framework listeners
+        finally
+        {
+            if ( listeners != null )
+            {
+                for(final FrameworkListener fl : listeners)
+                {
+                    removeFrameworkListener(this, fl);
+                }
+            }
+        }
+    }
 }
