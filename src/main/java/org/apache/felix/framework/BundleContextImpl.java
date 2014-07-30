@@ -531,9 +531,46 @@ class BundleContextImpl implements FelixBundleContext
      */
     public <S> ServiceObjects<S> getServiceObjects(final ServiceReference<S> ref)
     {
-        // Get the service registration.
-        final ServiceRegistrationImpl reg =
-            ((ServiceRegistrationImpl.ServiceReferenceImpl) ref).getRegistration();
-        return reg.getServiceObjects(m_bundle);
+        return new ServiceObjectsImpl(ref);
     }
+
+    //
+    // ServiceObjects implementation
+    //
+    class ServiceObjectsImpl<S> implements ServiceObjects<S>
+    {
+        private final ServiceReference<S> m_ref;
+
+        public ServiceObjectsImpl(final ServiceReference<S> ref)
+        {
+            this.m_ref = ref;
+        }
+
+        public S getService() {
+            // special handling for prototype scope
+            if ( m_ref.getProperty(Constants.SERVICE_SCOPE) == Constants.SCOPE_PROTOTYPE )
+            {
+                throw new UnsupportedOperationException();
+            }
+            // getService handles singleton and bundle scope
+            return BundleContextImpl.this.getService(m_ref);
+        }
+
+        public void ungetService(final S service)
+        {
+            // special handling for prototype scope
+            if ( m_ref.getProperty(Constants.SERVICE_SCOPE) == Constants.SCOPE_PROTOTYPE )
+            {
+                throw new UnsupportedOperationException();
+            }
+            // ungetService handles singleton and bundle scope
+            BundleContextImpl.this.ungetService(m_ref);
+        }
+
+        public ServiceReference<S> getServiceReference()
+        {
+            return m_ref;
+        }
+    }
+
 }

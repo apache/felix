@@ -36,9 +36,9 @@ import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleReference;
 import org.osgi.framework.Constants;
+import org.osgi.framework.PrototypeServiceFactory;
 import org.osgi.framework.ServiceException;
 import org.osgi.framework.ServiceFactory;
-import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.wiring.BundleCapability;
@@ -60,7 +60,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
     // Service factory interface.
     private volatile ServiceFactory m_factory;
     // Associated property dictionary.
-    private volatile Map m_propMap = new StringMap();
+    private volatile Map<String, Object> m_propMap = new StringMap();
     // Re-usable service reference.
     private final ServiceReferenceImpl m_ref;
     // Flag indicating that we are unregistering.
@@ -293,18 +293,18 @@ class ServiceRegistrationImpl implements ServiceRegistration
         }
     }
 
-    private void initializeProperties(Dictionary dict)
+    private void initializeProperties(Dictionary<String, Object> dict)
     {
         // Create a case-insensitive map for the properties.
-        Map props = new StringMap();
+        Map<String, Object> props = new StringMap();
 
         if (dict != null)
         {
             // Make sure there are no duplicate keys.
-            Enumeration keys = dict.keys();
+            Enumeration<String> keys = dict.keys();
             while (keys.hasMoreElements())
             {
-                Object key = keys.nextElement();
+                String key = keys.nextElement();
                 if (props.get(key) == null)
                 {
                     props.put(key, dict.get(key));
@@ -320,6 +320,16 @@ class ServiceRegistrationImpl implements ServiceRegistration
         props.put(Constants.OBJECTCLASS, m_classes);
         props.put(Constants.SERVICE_ID, m_serviceId);
         props.put(Constants.SERVICE_BUNDLEID, m_bundle.getBundleId());
+        if ( m_factory != null )
+        {
+            props.put(Constants.SERVICE_SCOPE,
+                      (m_factory instanceof PrototypeServiceFactory
+                       ? Constants.SCOPE_PROTOTYPE : Constants.SCOPE_BUNDLE));
+        }
+        else
+        {
+            props.put(Constants.SERVICE_SCOPE, Constants.SCOPE_SINGLETON);
+        }
 
         // Update the service property map.
         m_propMap = props;
@@ -402,14 +412,6 @@ class ServiceRegistrationImpl implements ServiceRegistration
             }
             return null;
         }
-    }
-
-    /**
-     * Get the service objects for the provided bundle
-     */
-    public ServiceObjects getServiceObjects(Bundle bundle)
-    {
-        throw new UnsupportedOperationException();
     }
 
     //
