@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2012). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2013). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import java.util.EventObject;
  * @Immutable
  * @see ServiceListener
  * @see AllServiceListener
- * @version $Id: 49e34e0ad5564d6f4ca0ab0053b272c22b9fb917 $
+ * @author $Id: b27a941cb68e6416825b1b717090a2eb098733f3 $
  */
 
 public class ServiceEvent extends EventObject {

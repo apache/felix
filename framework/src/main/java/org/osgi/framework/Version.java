@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2004, 2012). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2004, 2014). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ import java.util.StringTokenizer;
  * 
  * @since 1.3
  * @Immutable
- * @version $Id: a0b5a865f7fbf2b3dcb77a13b2e99da0b64702bb $
+ * @author $Id: c24d4d37a0657ac69de29085d2d290cbb0031c4a $
  */
 
 public class Version implements Comparable<Version> {
@@ -210,13 +210,13 @@ public class Version implements Comparable<Version> {
 	 * Parses a version identifier from the specified string.
 	 * 
 	 * <p>
-	 * See {@code Version(String)} for the format of the version string.
+	 * See {@link #Version(String)} for the format of the version string.
 	 * 
 	 * @param version String representation of the version identifier. Leading
 	 *        and trailing whitespace will be ignored.
 	 * @return A {@code Version} object representing the version identifier. If
 	 *         {@code version} is {@code null} or the empty string then
-	 *         {@code emptyVersion} will be returned.
+	 *         {@link #emptyVersion} will be returned.
 	 * @throws IllegalArgumentException If {@code version} is improperly
 	 *         formatted.
 	 */
@@ -225,6 +225,30 @@ public class Version implements Comparable<Version> {
 			return emptyVersion;
 		}
 
+		return valueOf(version);
+	}
+
+	/**
+	 * Returns a {@code Version} object holding the version identifier in the
+	 * specified {@code String}.
+	 * 
+	 * <p>
+	 * See {@link #Version(String)} for the format of the version string.
+	 * 
+	 * <p>
+	 * This method performs a similar function as {@link #parseVersion(String)}
+	 * but has the static factory {@code valueOf(String)} method signature.
+	 * 
+	 * @param version String representation of the version identifier. Leading
+	 *        and trailing whitespace will be ignored. Must not be {@code null}.
+	 * @return A {@code Version} object representing the version identifier. If
+	 *         {@code version} is the empty string then {@link #emptyVersion}
+	 *         will be returned.
+	 * @throws IllegalArgumentException If {@code version} is improperly
+	 *         formatted.
+	 * @since 1.8
+	 */
+	public static Version valueOf(String version) {
 		version = version.trim();
 		if (version.length() == 0) {
 			return emptyVersion;
@@ -279,6 +303,7 @@ public class Version implements Comparable<Version> {
 	 * 
 	 * @return The string representation of this version identifier.
 	 */
+	@Override
 	public String toString() {
 		return toString0();
 	}
@@ -289,8 +314,9 @@ public class Version implements Comparable<Version> {
 	 * @return The string representation of this version identifier.
 	 */
 	String toString0() {
-		if (versionString != null) {
-			return versionString;
+		String s = versionString;
+		if (s != null) {
+			return s;
 		}
 		int q = qualifier.length();
 		StringBuffer result = new StringBuffer(20 + q);
@@ -311,11 +337,13 @@ public class Version implements Comparable<Version> {
 	 * 
 	 * @return An integer which is a hash code value for this object.
 	 */
+	@Override
 	public int hashCode() {
-		if (hash != 0) {
-			return hash;
+		int h = hash;
+		if (h != 0) {
+			return h;
 		}
-		int h = 31 * 17;
+		h = 31 * 17;
 		h = 31 * h + major;
 		h = 31 * h + minor;
 		h = 31 * h + micro;
@@ -335,6 +363,7 @@ public class Version implements Comparable<Version> {
 	 * @return {@code true} if {@code object} is a {@code Version} and is equal
 	 *         to this object; {@code false} otherwise.
 	 */
+	@Override
 	public boolean equals(Object object) {
 		if (object == this) { // quicktest
 			return true;

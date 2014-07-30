@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2009, 2012). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2009, 2013). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package org.osgi.framework.launch;
 
 import java.util.Map;
+import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.framework.Bundle;
 
 /**
@@ -44,9 +45,9 @@ import org.osgi.framework.Bundle;
  * the resource.
  * 
  * @ThreadSafe
- * @noimplement
- * @version $Id: 1684e14aa98a1f6e1ff3e0f3afa2c55982210f72 $
+ * @author $Id: c1647bcb8416b6dfa9e37c6cc146bb54c7173526 $
  */
+@ProviderType
 public interface FrameworkFactory {
 
 	/**

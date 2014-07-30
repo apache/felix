@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2002, 2011). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2002, 2013). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,7 +68,7 @@ import org.osgi.framework.Bundle;
  * 
  * @ThreadSafe
  * @noimplement
- * @version $Id: ec0295bdf246c0258261374b3ac0e4aef11f7315 $
+ * @author $Id: 42f3c6bbf682a69ea3914c737d5b0001694383db $
  * @deprecated This service has been replaced by the
  *             <code>org.osgi.framework.startlevel</code> package.
  */
@@ -100,14 +100,13 @@ public interface StartLevel {
 	 * At each intermediate start level value on the way to and including the
 	 * target start level, the Framework must:
 	 * <ol>
-	 * <li>Change the active start level to the intermediate start level value.
-	 * <li>Start bundles at the intermediate start level whose autostart
-	 * setting indicate they must be started. They are started as described in
-	 * the {@link Bundle#start(int)} method using the
-	 * {@link Bundle#START_TRANSIENT} option. The
-	 * {@link Bundle#START_ACTIVATION_POLICY} option must also be used if
-	 * {@link #isBundleActivationPolicyUsed(Bundle)} returns {@code true}
-	 * for the bundle.
+	 * <li>Change the active start level to the intermediate start level value.</li>
+	 * <li>Start bundles at the intermediate start level whose autostart setting
+	 * indicate they must be started. They are started as described in the
+	 * {@link Bundle#start(int)} method using the {@link Bundle#START_TRANSIENT}
+	 * option. The {@link Bundle#START_ACTIVATION_POLICY} option must also be
+	 * used if {@link #isBundleActivationPolicyUsed(Bundle)} returns
+	 * {@code true} for the bundle.</li>
 	 * </ol>
 	 * When this process completes after the specified start level is reached,
 	 * the Framework will fire a Framework event of type
@@ -124,8 +123,8 @@ public interface StartLevel {
 	 * <ol>
 	 * <li>Stop bundles at the intermediate start level as described in the
 	 * {@link Bundle#stop(int)} method using the {@link Bundle#STOP_TRANSIENT}
-	 * option.
-	 * <li>Change the active start level to the intermediate start level value.
+	 * option.</li>
+	 * <li>Change the active start level to the intermediate start level value.</li>
 	 * </ol>
 	 * When this process completes after the specified start level is reached,
 	 * the Framework will fire a Framework event of type

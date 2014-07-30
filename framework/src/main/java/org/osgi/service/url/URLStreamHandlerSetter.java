@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2002, 2012). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2002, 2013). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package org.osgi.service.url;
 
 import java.net.URL;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * Interface used by {@code URLStreamHandlerService} objects to call the
@@ -31,8 +32,9 @@ import java.net.URL;
  * {@code java.net.URL} for the protocol.
  * 
  * @ThreadSafe
- * @version $Id: 90f25e3961fea2150cfd31117a2237304f1518f9 $
+ * @author $Id: 96648b48a7ce8fb4baf50c7b118a0339f4efcf35 $
  */
+@ConsumerType
 public interface URLStreamHandlerSetter {
 	/**
 	 * @see "java.net.URLStreamHandler.setURL(URL,String,String,int,String,String)"
@@ -40,10 +42,12 @@ public interface URLStreamHandlerSetter {
 	 * @deprecated This method is only for compatibility with handlers written
 	 *             for JDK 1.1.
 	 */
+	@SuppressWarnings("javadoc")
 	public void setURL(URL u, String protocol, String host, int port, String file, String ref);
 
 	/**
 	 * @see "java.net.URLStreamHandler.setURL(URL,String,String,int,String,String,String,String)"
 	 */
+	@SuppressWarnings("javadoc")
 	public void setURL(URL u, String protocol, String host, int port, String authority, String userInfo, String path, String query, String ref);
 }

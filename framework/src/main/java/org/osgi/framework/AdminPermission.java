@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2012). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2013). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,8 +52,10 @@ import java.util.Map;
  * lifecycle          BundleContext.installBundle
  *                    Bundle.update
  *                    Bundle.uninstall
- * listener           BundleContext.addBundleListener for SynchronousBundleListener
- *                    BundleContext.removeBundleListener for SynchronousBundleListener
+ * listener           BundleContext.addBundleListener for
+ *                      SynchronousBundleListener
+ *                    BundleContext.removeBundleListener for
+ *                      SynchronousBundleListener
  * metadata           Bundle.getHeaders
  *                    Bundle.getLocation
  * resolve            FrameworkWiring.refreshBundles
@@ -67,7 +69,8 @@ import java.util.Map;
  * startlevel         FrameworkStartLevel.setStartLevel
  *                    FrameworkStartLevel.setInitialBundleStartLevel
  * context            Bundle.getBundleContext
- * weave              WovenClass.setBytes
+ * weave              WovenClass.getBytes
+ *                    WovenClass.setBytes
  *                    WovenClass.getDynamicImports for modification
  * </pre>
  * 
@@ -89,7 +92,7 @@ import java.util.Map;
  * Filter attribute names are processed in a case sensitive manner.
  * 
  * @ThreadSafe
- * @version $Id: cd883e81fde210ce8f0cabaebea377378d672818 $
+ * @author $Id: 2a803b07dcdc9af47ca0cb208d96fcd9c0bcfb0c $
  */
 
 public final class AdminPermission extends BasicPermission {
@@ -236,8 +239,9 @@ public final class AdminPermission extends BasicPermission {
 	 * Examples:
 	 * 
 	 * <pre>
-	 * (signer=\*,o=ACME,c=US)   
-	 * (&amp;(signer=\*,o=ACME,c=US)(name=com.acme.*)(location=http://www.acme.com/bundles/*))
+	 * (signer=\*,o=ACME,c=US)
+	 * (&amp;(signer=\*,o=ACME,c=US)(name=com.acme.*)
+	 *   (location=http://www.acme.com/bundles/*))
 	 * (id&gt;=1)
 	 * </pre>
 	 * 
@@ -593,6 +597,7 @@ public final class AdminPermission extends BasicPermission {
 	 * @return {@code true} if the specified permission is implied by this
 	 *         object; {@code false} otherwise.
 	 */
+	@Override
 	public boolean implies(Permission p) {
 		if (!(p instanceof AdminPermission)) {
 			return false;
@@ -663,6 +668,7 @@ public final class AdminPermission extends BasicPermission {
 	 * @return Canonical string representation of the {@code AdminPermission}
 	 *         actions.
 	 */
+	@Override
 	public String getActions() {
 		String result = actions;
 		if (result == null) {
@@ -740,6 +746,7 @@ public final class AdminPermission extends BasicPermission {
 	 * 
 	 * @return A new {@code PermissionCollection} object.
 	 */
+	@Override
 	public PermissionCollection newPermissionCollection() {
 		return new AdminPermissionCollection();
 	}
@@ -751,6 +758,7 @@ public final class AdminPermission extends BasicPermission {
 	 * @return {@code true} if {@code obj} is equivalent to this
 	 *         {@code AdminPermission}; {@code false} otherwise.
 	 */
+	@Override
 	public boolean equals(Object obj) {
 		if (obj == this) {
 			return true;
@@ -770,6 +778,7 @@ public final class AdminPermission extends BasicPermission {
 	 * 
 	 * @return Hash code value for this object.
 	 */
+	@Override
 	public int hashCode() {
 		int h = 31 * 17 + getName().hashCode();
 		h = 31 * h + getActions().hashCode();
@@ -833,8 +842,8 @@ public final class AdminPermission extends BasicPermission {
 		recurse.set(bundle);
 		try {
 			final Map<String, Object> map = new HashMap<String, Object>(4);
-			AccessController.doPrivileged(new PrivilegedAction<Object>() {
-				public Object run() {
+			AccessController.doPrivileged(new PrivilegedAction<Void>() {
+				public Void run() {
 					map.put("id", new Long(bundle.getBundleId()));
 					map.put("location", bundle.getLocation());
 					String name = bundle.getSymbolicName();
@@ -893,6 +902,7 @@ final class AdminPermissionCollection extends PermissionCollection {
 	 * @throws SecurityException If this {@code AdminPermissionCollection}
 	 *         object has been marked read-only.
 	 */
+	@Override
 	public void add(Permission permission) {
 		if (!(permission instanceof AdminPermission)) {
 			throw new IllegalArgumentException("invalid permission: " + permission);
@@ -936,6 +946,7 @@ final class AdminPermissionCollection extends PermissionCollection {
 	 *         {@code AdminPermission} in this collection, {@code false}
 	 *         otherwise.
 	 */
+	@Override
 	public boolean implies(Permission permission) {
 		if (!(permission instanceof AdminPermission)) {
 			return false;
@@ -979,6 +990,7 @@ final class AdminPermissionCollection extends PermissionCollection {
 	 * 
 	 * @return Enumeration of all {@code AdminPermission} objects.
 	 */
+	@Override
 	public synchronized Enumeration<Permission> elements() {
 		List<Permission> all = new ArrayList<Permission>(permissions.values());
 		return Collections.enumeration(all);
@@ -997,6 +1009,7 @@ final class AdminPermissionCollection extends PermissionCollection {
 
 	private synchronized void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
 		ObjectInputStream.GetField gfields = in.readFields();
+		@SuppressWarnings("unchecked")
 		Hashtable<String, AdminPermission> hashtable = (Hashtable<String, AdminPermission>) gfields.get("permissions", null);
 		permissions = new HashMap<String, AdminPermission>(hashtable);
 		all_allowed = gfields.get("all_allowed", false);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2011, 2012). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2011, 2013). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package org.osgi.resource;
 
 import java.util.List;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * A wiring for a resource. A wiring is associated with a resource and
@@ -28,8 +29,9 @@ import java.util.List;
  * always return the same result.
  * 
  * @ThreadSafe
- * @version $Id: b65dec3887cfa1d5731e860db558a01503c0f47d $
+ * @author $Id: 935272fa914a9cc0020549c43a3857acad2c45cc $
  */
+@ConsumerType
 public interface Wiring {
 	/**
 	 * Returns the capabilities provided by this wiring.
@@ -64,7 +66,7 @@ public interface Wiring {
 	 * @return A list containing a snapshot of the {@link Capability}s, or an
 	 *         empty list if this wiring provides no capabilities in the
 	 *         specified namespace. For a given namespace, the list contains the
-	 *         wires in the order the capabilities were specified in the
+	 *         capabilities in the order the capabilities were specified in the
 	 *         manifests of the {@link #getResource() resource} and the attached
 	 *         fragment resources<sup>&#8224;</sup> of this wiring. There is no
 	 *         ordering defined between capabilities in different namespaces.
@@ -91,11 +93,11 @@ public interface Wiring {
 	 *        {@code null} to return the requirements from all namespaces.
 	 * @return A list containing a snapshot of the {@link Requirement}s, or an
 	 *         empty list if this wiring uses no requirements in the specified
-	 *         namespace. For a given namespace, the list contains the wires in
-	 *         the order the requirements were specified in the manifests of the
-	 *         {@link #getResource() resource} and the attached fragment
-	 *         resources of this wiring. There is no ordering defined between
-	 *         requirements in different namespaces.
+	 *         namespace. For a given namespace, the list contains the
+	 *         requirements in the order the requirements were specified in the
+	 *         manifests of the {@link #getResource() resource} and the attached
+	 *         fragment resources of this wiring. There is no ordering defined
+	 *         between requirements in different namespaces.
 	 */
 	List<Requirement> getResourceRequirements(String namespace);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2010, 2012). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2010, 2013). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package org.osgi.framework.wiring;
 
 import java.util.List;
+import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleReference;
 import org.osgi.framework.Constants;
@@ -51,9 +52,9 @@ import org.osgi.resource.Resource;
  * {@link Constants#REQUIRE_CAPABILITY Require-Capability} manifest headers.
  * 
  * @ThreadSafe
- * @noimplement
- * @version $Id: e68e01a670f0ae9d6eb736414f875c8b216ed1bc $
+ * @author $Id: 1f318afdf8f5fe6097a841b49b67bf67d8c924f2 $
  */
+@ProviderType
 public interface BundleRevision extends BundleReference, Resource {
 	/**
 	 * Returns the symbolic name for this bundle revision.
@@ -235,7 +236,7 @@ public interface BundleRevision extends BundleReference, Resource {
 	 * Returns the special types of this bundle revision. The bundle revision
 	 * type values are:
 	 * <ul>
-	 * <li>{@link #TYPE_FRAGMENT}
+	 * <li>{@link #TYPE_FRAGMENT}</li>
 	 * </ul>
 	 * 
 	 * A bundle revision may be more than one type at a time. A type code is

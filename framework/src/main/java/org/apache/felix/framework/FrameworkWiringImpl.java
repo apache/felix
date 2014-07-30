@@ -21,11 +21,15 @@ package org.apache.felix.framework;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
 import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.FrameworkWiring;
+import org.osgi.resource.Requirement;
 import org.osgi.service.packageadmin.PackageAdmin;
 
 class FrameworkWiringImpl implements FrameworkWiring, Runnable
@@ -184,5 +188,12 @@ class FrameworkWiringImpl implements FrameworkWiring, Runnable
                 m_requestListeners.remove(0);
             }
         }
+    }
+
+    /* (non-Javadoc)
+     * @see org.osgi.framework.wiring.FrameworkWiring#findProviders(org.osgi.resource.Requirement)
+     */
+    public Collection<BundleCapability> findProviders(Requirement requirement) {
+        throw new UnsupportedOperationException(); // TODO
     }
 }

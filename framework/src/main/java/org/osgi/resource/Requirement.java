@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2011, 2012). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2011, 2013). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package org.osgi.resource;
 
 import java.util.Map;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * A requirement that has been declared from a {@link Resource} .
@@ -27,8 +28,9 @@ import java.util.Map;
  * always return the same result.
  * 
  * @ThreadSafe
- * @version $Id: 212b26179910f98fd2c59c3e1e7dd0d086f42b5d $
+ * @author $Id: 252221aeaaf9b189eef6e0c3798d0076a0032242 $
  */
+@ConsumerType
 public interface Requirement {
 	/**
 	 * Returns the namespace of this requirement.

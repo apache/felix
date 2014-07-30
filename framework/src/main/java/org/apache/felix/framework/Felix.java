@@ -18,10 +18,37 @@
  */
 package org.apache.felix.framework;
 
-import java.io.*;
-import java.net.*;
-import java.security.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLStreamHandler;
+import java.security.AccessControlException;
+import java.security.Permission;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.WeakHashMap;
 
 import org.apache.felix.framework.BundleWiringImpl.BundleClassLoader;
 import org.apache.felix.framework.ServiceRegistry.ServiceRegistryCallbacks;
@@ -478,6 +505,7 @@ public class Felix extends BundleImpl implements Framework
 
     // This overrides the default behavior of BundleImpl.getFramework()
     // to return "this", since the system bundle is the framework.
+    @Override
     Felix getFramework()
     {
         return this;
@@ -505,41 +533,49 @@ public class Felix extends BundleImpl implements Framework
         return super.adapt(type);
     }
 
+    @Override
     public long getBundleId()
     {
         return 0;
     }
 
+    @Override
     public long getLastModified()
     {
         return 0;
     }
 
+    @Override
     void setLastModified(long l)
     {
         // Ignore.
     }
 
+    @Override
     String _getLocation()
     {
         return Constants.SYSTEM_BUNDLE_LOCATION;
     }
 
+    @Override
     public int getPersistentState()
     {
         return Bundle.ACTIVE;
     }
 
+    @Override
     public void setPersistentStateInactive()
     {
         // Ignore.
     }
 
+    @Override
     public void setPersistentStateActive()
     {
         // Ignore.
     }
 
+    @Override
     public void setPersistentStateUninstalled()
     {
         // Ignore.
@@ -551,6 +587,7 @@ public class Felix extends BundleImpl implements Framework
      * @param defaultLevel This parameter is ignored by the system bundle.
      * @return Always returns zero.
     **/
+    @Override
     int getStartLevel(int defaultLevel)
     {
         return 0;
@@ -564,11 +601,13 @@ public class Felix extends BundleImpl implements Framework
      * @throws IllegalArgumentException Always throws exception since system
      *         bundle's start level cannot be changed.
     **/
+    @Override
     void setStartLevel(int level)
     {
         throw new IllegalArgumentException("Cannot set the system bundle's start level.");
     }
 
+    @Override
     public boolean hasPermission(Object obj)
     {
         return true;
@@ -821,7 +860,7 @@ public class Felix extends BundleImpl implements Framework
                             {
                                 if (bundle != this)
                                 {
-                                    setBundleProtectionDomain((BundleImpl) bundle, (BundleRevisionImpl) ((BundleImpl) bundle).adapt(BundleRevisionImpl.class));
+                                    setBundleProtectionDomain((BundleImpl) bundle, ((BundleImpl) bundle).adapt(BundleRevisionImpl.class));
                                 }
                             }
                             catch (Exception ex)
@@ -887,6 +926,7 @@ public class Felix extends BundleImpl implements Framework
      *
      * @throws org.osgi.framework.BundleException if any error occurs.
     **/
+    @Override
     public void start() throws BundleException
     {
         int startLevel = FelixConstants.FRAMEWORK_DEFAULT_STARTLEVEL;
@@ -936,6 +976,7 @@ public class Felix extends BundleImpl implements Framework
         fireFrameworkEvent(FrameworkEvent.STARTED, this, null);
     }
 
+    @Override
     public void start(int options) throws BundleException
     {
         start();
@@ -945,6 +986,7 @@ public class Felix extends BundleImpl implements Framework
      * This method asynchronously shuts down the framework, it must be called at the
      * end of a session in order to shutdown all active bundles.
     **/
+    @Override
     public void stop() throws BundleException
     {
         Object sm = System.getSecurityManager();
@@ -978,6 +1020,7 @@ public class Felix extends BundleImpl implements Framework
         }
     }
 
+    @Override
     public void stop(int options) throws BundleException
     {
         stop();
@@ -1022,16 +1065,19 @@ public class Felix extends BundleImpl implements Framework
         return event;
     }
 
+    @Override
     public void uninstall() throws BundleException
     {
         throw new BundleException("Cannot uninstall the system bundle.");
     }
 
+    @Override
     public void update() throws BundleException
     {
         update(null);
     }
 
+    @Override
     public void update(InputStream is) throws BundleException
     {
         Object sm = System.getSecurityManager();
@@ -1114,6 +1160,7 @@ public class Felix extends BundleImpl implements Framework
         }).start();
     }
 
+    @Override
     public String toString()
     {
         return getSymbolicName() + " [" + getBundleId() +"]";
@@ -3196,7 +3243,7 @@ public class Felix extends BundleImpl implements Framework
                 }
             }
         }
-        return (Bundle[]) bundles.toArray(new Bundle[bundles.size()]);
+        return bundles.toArray(new Bundle[bundles.size()]);
     }
 
     /**
@@ -3208,7 +3255,7 @@ public class Felix extends BundleImpl implements Framework
     Bundle[] getBundles()
     {
         Collection<Bundle> bundles = m_installedBundles[IDENTIFIER_MAP_IDX].values();
-        return (Bundle[]) bundles.toArray(new Bundle[bundles.size()]);
+        return bundles.toArray(new Bundle[bundles.size()]);
     }
 
     void addBundleListener(BundleImpl bundle, BundleListener l)
@@ -3573,7 +3620,7 @@ public class Felix extends BundleImpl implements Framework
     {
         try
         {
-            return (S) m_registry.getService(bundle, ref);
+            return m_registry.getService(bundle, ref);
         }
         catch (ServiceException ex)
         {
@@ -4385,7 +4432,7 @@ public class Felix extends BundleImpl implements Framework
             // Remove dependencies.
             m_dependencies.removeDependencies(bundle);
             // Reset the bundle object.
-            ((BundleImpl) bundle).refresh();
+            bundle.refresh();
             // Fire UNRESOLVED event if necessary
             // and notify state change..
             if (fire)
@@ -5249,4 +5296,12 @@ public class Felix extends BundleImpl implements Framework
     {
         return m_urlHandlersActivator.getContentHandlerService(mimeType);
     }
+
+    /* (non-Javadoc)
+     * @see org.osgi.framework.launch.Framework#init(org.osgi.framework.FrameworkListener[])
+     */
+    public void init(FrameworkListener... listeners) throws BundleException {
+        this.init(); // TODO
+    }
+
 }

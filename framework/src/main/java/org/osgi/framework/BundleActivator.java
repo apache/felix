@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2012). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2013). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 
 package org.osgi.framework;
+
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * Customizes the starting and stopping of a bundle.
@@ -34,19 +36,19 @@ package org.osgi.framework;
  * {@code BundleActivator}. The form of the Manifest header is:
  * 
  * <p>
- * {@code Bundle-Activator: <i>class-name</i>}
+ * {@code Bundle-Activator:} <i>class-name</i>
  * 
  * <p>
- * where {@code <i>class-name</i>} is a fully qualified Java classname.
+ * where <i>class-name</i> is a fully qualified Java classname.
  * <p>
  * The specified {@code BundleActivator} class must have a public constructor
  * that takes no parameters so that a {@code BundleActivator} object can be
  * created by {@code Class.newInstance()}.
  * 
  * @NotThreadSafe
- * @version $Id: f5b2debe0064ab60669102d0a087feaeab13dc0e $
+ * @author $Id: a9d91a8ae13157f49a6a55b0c7f25b63b6bd00bd $
  */
-
+@ConsumerType
 public interface BundleActivator {
 	/**
 	 * Called when this bundle is started so the Framework can perform the

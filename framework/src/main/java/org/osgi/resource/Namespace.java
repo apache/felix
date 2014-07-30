@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2012). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2012, 2013). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 
 package org.osgi.resource;
+
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * Capability and Requirement Namespaces base class.
@@ -34,8 +36,9 @@ package org.osgi.resource;
  * otherwise indicated.
  * 
  * @Immutable
- * @version $Id: 43c9ff5cea19546d71c4703db71a2b5070a3f2fa $
+ * @author $Id: 95a67250528646012b39e8e5a92775fbb635a8c0 $
  */
+@ConsumerType
 public abstract class Namespace {
 
 	/**
