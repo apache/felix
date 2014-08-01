@@ -1278,7 +1278,7 @@ class BundleImpl implements Bundle, BundleRevisions
                     Collection<Bundle> shrinkableCollisionCandidates = new ShrinkableCollection<Bundle>(collisionCanditates);
                     for (ServiceReference<CollisionHook> hook : hooks)
                     {
-                        CollisionHook ch = getFramework().getService(getFramework(), hook);
+                        CollisionHook ch = getFramework().getService(getFramework(), hook, false);
                         if (ch != null)
                         {
                             int operationType;

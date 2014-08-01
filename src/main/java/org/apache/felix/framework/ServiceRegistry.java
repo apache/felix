@@ -18,7 +18,17 @@
  */
 package org.apache.felix.framework;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.WeakHashMap;
 
 import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
@@ -38,21 +48,21 @@ public class ServiceRegistry
     private final Logger m_logger;
     private long m_currentServiceId = 1L;
     // Maps bundle to an array of service registrations.
-    private final Map m_regsMap = Collections.synchronizedMap(new HashMap());
+    private final Map<Bundle, ServiceRegistration<?>[]> m_regsMap = Collections.synchronizedMap(new HashMap<Bundle, ServiceRegistration<?>[]>());
     // Capability set for all service registrations.
     private final CapabilitySet m_regCapSet;
 
     // Maps registration to thread to keep track when a
     // registration is in use, which will cause other
     // threads to wait.
-    private final Map m_lockedRegsMap = new HashMap();
+    private final Map<ServiceRegistration<?>, Object> m_lockedRegsMap = new HashMap<ServiceRegistration<?>, Object>();
     // Maps bundle to an array of usage counts.
-    private final Map m_inUseMap = new HashMap();
+    private final Map<Bundle, UsageCount[]> m_inUseMap = new HashMap<Bundle, UsageCount[]>();
 
     private final ServiceRegistryCallbacks m_callbacks;
 
-    private final WeakHashMap<ServiceReference, ServiceReference> m_blackList =
-        new WeakHashMap<ServiceReference, ServiceReference>();
+    private final WeakHashMap<ServiceReference<?>, ServiceReference<?>> m_blackList =
+        new WeakHashMap<ServiceReference<?>, ServiceReference<?>>();
 
     private final static Class<?>[] m_hookClasses = {
         org.osgi.framework.hooks.bundle.CollisionHook.class,
@@ -80,12 +90,12 @@ public class ServiceRegistry
         m_regCapSet = new CapabilitySet(indices, false);
     }
 
-    public ServiceReference[] getRegisteredServices(Bundle bundle)
+    public ServiceReference<?>[] getRegisteredServices(Bundle bundle)
     {
-        ServiceRegistration[] regs = (ServiceRegistration[]) m_regsMap.get(bundle);
+        ServiceRegistration<?>[] regs = m_regsMap.get(bundle);
         if (regs != null)
         {
-            List refs = new ArrayList(regs.length);
+            List<Object> refs = new ArrayList<Object>(regs.length);
             for (int i = 0; i < regs.length; i++)
             {
                 try
@@ -97,13 +107,13 @@ public class ServiceRegistry
                     // Don't include the reference as it is not valid anymore
                 }
             }
-            return (ServiceReference[]) refs.toArray(new ServiceReference[refs.size()]);
+            return refs.toArray(new ServiceReference[refs.size()]);
         }
         return null;
     }
 
     // Caller is expected to fire REGISTERED event.
-    public ServiceRegistration registerService(
+    public ServiceRegistration<?> registerService(
         BundleContext context, String[] classNames, Object svcObj, Dictionary dict)
     {
         ServiceRegistrationImpl reg = null;
@@ -120,7 +130,7 @@ public class ServiceRegistry
             addHooks(classNames, svcObj, reg.getReference());
 
             // Get the bundles current registered services.
-            ServiceRegistration[] regs = (ServiceRegistration[]) m_regsMap.get(bundle);
+            ServiceRegistration<?>[] regs = m_regsMap.get(bundle);
             m_regsMap.put(bundle, addServiceRegistration(regs, reg));
             m_regCapSet.addCapability((BundleCapabilityImpl) reg.getReference());
         }
@@ -128,7 +138,7 @@ public class ServiceRegistry
         return reg;
     }
 
-    public void unregisterService(Bundle bundle, ServiceRegistration reg)
+    public void unregisterService(Bundle bundle, ServiceRegistration<?> reg)
     {
         // If this is a hook, it should be removed.
         removeHook(reg.getReference());
@@ -142,7 +152,7 @@ public class ServiceRegistry
             // new bundles will be able to look up the service.
 
             // Now remove the registered service.
-            ServiceRegistration[] regs = (ServiceRegistration[]) m_regsMap.get(bundle);
+            ServiceRegistration<?>[] regs = m_regsMap.get(bundle);
             m_regsMap.put(bundle, removeServiceRegistration(regs, reg));
             m_regCapSet.removeCapability((BundleCapabilityImpl) reg.getReference());
         }
@@ -155,20 +165,32 @@ public class ServiceRegistry
         }
 
         // Now forcibly unget the service object for all stubborn clients.
-        ServiceReference ref = reg.getReference();
+        ServiceReference<?> ref = reg.getReference();
         Bundle[] clients = getUsingBundles(ref);
         for (int i = 0; (clients != null) && (i < clients.length); i++)
         {
-            while (ungetService(clients[i], reg.getReference()))
-                ; // Keep removing until it is no longer possible
+            UsageCount[] usages = m_inUseMap.get(clients[i]);
+            for (int x = 0; (usages != null) && (x < usages.length); x++)
+            {
+                if (usages[x].m_ref.equals(ref))
+                {
+                	ungetService(clients[i], ref, (usages[x].m_prototype ? usages[x].m_svcObj : null));
+                }
+            }
         }
         // Invalidate registration
         ((ServiceRegistrationImpl) reg).invalidate();
         // Bundles are allowed to get a reference while unregistering
         for (int i = 0; (clients != null) && (i < clients.length); i++)
         {
-            while (ungetService(clients[i], ref))
-                ; // Keep removing until it is no longer possible
+            UsageCount[] usages = m_inUseMap.get(clients[i]);
+            for (int x = 0; (usages != null) && (x < usages.length); x++)
+            {
+                if (usages[x].m_ref.equals(ref))
+                {
+                	ungetService(clients[i], ref, (usages[x].m_prototype ? usages[x].m_svcObj : null));
+                }
+            }
         }
     }
 
@@ -182,10 +204,10 @@ public class ServiceRegistry
     public void unregisterServices(Bundle bundle)
     {
         // Simply remove all service registrations for the bundle.
-        ServiceRegistration[] regs = null;
+        ServiceRegistration<?>[] regs = null;
         synchronized (this)
         {
-            regs = (ServiceRegistration[]) m_regsMap.get(bundle);
+            regs = m_regsMap.get(bundle);
         }
 
         // Note, there is no race condition here with respect to the
@@ -231,7 +253,7 @@ public class ServiceRegistry
         else if ((className != null) && (filter != null))
         {
             // Return services matching the class name and filter.
-            List filters = new ArrayList(2);
+            List<SimpleFilter> filters = new ArrayList<SimpleFilter>(2);
             filters.add(new SimpleFilter(Constants.OBJECTCLASS, className, SimpleFilter.EQ));
             filters.add(filter);
             filter = new SimpleFilter(null, filters, SimpleFilter.AND);
@@ -240,15 +262,15 @@ public class ServiceRegistry
 
         Set<BundleCapability> matches = m_regCapSet.match(filter, false);
 
-        return new ArrayList(matches);
+        return new ArrayList<BundleCapability>(matches);
     }
 
-    public synchronized ServiceReference[] getServicesInUse(Bundle bundle)
+    public synchronized ServiceReference<?>[] getServicesInUse(Bundle bundle)
     {
-        UsageCount[] usages = (UsageCount[]) m_inUseMap.get(bundle);
+        UsageCount[] usages = m_inUseMap.get(bundle);
         if (usages != null)
         {
-            ServiceReference[] refs = new ServiceReference[usages.length];
+            ServiceReference<?>[] refs = new ServiceReference[usages.length];
             for (int i = 0; i < refs.length; i++)
             {
                 refs[i] = usages[i].m_ref;
@@ -258,7 +280,8 @@ public class ServiceRegistry
         return null;
     }
 
-    public <S> S getService(Bundle bundle, ServiceReference<S> ref)
+    @SuppressWarnings("unchecked")
+    public <S> S getService(Bundle bundle, ServiceReference<S> ref, boolean isPrototype)
     {
         UsageCount usage = null;
         Object svcObj = null;
@@ -299,14 +322,15 @@ public class ServiceRegistry
             if (reg.isValid())
             {
                 // Get the usage count, if any.
-                usage = getUsageCount(bundle, ref);
+                // if prototype, we always create a new usage
+                usage = isPrototype ? null : getUsageCount(bundle, ref, null);
 
                 // If we don't have a usage count, then create one and
                 // since the spec says we increment usage count before
                 // actually getting the service object.
                 if (usage == null)
                 {
-                    usage = addUsageCount(bundle, ref);
+                    usage = addUsageCount(bundle, ref, isPrototype);
                 }
 
                 // Increment the usage count and grab the already retrieved
@@ -340,7 +364,7 @@ public class ServiceRegistry
                 // unregistered while we didn't hold the lock.
                 if (!reg.isValid() || (svcObj == null))
                 {
-                    flushUsageCount(bundle, ref);
+                    flushUsageCount(bundle, ref, usage);
                 }
                 else
                 {
@@ -354,7 +378,7 @@ public class ServiceRegistry
         return (S) svcObj;
     }
 
-    public boolean ungetService(Bundle bundle, ServiceReference ref)
+    public boolean ungetService(Bundle bundle, ServiceReference<?> ref, Object svcObj)
     {
         UsageCount usage = null;
         ServiceRegistrationImpl reg =
@@ -384,7 +408,7 @@ public class ServiceRegistry
             }
 
             // Get the usage count.
-            usage = getUsageCount(bundle, ref);
+            usage = getUsageCount(bundle, ref, svcObj);
             // If there is no cached services, then just return immediately.
             if (usage == null)
             {
@@ -424,7 +448,7 @@ public class ServiceRegistry
                 if (!reg.isValid() || (usage.m_count <= 0))
                 {
                     usage.m_svcObj = null;
-                    flushUsageCount(bundle, ref);
+                    flushUsageCount(bundle, ref, usage);
                 }
 
                 // Release the registration lock so any waiting threads can
@@ -448,7 +472,7 @@ public class ServiceRegistry
         UsageCount[] usages;
         synchronized (this)
         {
-            usages = (UsageCount[]) m_inUseMap.get(bundle);
+            usages = m_inUseMap.get(bundle);
         }
 
         if (usages == null)
@@ -466,21 +490,21 @@ public class ServiceRegistry
         for (int i = 0; i < usages.length; i++)
         {
             // Keep ungetting until all usage count is zero.
-            while (ungetService(bundle, usages[i].m_ref))
+            while (ungetService(bundle, usages[i].m_ref, usages[i].m_prototype ? usages[i].m_svcObj : null))
             {
                 // Empty loop body.
             }
         }
     }
 
-    public synchronized Bundle[] getUsingBundles(ServiceReference ref)
+    public synchronized Bundle[] getUsingBundles(ServiceReference<?> ref)
     {
         Bundle[] bundles = null;
-        for (Iterator iter = m_inUseMap.entrySet().iterator(); iter.hasNext(); )
+        for (Iterator<Map.Entry<Bundle, UsageCount[]>> iter = m_inUseMap.entrySet().iterator(); iter.hasNext(); )
         {
-            Map.Entry entry = (Map.Entry) iter.next();
-            Bundle bundle = (Bundle) entry.getKey();
-            UsageCount[] usages = (UsageCount[]) entry.getValue();
+            Map.Entry<Bundle, UsageCount[]> entry = iter.next();
+            Bundle bundle = entry.getKey();
+            UsageCount[] usages = entry.getValue();
             for (int useIdx = 0; useIdx < usages.length; useIdx++)
             {
                 if (usages[useIdx].m_ref.equals(ref))
@@ -503,7 +527,7 @@ public class ServiceRegistry
         return bundles;
     }
 
-    void servicePropertiesModified(ServiceRegistration reg, Dictionary oldProps)
+    void servicePropertiesModified(ServiceRegistration<?> reg, Dictionary oldProps)
     {
         updateHook(reg.getReference());
         if (m_callbacks != null)
@@ -518,8 +542,8 @@ public class ServiceRegistry
         return m_logger;
     }
 
-    private static ServiceRegistration[] addServiceRegistration(
-        ServiceRegistration[] regs, ServiceRegistration reg)
+    private static ServiceRegistration<?>[] addServiceRegistration(
+        ServiceRegistration<?>[] regs, ServiceRegistration<?> reg)
     {
         if (regs == null)
         {
@@ -527,7 +551,7 @@ public class ServiceRegistry
         }
         else
         {
-            ServiceRegistration[] newRegs = new ServiceRegistration[regs.length + 1];
+            ServiceRegistration<?>[] newRegs = new ServiceRegistration[regs.length + 1];
             System.arraycopy(regs, 0, newRegs, 0, regs.length);
             newRegs[regs.length] = reg;
             regs = newRegs;
@@ -535,8 +559,8 @@ public class ServiceRegistry
         return regs;
     }
 
-    private static ServiceRegistration[] removeServiceRegistration(
-        ServiceRegistration[] regs, ServiceRegistration reg)
+    private static ServiceRegistration<?>[] removeServiceRegistration(
+        ServiceRegistration<?>[] regs, ServiceRegistration<?> reg)
     {
         for (int i = 0; (regs != null) && (i < regs.length); i++)
         {
@@ -550,7 +574,7 @@ public class ServiceRegistry
                 // Otherwise, we need to do some array copying.
                 else
                 {
-                    ServiceRegistration[] newRegs = new ServiceRegistration[regs.length - 1];
+                    ServiceRegistration<?>[] newRegs = new ServiceRegistration[regs.length - 1];
                     System.arraycopy(regs, 0, newRegs, 0, i);
                     if (i < newRegs.length)
                     {
@@ -571,12 +595,14 @@ public class ServiceRegistry
      * @param ref The service reference to find in the bundle's usage counts.
      * @return The associated usage count or null if not found.
     **/
-    private UsageCount getUsageCount(Bundle bundle, ServiceReference ref)
+    private UsageCount getUsageCount(Bundle bundle, ServiceReference<?> ref, final Object svcObj)
     {
-        UsageCount[] usages = (UsageCount[]) m_inUseMap.get(bundle);
+        UsageCount[] usages = m_inUseMap.get(bundle);
         for (int i = 0; (usages != null) && (i < usages.length); i++)
         {
-            if (usages[i].m_ref.equals(ref))
+            if (usages[i].m_ref.equals(ref) 
+               && ((svcObj == null && !usages[i].m_prototype) 
+            		|| (usages[i].m_svcObj == svcObj && usages[i].m_prototype)))
             {
                 return usages[i];
             }
@@ -594,12 +620,13 @@ public class ServiceRegistry
      * @param ref The service reference of the acquired service.
      * @param svcObj The service object of the acquired service.
     **/
-    private UsageCount addUsageCount(Bundle bundle, ServiceReference ref)
+    private UsageCount addUsageCount(Bundle bundle, ServiceReference<?> ref, boolean isPrototype)
     {
-        UsageCount[] usages = (UsageCount[]) m_inUseMap.get(bundle);
+        UsageCount[] usages = m_inUseMap.get(bundle);
 
         UsageCount usage = new UsageCount();
         usage.m_ref = ref;
+        usage.m_prototype = isPrototype;
 
         if (usages == null)
         {
@@ -630,12 +657,12 @@ public class ServiceRegistry
      * @param bundle The bundle whose usage count should be removed.
      * @param ref The service reference whose usage count should be removed.
     **/
-    private void flushUsageCount(Bundle bundle, ServiceReference ref)
+    private void flushUsageCount(Bundle bundle, ServiceReference<?> ref, UsageCount uc)
     {
-        UsageCount[] usages = (UsageCount[]) m_inUseMap.get(bundle);
+        UsageCount[] usages = m_inUseMap.get(bundle);
         for (int i = 0; (usages != null) && (i < usages.length); i++)
         {
-            if (usages[i].m_ref.equals(ref))
+            if ((uc == null && usages[i].m_ref.equals(ref)) || (uc == usages[i]))
             {
                 // If this is the only usage, then point to empty list.
                 if ((usages.length - 1) == 0)
@@ -653,6 +680,7 @@ public class ServiceRegistry
                             usages, i + 1, newUsages, i, newUsages.length - i);
                     }
                     usages = newUsages;
+                    i--;
                 }
             }
         }
@@ -671,12 +699,12 @@ public class ServiceRegistry
     // Hook-related methods.
     //
 
-    boolean isHookBlackListed(ServiceReference sr)
+    boolean isHookBlackListed(ServiceReference<?> sr)
     {
         return m_blackList.containsKey(sr);
     }
 
-    void blackListHook(ServiceReference sr)
+    void blackListHook(ServiceReference<?> sr)
     {
         m_blackList.put(sr, sr);
     }
@@ -731,7 +759,7 @@ public class ServiceRegistry
         }
     }
 
-    private void updateHook(ServiceReference ref)
+    private void updateHook(ServiceReference<?> ref)
     {
         // We maintain the hooks sorted, so if ranking has changed for example,
         // we need to ensure the order remains correct by resorting the hooks.
@@ -757,7 +785,7 @@ public class ServiceRegistry
         }
     }
 
-    private void removeHook(ServiceReference ref)
+    private void removeHook(ServiceReference<?> ref)
     {
         Object svcObj = ((ServiceRegistrationImpl.ServiceReferenceImpl) ref)
             .getRegistration().getService();
@@ -790,25 +818,26 @@ public class ServiceRegistry
             Set<ServiceReference<?>> hooks = m_allHooks.get(hookClass);
             if (hooks != null)
             {
-                SortedSet sorted = new TreeSet<ServiceReference<?>>(Collections.reverseOrder());
+                SortedSet<ServiceReference<?>> sorted = new TreeSet<ServiceReference<?>>(Collections.reverseOrder());
                 sorted.addAll(hooks);
                 return asTypedSortedSet(sorted);
             }
-            return Collections.EMPTY_SET;
+            return Collections.emptySet();
         }
     }
 
     private static <S> SortedSet<ServiceReference<S>> asTypedSortedSet(
         SortedSet<ServiceReference<?>> ss)
     {
-        return (SortedSet<ServiceReference<S>>) (SortedSet) ss;
+        return (SortedSet) ss;
     }
 
     private static class UsageCount
     {
-        public int m_count = 0;
-        public ServiceReference m_ref = null;
-        public Object m_svcObj = null;
+        public int m_count;
+        public ServiceReference<?> m_ref;
+        public Object m_svcObj;
+        public boolean m_prototype;
     }
 
     public interface ServiceRegistryCallbacks

@@ -585,7 +585,7 @@ public class EventDispatcher
                     new ShrinkableCollection(new ArrayList(entry.getValue()));
                 shrinkableMap.put(
                     entry.getKey(),
-                    (Collection<ListenerHook.ListenerInfo>) shrinkableCollection);
+                    shrinkableCollection);
             }
             shrinkableMap =
                 new ShrinkableMap<BundleContext, Collection<ListenerHook.ListenerInfo>>
@@ -598,7 +598,7 @@ public class EventDispatcher
                     org.osgi.framework.hooks.service.EventListenerHook elh = null;
                     try
                     {
-                        elh = m_registry.getService(felix, sr);
+                        elh = m_registry.getService(felix, sr, false);
                     }
                     catch (Exception ex)
                     {
@@ -618,7 +618,7 @@ public class EventDispatcher
                         }
                         finally
                         {
-                            m_registry.ungetService(felix, sr);
+                            m_registry.ungetService(felix, sr, null);
                         }
                     }
                 }
@@ -675,7 +675,7 @@ public class EventDispatcher
                     T eh = null;
                     try
                     {
-                        eh = m_registry.getService(felix, sr);
+                        eh = m_registry.getService(felix, sr, false);
                     }
                     catch (Exception ex)
                     {
@@ -705,7 +705,7 @@ public class EventDispatcher
                         }
                         finally
                         {
-                            m_registry.ungetService(felix, sr);
+                            m_registry.ungetService(felix, sr, null);
                         }
                     }
                 }
