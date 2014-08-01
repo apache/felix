@@ -20,6 +20,7 @@ package org.apache.felix.framework;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -50,9 +51,10 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
         m_registry = registry;
     }
 
+    @SuppressWarnings("unchecked")
     void start()
     {
-        m_slReg = m_registry.registerService(m_felix._getBundleContext(),
+        m_slReg = (ServiceRegistration<StartLevel>) m_registry.registerService(m_felix._getBundleContext(),
                 new String[] { StartLevel.class.getName() },
                 new StartLevelImpl(m_felix),
                 null);
@@ -235,7 +237,7 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
                 // Start thread if necessary.
                 startThread();
                 // Synchronously persists the start level.
-                ((BundleImpl) m_bundle).setStartLevel(startlevel);
+                m_bundle.setStartLevel(startlevel);
                 // Queue request.
                 m_requestListeners.add(null);
                 m_requests.add(new Object[] { m_bundle, new Integer(startlevel) });

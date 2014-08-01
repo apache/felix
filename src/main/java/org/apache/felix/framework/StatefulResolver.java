@@ -31,6 +31,7 @@ import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.StringTokenizer;
+
 import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.resolver.CandidateComparator;
@@ -41,7 +42,6 @@ import org.apache.felix.framework.resolver.ResolverWire;
 import org.apache.felix.framework.util.ShrinkableCollection;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.R4Library;
-import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.apache.felix.framework.wiring.BundleWireImpl;
 import org.osgi.framework.Bundle;
@@ -566,7 +566,7 @@ class StatefulResolver
         throws BundleException
     {
         // This map maps the hook factory service to the actual hook objects. It
-        // needs to be a map that preserves insertion order to ensure that we call 
+        // needs to be a map that preserves insertion order to ensure that we call
         // hooks in the correct order.
         // The hooks are added in the order that m_felix.getHooks() returns them which
         // is also the order in which they should be called.
@@ -595,13 +595,13 @@ class StatefulResolver
             triggers = Collections.unmodifiableSet(triggers);
 
             BundleException rethrow = null;
-            
+
             // Create resolver hook objects by calling begin() on factory.
             for (ServiceReference<ResolverHookFactory> ref : hookRefs)
             {
                 try
                 {
-                    ResolverHookFactory rhf = m_felix.getService(m_felix, ref);
+                    ResolverHookFactory rhf = m_felix.getService(m_felix, ref, false);
                     if (rhf != null)
                     {
                         ResolverHook hook =
@@ -621,7 +621,7 @@ class StatefulResolver
                         ex);
                     // Resolver hook spec: if there is an exception during the resolve operation; abort.
                     // So we break here to make sure that no further resolver hooks are created.
-                    break; 
+                    break;
                 }
             }
 
@@ -663,7 +663,7 @@ class StatefulResolver
                         ex);
                     // Resolver hook spec: if there is an exception during the resolve operation; abort.
                     // So we break here to make sure that no further resolver operations are executed.
-                    break; 
+                    break;
                 }
             }
 
@@ -751,7 +751,7 @@ class StatefulResolver
                 {
                     invalid = true;
                 }
-                m_felix.ungetService(m_felix, ref);
+                m_felix.ungetService(m_felix, ref, null);
             }
             if (invalid)
             {
@@ -824,7 +824,7 @@ class StatefulResolver
             {
                 BundleCapability cap = itCand.next();
                 if (CapabilitySet.matches(
-                    (BundleCapabilityImpl) cap,
+                    cap,
                     ((BundleRequirementImpl) dynamics.get(dynIdx)).getFilter()))
                 {
                     dynReq = (BundleRequirementImpl) dynamics.get(dynIdx);
@@ -841,7 +841,7 @@ class StatefulResolver
             {
                 BundleCapability cap = itCand.next();
                 if (!CapabilitySet.matches(
-                    (BundleCapabilityImpl) cap, dynReq.getFilter()))
+                    cap, dynReq.getFilter()))
                 {
                     itCand.remove();
                 }
@@ -1570,7 +1570,7 @@ class StatefulResolver
     {
         final Map<ServiceReference<ResolverHookFactory>, ResolverHook> m_resolveHookMap;
         final Collection<BundleRevision> m_brWhitelist;
- 
+
         /** The map passed in must be of an ordered type, so that the iteration order over the values
          * is predictable.
          */
@@ -1580,8 +1580,8 @@ class StatefulResolver
             m_resolveHookMap = resolveHookMap;
             m_brWhitelist = brWhiteList;
         }
-        
-        Collection<BundleRevision> getBundleRevisionWhitelist() 
+
+        Collection<BundleRevision> getBundleRevisionWhitelist()
         {
             return m_brWhitelist;
         }

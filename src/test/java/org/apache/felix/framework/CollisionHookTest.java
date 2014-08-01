@@ -66,7 +66,7 @@ public class CollisionHookTest extends TestCase
         {
             differentBundle, identicalBundle
         });
-        Mockito.when(felixMock.getService(felixMock, chRef)).thenReturn(testCollisionHook);
+        Mockito.when(felixMock.getService(felixMock, chRef, false)).thenReturn(testCollisionHook);
 
         // Mock the archive of the bundle being installed
         Map<String, String> headerMap = new HashMap<String, String>();
@@ -129,7 +129,7 @@ public class CollisionHookTest extends TestCase
         {
             differentBundle, identicalBundle
         });
-        Mockito.when(felixMock.getService(felixMock, chRef)).thenReturn(testCollisionHook);
+        Mockito.when(felixMock.getService(felixMock, chRef, false)).thenReturn(testCollisionHook);
 
         // Mock the archive of the bundle being installed
         Map<String, String> headerMap = new HashMap<String, String>();
@@ -185,7 +185,7 @@ public class CollisionHookTest extends TestCase
         {
             differentBundle, identicalBundle
         });
-        Mockito.when(felixMock.getService(felixMock, chRef)).thenReturn(testCollisionHook);
+        Mockito.when(felixMock.getService(felixMock, chRef, false)).thenReturn(testCollisionHook);
 
         // Mock the archive of the bundle being installed
         Map<String, String> headerMap = new HashMap<String, String>();
