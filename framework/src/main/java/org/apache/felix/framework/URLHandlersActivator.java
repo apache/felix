@@ -19,8 +19,6 @@
 package org.apache.felix.framework;
 
 import java.net.ContentHandler;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -29,7 +27,6 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.url.URLStreamHandlerService;
-import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * <p>
@@ -107,13 +104,13 @@ class URLHandlersActivator implements BundleActivator
                     {
                         if (value.equals(((String[]) values)[valueIdx]))
                         {
-                            return m_framework.getService(m_framework, ref);
+                            return m_framework.getService(m_framework, ref, false);
                         }
                     }
                 }
                 else if (value.equals(values))
                 {
-                    return m_framework.getService(m_framework, ref);
+                    return m_framework.getService(m_framework, ref, false);
                 }
             }
         }

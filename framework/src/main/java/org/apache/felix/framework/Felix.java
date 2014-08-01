@@ -3070,7 +3070,7 @@ public class Felix extends BundleImpl implements Framework
                 bundles = new ShrinkableCollection<Bundle>(bundles);
                 for (ServiceReference<org.osgi.framework.hooks.bundle.FindHook> hook : hooks)
                 {
-                    org.osgi.framework.hooks.bundle.FindHook fh = getService(this, hook);
+                    org.osgi.framework.hooks.bundle.FindHook fh = getService(this, hook, false);
                     if (fh != null)
                     {
                         try
@@ -3156,7 +3156,7 @@ public class Felix extends BundleImpl implements Framework
             bundles = new ShrinkableCollection<Bundle>(bundles);
             for (ServiceReference<org.osgi.framework.hooks.bundle.FindHook> hook : hooks)
             {
-                org.osgi.framework.hooks.bundle.FindHook fh = getService(this, hook);
+                org.osgi.framework.hooks.bundle.FindHook fh = getService(this, hook, false);
                 if (fh != null)
                 {
                     try
@@ -3224,7 +3224,7 @@ public class Felix extends BundleImpl implements Framework
             bundles = new ShrinkableCollection<Bundle>(new ArrayList(bundles));
             for (ServiceReference<org.osgi.framework.hooks.bundle.FindHook> hook : hooks)
             {
-                org.osgi.framework.hooks.bundle.FindHook fh = getService(this, hook);
+                org.osgi.framework.hooks.bundle.FindHook fh = getService(this, hook, false);
                 if (fh != null)
                 {
                     try
@@ -3298,7 +3298,7 @@ public class Felix extends BundleImpl implements Framework
                     ServiceListener.class, l, oldFilter, null, true));
             for (ServiceReference<org.osgi.framework.hooks.service.ListenerHook> sr : listenerHooks)
             {
-                org.osgi.framework.hooks.service.ListenerHook lh = getService(this, sr);
+                org.osgi.framework.hooks.service.ListenerHook lh = getService(this, sr, false);
                 if (lh != null)
                 {
                     try
@@ -3312,7 +3312,7 @@ public class Felix extends BundleImpl implements Framework
                     }
                     finally
                     {
-                        m_registry.ungetService(this, sr);
+                        m_registry.ungetService(this, sr, null);
                     }
                 }
             }
@@ -3324,7 +3324,7 @@ public class Felix extends BundleImpl implements Framework
                 ServiceListener.class, l, newFilter, null, false));
         for (ServiceReference<org.osgi.framework.hooks.service.ListenerHook> sr : listenerHooks)
         {
-            org.osgi.framework.hooks.service.ListenerHook lh = getService(this, sr);
+            org.osgi.framework.hooks.service.ListenerHook lh = getService(this, sr, false);
             if (lh != null)
             {
                 try
@@ -3338,7 +3338,7 @@ public class Felix extends BundleImpl implements Framework
                 }
                 finally
                 {
-                    m_registry.ungetService(this, sr);
+                    m_registry.ungetService(this, sr, null);
                 }
             }
         }
@@ -3365,7 +3365,7 @@ public class Felix extends BundleImpl implements Framework
             Collection removed = Collections.singleton(listener);
             for (ServiceReference<org.osgi.framework.hooks.service.ListenerHook> sr : listenerHooks)
             {
-                org.osgi.framework.hooks.service.ListenerHook lh = getService(this, sr);
+                org.osgi.framework.hooks.service.ListenerHook lh = getService(this, sr, false);
                 if (lh != null)
                 {
                     try
@@ -3379,7 +3379,7 @@ public class Felix extends BundleImpl implements Framework
                     }
                     finally
                     {
-                        m_registry.ungetService(this, sr);
+                        m_registry.ungetService(this, sr, null);
                     }
                 }
             }
@@ -3454,7 +3454,7 @@ public class Felix extends BundleImpl implements Framework
         {
             org.osgi.framework.hooks.service.ListenerHook lh =
                 (org.osgi.framework.hooks.service.ListenerHook)
-                    getService(this, reg.getReference());
+                    getService(this, reg.getReference(), false);
             if (lh != null)
             {
                 try
@@ -3469,7 +3469,7 @@ public class Felix extends BundleImpl implements Framework
                 }
                 finally
                 {
-                    m_registry.ungetService(this, reg.getReference());
+                    m_registry.ungetService(this, reg.getReference(), null);
                 }
             }
         }
@@ -3534,7 +3534,7 @@ public class Felix extends BundleImpl implements Framework
             m_registry.getHooks(org.osgi.framework.hooks.service.FindHook.class);
         for (ServiceReference<org.osgi.framework.hooks.service.FindHook> sr : findHooks)
         {
-            org.osgi.framework.hooks.service.FindHook fh = getService(this, sr);
+            org.osgi.framework.hooks.service.FindHook fh = getService(this, sr, false);
             if (fh != null)
             {
                 try
@@ -3554,7 +3554,7 @@ public class Felix extends BundleImpl implements Framework
                 }
                 finally
                 {
-                    m_registry.ungetService(this, sr);
+                    m_registry.ungetService(this, sr, null);
                 }
             }
         }
@@ -3616,11 +3616,11 @@ public class Felix extends BundleImpl implements Framework
 
     }
 
-    <S> S getService(Bundle bundle, ServiceReference<S> ref)
+    <S> S getService(Bundle bundle, ServiceReference<S> ref, boolean isPrototype)
     {
         try
         {
-            return m_registry.getService(bundle, ref);
+            return m_registry.getService(bundle, ref, isPrototype);
         }
         catch (ServiceException ex)
         {
@@ -3630,9 +3630,9 @@ public class Felix extends BundleImpl implements Framework
         return null;
     }
 
-    boolean ungetService(Bundle bundle, ServiceReference ref)
+    boolean ungetService(Bundle bundle, ServiceReference ref, Object srvObj)
     {
-        return m_registry.ungetService(bundle, ref);
+        return m_registry.ungetService(bundle, ref, srvObj);
     }
 
     File getDataFile(BundleImpl bundle, String s)

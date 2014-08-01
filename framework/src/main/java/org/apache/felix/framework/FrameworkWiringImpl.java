@@ -49,9 +49,10 @@ class FrameworkWiringImpl implements FrameworkWiring, Runnable
         m_registry = registry;
     }
 
+    @SuppressWarnings("unchecked")
     void start()
     {
-        m_paReg = m_registry.registerService(m_felix._getBundleContext(),
+        m_paReg = (ServiceRegistration<PackageAdmin>) m_registry.registerService(m_felix._getBundleContext(),
                 new String[] { PackageAdmin.class.getName() },
                 new PackageAdminImpl(m_felix),
                 null);

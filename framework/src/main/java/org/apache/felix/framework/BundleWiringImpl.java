@@ -591,7 +591,7 @@ public class BundleWiringImpl implements BundleWiring
 
     private static List<Wire> asWireList(List wires)
     {
-        return (List<Wire>) wires;
+        return wires;
     }
 
     public List<Wire> getProvidedResourceWires(String namespace)
@@ -706,7 +706,7 @@ public class BundleWiringImpl implements BundleWiring
             // enabled; otherwise, create it directly.
             try
             {
-                Constructor ctor = (Constructor) BundleRevisionImpl.getSecureAction()
+                Constructor ctor = BundleRevisionImpl.getSecureAction()
                     .getConstructor(clazz, new Class[] { BundleWiringImpl.class, ClassLoader.class });
                 m_classLoader = (BundleClassLoader)
                     BundleRevisionImpl.getSecureAction().invoke(ctor,
@@ -1521,11 +1521,11 @@ public class BundleWiringImpl implements BundleWiring
                                 + m_revision.getSymbolicName()
                                 + " is no longer valid.");
                         }
-                        result = (Object) ((BundleClassLoader) cl).findClass(name);
+                        result = ((BundleClassLoader) cl).findClass(name);
                     }
                     else
                     {
-                        result = (Object) m_revision.getResourceLocal(name);
+                        result = m_revision.getResourceLocal(name);
                     }
 
                     // If still not found, then try the revision's dynamic imports.
@@ -1883,6 +1883,7 @@ public class BundleWiringImpl implements BundleWiring
             m_isParallel = registered;
         }
 
+        @Override
         protected boolean isParallel()
         {
             return m_isParallel;
@@ -2087,7 +2088,7 @@ public class BundleWiringImpl implements BundleWiring
                                 // Note that we don't use the bundle context
                                 // to get the service object since that would
                                 // perform sercurity checks.
-                                WeavingHook wh = felix.getService(felix, sr);
+                                WeavingHook wh = felix.getService(felix, sr, false);
                                 if (wh != null)
                                 {
                                     try
@@ -2115,7 +2116,7 @@ public class BundleWiringImpl implements BundleWiring
                                     }
                                     finally
                                     {
-                                        felix.ungetService(felix, sr);
+                                        felix.ungetService(felix, sr, null);
                                     }
                                 }
                             }
