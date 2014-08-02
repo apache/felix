@@ -551,12 +551,21 @@ public abstract class ComponentTestBase
     }
 
 
-    protected void checkNoFactory(final String componentfactory)
+    protected void checkFactory(final String componentfactory, boolean expectFactoryPresent)
         throws InvalidSyntaxException
     {
         ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(), "("
             + ComponentConstants.COMPONENT_FACTORY + "=" + componentfactory + ")" );
-        TestCase.assertNull( refs );
+        if ( expectFactoryPresent )
+        {
+            TestCase.assertNotNull( refs );
+            TestCase.assertEquals(1, refs.length);
+
+        }
+        else
+        {
+            TestCase.assertNull( refs );
+        }
     }
 
     protected ComponentInstance createFactoryComponentInstance(final String componentfactory)

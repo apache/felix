@@ -589,18 +589,23 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                     // FELIX-2368: cycle component immediately, reconfigure() is
                     //     called through ConfigurationListener API which itself is
                     //     called asynchronously by the Configuration Admin Service
-                    releaseActivationWriteeLock( "reconfigure.modified.1" );;
-                    deactivateInternal( reason, false, false );
-                    obtainActivationWriteLock( "reconfigure.deactivate.activate" );
-                    try
+                    releaseActivationWriteeLock( "reconfigure.modified.1" );
+                    //we have already determined that modify cannot be called. Therefore factory instances must be disposed.
+                    boolean dispose = m_factoryInstance;
+                    deactivateInternal( reason, dispose, dispose );
+                    if ( !dispose )
                     {
-                        updateTargets( getProperties() );
+                        obtainActivationWriteLock("reconfigure.deactivate.activate");
+                        try
+                        {
+                            updateTargets(getProperties());
+                        }
+                        finally
+                        {
+                            releaseActivationWriteeLock("reconfigure.deactivate.activate");
+                        }
+                        activateInternal(getTrackingCount().get());
                     }
-                    finally
-                    {
-                        releaseActivationWriteeLock( "reconfigure.deactivate.activate" );
-                    }
-                    activateInternal( getTrackingCount().get() );
                 }
             }
             finally

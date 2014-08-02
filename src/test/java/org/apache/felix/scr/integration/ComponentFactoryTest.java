@@ -19,6 +19,7 @@
 package org.apache.felix.scr.integration;
 
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Hashtable;
 
 import junit.framework.TestCase;
@@ -137,6 +138,44 @@ public class ComponentFactoryTest extends ComponentTestBase
         final String componentname = "factory.component.configuration";
         final String componentfactory = "factory.component.factory.configuration";
 
+        testConfiguredFactory(componentname, componentfactory, false, false);
+        
+    }
+
+    @Test
+    public void test_component_factory_optional_configuration() throws Exception
+    {
+        final String componentname = "factory.component.configuration.optional";
+        final String componentfactory = "factory.component.factory.configuration.optional";
+
+        testConfiguredFactory(componentname, componentfactory, true, false);
+        
+    }
+
+    @Test
+    public void test_component_factory_optional_configuration_13() throws Exception
+    {
+        final String componentname = "factory.component.configuration.optional.13";
+        final String componentfactory = "factory.component.factory.configuration.optional.13";
+
+        testConfiguredFactory(componentname, componentfactory, true, true);
+    }
+
+    @Test
+    public void test_component_factory_optional_configuration_nomodify() throws Exception
+    {
+        final String componentname = "factory.component.configuration.optional.nomodify";
+        final String componentfactory = "factory.component.factory.configuration.optional.nomodify";
+
+        testConfiguredFactory(componentname, componentfactory, true, false);
+        
+    }
+
+
+    private ComponentInstance testConfiguredFactory(final String componentname,
+        final String componentfactory, boolean optional, boolean expectComponent) throws InvocationTargetException,
+        InterruptedException, InvalidSyntaxException
+    {
         // ensure there is no configuration for the component
         deleteConfig( componentname );
         delay();
@@ -147,7 +186,7 @@ public class ComponentFactoryTest extends ComponentTestBase
         // At this point, since we don't have created the configuration, then the ComponentFactory
         // should not be available.
         
-        checkNoFactory(componentfactory);
+        checkFactory(componentfactory, optional);
         
         // supply configuration now and ensure active
         configure( componentname );
@@ -172,13 +211,26 @@ public class ComponentFactoryTest extends ComponentTestBase
         //deactivates component.
         deleteConfig( componentname );
         delay();
-        checkNoFactory(componentfactory);
 
-        TestCase.assertNull( instance.getInstance() );
-        TestCase.assertNull( SimpleComponent.INSTANCE );
+        checkFactory(componentfactory, optional);
 
-        // with removal of the factory, the created instance should also be removed
-        checkConfigurationCount(componentname, 0, ComponentConfigurationDTO.ACTIVE);
+        if (expectComponent) 
+        {
+            TestCase.assertNotNull( instance.getInstance() );
+            TestCase.assertNotNull( SimpleComponent.INSTANCE );
+
+            // with removal of the factory, the created instance should also be removed
+            checkConfigurationCount(componentname, 1, ComponentConfigurationDTO.ACTIVE);            
+        }
+        else
+        {
+            TestCase.assertNull( instance.getInstance() );
+            TestCase.assertNull( SimpleComponent.INSTANCE );
+
+            // with removal of the factory, the created instance should also be removed
+            checkConfigurationCount(componentname, 0, ComponentConfigurationDTO.ACTIVE);            
+        }
+        return instance;
     }
 
 
