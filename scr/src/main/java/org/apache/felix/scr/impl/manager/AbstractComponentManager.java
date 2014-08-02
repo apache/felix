@@ -84,7 +84,8 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     
     protected final ComponentContainer<S> m_container;
 
-    private final boolean m_factoryInstance;
+    //true for normal spec factory instances. False for "persistent" factory instances and obsolete use of factory component with factory configurations.
+    protected final boolean m_factoryInstance;
     // the ID of this component
     private long m_componentId;
 
