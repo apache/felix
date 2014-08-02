@@ -19,6 +19,7 @@
 package org.apache.felix.scr.impl.config;
 
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -142,6 +143,9 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
      * enabled. Otherwise they are not enabled immediately.
      */
     private volatile boolean m_enabled;
+    private final Object enableLock = new Object();
+    private Promise<Void> m_enablePromise;
+    private Promise<Void> m_disablePromise = Promises.resolved(null);
 
     private final ComponentMethods m_componentMethods;    
 
@@ -589,7 +593,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
         {
         synchronized ( m_components )
         {
-            return getComponentManagers( false );
+            return getComponentManagers( );
         }
         }
 
@@ -598,55 +602,106 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
         return m_enabled;
     }
 
+
+    private void wait(Promise<Void> promise)
+    {
+        boolean waited = false;
+        boolean interrupted = false;
+        while ( !waited )
+        {
+            try
+            {
+                promise.getValue();
+                waited = true;
+            }
+            catch ( InterruptedException e )
+            {
+                interrupted = true;
+            }
+            catch (InvocationTargetException e)
+            {
+                //this is not going to happen
+            }
+        }
+        if ( interrupted )
+        {
+            Thread.currentThread().interrupt();
+        }
+    }
+    
     public Promise<Void> enableComponents( final boolean async )
     {
-        List<AbstractComponentManager<S>> cms = new ArrayList<AbstractComponentManager<S>>();
-        synchronized ( m_components )
+        synchronized (enableLock)
         {
-            if ( isSatisfied() )
+            if ( m_enablePromise != null)
             {
-                if ( m_factoryPidIndex == null || m_componentMetadata.isObsoleteFactoryComponentFactory())
+                return m_enablePromise;
+            }
+            wait( m_disablePromise );
+
+
+            List<AbstractComponentManager<S>> cms = new ArrayList<AbstractComponentManager<S>>();
+            synchronized ( m_components )
+            {
+                if ( isSatisfied() )
                 {
-                    m_singleComponent = createComponentManager(false);
-                    cms.add( m_singleComponent );
-                    m_singleComponent.reconfigure(mergeProperties( null ), false);
-                }
-                if ( m_factoryPidIndex != null)
-                {
-                    for (String pid: m_factoryConfigurations.keySet()) {
-                        AbstractComponentManager<S> scm = createComponentManager(true);
-                        m_components.put(pid, scm);
-                        scm.reconfigure( mergeProperties( pid ), false);
-                        cms.add( scm );
+                    if ( m_factoryPidIndex == null || m_componentMetadata.isObsoleteFactoryComponentFactory())
+                    {
+                        m_singleComponent = createComponentManager(false);
+                        cms.add( m_singleComponent );
+                        m_singleComponent.reconfigure(mergeProperties( null ), false);
+                    }
+                    if ( m_factoryPidIndex != null)
+                    {
+                        for (String pid: m_factoryConfigurations.keySet()) {
+                            AbstractComponentManager<S> scm = createComponentManager(true);
+                            m_components.put(pid, scm);
+                            scm.reconfigure( mergeProperties( pid ), false);
+                            cms.add( scm );
+                        }
                     }
                 }
+                m_enabled = true;
             }
-            m_enabled = true;
+            List<Promise<Void>> promises = new ArrayList<Promise<Void>>();
+            for ( AbstractComponentManager<S> cm : cms )
+            {
+                promises.add(cm.enable( async ));
+            }
+            m_enablePromise = new Deferred<List<Void>>().resolveWith(Promises.all(promises));
+            m_disablePromise = null;
+            return m_enablePromise;
         }
-        List<Promise<Void>> promises = new ArrayList<Promise<Void>>();
-        for ( AbstractComponentManager<S> cm : cms )
-        {
-            promises.add(cm.enable( async ));
-        }
-        return new Deferred().resolveWith(Promises.all(promises));
     }
 
 
     public Promise<Void> disableComponents( final boolean async )
     {
-        List<AbstractComponentManager<S>> cms;
-        synchronized ( m_components )
+        synchronized (enableLock)
         {
-            m_enabled = false;
+            if ( m_disablePromise != null)
+            {
+                return m_disablePromise;
+            }
+            wait( m_enablePromise );
 
-            cms = getComponentManagers( true );
+            List<AbstractComponentManager<S>> cms;
+            synchronized ( m_components )
+            {
+                m_enabled = false;
+
+                cms = getDirectComponentManagers( );
+                clearComponents();
+            }
+            List<Promise<Void>> promises = new ArrayList<Promise<Void>>();
+            for ( AbstractComponentManager<S> cm : cms )
+            {
+                promises.add(cm.disable( async ));
+            }
+            m_disablePromise = new Deferred<List<Void>>().resolveWith(Promises.all(promises));
+            m_enablePromise = null;
+            return m_disablePromise;
         }
-        List<Promise<Void>> promises = new ArrayList<Promise<Void>>();
-        for ( AbstractComponentManager<S> cm : cms )
-        {
-            promises.add(cm.disable( async ));
-        }
-        return new Deferred().resolveWith(Promises.all(promises));
     }
 
 
@@ -655,7 +710,8 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
         List<AbstractComponentManager<S>> cms;
         synchronized ( m_components )
         {
-            cms = getComponentManagers( true );
+            cms = getDirectComponentManagers( );
+            clearComponents();
         }
         for ( AbstractComponentManager<S> cm : cms )
         {
@@ -741,39 +797,37 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
      * Returns all component managers from the map and the single component manager, optionally also removing them
      * from the map. If there are no component managers, <code>null</code>
      * is returned.  Must be called synchronized on m_components.
-     * 
-     * @param clear If true, clear the map and the single component manager.
      */
-    List<AbstractComponentManager<S>> getComponentManagers( final boolean clear )
+    List<AbstractComponentManager<S>> getComponentManagers( )
     {
-        List<AbstractComponentManager<S>> cms;
-        if ( m_components.isEmpty() )
+        List<AbstractComponentManager<S>> cms = new ArrayList<AbstractComponentManager<S>>();
+        if ( m_singleComponent != null)
         {
-            if ( m_singleComponent != null)
-            {
-                cms = new ArrayList<AbstractComponentManager<S>>();
-                m_singleComponent.getComponentManagers(cms);
-            }
-            else 
-            {
-                cms = Collections.emptyList();
-            }
+            m_singleComponent.getComponentManagers(cms);
         }
 
-        else
+        for (AbstractComponentManager<S> cm: m_components.values())
         {
-            cms = new ArrayList<AbstractComponentManager<S>>();
-            for (AbstractComponentManager<S> cm: m_components.values())
-            {
-                cm.getComponentManagers(cms);
-            }
-        }
-        if ( clear )
-        {
-            m_components.clear();
-            m_singleComponent = null;
+            cm.getComponentManagers(cms);
         }
         return cms;
+    }
+    
+    List<AbstractComponentManager<S>> getDirectComponentManagers( )
+    {
+        List<AbstractComponentManager<S>> cms = new ArrayList<AbstractComponentManager<S>>();
+        if ( m_singleComponent != null)
+        {
+            cms.add(m_singleComponent);
+        }
+        cms.addAll(m_components.values());
+        return cms;
+    }
+
+    void clearComponents()
+    {
+        m_components.clear();
+        m_singleComponent = null;
     }
 
     public boolean isLogEnabled( int level )

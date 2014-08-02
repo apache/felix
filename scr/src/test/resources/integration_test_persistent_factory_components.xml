@@ -33,7 +33,8 @@
         felix:persistentFactoryComponent="true"
         enabled="false"
         configuration-policy="require"
-        factory="factory.component.factory.configuration" >
+        factory="factory.component.factory.configuration" 
+        modified="modified">
         <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
     </scr:component>
     

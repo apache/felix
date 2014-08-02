@@ -322,14 +322,13 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         return null;
     }
 
-    //TODO shouldn't something be calling this?
     /**
      * Disposes off all components ever created by this component holder. This
      * method is called if either the Declarative Services runtime is stopping
      * or if the owning bundle is stopped. In both cases all components created
      * by this holder must be disposed off.
      */
-    public void disposeComponents( int reason )
+    public void dispose( int reason )
     {
         List<AbstractComponentManager<S>> cms = new ArrayList<AbstractComponentManager<S>>( );
         getComponentManagers( m_componentInstances, cms );
@@ -344,7 +343,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         }
 
         // finally dispose the component factory itself
-        dispose( reason );
+        super.dispose( reason );
     }
 
 
@@ -387,11 +386,6 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     {
         return m_targetedPID;
     }
-
-
-	public boolean isEnabled() {
-		return isInternalEnabled();
-	}
 
 
 	@Override

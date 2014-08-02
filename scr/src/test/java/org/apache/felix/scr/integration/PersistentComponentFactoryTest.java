@@ -163,23 +163,16 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
 
         checkConfigurationCount(componentname, 1, ComponentConfigurationDTO.ACTIVE);
 
-        // delete config, ensure factory is not active anymore and component instance not changed
+        // delete config, ensure factory is not active anymore and component instance dropped (config required)
         deleteConfig( componentname );
         delay();
         checkNoFactory(componentfactory);
 
-        TestCase.assertNotNull( instance.getInstance() );
-        TestCase.assertEquals( SimpleComponent.INSTANCE, instance.getInstance() );
-        TestCase.assertEquals( instanceObject, instance.getInstance() );
-        TestCase.assertEquals( PROP_NAME_FACTORY, SimpleComponent.INSTANCE.getProperty( PROP_NAME_FACTORY ) );
-        TestCase.assertEquals( PROP_NAME, SimpleComponent.INSTANCE.getProperty( PROP_NAME ) );
-
-        instance.dispose();
-        TestCase.assertNull( SimpleComponent.INSTANCE ); // component is deactivated
-        TestCase.assertNull( instance.getInstance() ); // SCR 112.12.6.2
+        TestCase.assertNull( instance.getInstance() );
+        TestCase.assertNull( SimpleComponent.INSTANCE );
 
         // with removal of the factory, the created instance should also be removed
-        checkConfigurationCount(componentname, 0, ComponentConfigurationDTO.ACTIVE);
+        checkConfigurationCount(componentname, 0, ComponentConfigurationDTO.UNSATISFIED);
     }
 
 
