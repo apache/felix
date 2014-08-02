@@ -109,7 +109,6 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
      */
     private final AtomicReference< Deferred<Void>> m_enabledLatchRef = new AtomicReference<Deferred<Void>>( new Deferred<Void>() );
 
-    protected volatile boolean m_enabled;
     protected volatile boolean m_internalEnabled;
     
 	private volatile boolean m_satisfied;
@@ -393,10 +392,6 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
     public final Promise<Void> enable( final boolean async )
     {
-        if (m_enabled)
-        {
-            return Promises.resolved(null);
-        }
         Deferred<Void> enableLatch = null;
         try
         {
@@ -413,7 +408,6 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
             {
                 enableLatch.resolve(null);
             }
-            m_enabled = true;
         }
 
         if ( async )
@@ -487,24 +481,8 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         return newEnabledLatch;  
     }
 
-    /**
-     * Disables this component and - if active - first deactivates it. The
-     * component may be reenabled by calling the {@link #enable()} method.
-     * <p>
-     * This method deactivates and disables the component immediately.
-     */
-    public final void disable()
-    {
-        disable( true );
-    }
-
-
     public final Promise<Void> disable( final boolean async )
     {
-        if (!m_enabled)
-        {
-            return Promises.resolved(null);
-        }
         Deferred<Void> enableLatch = null;
         try
         {
@@ -521,7 +499,6 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
             {
                 enableLatch.resolve(null);
             }
-            m_enabled = false;
         }
 
         if ( async )

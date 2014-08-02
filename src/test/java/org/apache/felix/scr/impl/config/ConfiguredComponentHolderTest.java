@@ -182,7 +182,7 @@ public class ConfiguredComponentHolderTest extends TestCase
 
     private static List<SingleComponentManager> getComponentManagers( ConfigurableComponentHolder holder )
     {
-    	return holder.getComponentManagers(false);
+    	return holder.getComponentManagers();
     }
 
     private static class TestingConfiguredComponentHolder extends ConfigurableComponentHolder
