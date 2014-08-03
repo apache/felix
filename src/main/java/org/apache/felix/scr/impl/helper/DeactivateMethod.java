@@ -18,6 +18,8 @@
  */
 package org.apache.felix.scr.impl.helper;
 
+import org.apache.felix.scr.impl.metadata.DSVersion;
+
 
 public class DeactivateMethod extends ActivateMethod
 {
@@ -27,15 +29,15 @@ public class DeactivateMethod extends ActivateMethod
 
 
     public DeactivateMethod( final String methodName,
-            final boolean methodRequired, final Class<?> componentClass, final boolean isDS11, final boolean isDS12Felix )
+            final boolean methodRequired, final Class<?> componentClass, final DSVersion dsVersion, final boolean configurableServiceProperties )
     {
-        super( methodName, methodRequired, componentClass, isDS11, isDS12Felix );
+        super( methodName, methodRequired, componentClass, dsVersion, configurableServiceProperties );
     }
 
 
     protected Class[] getAcceptedParameterTypes()
     {
-        return isDS11() ? DEACTIVATE_TYPES_DS11 : ACTIVATE_TYPES_DS10;
+        return getDSVersion().isDS11() ? DEACTIVATE_TYPES_DS11 : ACTIVATE_TYPES_DS10;
     }
 
 

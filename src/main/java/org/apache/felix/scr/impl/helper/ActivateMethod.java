@@ -22,6 +22,7 @@ package org.apache.felix.scr.impl.helper;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.osgi.service.log.LogService;
 
 
@@ -35,9 +36,9 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter>
 
 
     public ActivateMethod( final String methodName,
-            final boolean methodRequired, final Class componentClass, final boolean isDS11, final boolean isDS12Felix )
+            final boolean methodRequired, final Class componentClass, final DSVersion dsVersion, final boolean configurableServiceProperties )
     {
-        super( methodName, methodRequired, componentClass, isDS11, isDS12Felix );
+        super( methodName, methodRequired, componentClass, dsVersion, configurableServiceProperties );
     }
 
 
@@ -60,7 +61,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter>
             suitableMethodNotAccessible = true;
         }
 
-        if ( isDS11() )
+        if ( getDSVersion().isDS11() )
         {
             // check methods with MethodTester
             Method[] methods = targetClass.getDeclaredMethods();
@@ -236,13 +237,13 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter>
 
     protected Class[] getAcceptedParameterTypes()
     {
-        return isDS11() ? ACTIVATE_TYPES_DS11 : ACTIVATE_TYPES_DS10;
+        return getDSVersion().isDS11() ? ACTIVATE_TYPES_DS11 : ACTIVATE_TYPES_DS10;
     }
 
 
     protected boolean acceptEmpty()
     {
-        return isDS11();
+        return getDSVersion().isDS11();
     }
 
 }

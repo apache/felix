@@ -29,6 +29,7 @@ import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.config.ComponentContainer;
 import org.apache.felix.scr.impl.manager.SingleComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
+import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.apache.felix.scr.impl.metadata.XmlHandler;
 import org.apache.felix.scr.impl.metadata.instances.AcceptMethod;
 import org.apache.felix.scr.impl.metadata.instances.BaseObject;
@@ -268,7 +269,7 @@ public class ActivateMethodTest extends TestCase
     {
         ComponentContainer container = newContainer();
         SingleComponentManager icm = new SingleComponentManager( container, new ComponentMethods() );
-        ActivateMethod am = new ActivateMethod( methodName, methodName != null, obj.getClass(), true, false );
+        ActivateMethod am = new ActivateMethod( methodName, methodName != null, obj.getClass(), DSVersion.DS11, false );
         am.invoke( obj, new ActivatorParameter( m_ctx, -1 ), null, icm );
         Method m = get(am, "m_method");
         assertNotNull( m );
@@ -302,7 +303,7 @@ public class ActivateMethodTest extends TestCase
 
 
 	private ComponentMetadata newMetadata() {
-		ComponentMetadata metadata = new ComponentMetadata( XmlHandler.DS_VERSION_1_1 );
+		ComponentMetadata metadata = new ComponentMetadata( DSVersion.DS11 );
         metadata.setName("foo");
         metadata.setImplementationClassName(Object.class.getName());
         metadata.validate(null);
@@ -323,7 +324,7 @@ public class ActivateMethodTest extends TestCase
     {
         ComponentContainer container = newContainer();
         SingleComponentManager icm = new SingleComponentManager( container, new ComponentMethods() );
-        ActivateMethod am = new ActivateMethod( methodName, methodName != null, obj.getClass(), true, false );
+        ActivateMethod am = new ActivateMethod( methodName, methodName != null, obj.getClass(), DSVersion.DS11, false );
         am.invoke( obj, new ActivatorParameter( m_ctx, -1 ), null, icm );
         assertNull( get( am, "m_method" ) );
         assertNull( obj.getCalledMethod() );

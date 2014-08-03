@@ -464,10 +464,11 @@ public class ReferenceMetadata
      */
     void validate( final ComponentMetadata componentMetadata, final Logger logger )
     {
+        DSVersion dsVersion = componentMetadata.getDSVersion();
         if ( m_name == null )
         {
             // 112.10 name attribute is optional, defaults to interface since DS 1.1
-            if ( !componentMetadata.isDS11() )
+            if ( !dsVersion.isDS11() )
             {
                 throw componentMetadata.validationFailure( "A name must be declared for the reference" );
             }
@@ -506,21 +507,21 @@ public class ReferenceMetadata
         {
             throw componentMetadata.validationFailure( "Policy option must be one of " + POLICY_OPTION_VALID );
         }
-        else if ( !componentMetadata.isDS12() && !POLICY_OPTION_RELUCTANT.equals( m_policy_option ) )
+        else if ( !dsVersion.isDS12() && !POLICY_OPTION_RELUCTANT.equals( m_policy_option ) )
         {
             throw componentMetadata.validationFailure( "Policy option must be reluctant for DS < 1.2" );
         }
 
 
         // updated method is only supported in namespace xxx and later
-        if ( m_updated != null && !componentMetadata.isDS11Felix() )
+        if ( m_updated != null && !(dsVersion.isDS12() || dsVersion == DSVersion.DS11Felix) )
         {
             // FELIX-3648 validation must fail (instead of just ignore)
             throw componentMetadata.validationFailure( "updated method declaration requires DS 1.2 or later namespace " );
         }
 
         if (m_scopeName != null) {
-        	if (componentMetadata.getNamespaceCode() < XmlHandler.DS_VERSION_1_3)
+        	if ( !dsVersion.isDS13() )
         	{
         		throw componentMetadata.validationFailure( "reference scope can be set only for DS >= 1.3");
         	}

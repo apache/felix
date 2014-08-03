@@ -439,7 +439,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
     private Map<String, Object> mergeProperties(String servicePid) {
         Map<String, Object> properties = new HashMap<String, Object>(m_componentMetadata.getProperties());
         List<String> pids = null;
-        boolean isDS13 = m_componentMetadata.isDS13();
+        boolean isDS13 = m_componentMetadata.getDSVersion().isDS13();
         if (isDS13)
         {
             pids = new ArrayList<String>();

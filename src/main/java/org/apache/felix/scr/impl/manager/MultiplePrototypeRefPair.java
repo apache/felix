@@ -44,6 +44,14 @@ public class MultiplePrototypeRefPair<S, T> extends RefPair<S, T>
         super(ref);
         this.serviceObjects = context.getServiceObjects(ref);
     }
+    
+    @Override
+    public Object getServiceObjects()
+    {
+        return serviceObjects;
+    }
+
+
 
     @Override
     public T getServiceObject(ComponentContextImpl<S> key)

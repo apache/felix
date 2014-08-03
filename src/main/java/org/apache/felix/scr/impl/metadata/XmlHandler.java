@@ -101,7 +101,7 @@ public class XmlHandler implements KXml2SAXHandler
     public static final int DS_VERSION_1_3 = 5;
 
     // mapping of namespace URI to namespace code
-    private static final Map<String, Integer> NAMESPACE_CODE_MAP;
+    private static final Map<String, DSVersion> NAMESPACE_CODE_MAP;
 
     // the bundle containing the XML resource being parsed
     private final Bundle m_bundle;
@@ -136,14 +136,14 @@ public class XmlHandler implements KXml2SAXHandler
 
     static
     {
-        NAMESPACE_CODE_MAP = new HashMap<String, Integer>();
-        NAMESPACE_CODE_MAP.put( NAMESPACE_URI_EMPTY, DS_VERSION_1_0 );
-        NAMESPACE_CODE_MAP.put( NAMESPACE_URI, DS_VERSION_1_0 );
-        NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_1, DS_VERSION_1_1 );
-        NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_1_FELIX, DS_VERSION_1_1_FELIX );
-        NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_2, DS_VERSION_1_2 );
-        NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_2_FELIX, DS_VERSION_1_2_FELIX );
-        NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_3, DS_VERSION_1_3 );
+        NAMESPACE_CODE_MAP = new HashMap<String, DSVersion>();
+        NAMESPACE_CODE_MAP.put( NAMESPACE_URI_EMPTY, DSVersion.DS10 );
+        NAMESPACE_CODE_MAP.put( NAMESPACE_URI, DSVersion.DS10 );
+        NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_1, DSVersion.DS11 );
+        NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_1_FELIX, DSVersion.DS11Felix );
+        NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_2, DSVersion.DS12 );
+        NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_2_FELIX, DSVersion.DS12Felix );
+        NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_3, DSVersion.DS13 );
     }
 
 
@@ -205,7 +205,7 @@ public class XmlHandler implements KXml2SAXHandler
         }
 
         // get the namespace code for the namespace uri
-        Integer namespaceCode = (Integer) NAMESPACE_CODE_MAP.get( uri );
+        DSVersion namespaceCode = NAMESPACE_CODE_MAP.get( uri );
         // from now on uri points to the namespace
         if ( namespaceCode != null )
         {
@@ -218,7 +218,7 @@ public class XmlHandler implements KXml2SAXHandler
                     this.isComponent = true;
 
                     // Create a new ComponentMetadata
-                    m_currentComponent = new ComponentMetadata( namespaceCode.intValue() );
+                    m_currentComponent = new ComponentMetadata( namespaceCode );
 
                     // name attribute is optional (since DS 1.1)
                     if ( attributes.getAttribute( "name" ) != null )

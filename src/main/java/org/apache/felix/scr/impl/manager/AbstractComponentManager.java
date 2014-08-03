@@ -159,7 +159,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
                 LogService.LOG_DEBUG,
                 "Component {0} created: DS={1}, implementation={2}, immediate={3}, default-enabled={4}, factory={5}, configuration-policy={6}, activate={7}, deactivate={8}, modified={9} configuration-pid={10}",
                 new Object[]
-                    { metadata.getName(), metadata.getNamespaceCode(),
+                    { metadata.getName(), metadata.getDSVersion(),
                         metadata.getImplementationClassName(), metadata.isImmediate(),
                         metadata.isEnabled(), metadata.getFactoryIdentifier(),
                         metadata.getConfigurationPolicy(), metadata.getActivate(), metadata.getDeactivate(),

@@ -27,6 +27,7 @@ import java.security.PrivilegedAction;
 import java.util.Arrays;
 import java.util.Map;
 
+import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
@@ -42,12 +43,11 @@ abstract class BaseMethod<P>
     // class references to simplify parameter checking
     protected static final Class<?> COMPONENT_CONTEXT_CLASS = ComponentContext.class;
     protected static final Class<?> BUNDLE_CONTEXT_CLASS = BundleContext.class;
-    protected static final Class<?> SERVICE_REFERENCE_CLASS = ServiceReference.class;
     protected static final Class<?> MAP_CLASS = Map.class;
     protected static final Class<?> INTEGER_CLASS = Integer.class;
 
-    private final boolean isDS11;
-    private final boolean isDS12Felix;
+    private final DSVersion dsVersion;
+    private final boolean configurableServiceProperties;
 
     private final String m_methodName;
     private final Class<?> m_componentClass;
@@ -59,20 +59,20 @@ abstract class BaseMethod<P>
     private volatile State m_state;
 
     protected BaseMethod( final String methodName,
-            final Class<?> componentClass, final boolean ds11, final boolean ds12Felix )
+            final Class<?> componentClass, final DSVersion dsVersion, final boolean configurableServiceProperties )
     {
-        this( methodName, methodName != null, componentClass, ds11, ds12Felix );
+        this( methodName, methodName != null, componentClass, dsVersion, configurableServiceProperties );
     }
 
 
     protected BaseMethod( final String methodName,
-            final boolean methodRequired, final Class<?> componentClass, final boolean ds11, final boolean ds12Felix )
+            final boolean methodRequired, final Class<?> componentClass, final DSVersion dsVersion, final boolean configurableServiceProperties )
     {
         m_methodName = methodName;
         m_methodRequired = methodRequired;
         m_componentClass = componentClass;
-        isDS11 = ds11;
-        isDS12Felix = ds12Felix;
+        this.dsVersion = dsVersion;
+        this.configurableServiceProperties = configurableServiceProperties;
         if ( m_methodName == null )
         {
             m_state = NotApplicable.INSTANCE;
@@ -83,15 +83,15 @@ abstract class BaseMethod<P>
         }
     }
 
-    protected final boolean isDS11()
+    protected final DSVersion getDSVersion()
     {
-        return isDS11;
+        return dsVersion;
     }
 
 
     protected final boolean isDS12Felix()
     {
-        return isDS12Felix;
+        return configurableServiceProperties;
     }
 
 
@@ -158,8 +158,8 @@ abstract class BaseMethod<P>
      */
     private Method findMethod( SimpleLogger logger ) throws InvocationTargetException
     {
-        boolean acceptPrivate = isDS11();
-        boolean acceptPackage = isDS11();
+        boolean acceptPrivate = getDSVersion().isDS11();
+        boolean acceptPackage = getDSVersion().isDS11();
 
         final Class<?> targetClass = getComponentClass();
         final ClassLoader targetClasslLoader = targetClass.getClassLoader();

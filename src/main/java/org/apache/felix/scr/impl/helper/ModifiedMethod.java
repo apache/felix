@@ -18,14 +18,16 @@
  */
 package org.apache.felix.scr.impl.helper;
 
+import org.apache.felix.scr.impl.metadata.DSVersion;
+
 
 public class ModifiedMethod extends ActivateMethod
 {
 
     public ModifiedMethod( final String methodName,
-            final Class<?> componentClass, final boolean isDS11, final boolean isDS12Felix )
+            final Class<?> componentClass, final DSVersion dsVersion, final boolean configurableServiceProperties )
     {
-        super( methodName, methodName != null, componentClass, isDS11, isDS12Felix );
+        super( methodName, methodName != null, componentClass, dsVersion, configurableServiceProperties );
     }
 
 

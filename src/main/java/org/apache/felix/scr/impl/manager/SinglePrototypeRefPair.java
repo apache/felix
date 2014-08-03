@@ -42,6 +42,12 @@ public class SinglePrototypeRefPair<S, T> extends SingleRefPair<S, T>
     }
 
     @Override
+    public Object getServiceObjects()
+    {
+        return serviceObjects;
+    }
+
+    @Override
     public String toString()
     {
         return "[SinglePrototypeRefPair: ref: [" + getRef() + "] service: [" + getServiceObject(null) + "]]";

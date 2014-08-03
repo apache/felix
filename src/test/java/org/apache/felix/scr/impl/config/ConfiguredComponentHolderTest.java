@@ -32,6 +32,7 @@ import org.apache.felix.scr.impl.TargetedPID;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.manager.SingleComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
+import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.apache.felix.scr.impl.metadata.XmlHandler;
 
 
@@ -163,7 +164,7 @@ public class ConfiguredComponentHolderTest extends TestCase
 
     private static ComponentMetadata createComponentMetadata( String name )
     {
-        final ComponentMetadata metadata = new ComponentMetadata( XmlHandler.DS_VERSION_1_1 );
+        final ComponentMetadata metadata = new ComponentMetadata( DSVersion.DS11 );
         metadata.setName( name );
         metadata.setImplementationClassName(Object.class.getName());
         metadata.validate(null);

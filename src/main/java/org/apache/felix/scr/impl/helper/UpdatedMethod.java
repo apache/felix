@@ -18,6 +18,9 @@
  */
 package org.apache.felix.scr.impl.helper;
 
+import org.apache.felix.scr.impl.metadata.DSVersion;
+import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
+
 
 /**
  * Component method to be invoked on service property update of a bound service.
@@ -26,9 +29,9 @@ public class UpdatedMethod extends BindMethod
 {
 
     public UpdatedMethod( final String methodName,
-            final Class<?> componentClass, final String referenceClassName, final boolean isDS11, final boolean isDS12Felix )
+            final Class<?> componentClass, final String referenceClassName, final DSVersion dsVersion, final boolean configurableServiceProperties, ReferenceMetadata.ReferenceScope referenceScope )
     {
-        super( methodName, componentClass, referenceClassName, isDS11, isDS12Felix );
+        super( methodName, componentClass, referenceClassName, dsVersion, configurableServiceProperties, referenceScope );
     }
 
 
