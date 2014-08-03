@@ -29,6 +29,7 @@ import org.apache.felix.scr.impl.manager.RefPair;
 import org.apache.felix.scr.impl.manager.SingleRefPair;
 import org.apache.felix.scr.impl.manager.components.FakeService;
 import org.apache.felix.scr.impl.manager.components.T1;
+import org.apache.felix.scr.impl.manager.components.T1MapSR;
 import org.apache.felix.scr.impl.manager.components.T1a;
 import org.apache.felix.scr.impl.manager.components.T3;
 import org.apache.felix.scr.impl.manager.components2.T2;
@@ -428,6 +429,17 @@ public class BindMethodTest extends TestCase
         // T1a extends T1 and uses T1's public method
         testMethod( "suitable", new T1a(), DSVersion.DS10, "suitableT1" );
         testMethod( "suitable", new T1a(), DSVersion.DS11, "suitableT1" );
+    }
+    
+    public void test_13()
+    {
+        //single map param
+        testMethod( "packageT1Map", new T1(), DSVersion.DS12, null);
+        testMethod( "packageT1Map", new T1(), DSVersion.DS13, "packageT1Map");
+        
+        //map, sr
+        testMethod( "packageT1MapSR", new T1MapSR(), DSVersion.DS12, null);
+        testMethod( "packageT1MapSR", new T1MapSR(), DSVersion.DS13, "packageT1MapSR");
     }
 
 
