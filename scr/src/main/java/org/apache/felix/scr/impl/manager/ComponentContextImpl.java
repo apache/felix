@@ -47,17 +47,16 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     
     private final Bundle m_usingBundle;
     
-    private final S m_implementationObject;
+    private S m_implementationObject;
     
     private volatile boolean m_implementationAccessible;
     
     private final CountDownLatch accessibleLatch = new CountDownLatch(1);
 
-    ComponentContextImpl( SingleComponentManager<S> componentManager, Bundle usingBundle, S implementationObject )
+    public ComponentContextImpl( SingleComponentManager<S> componentManager, Bundle usingBundle )
     {
         m_componentManager = componentManager;
         m_usingBundle = usingBundle;
-        m_implementationObject = implementationObject;
         edgeInfos = new EdgeInfo[componentManager.getComponentMetadata().getDependencies().size()];
         for (int i = 0; i< edgeInfos.length; i++)
         {
@@ -65,6 +64,13 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         }
     }
     
+    
+    public void setImplementationObject(S implementationObject)
+    {
+        this.m_implementationObject = implementationObject;
+    }
+
+
     void setImplementationAccessible(boolean implementationAccessible)
     {
         this.m_implementationAccessible = implementationAccessible;
@@ -98,7 +104,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         try
         {
             DependencyManager<S, ?> dm = m_componentManager.getDependencyManager( name );
-            return ( dm != null ) ? dm.getService() : null;
+            return ( dm != null ) ? dm.getService(this) : null;
         }
         finally
         {
@@ -113,7 +119,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         try
         {
             DependencyManager<S, ?> dm = m_componentManager.getDependencyManager( name );
-            return ( dm != null ) ? dm.getService( ref ) : null;
+            return ( dm != null ) ? dm.getService( this, ref ) : null;
         }
         finally
         {
@@ -128,7 +134,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         try
         {
             DependencyManager<S, ?> dm = m_componentManager.getDependencyManager( name );
-            return ( dm != null ) ? dm.getServices() : null;
+            return ( dm != null ) ? dm.getServices(this) : null;
         }
         finally
         {

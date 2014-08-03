@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.config.ComponentContainer;
 import org.apache.felix.scr.impl.config.ReferenceManager;
-import org.apache.felix.scr.impl.helper.ActivateMethod.ActivatorParameter;
+import org.apache.felix.scr.impl.helper.ActivatorParameter;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.helper.MethodResult;
 import org.apache.felix.scr.impl.helper.ModifiedMethod;
@@ -103,7 +103,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     // 4. Call the activate method, if present
     // if this method is overwritten, the deleteComponent method should
     // also be overwritten
-    private boolean createComponent()
+    private boolean createComponent(ComponentContextImpl<S> componentContext)
     {
         if ( !isStateLocked() )
         {
@@ -123,7 +123,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 {
                     m_componentContext = null;
                 }
-            } );
+            }, componentContext );
 
             // if something failed creating the component instance, return false
             if ( tmpComponent == null )
@@ -215,7 +215,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     }
 
 
-    protected S createImplementationObject( Bundle usingBundle, SetImplementationObject<S> setter )
+    protected S createImplementationObject( Bundle usingBundle, SetImplementationObject<S> setter, ComponentContextImpl<S> componentContext )
     {
         final Class<S> implementationObjectClass;
         final S implementationObject;
@@ -246,7 +246,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             return null;
         }
         
-        ComponentContextImpl<S> componentContext = new ComponentContextImpl<S>(this, usingBundle, implementationObject);
+        componentContext.setImplementationObject(implementationObject);
 
         // 3. set the implementation object prematurely
         setter.presetComponentContext( componentContext );
@@ -261,7 +261,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 // if a dependency turned unresolved since the validation check,
                 // creating the instance fails here, so we deactivate and return
                 // null.
-                boolean open = dm.open( implementationObject, componentContext.getEdgeInfo( dm ) );
+                boolean open = dm.open( componentContext, componentContext.getEdgeInfo( dm ) );
                 if ( !open )
                 {
                     log( LogService.LOG_ERROR, "Cannot create component instance due to failure to bind reference {0}",
@@ -288,12 +288,11 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 }
                 if ( !skip )
                 {
-                    md.close( implementationObject, componentContext.getEdgeInfo( md ) );
+                    md.close( componentContext, componentContext.getEdgeInfo( md ) );
                 }
                 md.deactivate();
             }
             setter.resetImplementationObject( implementationObject );
-            unsetDependenciesCollected();
             return null;
 
         }
@@ -307,7 +306,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             // containing the exception with the Log Service and activation fails
             for ( DependencyManager<S, ?> md: getReversedDependencyManagers() )
             {
-                md.close( implementationObject, componentContext.getEdgeInfo( md ) );
+                md.close( componentContext, componentContext.getEdgeInfo( md ) );
             }
 
             // make sure the implementation object is not available
@@ -348,7 +347,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             // 2. Unbind any bound services
             for ( DependencyManager<S, ?> md: getReversedDependencyManagers() )
             {
-                md.close( implementationObject, componentContext.getEdgeInfo( md ) );
+                md.close( componentContext, componentContext.getEdgeInfo( md ) );
             }
         }
 
@@ -359,36 +358,33 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         return m_componentContext != null;
     }
 
-    <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )
+    <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> refPair, int trackingCount )
     {
         ComponentContextImpl<S> componentContext = m_componentContext;
         if ( componentContext != null )
         {
-            final S impl = componentContext.getImplementationObject( false );
             EdgeInfo info = componentContext.getEdgeInfo( dependencyManager );
-            dependencyManager.invokeBindMethod( impl, refPair, trackingCount, info );
+            dependencyManager.invokeBindMethod( componentContext, refPair, trackingCount, info );
         }
     }
 
-    <T> void invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )
+    <T> void invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> refPair, int trackingCount )
     {
         ComponentContextImpl<S> componentContext = m_componentContext;
         if ( componentContext != null )
         {
-            final S impl = componentContext.getImplementationObject( false );
             EdgeInfo info = componentContext.getEdgeInfo( dependencyManager );
-            dependencyManager.invokeUpdatedMethod( impl, refPair, trackingCount, info );
+            dependencyManager.invokeUpdatedMethod( componentContext, refPair, trackingCount, info );
         }
     }
 
-    <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> oldRefPair, int trackingCount )
+    <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> oldRefPair, int trackingCount )
     {
         ComponentContextImpl<S> componentContext = m_componentContext;
         if ( componentContext != null )
         {
-            final S impl = componentContext.getImplementationObject( false );
             EdgeInfo info = componentContext.getEdgeInfo( dependencyManager );
-            dependencyManager.invokeUnbindMethod( impl, oldRefPair, trackingCount, info );
+            dependencyManager.invokeUnbindMethod( componentContext, oldRefPair, trackingCount, info );
         }
     }
 
@@ -768,26 +764,15 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             boolean success = true;
             if ( m_componentContext == null )
             {
-                try
+                ComponentContextImpl<S> componentContext = new ComponentContextImpl<S>(this, null);
+                if ( collectDependencies(componentContext))
                 {
-                    if ( !collectDependencies() )
-                    {
                         log(
                                 LogService.LOG_DEBUG,
-                                "getService did not win collecting dependencies, try creating object anyway.",
+                                "getService (single component manager) dependencies collected.",
                                 null );
-
-                    }
-                    else
-                    {
-                        log(
-                                LogService.LOG_DEBUG,
-                                "getService won collecting dependencies, proceed to creating object.",
-                                null );
-
-                    }
                 }
-                catch ( IllegalStateException e )
+                else
                 {
                     log(
                             LogService.LOG_INFO,
@@ -801,7 +786,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                     if ( m_componentContext == null )
                     {
                         //state should be "Registered"
-                        S result = getService( );
+                        S result = getService(componentContext );
                         if ( result == null )
                         {
                             success = false;;
@@ -826,7 +811,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         }
     }
 
-    private S getService()
+    private S getService(ComponentContextImpl<S> componentContext)
     {
         //should be write locked
         if (!isInternalEnabled())
@@ -834,7 +819,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             return null;
         }
 
-        if ( createComponent() )
+        if ( createComponent(componentContext) )
         {
             return getInstance();
         }
@@ -879,7 +864,6 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                     if ( m_useCount.get() == 0 )
                     {
                         ungetService( );
-                        unsetDependenciesCollected();
                     }
                 }
                 finally
