@@ -23,8 +23,10 @@ import junit.framework.TestCase;
 
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.config.ComponentContainer;
+import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.SingleComponentManager;
 import org.apache.felix.scr.impl.manager.RefPair;
+import org.apache.felix.scr.impl.manager.SingleRefPair;
 import org.apache.felix.scr.impl.manager.components.FakeService;
 import org.apache.felix.scr.impl.manager.components.T1;
 import org.apache.felix.scr.impl.manager.components.T1a;
@@ -434,9 +436,11 @@ public class BindMethodTest extends TestCase
         SingleComponentManager icm = new SingleComponentManager( container, new ComponentMethods() );
         BindMethod bm = new BindMethod( methodName, component.getClass(),
                 FakeService.class.getName(), isDS11, false );
-        RefPair refPair = new RefPair( m_serviceReference );
-        assertTrue( bm.getServiceObject( refPair, m_context, icm ) );
-        bm.invoke( component, refPair, null, icm );
+        RefPair refPair = new SingleRefPair( m_serviceReference );
+        ComponentContextImpl<T1> cc = new ComponentContextImpl(icm, null);
+        assertTrue( bm.getServiceObject( cc, refPair, m_context, icm ) );
+        BindParameters bp = new BindParameters(cc, refPair);
+        bm.invoke( component, bp, null, icm );
         assertEquals( expectCallPerformed, component.callPerformed );
     }
     

@@ -24,7 +24,7 @@ import java.util.Collection;
 import java.util.IdentityHashMap;
 
 import org.apache.felix.scr.impl.config.ComponentContainer;
-import org.apache.felix.scr.impl.helper.ActivateMethod;
+import org.apache.felix.scr.impl.helper.ActivatorParameter;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.helper.MethodResult;
 import org.apache.felix.scr.impl.helper.ModifiedMethod;
@@ -84,24 +84,15 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
 
         // When the getServiceMethod is called, the implementation object must be created
 
-        try
+        ComponentContextImpl<S> componentContext = new ComponentContextImpl<S>(this, bundle);
+        if (collectDependencies(componentContext) )
         {
-            if ( !collectDependencies() )
-            {
-                log( LogService.LOG_DEBUG,
-                        "getService (ServiceFactory) did not win collecting dependencies, try creating object anyway.",
-                        null );
+            log( LogService.LOG_DEBUG,
+                "getService (ServiceFactory) dependencies collected.",
+                null );
 
-            }
-            else
-            {
-                log( LogService.LOG_DEBUG,
-                        "getService (ServiceFactory) won collecting dependencies, proceed to creating object.",
-                        null );
-
-            }
         }
-        catch ( IllegalStateException e )
+        else
         {
             //cannot obtain service from a required reference
             return null;
@@ -125,14 +116,18 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
                 }
             }
 
-        } );
+        }, componentContext );
 
-        // register the components component context if successfull
+        // register the components component context if successful
         if ( service == null )
         {
             // log that the service factory component cannot be created (we don't
             // know why at this moment; this should already have been logged)
             log( LogService.LOG_ERROR, "Failed creating the component instance; see log for reason", null );
+        } 
+        else 
+        {
+            m_activated = true;
         }
 
         return service;
@@ -160,7 +155,7 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
             // if this was the last use of the component, go back to REGISTERED state
             if ( serviceContexts.isEmpty() && getState() == STATE_ACTIVE )
             {
-                unsetDependenciesCollected();
+                m_activated = false;
             }
         }
     }
@@ -173,27 +168,27 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
         }
     }
 
-    <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )
+    <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> refPair, int trackingCount )
     {
         for ( ComponentContextImpl<S> cc : getComponentContexts() )
         {
-            dependencyManager.invokeBindMethod( cc.getImplementationObject( false ), refPair, trackingCount, cc.getEdgeInfo( dependencyManager ) );
+            dependencyManager.invokeBindMethod( cc, refPair, trackingCount, cc.getEdgeInfo( dependencyManager ) );
         }
     }
 
-    <T> void invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )
+    <T> void invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> refPair, int trackingCount )
     {
         for ( ComponentContextImpl<S> cc : getComponentContexts() )
         {
-            dependencyManager.invokeUpdatedMethod( cc.getImplementationObject( false ), refPair, trackingCount, cc.getEdgeInfo( dependencyManager ) );
+            dependencyManager.invokeUpdatedMethod( cc, refPair, trackingCount, cc.getEdgeInfo( dependencyManager ) );
         }
     }
 
-    <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> oldRefPair, int trackingCount )
+    <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> oldRefPair, int trackingCount )
     {
         for ( ComponentContextImpl<S> cc : getComponentContexts() )
         {
-            dependencyManager.invokeUnbindMethod( cc.getImplementationObject( false ), oldRefPair, trackingCount, cc.getEdgeInfo( dependencyManager ) );
+            dependencyManager.invokeUnbindMethod( cc, oldRefPair, trackingCount, cc.getEdgeInfo( dependencyManager ) );
         }
     }
 
@@ -205,7 +200,7 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
         {
             S instance = componentContext.getImplementationObject(true);
             result = modifiedMethod.invoke( instance,
-                    new ActivateMethod.ActivatorParameter( componentContext, -1 ), MethodResult.VOID, this );
+                    new ActivatorParameter( componentContext, -1 ), MethodResult.VOID, this );
 
         }
         return result;

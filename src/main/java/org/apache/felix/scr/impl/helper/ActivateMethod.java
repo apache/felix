@@ -22,11 +22,10 @@ package org.apache.felix.scr.impl.helper;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
 
 
-public class ActivateMethod extends BaseMethod
+public class ActivateMethod extends BaseMethod<ActivatorParameter>
 {
 
     private static final Class[] ACTIVATE_TYPES_DS11 =
@@ -107,7 +106,7 @@ public class ActivateMethod extends BaseMethod
     }
 
 
-    protected Object[] getParameters( Method method, Object rawParameter )
+    protected Object[] getParameters( Method method, ActivatorParameter rawParameter )
     {
         final Class[] parameterTypes = method.getParameterTypes();
         final ActivatorParameter ap = ( ActivatorParameter ) rawParameter;
@@ -142,7 +141,7 @@ public class ActivateMethod extends BaseMethod
         return "activate";
     }
 
-    public MethodResult invoke( Object componentInstance, Object rawParameter, final MethodResult methodCallFailureResult, SimpleLogger logger )
+    public MethodResult invoke( Object componentInstance, ActivatorParameter rawParameter, final MethodResult methodCallFailureResult, SimpleLogger logger )
     {
         if (methodExists( logger ))
         {
@@ -246,29 +245,4 @@ public class ActivateMethod extends BaseMethod
         return isDS11();
     }
 
-    //---------- Helper class for method call parameters
-
-    public static final class ActivatorParameter
-    {
-        private final ComponentContext m_componentContext;
-        private final int m_reason;
-
-        public ActivatorParameter( ComponentContext componentContext, int reason )
-        {
-            this.m_componentContext = componentContext;
-            this.m_reason = reason;
-        }
-
-
-        public ComponentContext getComponentContext()
-        {
-            return m_componentContext;
-        }
-
-
-        public int getReason()
-        {
-            return m_reason;
-        }
-    }
 }

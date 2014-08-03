@@ -295,20 +295,20 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         return false;
     }
 
-    protected boolean collectDependencies()
+    protected boolean collectDependencies(ComponentContextImpl<S> componentContext)
     {
         return true;
     }
 
-    <T> void invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<T> ref, int trackingCount )
+    <T> void invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> ref, int trackingCount )
     {
     }
 
-    <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> reference, int trackingCount )
+    <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> reference, int trackingCount )
     {
     }
 
-    <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> oldRef, int trackingCount )
+    <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> oldRef, int trackingCount )
     {
     }
 

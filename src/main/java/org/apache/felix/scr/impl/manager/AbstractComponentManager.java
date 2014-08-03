@@ -96,8 +96,6 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
     private volatile boolean m_dependencyManagersInitialized;
 
-    private volatile boolean m_dependenciesCollected;
-
     private final AtomicInteger m_trackingCount = new AtomicInteger( );
 
     // The ServiceRegistration is now tracked in the RegistrationManager
@@ -783,7 +781,6 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
                 {
                     disableDependencyManagers();
                 }
-                unsetDependenciesCollected();
             }
             finally
             {
@@ -968,47 +965,34 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
     /**
      * Collect and store in m_dependencies_map all the services for dependencies, outside of any locks.
-     * Throwing IllegalStateException on failure to collect all the dependencies is needed so getService can
-     * know to return null.
+     * @param componentContext possible instance key for prototype scope references
      *
-     * @return true if this thread collected the dependencies;
-     *   false if some other thread successfully collected the dependencies;
-     * @throws IllegalStateException if some dependency is no longer available.
+     * @return true if all references can be collected,
+     *   false if some dependency is no longer available.
      */
-    protected boolean collectDependencies() throws IllegalStateException
+    protected boolean collectDependencies(ComponentContextImpl<S> componentContext)
     {
-        if ( m_dependenciesCollected)
-        {
-            log( LogService.LOG_DEBUG, "dependencies already collected, do not collect dependencies", null );
-            return false;
-        }
         initDependencyManagers();
         for ( DependencyManager<S, ?> dependencyManager : m_dependencyManagers )
         {
-            if ( !dependencyManager.prebind() )
+            if ( !dependencyManager.prebind(componentContext) )
             {
                 //not actually satisfied any longer
                 deactivateDependencyManagers();
                 log( LogService.LOG_DEBUG, "Could not get required dependency for dependency manager: {0}",
                         new Object[] {dependencyManager.getName()}, null );
-                throw new IllegalStateException( "Missing dependencies, not satisfied" );
+                return false;
             }
         }
-        m_dependenciesCollected = true;
         log( LogService.LOG_DEBUG, "This thread collected dependencies", null );
         return true;
     }
 
-    protected void unsetDependenciesCollected()
-    {
-        m_dependenciesCollected = false;
-    }
+    abstract <T> void invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> refPair, int trackingCount );
 
-    abstract <T> void invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount );
+    abstract <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> refPair, int trackingCount );
 
-    abstract <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount );
-
-    abstract <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> oldRefPair, int trackingCount );
+    abstract <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> oldRefPair, int trackingCount );
 
     //**********************************************************************************************************
     public BundleComponentActivator getActivator()

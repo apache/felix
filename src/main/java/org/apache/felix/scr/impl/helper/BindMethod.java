@@ -23,6 +23,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import org.apache.felix.scr.impl.Activator;
+import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.RefPair;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -34,7 +35,7 @@ import org.osgi.service.packageadmin.PackageAdmin;
 /**
  * Component method to be invoked on service (un)binding.
  */
-public class BindMethod extends BaseMethod
+public class BindMethod extends BaseMethod<BindParameters>
 {
 
     private static final Class<?> OBJECT_CLASS = Object.class;
@@ -563,46 +564,33 @@ public class BindMethod extends BaseMethod
         return null;
     }
 
-    public <T> boolean getServiceObject( RefPair<T> refPair, BundleContext context, SimpleLogger logger )
+    public <S, T> boolean getServiceObject( ComponentContextImpl<S> key, RefPair<S, T> refPair, BundleContext context, SimpleLogger logger )
     {
         //??? this resolves which we need.... better way?
-        if ( refPair.getServiceObject() == null && methodExists( logger ) )
+        if ( refPair.getServiceObject(key) == null && methodExists( logger ) )
         {
             if (m_paramStyle == SERVICE_OBJECT || m_paramStyle == SERVICE_OBJECT_AND_MAP) {
-                T service = context.getService( refPair.getRef() );
-                if ( service == null )
-                {
-                    refPair.setFailed();
-                    logger.log(
-                         LogService.LOG_WARNING,
-                         "Could not get service from ref {0}", new Object[] {refPair.getRef()}, null );
-                    return false;
-                }
-                if (!refPair.setServiceObject(service))
-                {
-                    // Another thread got the service before, so unget our
-                    context.ungetService( refPair.getRef() );
-                }
-                return true;
+                return refPair.getServiceObject(key, context, logger);
             }
         }
         return true;
     }
 
-    protected Object[] getParameters( Method method, Object rawParameter )
+    protected Object[] getParameters( Method method, BindParameters bp )
     {
-        RefPair<?> refPair = ( RefPair<?> ) rawParameter;
+        ComponentContextImpl key = bp.getComponentContext();
+        RefPair<?, ?> refPair = bp.getRefPair();
         if (m_paramStyle == SERVICE_REFERENCE )
         {
             return new Object[] {refPair.getRef()};
         }
         if (m_paramStyle == SERVICE_OBJECT)
         {
-            return new Object[] {refPair.getServiceObject()};
+            return new Object[] {refPair.getServiceObject(key)};
         }
         if (m_paramStyle == SERVICE_OBJECT_AND_MAP  )
         {
-            return new Object[] {refPair.getServiceObject(), new ReadOnlyDictionary<String, Object>( refPair.getRef() )};
+            return new Object[] {refPair.getServiceObject(key), new ReadOnlyDictionary<String, Object>( refPair.getRef() )};
         }
         throw new IllegalStateException( "Unexpected m_paramStyle of " + m_paramStyle );
     }
