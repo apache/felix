@@ -21,6 +21,7 @@
 package org.apache.felix.scr.impl.helper;
 
 
+import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 
 /**
@@ -33,25 +34,26 @@ public class BindMethods
     private final UnbindMethod m_unbind;
 
     BindMethods( ReferenceMetadata m_dependencyMetadata, Class<?> instanceClass,
-            final boolean isDS11, final boolean isDS12Felix )
+            final DSVersion dsVersion, final boolean configurableServiceProperties )
     {
+        ReferenceMetadata.ReferenceScope referenceScope = m_dependencyMetadata.getScope();
         m_bind = new BindMethod(
                 m_dependencyMetadata.getBind(),
                 instanceClass,
                 m_dependencyMetadata.getInterface(),
-                isDS11, isDS12Felix
+                dsVersion, configurableServiceProperties, referenceScope
         );
         m_updated = new UpdatedMethod(
                 m_dependencyMetadata.getUpdated(),
                 instanceClass,
                 m_dependencyMetadata.getInterface(),
-                isDS11, isDS12Felix
+                dsVersion, configurableServiceProperties, referenceScope
         );
         m_unbind = new UnbindMethod(
                 m_dependencyMetadata.getUnbind(),
                 instanceClass,
                 m_dependencyMetadata.getInterface(),
-                isDS11, isDS12Felix
+                dsVersion, configurableServiceProperties, referenceScope
         );
     }
 

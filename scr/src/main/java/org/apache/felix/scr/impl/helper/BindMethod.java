@@ -21,11 +21,17 @@ package org.apache.felix.scr.impl.helper;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.felix.scr.impl.Activator;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.RefPair;
+import org.apache.felix.scr.impl.metadata.DSVersion;
+import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
+import org.apache.felix.scr.impl.metadata.ReferenceMetadata.ReferenceScope;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.ExportedPackage;
@@ -39,21 +45,48 @@ public class BindMethod extends BaseMethod<BindParameters>
 {
 
     private static final Class<?> OBJECT_CLASS = Object.class;
+    
+    protected static final Class<?> SERVICE_REFERENCE_CLASS = ServiceReference.class;
+    private static final Class<?> SERVICE_OBJECTS_CLASS;
+    
+    static {
+        Class<?> serviceObjectsClass = null;
+        try {
+            serviceObjectsClass = ServiceObjects.class;
+        }
+        catch (Throwable t)
+        {
+            //can't load class
+        }
+        SERVICE_OBJECTS_CLASS = serviceObjectsClass;
+    }
 
     private final String m_referenceClassName;
+    
+    private final ReferenceMetadata.ReferenceScope m_referenceScope;
 
-    private static final int SERVICE_REFERENCE = 1;
-    private static final int SERVICE_OBJECT = 2;
-    private static final int SERVICE_OBJECT_AND_MAP = 3;
+//    private static final int SERVICE_REFERENCE = 1;
+//    private static final int SERVICE_OBJECT = 2;
+//    private static final int SERVICE_OBJECT_AND_MAP = 3;
 
-    private int m_paramStyle;
+//    private int m_paramStyle;
+    
+    private enum ParamType { 
+        serviceReference,
+        serviceObjects,
+        serviceType,
+        map
+    }
+    
+    private List<ParamType> m_paramTypes = new ArrayList<ParamType>();
 
 
     public BindMethod( final String methodName,
-            final Class<?> componentClass, final String referenceClassName, final boolean isDS11, final boolean isDS12Felix )
+            final Class<?> componentClass, final String referenceClassName, final DSVersion dsVersion, final boolean configurableServiceProperties, ReferenceScope referenceScope )
     {
-        super( methodName, componentClass, isDS11, isDS12Felix );
+        super( methodName, componentClass, dsVersion, configurableServiceProperties );
         m_referenceClassName = referenceClassName;
+        m_referenceScope = referenceScope;
     }
 
 
@@ -78,12 +111,14 @@ public class BindMethod extends BaseMethod<BindParameters>
     protected Method doFindMethod( Class<?> targetClass, boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger )
         throws SuitableMethodNotAccessibleException, InvocationTargetException
     {
-        // 112.3.1 The method is searched for using the following priority
-        // 1 - Service reference parameter
-        // 2 - Service object parameter
-        // 3 - Service interface assignement compatible methods
-        // 4 - same as 2, but with Map param (DS 1.1 only)
-        // 5 - same as 3, but with Map param (DS 1.1 only)
+        /* 112.3.1 The method is searched for using the following priority
+         1 - ServiceReference single parameter
+         2 - ServiceObjects single parameter (DS 1.3+ only)
+         3 - Service object single parameter
+         4 - Service interface assignment compatible single parameter
+         5 - two parameters, first the type of or assignment compatible with the service, the second Map (DS 1.1, 1.2 only)
+         6 - one or more parameters of types ServiceReference, ServiceObjects, interface type, or assignment compatible to interface type, in any order. (DS 1.3+ only)
+         */
 
         // flag indicating a suitable but inaccessible method has been found
         boolean suitableMethodNotAccessible = false;
@@ -105,7 +140,26 @@ public class BindMethod extends BaseMethod<BindParameters>
                 {
                     logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
                 }
-                m_paramStyle = SERVICE_REFERENCE;
+                m_paramTypes.add(ParamType.serviceReference);
+                return method;
+            }
+        }
+        catch ( SuitableMethodNotAccessibleException ex )
+        {
+            suitableMethodNotAccessible = true;
+        }
+
+        //case 2 ServiceObjects parameter
+        try
+        {
+            method = getServiceObjectsMethod( targetClass, acceptPrivate, acceptPackage, logger );
+            if ( method != null )
+            {
+                if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+                {
+                    logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
+                }
+                m_paramTypes.add(ParamType.serviceObjects);
                 return method;
             }
         }
@@ -133,7 +187,7 @@ public class BindMethod extends BaseMethod<BindParameters>
                 method = getServiceObjectMethod( targetClass, parameterClass, acceptPrivate, acceptPackage, logger );
                 if ( method != null )
                 {
-                    m_paramStyle = SERVICE_OBJECT;
+                    m_paramTypes.add(ParamType.serviceType);
                     return method;
                 }
             }
@@ -148,7 +202,7 @@ public class BindMethod extends BaseMethod<BindParameters>
                 method = getServiceObjectAssignableMethod( targetClass, parameterClass, acceptPrivate, acceptPackage, logger );
                 if ( method != null )
                 {
-                    m_paramStyle = SERVICE_OBJECT;
+                    m_paramTypes.add(ParamType.serviceType);
                     return method;
                 }
             }
@@ -158,7 +212,7 @@ public class BindMethod extends BaseMethod<BindParameters>
             }
 
             // signatures taking a map are only supported starting with DS 1.1
-            if ( isDS11() )
+            if ( getDSVersion().isDS11() && !getDSVersion().isDS13() )
             {
 
                 // Case 4 - same as case 2, but + Map param (DS 1.1 only)
@@ -167,7 +221,8 @@ public class BindMethod extends BaseMethod<BindParameters>
                     method = getServiceObjectWithMapMethod( targetClass, parameterClass, acceptPrivate, acceptPackage, logger );
                     if ( method != null )
                     {
-                        m_paramStyle = SERVICE_OBJECT_AND_MAP;
+                        m_paramTypes.add(ParamType.serviceType);
+                        m_paramTypes.add(ParamType.map);
                         return method;
                     }
                 }
@@ -183,7 +238,8 @@ public class BindMethod extends BaseMethod<BindParameters>
                         acceptPackage );
                     if ( method != null )
                     {
-                        m_paramStyle = SERVICE_OBJECT_AND_MAP;
+                        m_paramTypes.add(ParamType.serviceType);
+                        m_paramTypes.add(ParamType.map);
                         return method;
                     }
                 }
@@ -193,7 +249,10 @@ public class BindMethod extends BaseMethod<BindParameters>
                 }
 
             }
-
+            if ( getDSVersion().isDS13() )
+            {
+                //TODO
+            }
         }
         else if ( logger.isLogEnabled( LogService.LOG_WARNING ) )
         {
@@ -353,6 +412,18 @@ public class BindMethod extends BaseMethod<BindParameters>
     {
         return getMethod( targetClass, getMethodName(), new Class[]
             { SERVICE_REFERENCE_CLASS }, acceptPrivate, acceptPackage, logger );
+    }
+
+    private Method getServiceObjectsMethod( final Class<?> targetClass, boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger )
+        throws SuitableMethodNotAccessibleException, InvocationTargetException
+    {
+        if ( m_referenceScope == ReferenceMetadata.ReferenceScope.prototype )
+        {
+            return getMethod(targetClass, getMethodName(),
+                new Class[] { SERVICE_OBJECTS_CLASS }, acceptPrivate, acceptPackage,
+                logger);
+        }
+        return null;
     }
 
 
@@ -569,7 +640,7 @@ public class BindMethod extends BaseMethod<BindParameters>
         //??? this resolves which we need.... better way?
         if ( refPair.getServiceObject(key) == null && methodExists( logger ) )
         {
-            if (m_paramStyle == SERVICE_OBJECT || m_paramStyle == SERVICE_OBJECT_AND_MAP) {
+            if ( m_paramTypes.contains(ParamType.serviceType) ) {
                 return refPair.getServiceObject(key, context, logger);
             }
         }
@@ -579,38 +650,38 @@ public class BindMethod extends BaseMethod<BindParameters>
     protected Object[] getParameters( Method method, BindParameters bp )
     {
         ComponentContextImpl key = bp.getComponentContext();
+        Object[] result = new Object[ m_paramTypes.size()];
         RefPair<?, ?> refPair = bp.getRefPair();
-        if (m_paramStyle == SERVICE_REFERENCE )
-        {
-            return new Object[] {refPair.getRef()};
+        int i = 0;
+        for ( ParamType pt: m_paramTypes ) {
+            switch (pt) {
+                case serviceReference: 
+                    result[i++] = refPair.getRef();
+                    break;
+                
+                case serviceObjects:
+                    result[i++] = refPair.getServiceObjects();
+                    break;
+                
+                case map:
+                    result[i++] = new ReadOnlyDictionary<String, Object>( refPair.getRef() );
+                    break;
+                
+                case serviceType:
+                    result[i++] = refPair.getServiceObject(key);
+                    break;
+                
+                default: throw new IllegalStateException("unexpected ParamType: " + pt);
+                
+            }
         }
-        if (m_paramStyle == SERVICE_OBJECT)
-        {
-            return new Object[] {refPair.getServiceObject(key)};
-        }
-        if (m_paramStyle == SERVICE_OBJECT_AND_MAP  )
-        {
-            return new Object[] {refPair.getServiceObject(key), new ReadOnlyDictionary<String, Object>( refPair.getRef() )};
-        }
-        throw new IllegalStateException( "Unexpected m_paramStyle of " + m_paramStyle );
+        return result;
     }
 
 
     protected String getMethodNamePrefix()
     {
         return "bind";
-    }
-
-    //---------- Service abstraction ------------------------------------
-
-    public static interface Service
-    {
-
-        ServiceReference getReference();
-
-
-        Object getInstance();
-
     }
 
 }

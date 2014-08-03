@@ -433,7 +433,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             if ( m_factoryProperties != null)
             {
                 props.putAll(m_factoryProperties);
-                if (getComponentMetadata().isDS13() && m_factoryProperties.containsKey(Constants.SERVICE_PID))
+                if (getComponentMetadata().getDSVersion().isDS13() && m_factoryProperties.containsKey(Constants.SERVICE_PID))
                 {
                     List<String> servicePids = (List<String>) m_configurationProperties.get(Constants.SERVICE_PID);
                     if (servicePids == null) 

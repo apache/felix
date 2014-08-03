@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
+import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 
 
@@ -44,19 +45,19 @@ public class ComponentMethods
         {
             return;
         }
-        boolean isDS11 = componentMetadata.isDS11();
-        boolean isDS12Felix = componentMetadata.isDS12Felix();
+        DSVersion dsVersion = componentMetadata.getDSVersion();
+        boolean configurableServiceProperties = componentMetadata.isConfigurableServiceProperties();
         m_activateMethod = new ActivateMethod( componentMetadata.getActivate(), componentMetadata
-                .isActivateDeclared(), implementationObjectClass, isDS11, isDS12Felix );
+                .isActivateDeclared(), implementationObjectClass, dsVersion, configurableServiceProperties );
         m_deactivateMethod = new DeactivateMethod( componentMetadata.getDeactivate(),
-                componentMetadata.isDeactivateDeclared(), implementationObjectClass, isDS11, isDS12Felix );
+                componentMetadata.isDeactivateDeclared(), implementationObjectClass, dsVersion, configurableServiceProperties );
 
-        m_modifiedMethod = new ModifiedMethod( componentMetadata.getModified(), implementationObjectClass, isDS11, isDS12Felix );
+        m_modifiedMethod = new ModifiedMethod( componentMetadata.getModified(), implementationObjectClass, dsVersion, configurableServiceProperties );
 
         for ( ReferenceMetadata referenceMetadata: componentMetadata.getDependencies() )
         {
             String refName = referenceMetadata.getName();
-            BindMethods bindMethods = new BindMethods( referenceMetadata, implementationObjectClass, isDS11, isDS12Felix);
+            BindMethods bindMethods = new BindMethods( referenceMetadata, implementationObjectClass, dsVersion, configurableServiceProperties);
             bindMethodMap.put( refName, bindMethods );
         }
     }

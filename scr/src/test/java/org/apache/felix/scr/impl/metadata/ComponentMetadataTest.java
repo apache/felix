@@ -505,7 +505,7 @@ public class ComponentMetadataTest extends TestCase
         // updated method accepted for DS 1.1-felix
         final ReferenceMetadata rm3 = createReferenceMetadata( "test" );
         rm3.setUpdated( "my_updated_method" );
-        final ComponentMetadata cm3 = createComponentMetadata( XmlHandler.DS_VERSION_1_1_FELIX, Boolean.TRUE, null );
+        final ComponentMetadata cm3 = createComponentMetadata( DSVersion.DS11Felix, Boolean.TRUE, null );
         cm3.addDependency( rm3 );
 
         // validates fine and logs no message
@@ -520,7 +520,7 @@ public class ComponentMetadataTest extends TestCase
         // updated method accepted for DS 1.2
         final ReferenceMetadata rm3 = createReferenceMetadata( "test" );
         rm3.setUpdated( "my_updated_method" );
-        final ComponentMetadata cm3 = createComponentMetadata( XmlHandler.DS_VERSION_1_2, Boolean.TRUE, null );
+        final ComponentMetadata cm3 = createComponentMetadata( DSVersion.DS12, Boolean.TRUE, null );
         cm3.addDependency( rm3 );
 
         // validates fine and logs no message
@@ -741,16 +741,16 @@ public class ComponentMetadataTest extends TestCase
 
     public void test_get_configuration_pid_method()
     {
-        doTest_get_configuration_pid_method(XmlHandler.DS_VERSION_1_0);
-        doTest_get_configuration_pid_method(XmlHandler.DS_VERSION_1_1);
-        doTest_get_configuration_pid_method(XmlHandler.DS_VERSION_1_2);
+        doTest_get_configuration_pid_method(DSVersion.DS10);
+        doTest_get_configuration_pid_method(DSVersion.DS11);
+        doTest_get_configuration_pid_method(DSVersion.DS12);
     }
 
-    private void doTest_get_configuration_pid_method(int specVersion)
+    private void doTest_get_configuration_pid_method(DSVersion specVersion)
     {
         // Make sure that getConfigurationPid returns the default component name (implementation class name).
         // We only do this kind of test if spec is greater than ds 1.0, because in ds 1.0, the component name is mandatory.
-        if (specVersion > XmlHandler.DS_VERSION_1_0)
+        if ( specVersion.isDS11() )
         {
             ComponentMetadata cm = new ComponentMetadata( specVersion );
             try
@@ -820,9 +820,9 @@ public class ComponentMetadataTest extends TestCase
 
 
     // Creates Component Metadata for the given namespace
-    private ComponentMetadata createComponentMetadata( int nameSpaceCode, Boolean immediate, String factory )
+    private ComponentMetadata createComponentMetadata( DSVersion dsVersion, Boolean immediate, String factory )
     {
-        ComponentMetadata meta = new ComponentMetadata( nameSpaceCode );
+        ComponentMetadata meta = new ComponentMetadata( dsVersion );
         meta.setName( "place.holder" );
         meta.setImplementationClassName( "place.holder.implementation" );
         if ( immediate != null )
@@ -840,20 +840,20 @@ public class ComponentMetadataTest extends TestCase
     // Creates DS 1.0 Component Metadata
     private ComponentMetadata createComponentMetadata( Boolean immediate, String factory )
     {
-        return createComponentMetadata( XmlHandler.DS_VERSION_1_0, immediate, factory );
+        return createComponentMetadata( DSVersion.DS10, immediate, factory );
     }
 
 
     // Creates DS 1.1 Component Metadata
     private ComponentMetadata createComponentMetadata11( Boolean immediate, String factory )
     {
-        return createComponentMetadata( XmlHandler.DS_VERSION_1_1, immediate, factory );
+        return createComponentMetadata( DSVersion.DS11, immediate, factory );
     }
 
     // Creates DS 1.2 Component Metadata
     private ComponentMetadata createComponentMetadata12( Boolean immediate, String factory )
     {
-        return createComponentMetadata( XmlHandler.DS_VERSION_1_2, immediate, factory );
+        return createComponentMetadata( DSVersion.DS12, immediate, factory );
     }
 
     private ServiceMetadata createServiceMetadata( Boolean serviceFactory )

@@ -63,7 +63,7 @@ public class ComponentMetadata
 
     // the namespace code of the namespace declaring this component, this is
     // one of the XmlHandler.DS_VERSION_* constants
-    private final int m_namespaceCode;
+    private final DSVersion m_dsVersion;
 
     // 112.4.3: A Globally unique component name (required)
     private String m_name;
@@ -137,9 +137,9 @@ public class ComponentMetadata
     }
 
 
-    public ComponentMetadata( int namespaceCode )
+    public ComponentMetadata( DSVersion dsVersion )
     {
-        this.m_namespaceCode = namespaceCode;
+        this.m_dsVersion = dsVersion;
     }
 
     /////////////////////////////////////////// SETTERS //////////////////////////////////////
@@ -420,66 +420,12 @@ public class ComponentMetadata
      * declaring this component. This is one of the XmlHandler.DS_VERSION_*
      * constants.
      */
-    public int getNamespaceCode()
+    public DSVersion getDSVersion()
     {
-        return m_namespaceCode;
+        return m_dsVersion;
     }
 
-
-    /**
-     * Returns <code>true</code> if the metadata declaration has used the
-     * Declarative Services version 1.1 namespace or a later namespace.
-     */
-    public boolean isDS11()
-    {
-        return getNamespaceCode() >= XmlHandler.DS_VERSION_1_1;
-    }
-
-
-    /**
-     * Returns <code>true</code> if the metadata declaration has used the
-     * Declarative Services version 1.1-felix namespace or a later namespace.
-     *
-     * @see <a href="https://issues.apache.org/jira/browse/FELIX-1893">FELIX-1893</a>
-     */
-    public boolean isDS11Felix()
-    {
-        return getNamespaceCode() >= XmlHandler.DS_VERSION_1_1_FELIX;
-    }
-
-
-    /**
-     * Returns <code>true</code> if the metadata declaration has used the
-     * Declarative Services version 1.2 namespace or a later namespace.
-     */
-    public boolean isDS12()
-    {
-        return getNamespaceCode() >= XmlHandler.DS_VERSION_1_2;
-    }
-
-
-    /**
-     * Returns <code>true</code> if the metadata declaration has used the
-     * Declarative Services version 1.2-felix namespace or a later namespace.
-     *
-     * @see <a href="https://issues.apache.org/jira/browse/FELIX-3377">FELIX-3377</a>
-     */
-    public boolean isDS12Felix()
-    {
-        return getNamespaceCode() >= XmlHandler.DS_VERSION_1_2_FELIX;
-    }
     
-    /**
-     * Returns <code>true</code> if the metadata declaration has used the
-     * Declarative Services version 1.3 namespace or a later namespace.
-     */
-    public boolean isDS13()
-    {
-        return getNamespaceCode() >= XmlHandler.DS_VERSION_1_3;
-    }
-    
-
-
     /**
      * Returns the name of the component
      *
@@ -810,7 +756,7 @@ public class ComponentMetadata
         if ( m_name == null )
         {
             // 112.4.3 name is optional defaulting to implementation class name since DS 1.1
-            if ( m_namespaceCode < XmlHandler.DS_VERSION_1_1 )
+            if ( !m_dsVersion.isDS11() )
             {
                 throw new ComponentException( "The component name has not been set" );
             }
@@ -833,7 +779,7 @@ public class ComponentMetadata
             // default if not specified or pre DS 1.1
             m_configurationPolicy = CONFIGURATION_POLICY_OPTIONAL;
         }
-        else if ( m_namespaceCode < XmlHandler.DS_VERSION_1_1 )
+        else if ( !m_dsVersion.isDS11() )
         {
             throw validationFailure( "configuration-policy declaration requires DS 1.1 or later namespace " );
         }
@@ -848,7 +794,7 @@ public class ComponentMetadata
             // default if not specified or pre DS 1.1
             m_activate = "activate";
         }
-        else if ( m_namespaceCode < XmlHandler.DS_VERSION_1_1 )
+        else if ( !m_dsVersion.isDS11() )
         {
             throw validationFailure( "activate method declaration requires DS 1.1 or later namespace " );
         }
@@ -859,13 +805,13 @@ public class ComponentMetadata
             // default if not specified or pre DS 1.1
             m_deactivate = "deactivate";
         }
-        else if ( m_namespaceCode < XmlHandler.DS_VERSION_1_1 )
+        else if ( !m_dsVersion.isDS11() )
         {
             throw validationFailure( "deactivate method declaration requires DS 1.1 or later namespace " );
         }
 
         // 112.??.?? modified can be specified (since DS 1.1)
-        if ( m_modified != null && m_namespaceCode < XmlHandler.DS_VERSION_1_1 )
+        if ( m_modified != null && !m_dsVersion.isDS11() )
         {
             throw validationFailure( "modified method declaration requires DS 1.1 or later namespace " );
         }
@@ -877,7 +823,7 @@ public class ComponentMetadata
         }
         else
         {
-            if ( m_namespaceCode < XmlHandler.DS_VERSION_1_2 )
+            if ( !m_dsVersion.isDS12() )
             {
                 throw validationFailure( "configuration-pid attribute requires DS 1.2 or later namespace " );
             }
@@ -885,7 +831,7 @@ public class ComponentMetadata
             {
                 throw validationFailure( "configuration-pid nust not be empty string " );
             }
-            if (m_configurationPid.size() > 1 && m_namespaceCode < XmlHandler.DS_VERSION_1_3)
+            if (m_configurationPid.size() > 1 && !m_dsVersion.isDS13())
             {
                 throw validationFailure( "multiple configuration-pid requires DS 1.3 or later namespace " );
             }
@@ -893,7 +839,7 @@ public class ComponentMetadata
             {
                 if ("$".equals( m_configurationPid.get(i)))
                 {
-                    if (m_namespaceCode < XmlHandler.DS_VERSION_1_3)
+                    if (!m_dsVersion.isDS13())
                     {
                         throw validationFailure( "Use of '$' configuration-pid wildcard requires DS 1.3 or later namespace " );                        
                     }
@@ -970,19 +916,19 @@ public class ComponentMetadata
             }
         }
         
-        if (m_namespaceCode == XmlHandler.DS_VERSION_1_2_FELIX) 
+        if (m_dsVersion == DSVersion.DS12Felix) 
         {
         	m_configurableServiceProperties = true;
         }
-        if (m_namespaceCode >= XmlHandler.DS_VERSION_1_3)
+        if (m_dsVersion.isDS13())
         {
         	m_deleteCallsModify = true; //spec behavior as of 1.3
         }
-        if (m_namespaceCode < XmlHandler.DS_VERSION_1_3 && m_configureWithInterfaces)
+        if ( !m_dsVersion.isDS13() && m_configureWithInterfaces)
         {
         	throw validationFailure("Configuration with interfaces or annotations only possible with version 1.3 or later");
         }
-        if (m_namespaceCode >= XmlHandler.DS_VERSION_1_3 && m_obsoleteFactoryComponentFactory)
+        if (m_dsVersion.isDS13() && m_obsoleteFactoryComponentFactory)
         {
         	throw validationFailure("Configuration of component factory instances through config admin factory pids supported only through the 1.2 namespace");
         }

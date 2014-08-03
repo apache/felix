@@ -97,7 +97,7 @@ public class XmlHandlerTest extends TestCase
         final List metadataList = readMetadataFromString( "<scr:component xmlns:scr=\"http://www.osgi.org/xmlns/scr/v1.0.0\" name=\"n\" ><implementation class=\"n\"/></scr:component>" );
         assertEquals( "1 Descriptor expected", 1, metadataList.size() );
         final ComponentMetadata metadata = ( ComponentMetadata ) metadataList.get( 0 );
-        assertEquals( "Expect NS 1.0.0", XmlHandler.DS_VERSION_1_0, metadata.getNamespaceCode() );
+        assertEquals( "Expect NS 1.0.0", DSVersion.DS10, metadata.getDSVersion() );
     }
 
 
@@ -106,7 +106,7 @@ public class XmlHandlerTest extends TestCase
         final List metadataList = readMetadataFromString( "<scr:component xmlns:scr=\"http://www.osgi.org/xmlns/scr/v1.1.0\" name=\"n\" ><implementation class=\"n\"/></scr:component>" );
         assertEquals( "1 Descriptor expected", 1, metadataList.size() );
         final ComponentMetadata metadata = ( ComponentMetadata ) metadataList.get( 0 );
-        assertEquals( "Expect NS 1.1.0", XmlHandler.DS_VERSION_1_1, metadata.getNamespaceCode() );
+        assertEquals( "Expect NS 1.1.0", DSVersion.DS11, metadata.getDSVersion() );
     }
 
 
@@ -115,7 +115,7 @@ public class XmlHandlerTest extends TestCase
         final List metadataList = readMetadataFromString( "<scr:component xmlns:scr=\"http://felix.apache.org/xmlns/scr/v1.1.0-felix\" name=\"n\" ><implementation class=\"n\"/></scr:component>" );
         assertEquals( "1 Descriptor expected", 1, metadataList.size() );
         final ComponentMetadata metadata = ( ComponentMetadata ) metadataList.get( 0 );
-        assertEquals( "Expect NS 1.1.0-felix", XmlHandler.DS_VERSION_1_1_FELIX, metadata.getNamespaceCode() );
+        assertEquals( "Expect NS 1.1.0-felix", DSVersion.DS11Felix, metadata.getDSVersion() );
     }
 
 
@@ -124,7 +124,7 @@ public class XmlHandlerTest extends TestCase
         final List metadataList = readMetadataFromString( "<scr:component xmlns:scr=\"http://www.osgi.org/xmlns/scr/v1.2.0\" name=\"n\" ><implementation class=\"n\"/></scr:component>" );
         assertEquals( "1 Descriptor expected", 1, metadataList.size() );
         final ComponentMetadata metadata = ( ComponentMetadata ) metadataList.get( 0 );
-        assertEquals( "Expect NS 1.2.0", XmlHandler.DS_VERSION_1_2, metadata.getNamespaceCode() );
+        assertEquals( "Expect NS 1.2.0", DSVersion.DS12, metadata.getDSVersion() );
     }
 
 
@@ -133,7 +133,7 @@ public class XmlHandlerTest extends TestCase
         final List metadataList = readMetadataFromString( "<scr:component xmlns:scr=\"http://felix.apache.org/xmlns/scr/v1.2.0-felix\" name=\"n\" ><implementation class=\"n\"/></scr:component>" );
         assertEquals( "1 Descriptor expected", 1, metadataList.size() );
         final ComponentMetadata metadata = ( ComponentMetadata ) metadataList.get( 0 );
-        assertEquals( "Expect NS 1.2.0-felix", XmlHandler.DS_VERSION_1_2_FELIX, metadata.getNamespaceCode() );
+        assertEquals( "Expect NS 1.2.0-felix", DSVersion.DS12Felix, metadata.getDSVersion() );
     }
 
 
@@ -150,7 +150,7 @@ public class XmlHandlerTest extends TestCase
         assertEquals( "1 Descriptor expected", 1, metadataList.size() );
 
         final ComponentMetadata metadata = ( ComponentMetadata ) metadataList.get( 0 );
-        assertEquals( "Expect NS 1.0.0", XmlHandler.DS_VERSION_1_0, metadata.getNamespaceCode() );
+        assertEquals( "Expect NS 1.0.0", DSVersion.DS10, metadata.getDSVersion() );
     }
 
 
@@ -168,7 +168,7 @@ public class XmlHandlerTest extends TestCase
         assertEquals( "Component Descriptors", 1, metadataList11.size() );
         final ComponentMetadata cm11 = ( ComponentMetadata ) metadataList11.get( 0 );
         cm11.validate( logger );
-        assertEquals( "DS Version 1.1", XmlHandler.DS_VERSION_1_1, cm11.getNamespaceCode() );
+        assertEquals( "DS Version 1.1", DSVersion.DS11, cm11.getDSVersion() );
         assertEquals( "Expected Activate Method set", "myactivate", cm11.getActivate() );
         assertTrue( "Activate method expected to be declared", cm11.isActivateDeclared() );
         assertEquals( "Expected Deactivate Method set", "mydeactivate", cm11.getDeactivate() );
@@ -234,8 +234,8 @@ public class XmlHandlerTest extends TestCase
         // dont validate this, we test the raw reading
 
         // ds namespace
-        assertEquals( "DS Version 1.0", XmlHandler.DS_VERSION_1_0, cm10.getNamespaceCode() );
-        assertFalse( "DS Version 1.0", cm10.isDS11() );
+        assertEquals( "DS Version 1.0", DSVersion.DS10, cm10.getDSVersion() );
+        assertFalse( "DS Version 1.0", cm10.getDSVersion().isDS11() );
 
         // base component attributes
         assertEquals( "component name", true, cm10.isEnabled() );
@@ -458,8 +458,8 @@ public class XmlHandlerTest extends TestCase
         // dont validate this, we test the raw reading
 
         // ds namespace
-        assertEquals( "DS Version 1.1", XmlHandler.DS_VERSION_1_1, cm11.getNamespaceCode() );
-        assertTrue( "DS Version 1.1", cm11.isDS11() );
+        assertEquals( "DS Version 1.1", DSVersion.DS11, cm11.getDSVersion() );
+        assertTrue( "DS Version 1.1", cm11.getDSVersion().isDS11() );
 
         assertEquals( "component name", "DummyClass", cm11.getName() );
         assertEquals( "component name", "DummyClass", cm11.getImplementationClassName() );

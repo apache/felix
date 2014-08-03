@@ -111,7 +111,7 @@ public class ServiceMetadata {
         }
         if (m_serviceFactory != null)
         {
-        	if (componentMetadata.getNamespaceCode() >= XmlHandler.DS_VERSION_1_3)
+        	if ( componentMetadata.getDSVersion().isDS13() )
         	{
             	throw componentMetadata.validationFailure("service-factory can only be specified in version 1.2 and earlier");
         	}
@@ -119,8 +119,8 @@ public class ServiceMetadata {
         }
         if ( m_scopeName != null )
         {
-        	if (componentMetadata.getNamespaceCode() < XmlHandler.DS_VERSION_1_3)
-        	{
+        	if ( !componentMetadata.getDSVersion().isDS13() )
+        	{ 
             	throw componentMetadata.validationFailure("service scope can only be specified in version 1.3 and later");
         	}
         	try
