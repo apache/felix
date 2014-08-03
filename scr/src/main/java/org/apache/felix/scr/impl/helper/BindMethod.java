@@ -23,6 +23,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.felix.scr.impl.Activator;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
@@ -251,7 +252,70 @@ public class BindMethod extends BaseMethod<BindParameters>
             }
             if ( getDSVersion().isDS13() )
             {
-                //TODO
+                for (Method m: targetClass.getDeclaredMethods())
+                {
+                    if (getMethodName().equals(m.getName())) {
+                        Class<?>[] parameterTypes = m.getParameterTypes();
+                        boolean matches = true;
+                        boolean specialMatch = true;
+                        for (Class<?> paramType: parameterTypes) {
+                            if (paramType == SERVICE_REFERENCE_CLASS)
+                            {
+                                if (specialMatch && parameterClass == SERVICE_REFERENCE_CLASS)
+                                {
+                                    specialMatch = false;
+                                    m_paramTypes.add(ParamType.serviceType);
+                                }
+                                else
+                                {
+                                    m_paramTypes.add(ParamType.serviceReference);
+                                }
+                            }
+                            else if (paramType == SERVICE_OBJECTS_CLASS)
+                            {
+                                if (specialMatch && parameterClass == SERVICE_OBJECTS_CLASS)
+                                {
+                                    specialMatch = false;
+                                    m_paramTypes.add(ParamType.serviceType);
+                                }
+                                else
+                                {
+                                    m_paramTypes.add(ParamType.serviceObjects);
+                                }
+                            }
+                            else if (paramType == Map.class)
+                            {
+                                if (specialMatch && parameterClass == Map.class)
+                                {
+                                    specialMatch = false;
+                                    m_paramTypes.add(ParamType.serviceType);
+                                }
+                                else
+                                {
+                                    m_paramTypes.add(ParamType.map);
+                                }
+                            }
+                            else if (paramType.isAssignableFrom( parameterClass ) )
+                            {
+                                m_paramTypes.add(ParamType.serviceType);
+                            }
+                            else
+                            {
+                                matches = false;
+                                m_paramTypes.clear();
+                                break;
+                            }
+                        }
+                        if (matches)
+                        {
+                            if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
+                            {
+                                return m;
+                            }
+                            suitableMethodNotAccessible = true;
+                        }
+                    }
+                }
             }
         }
         else if ( logger.isLogEnabled( LogService.LOG_WARNING ) )
