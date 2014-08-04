@@ -25,9 +25,7 @@ import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
@@ -53,11 +51,11 @@ import org.osgi.service.metatype.ObjectClassDefinition;
 public class MetaTypeProviderImpl implements MetaTypeProvider, ManagedService, ManagedServiceFactory {
     private ManagedService m_managedServiceDelegate;
     private ManagedServiceFactory m_managedServiceFactoryDelegate;
-    private List m_propertiesMetaData = new ArrayList();
+    private ArrayList m_propertiesMetaData = new ArrayList();
     private String m_description;
     private String m_heading;
     private String m_localization;
-    private Map m_localesProperties = new HashMap();
+    private HashMap m_localesProperties = new HashMap();
     private Logger m_logger;
     private BundleContext m_bctx;
     private String m_pid;
@@ -77,6 +75,21 @@ public class MetaTypeProviderImpl implements MetaTypeProvider, ManagedService, M
             m_localization = Constants.BUNDLE_LOCALIZATION_DEFAULT_BASENAME;
         }
     }
+    
+    public MetaTypeProviderImpl(MetaTypeProviderImpl prototype, ManagedService msDelegate, ManagedServiceFactory msfDelegate) {
+        m_pid = prototype.m_pid;
+        m_bctx = prototype.m_bctx;
+        m_logger = prototype.m_logger;
+        m_localization = prototype.m_localization;
+        m_propertiesMetaData = prototype.m_propertiesMetaData != null ? (ArrayList) prototype.m_propertiesMetaData.clone() : null;
+        m_description = prototype.m_description;
+        m_heading = prototype.m_heading;
+        m_localization = prototype.m_localization;
+        m_localesProperties = prototype.m_localesProperties != null ? (HashMap) prototype.m_localesProperties.clone() : null;
+        m_managedServiceDelegate = msDelegate;
+        m_managedServiceFactoryDelegate = msfDelegate;
+    }
+
 
     /**
      * Registers the metatype information of a given configuration property

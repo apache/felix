@@ -58,6 +58,7 @@ public class ConfigurationDependencyImpl extends DependencyImpl<ConfigurationDep
 	    m_pid = prototype.m_pid;
 	    m_callback = prototype.m_callback;
 	    m_logger = prototype.m_logger;
+        m_metaType = prototype.m_metaType != null ? new MetaTypeProviderImpl(prototype.m_metaType, this, null) : null;
 	}
 	
 	@Override
