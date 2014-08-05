@@ -192,8 +192,9 @@ public final class HttpContextManager
 
         this.idMap.put(id, holder);
         this.contextMap.put(context, id);
-
-        return holder.getMappings();
+        
+        // return a copy to prevent concurrent modification
+        return new HashSet<AbstractMapping>(holder.getMappings());
     }
 
     public synchronized Collection<AbstractMapping> removeHttpContext(HttpContext context)
