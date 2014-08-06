@@ -45,6 +45,44 @@ public class Coercions
     
     public static Object coerce(Class<?> type, Object raw, Bundle bundle )
     {
+        if (type.isArray())
+        {
+            if (raw == null)
+            {
+                return null;
+            }
+            Class<?> componentType = type.getComponentType();
+            if (raw.getClass().isArray())
+            {
+                int size = Array.getLength(raw);
+                Object result = Array.newInstance(componentType, size);
+                for (int i = 0; i < size; i++)
+                {
+                    Object rawElement = Array.get(raw, i);
+                    Object cooked = coerce(componentType, rawElement, bundle);
+                    Array.set(result, i, cooked);
+                }
+                return result;
+            }
+            if (raw instanceof Collection)
+            {
+                Collection raws = (Collection) raw;
+                int size = raws.size();
+                Object result = Array.newInstance(componentType, size);
+                int i = 0;
+                for (Object rawElement: raws)
+                {
+                    Object cooked = coerce(componentType, rawElement, bundle);
+                    Array.set(result, i++, cooked);
+                }
+                return result;
+                
+            }
+            Object cooked = coerce(componentType, raw, bundle);
+            Object result = Array.newInstance(componentType, 1);
+            Array.set(result, 0, cooked);
+            return result;
+        }
         if (type == Byte.class || type == byte.class)
         {
             return coerceToByte(raw);

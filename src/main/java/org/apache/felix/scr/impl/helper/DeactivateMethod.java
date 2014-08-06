@@ -30,11 +30,10 @@ public class DeactivateMethod extends ActivateMethod
         return true;
     }
 
-
     public DeactivateMethod( final String methodName,
-            final boolean methodRequired, final Class<?> componentClass, final DSVersion dsVersion, final boolean configurableServiceProperties )
+            final boolean methodRequired, final Class<?> componentClass, final DSVersion dsVersion, final boolean configurableServiceProperties, boolean supportsInterfaces )
     {
-        super( methodName, methodRequired, componentClass, dsVersion, configurableServiceProperties );
+        super( methodName, methodRequired, componentClass, dsVersion, configurableServiceProperties, supportsInterfaces );
     }
 
     protected String getMethodNamePrefix()

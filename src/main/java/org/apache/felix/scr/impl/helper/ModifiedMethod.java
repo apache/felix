@@ -25,9 +25,9 @@ public class ModifiedMethod extends ActivateMethod
 {
 
     public ModifiedMethod( final String methodName,
-            final Class<?> componentClass, final DSVersion dsVersion, final boolean configurableServiceProperties )
+            final Class<?> componentClass, final DSVersion dsVersion, final boolean configurableServiceProperties, boolean supportsInterfaces )
     {
-        super( methodName, methodName != null, componentClass, dsVersion, configurableServiceProperties );
+        super( methodName, methodName != null, componentClass, dsVersion, configurableServiceProperties, supportsInterfaces );
     }
 
 

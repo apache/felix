@@ -47,12 +47,13 @@ public class ComponentMethods
         }
         DSVersion dsVersion = componentMetadata.getDSVersion();
         boolean configurableServiceProperties = componentMetadata.isConfigurableServiceProperties();
+        boolean supportsInterfaces = componentMetadata.isConfigureWithInterfaces();
         m_activateMethod = new ActivateMethod( componentMetadata.getActivate(), componentMetadata
-                .isActivateDeclared(), implementationObjectClass, dsVersion, configurableServiceProperties );
+                .isActivateDeclared(), implementationObjectClass, dsVersion, configurableServiceProperties, supportsInterfaces );
         m_deactivateMethod = new DeactivateMethod( componentMetadata.getDeactivate(),
-                componentMetadata.isDeactivateDeclared(), implementationObjectClass, dsVersion, configurableServiceProperties );
+                componentMetadata.isDeactivateDeclared(), implementationObjectClass, dsVersion, configurableServiceProperties, supportsInterfaces );
 
-        m_modifiedMethod = new ModifiedMethod( componentMetadata.getModified(), implementationObjectClass, dsVersion, configurableServiceProperties );
+        m_modifiedMethod = new ModifiedMethod( componentMetadata.getModified(), implementationObjectClass, dsVersion, configurableServiceProperties, supportsInterfaces );
 
         for ( ReferenceMetadata referenceMetadata: componentMetadata.getDependencies() )
         {
