@@ -43,6 +43,52 @@ public class Coercions
     private static final long long0 = 0;
     private static final short short0 = 0;
     
+    public static Object coerce(Class<?> type, Object raw, Bundle bundle )
+    {
+        if (type == Byte.class || type == byte.class)
+        {
+            return coerceToByte(raw);
+        }
+        if (type == Boolean.class || type == boolean.class)
+        {
+            return coerceToBoolean(raw);
+        }
+        if (type == Class.class)
+        {
+            return coerceToClass(raw, bundle);
+        }
+        if (type == Double.class || type == double.class)
+        {
+            return coerceToDouble(raw);
+        }
+        if (type.isEnum())
+        {
+            Class clazz = type; //TODO is there a better way to do ? enum creation?
+            return coerceToEnum(raw, clazz);
+        }
+        if (type == Float.class || type == float.class)
+        {
+            return coerceToFloat(raw);
+        }
+        if (type == Integer.class || type == int.class)
+        {
+            return coerceToInteger(raw);
+        }
+        if (type == Long.class || type == long.class)
+        {
+            return coerceToLong(raw);
+        }
+        if (type == Short.class || type == short.class)
+        {
+            return coerceToShort(raw);
+        }
+        if (type == String.class)
+        {
+            return coerceToString(raw);
+        }
+        throw new ComponentException ("unexpected output type " + type);
+    }
+    
     public static byte coerceToByte(Object o)
     {
         o = multipleToSingle( o, byte0 );
