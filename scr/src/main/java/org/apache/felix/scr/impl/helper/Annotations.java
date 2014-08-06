@@ -23,6 +23,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.osgi.framework.Bundle;
 
@@ -37,7 +39,7 @@ public class Annotations
         for ( Method method: methods )
         {
             String name = method.getName();
-            //fix up name
+            name = fixup(name);
             Object raw = props.get(name);
             Object cooked = Coercions.coerce( method.getReturnType(), raw, b );
             m.put( name, cooked );
@@ -47,6 +49,26 @@ public class Annotations
         return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] { clazz }, h);
     }
     
+    private static final Pattern p = Pattern.compile("(\\$\\$)|(\\$)|(__)|(_)");
+    
+    static String fixup(String name)
+    {
+        Matcher m = p.matcher(name);
+        StringBuffer b = new StringBuffer();
+        while (m.find())
+        {
+            String replacement = "";//null;
+            if (m.group(1) != null) replacement = "\\$";
+            if (m.group(2) != null) replacement = "";
+            if (m.group(3) != null) replacement = "_";
+            if (m.group(4) != null) replacement = ".";
+            
+            m.appendReplacement(b, replacement);
+        }
+        m.appendTail(b);
+        return b.toString();
+    }
+
     private static class Handler implements InvocationHandler 
     {
         

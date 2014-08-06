@@ -294,7 +294,7 @@ public class ActivateMethodTest extends TestCase
     {
         ComponentContainer<?> container = newContainer();
         SingleComponentManager<?> icm = new SingleComponentManager( container, new ComponentMethods() );
-        ActivateMethod am = new ActivateMethod( methodName, methodName != null, obj.getClass(), version, false );
+        ActivateMethod am = new ActivateMethod( methodName, methodName != null, obj.getClass(), version, false, false );
         am.invoke( obj, new ActivatorParameter( m_ctx, -1 ), null, icm );
         Method m = am.getMethod();
         assertNotNull( m );
@@ -365,7 +365,7 @@ public class ActivateMethodTest extends TestCase
     {
         ComponentContainer container = newContainer();
         SingleComponentManager icm = new SingleComponentManager( container, new ComponentMethods() );
-        ActivateMethod am = new ActivateMethod( methodName, methodName != null, obj.getClass(), version, false );
+        ActivateMethod am = new ActivateMethod( methodName, methodName != null, obj.getClass(), version, false, false );
         am.invoke( obj, new ActivatorParameter( m_ctx, -1 ), null, icm );
         Method m = am.getMethod();
         assertNull( m );
@@ -397,7 +397,7 @@ public class ActivateMethodTest extends TestCase
     }
     public void testMethodSorting() throws Exception
     {
-        ActivateMethod am = new ActivateMethod( "a", true, Sort.class, DSVersion.DS11, false );
+        ActivateMethod am = new ActivateMethod( "a", true, Sort.class, DSVersion.DS11, false, false );
         List<Method> ms = am.getSortedMethods(Sort.class);
         assertEquals(8, ms.size());
         assertEquals(1, ms.get(0).getParameterTypes().length);

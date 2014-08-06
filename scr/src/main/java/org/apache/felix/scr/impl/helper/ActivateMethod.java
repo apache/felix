@@ -40,13 +40,18 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter>
     protected static final Class<?> BUNDLE_CONTEXT_CLASS = BundleContext.class;
     protected static final Class<?> INTEGER_CLASS = Integer.class;
 
-    protected final boolean m_supportsInterfaces = false; //TODO configure
+    protected final boolean m_supportsInterfaces;
 
 
     public ActivateMethod( final String methodName,
-            final boolean methodRequired, final Class<?> componentClass, final DSVersion dsVersion, final boolean configurableServiceProperties )
+            final boolean methodRequired,
+            final Class<?> componentClass,
+            final DSVersion dsVersion, 
+            final boolean configurableServiceProperties, 
+            boolean supportsInterfaces )
     {
         super( methodName, methodRequired, componentClass, dsVersion, configurableServiceProperties );
+        m_supportsInterfaces = supportsInterfaces;
     }
 
 
