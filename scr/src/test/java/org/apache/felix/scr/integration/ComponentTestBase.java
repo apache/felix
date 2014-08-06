@@ -110,7 +110,7 @@ public abstract class ComponentTestBase
     protected static final String BUNDLE_JAR_DEFAULT = "target/scr.jar";
 
     protected static final String PROP_NAME = "theValue";
-    protected static final Dictionary<String, String> theConfig;
+    protected static final Dictionary<String, Object> theConfig;
 
     // the JVM option to set to enable remote debugging
     protected static final String DEBUG_VM_OPTION = "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=30303";
@@ -144,14 +144,15 @@ public abstract class ComponentTestBase
 
     static
     {
-        theConfig = new Hashtable<String, String>();
+        theConfig = new Hashtable<String, Object>();
         theConfig.put( PROP_NAME, PROP_NAME );
     }
 
     @ProbeBuilder
     public TestProbeBuilder extendProbe(TestProbeBuilder builder) {
         builder.setHeader("Export-Package", "org.apache.felix.scr.integration.components," +
-                                            "org.apache.felix.scr.integration.components.activatesignature," +
+            "org.apache.felix.scr.integration.components.activatesignature," +
+            "org.apache.felix.scr.integration.components.annoconfig," +
                                             "org.apache.felix.scr.integration.components.circular," +
                                             "org.apache.felix.scr.integration.components.circularFactory," +
                                             "org.apache.felix.scr.integration.components.concurrency," +
@@ -371,20 +372,35 @@ public abstract class ComponentTestBase
     
     protected <S> S getServiceFromConfiguration( ComponentConfigurationDTO dto, Class<S> clazz )
     {
-    	long id = dto.id;
-    	String filter = "(component.id=" + id + ")";
-    	Collection<ServiceReference<S>> srs;
-		try {
-			srs = bundleContext.getServiceReferences(clazz, filter);
-	    	Assert.assertEquals(1, srs.size());
-	    	ServiceReference<S> sr = srs.iterator().next();
-	    	S s = bundleContext.getService(sr);
-	    	Assert.assertNotNull(s);
-	    	return s;
-		} catch (InvalidSyntaxException e) {
-			TestCase.fail(e.getMessage());
-			return null;//unreachable in fact
-		}
+        long id = dto.id;
+        String filter = "(component.id=" + id + ")";
+        Collection<ServiceReference<S>> srs;
+        try {
+            srs = bundleContext.getServiceReferences(clazz, filter);
+            Assert.assertEquals(1, srs.size());
+            ServiceReference<S> sr = srs.iterator().next();
+            S s = bundleContext.getService(sr);
+            Assert.assertNotNull(s);
+            return s;
+        } catch (InvalidSyntaxException e) {
+            TestCase.fail(e.getMessage());
+            return null;//unreachable in fact
+        }
+    }
+    
+    protected <S> void ungetServiceFromConfiguration( ComponentConfigurationDTO dto, Class<S> clazz )
+    {
+        long id = dto.id;
+        String filter = "(component.id=" + id + ")";
+        Collection<ServiceReference<S>> srs;
+        try {
+            srs = bundleContext.getServiceReferences(clazz, filter);
+            Assert.assertEquals(1, srs.size());
+            ServiceReference<S> sr = srs.iterator().next();
+            bundleContext.ungetService(sr);
+        } catch (InvalidSyntaxException e) {
+            TestCase.fail(e.getMessage());
+        }
     }
     
     protected void enableAndCheck( ComponentDescriptionDTO cd ) throws InvocationTargetException, InterruptedException
@@ -461,6 +477,12 @@ public abstract class ComponentTestBase
 
     protected org.osgi.service.cm.Configuration configure( String pid, String bundleLocation )
     {
+        return configure(pid, bundleLocation, theConfig);
+    }
+
+    protected org.osgi.service.cm.Configuration configure(String pid,
+        String bundleLocation, Dictionary<String, Object> props)
+    {
         ConfigurationAdmin ca = getConfigurationAdmin();
         try
         {
@@ -469,7 +491,7 @@ public abstract class ComponentTestBase
             {
                 config.setBundleLocation( bundleLocation );
             }
-            config.update( theConfig );
+            config.update( props );
             return config;
         }
         catch ( IOException ioe )
