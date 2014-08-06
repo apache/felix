@@ -29,7 +29,7 @@ import org.osgi.framework.Bundle;
 public class Annotations
 {
     
-    public <T> T toObject(Class<T> clazz, Map<String, Object> props, Bundle b )
+    static public <T> T toObject(Class<T> clazz, Map<String, Object> props, Bundle b )
     {     
         Map<String, Object> m = new HashMap<String, Object>();
         

@@ -104,4 +104,10 @@ public class BaseObject
     }
 
 
+    public @interface Ann1 { }
+    public @interface Ann2 { }
+   
+    void activate_13_2_annotations(ComponentContext cc, Ann1 a1, BundleContext c, Ann2 a2, Map<String, Object> map, ComponentContext cc2) {
+        setCalledMethod("activate_13_2_annotations");
+    }
 }

@@ -54,7 +54,7 @@ public class AnnotationTest extends TestCase
     {
         Map<String, Object> values = allValues();
         
-        Object o = new Annotations().toObject( A1.class, values, mockBundle());
+        Object o = Annotations.toObject( A1.class, values, mockBundle());
         assertTrue("expected an A1", o instanceof A1);
         
         A1 a = (A1) o;
@@ -103,7 +103,7 @@ public class AnnotationTest extends TestCase
     {
         Map<String, Object> values = allValues();
         
-        Object o = new Annotations().toObject( A2.class, values, mockBundle());
+        Object o = Annotations.toObject( A2.class, values, mockBundle());
         assertTrue("expected an A2", o instanceof A2);
         
         A2 a = (A2) o;

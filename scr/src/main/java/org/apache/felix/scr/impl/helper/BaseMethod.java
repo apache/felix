@@ -41,10 +41,7 @@ abstract class BaseMethod<P>
 {
 
     // class references to simplify parameter checking
-    protected static final Class<?> COMPONENT_CONTEXT_CLASS = ComponentContext.class;
-    protected static final Class<?> BUNDLE_CONTEXT_CLASS = BundleContext.class;
     protected static final Class<?> MAP_CLASS = Map.class;
-    protected static final Class<?> INTEGER_CLASS = Integer.class;
 
     private final DSVersion dsVersion;
     private final boolean configurableServiceProperties;
@@ -100,7 +97,7 @@ abstract class BaseMethod<P>
         return m_methodName;
     }
 
-    protected final Method getMethod()
+    final Method getMethod()
     {
         return m_method;
     }
