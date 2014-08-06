@@ -920,6 +920,10 @@ public class ComponentMetadata
         {
         	m_configurableServiceProperties = true;
         }
+        if ( m_configurableServiceProperties && getServiceScope() != Scope.singleton )
+        {
+            throw validationFailure( "configurable service properties only allowed with singleton scope" );
+        }
         if (m_dsVersion.isDS13())
         {
         	m_deleteCallsModify = true; //spec behavior as of 1.3
