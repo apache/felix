@@ -5,6 +5,10 @@ Bundle-DocURL: http://felix.apache.org/site/apache-felix-service-component-runti
 Bundle-Activator: org.apache.felix.scr.impl.Activator
 Bundle-Version: 2.0.0
 
+Provide-Capability: osgi.extender;\
+                   osgi.extender="osgi.component";\
+                   uses:="org.osgi.service.component";\
+                   version:Version="1.3"
 
 Export-Package: org.apache.felix.scr;version=2.0, \
  org.apache.felix.scr.component;version=1.1.0;mandatory:="status"; status="provisional", \
