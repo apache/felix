@@ -21,28 +21,36 @@ package org.apache.felix.scr.impl.helper;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.felix.scr.impl.metadata.DSVersion;
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
 
 
 public class ActivateMethod extends BaseMethod<ActivatorParameter>
 {
 
-    private static final Class[] ACTIVATE_TYPES_DS11 =
-        { COMPONENT_CONTEXT_CLASS, BUNDLE_CONTEXT_CLASS, MAP_CLASS };
-    static final Class[] ACTIVATE_TYPES_DS10 =
-        { COMPONENT_CONTEXT_CLASS };
+    protected static final Class<?> COMPONENT_CONTEXT_CLASS = ComponentContext.class;
+    protected static final Class<?> BUNDLE_CONTEXT_CLASS = BundleContext.class;
+    protected static final Class<?> INTEGER_CLASS = Integer.class;
+
+    protected final boolean m_supportsInterfaces = false; //TODO configure
 
 
     public ActivateMethod( final String methodName,
-            final boolean methodRequired, final Class componentClass, final DSVersion dsVersion, final boolean configurableServiceProperties )
+            final boolean methodRequired, final Class<?> componentClass, final DSVersion dsVersion, final boolean configurableServiceProperties )
     {
         super( methodName, methodRequired, componentClass, dsVersion, configurableServiceProperties );
     }
 
 
-    protected Method doFindMethod( Class targetClass, boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger )
+    protected Method doFindMethod( Class<?> targetClass, boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger )
         throws SuitableMethodNotAccessibleException, InvocationTargetException
     {
 
@@ -50,54 +58,109 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter>
 
         try
         {
-            final Method method = getSingleParameterMethod( targetClass, acceptPrivate, acceptPackage, logger );
+            // find the declared method in this class
+            final Method method = getMethod( targetClass, getMethodName(), new Class[]
+                { COMPONENT_CONTEXT_CLASS }, acceptPrivate, acceptPackage, logger );
             if ( method != null )
             {
                 return method;
             }
         }
-        catch ( SuitableMethodNotAccessibleException smnae )
+        catch ( SuitableMethodNotAccessibleException thrown )
         {
+            logger.log( LogService.LOG_DEBUG, "SuitableMethodNotAccessible", thrown );
             suitableMethodNotAccessible = true;
         }
-
-        if ( getDSVersion().isDS11() )
+        if (getDSVersion().isDS11())
         {
-            // check methods with MethodTester
-            Method[] methods = targetClass.getDeclaredMethods();
-            for ( int i = 0; i < methods.length; i++ )
+            List<Method> methods = getSortedMethods( targetClass);
+            for (Method m: methods)
             {
-                if ( methods[i].getName().equals( getMethodName() ) && isSuitable( methods[i] ) )
+                final Class<?>[] parameterTypes = m.getParameterTypes();
+                if (parameterTypes.length == 1)
                 {
-                    if ( accept( methods[i], acceptPrivate, acceptPackage, returnValue() ) )
+                    Class<?> type = parameterTypes[0];
+                    //single parameter method with parameter ComponentContext will already have been found.
+                    if (type == BUNDLE_CONTEXT_CLASS)
                     {
-                        // check modifiers etc.
-                        return methods[i];
+                        if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
+                        {
+                            return m;
+                        }
+                        suitableMethodNotAccessible = true;                   
                     }
-
-                    // method is suitable but not accessible, flag it
-                    suitableMethodNotAccessible = true;
+                    if (getDSVersion().isDS13() && isAnnotation(type))
+                    {
+                        if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
+                        {
+                            return m;
+                        }
+                        suitableMethodNotAccessible = true;                   
+                    }
+                    if (type == MAP_CLASS)
+                    {
+                        if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
+                        {
+                            return m;
+                        }
+                        suitableMethodNotAccessible = true;                   
+                    }
+                    if (type == int.class)
+                    {
+                        if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
+                        {
+                            return m;
+                        }
+                        suitableMethodNotAccessible = true;                   
+                    }
+                    if (type == Integer.class)
+                    {
+                        if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
+                        {
+                            return m;
+                        }
+                        suitableMethodNotAccessible = true;                   
+                    }
+                    
                 }
-            }
-
-            // finally check method with no arguments
-            if ( acceptEmpty() )
-            {
-                try
+                else if (parameterTypes.length > 1)
                 {
-                    // find the declared method in this class
-                    Method m = getMethod( targetClass, getMethodName(), null, acceptPrivate, acceptPackage, logger );
-                    if ( m != null ) {
+                    boolean accept = true;
+                    for (Class<?> type: parameterTypes)
+                    {
+                        accept = type == COMPONENT_CONTEXT_CLASS
+                            || type == BUNDLE_CONTEXT_CLASS
+                            || type == MAP_CLASS
+                            || ( isDeactivate() && ( type == int.class || type == Integer.class))
+                            || ( getDSVersion().isDS13() && isAnnotation(type));
+                        if ( !accept ) 
+                        {
+                            break;
+                        }
+                            
+                    }
+                    if (accept)
+                    {
+                        if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
+                        {
+                            return m;
+                        }
+                        suitableMethodNotAccessible = true;                                           
+                    }
+                    
+                }
+                else //no parameters
+                {
+                    if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
+                    {
                         return m;
                     }
+                    suitableMethodNotAccessible = true;                   
                 }
-                catch ( SuitableMethodNotAccessibleException smnae )
-                {
-                    suitableMethodNotAccessible = true;
-                }
+                
             }
         }
-
+        
         if ( suitableMethodNotAccessible )
         {
             throw new SuitableMethodNotAccessibleException();
@@ -107,9 +170,77 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter>
     }
 
 
+    boolean isDeactivate()
+    {
+        return false;
+    }
+
+
+    /**
+     * returns the declared methods of the target class, with the correct name, sorted by number of parameters ( no parameters last)
+     * @param targetClass class to examine methods of
+     * @return sorted methods of correct name;
+     */
+    List<Method> getSortedMethods(Class<?> targetClass)
+    {
+        List<Method> result = new ArrayList<Method>();
+        Method[] methods = targetClass.getDeclaredMethods();
+        for (Method m: methods)
+        {
+            if (m.getName().equals(getMethodName()))
+            {
+                result.add(m);
+            }
+        }
+        Collections.sort(result, new Comparator<Method>(){
+
+            public int compare(Method m1, Method m2)
+            {
+                final int l1 = m1.getParameterTypes().length;
+                final int l2 = m2.getParameterTypes().length;
+                if ( l1 == 0)
+                {
+                    return l2;
+                }
+                if ( l2 == 0)
+                {
+                    return -l1;
+                }
+                if (l1 == 1 && l2 == 1)
+                {
+                    final Class<?> t1 = m1.getParameterTypes()[0];
+                    final Class<?> t2 = m2.getParameterTypes()[0];
+                    //t1, t2 can't be equal
+                    if (t1 == COMPONENT_CONTEXT_CLASS) return -1;
+                    if (t2 == COMPONENT_CONTEXT_CLASS) return 1;
+                    if (t1 == BUNDLE_CONTEXT_CLASS) return -1;
+                    if (t2 == BUNDLE_CONTEXT_CLASS) return 1;
+                    if (isAnnotation(t1)) return isAnnotation(t2)? 0: -1;
+                    if (isAnnotation(t2)) return 1;
+                    if (t1 == MAP_CLASS) return -1;
+                    if (t2 == MAP_CLASS) return 1;
+                    if (t1 == int.class) return -1;
+                    if (t2 == int.class) return 1;
+                    if (t1 == Integer.class) return -1;
+                    if (t2 == Integer.class) return 1;
+                    return 0;
+                }
+                return l1 - l2;
+            }
+
+        });
+        return result;
+    }
+
+    private boolean isAnnotation(final Class<?> t1)
+    {
+        return t1.isAnnotation() || (m_supportsInterfaces && t1.isInterface() && !(t1 == MAP_CLASS));
+    }
+    
+
     protected Object[] getParameters( Method method, ActivatorParameter rawParameter )
     {
-        final Class[] parameterTypes = method.getParameterTypes();
+        final Class<?>[] parameterTypes = method.getParameterTypes();
         final ActivatorParameter ap = ( ActivatorParameter ) rawParameter;
         final Object[] param = new Object[parameterTypes.length];
         for ( int i = 0; i < param.length; i++ )
@@ -130,6 +261,12 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter>
             else if ( parameterTypes[i] == INTEGER_CLASS || parameterTypes[i] == Integer.TYPE )
             {
                 param[i] = ap.getReason();
+            } 
+            else
+            {
+                param[i] = Annotations.toObject(parameterTypes[i], 
+                    (Map<String, Object>) ap.getComponentContext().getProperties(),
+                    ap.getComponentContext().getBundleContext().getBundle());
             }
         }
 
@@ -149,101 +286,6 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter>
             return super.invoke(componentInstance, rawParameter, methodCallFailureResult, logger );
         }
         return null;
-    }
-
-    /**
-     * Returns a method taking a single parameter of one of the
-     * {@link #getAcceptedParameterTypes()} or <code>null</code> if no such
-     * method exists.
-     *
-     *
-     * @param targetClass The class in which to look for the method. Only this
-     *      class is searched for the method.
-     * @param acceptPrivate <code>true</code> if private methods should be
-     *      considered.
-     * @param acceptPackage <code>true</code> if package private methods should
-     *      be considered.
-     * @param logger
-     * @return The requested method or <code>null</code> if no acceptable method
-     *      can be found in the target class.
-     * @throws SuitableMethodNotAccessibleException If a suitable method was
-     *      found which is not accessible
-     * @throws InvocationTargetException If an unexpected Throwable is caught
-     *      trying to find the requested method.
-     */
-    private Method getSingleParameterMethod( final Class targetClass, final boolean acceptPrivate,
-            final boolean acceptPackage, SimpleLogger logger ) throws SuitableMethodNotAccessibleException, InvocationTargetException
-    {
-        SuitableMethodNotAccessibleException ex = null;
-        Method singleParameterMethod = null;
-        final Class[] acceptedTypes = getAcceptedParameterTypes();
-        for ( int i = 0; singleParameterMethod == null && i < acceptedTypes.length; i++ )
-        {
-            try
-            {
-                // find the declared method in this class
-                singleParameterMethod = getMethod( targetClass, getMethodName(), new Class[]
-                    { acceptedTypes[i] }, acceptPrivate, acceptPackage, logger );
-            }
-            catch ( SuitableMethodNotAccessibleException thrown )
-            {
-                logger.log( LogService.LOG_DEBUG, "SuitableMethodNotAccessible", thrown );
-                ex = thrown;
-            }
-        }
-
-        // rethrow if we looked for all method signatures and only found
-        // one or more which would be suitable but not accessible
-        if ( singleParameterMethod == null && ex != null )
-        {
-            throw ex;
-        }
-
-        // no method with a matching single parameter has been found
-        return singleParameterMethod;
-    }
-
-
-    private boolean isSuitable( Method method )
-    {
-        // require two or more arguments
-        final Class[] types = method.getParameterTypes();
-        if ( types.length < 2 )
-        {
-            return false;
-        }
-
-        // check for argument types
-        final Class[] acceptedTypes = getAcceptedParameterTypes();
-        OUTER: for ( int i = 0; i < types.length; i++ )
-        {
-            final Class type = types[i];
-            for ( int j = 0; j < acceptedTypes.length; j++ )
-            {
-                if ( type == acceptedTypes[j] )
-                {
-                    continue OUTER;
-                }
-            }
-
-            // get here if type is not contained in the array
-            return false;
-        }
-
-        // all parameters are acceptable
-        return true;
-    }
-
-
-    protected Class[] getAcceptedParameterTypes()
-    {
-        return getDSVersion().isDS11() ? ACTIVATE_TYPES_DS11 : ACTIVATE_TYPES_DS10;
-    }
-
-
-    protected boolean acceptEmpty()
-    {
-        return getDSVersion().isDS11();
     }
 
 }

@@ -22,6 +22,8 @@ package org.apache.felix.scr.impl.helper;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
 
 import junit.framework.TestCase;
 
@@ -36,7 +38,10 @@ import org.apache.felix.scr.impl.metadata.instances.BaseObject;
 import org.apache.felix.scr.impl.metadata.instances.Level1Object;
 import org.apache.felix.scr.impl.metadata.instances.Level3Object;
 import org.apache.felix.scr.impl.metadata.instances2.Level2Object;
+import org.apache.felix.scr.integration.components.ActivatorComponent;
 import org.easymock.EasyMock;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
 
 
@@ -58,11 +63,15 @@ public class ActivateMethodTest extends TestCase
     protected void setUp() throws Exception
     {
         super.setUp();
+        Bundle bundle = ( Bundle ) EasyMock.createNiceMock( Bundle.class );
+        BundleContext context = ( BundleContext ) EasyMock.createNiceMock( BundleContext.class );
+        EasyMock.expect( context.getBundle() ).andReturn( bundle ).anyTimes();
 
         m_ctx = (ComponentContext) EasyMock.createNiceMock(ComponentContext.class);
         EasyMock.expect( m_ctx.getProperties() ).andReturn( new Hashtable() ).anyTimes();
+        EasyMock.expect( m_ctx.getBundleContext() ).andReturn( context ).anyTimes();
         EasyMock.replay( new Object[]
-            { m_ctx } );
+            { m_ctx, context } );
 
     }
 
@@ -224,7 +233,7 @@ public class ActivateMethodTest extends TestCase
 
     public void test_precedence() throws Exception
     {
-        //All tested methods are only in base.  They differ in argurments and visibility.
+        //All tested methods are only in base.  They differ in arguments and visibility.
         //R4.2 compendium  112.5.8
         //private method, arg ComponentContext
         checkMethod( base, "activate_precedence_1", "activate_precedence_1_comp" );
@@ -253,7 +262,7 @@ public class ActivateMethodTest extends TestCase
      */
     private void checkMethod( BaseObject obj, String methodName )
     {
-        checkMethod( obj, methodName, methodName );
+        checkMethod( obj, methodName, methodName, DSVersion.DS11 );
     }
 
     /**
@@ -267,11 +276,27 @@ public class ActivateMethodTest extends TestCase
      */
     private void checkMethod( BaseObject obj, String methodName, String methodDesc )
     {
-        ComponentContainer container = newContainer();
-        SingleComponentManager icm = new SingleComponentManager( container, new ComponentMethods() );
-        ActivateMethod am = new ActivateMethod( methodName, methodName != null, obj.getClass(), DSVersion.DS11, false );
+        checkMethod(obj, methodName, methodDesc, DSVersion.DS11);
+    }
+
+
+    /**
+     * Checks whether a method with the given name can be found for the
+     * activate/deactivate method parameter list and whether the method returns
+     * the expected description when called.
+     *
+     * @param obj
+     * @param methodName
+     * @param methodDesc
+     * @param version DSVersion tested
+     */
+    private void checkMethod( BaseObject obj, String methodName, String methodDesc, DSVersion version )
+    {
+        ComponentContainer<?> container = newContainer();
+        SingleComponentManager<?> icm = new SingleComponentManager( container, new ComponentMethods() );
+        ActivateMethod am = new ActivateMethod( methodName, methodName != null, obj.getClass(), version, false );
         am.invoke( obj, new ActivatorParameter( m_ctx, -1 ), null, icm );
-        Method m = get(am, "m_method");
+        Method m = am.getMethod();
         assertNotNull( m );
         assertEquals( methodName, m.getName() );
         assertEquals( methodDesc, obj.getCalledMethod() );
@@ -322,11 +347,28 @@ public class ActivateMethodTest extends TestCase
      */
     private void ensureMethodNotFoundMethod( BaseObject obj, String methodName )
     {
+        ensureMethodNotFoundMethod(obj, methodName, DSVersion.DS11);
+    }
+
+
+    /**
+     * Ensures no method with the given name accepting any of the
+     * activate/deactive method parameters can be found.
+     *
+     * @param obj
+     * @param methodName
+     * @param version DS version tested
+     * @throws InvocationTargetException
+     * @throws IllegalAccessException
+     */
+    private void ensureMethodNotFoundMethod( BaseObject obj, String methodName, DSVersion version )
+    {
         ComponentContainer container = newContainer();
         SingleComponentManager icm = new SingleComponentManager( container, new ComponentMethods() );
-        ActivateMethod am = new ActivateMethod( methodName, methodName != null, obj.getClass(), DSVersion.DS11, false );
+        ActivateMethod am = new ActivateMethod( methodName, methodName != null, obj.getClass(), version, false );
         am.invoke( obj, new ActivatorParameter( m_ctx, -1 ), null, icm );
-        assertNull( get( am, "m_method" ) );
+        Method m = am.getMethod();
+        assertNull( m );
         assertNull( obj.getCalledMethod() );
     }
 
@@ -338,27 +380,45 @@ public class ActivateMethodTest extends TestCase
         boolean accepted = BaseMethod.accept( method, acceptPrivate, acceptPackage, false );
         assertEquals( expected, accepted );
     }
-
-
-    private static Method get( final BaseMethod baseMethod, final String fieldName )
+    
+    private static @interface Ann{}
+    private static class Sort
     {
-        try
-        {
-            Field field = BaseMethod.class.getDeclaredField( fieldName );
-            field.setAccessible( true );
-            Object value = field.get( baseMethod );
-            if ( value == null || value instanceof Method )
-            {
-                return ( Method ) value;
-            }
-            fail( "Field " + field + " is not of type Method" );
-        }
-        catch ( Throwable t )
-        {
-            fail( "Failure accessing field " + fieldName + " in " + baseMethod + ": " + t );
-        }
-
-        // Compiler does not know about fail()
-        return null;
+        public void a(Ann ann) {};
+        public void a(int c) {};
+        public void a(Integer c) {};
+        public void a(BundleContext c) {};
+        public void a(Map m) {};
+        public void a() {};
+        public void a(ComponentContext cc) {};
+        public void a(ComponentContext cc, BundleContext c) {};
+        public void b() {};
+        
     }
+    public void testMethodSorting() throws Exception
+    {
+        ActivateMethod am = new ActivateMethod( "a", true, Sort.class, DSVersion.DS11, false );
+        List<Method> ms = am.getSortedMethods(Sort.class);
+        assertEquals(8, ms.size());
+        assertEquals(1, ms.get(0).getParameterTypes().length);
+        assertEquals(ComponentContext.class, ms.get(0).getParameterTypes()[0]);
+        assertEquals(1, ms.get(1).getParameterTypes().length);
+        assertEquals(BundleContext.class, ms.get(1).getParameterTypes()[0]);
+        assertEquals(1, ms.get(2).getParameterTypes().length);
+        assertEquals(Ann.class, ms.get(2).getParameterTypes()[0]);
+        assertEquals(1, ms.get(3).getParameterTypes().length);
+        assertEquals(Map.class, ms.get(3).getParameterTypes()[0]);
+        assertEquals(1, ms.get(4).getParameterTypes().length);
+        assertEquals(int.class, ms.get(4).getParameterTypes()[0]);
+        assertEquals(1, ms.get(5).getParameterTypes().length);
+        assertEquals(Integer.class, ms.get(5).getParameterTypes()[0]);
+        assertEquals(2, ms.get(6).getParameterTypes().length);
+        assertEquals(0, ms.get(7).getParameterTypes().length);
+    }
+    
+    public void test_13_annos() throws Exception
+    {
+        checkMethod(base, "activate_13_2_annotations", "activate_13_2_annotations", DSVersion.DS13 );
+    }
+    
 }

@@ -24,8 +24,11 @@ import org.apache.felix.scr.impl.metadata.DSVersion;
 public class DeactivateMethod extends ActivateMethod
 {
 
-    private static final Class[] DEACTIVATE_TYPES_DS11 =
-        { COMPONENT_CONTEXT_CLASS, BUNDLE_CONTEXT_CLASS, MAP_CLASS, Integer.TYPE, INTEGER_CLASS };
+    @Override
+    boolean isDeactivate()
+    {
+        return true;
+    }
 
 
     public DeactivateMethod( final String methodName,
@@ -33,13 +36,6 @@ public class DeactivateMethod extends ActivateMethod
     {
         super( methodName, methodRequired, componentClass, dsVersion, configurableServiceProperties );
     }
-
-
-    protected Class[] getAcceptedParameterTypes()
-    {
-        return getDSVersion().isDS11() ? DEACTIVATE_TYPES_DS11 : ACTIVATE_TYPES_DS10;
-    }
-
 
     protected String getMethodNamePrefix()
     {
