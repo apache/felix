@@ -39,6 +39,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.jar.Attributes;
@@ -136,10 +137,10 @@ public class BundlePlugin extends AbstractMojo
 
     /**
      * Final name of the bundle (without classifier or extension)
-     * 
+     *
      * @parameter expression="${project.build.finalName}"
-     */ 
-    private String finalName; 
+     */
+    private String finalName;
 
     /**
      * Classifier type of the bundle to be installed.  For example, "jdk14".
@@ -458,6 +459,35 @@ public class BundlePlugin extends AbstractMojo
     {
         properties.putAll( getDefaultProperties( currentProject ) );
         properties.putAll( transformDirectives( originalInstructions ) );
+
+        // process overrides from project
+        final Set removeProps = new HashSet();
+        final Iterator iter = currentProject.getProperties().entrySet().iterator();
+        while ( iter.hasNext() )
+        {
+            final Map.Entry entry = (Entry) iter.next();
+            final String key = entry.getKey().toString();
+            if ( key.startsWith("BNDExtension-") )
+            {
+                final String oKey = key.substring(13);
+                final String currentValue = properties.getProperty(oKey);
+                if ( currentValue == null )
+                {
+                    properties.put(oKey, entry.getValue());
+                }
+                else
+                {
+                    properties.put(oKey, currentValue + ',' + entry.getValue());
+                }
+                removeProps.add(key);
+            }
+        }
+        final Iterator keyIter = removeProps.iterator();
+        while ( keyIter.hasNext() )
+        {
+            properties.remove(keyIter.next());
+        }
+
         if (properties.getProperty("Bundle-Activator") != null
                 && properties.getProperty("Bundle-Activator").isEmpty())
         {
@@ -483,7 +513,7 @@ public class BundlePlugin extends AbstractMojo
         }
 
         Builder builder = new Builder();
-        synchronized ( BundlePlugin.class ) // protect setBase...getBndLastModified which uses static DateFormat 
+        synchronized ( BundlePlugin.class ) // protect setBase...getBndLastModified which uses static DateFormat
         {
             builder.setBase( getBase( currentProject ) );
         }
@@ -1343,7 +1373,7 @@ public class BundlePlugin extends AbstractMojo
             // mark all source packages as private by default (can be overridden by export list)
             privatePkgs.put( pkg );
 
-            // we can't export the default package (".") and we shouldn't export internal packages 
+            // we can't export the default package (".") and we shouldn't export internal packages
             String fqn = pkg.getFQN();
             if ( noprivatePackages || !( ".".equals( fqn ) || fqn.contains( ".internal" ) || fqn.contains( ".impl" ) ) )
             {
