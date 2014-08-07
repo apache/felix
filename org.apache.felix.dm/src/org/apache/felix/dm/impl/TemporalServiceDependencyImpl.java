@@ -19,6 +19,7 @@
 package org.apache.felix.dm.impl;
 
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
@@ -152,11 +153,14 @@ public class TemporalServiceDependencyImpl extends ServiceDependencyImpl impleme
         }
         
         try {
-            return method.invoke(service, args);
-        }
-        catch (IllegalAccessException iae) {
-            method.setAccessible(true);
-            return method.invoke(service, args);
+			try {
+				return method.invoke(service, args);
+			} catch (IllegalAccessException iae) {
+				method.setAccessible(true);
+				return method.invoke(service, args);
+			}
+        } catch (InvocationTargetException e) {
+        	throw e.getTargetException();
         }
     }
 }

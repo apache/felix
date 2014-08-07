@@ -1,5 +1,7 @@
 package org.apache.felix.dm.itest;
 
+import java.util.Hashtable;
+
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ServiceDependency;
@@ -72,6 +74,45 @@ public class TemporalServiceDependencyTest extends TestBase {
         // ensure we executed all steps inside the component instance
         e.step(7);
         m.clear();
+    }
+
+    public void testFelix4602_PropagateServiceInvocationException() {
+        DependencyManager m = new DependencyManager(context);
+        final Ensure ensure = new Ensure();
+        Runnable provider = new Runnable() {
+        	public void run() {
+        		throw new UncheckedException();
+        	}
+        };
+        Hashtable props = new Hashtable();
+        props.put("target", getClass().getSimpleName());
+        Component providerComp = m.createComponent()
+        		.setInterface(Runnable.class.getName(), props)
+        		.setImplementation(provider);
+
+        Object consumer = new Object() {
+        	volatile Runnable m_provider;
+        	void start() {
+        		try {
+        			ensure.step(1);
+        			m_provider.run();
+        		} catch (UncheckedException e) {
+        			ensure.step(2);
+        		}
+        	}
+        };
+        Component consumerComp = m.createComponent()
+        		.setImplementation(consumer)
+        		.add(m.createTemporalServiceDependency(5000)
+        				.setService(Runnable.class, "(target=" + getClass().getSimpleName() + ")")
+        				.setRequired(true));
+        m.add(consumerComp);
+        m.add(providerComp);
+        ensure.waitForStep(2, 5000);
+        m.clear();
+    }
+    
+    static class UncheckedException extends RuntimeException {    	
     }
 
     static interface TemporalServiceInterface {
