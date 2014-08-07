@@ -26,41 +26,37 @@ import org.osgi.service.component.ComponentContext;
  * 
  * @since 1.3
  * @NotThreadSafe
- * @author $Id: e852b2edb4d364069d01ca41130aac4a3b3112a3 $
+ * @author $Id: f519b5fddd8002ffc252d039856acc8ba6f422d6 $
  */
 public class ComponentConfigurationDTO extends DTO {
 	/**
-	 * The component configuration is unsatisfied.
-	 * 
-	 * <p>
-	 * This is the initial state of a component configuration. When the
-	 * component configuration becomes satisfied it enters the
-	 * {@link #SATISFIED} state.
+	 * The component configuration is unsatisfied due to a missing required
+	 * configuration.
 	 */
-	public static final int		UNSATISFIED		= 1;
+	public static final int			UNSATISFIED_CONFIGURATION	= 1;
+
+	/**
+	 * The component configuration is unsatisfied due to an unsatisfied
+	 * reference.
+	 */
+	public static final int			UNSATISFIED_REFERENCE		= 2;
 
 	/**
 	 * The component configuration is satisfied.
 	 * 
 	 * <p>
-	 * Any {@link ComponentDescriptionDTO#serviceInterfaces services} declared by
-	 * the component description are registered.
-	 * 
-	 * If the component configuration becomes unsatisfied for any reason, any
-	 * declared services must be unregistered and the component configuration
-	 * returns to the {@link #UNSATISFIED} state.
+	 * Any {@link ComponentDescriptionDTO#serviceInterfaces services} declared
+	 * by the component description are registered.
 	 */
-	public static final int		SATISFIED		= 2;
+	public static final int			SATISFIED					= 4;
 
 	/**
 	 * The component configuration is active.
 	 * 
 	 * <p>
-	 * This is the normal operational state of a component configuration. The
-	 * component configuration will move to the {@link #SATISFIED} state when it
-	 * is deactivated.
+	 * This is the normal operational state of a component configuration.
 	 */
-	public static final int			ACTIVE		= 4;
+	public static final int			ACTIVE						= 8;
 
 	/**
 	 * The representation of the component configuration's component
@@ -81,8 +77,8 @@ public class ComponentConfigurationDTO extends DTO {
 	 * The current state of the component configuration.
 	 * 
 	 * <p>
-	 * This is one of {@link #UNSATISFIED}, {@link #SATISFIED} or
-	 * {@link #ACTIVE}.
+	 * This is one of {@link #UNSATISFIED_CONFIGURATION},
+	 * {@link #UNSATISFIED_REFERENCE}, {@link #SATISFIED} or {@link #ACTIVE}.
 	 */
 	public int					state;
 
@@ -94,12 +90,22 @@ public class ComponentConfigurationDTO extends DTO {
 	public Map<String, Object>	properties;
 
 	/**
-	 * The currently bound references.
+	 * The satisfied references.
 	 * 
 	 * <p>
-	 * Each {@link BoundReferenceDTO} in the array represents a service bound to a
-	 * reference of the component configuration. The array will be empty if the
-	 * component configuration has no bound references.
+	 * Each {@link SatisfiedReferenceDTO} in the array represents a satisfied
+	 * reference of the component configuration. The array must be empty if the
+	 * component configuration has no satisfied references.
 	 */
-	public BoundReferenceDTO[]		boundReferences;
+	public SatisfiedReferenceDTO[]		satisfiedReferences;
+
+	/**
+	 * The unsatisfied references.
+	 * 
+	 * <p>
+	 * Each {@link UnsatisfiedReferenceDTO} in the array represents an
+	 * unsatisfied reference of the component configuration. The array must be
+	 * empty if the component configuration has no unsatisfied references.
+	 */
+	public UnsatisfiedReferenceDTO[]	unsatisfiedReferences;
 }

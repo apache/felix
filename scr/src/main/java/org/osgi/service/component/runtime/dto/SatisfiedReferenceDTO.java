@@ -20,13 +20,13 @@ import org.osgi.dto.DTO;
 import org.osgi.framework.dto.ServiceReferenceDTO;
 
 /**
- * A representation of a bound reference to a service.
+ * A representation of a satisfied reference.
  * 
  * @since 1.3
  * @NotThreadSafe
- * @author $Id: 1ba28863312f0c0784e4a5596f991a6a6a68c147 $
+ * @author $Id: 20de229ef78ffbfd603b62d4534721e2f2b17922 $
  */
-public class BoundReferenceDTO extends DTO {
+public class SatisfiedReferenceDTO extends DTO {
 	/**
 	 * The name of the declared reference.
 	 * 
@@ -34,18 +34,18 @@ public class BoundReferenceDTO extends DTO {
 	 * This is declared in the {@code name} attribute of the {@code reference}
 	 * element of the component description.
 	 * 
-	 * @see ComponentDescriptionDTO#name
+	 * @see ReferenceDTO#name
 	 */
 	public String					name;
 
 	/**
-	 * The target property of the bound reference.
+	 * The target property of the satisfied reference.
 	 * 
 	 * <p>
 	 * This is the value of the {@link ComponentConfigurationDTO#properties
 	 * component property} whose name is the concatenation of the
 	 * {@link ReferenceDTO#name declared reference name} and
-	 * &quot;.target&quot;. This will be {@code null} if no target property is
+	 * &quot;.target&quot;. This must be {@code null} if no target property is
 	 * set for the reference.
 	 */
 	public String					target;
@@ -55,7 +55,8 @@ public class BoundReferenceDTO extends DTO {
 	 * 
 	 * <p>
 	 * Each {@link ServiceReferenceDTO} in the array represents a service bound
-	 * to the component configuration.
+	 * to the satisfied reference. The array must be empty if there are no bound
+	 * services.
 	 */
-	public ServiceReferenceDTO[]	serviceReferences;
+	public ServiceReferenceDTO[]	boundServices;
 }
