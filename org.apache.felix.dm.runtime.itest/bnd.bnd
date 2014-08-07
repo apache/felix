@@ -17,8 +17,8 @@
 	org.apache.felix.dm.runtime.itest.tests;version=latest,\
 	org.apache.felix.dm.itest.api;version=latest,\
 	org.apache.felix.dm.runtime;version=latest
--runee:JavaSE-1.6
--runfw:org.apache.felix.framework
+-runee: JavaSE-1.7
+-runfw: org.apache.felix.framework;version='[4.4.0,4.4.0]'
 -runsystempackages: \
 	sun.reflect
 -runvm:-ea
