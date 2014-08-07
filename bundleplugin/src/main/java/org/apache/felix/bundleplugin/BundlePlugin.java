@@ -461,7 +461,7 @@ public class BundlePlugin extends AbstractMojo
         properties.putAll( transformDirectives( originalInstructions ) );
 
         // process overrides from project
-        final Set removeProps = new HashSet();
+        final Map addProps = new HashMap();
         final Iterator iter = currentProject.getProperties().entrySet().iterator();
         while ( iter.hasNext() )
         {
@@ -473,16 +473,16 @@ public class BundlePlugin extends AbstractMojo
                 final String currentValue = properties.getProperty(oKey);
                 if ( currentValue == null )
                 {
-                    properties.put(oKey, entry.getValue());
+                    addProps.put(oKey, entry.getValue());
                 }
                 else
                 {
-                    properties.put(oKey, currentValue + ',' + entry.getValue());
+                    addProps.put(oKey, currentValue + ',' + entry.getValue());
                 }
-                removeProps.add(key);
             }
         }
-        final Iterator keyIter = removeProps.iterator();
+        properties.putAll( addProps );
+        final Iterator keyIter = addProps.keySet().iterator();
         while ( keyIter.hasNext() )
         {
             properties.remove(keyIter.next());
