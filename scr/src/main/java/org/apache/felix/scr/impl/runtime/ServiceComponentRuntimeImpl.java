@@ -36,10 +36,11 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.dto.BundleDTO;
 import org.osgi.framework.dto.ServiceReferenceDTO;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
-import org.osgi.service.component.runtime.dto.BoundReferenceDTO;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 import org.osgi.service.component.runtime.dto.ReferenceDTO;
+import org.osgi.service.component.runtime.dto.SatisfiedReferenceDTO;
+import org.osgi.service.component.runtime.dto.UnsatisfiedReferenceDTO;
 import org.osgi.util.promise.Promise;
 
 public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime {
@@ -124,7 +125,8 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime {
 	private ComponentConfigurationDTO managerToConfiguration(
 			ComponentManager<?> manager, ComponentDescriptionDTO description) {
 		ComponentConfigurationDTO dto = new ComponentConfigurationDTO();
-		dto.boundReferences = refManagersToDTO(manager.getReferenceManagers());
+        dto.satisfiedReferences = satisfiedRefManagersToDTO(manager.getReferenceManagers());
+        dto.unsatisfiedReferences = unsatisfiedRefManagersToDTO(manager.getReferenceManagers());
 		dto.description = description;
 		dto.id = manager.getId();
 		dto.properties = new HashMap<String, Object>(manager.getProperties());//TODO deep copy?
@@ -132,26 +134,51 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime {
 		return dto;
 	}
 
-	private BoundReferenceDTO[] refManagersToDTO(List<? extends ReferenceManager<?, ?>> referenceManagers) {
-		BoundReferenceDTO[] dtos = new BoundReferenceDTO[referenceManagers.size()];
-		int i = 0;
-		for (ReferenceManager<?, ?> ref: referenceManagers)
-		{
-			BoundReferenceDTO dto = new BoundReferenceDTO();
-			dto.name = ref.getName();
-			dto.target = ref.getTarget();
-			List<ServiceReference<?>> serviceRefs = ref.getServiceReferences();
-			ServiceReferenceDTO[] srDTOs = new ServiceReferenceDTO[serviceRefs.size()];
-			int j = 0;
-			for (ServiceReference<?> serviceRef: serviceRefs)
-			{
-				srDTOs[j++] = serviceReferenceToDTO(serviceRef);
-			}
-			dto.serviceReferences = srDTOs;
-			dtos[i++] = dto;
-		}
-		return dtos;
-	}
+    private SatisfiedReferenceDTO[] satisfiedRefManagersToDTO(List<? extends ReferenceManager<?, ?>> referenceManagers) {
+        List<SatisfiedReferenceDTO> dtos = new ArrayList<SatisfiedReferenceDTO>();
+        for (ReferenceManager<?, ?> ref: referenceManagers)
+        {
+            if (ref.isSatisfied())
+            {
+                SatisfiedReferenceDTO dto = new SatisfiedReferenceDTO();
+                dto.name = ref.getName();
+                dto.target = ref.getTarget();
+                List<ServiceReference<?>> serviceRefs = ref.getServiceReferences();
+                ServiceReferenceDTO[] srDTOs = new ServiceReferenceDTO[serviceRefs.size()];
+                int j = 0;
+                for (ServiceReference<?> serviceRef : serviceRefs)
+                {
+                    srDTOs[j++] = serviceReferenceToDTO(serviceRef);
+                }
+                dto.boundServices = srDTOs;
+                dtos.add(dto);
+            }
+        }
+        return dtos.toArray( new SatisfiedReferenceDTO[dtos.size()] );
+    }
+
+    private UnsatisfiedReferenceDTO[] unsatisfiedRefManagersToDTO(List<? extends ReferenceManager<?, ?>> referenceManagers) {
+        List<UnsatisfiedReferenceDTO> dtos = new ArrayList<UnsatisfiedReferenceDTO>();
+        for (ReferenceManager<?, ?> ref: referenceManagers)
+        {
+            if (!ref.isSatisfied())
+            {
+                UnsatisfiedReferenceDTO dto = new UnsatisfiedReferenceDTO();
+                dto.name = ref.getName();
+                dto.target = ref.getTarget();
+                List<ServiceReference<?>> serviceRefs = ref.getServiceReferences();
+                ServiceReferenceDTO[] srDTOs = new ServiceReferenceDTO[serviceRefs.size()];
+                int j = 0;
+                for (ServiceReference<?> serviceRef : serviceRefs)
+                {
+                    srDTOs[j++] = serviceReferenceToDTO(serviceRef);
+                }
+                dto.targetServices = srDTOs;
+                dtos.add(dto);
+            }
+        }
+        return dtos.toArray( new UnsatisfiedReferenceDTO[dtos.size()] );
+    }
 
 	private ServiceReferenceDTO serviceReferenceToDTO(
 			ServiceReference<?> serviceRef) {

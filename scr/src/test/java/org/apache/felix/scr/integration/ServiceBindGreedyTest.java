@@ -182,7 +182,7 @@ public class ServiceBindGreedyTest extends ComponentTestBase
         srv1.drop();
         // no delay, should be immediate
 
-        findComponentConfigurationByName(name, ComponentConfigurationDTO.UNSATISFIED);
+        findComponentConfigurationByName(name, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
         final SimpleComponent comp11 = SimpleComponent.INSTANCE;
         TestCase.assertNull( comp11 );
 
@@ -426,7 +426,7 @@ public class ServiceBindGreedyTest extends ComponentTestBase
         srv1.drop();
         // no delay, should be immediate
 
-        findComponentConfigurationByName(name, ComponentConfigurationDTO.UNSATISFIED);
+        findComponentConfigurationByName(name, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
         final SimpleComponent comp11 = SimpleComponent.INSTANCE;
         TestCase.assertNull( comp11 );
 
@@ -548,7 +548,7 @@ public class ServiceBindGreedyTest extends ComponentTestBase
     {
         String name ="test_required_multiple_dynamic_factory"; //also pid
         final String factoryPid = "factory_" + name;
-        getConfigurationsDisabledThenEnable(name, 0, ComponentConfigurationDTO.UNSATISFIED);
+        getConfigurationsDisabledThenEnable(name, 0, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
 //        final String pid = "test_required_multiple_dynamic_factory";
 //
 //        final Component component = findComponentDescriptorByName( pid );
@@ -558,7 +558,7 @@ public class ServiceBindGreedyTest extends ComponentTestBase
 //        // async enabling (unsatisfied)
 //        enableAndCheck(cc.description);
 //        delay();
-//        findComponentConfigurationByName(name, ComponentConfigurationDTO.UNSATISFIED);
+//        findComponentConfigurationByName(name, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
 
         // register service, satisfying
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
@@ -832,7 +832,7 @@ public class ServiceBindGreedyTest extends ComponentTestBase
         srv1.drop();
         delay(); // async reactivate
 
-        findComponentConfigurationByName(name, ComponentConfigurationDTO.UNSATISFIED);
+        findComponentConfigurationByName(name, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
         final SimpleComponent comp11 = SimpleComponent.INSTANCE;
         TestCase.assertNull( comp11 );
 
@@ -1104,7 +1104,7 @@ public class ServiceBindGreedyTest extends ComponentTestBase
         srv1.drop();
         delay(); // async reactivate
 
-        findComponentConfigurationByName(name, ComponentConfigurationDTO.UNSATISFIED);
+        findComponentConfigurationByName(name, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
         final SimpleComponent comp11 = SimpleComponent.INSTANCE;
         TestCase.assertNull( comp11 );
 

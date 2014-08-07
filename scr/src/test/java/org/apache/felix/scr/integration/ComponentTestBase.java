@@ -295,7 +295,7 @@ public abstract class ComponentTestBase
     static final Map<Integer, String> STATES = new HashMap<Integer, String>();
     
     static {
-    	STATES.put(ComponentConfigurationDTO.UNSATISFIED, "Unsatisfied (" + ComponentConfigurationDTO.UNSATISFIED + ")" );
+    	STATES.put(ComponentConfigurationDTO.UNSATISFIED_REFERENCE, "Unsatisfied (" + ComponentConfigurationDTO.UNSATISFIED_REFERENCE + ")" );
     	STATES.put(ComponentConfigurationDTO.SATISFIED, "Satisified (" + ComponentConfigurationDTO.SATISFIED + ")" );
     	STATES.put(ComponentConfigurationDTO.ACTIVE, "Active (" + ComponentConfigurationDTO.ACTIVE + ")" );
     }

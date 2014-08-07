@@ -565,8 +565,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             obtainActivationWriteLock( "reconfigure" );
             try
             {
-                if ( getState() == STATE_UNSATISFIED
-                        && !getComponentMetadata().isConfigurationIgnored() )
+                if ( !isSatisfied() && !getComponentMetadata().isConfigurationIgnored() )
                 {
                     log( LogService.LOG_DEBUG, "Attempting to activate unsatisfied component", null );
                     updateTargets( getProperties() );

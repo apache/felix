@@ -127,7 +127,7 @@ public class ServiceChangedTest extends ComponentTestBase
 
         // set target to not match any more -> deactivate this component
         srv1.setFilterProperty( "don't match" );
-        findComponentConfigurationByName(name, ComponentConfigurationDTO.UNSATISFIED);
+        findComponentConfigurationByName(name, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
         TestCase.assertNull( SimpleComponent.INSTANCE );
         TestCase.assertNull( comp10.m_singleRef );
         TestCase.assertTrue( comp10.m_multiRef.isEmpty() );
@@ -249,7 +249,7 @@ public class ServiceChangedTest extends ComponentTestBase
         // set target to not match any more
         srv1.setFilterProperty( "don't match" );
 
-        findComponentConfigurationByName(name, ComponentConfigurationDTO.UNSATISFIED);
+        findComponentConfigurationByName(name, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
         final SimpleComponent comp11 = SimpleComponent.INSTANCE;
         TestCase.assertNull( comp11 );
         TestCase.assertNull( comp10.m_singleRef );
@@ -382,7 +382,7 @@ public class ServiceChangedTest extends ComponentTestBase
 
         // set target to not match any more -> deactivate this component
         srv1.setFilterProperty( "don't match" );
-        findComponentConfigurationByName(name, ComponentConfigurationDTO.UNSATISFIED);
+        findComponentConfigurationByName(name, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
         TestCase.assertNull( SimpleComponent.INSTANCE );
         TestCase.assertNull( comp10.m_singleRef );
         TestCase.assertTrue( comp10.m_multiRef.isEmpty() );
@@ -525,7 +525,7 @@ public class ServiceChangedTest extends ComponentTestBase
         // set target to not match any more
         srv1.setFilterProperty( "don't match" );
 
-        findComponentConfigurationByName(name, ComponentConfigurationDTO.UNSATISFIED);
+        findComponentConfigurationByName(name, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
         final SimpleComponent comp11 = SimpleComponent.INSTANCE;
         TestCase.assertNull( comp11 );
         TestCase.assertNull( comp10.m_singleRef );

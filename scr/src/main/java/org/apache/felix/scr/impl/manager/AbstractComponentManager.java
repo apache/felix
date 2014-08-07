@@ -614,6 +614,11 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     {
         return false;
     }
+    
+    protected boolean isSatisfied()
+    {
+        return m_satisfied;
+    }
 
 
     //-------------- atomic transition methods -------------------------------
@@ -1351,7 +1356,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         }
         if ( !m_satisfied )
         {
-            return STATE_UNSATISFIED;
+            return STATE_UNSATISFIED_REFERENCE;
         }
         if ( hasInstance() )
         {
