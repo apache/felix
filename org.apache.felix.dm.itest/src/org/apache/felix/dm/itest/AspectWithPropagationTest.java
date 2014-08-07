@@ -29,6 +29,96 @@ public class AspectWithPropagationTest extends TestBase {
     /**
      * This test does the following:
      * 
+     * - Create S service with property "p=s"
+     * - Create SA (aspect of S) with property "p=aspect"
+     * - Create Client, depending on S (actually, on SA).
+     * - Client should see SA with properties p=aspect
+     * - Change S service property with "p=smodified": the Client should be changed with SA(p=aspect)
+     * - Change aspect service property with "p=aspectmodified": The client should be changed with SA(p=aspectmodified)
+     */
+    public void testAspectsWithPropagationNotOverriding() {
+        System.out.println("----------- Running testAspectsWithPropagationNotOverriding ...");
+        DependencyManager m = getDM();
+        m_invokeStep = new Ensure(); 
+        
+        // Create our original "S" service.
+        S s = new S() {
+			public void invoke() {
+			}
+        };
+		Dictionary props = new Hashtable();
+		props.put("p", "s");
+		Component sComp = m.createComponent()
+                .setImplementation(s)
+                .setInterface(S.class.getName(), props);
+
+        // Create SA (aspect of S)
+        S sa = new S() {
+        	volatile S m_s;
+			public void invoke() {
+			}
+        };
+        Component saComp = m.createAspectService(S.class, null, 1).setImplementation(sa);        		
+        props = new Hashtable();
+        props.put("p", "aspect");
+        saComp.setServiceProperties(props);
+        
+        // Create client depending on S
+        Object client = new Object() {
+        	int m_changeCount;
+        	void add(Map props, S s) {
+        		Assert.assertEquals("aspect", props.get("p"));
+        		m_invokeStep.step(1);
+        	}
+        	
+        	void change(Map props, S s) {
+        		switch (++m_changeCount) {
+        		case 1:
+        			Assert.assertEquals("aspect", props.get("p"));
+            		m_invokeStep.step(2);
+            		break;
+        		case 2:
+        			Assert.assertEquals("aspectmodified", props.get("p"));
+            		m_invokeStep.step(3);
+        		}
+        	}
+        };
+        Component clientComp = m.createComponent()
+                .add(m.createServiceDependency()
+                     .setService(S.class)
+                     .setRequired(true)
+                     .setCallbacks("add", "change", null))
+                .setImplementation(client);
+        
+        // Add components in dependency manager
+        m.add(sComp);
+        m.add(saComp);
+        m.add(clientComp);
+        
+        // client should have been added with SA aspect
+        m_invokeStep.waitForStep(1, 5000);
+        
+        // now change s "p=s" to "p=smodified": client should not see it
+        props = new Hashtable();
+        props.put("p", "smodified");
+        sComp.setServiceProperties(props);
+        m_invokeStep.waitForStep(2, 5000);
+        
+        // now change sa aspect "p=aspect" to "p=aspectmodified": client should see it
+        props = new Hashtable();
+        props.put("p", "aspectmodified");
+        saComp.setServiceProperties(props);
+        m_invokeStep.waitForStep(3, 5000);    
+        
+        // remove components
+        m.remove(clientComp);
+        m.remove(saComp);
+        m.remove(sComp);
+    }
+        
+    /**
+     * This test does the following:
+     * 
      * - Create S service
      * - Create some S Aspects
      * - Create a Client, depending on S (actually, on the top-level S aspect)

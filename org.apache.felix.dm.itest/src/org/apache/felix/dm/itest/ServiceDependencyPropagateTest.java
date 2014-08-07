@@ -47,7 +47,7 @@ public class ServiceDependencyPropagateTest extends TestBase {
                       .add(m.createServiceDependency().setService(C3.class).setRequired(true).setPropagate(true));
 
         Component c3 = m.createComponent()
-                      .setInterface(C3.class.getName(), new Hashtable() {{ put("foo2", "bar2"); }})
+                      .setInterface(C3.class.getName(), new Hashtable() {{ put("foo2", "bar2"); put("foo", "overriden");}})
                       .setImplementation(new C3());
         
         m.add(c1);
@@ -106,7 +106,7 @@ public class ServiceDependencyPropagateTest extends TestBase {
         
         void start() {
             m_ensure.step(1);
-            if ("bar".equals(m_props.get("foo"))) {
+            if ("bar".equals(m_props.get("foo"))) { // "foo=overriden" from C2 should not override our own "foo" property
                 m_ensure.step(2);
             }
             if ("bar2".equals(m_props.get("foo2"))) {
@@ -119,7 +119,7 @@ public class ServiceDependencyPropagateTest extends TestBase {
       C3 m_c3;
       
       public Dictionary getServiceProperties(ServiceReference ref) {
-          return new Hashtable() {{ put("foo2", "bar2"); }};
+          return new Hashtable() {{ put("foo2", "bar2"); put("foo", "overriden"); }};
       }
     }
     

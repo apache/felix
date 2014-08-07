@@ -628,7 +628,6 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 
     private Dictionary calculateServiceProperties() {
 		Dictionary properties = new Properties();
-		addTo(properties, m_serviceProperties);
 		for (int i = 0; i < m_dependencies.size(); i++) {
 			DependencyContext d = (DependencyContext) m_dependencies.get(i);
 			if (d.isPropagated() && d.isAvailable()) {
@@ -636,6 +635,9 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 				addTo(properties, dict);
 			}
 		}
+		// our service properties must not be overriden by propagated dependency properties, so we add our service
+		// properties after having added propagated dependency properties.
+		addTo(properties, m_serviceProperties);
 		if (properties.size() == 0) {
 			properties = null;
 		}

@@ -62,12 +62,14 @@ public class AdapterWithPropagationTest extends TestBase {
         }
         
         public void add(Map properties, S1 s1) {
-            Assert.assertTrue("bar".equals(properties.get("foo")));
+            Assert.assertTrue("v1".equals(properties.get("p1")));
+            Assert.assertTrue("v2overriden".equals(properties.get("p2")));
             m_ensure.step(2);
         }
         
         public void change(Map properties, S1 s1) {   
-            Assert.assertTrue("bar2".equals(properties.get("foo")));
+            Assert.assertTrue("v1modified".equals(properties.get("p1")));
+            Assert.assertTrue("v2overriden".equals(properties.get("p2")));
             m_ensure.step(4);
         }
     }
@@ -80,12 +82,14 @@ public class AdapterWithPropagationTest extends TestBase {
         }
                         
         public void add(Map properties, S2 s2) {
-            Assert.assertTrue("bar".equals(properties.get("foo")));
+            Assert.assertTrue("v1".equals(properties.get("p1")));
+            Assert.assertTrue("v2".equals(properties.get("p2"))); // s1 should not override adapter service properties
             m_ensure.step(3);
         }
         
         public void change(Map properties, S2 s2) {
-            Assert.assertTrue("bar2".equals(properties.get("foo")));
+            Assert.assertTrue("v1modified".equals(properties.get("p1")));
+            Assert.assertTrue("v2".equals(properties.get("p2"))); // s1 should not override adapter service properties
             m_ensure.step(5);
         }
     }
@@ -96,13 +100,16 @@ public class AdapterWithPropagationTest extends TestBase {
         Ensure e = new Ensure(); 
         
         Dictionary s1Properties = new Hashtable();
-        s1Properties.put("foo", "bar");
+        s1Properties.put("p1", "v1");
+        s1Properties.put("p2", "v2overriden"); // should not override adapter
         Component s1 = m.createComponent()
                 .setImplementation(new S1Impl(e))
                 .setInterface(S1.class.getName(), s1Properties);
         
+        Dictionary s1AdapterProperties = new Hashtable();
+        s1AdapterProperties.put("p2", "v2");
         Component s1Adapter = m.createAdapterService(S1.class, null, "add", "change", null)
-                .setInterface(S2.class.getName(), null)
+                .setInterface(S2.class.getName(), s1AdapterProperties)
                 .setImplementation(new S1Adapter(e));
         
         Component s3 = m.createComponent()
@@ -120,7 +127,8 @@ public class AdapterWithPropagationTest extends TestBase {
         e.waitForStep(3, 5000);
         
         s1Properties = new Hashtable();
-        s1Properties.put("foo", "bar2");
+        s1Properties.put("p1", "v1modified");
+        s1Properties.put("p2", "v2overriden");
         s1.setServiceProperties(s1Properties);
         
         e.waitForStep(5, 5000);
