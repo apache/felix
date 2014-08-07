@@ -31,7 +31,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import org.apache.felix.scrplugin.Options;
 import org.apache.felix.scrplugin.Project;
@@ -44,11 +43,13 @@ import org.apache.felix.scrplugin.SpecVersion;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
+import org.apache.maven.model.Plugin;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.sonatype.plexus.build.incremental.BuildContext;
 
 /**
@@ -78,6 +79,13 @@ public class SCRDescriptorMojo extends AbstractMojo {
      * @see #checkAnnotationArtifact(Artifact)
      */
     private static final String SCR_ANN_ARTIFACTID = "org.apache.felix.scr.annotations";
+
+    private static final String BUNDLE_PLUGIN_GROUP_ID = "org.apache.felix";
+    private static final String BUNDLE_PLUGIN_ARTIFACT_ID = "maven-bundle-plugin";
+    private static final String BUNDLE_PLUGIN_INSTRUCTIONS = "instructions";
+    private static final String BUNDLE_PLUGIN_EXTENSION = "BNDExtension-";
+    private static final String OSGI_CFG_RESOURCES = "Include-Resource";
+    private static final String OSGI_CFG_COMPONENTS = "Service-Component";
 
     /**
      * The minimum SCR Annotation library version supported by this plugin. See
@@ -385,6 +393,45 @@ public class SCRDescriptorMojo extends AbstractMojo {
     }
 
     /**
+     * We need the bundle plugin with a version higher than 2.5.0!
+     */
+    private Plugin getBundlePlugin() {
+        Plugin bundlePlugin  = null;
+        final List<Plugin> plugins = this.project.getBuildPlugins();
+        for(final Plugin p : plugins) {
+            if ( p.getArtifactId().equals(BUNDLE_PLUGIN_ARTIFACT_ID)
+                 && p.getGroupId().equals(BUNDLE_PLUGIN_GROUP_ID) ) {
+                final ArtifactVersion pluginVersion = new DefaultArtifactVersion(p.getVersion());
+                final ArtifactVersion requiredMinVersion = new DefaultArtifactVersion("2.5.0");
+                if ( pluginVersion.compareTo(requiredMinVersion) > 0 ) {
+                    bundlePlugin = p;
+                    break;
+                }
+            }
+        }
+        return bundlePlugin;
+
+    }
+
+    private String getBundlePluginConfiguration(final String key) {
+        String value = null;
+        Plugin bundlePlugin = this.getBundlePlugin();
+        if ( bundlePlugin != null ) {
+            final Xpp3Dom config = (Xpp3Dom) bundlePlugin.getConfiguration();
+            if ( config != null) {
+                final Xpp3Dom instructionsConfig = config.getChild(BUNDLE_PLUGIN_INSTRUCTIONS);
+                if ( instructionsConfig != null) {
+                    final Xpp3Dom keyConfig = instructionsConfig.getChild(key);
+                    if ( keyConfig != null ) {
+                        return keyConfig.getValue();
+                    }
+                }
+            }
+        }
+        return value;
+    }
+
+    /**
      * Set the service component header based on the files in the output directory
      */
     private void setServiceComponentHeader(final Options options) {
@@ -392,15 +439,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
         final File componentDir = options.getComponentDescriptorDirectory();
         final String cmpPrefix = componentDir.getAbsolutePath().substring(outputDirLength).replace(File.separatorChar, '/');
         if ( componentDir.exists() ) {
-            final String svcHeader = project.getProperties().getProperty("Service-Component");
             final Set<String> xmlFiles = new HashSet<String>();
-            if ( svcHeader != null ) {
-                final StringTokenizer st = new StringTokenizer(svcHeader, ",");
-                while ( st.hasMoreTokens() ) {
-                    final String token = st.nextToken();
-                    xmlFiles.add(token.trim());
-                }
-            }
 
             for(final File f : componentDir.listFiles()) {
                 if ( f.isFile() && f.getName().endsWith(".xml") ) {
@@ -410,21 +449,25 @@ public class SCRDescriptorMojo extends AbstractMojo {
             }
 
             final StringBuilder sb = new StringBuilder();
-            boolean first = true;
             for(final String entry : xmlFiles) {
-                if ( !first ) {
+                if ( sb.length() > 0 ) {
                     sb.append(", ");
-                } else {
-                    first = false;
                 }
                 sb.append(entry);
             }
-            project.getProperties().setProperty("Service-Component", sb.toString());
+
+            if ( sb.length() > 0 ) {
+                if ( this.getBundlePlugin() != null ) {
+                    project.getProperties().setProperty(BUNDLE_PLUGIN_EXTENSION + OSGI_CFG_COMPONENTS, sb.toString());
+                } else {
+                    project.getProperties().setProperty(OSGI_CFG_COMPONENTS, sb.toString());
+                }
+            }
         }
     }
 
     /**
-     * Set the include resource header for bnd
+     * Set the include resource header for bnd or as project properties
      * @param options
      */
     private void setIncludeResourceHeader(final Options options) {
@@ -432,10 +475,8 @@ public class SCRDescriptorMojo extends AbstractMojo {
 
         // make sure to either include the current settings or the default
         final StringBuilder resourcesEntry = new StringBuilder();
-        final String includeResources = project.getProperties().getProperty("Include-Resource");
-        if ( includeResources != null ) {
-            resourcesEntry.append(includeResources);
-        } else {
+        final String includeResources = this.getBundlePluginConfiguration(OSGI_CFG_RESOURCES);
+        if ( includeResources == null ) {
             resourcesEntry.append("{maven-resources}");
         }
 
@@ -447,7 +488,9 @@ public class SCRDescriptorMojo extends AbstractMojo {
                 if ( f.isFile() && f.getName().endsWith(".xml") ) {
                     final String entry = cmpPrefix + '/' + f.getName();
 
-                    resourcesEntry.append(",");
+                    if ( resourcesEntry.length() > 0 ) {
+                        resourcesEntry.append(",");
+                    }
                     resourcesEntry.append(entry);
                     resourcesEntry.append("=");
                     resourcesEntry.append(this.outputDirectory);
@@ -464,7 +507,9 @@ public class SCRDescriptorMojo extends AbstractMojo {
                 if ( f.isFile() && (f.getName().endsWith(".xml") || f.getName().endsWith(".properties")) ) {
                     final String entry = mtPrefix + '/' + f.getName();
 
-                    resourcesEntry.append(",");
+                    if ( resourcesEntry.length() > 0 ) {
+                        resourcesEntry.append(",");
+                    }
                     resourcesEntry.append(entry);
                     resourcesEntry.append("=");
                     resourcesEntry.append(this.outputDirectory);
@@ -473,7 +518,14 @@ public class SCRDescriptorMojo extends AbstractMojo {
                 }
             }
         }
-        project.getProperties().setProperty("Include-Resource", resourcesEntry.toString());
+
+        if ( resourcesEntry.length() > 0 ) {
+            if ( this.getBundlePlugin() != null ) {
+                project.getProperties().setProperty(BUNDLE_PLUGIN_EXTENSION + OSGI_CFG_RESOURCES, resourcesEntry.toString());
+            } else {
+                project.getProperties().setProperty(OSGI_CFG_RESOURCES, resourcesEntry.toString());
+            }
+        }
     }
 
     /**
