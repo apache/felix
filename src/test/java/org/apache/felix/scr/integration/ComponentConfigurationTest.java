@@ -125,7 +125,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
         
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
-        getConfigurationsDisabledThenEnable(pid, 0, ComponentConfigurationDTO.UNSATISFIED);
+        getConfigurationsDisabledThenEnable(pid, 0, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
         configure( pid );
@@ -269,14 +269,14 @@ public class ComponentConfigurationTest extends ComponentTestBase
             delay();
 
             // mandatory ref missing --> component unsatisfied
-            ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.UNSATISFIED);
+            ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
 
             // dynamically configure without the correct target
             configure( pid );
             delay();
 
             // mandatory ref missing --> component unsatisfied
-            findComponentConfigurationByName(pid, ComponentConfigurationDTO.UNSATISFIED);
+            findComponentConfigurationByName(pid, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
 
             // dynamically configure with correct target
             theConfig.put( targetProp, "(filterprop=" + filterProp + ")" );
@@ -306,13 +306,13 @@ public class ComponentConfigurationTest extends ComponentTestBase
             delay();
 
             // mandatory ref missing --> component unsatisfied
-            findComponentConfigurationByName(pid, ComponentConfigurationDTO.UNSATISFIED);
+            findComponentConfigurationByName(pid, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
 
             deleteConfig( pid );
             delay();
 
             // mandatory ref missing --> component unsatisfied
-            findComponentConfigurationByName(pid, ComponentConfigurationDTO.UNSATISFIED);
+            findComponentConfigurationByName(pid, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
 
             disableAndCheck(cc);
             TestCase.assertNull( SimpleComponent.INSTANCE );
@@ -346,14 +346,14 @@ public class ComponentConfigurationTest extends ComponentTestBase
             delay();
 
             // mandatory ref missing --> component unsatisfied
-            ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.UNSATISFIED);
+            ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
 
             // dynamically configure without the correct target
             configure( pid );
             delay();
 
             // mandatory ref missing --> component unsatisfied
-            findComponentConfigurationByName(pid, ComponentConfigurationDTO.UNSATISFIED);
+            findComponentConfigurationByName(pid, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
 
             // dynamically configure with correct target
             theConfig.put( targetProp, "(|(filterprop=" + filterProp1 + ")(filterprop=" + filterProp2 + "))" );
@@ -398,7 +398,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
             delay();
 
             // mandatory ref missing --> component unsatisfied
-            findComponentConfigurationByName(pid, ComponentConfigurationDTO.UNSATISFIED);
+            findComponentConfigurationByName(pid, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
 
             disableAndCheck(cc);
             TestCase.assertNull( SimpleComponent.INSTANCE );

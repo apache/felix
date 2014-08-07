@@ -199,7 +199,7 @@ public class ComponentActivationTest extends ComponentTestBase
 
     private void testRequiredDependency(final String componentname) throws Exception
     {
-        ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname, ComponentConfigurationDTO.UNSATISFIED);
+        ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
 
         SimpleServiceImpl ss = SimpleServiceImpl.create( bundleContext, "foo" );
         
@@ -208,7 +208,7 @@ public class ComponentActivationTest extends ComponentTestBase
         ServiceReference<ActivatorComponent> ref = bundleContext.getServiceReference( ActivatorComponent.class );
         
         ss.drop();
-        findComponentConfigurationByName(componentname, ComponentConfigurationDTO.UNSATISFIED);
+        findComponentConfigurationByName(componentname, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
 
         
         TestCase.assertNull(bundleContext.getServiceReference( ActivatorComponent.class ));

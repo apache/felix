@@ -48,7 +48,7 @@ public class ComponentConfigurationPidTest extends ComponentTestBase
         delay();
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
-        getConfigurationsDisabledThenEnable(name, 0, ComponentConfigurationDTO.UNSATISFIED);
+        getConfigurationsDisabledThenEnable(name, 0, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
 
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
@@ -77,7 +77,7 @@ public class ComponentConfigurationPidTest extends ComponentTestBase
         deleteConfig( pid );
         delay();
 
-        getConfigurationsDisabledThenEnable(name, 0, ComponentConfigurationDTO.UNSATISFIED);
+        getConfigurationsDisabledThenEnable(name, 0, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
         configure( pid );

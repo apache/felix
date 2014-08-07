@@ -40,10 +40,11 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.dto.ServiceReferenceDTO;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
-import org.osgi.service.component.runtime.dto.BoundReferenceDTO;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 import org.osgi.service.component.runtime.dto.ReferenceDTO;
+import org.osgi.service.component.runtime.dto.SatisfiedReferenceDTO;
+import org.osgi.service.component.runtime.dto.UnsatisfiedReferenceDTO;
 
 /**
  * The <code>ScrCommand</code> class provides the implementations for the
@@ -407,16 +408,38 @@ public class ScrCommand implements ScrInfo
         out.println( cc.id );
         out.print("    State: ");
         out.println( toStateString(cc.state));
-        for ( BoundReferenceDTO ref: cc.boundReferences) 
+        for ( SatisfiedReferenceDTO ref: cc.satisfiedReferences) 
         {
-            out.print( "    BoundReference: ");
+            out.print( "    SatisfiedReference: ");
             out.println( ref.name );
             out.print( "      Target: " );
             out.println( ref.target );
-          ServiceReferenceDTO[] serviceRefs = ref.serviceReferences;
+          ServiceReferenceDTO[] serviceRefs = ref.boundServices;
           if ( serviceRefs != null )
           {
               out.print( "      Bound to:" );
+              for ( ServiceReferenceDTO sr: serviceRefs )
+              {
+                  out.print( "        " );
+                  out.println( sr.id );
+              }
+          }
+          else
+          {
+              out.println( "      (unbound)" );
+          }
+
+        }
+        for ( UnsatisfiedReferenceDTO ref: cc.unsatisfiedReferences) 
+        {
+            out.print( "    UnsatisfiedReference: ");
+            out.println( ref.name );
+            out.print( "      Target: " );
+            out.println( ref.target );
+          ServiceReferenceDTO[] serviceRefs = ref.targetServices;
+          if ( serviceRefs != null )
+          {
+              out.print( "      Target services:" );
               for ( ServiceReferenceDTO sr: serviceRefs )
               {
                   out.print( "        " );
@@ -501,8 +524,8 @@ public class ScrCommand implements ScrInfo
     {
         switch (state) {
 
-        case (ComponentConfigurationDTO.UNSATISFIED):
-            return "unsatisfied ";
+        case (ComponentConfigurationDTO.UNSATISFIED_REFERENCE):
+            return "unsatisfied reference";
         case (ComponentConfigurationDTO.ACTIVE):
             return "active      ";
         case (ComponentConfigurationDTO.SATISFIED):

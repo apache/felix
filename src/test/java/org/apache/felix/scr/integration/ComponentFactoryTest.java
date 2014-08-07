@@ -325,7 +325,7 @@ public class ComponentFactoryTest extends ComponentTestBase
     {
         //set up the component that refers to the service the factory will create.
         final String referringComponentName = "ComponentReferringToFactoryObject";
-        getConfigurationsDisabledThenEnable(referringComponentName, 1, ComponentConfigurationDTO.UNSATISFIED);
+        getConfigurationsDisabledThenEnable(referringComponentName, 1, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
 
         final String componentname = "factory.component.referred";
         final String componentfactory = "factory.component.factory.referred";
@@ -349,7 +349,7 @@ public class ComponentFactoryTest extends ComponentTestBase
         TestCase.assertNull( instance.getInstance() ); // SCR 112.12.6.2
 
         //make sure it's unsatisfied (service is no longer available)
-        checkConfigurationCount(referringComponentName, 1, ComponentConfigurationDTO.UNSATISFIED);
+        checkConfigurationCount(referringComponentName, 1, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
     }
 
     @Test

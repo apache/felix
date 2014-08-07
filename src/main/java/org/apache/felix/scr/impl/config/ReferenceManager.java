@@ -45,4 +45,6 @@ public interface ReferenceManager<S, T> {
 	 */
 	String getTarget();
 
+    boolean isSatisfied();
+
 }

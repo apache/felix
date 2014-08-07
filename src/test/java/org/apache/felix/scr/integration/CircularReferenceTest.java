@@ -57,10 +57,10 @@ public class CircularReferenceTest extends ComponentTestBase
     public void test_A11_B11()
     {
         String componentNameA = "1.A.1.1.dynamic";
-        final ComponentConfigurationDTO componentA = findComponentConfigurationByName( componentNameA, ComponentConfigurationDTO.UNSATISFIED );
+        final ComponentConfigurationDTO componentA = findComponentConfigurationByName( componentNameA, ComponentConfigurationDTO.UNSATISFIED_REFERENCE );
 
         String componentNameB = "1.B.1.1.dynamic";
-        final ComponentConfigurationDTO componentB = findComponentConfigurationByName( componentNameB, ComponentConfigurationDTO.UNSATISFIED );
+        final ComponentConfigurationDTO componentB = findComponentConfigurationByName( componentNameB, ComponentConfigurationDTO.UNSATISFIED_REFERENCE );
     }
 
     /**
