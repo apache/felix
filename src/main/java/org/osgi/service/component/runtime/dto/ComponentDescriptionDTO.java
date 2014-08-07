@@ -25,7 +25,7 @@ import org.osgi.framework.dto.BundleDTO;
  * 
  * @since 1.3
  * @NotThreadSafe
- * @author $Id: 5ed89a27964e91018c55dc9e72434eb92a438fa6 $
+ * @author $Id: 9f098a6edef3359b4dbd21e1e58bbad01b89b995 $
  */
 public class ComponentDescriptionDTO extends DTO {
 	/**
@@ -33,7 +33,7 @@ public class ComponentDescriptionDTO extends DTO {
 	 * 
 	 * <p>
 	 * This is declared in the {@code name} attribute of the {@code component}
-	 * element. This will be the default name if the component description does
+	 * element. This must be the default name if the component description does
 	 * not declare a name.
 	 */
 	public String				name;
@@ -48,7 +48,7 @@ public class ComponentDescriptionDTO extends DTO {
 	 * 
 	 * <p>
 	 * This is declared in the {@code factory} attribute of the
-	 * {@code component} element. This will be {@code null} if the component
+	 * {@code component} element. This must be {@code null} if the component
 	 * description is not declared as a component factory.
 	 */
 	public String				factory;
@@ -58,7 +58,7 @@ public class ComponentDescriptionDTO extends DTO {
 	 * 
 	 * <p>
 	 * This is declared in the {@code scope} attribute of the {@code service}
-	 * element. This will be {@code null} if the component description does not
+	 * element. This must be {@code null} if the component description does not
 	 * declare any service interfaces.
 	 */
 	public String				scope;
@@ -95,7 +95,7 @@ public class ComponentDescriptionDTO extends DTO {
 	 * 
 	 * <p>
 	 * These are declared in the {@code interface} attribute of the
-	 * {@code provide} elements. The array will be empty if the component
+	 * {@code provide} elements. The array must be empty if the component
 	 * description does not declare any service interfaces.
 	 */
 	public String[]				serviceInterfaces;
@@ -113,7 +113,7 @@ public class ComponentDescriptionDTO extends DTO {
 	 * The referenced services.
 	 * 
 	 * <p>
-	 * These are declared in the {@code reference} elements. The array will be
+	 * These are declared in the {@code reference} elements. The array must be
 	 * empty if the component description does not declare references to any
 	 * services.
 	 */
@@ -124,7 +124,7 @@ public class ComponentDescriptionDTO extends DTO {
 	 * 
 	 * <p>
 	 * This is declared in the {@code activate} attribute of the
-	 * {@code component} element. This will be {@code null} if the component
+	 * {@code component} element. This must be {@code null} if the component
 	 * description does not declare an activate method name.
 	 */
 	public String				activate;
@@ -134,7 +134,7 @@ public class ComponentDescriptionDTO extends DTO {
 	 * 
 	 * <p>
 	 * This is declared in the {@code deactivate} attribute of the
-	 * {@code component} element. This will be {@code null} if the component
+	 * {@code component} element. This must be {@code null} if the component
 	 * description does not declare a deactivate method name.
 	 */
 	public String				deactivate;
@@ -144,7 +144,7 @@ public class ComponentDescriptionDTO extends DTO {
 	 * 
 	 * <p>
 	 * This is declared in the {@code modified} attribute of the
-	 * {@code component} element. This will be {@code null} if the component
+	 * {@code component} element. This must be {@code null} if the component
 	 * description does not declare a modified method name.
 	 */
 	public String				modified;
@@ -154,7 +154,7 @@ public class ComponentDescriptionDTO extends DTO {
 	 * 
 	 * <p>
 	 * This is declared in the {@code configuration-policy} attribute of the
-	 * {@code component} element. This will be the default configuration policy
+	 * {@code component} element. This must be the default configuration policy
 	 * if the component description does not declare a configuration policy.
 	 */
 	public String				configurationPolicy;
@@ -164,7 +164,7 @@ public class ComponentDescriptionDTO extends DTO {
 	 * 
 	 * <p>
 	 * These are declared in the {@code configuration-pid} attribute of the
-	 * {@code component} element. This will contain the default configuration
+	 * {@code component} element. This must contain the default configuration
 	 * pid if the component description does not declare a configuration pid.
 	 */
 	public String[]				configurationPid;
