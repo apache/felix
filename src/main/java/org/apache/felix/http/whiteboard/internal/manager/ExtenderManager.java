@@ -36,13 +36,16 @@ import org.osgi.service.http.HttpService;
 
 public final class ExtenderManager
 {
+    static final String TYPE_FILTER = "f";
+    static final String TYPE_SERVLET = "s";
+
     private HttpService httpService;
-    private final HashMap<ServiceReference, AbstractMapping> mapping;
+    private final Map<String, AbstractMapping> mapping;
     private final HttpContextManager contextManager;
 
     public ExtenderManager()
     {
-        this.mapping = new HashMap<ServiceReference, AbstractMapping>();
+        this.mapping = new HashMap<String, AbstractMapping>();
         this.contextManager = new HttpContextManager();
     }
 
@@ -159,7 +162,7 @@ public final class ExtenderManager
         FilterMapping mapping = new FilterMapping(ref.getBundle(), service, pattern, ranking);
         getHttpContext(mapping, ref);
         addInitParams(ref, mapping);
-        addMapping(ref, mapping);
+        addMapping(TYPE_FILTER, ref, mapping);
     }
 
     public void add(Servlet service, ServiceReference ref)
@@ -175,12 +178,17 @@ public final class ExtenderManager
         ServletMapping mapping = new ServletMapping(ref.getBundle(), service, alias);
         getHttpContext(mapping, ref);
         addInitParams(ref, mapping);
-        addMapping(ref, mapping);
+        addMapping(TYPE_SERVLET, ref, mapping);
     }
 
-    public void remove(ServiceReference ref)
+    public void removeFilter(ServiceReference ref)
     {
-        removeMapping(ref);
+        removeMapping(TYPE_FILTER, ref);
+    }
+
+    public void removeServlet(ServiceReference ref)
+    {
+        removeMapping(TYPE_SERVLET, ref);
     }
 
     public synchronized void setHttpService(HttpService service)
@@ -237,15 +245,15 @@ public final class ExtenderManager
     	}
     }
 
-    private synchronized void addMapping(ServiceReference ref, AbstractMapping mapping)
+    private synchronized void addMapping(final String servType, ServiceReference ref, AbstractMapping mapping)
     {
-        this.mapping.put(ref, mapping);
+        this.mapping.put(ref.getProperty(Constants.SERVICE_ID).toString() + servType, mapping);
         this.registerMapping(mapping);
     }
 
-    private synchronized void removeMapping(ServiceReference ref)
+    private synchronized void removeMapping(final String servType, ServiceReference ref)
     {
-        AbstractMapping mapping = this.mapping.remove(ref);
+        AbstractMapping mapping = this.mapping.remove(ref.getProperty(Constants.SERVICE_ID).toString() + servType);
         if (mapping != null)
         {
             ungetHttpContext(mapping, ref);
@@ -295,11 +303,11 @@ public final class ExtenderManager
     /**
      * Returns mappings indexed by there owning OSGi service.
      */
-    Map<Object, AbstractMapping> getMappings()
+    Map<String, AbstractMapping> getMappings()
     {
         synchronized (this)
         {
-            return new HashMap<Object, AbstractMapping>(this.mapping);
+            return new HashMap<String, AbstractMapping>(this.mapping);
         }
     }
 }
