@@ -17,6 +17,7 @@
 package org.apache.felix.http.whiteboard.internal.tracker;
 
 import javax.servlet.Filter;
+
 import org.apache.felix.http.whiteboard.internal.manager.ExtenderManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -32,19 +33,22 @@ public final class FilterTracker
         this.manager = manager;
     }
 
+    @Override
     protected void added(Filter service, ServiceReference ref)
     {
         this.manager.add(service, ref);
     }
 
+    @Override
     protected void modified(Filter service, ServiceReference ref)
     {
         removed(service, ref);
         added(service, ref);
     }
 
+    @Override
     protected void removed(Filter service, ServiceReference ref)
     {
-        this.manager.remove(ref);
+        this.manager.removeFilter(ref);
     }
 }
