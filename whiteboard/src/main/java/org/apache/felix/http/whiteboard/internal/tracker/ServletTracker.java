@@ -16,10 +16,11 @@
  */
 package org.apache.felix.http.whiteboard.internal.tracker;
 
+import javax.servlet.Servlet;
+
 import org.apache.felix.http.whiteboard.internal.manager.ExtenderManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
-import javax.servlet.Servlet;
 
 public final class ServletTracker
     extends AbstractTracker<Servlet>
@@ -32,19 +33,22 @@ public final class ServletTracker
         this.manager = manager;
     }
 
+    @Override
     protected void added(Servlet service, ServiceReference ref)
     {
         this.manager.add(service, ref);
     }
 
+    @Override
     protected void modified(Servlet service, ServiceReference ref)
     {
         removed(service, ref);
         added(service, ref);
     }
 
+    @Override
     protected void removed(Servlet service, ServiceReference ref)
     {
-        this.manager.remove(ref);
+        this.manager.removeServlet(ref);
     }
 }
