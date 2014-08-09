@@ -19,6 +19,7 @@
 package org.apache.felix.scr.impl;
 
 import java.io.PrintWriter;
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -392,11 +393,22 @@ public class ScrCommand implements ScrInfo
                 Object prop = entry.getValue();
                 if ( prop.getClass().isArray() )
                 {
-                    prop = Arrays.asList( ( Object[] ) prop );
+                    out.print("[");
+                    int length = Array.getLength(prop);
+                    for (int i = 0; i< length; i++)
+                    {
+                        out.print(Array.get(prop, i));
+                        if ( i < length - 1)
+                        {
+                            out.print(", ");
+                        }
+                    }
+                    out.println("]");
+                } 
+                else
+                {
+                    out.println( prop );
                 }
-                out.print( prop );
-
-                out.println();
             }
         }
     }
@@ -422,6 +434,7 @@ public class ScrCommand implements ScrInfo
               {
                   out.print( "        " );
                   out.println( sr.id );
+                  propertyInfo(sr.properties, out, "        ");
               }
           }
           else
