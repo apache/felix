@@ -18,11 +18,13 @@
  */
 package org.apache.felix.scr.impl.runtime;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.felix.scr.impl.ComponentRegistry;
 import org.apache.felix.scr.impl.config.ComponentHolder;
@@ -30,8 +32,10 @@ import org.apache.felix.scr.impl.config.ComponentManager;
 import org.apache.felix.scr.impl.config.ReferenceManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
+import org.osgi.dto.DTO;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.dto.BundleDTO;
 import org.osgi.framework.dto.ServiceReferenceDTO;
@@ -43,7 +47,8 @@ import org.osgi.service.component.runtime.dto.SatisfiedReferenceDTO;
 import org.osgi.service.component.runtime.dto.UnsatisfiedReferenceDTO;
 import org.osgi.util.promise.Promise;
 
-public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime {
+public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
+{
 	
 	private static final String[] EMPTY = {};
 	
@@ -51,14 +56,14 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime {
 	private final ComponentRegistry componentRegistry;
 
 
-	public ServiceComponentRuntimeImpl(BundleContext context,
-			ComponentRegistry componentRegistry) {
+	public ServiceComponentRuntimeImpl(BundleContext context,ComponentRegistry componentRegistry) 
+	{
 		this.context = context;
 		this.componentRegistry = componentRegistry;
 	}
 
-	public Collection<ComponentDescriptionDTO> getComponentDescriptionDTOs(
-			Bundle... bundles) {
+	public Collection<ComponentDescriptionDTO> getComponentDescriptionDTOs(Bundle... bundles) 
+	{
 		List<ComponentHolder<?>> holders;
 		if (bundles == null || bundles.length == 0)
 		{
@@ -77,7 +82,8 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime {
 		return result;
 	}
 
-	public ComponentDescriptionDTO getComponentDescriptionDTO(Bundle bundle, String name) {
+	public ComponentDescriptionDTO getComponentDescriptionDTO(Bundle bundle, String name)
+	{
 	    ComponentHolder<?> holder = componentRegistry.getComponentHolder(bundle, name);
 		if ( holder != null )
 		{
@@ -89,8 +95,8 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime {
 		}
 	}
 
-	public Collection<ComponentConfigurationDTO> getComponentConfigurationDTOs(
-			ComponentDescriptionDTO description) {
+	public Collection<ComponentConfigurationDTO> getComponentConfigurationDTOs(ComponentDescriptionDTO description) 
+	{
 		if ( description == null)
 		{
 			return Collections.emptyList();
@@ -107,23 +113,26 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime {
 		return result;
 	}
 
-	public boolean isComponentEnabled(ComponentDescriptionDTO description) {
+	public boolean isComponentEnabled(ComponentDescriptionDTO description) 
+	{
 		ComponentHolder<?> holder = getHolderFromDescription( description);
 		return holder.isEnabled();
 	}
 
-	public Promise<Void> enableComponent(ComponentDescriptionDTO description) {
+	public Promise<Void> enableComponent(ComponentDescriptionDTO description) 
+	{
 		ComponentHolder<?> holder = getHolderFromDescription( description);
 		return holder.enableComponents(true);
 	}
 
-	public Promise<Void> disableComponent(ComponentDescriptionDTO description) {
+	public Promise<Void> disableComponent(ComponentDescriptionDTO description)
+	{
 		ComponentHolder<?> holder = getHolderFromDescription( description);
 		return holder.disableComponents(true); //synchronous
 	}
 	
-	private ComponentConfigurationDTO managerToConfiguration(
-			ComponentManager<?> manager, ComponentDescriptionDTO description) {
+	private ComponentConfigurationDTO managerToConfiguration(ComponentManager<?> manager, ComponentDescriptionDTO description) 
+	{
 		ComponentConfigurationDTO dto = new ComponentConfigurationDTO();
         dto.satisfiedReferences = satisfiedRefManagersToDTO(manager.getReferenceManagers());
         dto.unsatisfiedReferences = unsatisfiedRefManagersToDTO(manager.getReferenceManagers());
@@ -134,7 +143,8 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime {
 		return dto;
 	}
 
-    private SatisfiedReferenceDTO[] satisfiedRefManagersToDTO(List<? extends ReferenceManager<?, ?>> referenceManagers) {
+    private SatisfiedReferenceDTO[] satisfiedRefManagersToDTO(List<? extends ReferenceManager<?, ?>> referenceManagers)
+    {
         List<SatisfiedReferenceDTO> dtos = new ArrayList<SatisfiedReferenceDTO>();
         for (ReferenceManager<?, ?> ref: referenceManagers)
         {
@@ -157,7 +167,8 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime {
         return dtos.toArray( new SatisfiedReferenceDTO[dtos.size()] );
     }
 
-    private UnsatisfiedReferenceDTO[] unsatisfiedRefManagersToDTO(List<? extends ReferenceManager<?, ?>> referenceManagers) {
+    private UnsatisfiedReferenceDTO[] unsatisfiedRefManagersToDTO(List<? extends ReferenceManager<?, ?>> referenceManagers) 
+    {
         List<UnsatisfiedReferenceDTO> dtos = new ArrayList<UnsatisfiedReferenceDTO>();
         for (ReferenceManager<?, ?> ref: referenceManagers)
         {
@@ -180,17 +191,27 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime {
         return dtos.toArray( new UnsatisfiedReferenceDTO[dtos.size()] );
     }
 
-	private ServiceReferenceDTO serviceReferenceToDTO(
-			ServiceReference<?> serviceRef) {
+	private ServiceReferenceDTO serviceReferenceToDTO( ServiceReference<?> serviceRef)
+	{
 		ServiceReferenceDTO dto = new ServiceReferenceDTO();
 		dto.bundle = serviceRef.getBundle().getBundleId();
-		dto.id = (Long) serviceRef.getProperty("service.id"); //TODO use proper constant
-		//TODO service properties, using bundles
-		return dto;
+		dto.id = (Long) serviceRef.getProperty(Constants.SERVICE_ID);
+		dto.properties = deepCopy( serviceRef );
+		Bundle[] usingBundles = serviceRef.getUsingBundles();
+		if (usingBundles != null)
+        {
+            long[] usingBundleIds = new long[usingBundles.length];
+            for (int i = 0; i < usingBundles.length; i++)
+            {
+                usingBundleIds[i] = usingBundles[i].getBundleId();
+            }
+            dto.usingBundles = usingBundleIds;
+        }
+        return dto;
 	}
 
-	private ComponentHolder<?> getHolderFromDescription(
-			ComponentDescriptionDTO description) {
+	private ComponentHolder<?> getHolderFromDescription(ComponentDescriptionDTO description)
+	{
 		if (description.bundle == null)
 		{
 			throw new IllegalArgumentException("No bundle supplied in ComponentDescriptionDTO named " + description.name);
@@ -216,14 +237,72 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime {
 		dto.implementationClass = m.getImplementationClassName();
 		dto.modified = m.getModified();
 		dto.name = m.getName();
-		dto.properties = new HashMap<String, Object>(m.getProperties());// TODO deep copy of arrays
+		dto.properties = deepCopy(m.getProperties());
 		dto.references = refsToDTO(m.getDependencies());
 		dto.scope = m.getServiceMetadata() == null? null: m.getServiceMetadata().getScope().name();
 		dto.serviceInterfaces = m.getServiceMetadata() == null? EMPTY: m.getServiceMetadata().getProvides();
 		return dto;
 	}
+	
+    private Map<String, Object> deepCopy(Map<String, Object> source)
+    {
+        HashMap<String, Object> result = new HashMap<String, Object>(source.size());
+        for (Map.Entry<String, Object> entry: source.entrySet())
+        {
+            result.put(entry.getKey(), convert(entry.getValue()));
+        }
+        return result;
+    }
 
-	private ReferenceDTO[] refsToDTO(List<ReferenceMetadata> dependencies) {
+    private Map<String, Object> deepCopy(ServiceReference<?> source)
+    {
+        String[] keys = source.getPropertyKeys();
+        HashMap<String, Object> result = new HashMap<String, Object>(keys.length);
+        for (int i = 0; i< keys.length; i++)
+        {
+            result.put(keys[i], convert(source.getProperty(keys[i])));
+        }
+        return result;
+    }
+
+    Object convert(Object source)
+	{
+	    if (source.getClass().isArray())
+	    {
+	        Class<?> type = source.getClass().getComponentType();
+	        if (checkType(type))
+	        {
+	            return source;
+	        }
+	        return String.valueOf(source);
+	        /* array copy code in case it turns out to be needed
+	        int length = Array.getLength(source);
+            Object copy = Array.newInstance(type, length);
+	        for (int i = 0; i<length; i++)
+	        {
+	            Array.set(copy, i, Array.get(source, i));
+	        }
+	        return copy;
+	        */
+	    }
+	    if (checkType(source.getClass()))
+	    {
+	        return source;
+	    }
+	    return String.valueOf(source);
+	}
+    
+    boolean checkType(Class<?> type)
+    {
+        if (type == String.class) return true;
+        if (type == Boolean.class) return true;
+        if (Number.class.isAssignableFrom(type)) return true;
+        if (DTO.class.isAssignableFrom(type)) return true;
+        return false;            
+    }
+	
+	private ReferenceDTO[] refsToDTO(List<ReferenceMetadata> dependencies) 
+	{
 		ReferenceDTO[] dtos = new ReferenceDTO[dependencies.size()];
 		int i = 0;
 		for (ReferenceMetadata r: dependencies)
@@ -244,7 +323,8 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime {
 		return dtos;
 	}
 
-	private BundleDTO bundleToDTO(BundleContext bundleContext) {
+	private BundleDTO bundleToDTO(BundleContext bundleContext) 
+	{
 		if (bundleContext == null)
 		{
 			return null;
