@@ -1,6 +1,7 @@
 Changes from 1.3.2 to 1.3.4
 ---------------------------
 ** Improvement
+    * [FELIX-4604] - Add a configuration to ignore certain events
     * [FELIX-3511] - Use java.concurrent from Java 6
     * [FELIX-4316] - Packages imported dynamically should also be imported statically with an optional flag
 

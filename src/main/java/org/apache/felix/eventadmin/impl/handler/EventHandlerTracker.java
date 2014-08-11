@@ -274,6 +274,47 @@ public class EventHandlerTracker extends ServiceTracker<EventHandler, EventHandl
 	    }
 	}
 
+	static Matcher[] createMatchers(final String[] config)
+	{
+        final Matcher[] matchers;
+        if ( config == null || config.length == 0 )
+        {
+            matchers = null;
+        }
+        else
+        {
+            matchers = new Matcher[config.length];
+            for(int i=0;i<config.length;i++)
+            {
+                String value = config[i];
+                if ( value != null )
+                {
+                    value = value.trim();
+                }
+                if ( value != null && value.length() > 0 )
+                {
+                    if ( value.endsWith(".") )
+                    {
+                        matchers[i] = new PackageMatcher(value.substring(0, value.length() - 1));
+                    }
+                    else if ( value.endsWith("*") )
+                    {
+                        if ( value.equals("*") )
+                        {
+                            return new Matcher[] {new MatcherAll()};
+                        }
+                        matchers[i] = new SubPackageMatcher(value.substring(0, value.length() - 1));
+                    }
+                    else
+                    {
+                        matchers[i] = new ClassMatcher(value);
+                    }
+                }
+            }
+        }
+        return matchers;
+	}
+
     /**
      * The matcher interface for checking if timeout handling
      * is disabled for the handler.
@@ -282,6 +323,16 @@ public class EventHandlerTracker extends ServiceTracker<EventHandler, EventHandl
     static interface Matcher
     {
         boolean match(String className);
+    }
+
+    /** Match all. */
+    private static final class MatcherAll implements Matcher
+    {
+        @Override
+        public boolean match(final String className)
+        {
+            return true;
+        }
     }
 
     /** Match a package. */
@@ -294,7 +345,7 @@ public class EventHandlerTracker extends ServiceTracker<EventHandler, EventHandl
             m_packageName = name;
         }
         @Override
-        public boolean match(String className)
+        public boolean match(final String className)
         {
             final int pos = className.lastIndexOf('.');
             return pos > -1 && className.substring(0, pos).equals(m_packageName);
@@ -311,7 +362,7 @@ public class EventHandlerTracker extends ServiceTracker<EventHandler, EventHandl
             m_packageName = name + '.';
         }
         @Override
-        public boolean match(String className)
+        public boolean match(final String className)
         {
             final int pos = className.lastIndexOf('.');
             return pos > -1 && className.substring(0, pos + 1).startsWith(m_packageName);
@@ -328,7 +379,7 @@ public class EventHandlerTracker extends ServiceTracker<EventHandler, EventHandl
             m_className = name;
         }
         @Override
-        public boolean match(String className)
+        public boolean match(final String className)
         {
             return m_className.equals(className);
         }
