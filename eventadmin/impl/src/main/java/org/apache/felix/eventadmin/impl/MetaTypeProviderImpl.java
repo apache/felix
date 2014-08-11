@@ -40,19 +40,22 @@ public class MetaTypeProviderImpl
     private final int m_timeout;
     private final boolean m_requireTopic;
     private final String[] m_ignoreTimeout;
+    private final String[] m_ignoreTopic;
 
     private final ManagedService m_delegatee;
 
     public MetaTypeProviderImpl(final ManagedService delegatee,
             final int threadPoolSize,
             final int timeout, final boolean requireTopic,
-            final String[] ignoreTimeout)
+            final String[] ignoreTimeout,
+            final String[] ignoreTopic)
     {
         m_threadPoolSize = threadPoolSize;
         m_timeout = timeout;
         m_requireTopic = requireTopic;
         m_delegatee = delegatee;
         m_ignoreTimeout = ignoreTimeout;
+        m_ignoreTopic = ignoreTopic;
     }
 
     private ObjectClassDefinition ocd;
@@ -121,6 +124,15 @@ public class MetaTypeProviderImpl
                     "all handlers in this package and all subpackages are ignored. If the string neither " +
                     "ends with a dot nor with a star, this is assumed to define an exact class name.",
                     AttributeDefinition.STRING, m_ignoreTimeout, Integer.MAX_VALUE, null, null));
+            adList.add( new AttributeDefinitionImpl( Configuration.PROP_IGNORE_TIMEOUT, "Ignore Topics",
+                    "For performance optimization it is possible to configure topics which are ignored " +
+                    "by the event admin implementation. In this case, a event is not delivered to " +
+                    "registered event handlers. The value is a list of strings (separated by comma). " +
+                    "If a single value ends with a dot, all topics in exactly this package are ignored. " +
+                    "If a single value ends with a star, all topics in this package and all sub packages " +
+                    "are ignored. If a single value neither ends with a dot nor with a start, this is assumed " +
+                    "to define an exact topic. A single star can be used to disable delivery completely.",
+                    AttributeDefinition.STRING, m_ignoreTopic, Integer.MAX_VALUE, null, null));
             ocd = new ObjectClassDefinition()
             {
 
