@@ -271,7 +271,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter>
             {
                 param[i] = Annotations.toObject(parameterTypes[i], 
                     (Map<String, Object>) ap.getComponentContext().getProperties(),
-                    ap.getComponentContext().getBundleContext().getBundle());
+                    ap.getComponentContext().getBundleContext().getBundle(), m_supportsInterfaces);
             }
         }
 
