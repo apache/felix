@@ -22,6 +22,7 @@ package org.apache.felix.scr.impl.helper;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -66,12 +67,6 @@ public class BindMethod extends BaseMethod<BindParameters>
     
     private final ReferenceMetadata.ReferenceScope m_referenceScope;
 
-//    private static final int SERVICE_REFERENCE = 1;
-//    private static final int SERVICE_OBJECT = 2;
-//    private static final int SERVICE_OBJECT_AND_MAP = 3;
-
-//    private int m_paramStyle;
-    
     private enum ParamType { 
         serviceReference,
         serviceObjects,
@@ -79,7 +74,8 @@ public class BindMethod extends BaseMethod<BindParameters>
         map
     }
     
-    private List<ParamType> m_paramTypes = new ArrayList<ParamType>();
+    //initialized for cases where there is no method.
+    private volatile List<ParamType> m_paramTypes = Collections.emptyList();
 
 
     public BindMethod( final String methodName,
@@ -141,7 +137,7 @@ public class BindMethod extends BaseMethod<BindParameters>
                 {
                     logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
                 }
-                m_paramTypes.add(ParamType.serviceReference);
+                m_paramTypes = Collections.singletonList(ParamType.serviceReference);
                 return method;
             }
         }
@@ -160,7 +156,7 @@ public class BindMethod extends BaseMethod<BindParameters>
                 {
                     logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
                 }
-                m_paramTypes.add(ParamType.serviceObjects);
+                m_paramTypes = Collections.singletonList(ParamType.serviceObjects);
                 return method;
             }
         }
@@ -188,7 +184,7 @@ public class BindMethod extends BaseMethod<BindParameters>
                 method = getServiceObjectMethod( targetClass, parameterClass, acceptPrivate, acceptPackage, logger );
                 if ( method != null )
                 {
-                    m_paramTypes.add(ParamType.serviceType);
+                    m_paramTypes = Collections.singletonList(ParamType.serviceType);
                     return method;
                 }
             }
@@ -203,7 +199,7 @@ public class BindMethod extends BaseMethod<BindParameters>
                 method = getServiceObjectAssignableMethod( targetClass, parameterClass, acceptPrivate, acceptPackage, logger );
                 if ( method != null )
                 {
-                    m_paramTypes.add(ParamType.serviceType);
+                    m_paramTypes = Collections.singletonList(ParamType.serviceType);
                     return method;
                 }
             }
@@ -222,8 +218,10 @@ public class BindMethod extends BaseMethod<BindParameters>
                     method = getServiceObjectWithMapMethod( targetClass, parameterClass, acceptPrivate, acceptPackage, logger );
                     if ( method != null )
                     {
-                        m_paramTypes.add(ParamType.serviceType);
-                        m_paramTypes.add(ParamType.map);
+                        List<ParamType> paramTypes = new ArrayList<ParamType>(2);
+                        paramTypes.add(ParamType.serviceType);
+                        paramTypes.add(ParamType.map);
+                        m_paramTypes = paramTypes;
                         return method;
                     }
                 }
@@ -239,8 +237,10 @@ public class BindMethod extends BaseMethod<BindParameters>
                         acceptPackage );
                     if ( method != null )
                     {
-                        m_paramTypes.add(ParamType.serviceType);
-                        m_paramTypes.add(ParamType.map);
+                        List<ParamType> paramTypes = new ArrayList<ParamType>(2);
+                        paramTypes.add(ParamType.serviceType);
+                        paramTypes.add(ParamType.map);
+                        m_paramTypes = paramTypes;
                         return method;
                     }
                 }
@@ -258,17 +258,18 @@ public class BindMethod extends BaseMethod<BindParameters>
                         Class<?>[] parameterTypes = m.getParameterTypes();
                         boolean matches = true;
                         boolean specialMatch = true;
+                        List<ParamType> paramTypes = new ArrayList<ParamType>(parameterTypes.length);
                         for (Class<?> paramType: parameterTypes) {
                             if (paramType == SERVICE_REFERENCE_CLASS)
                             {
                                 if (specialMatch && parameterClass == SERVICE_REFERENCE_CLASS)
                                 {
                                     specialMatch = false;
-                                    m_paramTypes.add(ParamType.serviceType);
+                                    paramTypes.add(ParamType.serviceType);
                                 }
                                 else
                                 {
-                                    m_paramTypes.add(ParamType.serviceReference);
+                                    paramTypes.add(ParamType.serviceReference);
                                 }
                             }
                             else if (paramType == SERVICE_OBJECTS_CLASS)
@@ -276,11 +277,11 @@ public class BindMethod extends BaseMethod<BindParameters>
                                 if (specialMatch && parameterClass == SERVICE_OBJECTS_CLASS)
                                 {
                                     specialMatch = false;
-                                    m_paramTypes.add(ParamType.serviceType);
+                                    paramTypes.add(ParamType.serviceType);
                                 }
                                 else
                                 {
-                                    m_paramTypes.add(ParamType.serviceObjects);
+                                    paramTypes.add(ParamType.serviceObjects);
                                 }
                             }
                             else if (paramType == Map.class)
@@ -288,21 +289,20 @@ public class BindMethod extends BaseMethod<BindParameters>
                                 if (specialMatch && parameterClass == Map.class)
                                 {
                                     specialMatch = false;
-                                    m_paramTypes.add(ParamType.serviceType);
+                                    paramTypes.add(ParamType.serviceType);
                                 }
                                 else
                                 {
-                                    m_paramTypes.add(ParamType.map);
+                                    paramTypes.add(ParamType.map);
                                 }
                             }
                             else if (paramType.isAssignableFrom( parameterClass ) )
                             {
-                                m_paramTypes.add(ParamType.serviceType);
+                                paramTypes.add(ParamType.serviceType);
                             }
                             else
                             {
                                 matches = false;
-                                m_paramTypes.clear();
                                 break;
                             }
                         }
@@ -310,6 +310,7 @@ public class BindMethod extends BaseMethod<BindParameters>
                         {
                             if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
                             {
+                                m_paramTypes = paramTypes;
                                 return m;
                             }
                             suitableMethodNotAccessible = true;

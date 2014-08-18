@@ -1572,7 +1572,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         if ( !getServiceObject( componentContext, m_bindMethods.getBind(), refPair ))
         {
             m_componentManager.log( LogService.LOG_WARNING,
-                    "DependencyManager : invokeUpdatedMethod : Service not available from service registry for ServiceReference {0} for reference {1}",
+                    "DependencyManager : invokeBindMethod : Service not available from service registry for ServiceReference {0} for reference {1}",
                     new Object[] {refPair.getRef(), getName()}, null );
             return false;
 
