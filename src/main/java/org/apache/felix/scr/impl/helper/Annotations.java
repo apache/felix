@@ -22,7 +22,6 @@ import java.lang.reflect.Array;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -30,8 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.swing.text.Keymap;
 
 import org.osgi.framework.Bundle;
 
@@ -42,7 +39,7 @@ public class Annotations
     {     
         Map<String, Object> m = new HashMap<String, Object>();
         
-        Method[] methods = clazz.getDeclaredMethods();
+        Method[] methods = clazz.getMethods();
         Map<String, Method> complexFields = new HashMap<String, Method>();
         for ( Method method: methods )
         {
