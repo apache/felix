@@ -389,12 +389,7 @@ public class AnnotationTest extends TestCase
 
     public void testC1() throws Exception
     {
-        Map<String, Object> b1Values = b1Values();
-        Map<String, Object> values = allValues();
-        nest(values, "b1", 0, b1Values);
-        nest(values, "b1array", 0, b1Values);
-        nest(values, "b1array", 1, b1Values);
-        nest(values, "b1array", 2, b1Values);
+        Map<String, Object> values = c1Values();
         
         Object o = Annotations.toObject( C1.class, values, mockBundle(), true);
         assertTrue("expected an B1 " + o, o instanceof C1);
@@ -407,5 +402,111 @@ public class AnnotationTest extends TestCase
         
     }
 
+    private Map<String, Object> c1Values()
+    {
+        Map<String, Object> b1Values = b1Values();
+        Map<String, Object> values = allValues();
+        nest(values, "b1", 0, b1Values);
+        nest(values, "b1array", 0, b1Values);
+        nest(values, "b1array", 1, b1Values);
+        nest(values, "b1array", 2, b1Values);
+        return values;
+    }
+
+    public interface I0 {
+        boolean bool();
+        byte byt();
+        Class<?> clas();
+        E1 e1();
+    }
+    public interface AI1 extends I0 {
+        double doubl();
+        float floa();
+        int integer();
+        long lon();
+        short shor();
+        String string();
+    }
+    
+    public interface BI1 extends I0 {
+        double doubl();
+        float floa();
+        int integer();
+        long lon();
+        short shor();
+        String string();
+        AI1 a1();
+        AI1[] a1array();
+    }
+
+    public interface CI1 extends I0 {
+        double doubl();
+        float floa();
+        int integer();
+        long lon();
+        short shor();
+        String string();
+        BI1 b1();
+        BI1[] b1array();
+    }
+
+    public void testAI1() throws Exception
+    {
+        Map<String, Object> values = allValues();
+        
+        Object o = Annotations.toObject( AI1.class, values, mockBundle(), true);
+        assertTrue("expected an AI1", o instanceof AI1);
+        
+        AI1 a = (AI1) o;
+        checkAI1(a);
+    }
+
+    private void checkAI1(AI1 a)
+    {
+        assertEquals(true, a.bool());
+        assertEquals((byte)12, a.byt());
+        assertEquals(String.class, a.clas());
+        assertEquals(E1.a, a.e1());
+        assertEquals(3.14d, a.doubl());
+        assertEquals(500f, a.floa());
+        assertEquals(3, a.integer());
+        assertEquals(12345678l,  a.lon());
+        assertEquals((short)3, a.shor());
+        assertEquals("3", a.string());
+    }
+
+    public void testBI1() throws Exception
+    {
+        Map<String, Object> values = b1Values();
+        
+        Object o = Annotations.toObject( BI1.class, values, mockBundle(), true);
+        assertTrue("expected an B1 " + o, o instanceof BI1);
+        BI1 b = (BI1) o;
+        checkBI1(b);        
+    }
+
+    private void checkBI1(BI1 b)
+    {
+        checkAI1(b.a1());
+        assertEquals(3, b.a1array().length);
+        checkAI1(b.a1array()[0]);
+        checkAI1(b.a1array()[1]);
+        checkAI1(b.a1array()[2]);
+    }
+
+    public void testCI1() throws Exception
+    {
+        Map<String, Object> values = c1Values();
+        
+        Object o = Annotations.toObject( CI1.class, values, mockBundle(), true);
+        assertTrue("expected an B1 " + o, o instanceof CI1);
+        CI1 c = (CI1) o;
+        checkBI1(c.b1());  
+        assertEquals(3, c.b1array().length);
+        checkBI1(c.b1array()[0]);
+        checkBI1(c.b1array()[1]);
+        checkBI1(c.b1array()[2]);
+        
+    }
 
 }
