@@ -18,6 +18,9 @@ package org.apache.felix.webconsole.internal.servlet;
 
 import java.io.IOException;
 import java.net.URL;
+import java.security.AccessController;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -447,7 +450,33 @@ public class OsgiManager extends GenericServlet
         throws ServletException, IOException
     {
         // don't really expect to be called within a non-HTTP environment
-        service((HttpServletRequest) req, (HttpServletResponse) res);
+        try
+        {
+            AccessController.doPrivileged(new PrivilegedExceptionAction()
+            {
+                public Object run() throws Exception
+                {
+                    service((HttpServletRequest) req, (HttpServletResponse) res);
+                    return null;
+                }
+            });
+        }
+        catch (PrivilegedActionException e)
+        {
+            Exception x = e.getException();
+            if (x instanceof IOException)
+            {
+                throw (IOException) x;
+            }
+            else if (x instanceof ServletException)
+            {
+                throw (ServletException) x;
+            }
+            else
+            {
+                throw new IOException(x.toString());
+            }
+        }
 
         // ensure response has been sent back and response is committed
         // (we are authorative for our URL space and no other servlet should interfere)
@@ -471,7 +500,7 @@ public class OsgiManager extends GenericServlet
         }
     }
 
-    private void service(HttpServletRequest request, HttpServletResponse response)
+    void service(HttpServletRequest request, HttpServletResponse response)
         throws ServletException, IOException
     {
         // check whether we are not at .../{webManagerRoot}
