@@ -182,16 +182,6 @@
                     </instructions>
                 </configuration>
             </plugin>
-        </plugins>
-    </build>
-    <profiles>
-        <profile>
-            <id>java6</id>
-            <activation>
-                <jdk>1.6</jdk>
-            </activation>
-            <build>
-                <plugins>
                   <!-- integration tests run with pax-exam -->
                     <plugin>
                         <artifactId>maven-failsafe-plugin</artifactId>
@@ -216,8 +206,6 @@
                             </includes>
                         </configuration>
                     </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
+        </plugins>
+    </build>
 </project>
