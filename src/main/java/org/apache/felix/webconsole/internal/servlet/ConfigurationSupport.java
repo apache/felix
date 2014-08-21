@@ -19,6 +19,10 @@
 package org.apache.felix.webconsole.internal.servlet;
 
 
+import java.security.AccessControlContext;
+import java.security.AccessController;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.util.Dictionary;
 
 import org.osgi.framework.BundleContext;
@@ -42,8 +46,41 @@ class ConfigurationSupport implements ManagedService
 
 
     //---------- ManagedService
+    public void updated( final Dictionary config ) throws ConfigurationException
+    {
+        if (null != System.getSecurityManager())
+        {
+            try
+            {
+                AccessController.doPrivileged(new PrivilegedExceptionAction()
+                {
+                    public Object run() throws Exception
+                    {
+                        updated0(config);
+                        return null;
+                    }
+                });
+            }
+            catch (PrivilegedActionException e)
+            {
+                final Exception x = e.getException();
+                if (x instanceof ConfigurationException)
+                {
+                    throw (ConfigurationException) x;
+                }
+                else
+                {
+                    throw new ConfigurationException("?", "Update failed", x);
+                }
+            }
+        }
+        else
+        {
+            updated0(config);
+        }
+    }
 
-    public void updated( Dictionary config ) throws ConfigurationException
+    void updated0( Dictionary config ) throws ConfigurationException
     {
         // validate hashed password
         if ( isPasswordHashed( config ) )
