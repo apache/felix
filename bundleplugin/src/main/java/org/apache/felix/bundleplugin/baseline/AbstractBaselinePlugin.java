@@ -28,16 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import aQute.bnd.differ.Baseline;
-import aQute.bnd.differ.Baseline.Info;
-import aQute.bnd.differ.DiffPluginImpl;
-import aQute.bnd.osgi.Instructions;
-import aQute.bnd.osgi.Jar;
-import aQute.bnd.osgi.Processor;
-import aQute.bnd.service.diff.Delta;
-import aQute.bnd.service.diff.Diff;
-import aQute.bnd.version.Version;
-import aQute.service.reporter.Reporter;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.metadata.ArtifactMetadataRetrievalException;
@@ -55,6 +45,17 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.StringUtils;
+
+import aQute.bnd.differ.Baseline;
+import aQute.bnd.differ.Baseline.Info;
+import aQute.bnd.differ.DiffPluginImpl;
+import aQute.bnd.osgi.Instructions;
+import aQute.bnd.osgi.Jar;
+import aQute.bnd.osgi.Processor;
+import aQute.bnd.service.diff.Delta;
+import aQute.bnd.service.diff.Diff;
+import aQute.bnd.version.Version;
+import aQute.service.reporter.Reporter;
 
 /**
  * Abstract BND Baseline check between two bundles.
@@ -135,6 +136,13 @@ abstract class AbstractBaselinePlugin
      * @readonly
      */
     protected String comparisonVersion;
+
+    /**
+     * Classifier for the artifact to compare the current code against.
+     *
+     * @parameter expression="${comparisonClassifier}"
+     */
+    protected String comparisonClassifier;
 
     /**
      * A list of packages filter, if empty the whole bundle will be traversed. Values are specified in OSGi package
@@ -448,7 +456,7 @@ abstract class AbstractBaselinePlugin
                                                   project.getArtifactId(),
                                                   range,
                                                   project.getPackaging(),
-                                                  null,
+                                                  comparisonClassifier,
                                                   Artifact.SCOPE_COMPILE );
 
             if ( !previousArtifact.getVersionRange().isSelectedVersionKnown( previousArtifact ) )
