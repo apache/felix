@@ -557,7 +557,7 @@ abstract class AbstractBaselinePlugin
             extension = "jar"; // just in case maven gets confused
         }
 
-        String classifier = project.getArtifact().getClassifier();
+        String classifier = this.comparisonClassifier != null ? this.comparisonClassifier : project.getArtifact().getClassifier();
         if ( null != classifier && classifier.trim().length() > 0 )
         {
             return finalName + '-' + classifier + '.' + extension;
