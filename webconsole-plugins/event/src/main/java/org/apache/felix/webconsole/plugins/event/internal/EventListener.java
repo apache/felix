@@ -26,7 +26,7 @@ import org.osgi.framework.*;
  * - service events
  */
 public class EventListener
-    implements BundleListener, FrameworkListener, ServiceListener{
+    implements SynchronousBundleListener, FrameworkListener, ServiceListener{
 
     private final EventCollector collector;
 
