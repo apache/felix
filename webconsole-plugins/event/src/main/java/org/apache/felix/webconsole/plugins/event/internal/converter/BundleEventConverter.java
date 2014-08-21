@@ -65,7 +65,7 @@ public class BundleEventConverter {
                 break;
             case BundleEvent.UNRESOLVED:
                 buffer.append( "unresolved" );
-                topic.append("UNINSTALLED");
+                topic.append("UNRESOLVED");
                 break;
             case BundleEvent.UPDATED:
                 buffer.append( "updated" );
