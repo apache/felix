@@ -24,6 +24,7 @@ import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.List;
@@ -32,6 +33,7 @@ import javax.inject.Inject;
 
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
+import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.options.AbstractDelegateProvisionOption;
@@ -46,8 +48,8 @@ import org.slf4j.LoggerFactory;
 @RunWith(PaxExam.class)
 public abstract class AbstractTest implements Runnable {
 
-    /** the name of the system property providing the event admin version. */
-    private static final String EVENT_ADMIN_VERSION_PROP = "eventadmin.version";
+    // the name of the system property providing the bundle file to be installed and tested
+    private static final String BUNDLE_JAR_SYS_PROP = "project.bundle.file";
 
     /** The logger. */
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -235,14 +237,20 @@ public abstract class AbstractTest implements Runnable {
 
     @Configuration
     public static Option[] configuration() {
-        final String eventAdminVersion = System.getProperty( EVENT_ADMIN_VERSION_PROP, "1.3.3-SNAPSHOT" );
+        final String bundleFileName = System.getProperty( BUNDLE_JAR_SYS_PROP );
+        final File bundleFile = new File( bundleFileName );
+        if ( !bundleFile.canRead() ) {
+            throw new IllegalArgumentException( "Cannot read from bundle file " + bundleFileName + " specified in the "
+                + BUNDLE_JAR_SYS_PROP + " system property" );
+        }
+
         return options(
             provision(
                 mavenBundle( "org.ops4j.pax.tinybundles", "tinybundles", "1.0.0" ),
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "2.1.2"),
                 mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.2.8"),
                 mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.0.4"),
-                mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", eventAdminVersion),
+                CoreOptions.bundle( bundleFile.toURI().toString() ),
                 mavenBundle("org.ops4j.pax.url", "pax-url-mvn", "1.3.5")
              ),
              // below is instead of normal Pax Exam junitBundles() to deal
