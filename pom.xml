@@ -36,6 +36,16 @@
       <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/eventadmin/impl</developerConnection>
       <url>http://svn.apache.org/repos/asf/felix/eventadmin/impl</url>
     </scm>
+    
+    <properties>
+        <bundle.build.name>
+            ${basedir}/target
+        </bundle.build.name>
+        <bundle.file.name>
+            ${bundle.build.name}/${project.build.finalName}.jar
+        </bundle.file.name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
@@ -197,8 +207,8 @@
                         <configuration>
                             <systemProperties>
                                 <property>
-                                    <name>eventadmin.version</name>
-                                    <value>${project.version}</value>
+                                    <name>project.bundle.file</name>
+                                    <value>${bundle.file.name}</value>
                                 </property>
                             </systemProperties>
                             <includes>
