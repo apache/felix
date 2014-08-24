@@ -238,6 +238,7 @@ public class BundlePlugin extends AbstractMojo
     private static final String LOCAL_PACKAGES = "{local-packages}";
     private static final String MAVEN_SOURCES = "{maven-sources}";
     private static final String MAVEN_TEST_SOURCES = "{maven-test-sources}";
+    private static final String BUNDLE_PLUGIN_EXTENSION = "BNDExtension-";
 
     private static final String[] EMPTY_STRING_ARRAY =
         {};
@@ -467,9 +468,9 @@ public class BundlePlugin extends AbstractMojo
         {
             final Map.Entry entry = (Entry) iter.next();
             final String key = entry.getKey().toString();
-            if ( key.startsWith("BNDExtension-") )
+            if ( key.startsWith(BUNDLE_PLUGIN_EXTENSION) )
             {
-                final String oKey = key.substring(13);
+                final String oKey = key.substring(BUNDLE_PLUGIN_EXTENSION.length());
                 final String currentValue = properties.getProperty(oKey);
                 if ( currentValue == null )
                 {
@@ -485,8 +486,9 @@ public class BundlePlugin extends AbstractMojo
         final Iterator keyIter = addProps.keySet().iterator();
         while ( keyIter.hasNext() )
         {
-            properties.remove(keyIter.next());
+            properties.remove(BUNDLE_PLUGIN_EXTENSION + keyIter.next());
         }
+        System.out.println("PROPS: " + properties);
 
         if (properties.getProperty("Bundle-Activator") != null
                 && properties.getProperty("Bundle-Activator").isEmpty())
