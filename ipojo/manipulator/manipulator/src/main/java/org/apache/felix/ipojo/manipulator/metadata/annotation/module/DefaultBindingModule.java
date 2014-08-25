@@ -252,7 +252,7 @@ public class DefaultBindingModule extends AbsBindingModule {
                 .to(new AnnotationVisitorFactory() {
                     public AnnotationVisitor newAnnotationVisitor(BindingContext context) {
                         MethodNode node = context.getMethodNode();
-                        return new PostRegistrationVisitor(context.getWorkbench(), node.name);
+                        return new PostUnregistrationVisitor(context.getWorkbench(), node.name);
                     }
                 });
 
