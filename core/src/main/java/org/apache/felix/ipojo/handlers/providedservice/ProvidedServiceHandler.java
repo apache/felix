@@ -412,8 +412,9 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
         // Verify that the field name correspond to a dependency
         for (ProvidedService svc : m_providedServices) {
             boolean update = false;
-            for (int j = 0; j < svc.getProperties().length; j++) {
-                Property prop = svc.getProperties()[j];
+            // Retrieve a copy of the properties.
+            final Property[] properties = svc.getProperties();
+            for (Property prop : properties) {
                 if (fieldName.equals(prop.getField()) && !prop.getValue().equals(value)) {
                     // it is the associated property
                     prop.setValue(value);
