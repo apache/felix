@@ -28,10 +28,6 @@ import org.osgi.framework.ServiceRegistration;
  */
 public class ResourceAnnotationTest extends TestBase {
     
-    public ResourceAnnotationTest() { 
-        super(false); /* don't autoclear managers when one test is done */ 
-    }
-
     /**
      * Tests a simple ResourceConsumer
      * @param context

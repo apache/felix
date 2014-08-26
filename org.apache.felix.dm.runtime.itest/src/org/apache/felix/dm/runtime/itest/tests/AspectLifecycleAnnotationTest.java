@@ -30,10 +30,6 @@ import org.osgi.framework.ServiceRegistration;
  */
 public class AspectLifecycleAnnotationTest extends TestBase {
     
-    public AspectLifecycleAnnotationTest() { 
-        super(false); /* don't autoclear managers when one test is done */ 
-    }
-
     public void testAnnotatedAspect() {
         Ensure e = new Ensure();
         // Provide the Sequencer server to the ServiceProvider service

@@ -30,10 +30,6 @@ import org.osgi.framework.ServiceRegistration;
 
 public class PublisherAnnotationTest extends TestBase {
     
-    public PublisherAnnotationTest() { 
-        super(false); /* don't autoclear managers when one test is done */ 
-    }
-
     /**
      * A Service that just registers/unregisters its service, using the @ServiceLifecycle annotation.
      */

@@ -31,10 +31,6 @@ import org.osgi.framework.ServiceRegistration;
  */
 public class TemporalAnnotationsTest extends TestBase {
     
-   public TemporalAnnotationsTest() { 
-       super(false); /* don't autoclear managers when one test is done */ 
-   }
-
    public void testTemporalServiceDependency() {
         Ensure ensure = new Ensure();
         ServiceRegistration ensureReg = register(ensure, TemporalAnnotations.ENSURE);

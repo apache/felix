@@ -35,10 +35,6 @@ import org.osgi.service.cm.ConfigurationAdmin;
  */
 public class FactoryConfigurationAdapterAnnotationTest extends TestBase {
     
-    public FactoryConfigurationAdapterAnnotationTest() { 
-        super(false); /* don't autoclear managers when one test is done */ 
-    }
-
     private final static int MAXWAIT = 10000;
 
     public void testFactoryConfigurationAdapterAnnotation() throws Throwable {

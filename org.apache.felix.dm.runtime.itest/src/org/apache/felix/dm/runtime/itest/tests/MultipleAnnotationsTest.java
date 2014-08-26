@@ -29,10 +29,6 @@ import org.osgi.framework.ServiceRegistration;
  */
 public class MultipleAnnotationsTest extends TestBase {
     
-    public MultipleAnnotationsTest() { 
-        super(false); /* don't autoclear managers when one test is done */ 
-    }
-
     public void testMultipleAnnotations() {
         Ensure e = new Ensure();
         ServiceRegistration sr = register(e, MultipleAnnotations.ENSURE);

@@ -32,10 +32,6 @@ import org.osgi.framework.ServiceRegistration;
  */
 public class AspectAnnotationTest extends TestBase {
  
-    public AspectAnnotationTest() { 
-        super(false); /* don't autoclear managers when one test is done */ 
-    }
-
     public void testAspectChain() throws Throwable {
         Ensure e = new Ensure();
         // Activate service consumer

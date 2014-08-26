@@ -28,10 +28,6 @@ import org.osgi.framework.ServiceRegistration;
  */
 public class PropagateAnnotationTest extends TestBase {
     
-    public PropagateAnnotationTest() { 
-        super(false); /* don't autoclear managers when one test is done */ 
-    }
-
     public void testServiceDependencyPropagate() {
         Ensure e = new Ensure();
         ServiceRegistration sr = register(e, PropagateAnnotation.ENSURE);

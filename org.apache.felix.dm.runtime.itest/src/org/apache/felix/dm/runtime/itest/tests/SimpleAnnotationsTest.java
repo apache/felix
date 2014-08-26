@@ -11,10 +11,6 @@ import org.osgi.framework.ServiceRegistration;
  */
 public class SimpleAnnotationsTest extends TestBase {
     
-    public SimpleAnnotationsTest() { 
-        super(false); /* don't autoclear managers when one test is done */ 
-    }
-
     public void testSimpleAnnotations() throws Throwable {
         Ensure e = new Ensure();
         ServiceRegistration er = register(e, Producer.ENSURE);
