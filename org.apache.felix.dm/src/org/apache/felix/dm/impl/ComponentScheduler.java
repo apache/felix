@@ -1,10 +1,13 @@
 package org.apache.felix.dm.impl;
 
+import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Executor;
 
 import org.apache.felix.dm.Component;
+import org.apache.felix.dm.ComponentDeclaration;
+import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.context.ComponentContext;
 
 /**
@@ -49,7 +52,7 @@ public class ComponentScheduler {
     }
 
     public void add(final Component c) {
-        if (c.getComponentDeclaration().getName().equals(ComponentScheduler.class.getName())) {
+        if (! isParallelComponent(c)) {
             ((ComponentContext) c).start();
         } else {
             m_serial.execute(new Runnable() {
@@ -67,7 +70,7 @@ public class ComponentScheduler {
     }
 
     public void remove(final Component c) {
-        if (c.getComponentDeclaration().getName().equals(ComponentScheduler.class.getName())) {
+        if (! isParallelComponent(c)) {
             ((ComponentContext) c).stop();
         } else {
             m_serial.execute(new Runnable() {
@@ -93,5 +96,26 @@ public class ComponentScheduler {
 
     private void doRemove(Component c) {
         ((ComponentContext) c).stop();
+    }
+    
+    private boolean isParallelComponent(Component c) {
+        ComponentDeclaration decl = c.getComponentDeclaration();
+        
+        // The component declared from our DM Activator can not be parallel.
+        if (ComponentScheduler.class.getName().equals(decl.getName())) {
+            return false;
+        }
+        
+        // A threadpool declared by a "management agent" using DM cannot be itself parallel.
+        if (Executor.class.getName().equals(decl.getName())) {
+            Dictionary<?, ?> props = decl.getServiceProperties();
+            if (props != null) {
+                Object property = props.get(DependencyManager.THREADPOOL);
+                if (property != null && "true".equalsIgnoreCase(property.toString())) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }
