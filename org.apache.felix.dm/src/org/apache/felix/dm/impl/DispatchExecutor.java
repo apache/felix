@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.osgi.service.log.LogService;
 
 /**   
- * A parallel DispatchExecutor, similar to the SerialExecutor, except that several DispatchQueues can be executed 
+ * A parallel DispatchExecutor, similar to the SerialExecutor, except that several DispatchExecutor can be executed 
  * in parallel inside a shared thread pool. When one thread schedules tasks in DispatchQueue Q1, Q2, then Q1/Q2 
  * queues are dispatched and executed concurrently in a shared thread pool. However, each queue will execute tasks 
  * scheduled in it serially, in FIFO order.

@@ -33,6 +33,7 @@ import org.apache.felix.dm.impl.AspectServiceImpl;
 import org.apache.felix.dm.impl.BundleAdapterImpl;
 import org.apache.felix.dm.impl.BundleDependencyImpl;
 import org.apache.felix.dm.impl.ComponentImpl;
+import org.apache.felix.dm.impl.ComponentScheduler;
 import org.apache.felix.dm.impl.ConfigurationDependencyImpl;
 import org.apache.felix.dm.impl.FactoryConfigurationAdapterImpl;
 import org.apache.felix.dm.impl.Logger;
@@ -61,13 +62,24 @@ import org.osgi.framework.FrameworkUtil;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class DependencyManager {
+    /**
+     * A management agent can register a threadpool in the registry using a "target" property with the following value
+     */
+    public static final String THREADPOOL = "org.apache.felix.dependencymanager";
+    
+    /**
+     * The DependencyManager Activator will wait for a threadpool before creating any DM components if the following
+     * OSGi system property is set to true.
+     */
+    public final static String PARALLEL = "org.apache.felix.dependencymanager.parallel";
+
     public static final String ASPECT = "org.apache.felix.dependencymanager.aspect";
     public static final String SERVICEREGISTRY_CACHE_INDICES = "org.apache.felix.dependencymanager.filterindex";
     public static final String METHOD_CACHE_SIZE = "org.apache.felix.dependencymanager.methodcache";
+    
     private final BundleContext m_context;
     private final Logger m_logger;
     private final List<Component> m_components = new CopyOnWriteArrayList<>();
-    private volatile Executor m_threadPool;
 
     // service registry cache
     private static ServiceRegistryCache m_serviceRegistryCache;
@@ -125,15 +137,6 @@ public class DependencyManager {
     }
     
     /**
-     * Sets a threadpool to this dependency manager. All added/removed components will then be handled
-     * in parallel, using the provided threadpool.
-     */
-    public DependencyManager setThreadPool(Executor threadPool) {
-        m_threadPool = threadPool;
-        return this;
-    }
-
-    /**
      * Returns the list of currently created dependency managers.
      * @return the list of currently created dependency managers
      */
@@ -175,10 +178,9 @@ public class DependencyManager {
      */
     public void add(Component c) {
         m_components.add(c);
-        if (m_threadPool != null) {
-            ((ComponentContext) c).setThreadPool(m_threadPool);
-        }
-        ((ComponentContext) c).start();
+        // Adding the component is delegated to the ComponentScheduler, which will possibly use a threadpool
+        // in order to add the component in parallel.
+        ComponentScheduler.instance().add(c);
     }
 
     /**
@@ -187,9 +189,9 @@ public class DependencyManager {
      * 
      * @param service the service to remove
      */
-    public void remove(Component service) {
-        ((ComponentContext) service).stop();
-        m_components.remove(service);
+    public void remove(Component c) {
+        ComponentScheduler.instance().remove(c);
+        m_components.remove(c);
     }
 
     /**

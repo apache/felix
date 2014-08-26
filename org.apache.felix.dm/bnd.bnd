@@ -11,3 +11,4 @@ Export-Package: \
 	org.apache.felix.dm.tracker,\
 	org.apache.felix.dm.context
 Import-Package: !org.junit,!org.mockito.*,*
+Bundle-Activator: org.apache.felix.dm.impl.Activator
