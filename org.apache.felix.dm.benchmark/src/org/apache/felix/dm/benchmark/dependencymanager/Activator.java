@@ -22,6 +22,7 @@ import org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl;
 import org.apache.felix.dm.benchmark.scenario.impl.ArtistImpl;
 import org.apache.felix.dm.benchmark.scenario.impl.TrackImpl;
 import org.osgi.framework.BundleContext;
+import java.util.concurrent.Executor;
 
 /**
  * Activator for a scenario based on Dependency Manager 4.0
@@ -32,26 +33,7 @@ public class Activator extends DependencyActivatorBase {
      * Our BenchMark controller. We only depend on it in order to not start if the controller is not available
      */
     volatile ScenarioController m_controller;
-    
-    /**
-     * Flag used to check if our scenario can use a parallel dependency manager.
-     */
-    volatile boolean m_useThreadPool;
-        
-    /**
-     * Activator (no parallelism).
-     */
-    public Activator() {
-        this(false);
-    }
-    
-    /**
-     * Activator (possibly parallel).
-     */
-    public Activator(boolean useThreadPool) {        
-        m_useThreadPool = useThreadPool;
-    }
-        
+                    
     /**
      * First, we have to depend on the BenchmarkController service.
      */
@@ -69,11 +51,7 @@ public class Activator extends DependencyActivatorBase {
      */
     private void start(Component c) {
         Helper.debug(() -> "DependencyManager.Activator: start");
-
         DependencyManager dm = c.getDependencyManager();
-        if (m_useThreadPool) {
-            dm.setThreadPool(Helper.getThreadPool());
-        }
         
         List<Component> components = new ArrayList<>();
         IntStream.range(0, ARTISTS)
