@@ -55,6 +55,7 @@ public class AspectDynamicsTest extends TestBase {
         m.remove(provider2);
         m.remove(provider);
         m.remove(consumer);
+        e.waitForStep(16, 15000);
     }
     
     static interface ServiceInterface {
@@ -75,6 +76,9 @@ public class AspectDynamicsTest extends TestBase {
         public void invoke() {
             m_ensure.step(9);
         }
+        public void stop() {
+            m_ensure.step();
+        }
     }
 
     static class ServiceProvider implements ServiceInterface {
@@ -84,6 +88,9 @@ public class AspectDynamicsTest extends TestBase {
         }
         public void invoke(Runnable run) {
             run.run();
+        }
+        public void stop() {
+            m_ensure.step();
         }
     }
     
@@ -140,6 +147,10 @@ public class AspectDynamicsTest extends TestBase {
             m_ensure.step(10);
             m_ensure.waitForStep(12, 15000);
             m_service.invoke(Ensure.createRunnableStep(m_ensure, 13));
+        }
+        
+        public void stop() {
+            m_ensure.step();
         }
     }
 }

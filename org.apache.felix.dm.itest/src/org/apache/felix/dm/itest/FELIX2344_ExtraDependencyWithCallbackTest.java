@@ -31,7 +31,7 @@ public class FELIX2344_ExtraDependencyWithCallbackTest extends TestBase {
      * Checks if an extra optional/required dependency is properly injected into a consumer, using callbacks.
      */
     public void testExtraDependencyWithCallback() {
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // create a service consumer and provider

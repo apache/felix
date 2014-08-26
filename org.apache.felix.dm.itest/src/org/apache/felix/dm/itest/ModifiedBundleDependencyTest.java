@@ -79,7 +79,7 @@ public class ModifiedBundleDependencyTest extends TestBase {
     }
     
     public void testAdapterWithChangedInstanceBoundDependency() {
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         Ensure e = new Ensure();
 
         Component a = m.createComponent()

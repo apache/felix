@@ -10,7 +10,7 @@ import junit.framework.Assert;
 
 public class TemporalServiceDependencyTest extends TestBase {
     public void testServiceConsumptionAndIntermittentAvailability() {
-        DependencyManager m = new DependencyManager(context);
+        final DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // create a service provider and consumer
@@ -42,7 +42,7 @@ public class TemporalServiceDependencyTest extends TestBase {
     }
 
     public void testServiceConsumptionWithCallbackAndIntermittentAvailability() {
-        DependencyManager m = new DependencyManager(context);
+        final DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // create a service provider and consumer
@@ -77,7 +77,7 @@ public class TemporalServiceDependencyTest extends TestBase {
     }
 
     public void testFelix4602_PropagateServiceInvocationException() {
-        DependencyManager m = new DependencyManager(context);
+        final DependencyManager m = getDM();
         final Ensure ensure = new Ensure();
         Runnable provider = new Runnable() {
         	public void run() {

@@ -39,7 +39,7 @@ import junit.framework.Assert;
 public class FELIX4361_ConcurrentComponentListingTest extends TestBase {
 
     public void testConcurrentGetComponentsManipulation() {
-        DependencyManager dm = new DependencyManager(context);
+        DependencyManager dm = getDM();
         dm.add(dm.createComponent().setImplementation(Object.class));
         Iterator iterator = dm.getComponents().iterator();
         dm.add(dm.createComponent().setImplementation(Object.class));
@@ -47,7 +47,7 @@ public class FELIX4361_ConcurrentComponentListingTest extends TestBase {
     }
 
     public void testConcurrentGetComponentsMultipleThreads() {
-        final DependencyManager m = new DependencyManager(context);
+        final DependencyManager m = getDM();
         final AtomicInteger errors = new AtomicInteger(0);
         final AtomicInteger componentsAdded = new AtomicInteger(0);
         final int max = 10000;

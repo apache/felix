@@ -29,7 +29,7 @@ import org.osgi.framework.Bundle;
 public class FELIX3008_FilterIndexStartupTest extends TestBase {
     public void testNormalStart() throws Exception {
         System.setProperty("org.apache.felix.dependencymanager.filterindex", "objectClass");
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // create a provider

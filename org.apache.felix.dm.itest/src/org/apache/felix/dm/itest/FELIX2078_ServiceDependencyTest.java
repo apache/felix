@@ -23,7 +23,7 @@ import org.apache.felix.dm.DependencyManager;
 
 public class FELIX2078_ServiceDependencyTest extends TestBase {
     public void testRequiredServiceRegistrationAndConsumption() {
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // create a service provider and consumer
@@ -44,7 +44,7 @@ public class FELIX2078_ServiceDependencyTest extends TestBase {
     }
     
     public void testOptionalServiceRegistrationAndConsumption() {
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // create a service provider and consumer

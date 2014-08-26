@@ -37,7 +37,7 @@ public class FELIX3057_EmptyServiceReferenceArray extends TestBase {
     }
 
     private void executeTest(BundleContext context) throws InvalidSyntaxException {
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         Assert.assertNull("Looking up a non-existing service should return null.", m.getBundleContext().getServiceReferences(Service.class.getName(), "(objectClass=*)"));
         Assert.assertNull("Looking up a non-existing service should return null.", m.getBundleContext().getAllServiceReferences(Service.class.getName(), "(objectClass=*)"));
         Assert.assertNull("Looking up a non-existing service should return null.", m.getBundleContext().getServiceReference(Service.class.getName()));

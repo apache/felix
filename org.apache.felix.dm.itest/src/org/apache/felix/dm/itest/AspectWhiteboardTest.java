@@ -12,7 +12,7 @@ import org.osgi.framework.ServiceReference;
 public class AspectWhiteboardTest extends TestBase {
 
 	public void testWhiteboardConsumer() {
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // create service providers and consumer

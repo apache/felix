@@ -112,7 +112,7 @@ public class AdapterWithModifiedInstanceBoundDependencyTest extends TestBase {
     }
     
     public void testAdapterWithChangedInstanceBoundDependency() {
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         Ensure e = new Ensure();
 
         Dictionary props = new Hashtable();

@@ -11,7 +11,7 @@ public class BundleAdapterTest extends TestBase {
     private final static String BSN = "org.apache.felix.metatype";
     
     public void testBundleAdapter() {
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         // create a bundle adapter service (one is created for each bundle)
         Component adapter = m.createBundleAdapterService(Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE, null, false)
                              .setImplementation(BundleAdapter.class)

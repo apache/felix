@@ -32,10 +32,10 @@ public class AdapterWithInstanceBoundDependencyTest extends TestBase {
             .setInterface(ServiceInterface.class.getName(), null)
             .setImplementation(new ServiceProvider(e));
         Component sp2 = m.createComponent()
-        .setInterface(ServiceInterface2.class.getName(), null)
+            .setInterface(ServiceInterface2.class.getName(), null)
             .setImplementation(new ServiceProvider2(e));
         Component sc = m.createComponent()
-            .setImplementation(new ServiceConsumer())
+            .setImplementation(new ServiceConsumer(e))
             .add(m.createServiceDependency()
                 .setService(ServiceInterface3.class)
                 .setRequired(true));
@@ -47,11 +47,13 @@ public class AdapterWithInstanceBoundDependencyTest extends TestBase {
         m.add(sp2);
         m.add(sa);
         e.waitForStep(5, 15000);
+        // cleanup
         m.remove(sa);
         m.remove(sp2);
         m.remove(sp);
         m.remove(sc);
         m.clear();
+        e.waitForStep(9, 5000); // make sure all components are stopped
     }
     
     static interface ServiceInterface {
@@ -76,6 +78,10 @@ public class AdapterWithInstanceBoundDependencyTest extends TestBase {
         public void invoke() {
             m_ensure.step(4);
         }
+        
+        public void stop() {
+            m_ensure.step();
+        }
     }
 
     static class ServiceProvider implements ServiceInterface {
@@ -85,6 +91,9 @@ public class AdapterWithInstanceBoundDependencyTest extends TestBase {
         }
         public void invoke() {
             m_ensure.step(5);
+        }
+        public void stop() {
+            m_ensure.step();
         }
     }
     
@@ -112,12 +121,17 @@ public class AdapterWithInstanceBoundDependencyTest extends TestBase {
         }
         
         public void stop() {
-            m_ensure.step(6);
+            m_ensure.step();
         }
     }
 
     static class ServiceConsumer implements Runnable {
-        private volatile ServiceInterface3 m_service;
+        volatile ServiceInterface3 m_service;
+        final Ensure m_ensure;
+        
+        ServiceConsumer(Ensure e) {
+            m_ensure = e;
+        }
         
         public void init() {
             Thread t = new Thread(this);
@@ -126,6 +140,9 @@ public class AdapterWithInstanceBoundDependencyTest extends TestBase {
         
         public void run() {
             m_service.invoke();
+        }
+        public void stop() {
+            m_ensure.step();
         }
     }
 }

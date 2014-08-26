@@ -21,7 +21,7 @@ import org.osgi.framework.ServiceReference;
 
 public class FELIX2348_ResourceAdapterTest extends TestBase {
     public void testBasicResourceAdapter() throws Exception {
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         m.add(m.createResourceAdapterService("(&(path=/path/to/*.txt)(host=localhost))", false, null, "changed")

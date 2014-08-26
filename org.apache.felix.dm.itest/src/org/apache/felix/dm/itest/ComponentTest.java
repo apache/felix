@@ -13,7 +13,7 @@ public class ComponentTest extends TestBase {
     private final Ensure m_ensure = new Ensure();
 
     public void testSimple() throws Exception {
-        DependencyManager dm = new DependencyManager(context);
+        final DependencyManager dm = getDM();
         Component consumer = dm.createComponent();
         consumer
             .setImplementation(new Consumer())

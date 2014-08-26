@@ -23,7 +23,7 @@ import org.osgi.framework.ServiceReference;
  */
 public class RemovedDependencyTest extends TestBase {
     public void testRemoveDependencyAndConsumerMustRemainStarted() {
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // Create two providers

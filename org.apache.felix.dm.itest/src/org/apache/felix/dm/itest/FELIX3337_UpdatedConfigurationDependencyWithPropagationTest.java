@@ -111,7 +111,7 @@ public class FELIX3337_UpdatedConfigurationDependencyWithPropagationTest extends
     }
     
     public void testComponentWithRequiredUpdatedConfigurationAndServicePropertyPropagation() {
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();        
         ConfigurationCreator confCreator = new ConfigurationCreator();

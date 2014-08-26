@@ -34,7 +34,7 @@ public class MultipleExtraDependenciesTest extends TestBase {
      * A component c1 will define two extra dependencies over *available* c4/c5 services.
      */
      public void testWithTwoAvailableExtraDependency() {   
-         DependencyManager m = new DependencyManager(context);
+         DependencyManager m = getDM();
          // Helper class that ensures certain steps get executed in sequence
          Ensure e = new Ensure();
          Component c1 = m.createComponent()
@@ -95,7 +95,7 @@ public class MultipleExtraDependenciesTest extends TestBase {
      * Then c5 is added, and it triggers the c1 activation ...
      */
     public void testWithOneAvailableExtraDependency() {  
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         // Helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         Component c1 = m.createComponent()

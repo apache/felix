@@ -29,7 +29,7 @@ public class FELIX2344_ExtraDependencyWithAutoConfigTest extends TestBase {
      * Test if an auto config extra dependency is injected in the expected order.
      */
     public void testExtraDependencyWithAutoConfig() {  
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         // Helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // Create a service provider

@@ -22,7 +22,7 @@ import org.osgi.framework.ServiceReference;
 
 public class ServiceUpdateTest extends TestBase {
     public void testServiceUpdate() throws Exception {
-        DependencyManager m = new DependencyManager(context);
+        final DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // create a resource provider

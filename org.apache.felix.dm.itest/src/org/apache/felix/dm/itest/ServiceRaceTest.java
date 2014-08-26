@@ -25,7 +25,6 @@ import org.osgi.service.cm.ConfigurationException;
  */
 public class ServiceRaceTest extends TestBase {
     volatile ConfigurationAdmin m_cm;
-    volatile DependencyManager m_dm;
     final static int STEP_WAIT = 5000;
     final static int DEPENDENCIES = 10;
     final static int LOOPS = 3000;
@@ -46,7 +45,6 @@ public class ServiceRaceTest extends TestBase {
      * Creates many service dependencies, and activate/deactivate them concurrently.  
      */
     public void testCreateParallelComponentRegistgrationUnregistration() {
-        m_dm = new DependencyManager(context);
         m_dm.add(m_dm.createComponent()
             .setImplementation(this)
             .setCallbacks(null, "start", null, null)

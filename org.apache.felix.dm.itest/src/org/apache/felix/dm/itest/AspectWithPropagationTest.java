@@ -25,7 +25,7 @@ public class AspectWithPropagationTest extends TestBase {
     private final Random _rnd = new Random();
     private static Ensure m_invokeStep;
     private static Ensure m_changeStep;
-        
+    
     /**
      * This test does the following:
      * 
@@ -167,7 +167,7 @@ public class AspectWithPropagationTest extends TestBase {
         for (int i = 0; i < ASPECTS; i ++) {
             int index = getRandomAspect();
             m.add(aspects[index]);
-            if (_rnd.nextBoolean()) {
+            if (! originalServiceAdded && _rnd.nextBoolean()) {
                 m.add(s);
                 originalServiceAdded = true;
             }
@@ -285,7 +285,7 @@ public class AspectWithPropagationTest extends TestBase {
         for (int i = 0; i < ASPECTS; i ++) {
             int index = getRandomAspect();
             m.add(aspects[index]);
-            if (_rnd.nextBoolean()) {
+            if (! originalServiceAdded && _rnd.nextBoolean()) {
                 m.add(s);
                 originalServiceAdded = true;
             }
@@ -393,7 +393,7 @@ public class AspectWithPropagationTest extends TestBase {
         for (int i = 0; i < ASPECTS; i ++) {
             int index = getRandomAspect();
             m.add(aspects[index]);
-            if (_rnd.nextBoolean()) {
+            if (! originalServiceAdded && _rnd.nextBoolean()) {
                 m.add(s);
                 originalServiceAdded = true;
             }
@@ -489,7 +489,7 @@ public class AspectWithPropagationTest extends TestBase {
         for (int i = 0; i < ASPECTS; i ++) {
             int index = getRandomAspect();
             m.add(aspects[index]);
-            if (_rnd.nextBoolean()) {
+            if (! originalServiceAdded && _rnd.nextBoolean()) {
                 m.add(s);
                 originalServiceAdded = true;
             }

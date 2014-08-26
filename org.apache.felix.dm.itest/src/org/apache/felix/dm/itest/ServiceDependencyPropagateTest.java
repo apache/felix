@@ -34,7 +34,7 @@ public class ServiceDependencyPropagateTest extends TestBase {
      * Checks that a ServiceDependency propagates the dependency service properties to the provided service properties.
      */
     public void testServiceDependencyPropagate() {
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         Component c1 = m.createComponent()
@@ -67,7 +67,7 @@ public class ServiceDependencyPropagateTest extends TestBase {
      * using a callback method.
      */
     public void testServiceDependencyPropagateCallback() {
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         Component c1 = m.createComponent()

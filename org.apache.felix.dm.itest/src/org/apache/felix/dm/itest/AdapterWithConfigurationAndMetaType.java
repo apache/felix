@@ -29,7 +29,7 @@ public class AdapterWithConfigurationAndMetaType extends TestBase {
     final static String WORDS_PROPERTY = "words";
     
     public void testAdapterWithConfigurationDependencyAndMetaType() {
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         Ensure e = new Ensure();
         
         m.add(m.createAdapterService(A.class, null)
@@ -63,6 +63,7 @@ public class AdapterWithConfigurationAndMetaType extends TestBase {
         // now stop configurator, and ensure that all components have been stopped
         m.remove(configurator);
         e.waitForStep(7, 5000);
+        m.clear();
     }
     
     public interface A {

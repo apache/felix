@@ -25,7 +25,7 @@ import org.osgi.framework.ServiceReference;
 public class FilterIndexResourceAdapterTest extends TestBase {
   public void testBasicResourceAdapter() throws Exception {
       System.setProperty("org.apache.felix.dependencymanager.filterindex", "objectClass");
-      DependencyManager m = new DependencyManager(context);
+      DependencyManager m = getDM();
       // helper class that ensures certain steps get executed in sequence
       Ensure e = new Ensure();
       // create a resource provider

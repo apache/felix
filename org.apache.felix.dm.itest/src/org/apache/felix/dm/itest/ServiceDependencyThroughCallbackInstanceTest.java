@@ -33,7 +33,7 @@ public class ServiceDependencyThroughCallbackInstanceTest extends TestBase {
     }
 
     private void invokeTest(BundleContext context, int numberOfServices) {
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         // create a number of services
 		for (int i = 0; i < numberOfServices; i++) {
 			final int num = i;

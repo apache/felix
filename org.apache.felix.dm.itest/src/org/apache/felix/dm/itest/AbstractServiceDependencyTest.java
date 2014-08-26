@@ -25,7 +25,7 @@ import junit.framework.Assert;
 
 public class AbstractServiceDependencyTest extends TestBase {
    public void testAbstractClassDependency() {
-       DependencyManager m = new DependencyManager(context);
+       DependencyManager m = getDM();
        // helper class that ensures certain steps get executed in sequence
        Ensure e = new Ensure();
        // create a service provider and consumer

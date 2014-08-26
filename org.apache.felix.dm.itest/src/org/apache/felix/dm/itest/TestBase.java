@@ -4,12 +4,18 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import junit.framework.TestCase;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.ComponentState;
+import org.apache.felix.dm.ComponentStateListener;
 import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -30,30 +36,29 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     
     // optional thread pool used by parallel dependency managers
     private final static ExecutorService m_threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    private boolean m_useThreadPool = false;
     
-    // By default, we clear all dependendency managers when a test is done. Overriden by runtime tests, 
-    // where we must not clear managers created by the runtime itself.
-    protected final boolean m_autoClearDependencyManagers;
-    
+    // flag used to check if the threadpool must be used for a given test.
+    private boolean m_parallel;
+        
     // Flag used to check if some errors have been logged during the execution of a given test.
     private volatile boolean m_errorsLogged;
 
     // We implement OSGI log service.
     protected ServiceRegistration logService;
     
+    // Our bundle context
     protected BundleContext context;
-    
+
+    // Our dependency manager used to create test components.
+    protected volatile DependencyManager m_dm;
+
+    private ServiceRegistration m_threadPoolRegistration;
+        
     public TestBase() {
-        this(true);
     }
        
-    public TestBase(boolean autoClearDependencyManagers) {
-        m_autoClearDependencyManagers = autoClearDependencyManagers;
-    }
-    
-    protected void setParallel(boolean parallel) {
-        m_useThreadPool = parallel;
+    protected void setParallel() {
+        m_parallel = true;
     }
     
     public void setUp() throws Exception {
@@ -61,31 +66,35 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     	context = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
         logService = context.registerService(LogService.class.getName(), this, null);
         context.addFrameworkListener(this);
+        m_dm = new DependencyManager(context);
+        if (m_parallel) {
+            warn("Registering threadpool ...");
+            Properties props = new Properties();
+            props.put("target", DependencyManager.THREADPOOL);
+            m_threadPoolRegistration = context.registerService(Executor.class.getName(), m_threadPool, props);
+        }
     }
     
     public void tearDown() throws Exception {
     	warn("Tearing down test " + getClass().getName());
     	logService.unregister();
     	context.removeFrameworkListener(this);
-    	if (m_autoClearDependencyManagers) {
-    	    clearAllManagers();
+    	clearComponents();
+    	if (m_parallel) {
+            warn("Unregistering threadpool ...");
+    	    m_threadPoolRegistration.unregister();
     	}
     }
-    
+        
     protected DependencyManager getDM() {
-        DependencyManager dm = new DependencyManager(context);
-        if (m_useThreadPool) {        
-            dm.setThreadPool(m_threadPool);
-        }
-        return dm;
+        return m_dm;
     }
-    
-    protected void clearAllManagers() {
-        // clear all dependency managers
-        List<DependencyManager> list = DependencyManager.getDependencyManagers();
-        for (DependencyManager m : list) {
-            m.clear();
-        }    
+                
+    protected void clearComponents() throws InterruptedException {
+        List<Component> list = m_dm.getComponents();
+        int count = list.size();
+        m_dm.clear(); // can be asynchronous if test is running in parallel.
+        warn("All component cleared (" + count + ")");
     }
 
     /**

@@ -17,7 +17,7 @@ public class FactoryConfigurationAdapterTest extends TestBase
     private static Ensure m_ensure;
     
     public void testFactoryConfigurationAdapter() {
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         m_ensure = new Ensure();
         

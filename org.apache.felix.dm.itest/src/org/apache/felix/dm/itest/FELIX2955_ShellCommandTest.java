@@ -42,7 +42,7 @@ public class FELIX2955_ShellCommandTest extends TestBase {
                 break;
             }
         }
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         

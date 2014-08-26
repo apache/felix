@@ -18,7 +18,6 @@ import org.osgi.framework.ServiceReference;
 public class AspectRaceTest extends TestBase {
 	volatile ExecutorService m_serviceExec;
 	volatile ExecutorService m_aspectExec;
-	volatile DependencyManager m_dm;
 	final static int SERVICES = 3;
 	final static int ASPECTS_PER_SERVICE = 3;
 	final static int ITERATIONS = 3000;
@@ -36,7 +35,6 @@ public class AspectRaceTest extends TestBase {
 			// We create a Controller which is injected with some S services,
 			// and each S services has some aspects (SAspect).
 
-			m_dm = new DependencyManager(context);
 			Controller controller = new Controller();
 			ServiceDependency dependency = m_dm.createServiceDependency().setService(S.class)
 					.setCallbacks("bind", null, "unbind", "swap")

@@ -36,7 +36,7 @@ public class FELIX2696_ConfigurationAndServiceDependencyTest extends TestBase {
     final static String PID = "FELIX2696_ConfigurationAndServiceDependencyTest.pid";
 
     public void testComponentWithRequiredConfigurationAndServicePropertyPropagation() {
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // create a service provider and consumer

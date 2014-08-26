@@ -10,7 +10,7 @@ public class BundleDependencyTest extends TestBase {
     private final static String BSN = "org.apache.felix.metatype";
     
     public void testBundleDependencies() {
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         // create a service provider and consumer
         Consumer c = new Consumer();
         Component consumer = m.createComponent().setImplementation(c).add(m.createBundleDependency().setCallbacks("add", "remove"));
@@ -35,7 +35,7 @@ public class BundleDependencyTest extends TestBase {
     }
     
     public void testRequiredBundleDependency() {
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         // create a service provider and consumer
         Consumer c = new Consumer();
         

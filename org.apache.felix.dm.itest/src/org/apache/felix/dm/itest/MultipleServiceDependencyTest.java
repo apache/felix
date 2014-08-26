@@ -26,7 +26,7 @@ import org.osgi.framework.Constants;
 
 public class MultipleServiceDependencyTest extends TestBase {
    public void testMultipleServiceRegistrationAndConsumption() {
-       DependencyManager m = new DependencyManager(context);
+       DependencyManager m = getDM();
        // helper class that ensures certain steps get executed in sequence
        Ensure e = new Ensure();
        // create a service provider and consumer
@@ -46,7 +46,7 @@ public class MultipleServiceDependencyTest extends TestBase {
    }
 
    public void testReplacementAutoConfig() {
-       DependencyManager m = new DependencyManager(context);
+       DependencyManager m = getDM();
        // helper class that ensures certain steps get executed in sequence
        Ensure e = new Ensure();
        // create a service provider and consumer
@@ -66,7 +66,7 @@ public class MultipleServiceDependencyTest extends TestBase {
    }
 
    public void testReplacementCallbacks() {
-       DependencyManager m = new DependencyManager(context);
+       DependencyManager m = getDM();
        // helper class that ensures certain steps get executed in sequence
        Ensure e = new Ensure();
        // create a service provider and consumer

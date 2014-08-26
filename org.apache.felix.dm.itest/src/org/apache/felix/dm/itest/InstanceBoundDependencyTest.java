@@ -40,7 +40,7 @@ public class InstanceBoundDependencyTest extends TestBase {
     Ensure m_e;
     
     public void testServiceInjection() {
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         m_e = new Ensure();
         
         // Create a "C" component: it depends on some S1 services, and on some S2 instance-bound services (declared from C.init() method)        

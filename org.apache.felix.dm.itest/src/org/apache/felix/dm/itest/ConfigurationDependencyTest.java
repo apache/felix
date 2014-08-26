@@ -37,7 +37,7 @@ public class ConfigurationDependencyTest extends TestBase {
     final static String PID = "ConfigurationDependencyTest.pid";
     
     public void testComponentWithRequiredConfigurationAndServicePropertyPropagation() {
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // create a service provider and consumer
@@ -57,7 +57,7 @@ public class ConfigurationDependencyTest extends TestBase {
     
     public void testFELIX2987() {
         // mimics testComponentWithRequiredConfigurationAndServicePropertyPropagation
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // create a service provider and consumer

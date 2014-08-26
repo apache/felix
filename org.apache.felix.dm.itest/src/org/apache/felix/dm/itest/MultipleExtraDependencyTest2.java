@@ -35,7 +35,7 @@ import org.apache.felix.dm.ServiceDependency;
 public class MultipleExtraDependencyTest2 extends TestBase {
     public void testMultipleExtraDependencies()
     {
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         Ensure e = new Ensure();
         
         Component sp2 = m.createComponent()

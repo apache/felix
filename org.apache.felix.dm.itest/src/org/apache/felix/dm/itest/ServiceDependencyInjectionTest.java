@@ -25,7 +25,7 @@ import junit.framework.Assert;
 
 public class ServiceDependencyInjectionTest extends TestBase {
     public void testServiceInjection() {
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         Ensure e = new Ensure();
         // create a service provider and consumer
         ServiceProvider provider = new ServiceProvider(e);

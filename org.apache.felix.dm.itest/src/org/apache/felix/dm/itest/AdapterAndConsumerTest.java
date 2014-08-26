@@ -24,7 +24,7 @@ import org.apache.felix.dm.DependencyManager;
 public class AdapterAndConsumerTest extends TestBase {
     
     public void testServiceWithAdapterAndConsumer() {
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
 

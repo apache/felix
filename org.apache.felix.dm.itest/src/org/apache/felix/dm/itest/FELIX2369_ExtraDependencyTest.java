@@ -35,7 +35,7 @@ import junit.framework.Assert;
 public class FELIX2369_ExtraDependencyTest extends TestBase
 {
     public void testExtraDependencies() {
-        DependencyManager m = new DependencyManager(context);
+        DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // create a service consumer and provider

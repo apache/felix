@@ -13,7 +13,7 @@ import org.osgi.framework.ServiceRegistration;
 public class AspectBaseTest extends TestBase {    
 
 	public void testSingleAspect() {
-        DependencyManager m = new DependencyManager(context);
+	    DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         
