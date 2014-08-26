@@ -16,9 +16,9 @@
  */
 package org.apache.felix.http.whiteboard.internal.tracker;
 
-import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
 public abstract class AbstractTracker<T>
     extends ServiceTracker
@@ -41,7 +41,7 @@ public abstract class AbstractTracker<T>
     @SuppressWarnings("unchecked")
     public final void modifiedService(ServiceReference ref, Object service)
     {
-        super.modifiedService(ref, service);
+        modified( (T)service, ref);
     }
 
     @Override
