@@ -22,7 +22,6 @@ import org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl;
 import org.apache.felix.dm.benchmark.scenario.impl.ArtistImpl;
 import org.apache.felix.dm.benchmark.scenario.impl.TrackImpl;
 import org.osgi.framework.BundleContext;
-import java.util.concurrent.Executor;
 
 /**
  * Activator for a scenario based on Dependency Manager 4.0

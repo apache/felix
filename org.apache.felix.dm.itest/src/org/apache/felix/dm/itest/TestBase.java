@@ -4,18 +4,12 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.Properties;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import junit.framework.TestCase;
 
 import org.apache.felix.dm.Component;
-import org.apache.felix.dm.ComponentState;
-import org.apache.felix.dm.ComponentStateListener;
 import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
