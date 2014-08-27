@@ -43,9 +43,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Filter;
 
 public class DMCommandTest {
     /** System output just used to debug **/
@@ -68,18 +66,6 @@ public class DMCommandTest {
         when(m_bundleContext.getBundle()).thenReturn(bundle);
         System.setOut(new PrintStream(outContent));
         System.setErr(new PrintStream(errContent));
-
-        // We have to call the DM Activator manually. But before, since the DM Activator is defining a
-        // dependency over an optional executor, we first have to mock the proper OSGi filter because
-        // The ServiceTracker will need it ...
-        Filter filter = mock(Filter.class);
-        when(m_bundleContext.createFilter("(&(objectClass=java.util.concurrent.Executor)(target=org.apache.felix.dependencymanager))")).thenReturn(filter);
-
-        // Now, invoke the DM Activator manually.
-        Class dmActivatorClass = Class.forName("org.apache.felix.dm.impl.Activator");
-        BundleActivator dmActivator = (BundleActivator) dmActivatorClass.newInstance();
-        dmActivator.start(m_bundleContext);
-        
         dm = new DependencyManager(m_bundleContext);
         dme = new DMCommand(m_bundleContext);
         DependencyManager.getDependencyManagers().add(dm);

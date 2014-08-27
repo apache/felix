@@ -20,43 +20,31 @@ package org.apache.felix.dm.impl;
 
 import java.util.concurrent.Executor;
 
-import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.BundleContext;
 
 /**
- * DependencyManager Activator. We are using this activator in order to use a threadpool, which can be 
- * optionally provided  by any management agent bundle.
- * The management agent can just register a <code>java.util.Executor</code> service in the osgi registry
- * using the "target=org.apache.felix.dependencymanager" system property.
- * 
- * There are two ways to ensure that all DM components are handled in parallel using the threadpool:
- * 
- * 1- the management agent bundle can simply be started before any bundles, using the start-level service.
- * 2- if the start-level service can't be used, then you can configure the org.apache.felix.dependendencymanager.parallel
- *    system property, in order to ask DM to wait for the threadpool, before creating any DM components.
+ * DependencyManager Activator. We are using this activator in order to track and use a threadpool, which can be 
+ * optionally registered by any management agent bundle.
+ * The management agent can just register a <code>java.util.Executor</code> service in the service registry
+ * using the "target=org.apache.felix.dependencymanager" property, and the "org.apache.felix.dependencymanager.parallel"
+ * OSGi system property must also be configured to "true".
  *    
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class Activator extends DependencyActivatorBase {
     @Override
-    public void init(BundleContext context, DependencyManager manager) throws Exception {
-        boolean waitForThreadPool = Boolean.valueOf(context.getProperty(DependencyManager.PARALLEL));
-        Component c = createComponent().setImplementation(ComponentScheduler.instance());
+    public void init(BundleContext ctx, DependencyManager mgr) throws Exception {
+        boolean parallelModeEnabled = Boolean.valueOf(ctx.getProperty(DependencyManager.PARALLEL));
         
-        if (waitForThreadPool) {
-            c.add(createTemporalServiceDependency(10000)
-                .setService(Executor.class, "(target=" + DependencyManager.THREADPOOL + ")")
-                .setRequired(true)
-                .setAutoConfig("m_threadPool"));
-        } else {
-            c.add(createServiceDependency()
-                .setService(Executor.class, "(target=" + DependencyManager.THREADPOOL + ")")
-                .setRequired(false)
-                .setAutoConfig("m_threadPool")
-                .setDefaultImplementation(ComponentScheduler.NullExecutor.class));
+        if (parallelModeEnabled) {
+            mgr.add(createComponent()
+                    .setImplementation(ComponentScheduler.instance())
+                    .add(createTemporalServiceDependency(10000)
+                        .setService(Executor.class, "(target=" + DependencyManager.THREADPOOL + ")")
+                        .setRequired(true)
+                        .setAutoConfig("m_threadPool")));
         }
-        manager.add(c);
     }
 }

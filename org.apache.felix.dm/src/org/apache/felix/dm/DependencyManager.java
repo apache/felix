@@ -80,6 +80,7 @@ public class DependencyManager {
     private final BundleContext m_context;
     private final Logger m_logger;
     private final List<Component> m_components = new CopyOnWriteArrayList<>();
+    private volatile Executor m_threadPool;
 
     // service registry cache
     private static ServiceRegistryCache m_serviceRegistryCache;
@@ -137,6 +138,15 @@ public class DependencyManager {
     }
     
     /**
+     * Sets a threadpool to this dependency manager. All added/removed components will then be handled
+     * in parallel, using the provided threadpool.
+     */
+    public DependencyManager setThreadPool(Executor threadPool) {
+        m_threadPool = threadPool;
+        return this;
+    }
+
+    /**
      * Returns the list of currently created dependency managers.
      * @return the list of currently created dependency managers
      */
@@ -178,9 +188,14 @@ public class DependencyManager {
      */
     public void add(Component c) {
         m_components.add(c);
-        // Adding the component is delegated to the ComponentScheduler, which will possibly use a threadpool
-        // in order to add the component in parallel.
-        ComponentScheduler.instance().add(c);
+        if (useComponentScheduler()) {
+            ComponentScheduler.instance().add(c);
+        } else {
+            if (m_threadPool != null) {
+                ((ComponentContext) c).setThreadPool(m_threadPool);
+            }
+            ((ComponentContext) c).start(); 
+        }
     }
 
     /**
@@ -190,7 +205,11 @@ public class DependencyManager {
      * @param service the service to remove
      */
     public void remove(Component c) {
-        ComponentScheduler.instance().remove(c);
+        if (useComponentScheduler()) {
+            ComponentScheduler.instance().remove(c);
+        } else {
+            ((ComponentContext) c).stop();
+        }
         m_components.remove(c);
     }
 
@@ -681,5 +700,9 @@ public class DependencyManager {
         else {
             return context;
         }
+    }
+    
+    private boolean useComponentScheduler() {
+        return m_threadPool == null && "true".equalsIgnoreCase(m_context.getProperty(DependencyManager.PARALLEL));
     }
 }

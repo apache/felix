@@ -1,7 +1,7 @@
 package org.apache.felix.dm.impl;
 
 import java.util.Dictionary;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.Executor;
 
@@ -11,15 +11,10 @@ import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.context.ComponentContext;
 
 /**
- * Components addition/removal made through the DependencyManagerAPI are delegated to this
- * scheduler, which will use a threadpool optionally provided by any management bundle. 
- * The management bundle can register a threadpool (java.util.Executor) in the osgi registry
- * using the "target=org.apache.felix.dependencymanager" service property.
- * 
- * If the "org.apache.felix.dependencymanager.parallel" OSGi service property is set to true,
- * then the scheduler will wait for a threadpool before creating any DM components (that is:
- * added components will be cached until threadpool comes up from the OSGi service registry. 
- * 
+ * When a DependencyManager is not explicitely configured with a threadpool, and when parallel mode is enabled,
+ * then added components are delegated to this class, which will cache all added components until one threadpool
+ * is registered in the OSGi service registry.
+ *  
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ComponentScheduler {
@@ -27,24 +22,19 @@ public class ComponentScheduler {
     private volatile Executor m_threadPool;
     private final Executor m_serial = new SerialExecutor(null);
     private boolean m_started;
-    private Set<Component> m_pending = new HashSet<>();
-    public final static class NullExecutor implements Executor {
-        @Override
-        public void execute(Runnable command) {
-        }
-    };
+    private Set<Component> m_pending = new LinkedHashSet<>();
 
     public static ComponentScheduler instance() {
         return m_instance;
     }
 
-    public void start() {
+    protected void start() {
         m_serial.execute(new Runnable() {
             @Override
             public void run() {
                 m_started = true;
                 for (Component c : m_pending) {
-                    doAdd(c);
+                    addUsingThreadPool(c);
                 }
                 m_pending.clear();
             }
@@ -52,9 +42,10 @@ public class ComponentScheduler {
     }
 
     public void add(final Component c) {
-        if (! isParallelComponent(c)) {
+        if (!isParallelComponent(c)) {
             ((ComponentContext) c).start();
-        } else {
+        }
+        else {
             m_serial.execute(new Runnable() {
                 @Override
                 public void run() {
@@ -62,7 +53,7 @@ public class ComponentScheduler {
                         m_pending.add(c);
                     }
                     else {
-                        doAdd(c);
+                        addUsingThreadPool(c);
                     }
                 }
             });
@@ -70,9 +61,10 @@ public class ComponentScheduler {
     }
 
     public void remove(final Component c) {
-        if (! isParallelComponent(c)) {
+        if (!isParallelComponent(c)) {
             ((ComponentContext) c).stop();
-        } else {
+        }
+        else {
             m_serial.execute(new Runnable() {
                 @Override
                 public void run() {
@@ -80,39 +72,34 @@ public class ComponentScheduler {
                         m_pending.remove(c);
                     }
                     else {
-                        doRemove(c);
+                        ((ComponentContext) c).stop();
                     }
                 }
             });
         }
     }
 
-    private void doAdd(Component c) {
-        if (! (m_threadPool instanceof NullExecutor)) {
-            ((ComponentContext) c).setThreadPool(m_threadPool);
-        }
+    private void addUsingThreadPool(Component c) {
+        ((ComponentContext) c).setThreadPool(m_threadPool);
         ((ComponentContext) c).start();
     }
 
-    private void doRemove(Component c) {
-        ((ComponentContext) c).stop();
-    }
-    
     private boolean isParallelComponent(Component c) {
-        ComponentDeclaration decl = c.getComponentDeclaration();
-        
         // The component declared from our DM Activator can not be parallel.
+        ComponentDeclaration decl = c.getComponentDeclaration();
         if (ComponentScheduler.class.getName().equals(decl.getName())) {
             return false;
         }
-        
-        // A threadpool declared by a "management agent" using DM cannot be itself parallel.
-        if (Executor.class.getName().equals(decl.getName())) {
-            Dictionary<?, ?> props = decl.getServiceProperties();
-            if (props != null) {
-                Object property = props.get(DependencyManager.THREADPOOL);
-                if (property != null && "true".equalsIgnoreCase(property.toString())) {
-                    return false;
+
+        // A threadpool component declared by a "management agent" using DM API cannot be itself parallel.
+        String[] services = decl.getServices();
+        if (services != null) {
+            for (String service : services) {
+                if (Executor.class.getName().equals(service)) {
+                    Dictionary<?, ?> props = decl.getServiceProperties();
+                    if (props != null && DependencyManager.THREADPOOL.equals(props.get("target"))) {
+                        return false;
+                    }
                 }
             }
         }

@@ -52,8 +52,6 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     // Our dependency manager used to create test components.
     protected volatile DependencyManager m_dm;
 
-    private ServiceRegistration m_threadPoolRegistration;
-        
     public TestBase() {
     }
        
@@ -68,10 +66,8 @@ public abstract class TestBase extends TestCase implements LogService, Framework
         context.addFrameworkListener(this);
         m_dm = new DependencyManager(context);
         if (m_parallel) {
-            warn("Registering threadpool ...");
-            Properties props = new Properties();
-            props.put("target", DependencyManager.THREADPOOL);
-            m_threadPoolRegistration = context.registerService(Executor.class.getName(), m_threadPool, props);
+            warn("Using threadpool ...");
+            m_dm.setThreadPool(m_threadPool);
         }
     }
     
@@ -80,10 +76,6 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     	logService.unregister();
     	context.removeFrameworkListener(this);
     	clearComponents();
-    	if (m_parallel) {
-            warn("Unregistering threadpool ...");
-    	    m_threadPoolRegistration.unregister();
-    	}
     }
         
     protected DependencyManager getDM() {
