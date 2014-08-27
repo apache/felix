@@ -488,7 +488,6 @@ public class BundlePlugin extends AbstractMojo
         {
             properties.remove(BUNDLE_PLUGIN_EXTENSION + keyIter.next());
         }
-        System.out.println("PROPS: " + properties);
 
         if (properties.getProperty("Bundle-Activator") != null
                 && properties.getProperty("Bundle-Activator").isEmpty())
