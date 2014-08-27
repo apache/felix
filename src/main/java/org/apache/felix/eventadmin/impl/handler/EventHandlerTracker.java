@@ -18,6 +18,7 @@
  */
 package org.apache.felix.eventadmin.impl.handler;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -283,7 +284,7 @@ public class EventHandlerTracker extends ServiceTracker<EventHandler, EventHandl
         }
         else
         {
-            matchers = new Matcher[config.length];
+            final List<Matcher> list = new ArrayList<EventHandlerTracker.Matcher>();
             for(int i=0;i<config.length;i++)
             {
                 String value = config[i];
@@ -295,7 +296,7 @@ public class EventHandlerTracker extends ServiceTracker<EventHandler, EventHandl
                 {
                     if ( value.endsWith(".") )
                     {
-                        matchers[i] = new PackageMatcher(value.substring(0, value.length() - 1));
+                        list.add(new PackageMatcher(value.substring(0, value.length() - 1)));
                     }
                     else if ( value.endsWith("*") )
                     {
@@ -303,13 +304,21 @@ public class EventHandlerTracker extends ServiceTracker<EventHandler, EventHandl
                         {
                             return new Matcher[] {new MatcherAll()};
                         }
-                        matchers[i] = new SubPackageMatcher(value.substring(0, value.length() - 1));
+                        list.add(new SubPackageMatcher(value.substring(0, value.length() - 1)));
                     }
                     else
                     {
-                        matchers[i] = new ClassMatcher(value);
+                        list.add(new ClassMatcher(value));
                     }
                 }
+            }
+            if ( list.size() > 0 )
+            {
+                matchers = list.toArray(new Matcher[list.size()]);
+            }
+            else
+            {
+                matchers = null;
             }
         }
         return matchers;
