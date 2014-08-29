@@ -138,9 +138,9 @@ public class Configuration
     private final BundleContext m_bundleContext;
 
     private int m_threadPoolSize;
-    
+
     private double m_asyncToSyncThreadRatio;
-    
+
     private int m_asyncThreadPoolSize;
 
     private int m_timeout;
@@ -247,11 +247,11 @@ public class Configuration
             // be created.
             m_threadPoolSize = getIntProperty(
                 PROP_THREAD_POOL_SIZE, m_bundleContext.getProperty(PROP_THREAD_POOL_SIZE), 20, 2);
-            
+
             // The ratio of asynchronous to synchronous threads in the internal thread
-            // pool.  Ratio must be positive and may be adjusted to represent the 
+            // pool.  Ratio must be positive and may be adjusted to represent the
             // distribution of post to send operations.  Applications with higher number
-            // of post operations should have a higher ratio.  
+            // of post operations should have a higher ratio.
             m_asyncToSyncThreadRatio = getDoubleProperty(
             	PROP_ASYNC_TO_SYNC_THREAD_RATIO, m_bundleContext.getProperty(PROP_ASYNC_TO_SYNC_THREAD_RATIO), 0.5, 0.0);
 
@@ -482,7 +482,7 @@ public class Configuration
         {
             return new MetaTypeProviderImpl((ManagedService)managedService,
                     m_threadPoolSize, m_timeout, m_requireTopic,
-                    m_ignoreTimeout, m_ignoreTopics);
+                    m_ignoreTimeout, m_ignoreTopics, m_asyncToSyncThreadRatio);
         }
         catch (final Throwable t)
         {
@@ -551,7 +551,7 @@ public class Configuration
 
         return defaultValue;
     }
-    
+
     /**
      * Returns either the parsed double from the value of the property if it is set and
      * not less then the min value or the default. Additionally, a warning is
