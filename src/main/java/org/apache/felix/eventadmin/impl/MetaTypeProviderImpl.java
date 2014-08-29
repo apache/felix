@@ -41,6 +41,7 @@ public class MetaTypeProviderImpl
     private final boolean m_requireTopic;
     private final String[] m_ignoreTimeout;
     private final String[] m_ignoreTopic;
+    private final double m_asyncThreadPoolRatio;
 
     private final ManagedService m_delegatee;
 
@@ -48,7 +49,8 @@ public class MetaTypeProviderImpl
             final int threadPoolSize,
             final int timeout, final boolean requireTopic,
             final String[] ignoreTimeout,
-            final String[] ignoreTopic)
+            final String[] ignoreTopic,
+            final double asyncThreadPoolRatio)
     {
         m_threadPoolSize = threadPoolSize;
         m_timeout = timeout;
@@ -56,6 +58,7 @@ public class MetaTypeProviderImpl
         m_delegatee = delegatee;
         m_ignoreTimeout = ignoreTimeout;
         m_ignoreTopic = ignoreTopic;
+        m_asyncThreadPoolRatio = asyncThreadPoolRatio;
     }
 
     private ObjectClassDefinition ocd;
@@ -133,6 +136,12 @@ public class MetaTypeProviderImpl
                     "are ignored. If a single value neither ends with a dot nor with a start, this is assumed " +
                     "to define an exact topic. A single star can be used to disable delivery completely.",
                     AttributeDefinition.STRING, m_ignoreTopic, Integer.MAX_VALUE, null, null));
+            adList.add( new AttributeDefinitionImpl( Configuration.PROP_ASYNC_TO_SYNC_THREAD_RATIO, "Async/sync Thread Pool Ratio",
+                    "The ratio of asynchronous to synchronous threads in the internal thread" +
+                    " pool. Ratio must be positive and may be adjusted to represent the " +
+                    "distribution of post to send operations.  Applications with higher number " +
+                    "of post operations should have a higher ratio.",
+                    m_asyncThreadPoolRatio));
             ocd = new ObjectClassDefinition()
             {
 
@@ -202,6 +211,12 @@ public class MetaTypeProviderImpl
         AttributeDefinitionImpl( final String id, final String name, final String description, final int defaultValue )
         {
             this( id, name, description, INTEGER, new String[]
+                { String.valueOf(defaultValue) }, 0, null, null );
+        }
+
+        AttributeDefinitionImpl( final String id, final String name, final String description, final double defaultValue )
+        {
+            this( id, name, description, DOUBLE, new String[]
                 { String.valueOf(defaultValue) }, 0, null, null );
         }
 
