@@ -127,7 +127,7 @@ public class MetaTypeProviderImpl
                     "all handlers in this package and all subpackages are ignored. If the string neither " +
                     "ends with a dot nor with a star, this is assumed to define an exact class name.",
                     AttributeDefinition.STRING, m_ignoreTimeout, Integer.MAX_VALUE, null, null));
-            adList.add( new AttributeDefinitionImpl( Configuration.PROP_IGNORE_TIMEOUT, "Ignore Topics",
+            adList.add( new AttributeDefinitionImpl( Configuration.PROP_IGNORE_TOPIC, "Ignore Topics",
                     "For performance optimization it is possible to configure topics which are ignored " +
                     "by the event admin implementation. In this case, a event is not delivered to " +
                     "registered event handlers. The value is a list of strings (separated by comma). " +
