@@ -94,6 +94,14 @@ public class DefaultThreadPool
             }
         }
     }
+    
+    /**
+     * Returns current pool size.
+     */
+    public int getPoolSize()
+    {
+    	return oldSize;
+    }
 
     /**
      * Close the pool i.e, stop pooling threads. Note that subsequently, task will
