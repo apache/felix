@@ -3,6 +3,7 @@ Changes from 1.4.0 to 1.4.2
 ** Improvement
     * [FELIX-4623] - Make Async to Sync ThreadPool Ratio Configurable
 ** Bug
+    * [FELIX-4627] - Potential Memory Leak in AsyncDeliverTasks
     * [FELIX-4617] - Empty configurations for ignore topic and ignore timeout lead to error messages in the log
     * [FELIX-4618] - NPE if config value for ignore topic or timeout is empty
 
