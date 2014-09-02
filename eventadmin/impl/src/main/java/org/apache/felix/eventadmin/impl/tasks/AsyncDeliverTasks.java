@@ -89,7 +89,7 @@ public class AsyncDeliverTasks
             TaskExecuter executer = m_running_threads.get(currentThreadId);
             if ( executer == null )
             {
-                executer = new TaskExecuter();
+                executer = new TaskExecuter(m_running_threads);
                 m_running_threads.put(currentThreadId, executer);
             }
             synchronized ( executer )
@@ -97,8 +97,10 @@ public class AsyncDeliverTasks
                 executer.add(info);
                 if ( !executer.isActive() )
                 {
+                    // reactivate thread
                     executer.setSyncDeliverTasks(m_deliver_task);
                     m_pool.executeTask(executer);
+                    m_running_threads.put(currentThreadId, executer);
                 }
             }
         //}
@@ -122,6 +124,12 @@ public class AsyncDeliverTasks
         private volatile TaskInfo last;
 
         private volatile SyncDeliverTasks m_deliver_task;
+
+        private final Map<Long, TaskExecuter> m_running_threads;
+
+        public TaskExecuter(Map<Long, TaskExecuter> runningThreads) {
+            m_running_threads = runningThreads;
+        }
 
         public boolean isActive()
         {
@@ -156,6 +164,7 @@ public class AsyncDeliverTasks
                     if ( !running )
                     {
                         this.m_deliver_task = null;
+                        this.m_running_threads.remove(this);
                     }
                 }
             } while ( running );
