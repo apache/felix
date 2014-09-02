@@ -90,7 +90,6 @@ public class AsyncDeliverTasks
             if ( executer == null )
             {
                 executer = new TaskExecuter(m_running_threads);
-                m_running_threads.put(currentThreadId, executer);
             }
             synchronized ( executer )
             {
