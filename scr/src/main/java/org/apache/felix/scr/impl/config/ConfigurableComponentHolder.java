@@ -668,7 +668,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
             {
                 promises.add(cm.enable( async ));
             }
-            m_enablePromise = new Deferred<List<Void>>().resolveWith(Promises.all(promises));
+            m_enablePromise = new Deferred<List<Void>>().resolveWith(Promises.<Void, Void>all(promises));
             m_disablePromise = null;
             return m_enablePromise;
         }
@@ -698,7 +698,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
             {
                 promises.add(cm.disable( async ));
             }
-            m_disablePromise = new Deferred<List<Void>>().resolveWith(Promises.all(promises));
+            m_disablePromise = new Deferred<List<Void>>().resolveWith(Promises.<Void, Void>all(promises));
             m_enablePromise = null;
             return m_disablePromise;
         }
