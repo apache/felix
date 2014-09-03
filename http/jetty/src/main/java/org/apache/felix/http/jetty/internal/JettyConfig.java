@@ -304,7 +304,8 @@ public final class JettyConfig
 
     public String getTruststore()
     {
-        return getProperty(FELIX_TRUSTSTORE, null);
+        String value = getProperty(FELIX_TRUSTSTORE, null);
+        return value == null || value.trim().length() == 0 ? null : value;
     }
 
     public String getTruststoreType()
