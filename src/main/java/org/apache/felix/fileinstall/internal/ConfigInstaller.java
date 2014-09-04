@@ -239,10 +239,6 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         if( !ht.equals( old ) )
         {
             ht.put(DirectoryWatcher.FILENAME, toConfigKey(f));
-            if (config.getBundleLocation() != null)
-            {
-                config.setBundleLocation(null);
-            }
             if (old == null) {
                 Util.log(context, Logger.LOG_INFO, "Creating configuration from " + pid[0]
                         + (pid[1] == null ? "" : "-" + pid[1]) + ".cfg", null);
