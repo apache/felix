@@ -97,11 +97,18 @@ public class MetaTypeProviderImpl
             final ArrayList<AttributeDefinition> adList = new ArrayList<AttributeDefinition>();
 
             adList.add( new AttributeDefinitionImpl( Configuration.PROP_THREAD_POOL_SIZE, "Thread Pool Size",
-                "The size of the thread pool. The default value is 10. Increase in case of a large amount " +
-                "of synchronous events where the event handler services in turn send new synchronous events in " +
-                "the event dispatching thread or a lot of timeouts are to be expected. A value of " +
-                "less then 2 triggers the default value. A value of 2 effectively disables thread pooling.",
+                "The size of the thread pool used for event delivery. The default value is 20. " +
+                "Increase in case of a large amount of events. A value of " +
+                "less then 2 triggers the default value. If the pool is exhausted, event delivery " +
+                "is blocked until a thread becomes available from the pool. Each event is delivered " +
+                "in a thread from the pool unless the ignore timeouts is configured for the receiving event handler.",
                 m_threadPoolSize ) );
+            adList.add( new AttributeDefinitionImpl( Configuration.PROP_ASYNC_TO_SYNC_THREAD_RATIO, "Async/sync Thread Pool Ratio",
+                    "The ratio of asynchronous to synchronous threads in the internal thread" +
+                    " pool. Ratio must be positive and may be adjusted to represent the " +
+                    "distribution of post to send operations.  Applications with higher number " +
+                    "of post operations should have a higher ratio.",
+                    m_asyncThreadPoolRatio));
 
             adList.add( new AttributeDefinitionImpl( Configuration.PROP_TIMEOUT, "Timeout",
                     "The black-listing timeout in milliseconds. The default value is 5000. Increase or decrease " +
@@ -136,12 +143,6 @@ public class MetaTypeProviderImpl
                     "are ignored. If a single value neither ends with a dot nor with a start, this is assumed " +
                     "to define an exact topic. A single star can be used to disable delivery completely.",
                     AttributeDefinition.STRING, m_ignoreTopic, Integer.MAX_VALUE, null, null));
-            adList.add( new AttributeDefinitionImpl( Configuration.PROP_ASYNC_TO_SYNC_THREAD_RATIO, "Async/sync Thread Pool Ratio",
-                    "The ratio of asynchronous to synchronous threads in the internal thread" +
-                    " pool. Ratio must be positive and may be adjusted to represent the " +
-                    "distribution of post to send operations.  Applications with higher number " +
-                    "of post operations should have a higher ratio.",
-                    m_asyncThreadPoolRatio));
             ocd = new ObjectClassDefinition()
             {
 
