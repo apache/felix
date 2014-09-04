@@ -3,6 +3,7 @@ Changes from 1.4.0 to 1.4.2
 ** Improvement
     * [FELIX-4623] - Make Async to Sync ThreadPool Ratio Configurable
     * [FELIX-4629] - Documentation - Properties and Property Defaults Incorrect
+    * [FELIX-4630] - Adding PerformanceTestIT to measure difference between send and post events
 ** Bug
     * [FELIX-4627] - Potential Memory Leak in AsyncDeliverTasks
     * [FELIX-4617] - Empty configurations for ignore topic and ignore timeout lead to error messages in the log
