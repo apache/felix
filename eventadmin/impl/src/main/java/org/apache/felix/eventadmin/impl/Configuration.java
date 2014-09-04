@@ -239,12 +239,12 @@ public class Configuration
         {
             // The size of the internal thread pool. Note that we must execute
             // each synchronous event dispatch that happens in the synchronous event
-            // dispatching thread in a new thread, hence a small thread pool is o.k.
+            // dispatching thread in a new thread.
             // A value of less then 2 triggers the default value. A value of 2
             // effectively disables thread pooling. Furthermore, this will be used by
             // a lazy thread pool (i.e., new threads are created when needed). Ones the
-            // the size is reached and no cached thread is available new threads will
-            // be created.
+            // the size is reached and no cached thread is available, the delivery
+            // is blocked.
             m_threadPoolSize = getIntProperty(
                 PROP_THREAD_POOL_SIZE, m_bundleContext.getProperty(PROP_THREAD_POOL_SIZE), 20, 2);
 
