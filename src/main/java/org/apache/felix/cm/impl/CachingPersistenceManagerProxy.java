@@ -20,10 +20,16 @@ package org.apache.felix.cm.impl;
 
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Vector;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.felix.cm.PersistenceManager;
 import org.osgi.framework.Constants;
@@ -37,12 +43,14 @@ import org.osgi.framework.Constants;
  */
 class CachingPersistenceManagerProxy implements PersistenceManager
 {
-
     /** the actual PersistenceManager */
     private final PersistenceManager pm;
 
     /** cached dictionaries */
     private final Hashtable cache;
+
+    /** protecting lock */
+    private final ReadWriteLock globalLock = new ReentrantReadWriteLock();
 
     /**
      * Indicates whether the getDictionaries method has already been called
@@ -70,8 +78,14 @@ class CachingPersistenceManagerProxy implements PersistenceManager
      */
     public void delete( String pid ) throws IOException
     {
-        cache.remove( pid );
-        pm.delete( pid );
+        Lock lock = globalLock.writeLock();
+        try {
+            lock.lock();
+            cache.remove( pid );
+            pm.delete(pid);
+        } finally {
+            lock.unlock();
+        }
     }
 
 
@@ -82,7 +96,13 @@ class CachingPersistenceManagerProxy implements PersistenceManager
      */
     public boolean exists( String pid )
     {
-        return cache.containsKey( pid ) || pm.exists( pid );
+        Lock lock = globalLock.readLock();
+        try {
+            lock.lock();
+            return cache.containsKey( pid ) || ( !fullyLoaded && pm.exists( pid ) );
+        } finally {
+            lock.unlock();
+        }
     }
 
 
@@ -98,39 +118,42 @@ class CachingPersistenceManagerProxy implements PersistenceManager
      */
     public Enumeration getDictionaries() throws IOException
     {
-        // if not fully loaded, call back to the underlying persistence
-        // manager and cach all dictionaries whose service.pid is set
-        if ( !fullyLoaded )
-        {
-            Enumeration fromPm = pm.getDictionaries();
-            while ( fromPm.hasMoreElements() )
+        Lock lock = globalLock.readLock();
+        try {
+            lock.lock();
+            // if not fully loaded, call back to the underlying persistence
+            // manager and cach all dictionaries whose service.pid is set
+            if ( !fullyLoaded )
             {
-                Dictionary next = ( Dictionary ) fromPm.nextElement();
-                String pid = ( String ) next.get( Constants.SERVICE_PID );
-                if ( pid != null )
+                lock.unlock();
+                lock = globalLock.writeLock();
+                lock.lock();
+                if ( !fullyLoaded )
                 {
-                    cache.put( pid, next );
+                    Enumeration fromPm = pm.getDictionaries();
+                    while (fromPm.hasMoreElements())
+                    {
+                        Dictionary next = (Dictionary) fromPm.nextElement();
+                        String pid = (String) next.get(Constants.SERVICE_PID);
+                        if (pid != null)
+                        {
+                            cache.put(pid, next);
+                        }
+                    }
+                    fullyLoaded = true;
                 }
             }
-            fullyLoaded = true;
+
+            // Deep copy the configuration to avoid any threading issue
+            Vector configs = new Vector();
+            for (Object o : cache.values())
+            {
+                configs.add( copy( ( Dictionary ) o ) );
+            }
+            return configs.elements();
+        } finally {
+            lock.unlock();
         }
-
-        return new Enumeration()
-        {
-            final Enumeration base = cache.elements();
-
-
-            public boolean hasMoreElements()
-            {
-                return base.hasMoreElements();
-            }
-
-
-            public Object nextElement()
-            {
-                return copy( ( Dictionary ) base.nextElement() );
-            }
-        };
     }
 
 
@@ -146,16 +169,26 @@ class CachingPersistenceManagerProxy implements PersistenceManager
      */
     public Dictionary load( String pid ) throws IOException
     {
-        Dictionary loaded = ( Dictionary ) cache.get( pid );
-        if ( loaded == null )
-        {
-            loaded = pm.load( pid );
-            if ( loaded != null )
+        Lock lock = globalLock.readLock();
+        try {
+            lock.lock();
+            Dictionary loaded = ( Dictionary ) cache.get( pid );
+            if ( loaded == null && !fullyLoaded )
             {
-                cache.put( pid, loaded );
+                lock.unlock();
+                lock = globalLock.writeLock();
+                lock.lock();
+                loaded = ( Dictionary ) cache.get( pid );
+                if ( loaded == null )
+                {
+                    loaded = pm.load(pid);
+                    cache.put(pid, loaded);
+                }
             }
+            return copy( loaded );
+        } finally {
+            lock.unlock();
         }
-        return copy( loaded );
     }
 
 
@@ -170,8 +203,14 @@ class CachingPersistenceManagerProxy implements PersistenceManager
      */
     public void store( String pid, Dictionary properties ) throws IOException
     {
-        pm.store( pid, properties );
-        cache.put( pid, copy( properties ) );
+        Lock lock = globalLock.writeLock();
+        try {
+            lock.lock();
+            pm.store( pid, properties );
+            cache.put( pid, copy( properties ) );
+        } finally {
+            lock.unlock();
+        }
     }
 
 
