@@ -1,3 +1,35 @@
+Version 3.4.2
+-------------
+** Bug
+    * [FELIX-4532] - ConcurrentModificationException in fileinstall
+    * [FELIX-4635] - Avoid a useless change in the bundle location and a persistence the configuration
+
+Version 3.4.0
+-------------
+** Bug
+    * [FELIX-4436] - DirectoryWatcher should not refresh transformed bundles on every start-up
+    * [FELIX-4472] - Various concurrency issues in fileinstall
+
+** Improvement
+    * [FELIX-2436] - Reduce the number files created by the fileinstall Scanner.
+    * [FELIX-2702] - File Install should be smarter about starting failed bundles
+    * [FELIX-3543] - Upgrade to the new osgi wiring api
+    * [FELIX-4474] - Remove the static fields on FileInstall
+    * [FELIX-4475] - Improve logging in FileInstall
+
+Version 3.2.8
+-------------
+** Bug
+    * [FELIX-3686] - FileInstall bundle contains ConfigurationHandler.java source file
+    * [FELIX-3712] - FileInstall throws Interrupted exception when refreshed
+    * [FELIX-3714] - Error when when fragment bundle is updated
+    * [FELIX-3821] - FileInstall does not support correctly ConfigAdmin being shut down
+    * [FELIX-3822] - FileInstall should unregister its services
+    * [FELIX-4071] - ConcurrentModificationException in DirectoryWatcher.bundleChanged
+    * [FELIX-4225] - compile error on FileInstall.java
+    * [FELIX-4332] - Incorrect evalution of variables
+    * [FELIX-4338] - Incorrect overwriting of properties that have not been changed
+
 Version 3.2.6
 -------------
 ** Bug
