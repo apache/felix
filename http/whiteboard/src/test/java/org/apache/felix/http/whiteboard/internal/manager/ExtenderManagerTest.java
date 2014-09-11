@@ -138,7 +138,7 @@ public class ExtenderManagerTest
         when(filter1Reference.getBundle()).thenReturn(bundle1);
         when(filter1Reference.getPropertyKeys()).thenReturn(new String[0]);
         when(filter1Reference.getProperty(HttpWhiteboardConstants.PATTERN)).thenReturn(SERVLET_1_ALIAS);
-        when(filter1Reference.getProperty(Constants.SERVICE_ID)).thenReturn(47L);
+        when(filter1Reference.getProperty(Constants.SERVICE_ID)).thenReturn(4L);
 
         when(filter1_1Reference.getBundle()).thenReturn(bundle1);
         when(filter1_1Reference.getPropertyKeys()).thenReturn(new String[0]);
