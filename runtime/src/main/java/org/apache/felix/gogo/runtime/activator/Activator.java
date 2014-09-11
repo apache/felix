@@ -19,7 +19,11 @@
 package org.apache.felix.gogo.runtime.activator;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.felix.gogo.runtime.CommandProcessorImpl;
 import org.apache.felix.gogo.runtime.CommandProxy;
@@ -27,6 +31,7 @@ import org.apache.felix.gogo.api.CommandSessionListener;
 import org.apache.felix.gogo.runtime.threadio.ThreadIOImpl;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
@@ -138,32 +143,50 @@ public class Activator implements BundleActivator
 
         return new ServiceTracker(context, filter, null)
         {
+            private final ConcurrentMap<ServiceReference, Map<String, CommandProxy>> proxies
+                    = new ConcurrentHashMap<ServiceReference, Map<String, CommandProxy>>();
+
             @Override
             public Object addingService(ServiceReference reference)
             {
                 Object scope = reference.getProperty(CommandProcessor.COMMAND_SCOPE);
                 Object function = reference.getProperty(CommandProcessor.COMMAND_FUNCTION);
+                Object ranking = reference.getProperty(Constants.SERVICE_RANKING);
                 List<Object> commands = new ArrayList<Object>();
 
+                int rank = 0;
+                if (ranking != null)
+                {
+                    try
+                    {
+                        rank = Integer.parseInt(ranking.toString());
+                    }
+                    catch (NumberFormatException e)
+                    {
+                        // Ignore
+                    }
+                }
                 if (scope != null && function != null)
                 {
+                    Map<String, CommandProxy> proxyMap = new HashMap<String, CommandProxy>();
                     if (function.getClass().isArray())
                     {
                         for (Object f : ((Object[]) function))
                         {
-                            Function target = new CommandProxy(context, reference,
-                                f.toString());
-                            processor.addCommand(scope.toString(), target, f.toString());
+                            CommandProxy target = new CommandProxy(context, reference, f.toString());
+                            proxyMap.put(f.toString(), target);
+                            processor.addCommand(scope.toString(), target, f.toString(), rank);
                             commands.add(target);
                         }
                     }
                     else
                     {
-                        Function target = new CommandProxy(context, reference,
-                            function.toString());
-                        processor.addCommand(scope.toString(), target, function.toString());
+                        CommandProxy target = new CommandProxy(context, reference, function.toString());
+                        proxyMap.put(function.toString(), target);
+                        processor.addCommand(scope.toString(), target, function.toString(), rank);
                         commands.add(target);
                     }
+                    proxies.put(reference, proxyMap);
                     return commands;
                 }
                 return null;
@@ -177,16 +200,10 @@ public class Activator implements BundleActivator
 
                 if (scope != null && function != null)
                 {
-                    if (!function.getClass().isArray())
+                    Map<String, CommandProxy> proxyMap = proxies.remove(reference);
+                    for (Map.Entry<String, CommandProxy> entry : proxyMap.entrySet())
                     {
-                        processor.removeCommand(scope.toString(), function.toString());
-                    }
-                    else
-                    {
-                        for (Object func : (Object[]) function)
-                        {
-                            processor.removeCommand(scope.toString(), func.toString());
-                        }
+                        processor.removeCommand(scope.toString(), entry.getKey(), entry.getValue());
                     }
                 }
 
