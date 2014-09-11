@@ -29,8 +29,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.TreeSet;
 import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.apache.felix.gogo.api.CommandSessionListener;
@@ -44,10 +47,11 @@ public class CommandProcessorImpl implements CommandProcessor
 {
     protected final Set<Converter> converters = new CopyOnWriteArraySet<Converter>();
     protected final Set<CommandSessionListener> listeners = new CopyOnWriteArraySet<CommandSessionListener>();
-    protected final Map<String, Object> commands = new LinkedHashMap<String, Object>();
-    protected final Map<String, Object> constants = new HashMap<String, Object>();
+    protected final ConcurrentMap<String, Map<Object, Integer>> commands = new ConcurrentHashMap<String, Map<Object, Integer>>();
+    protected final Map<String, Object> constants = new ConcurrentHashMap<String, Object>();
     protected final ThreadIO threadIO;
     protected final WeakHashMap<CommandSession, Object> sessions = new WeakHashMap<CommandSession, Object>();
+    protected boolean stopped;
 
     public CommandProcessorImpl(ThreadIO tio)
     {
@@ -58,6 +62,9 @@ public class CommandProcessorImpl implements CommandProcessor
     {
         synchronized (sessions)
         {
+            if (stopped) {
+                throw new IllegalStateException("CommandProcessor has been stopped");
+            }
             CommandSessionImpl session = new CommandSessionImpl(this, in, out, err);
             sessions.put(session, null);
             return session;
@@ -68,6 +75,7 @@ public class CommandProcessorImpl implements CommandProcessor
     {
         synchronized (sessions)
         {
+            stopped = true;
             for (CommandSession session : sessions.keySet())
             {
                 session.close();
@@ -113,9 +121,9 @@ public class CommandProcessorImpl implements CommandProcessor
         String cfunction = name.substring(colon);
         boolean anyScope = (colon == 1 && name.charAt(0) == '*');
 
-        Object cmd = commands.get(name);
+        Map<Object, Integer> cmdMap = commands.get(name);
 
-        if (null == cmd && anyScope)
+        if (null == cmdMap && anyScope)
         {
             String scopePath = (null == path ? "*" : path.toString());
 
@@ -123,30 +131,37 @@ public class CommandProcessorImpl implements CommandProcessor
             {
                 if (scope.equals("*"))
                 {
-                    synchronized (commands)
+                    for (Entry<String, Map<Object, Integer>> entry : commands.entrySet())
                     {
-                        for (Entry<String, Object> entry : commands.entrySet())
+                        if (entry.getKey().endsWith(cfunction))
                         {
-                            if (entry.getKey().endsWith(cfunction))
-                            {
-                                cmd = entry.getValue();
-                                break;
-                            }
+                            cmdMap = entry.getValue();
+                            break;
                         }
                     }
                 }
                 else
                 {
-                    cmd = commands.get(scope + cfunction);
-                }
-
-                if (cmd != null)
-                {
-                    break;
+                    cmdMap = commands.get(scope + cfunction);
+                    if (cmdMap != null)
+                    {
+                        break;
+                    }
                 }
             }
         }
 
+        Object cmd = null;
+        if (cmdMap != null && !cmdMap.isEmpty())
+        {
+            for (Entry<Object, Integer> e : cmdMap.entrySet())
+            {
+                if (cmd == null || e.getValue() > cmdMap.get(cmd))
+                {
+                    cmd = e.getKey();
+                }
+            }
+        }
         if ((null == cmd) || (cmd instanceof Function))
         {
             return (Function) cmd;
@@ -164,6 +179,11 @@ public class CommandProcessorImpl implements CommandProcessor
 
     public void addCommand(String scope, Object target, Class<?> functions)
     {
+        addCommand(scope, target, functions, 0);
+    }
+
+    public void addCommand(String scope, Object target, Class<?> functions, int ranking)
+    {
         if (target == null)
         {
             return;
@@ -172,7 +192,7 @@ public class CommandProcessorImpl implements CommandProcessor
         String[] names = getFunctions(functions);
         for (String function : names)
         {
-            addCommand(scope, target, function);
+            addCommand(scope, target, function, ranking);
         }
     }
 
@@ -188,32 +208,44 @@ public class CommandProcessorImpl implements CommandProcessor
 
     public void addCommand(String scope, Object target, String function)
     {
-        synchronized (commands)
+        addCommand(scope, target, function, 0);
+    }
+
+    public void addCommand(String scope, Object target, String function, int ranking)
+    {
+        String key = (scope + ":" + function).toLowerCase();
+        Map<Object, Integer> cmdMap = commands.get(key);
+        if (cmdMap == null)
         {
-            commands.put((scope + ":" + function).toLowerCase(), target);
+            commands.putIfAbsent(key, new LinkedHashMap<Object, Integer>());
+            cmdMap = commands.get(key);
         }
+        cmdMap.put(target, ranking);
     }
 
     public void removeCommand(String scope, String function)
     {
-        String func = (scope + ":" + function).toLowerCase();
-        synchronized (commands)
+        // TODO: WARNING: this method does remove all mapping for scope:function
+        String key = (scope + ":" + function).toLowerCase();
+        commands.remove(key);
+    }
+
+    public void removeCommand(String scope, String function, Object target)
+    {
+        // TODO: WARNING: this method does remove all mapping for scope:function
+        String key = (scope + ":" + function).toLowerCase();
+        Map<Object, Integer> cmdMap = commands.get(key);
+        if (cmdMap != null)
         {
-            commands.remove(func);
+            cmdMap.remove(target);
         }
     }
 
     public void removeCommand(Object target)
     {
-        synchronized (commands)
+        for (Map<Object, Integer> cmdMap : commands.values())
         {
-            for (Iterator<Object> i = commands.values().iterator(); i.hasNext();)
-            {
-                if (i.next() == target)
-                {
-                    i.remove();
-                }
-            }
+            cmdMap.remove(target);
         }
     }
 
@@ -241,14 +273,6 @@ public class CommandProcessorImpl implements CommandProcessor
 
         functions = list.toArray(new String[list.size()]);
         return functions;
-    }
-
-    protected void put(String name, Object target)
-    {
-        synchronized (commands)
-        {
-            commands.put(name, target);
-        }
     }
 
     public Object convert(Class<?> desiredType, Object in)
