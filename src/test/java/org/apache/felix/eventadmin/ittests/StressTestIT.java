@@ -18,6 +18,7 @@ package org.apache.felix.eventadmin.ittests;
 
 import org.junit.Test;
 
+
 public class StressTestIT extends AbstractTest {
 
     private static final String PREFIX = "org/apache/felix/eventing/test";
@@ -28,7 +29,7 @@ public class StressTestIT extends AbstractTest {
     protected void sendEvent(int index) {
         final String postFix = String.valueOf(index % 10);
         final String topic = PREFIX + '/' + postFix;
-        this.send(topic, null, true);
+        this.send(topic, null, index, false);
     }
 
     @Test
