@@ -23,11 +23,18 @@ import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
+import static org.ops4j.pax.exam.CoreOptions.vmOption;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.inject.Inject;
 
@@ -74,6 +81,8 @@ public abstract class AbstractTest implements Runnable {
     private volatile String prefix;
 
     private volatile long startTime;
+    
+    private final Queue<Event> eventRecievedList = new ConcurrentLinkedQueue();
 
     /** Wait lock for syncing. */
     private final Object waitLock = new Object();
@@ -87,6 +96,7 @@ public abstract class AbstractTest implements Runnable {
         if ( this.running ) {
             if ( prefix == null || event.getTopic().startsWith(prefix) ) {
                 incCount();
+                eventRecievedList.offer(event);
             }
         }
     }
@@ -97,8 +107,15 @@ public abstract class AbstractTest implements Runnable {
      * @param properties
      * @param sync
      */
-    protected void send(String topic, Dictionary<String, Object> properties, boolean sync) {
-        final Event event = new Event(topic, properties);
+    protected void send(String topic, Dictionary<String, Object> properties, int index, boolean sync) {
+        
+    	if(properties == null)
+    	{
+    		properties = new Hashtable();
+    	}
+        properties.put("thread", Thread.currentThread().getId());
+        properties.put("index", index);
+    	final Event event = new Event(topic, properties);
         if ( sync ) {
             getEventAdmin().sendEvent(event);
         } else {
@@ -257,6 +274,7 @@ public abstract class AbstractTest implements Runnable {
              // with build server issue
              new DirectURLJUnitBundlesOption(),
              systemProperty("pax.exam.invoker").value("junit"),
+             //vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"), 
              bundle("link:classpath:META-INF/links/org.ops4j.pax.exam.invoker.junit.link")
         );
     }
@@ -269,6 +287,36 @@ public abstract class AbstractTest implements Runnable {
         this.waitForFinish();
         this.stop();
         logger.info("Finished eventing test {}", this.getClass().getSimpleName());
+        Event currentEvent = null;
+        Map<Long, Integer> orderVerifyMap = new HashMap<Long, Integer>();
+        while((currentEvent =eventRecievedList.poll()) != null)
+        {
+        	Integer index = (Integer)currentEvent.getProperty("index");
+        	Long threadId = (Long)currentEvent.getProperty("thread");
+        	
+        	if(index != null && threadId != null){
+        		Integer previousIndex = orderVerifyMap.get(threadId);
+        		if(previousIndex == null)
+        		{
+        			if(index != 0)
+        			{
+        				System.out.println("Event " + index + " recieved first for thread " + threadId);
+        			}
+        			orderVerifyMap.put(threadId, index);
+        		}
+        		else
+        		{
+        			if(previousIndex > index)
+        			{
+        				System.out.println("Events for thread " + threadId + " out of order.  Event " + previousIndex + " recieved before " + index);
+        			}
+        			else
+        			{
+        				orderVerifyMap.put(threadId, index);
+        			}
+        		}
+        	}
+        }
         try {
             Thread.sleep(15 * 1000);
         } catch (final InterruptedException ie) {
