@@ -1520,7 +1520,7 @@ public class ResolverImpl implements Resolver
             for (Candidates existingPerm : permutations)
             {
                 List<Capability> existingPermCands = existingPerm.getCandidates(req);
-                if (!existingPermCands.get(0).equals(candidates.get(0)))
+                if (existingPermCands != null && !existingPermCands.get(0).equals(candidates.get(0)))
                 {
                     permutated = true;
                 }
