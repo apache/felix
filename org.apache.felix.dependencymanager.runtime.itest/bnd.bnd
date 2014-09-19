@@ -1,0 +1,27 @@
+-buildpath:  \
+	osgi.core;version='[4.2,5)',\
+	junit.osgi;version=3.8,\
+	org.apache.felix.dependencymanager;version=latest,\
+	org.apache.felix.dependencymanager.itest.api;version=latest,\
+	org.apache.felix.dependencymanager.annotation;version=latest,\
+	osgi.cmpn;version=4.2
+-runbundles:  \
+	org.apache.felix.dependencymanager;version=latest,\
+	org.apache.felix.dependencymanager.itest.api;version=latest,\
+	org.apache.felix.dependencymanager.runtime.itest.components;version=latest,\
+	org.apache.felix.dependencymanager.runtime.itest.tests;version=latest,\
+	org.apache.felix.dependencymanager.runtime;version=latest,\
+	org.apache.felix.configadmin;version=1.8.1,\
+	org.apache.felix.metatype;version=1.0.4,\
+	osgi.cmpn;version=4.3.0,\
+	org.apache.felix.gogo.runtime;version=0.10.0,\
+	junit.osgi;version=3.8.2
+-runee: JavaSE-1.7
+-runfw: org.apache.felix.framework;version='[4.4.0,4.4.0]'
+-runsystempackages: \
+	sun.reflect
+-runvm:-ea
+-sub: \
+	*.bnd
+-plugin: org.apache.felix.dm.annotation.plugin.bnd.AnnotationPlugin;log=debug;\
+		 path:=${workspace}/org.apache.felix.dependencymanager.annotation/generated/org.apache.felix.dependencymanager.annotation.jar

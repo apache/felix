@@ -1,9 +1,0 @@
--buildpath: \
-	osgi.core;version=4.2,\
-	org.apache.felix.dm;version=latest,\
-	org.apache.felix.gogo.runtime;version=0.10,\
-	org.mockito.mockito-all,\
-	osgi.cmpn
-Private-Package: \
-	org.apache.felix.dm.shell
-Bundle-Activator:org.apache.felix.dm.shell.Activator

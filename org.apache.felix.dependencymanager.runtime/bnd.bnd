@@ -1,0 +1,10 @@
+Bundle-Version: 4.0.0
+Private-Package: \
+	org.apache.felix.dm.runtime,\
+	org.json
+-buildpath: \
+	osgi.core;version=4.2,\
+	osgi.cmpn;version=4.2,\
+	org.apache.felix.dependencymanager;version=latest,\
+	de.twentyeleven.skysail.org.json-osgi;version=20080701.0
+Bundle-Activator:org.apache.felix.dm.runtime.Activator

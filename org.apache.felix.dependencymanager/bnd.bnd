@@ -1,0 +1,16 @@
+-buildpath:  \
+	osgi.core;version=4.2,\
+	org.mockito.mockito-all,\
+	osgi.cmpn;version=4.2
+Private-Package: \
+	org.apache.felix.dm.impl,\
+	org.apache.felix.dm.impl.index,\
+	org.apache.felix.dm.impl.index.multiproperty,\
+	org.apache.felix.dm.impl.metatype
+Export-Package: \
+	org.apache.felix.dm,\
+	org.apache.felix.dm.tracker,\
+	org.apache.felix.dm.context
+Import-Package: !org.junit,!org.mockito.*,*
+Bundle-Activator: org.apache.felix.dm.impl.Activator
+Bundle-Version: 4.0.0

@@ -1,0 +1,26 @@
+-buildpath:  \
+	org.apache.felix.dependencymanager;version=latest,\
+	osgi.core;version=4.2,\
+	biz.aQute.bndlib;version=2.2
+-runbundles:  \
+	org.apache.felix.dependencymanager;version=latest,\
+	org.apache.felix.dependencymanager.shell;version=latest,\
+	org.apache.felix.configadmin;version=1.8.1,\
+	org.apache.felix.metatype;version=1.0.10,\
+	org.apache.felix.log;version=1.0.1,\
+	org.apache.felix.gogo.command;version=0.12.0,\
+	org.apache.felix.gogo.shell;version=0.10.0,\
+	org.apache.felix.gogo.runtime;version=0.10.0,\
+	org.apache.felix.scr;version=1.8.2,\
+	org.apache.felix.dependencymanager.benchmark.scenario;version=latest
+-runfw: org.apache.felix.framework;version='[4.4.0,4.4.0]'
+
+-sub:  \
+	*.bnd
+Export-Package:  \
+	org.apache.felix.dm.benchmark.scenario.impl
+-runproperties:  \
+	ds.loglevel=warn,\
+	org.osgi.framework.bootdelegation='sun.*,com.sun.*,org.netbeans.*'
+-runvm: -server -Xmx1024m -Xms1024m
+-runee: JavaSE-1.8
