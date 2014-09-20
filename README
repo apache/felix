@@ -1,0 +1,37 @@
+Dependency Manager 4.0.0 general README
+
+* misc documentations:
+
+- org.apache.felix.dependencymanager/design.txt
+- org.apache.felix.dependencymanager.benchmark/README
+
+* to compile:
+
+- Install Eclipse Kepler SR2 + Java8 support (need by benchmark) + Eclipse Luna
+- Install bndtools
+- Install java7/Java8 JREs in Eclipse:
+
+Window -> Preferences -> Java -> Installed JREs
+
+- add Java7 and Java8 JREs, but make sure the default JRE used is Java7 
+(Only the org.apache.felix.dependencymanager.benchmark module is needing Java8).
+
+- Open Bndtools perspective
+- Import Dependency Manager in Eclipse
+
+* To run tests:
+
+- Click on org.apache.felix.dependencymanager project and run it as "JUnit test".
+- Click on org.apache.felix.dependencymanager.itest and run it as "Bnd OSGi Test Launcer (Junit)".
+- Click on org.apache.felix.dependencymanager.runtime.itest and run it as ""Bnd OSGi Test Launcer (Junit)".
+- Click on org.apache.felix.dependencymanager.shell and run it as "JUnit test"
+
+* To execute samples:
+
+- Click on org.apache.felix.dependencymanager.samples and run it as "Bnd OSGi Run Launcher"
+
+* To execute the benchmark:
+
+- Click on org.apache.felix.dependencymanager.benchmark and run it as ""Bnd OSGi Run Launcher"
+More informations on the benchmark can be found from org.apache.felix.dependencymanager.benchmark/README file.
+

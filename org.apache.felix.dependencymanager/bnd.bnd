@@ -1,7 +1,7 @@
 -buildpath:  \
 	osgi.core;version=4.2,\
-	org.mockito.mockito-all,\
-	osgi.cmpn;version=4.2
+	osgi.cmpn;version=4.2,\
+	org.mockito.mockito-all;version=1.9
 Private-Package: \
 	org.apache.felix.dm.impl,\
 	org.apache.felix.dm.impl.index,\
