@@ -7,7 +7,7 @@ Dependency Manager 4.0.0 general README
 
 * to compile:
 
-- Install Eclipse Kepler SR2 + Java8 support (need by benchmark) + Eclipse Luna
+- Install Eclipse Kepler SR2 + Java8 support (needed by benchmark) or Eclipse Luna
 - Install bndtools
 - Install java7/Java8 JREs in Eclipse:
 
