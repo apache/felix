@@ -19,10 +19,10 @@ This prototype demonstrates the new concurrency principles that form the basis f
 
 20 sept 2014 (pderop):
 
- * Added support for concurrent mode: you can now register in the OSGi service registry a
-   threadpool (java.util.concurrent.Executor) service using the
-   "target=org.apache.felix.dependencymanager" service property, and using the
-   "org.apache.felix.dependencymanager.parallel=true system property". This will allow to handle all
+ * Added support for concurrent mode: To allow components to be handled in parallel, you can now
+   register in the OSGi service registry a threadpool (java.util.concurrent.Executor) service with
+   a "target=org.apache.felix.dependencymanager" service property, and you also have to set the
+   "org.apache.felix.dependencymanager.parallel=true" system property. This will allow to handle all
    component dependencies and all component lifecycle callbacks concurrently. Notice that component
    events are still handled serially. The only difference is that multiple components can be handled
    in parallel. See the
