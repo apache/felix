@@ -32,6 +32,14 @@ import org.apache.felix.dm.context.ComponentContext;
  * When a DependencyManager is not explicitly configured with a threadpool, and when parallel mode is enabled,
  * then added components are delegated to this class, which will cache all added components until one threadpool
  * is registered in the OSGi service registry.
+ * 
+ * Parallel mode can be enabled by default by doing this:
+ * 
+ * - register a threadpool (java.util.concurrent.Executor) into the OSGi service registry with the 
+ *   "target=org.apache.felix.dependencymanager" property.
+ *   
+ * - and set the "org.apache.felix.dependencymanager.parallel" system property to either "*" or to some component classname 
+ *   prefixes. Note that you can specify several class name prefixes, and that some prefixes can be negated using "!".   
  *  
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */

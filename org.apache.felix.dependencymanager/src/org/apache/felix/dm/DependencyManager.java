@@ -81,7 +81,6 @@ public class DependencyManager {
     private final Logger m_logger;
     private final List<Component> m_components = new CopyOnWriteArrayList<>();
     private volatile Executor m_threadPool;
-    private volatile boolean m_setThreadPoolMethodCalled = false;
 
     // service registry cache
     private static ServiceRegistryCache m_serviceRegistryCache;
@@ -141,18 +140,9 @@ public class DependencyManager {
     /**
      * Sets a threadpool to this dependency manager. All added/removed components will then be handled
      * in parallel, using the provided threadpool.
-     * 
-     * Notice that you can also enable parallelism by registering an Executor in the OSGi service registry with
-     * a "target=org.apache.felix.dependencymanager" system property. In this case, you also need to set
-     * the "org.apache.felix.dependencymanager.parallel=true" system property. When doing so:
-     * <p><ul>
-     * <li> All Dependency Manager
-     * <li>Activators will then be handled concurrently, except if they explicitly invoke setThreadPool(null)
-     * </ul>
      */
     public DependencyManager setThreadPool(Executor threadPool) {
         m_threadPool = threadPool;
-        m_setThreadPoolMethodCalled = true;
         return this;
     }
 
@@ -198,7 +188,7 @@ public class DependencyManager {
      */
     public void add(Component c) {
         m_components.add(c);
-        if (useComponentScheduler()) {
+        if (useComponentSchedulerFor(c)) {
             ComponentScheduler.instance().add(c);
         } else {
             if (m_threadPool != null) {
@@ -215,7 +205,7 @@ public class DependencyManager {
      * @param service the service to remove
      */
     public void remove(Component c) {
-        if (useComponentScheduler()) {
+        if (useComponentSchedulerFor(c)) {
             ComponentScheduler.instance().remove(c);
         } else {
             ((ComponentContext) c).stop();
@@ -713,21 +703,42 @@ public class DependencyManager {
     }
     
     /**
-     * Determine if the component scheduler should be used. The scheduler is used when the {@link #PARALLEL} system
-     * property is set to "true" *AND* when the {@link #setThreadPool(Executor)} method has never been invoked.
+     * Determine if the component scheduler should be used for a given component. The scheduler is used if all the 
+     * following conditions are true:
+     *   - The user has not set a threadpool using {@link #setThreadPool(Executor)}.
+     *   - the {@link #PARALLEL} system property is set to a comma separated list of prefix of component classnames
+     *   which have to be activated using the threadpool. Notice that prefixes can be negated using "!".
      * 
      * When used, the scheduler will bufferize all activated DM components until a threadpool with a
-     * {@link #THREADPOOL} service property is registered in the OSGi registry. And at the point where the threadpool
-     * comes in, then all bufferized components will be activated using that threadpool.
+     * {@link #THREADPOOL} service property is registered in the OSGi registry. And at the point where the 
+     * threadpool comes in, then all bufferized components will be activated using that threadpool.
      * This simple mechanism allows to avoid to use a start level service in order to wait for the threadpool before
      * activating any DM components.
      * 
-     * Notice that if the {@link #PARALLEL} system property is configured, you can call {@link #setThreadPool(Executor)}
-     * with a null parameter: This will ensure that the component won't be handled in parallel, even if a threadpool is
-     * registered in the service registry.
      * @return true if the component scheduler should be used, false if not.
      */
-    private boolean useComponentScheduler() {
-        return ! m_setThreadPoolMethodCalled && "true".equalsIgnoreCase(m_context.getProperty(DependencyManager.PARALLEL));      
+    private boolean useComponentSchedulerFor(Component c) {
+        if (m_threadPool != null) {
+            return false;
+        }
+        
+        String parallel = m_context.getProperty(DependencyManager.PARALLEL);
+        if (parallel != null) {
+            for (String prefix : parallel.trim().split(",")) {
+                boolean not = prefix.startsWith("!");
+                if (not) {
+                    prefix = prefix.substring(1);
+                }
+                if ("*".equals(prefix)) {
+                    return !not;
+                }
+
+                if (c.getComponentDeclaration().getClassName().startsWith(prefix)) {
+                    return !not;
+                }
+            }
+        }
+        
+        return false;              
     }
 }

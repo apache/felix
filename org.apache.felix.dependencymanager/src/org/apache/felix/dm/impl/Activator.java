@@ -36,7 +36,7 @@ import org.osgi.framework.BundleContext;
 public class Activator extends DependencyActivatorBase {
     @Override
     public void init(BundleContext ctx, DependencyManager mgr) throws Exception {
-        boolean parallelModeEnabled = Boolean.valueOf(ctx.getProperty(DependencyManager.PARALLEL));
+        boolean parallelModeEnabled = ctx.getProperty(DependencyManager.PARALLEL) != null;
         
         if (parallelModeEnabled) {
             mgr.add(createComponent()

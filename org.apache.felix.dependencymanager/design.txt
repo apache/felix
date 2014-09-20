@@ -22,11 +22,34 @@ This prototype demonstrates the new concurrency principles that form the basis f
  * Added support for concurrent mode: To allow components to be handled in parallel, you can now
    register in the OSGi service registry a threadpool (java.util.concurrent.Executor) service with
    a "target=org.apache.felix.dependencymanager" service property, and you also have to set the
-   "org.apache.felix.dependencymanager.parallel=true" system property. This will allow to handle all
-   component dependencies and all component lifecycle callbacks concurrently. Notice that component
-   events are still handled serially. The only difference is that multiple components can be handled
-   in parallel. See the
+   "org.apache.felix.dependencymanager.parallel" system property to either "*", or to a list of
+   component classnames prefixes. This will allow to handle all component dependencies and all
+   component lifecycle callbacks concurrently. Notice that component events are still handled
+   serially. The only difference is that multiple components can be handled in parallel. See the
    org.apache.felix.dependencymanager/src/org/apache/felix/dm/impl/DispatchExecutor.java for for
    informations.
+
+For example: 
+
+- if you want to enable parallelism for all components, just set the system property:
+
+org.apache.felix.dependencymanager.parallel=*
+
+- if you want to enable parallelism for some components whose class names is starting with foo.bar
+  and foo.zoo:
+
+org.apache.felix.dependencymanager.parallel=foo.bar, foo.zoo
+
+- if yo uwant to enable parallelism for all components, except for components whose class names
+  start with "foo.notparallel":
+
+org.apache.felix.dependencymanager.parallel=!foo.parallel, *
+
+
+
+
+
+
+
 
 

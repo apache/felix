@@ -24,7 +24,7 @@ Private-Package: \
 	org.apache.felix.dependencymanager.samples.hello
 -runproperties:  \
 	org.apache.felix.log.maxSize=100000,\
-	org.apache.felix.dependencymanager.parallel=true,\
+	org.apache.felix.dependencymanager.parallel=!org.apache.felix.dependencymanager.samples.hello, *,\
 	org.apache.felix.dependencymanager.runtime.log=debug
 -plugin: org.apache.felix.dm.annotation.plugin.bnd.AnnotationPlugin;log=debug;\
 	path:=${workspace}/org.apache.felix.dependencymanager.annotation/generated/org.apache.felix.dependencymanager.annotation.jar
