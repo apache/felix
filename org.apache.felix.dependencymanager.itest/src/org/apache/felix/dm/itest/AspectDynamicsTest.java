@@ -8,11 +8,13 @@ public class AspectDynamicsTest extends TestBase {
         DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
+        Ensure aspectStopEnsure = new Ensure();
         // create a service provider and consumer
         Component provider = m.createComponent().setImplementation(new ServiceProvider(e)).setInterface(ServiceInterface.class.getName(), null);
         Component provider2 = m.createComponent().setImplementation(new ServiceProvider2(e)).setInterface(ServiceInterface2.class.getName(), null);
-        Component consumer = m.createComponent().setImplementation(new ServiceConsumer(e)).add(m.createServiceDependency().setService(ServiceInterface.class).setRequired(true));
-        Component aspect = m.createAspectService(ServiceInterface.class, null, 1, null).setImplementation(new ServiceAspect(e));
+        Component consumer = m.createComponent().setImplementation(new ServiceConsumer(e))
+            .add(m.createServiceDependency().setService(ServiceInterface.class).setRequired(true).setCallbacks("add", null, null, "swap"));
+        Component aspect = m.createAspectService(ServiceInterface.class, null, 1, null).setImplementation(new ServiceAspect(e, aspectStopEnsure));
         
         m.add(consumer);
         m.add(provider);
@@ -28,7 +30,7 @@ public class AspectDynamicsTest extends TestBase {
         
         m.add(provider2);
         
-        // after adding provider 2, we should now see the aspect being started, so
+        // after adding provider 2, we should now see the client being swapped, so
         // we wait for step 5 to happen
         e.waitForStep(5, 15000);
         
@@ -42,7 +44,8 @@ public class AspectDynamicsTest extends TestBase {
         e.waitForStep(10, 15000);
         
         m.remove(aspect);
-        // removing the aspect should trigger step 11 (in the stop method of the aspect)
+        aspectStopEnsure.waitForStep(1, 15000);
+        // removing the aspect should trigger step 11 (in the swap method of the consumer)
         e.waitForStep(11, 15000);
         
         // step 12 triggers the client to continue
@@ -100,9 +103,11 @@ public class AspectDynamicsTest extends TestBase {
         private volatile ServiceInterface2 m_injectedService;
         private volatile Component m_service;
         private volatile DependencyManager m_manager;
+        private final Ensure m_stopEnsure;
         
-        public ServiceAspect(Ensure e) {
+        public ServiceAspect(Ensure e, Ensure stopEnsure) {
             m_ensure = e;
+            m_stopEnsure = stopEnsure;
         }
         public void init() {
             m_service.add(m_manager.createServiceDependency()
@@ -111,9 +116,7 @@ public class AspectDynamicsTest extends TestBase {
             );
             m_ensure.step(4);
         }
-        public void start() {
-            m_ensure.step(5);
-        }
+
         public void invoke(Runnable run) {
             m_ensure.step(7);
             m_originalService.invoke(run);
@@ -121,16 +124,27 @@ public class AspectDynamicsTest extends TestBase {
         }
         
         public void stop() {
-            m_ensure.step(11);
+            m_stopEnsure.step(1);
         }
     }
 
     static class ServiceConsumer implements Runnable {
         private volatile ServiceInterface m_service;
         private final Ensure m_ensure;
+        private final Ensure.Steps m_swapSteps = new Ensure.Steps(5, 11);
 
         public ServiceConsumer(Ensure e) {
             m_ensure = e;
+        }
+        
+        void add(ServiceInterface service) {
+            m_service = service;
+        }
+        
+        void swap(ServiceInterface oldService, ServiceInterface newService) {
+            System.out.println("swap: old=" + oldService + ", new=" + newService);
+            m_ensure.steps(m_swapSteps);
+            m_service = newService;
         }
         
         public void init() {
