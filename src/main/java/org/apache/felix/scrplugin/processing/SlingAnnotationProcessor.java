@@ -188,10 +188,41 @@ public class SlingAnnotationProcessor implements AnnotationProcessor {
         classDescription.add(pd);
 
         // property scope
-        final String scope = cad.getEnumValue("scope", SlingFilterScope.REQUEST.getScope());
+        final String[] scopes;
+        final Object val = cad.getValue("scope");
+        if ( val != null ) {
+            if ( val instanceof String[] ) {
+                final String[] arr = (String[])val;
+                scopes = new String[arr.length / 2];
+                int i = 0;
+                int index = 0;
+                while ( i < arr.length) {
+                    scopes[index] = arr[i];
+                    i+=2;
+                    index++;
+                }
+            } else if ( val instanceof String[][] ) {
+                final String[][] arr = (String[][])val;
+                scopes = new String[arr.length];
+                int index = 0;
+                while ( index < arr.length) {
+                    scopes[index] = arr[index][1];
+                    index++;
+                }
+            } else {
+                scopes = new String[] { val.toString()};
+            }
+        } else {
+            scopes = new String[] {SlingFilterScope.REQUEST.getScope()};
+        }
+
         final PropertyDescription pd2 = new PropertyDescription(cad);
         pd2.setName("sling.filter.scope");
-        pd2.setValue(scope);
+        if ( scopes.length == 1 ) {
+            pd2.setValue(scopes[0]);
+        } else {
+            pd2.setMultiValue(scopes);
+        }
         pd2.setType(PropertyType.String);
         if (metatype) {
             pd2.setPrivate(true);
