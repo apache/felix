@@ -18,14 +18,15 @@ Bundle-Version: 1.0.0.${tstamp}
 	org.apache.felix.dependencymanager.samples.hello;version=latest,\
 	org.apache.felix.dependencymanager.samples.tpool;version=latest,\
 	org.apache.felix.dependencymanager.samples.conf;version=latest,\
-	org.apache.felix.configadmin;version=1.8.0
+	org.apache.felix.configadmin;version=1.8.0,\
+	org.apache.felix.dependencymanager.samples.device;version=latest
 Private-Package: \
 	org.apache.felix.dependencymanager.samples.tpool,\
 	org.apache.felix.dependencymanager.samples.hello
 -runproperties:  \
-	org.apache.felix.log.maxSize=100000,\
-	org.apache.felix.dependencymanager.parallel=!org.apache.felix.dependencymanager.samples.hello, *,\
-	org.apache.felix.dependencymanager.runtime.log=debug
+	org.apache.felix.dependencymanager.parallel='!org.apache.felix.dependencymanager.samples.tpool, *',\
+	org.apache.felix.dependencymanager.runtime.log=debug,\
+	org.apache.felix.log.maxSize=100000
 -plugin: org.apache.felix.dm.annotation.plugin.bnd.AnnotationPlugin;log=debug;\
 	path:=${workspace}/org.apache.felix.dependencymanager.annotation/generated/org.apache.felix.dependencymanager.annotation.jar
 Bundle-Activator: org.apache.felix.dependencymanager.samples.tpool.Activator
