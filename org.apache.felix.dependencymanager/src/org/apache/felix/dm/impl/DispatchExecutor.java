@@ -2,6 +2,7 @@ package org.apache.felix.dm.impl;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.osgi.service.log.LogService;
@@ -84,7 +85,13 @@ public class DispatchExecutor implements Executor, Runnable {
      */
 	public void execute() {
         if (m_scheduled.compareAndSet(false, true)) { // schedules our run method in the tpool.
-            m_threadPool.execute(this);
+            try {
+                m_threadPool.execute(this);
+            } catch (RejectedExecutionException e) {
+                // The threadpool seems stopped (maybe the framework is being stopped). Anyway, just execute our tasks
+                // from the current thread.
+                run();
+            }
         }
 	}
 
