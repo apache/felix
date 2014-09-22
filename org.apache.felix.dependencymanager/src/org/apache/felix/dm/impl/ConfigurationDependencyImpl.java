@@ -94,7 +94,9 @@ public class ConfigurationDependencyImpl extends DependencyImpl<ConfigurationDep
     public void stop() {
         super.stop();
         if (m_registration != null) {
-        	m_registration.unregister();
+            try {
+                m_registration.unregister();
+            } catch (IllegalStateException e) {}
         	m_registration = null;
         }
     }
