@@ -21,29 +21,55 @@ This prototype demonstrates the new concurrency principles that form the basis f
 
  * Added support for concurrent mode: To allow components to be handled in parallel, you can now
    register in the OSGi service registry a threadpool (java.util.concurrent.Executor) service with
-   a "target=org.apache.felix.dependencymanager" service property, and you also have to set the
-   "org.apache.felix.dependencymanager.parallel" system property to either "*", or to a list of
-   component classnames prefixes. This will allow to handle all component dependencies and all
-   component lifecycle callbacks concurrently. Notice that component events are still handled
-   serially. The only difference is that multiple components can be handled in parallel. See the
-   org.apache.felix.dependencymanager/src/org/apache/felix/dm/impl/DispatchExecutor.java for for
-   informations.
+   a "target=org.apache.felix.dependencymanager" service property. Then, the dependency manager will
+   use that threadpool for managing components. If you want to ensure that the threadpool is
+   registered in the OSGi registry before all components are started, you have two choices:
 
-For example: 
+- you can first use the start level service and manage to start the management agent bundle which
+  provides the threadpool before all other bundles.
 
-- if you want to enable parallelism for all components, just set the system property:
+- If the start level service is not an option, then you can use the
+  "org.apache.felix.dependencymanager.parallel" OSGi system property. This property allows
+  to specify all component implementation class name prefixes which have to wait for the thread pool
+  before being started by Dependency Manager. This property can simply take "*", or a list of
+  package prefixes (comma separated). This property can also be used to specify some components
+  which should not be handled using a threadpool, even if one is available from the OSGi
+  registry. To do so, just use a "!" in front of a given classname prefix.
 
-org.apache.felix.dependencymanager.parallel=*
+For example: if you want to enable parallelism for all components, just set the system property:
 
-- if you want to enable parallelism for some components whose class names is starting with foo.bar
+     org.apache.felix.dependencymanager.parallel=*
+
+if you want to enable parallelism for some components whose class names is starting with foo.bar
   and foo.zoo:
 
-org.apache.felix.dependencymanager.parallel=foo.bar, foo.zoo
+      org.apache.felix.dependencymanager.parallel=foo.bar, foo.zoo
 
-- if yo uwant to enable parallelism for all components, except for components whose class names
-  start with "foo.notparallel":
+if yo want to enable parallelism for all components, except for components whose class names
+  start with "foo.notparallel", then you can use a negation prefix ("!"), like this:
 
-org.apache.felix.dependencymanager.parallel=!foo.parallel, *
+      org.apache.felix.dependencymanager.parallel=!foo.notparallel, *
+
+Using the above property, all components will wait for the threadpool, except components which
+implementation class names which are starting with "foo.notparallel" prefix.
+
+- Notice that if the Dependency Manager API is used for declaring a threadpool and all its related
+  dependent services, then you have to use the "org.apache.felix.dependencymanager.parallel" system
+  property in order to exclude the threadpool DM components from the list of components using the
+  threadpool. As an example, you can take a look at the org.apache.felix.dependencymanager.samples
+  project, which is declaring a threadpool using the Dependency Manager API. The sample is then
+  using the following property in the org.apache.felix.dependencymanager.samples/bnd.bnd file:
+
+	org.apache.felix.dependencymanager.parallel=\
+		'!org.apache.felix.dependencymanager.samples.tpool, *',\
+
+Here, all components except those having a package starting with
+org.apache.felix.dependencymanager.samples.tpool will wait for the threadpool before being initialized 
+by Dependency Manager. But the org.apache.felix.dependencymanager.samples.tpool.ThreadPool will not
+wait for a threadpool, since *it is* the threadpool !
+
+
+
 
 
 

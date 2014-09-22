@@ -28,23 +28,18 @@ import org.osgi.framework.BundleContext;
  * DependencyManager Activator. We are using this activator in order to track and use a threadpool, which can be 
  * optionally registered by any management agent bundle.
  * The management agent can just register a <code>java.util.Executor</code> service in the service registry
- * using the "target=org.apache.felix.dependencymanager" property, and the "org.apache.felix.dependencymanager.parallel"
- * OSGi system property must also be configured to "true".
+ * using the "target=org.apache.felix.dependencymanager" property. 
  *    
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class Activator extends DependencyActivatorBase {
     @Override
     public void init(BundleContext ctx, DependencyManager mgr) throws Exception {
-        boolean parallelModeEnabled = ctx.getProperty(DependencyManager.PARALLEL) != null;
-        
-        if (parallelModeEnabled) {
-            mgr.add(createComponent()
-                    .setImplementation(ComponentScheduler.instance())
-                    .add(createTemporalServiceDependency(10000)
-                        .setService(Executor.class, "(target=" + DependencyManager.THREADPOOL + ")")
-                        .setRequired(true)
-                        .setAutoConfig("m_threadPool")));
-        }
+        mgr.add(createComponent()
+               .setImplementation(ComponentScheduler.instance())
+               .add(createServiceDependency()
+                   .setService(Executor.class, "(target=" + DependencyManager.THREADPOOL + ")")
+                   .setRequired(true)
+                   .setCallbacks("bind", "unbind")));
     }
 }

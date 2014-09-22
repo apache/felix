@@ -80,7 +80,6 @@ public class DependencyManager {
     private final BundleContext m_context;
     private final Logger m_logger;
     private final List<Component> m_components = new CopyOnWriteArrayList<>();
-    private volatile Executor m_threadPool;
 
     // service registry cache
     private static ServiceRegistryCache m_serviceRegistryCache;
@@ -138,15 +137,6 @@ public class DependencyManager {
     }
     
     /**
-     * Sets a threadpool to this dependency manager. All added/removed components will then be handled
-     * in parallel, using the provided threadpool.
-     */
-    public DependencyManager setThreadPool(Executor threadPool) {
-        m_threadPool = threadPool;
-        return this;
-    }
-
-    /**
      * Returns the list of currently created dependency managers.
      * @return the list of currently created dependency managers
      */
@@ -188,14 +178,7 @@ public class DependencyManager {
      */
     public void add(Component c) {
         m_components.add(c);
-        if (useComponentSchedulerFor(c)) {
-            ComponentScheduler.instance().add(c);
-        } else {
-            if (m_threadPool != null) {
-                ((ComponentContext) c).setThreadPool(m_threadPool);
-            }
-            ((ComponentContext) c).start(); 
-        }
+        ComponentScheduler.instance().add(c);
     }
 
     /**
@@ -205,11 +188,7 @@ public class DependencyManager {
      * @param service the service to remove
      */
     public void remove(Component c) {
-        if (useComponentSchedulerFor(c)) {
-            ComponentScheduler.instance().remove(c);
-        } else {
-            ((ComponentContext) c).stop();
-        }
+        ComponentScheduler.instance().remove(c);
         m_components.remove(c);
     }
 
@@ -700,45 +679,5 @@ public class DependencyManager {
         else {
             return context;
         }
-    }
-    
-    /**
-     * Determine if the component scheduler should be used for a given component. The scheduler is used if all the 
-     * following conditions are true:
-     *   - The user has not set a threadpool using {@link #setThreadPool(Executor)}.
-     *   - the {@link #PARALLEL} system property is set to a comma separated list of prefix of component classnames
-     *   which have to be activated using the threadpool. Notice that prefixes can be negated using "!".
-     * 
-     * When used, the scheduler will bufferize all activated DM components until a threadpool with a
-     * {@link #THREADPOOL} service property is registered in the OSGi registry. And at the point where the 
-     * threadpool comes in, then all bufferized components will be activated using that threadpool.
-     * This simple mechanism allows to avoid to use a start level service in order to wait for the threadpool before
-     * activating any DM components.
-     * 
-     * @return true if the component scheduler should be used, false if not.
-     */
-    private boolean useComponentSchedulerFor(Component c) {
-        if (m_threadPool != null) {
-            return false;
-        }
-        
-        String parallel = m_context.getProperty(DependencyManager.PARALLEL);
-        if (parallel != null) {
-            for (String prefix : parallel.trim().split(",")) {
-                boolean not = prefix.startsWith("!");
-                if (not) {
-                    prefix = prefix.substring(1);
-                }
-                if ("*".equals(prefix)) {
-                    return !not;
-                }
-
-                if (c.getComponentDeclaration().getClassName().startsWith(prefix)) {
-                    return !not;
-                }
-            }
-        }
-        
-        return false;              
     }
 }
