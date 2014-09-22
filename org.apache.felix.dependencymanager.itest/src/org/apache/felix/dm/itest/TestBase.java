@@ -4,6 +4,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -46,6 +47,9 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     // Our dependency manager used to create test components.
     protected volatile DependencyManager m_dm;
 
+    // The Registration for the DM threadpool.
+    private ServiceRegistration m_threadPoolRegistration;
+
     public TestBase() {
     }
        
@@ -61,7 +65,9 @@ public abstract class TestBase extends TestCase implements LogService, Framework
         m_dm = new DependencyManager(context);
         if (m_parallel) {
             warn("Using threadpool ...");
-            m_dm.setThreadPool(m_threadPool);
+            Hashtable props = new Hashtable();
+            props.put("target", DependencyManager.THREADPOOL);
+            m_threadPoolRegistration = context.registerService(Executor.class.getName(), m_threadPool, props);
         }
     }
     
@@ -69,6 +75,9 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     	warn("Tearing down test " + getClass().getName());
     	logService.unregister();
     	context.removeFrameworkListener(this);
+    	if (m_threadPoolRegistration != null) {
+    	    m_threadPoolRegistration.unregister();
+    	}
     	clearComponents();
     }
         
