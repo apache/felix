@@ -1,7 +1,10 @@
-package org.apache.felix.dependencymanager.samples.device;
+package org.apache.felix.dependencymanager.samples.device.impl;
 
 import java.util.Hashtable;
 
+import org.apache.felix.dependencymanager.samples.device.Device;
+import org.apache.felix.dependencymanager.samples.device.DeviceAccess;
+import org.apache.felix.dependencymanager.samples.device.DeviceParameter;
 import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.BundleContext;
@@ -17,7 +20,15 @@ public class Activator extends DependencyActivatorBase {
         createDeviceAndParameter(dm, 2);
 
         dm.add(createAdapterService(Device.class, null)
-            .setImplementation(DeviceConsumer.class));
+            .setImplementation(DeviceAccessImpl.class)
+            .setInterface(DeviceAccess.class.getName(), null));
+        
+        dm.add(createComponent()
+            .setImplementation(DeviceAccessConsumer.class)
+            .add(createServiceDependency()
+                .setService(DeviceAccess.class)
+                .setRequired(true)
+                .setCallbacks("add", null)));
     }
     
     private void createDeviceAndParameter(DependencyManager dm, int id) {
