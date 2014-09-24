@@ -19,13 +19,14 @@
 package org.apache.felix.bundlerepository.impl;
 
 import java.net.URL;
+import java.util.Collections;
 import java.util.Hashtable;
 
 import junit.framework.TestCase;
-import org.apache.felix.bundlerepository.impl.PullParser;
+
+import org.apache.felix.bundlerepository.Repository;
 import org.apache.felix.bundlerepository.Resolver;
 import org.apache.felix.bundlerepository.Resource;
-import org.apache.felix.bundlerepository.impl.StaxParser;
 import org.apache.felix.utils.filter.FilterImpl;
 import org.apache.felix.utils.log.Logger;
 import org.easymock.Capture;
@@ -36,7 +37,8 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleListener;
 import org.osgi.framework.ServiceListener;
-import org.apache.felix.bundlerepository.Repository;
+import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.resource.Capability;
 
 public class StaxParserTest extends TestCase
 {
@@ -138,8 +140,9 @@ public class StaxParserTest extends TestCase
 
     private RepositoryAdminImpl createRepositoryAdmin(Class repositoryParser) throws Exception
     {
-        BundleContext bundleContext = (BundleContext) EasyMock.createMock(BundleContext.class);
-        Bundle systemBundle = (Bundle) EasyMock.createMock(Bundle.class);
+        BundleContext bundleContext = EasyMock.createMock(BundleContext.class);
+        Bundle systemBundle = EasyMock.createMock(Bundle.class);
+        BundleRevision systemBundleRevision = EasyMock.createMock(BundleRevision.class);
 
         Activator.setContext(bundleContext);
         EasyMock.expect(bundleContext.getProperty(RepositoryAdminImpl.REPOSITORY_URL_PROP))
@@ -152,6 +155,8 @@ public class StaxParserTest extends TestCase
         EasyMock.expect(systemBundle.getRegisteredServices()).andReturn(null);
         EasyMock.expect(new Long(systemBundle.getBundleId())).andReturn(new Long(0)).anyTimes();
         EasyMock.expect(systemBundle.getBundleContext()).andReturn(bundleContext);
+        EasyMock.expect(systemBundleRevision.getCapabilities(null)).andReturn(Collections.<Capability>emptyList());
+        EasyMock.expect(systemBundle.adapt(BundleRevision.class)).andReturn(systemBundleRevision);
         bundleContext.addBundleListener((BundleListener) EasyMock.anyObject());
         bundleContext.addServiceListener((ServiceListener) EasyMock.anyObject());
         EasyMock.expect(bundleContext.getBundles()).andReturn(new Bundle[] { systemBundle });
@@ -161,7 +166,7 @@ public class StaxParserTest extends TestCase
                 return FilterImpl.newInstance((String) c.getValue());
             }
         }).anyTimes();
-        EasyMock.replay(new Object[] { bundleContext, systemBundle });
+        EasyMock.replay(new Object[] { bundleContext, systemBundle, systemBundleRevision });
 
         RepositoryAdminImpl repoAdmin = new RepositoryAdminImpl(bundleContext, new Logger(bundleContext));
 

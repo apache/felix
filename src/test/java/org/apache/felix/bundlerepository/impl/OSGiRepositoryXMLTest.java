@@ -35,6 +35,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Version;
 import org.osgi.framework.namespace.IdentityNamespace;
+import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
 import org.osgi.resource.Resource;
@@ -135,6 +136,8 @@ public class OSGiRepositoryXMLTest extends TestCase
     {
         Bundle sysBundle = Mockito.mock(Bundle.class);
         Mockito.when(sysBundle.getHeaders()).thenReturn(new Hashtable<String, String>());
+        BundleRevision br = Mockito.mock(BundleRevision.class);
+        Mockito.when(sysBundle.adapt(BundleRevision.class)).thenReturn(br);
 
         BundleContext bc = Mockito.mock(BundleContext.class);
         Mockito.when(bc.getBundle(0)).thenReturn(sysBundle);

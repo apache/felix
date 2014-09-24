@@ -19,6 +19,7 @@
 package org.apache.felix.bundlerepository.impl;
 
 import java.net.URL;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
@@ -35,6 +36,8 @@ import org.osgi.framework.BundleListener;
 import org.osgi.framework.Filter;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.resource.Capability;
 
 public class RepositoryImplTest extends TestCase
 {
@@ -96,6 +99,7 @@ public class RepositoryImplTest extends TestCase
     {
         BundleContext bundleContext = EasyMock.createMock(BundleContext.class);
         Bundle systemBundle = EasyMock.createMock(Bundle.class);
+        BundleRevision systemBundleRevision = EasyMock.createMock(BundleRevision.class);
 
         Activator.setContext(bundleContext);
         EasyMock.expect(bundleContext.getProperty((String) EasyMock.anyObject())).andReturn(null).anyTimes();
@@ -104,6 +108,8 @@ public class RepositoryImplTest extends TestCase
         EasyMock.expect(systemBundle.getRegisteredServices()).andReturn(null);
         EasyMock.expect(new Long(systemBundle.getBundleId())).andReturn(new Long(0)).anyTimes();
         EasyMock.expect(systemBundle.getBundleContext()).andReturn(bundleContext);
+        EasyMock.expect(systemBundleRevision.getCapabilities(null)).andReturn(Collections.<Capability>emptyList());
+        EasyMock.expect(systemBundle.adapt(BundleRevision.class)).andReturn(systemBundleRevision);
         bundleContext.addBundleListener((BundleListener) EasyMock.anyObject());
         bundleContext.addServiceListener((ServiceListener) EasyMock.anyObject());
         EasyMock.expect(bundleContext.getBundles()).andReturn(new Bundle[] { systemBundle });
@@ -121,7 +127,7 @@ public class RepositoryImplTest extends TestCase
                 return true;
             }
         }).anyTimes();
-        EasyMock.replay(new Object[] { bundleContext, systemBundle });
+        EasyMock.replay(new Object[] { bundleContext, systemBundle, systemBundleRevision });
 
         RepositoryAdminImpl repoAdmin = new RepositoryAdminImpl(bundleContext, new Logger(bundleContext));
 
