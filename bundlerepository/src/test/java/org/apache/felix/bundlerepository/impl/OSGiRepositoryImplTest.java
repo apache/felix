@@ -29,6 +29,8 @@ import java.util.Set;
 
 import junit.framework.TestCase;
 
+import org.apache.felix.bundlerepository.Reason;
+import org.apache.felix.bundlerepository.Resolver;
 import org.apache.felix.utils.log.Logger;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
@@ -37,6 +39,7 @@ import org.osgi.framework.Version;
 import org.osgi.framework.namespace.BundleNamespace;
 import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.framework.namespace.PackageNamespace;
+import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
 import org.osgi.resource.Resource;
@@ -198,10 +201,39 @@ public class OSGiRepositoryImplTest extends TestCase
         assertTrue(Arrays.equals(expectedBytes, actualBytes));
     }
 
+    public void testSystemBundleCapabilities() throws Exception {
+        RepositoryAdminImpl repoAdmin = createRepositoryAdmin();
+        Resolver resolver = repoAdmin.resolver();
+        RequirementImpl req = new RequirementImpl("some.system.cap");
+        req.setFilter("(sys.cap=something)");
+        resolver.add(req);
+        ResourceImpl res = new ResourceImpl();
+        res.addRequire(req);
+
+        resolver.add(res);
+        assertTrue(resolver.resolve());
+
+        // This should add the system bundle repo to the resolved set.
+        org.apache.felix.bundlerepository.Resource sysBundleRes = repoAdmin.getSystemRepository().getResources()[0];
+        Reason[] reason = resolver.getReason(sysBundleRes);
+        assertTrue(reason.length >= 1);
+        assertEquals(req, reason[0].getRequirement());
+    }
+
     private RepositoryAdminImpl createRepositoryAdmin() throws Exception
     {
         Bundle sysBundle = Mockito.mock(Bundle.class);
         Mockito.when(sysBundle.getHeaders()).thenReturn(new Hashtable<String, String>());
+
+        BundleRevision br = Mockito.mock(BundleRevision.class);
+        Mockito.when(sysBundle.adapt(BundleRevision.class)).thenReturn(br);
+        Capability cap1 = new OSGiCapabilityImpl("some.system.cap",
+                Collections.<String, Object>singletonMap("sys.cap", "something"),
+                Collections.singletonMap("x", "y"));
+        Capability cap2 = new OSGiCapabilityImpl("some.system.cap",
+                Collections.<String, Object>singletonMap("sys.cap", "somethingelse"),
+                Collections.<String, String>emptyMap());
+        Mockito.when(br.getCapabilities(null)).thenReturn(Arrays.asList(cap1, cap2));
 
         BundleContext bc = Mockito.mock(BundleContext.class);
         Mockito.when(bc.getBundle(0)).thenReturn(sysBundle);

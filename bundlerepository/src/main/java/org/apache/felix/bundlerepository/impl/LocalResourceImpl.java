@@ -20,6 +20,7 @@ package org.apache.felix.bundlerepository.impl;
 
 import java.util.Dictionary;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -29,6 +30,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.wiring.BundleRevision;
 
 public class LocalResourceImpl extends ResourceImpl
 {
@@ -87,49 +89,21 @@ public class LocalResourceImpl extends ResourceImpl
                 }
             }
 
-/* TODO: OBR - Fix system capabilities.
-            // Create a case-insensitive map.
-            Map map = new TreeMap(new Comparator() {
-                public int compare(Object o1, Object o2)
+            // Add all the OSGi capabilities from the system bundle as repo capabilities
+            BundleRevision br = m_bundle.adapt(BundleRevision.class);
+            for (org.osgi.resource.Capability cap : br.getCapabilities(null))
+            {
+                CapabilityImpl bcap = new CapabilityImpl(cap.getNamespace());
+                for (Map.Entry<String, Object> entry : cap.getAttributes().entrySet())
                 {
-                    return o1.toString().compareToIgnoreCase(o2.toString());
+                    bcap.addProperty(new FelixPropertyAdapter(entry));
                 }
-            });
-            map.put(
-                Constants.FRAMEWORK_VERSION,
-                m_context.getProperty(Constants.FRAMEWORK_VERSION));
-            map.put(
-                Constants.FRAMEWORK_VENDOR,
-                m_context.getProperty(Constants.FRAMEWORK_VENDOR));
-            map.put(
-                Constants.FRAMEWORK_LANGUAGE,
-                m_context.getProperty(Constants.FRAMEWORK_LANGUAGE));
-            map.put(
-                Constants.FRAMEWORK_OS_NAME,
-                m_context.getProperty(Constants.FRAMEWORK_OS_NAME));
-            map.put(
-                Constants.FRAMEWORK_OS_VERSION,
-                m_context.getProperty(Constants.FRAMEWORK_OS_VERSION));
-            map.put(
-                Constants.FRAMEWORK_PROCESSOR,
-                m_context.getProperty(Constants.FRAMEWORK_PROCESSOR));
-//                map.put(
-//                    FelixConstants.FELIX_VERSION_PROPERTY,
-//                    m_context.getProperty(FelixConstants.FELIX_VERSION_PROPERTY));
-            Map[] capMaps = (Map[]) bundleMap.get("capability");
-            if (capMaps == null)
-            {
-                capMaps = new Map[] { map };
+                for (Map.Entry<String, String> entry : cap.getDirectives().entrySet())
+                {
+                    bcap.addDirective(entry.getKey(), entry.getValue());
+                }
+                addCapability(bcap);
             }
-            else
-            {
-                Map[] newCaps = new Map[capMaps.length + 1];
-                newCaps[0] = map;
-                System.arraycopy(capMaps, 0, newCaps, 1, capMaps.length);
-                capMaps = newCaps;
-            }
-            bundleMap.put("capability", capMaps);
-*/
         }
     }
 
