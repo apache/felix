@@ -46,7 +46,7 @@ import org.osgi.framework.BundleContext;
  * 
  * Notice that if the threadpool and all the services it may depends on are also declared using the 
  * Dependency Manager API, then you have to list the package of such components with a "!" prefix, in order to 
- * indicat that those components must not wait for a threadpool (since they are part of the threadpool 
+ * indicate that those components must not wait for a threadpool (since they are part of the threadpool 
  * implementation !).
  * 
  * Examples:
@@ -142,7 +142,7 @@ public class ComponentScheduler {
             }
         }
         else {
-            // A threadpool is there. If the "parallel" OSGi system property not specified, we can start the component
+            // A threadpool is there. If the "parallel" OSGi system property is not specified, we can start the component
             // now and we'll use the threadpool for it.
             // But if the "parallel" system property is specified, the component will use the threadpool only if it's
             // classname is starting with one of the prefixes specified in the property.
