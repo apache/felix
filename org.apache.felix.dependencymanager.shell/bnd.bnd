@@ -3,7 +3,8 @@
 	org.apache.felix.gogo.runtime;version=0.10,\
 	org.mockito.mockito-all,\
 	osgi.cmpn,\
-	org.apache.felix.dependencymanager;version=latest
+	org.apache.felix.dependencymanager;version=latest,\
+	biz.aQute.junit;version=999999999.0
 Private-Package: \
 	org.apache.felix.dm.shell
 Bundle-Activator:org.apache.felix.dm.shell.Activator

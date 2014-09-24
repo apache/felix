@@ -1,7 +1,6 @@
 -runbundles:  \
 	org.apache.felix.metatype;version=1.0.4,\
 	org.mockito.mockito-all;version=1.9.0,\
-	junit.osgi,\
 	org.apache.felix.gogo.runtime;version=0.10.0,\
 	org.apache.felix.dependencymanager;version=latest,\
 	org.apache.felix.dependencymanager.shell;version=latest,\
@@ -13,11 +12,11 @@
 -buildpath:  \
 	osgi.core;version='[4.2,5)',\
 	org.mockito.mockito-all,\
-	junit.osgi;version=3.8,\
 	org.apache.felix.gogo.runtime;version=0.10,\
 	org.apache.felix.dependencymanager;version=latest,\
 	org.apache.felix.dependencymanager.shell;version=latest,\
-	osgi.cmpn;version=4.2
+	osgi.cmpn;version=4.2,\
+	biz.aQute.junit;version=999999999.0
 -runsystempackages: \
 	sun.reflect
 -sub: \
