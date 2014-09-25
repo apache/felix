@@ -21,6 +21,9 @@ import java.io.*;
 import java.lang.reflect.*;
 import java.net.URL;
 import java.net.URLConnection;
+import java.security.AccessController;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.util.*;
 
 import javax.servlet.ServletConfig;
@@ -468,8 +471,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
             }
         }
     }
-
-
+    
     /**
      * If the request addresses a resource which may be served by the
      * <code>getResource</code> method of the
@@ -488,7 +490,36 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
      *
      * @throws IOException If an error occurs accessing or spooling the resource.
      */
-    private final boolean spoolResource( HttpServletRequest request, HttpServletResponse response ) throws IOException
+    private final boolean spoolResource(final HttpServletRequest request, 
+        final HttpServletResponse response) throws IOException
+    {
+        try
+        {
+            // We need to call spoolResource0 in privileged block because it uses reflection, which
+            // requires the following set of permissions:
+            // (java.lang.RuntimePermission "getClassLoader")
+            // (java.lang.RuntimePermission "accessDeclaredMembers")
+            // (java.lang.reflect.ReflectPermission "suppressAccessChecks")
+            // See also https://issues.apache.org/jira/browse/FELIX-4652
+            final Boolean ret = (Boolean) AccessController.doPrivileged(new PrivilegedExceptionAction()
+            {
+
+                public Object run() throws Exception
+                {
+                    return spoolResource0(request, response) ? Boolean.TRUE : Boolean.FALSE;
+                }
+            });
+            return ret.booleanValue();
+        }
+        catch (PrivilegedActionException e)
+        {
+            final Exception x = e.getException();
+            throw x instanceof IOException ? (IOException) x : new IOException(
+                x.toString());
+        }
+    }
+
+    final boolean spoolResource0( HttpServletRequest request, HttpServletResponse response ) throws IOException
     {
         // no resource if no resource accessor
         Method getResourceMethod = getGetResourceMethod();
