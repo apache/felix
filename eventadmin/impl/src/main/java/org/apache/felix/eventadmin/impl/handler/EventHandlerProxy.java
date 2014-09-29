@@ -431,12 +431,15 @@ public class EventHandlerProxy {
      */
     public void blackListHandler()
     {
-        LogWrapper.getLogger().log(
-                        LogWrapper.LOG_WARNING,
-                        "Blacklisting ServiceReference [" + this.reference + " | Bundle("
-                                        + this.reference.getBundle() + ")] due to timeout!");
-        this.blacklisted = true;
-        // we can free the handler now.
-        this.release();
+    	if(!this.blacklisted)
+    	{
+	        LogWrapper.getLogger().log(
+	                        LogWrapper.LOG_WARNING,
+	                        "Blacklisting ServiceReference [" + this.reference + " | Bundle("
+	                                        + this.reference.getBundle() + ")] due to timeout!");
+	        this.blacklisted = true;
+	        // we can free the handler now.
+	        this.release();
+    	}
     }
 }
