@@ -2,11 +2,11 @@ package org.apache.felix.dm.itest;
 
 import java.util.Hashtable;
 
+import junit.framework.Assert;
+
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ServiceDependency;
-
-import junit.framework.Assert;
 
 public class TemporalServiceDependencyTest extends TestBase {
     public void testServiceConsumptionAndIntermittentAvailability() {

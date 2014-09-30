@@ -28,8 +28,7 @@ import org.osgi.framework.ServiceRegistration;
  * Use case: Tests an aspect service implemented as a dynamic proxy, and ensure that its lifecycle methods are properly invoked 
  * (init/start/stop/destroy methods).
  */
-public class AspectLifecycleWithDynamicProxyAnnotationTest extends TestBase {
-    
+public class AspectLifecycleWithDynamicProxyAnnotationTest extends TestBase {    
     public void testAnnotatedAspect() {
         Ensure e = new Ensure();
         // Provide the Sequencer server to the ServiceProvider service

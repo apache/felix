@@ -21,6 +21,7 @@ package org.apache.felix.dm.impl;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.util.Dictionary;
+import java.util.Set;
 
 import org.apache.felix.dm.BundleDependency;
 import org.apache.felix.dm.ComponentDependencyDeclaration;
@@ -74,23 +75,15 @@ public class BundleDependencyImpl extends DependencyImpl<BundleDependency> imple
     }
     
     @Override
-    public void start() {
-        boolean wasStarted = isStarted();
-        super.start();
-        if (!wasStarted) {
-            m_tracker = new BundleTracker(m_context, m_stateMask, this);
-            m_tracker.open();
-        }
+    protected void startTracking() {
+        m_tracker = new BundleTracker(m_context, m_stateMask, this);
+        m_tracker.open();
     }
 
     @Override
-    public void stop() {
-        boolean wasStarted = isStarted();
-        super.stop();
-        if (wasStarted) {
-            m_tracker.close();
-            m_tracker = null;
-        }            
+    protected void stopTracking() {
+        m_tracker.close();
+        m_tracker = null;
     }
 
     @Override
@@ -179,19 +172,15 @@ public class BundleDependencyImpl extends DependencyImpl<BundleDependency> imple
     }
     
     @Override
-    public Object getAutoConfigInstance() {
-        return getService();
-    }
-
-    @Override
     public Class<?> getAutoConfigType() {
         return Bundle.class;
     }
-    
+        
     @Override
     public Dictionary<?,?> getProperties() {
-        Bundle bundle = (Bundle) getService();
-        if (bundle != null) {
+        Event event = getService();
+        if (event != null) {
+            Bundle bundle = (Bundle) event.getEvent();
             if (m_propagateCallbackInstance != null && m_propagateCallbackMethod != null) {
                 try {
                     return (Dictionary<?,?>) InvocationUtil.invokeCallbackMethod(m_propagateCallbackInstance, m_propagateCallbackMethod, new Class[][] {{ Bundle.class }}, new Object[][] {{ bundle }});
@@ -214,29 +203,9 @@ public class BundleDependencyImpl extends DependencyImpl<BundleDependency> imple
     }
     
     @Override
-    protected Object getService() {
-        Bundle service = null;
-        if (isStarted()) {
-            BundleEventImpl be = (BundleEventImpl) m_component.getDependencyEvent(this);
-            return be != null ? be.getBundle() : null;
-        }
-        else {
-            Bundle[] bundles = m_context.getBundles();
-            for (int i = 0; i < bundles.length; i++) {
-                if ((bundles[i].getState() & m_stateMask) > 0) {
-                    Filter filter = m_filter;
-                    if (filter == null) {
-                        service = bundles[i];
-                        break;
-                    }
-                    else if (filter.match(bundles[i].getHeaders())) {
-                        service = bundles[i];
-                        break;
-                    }
-                }
-            }
-        }
-        if (service == null && isAutoConfig()) {
+    public Object getDefaultService() {
+        Object service = null;
+        if (isAutoConfig()) {
             // TODO does it make sense to add support for custom bundle impls?
 //            service = getDefaultImplementation();
             if (service == null) {
@@ -245,7 +214,7 @@ public class BundleDependencyImpl extends DependencyImpl<BundleDependency> imple
         }
         return service;
     }
-    
+
     private Bundle getNullObject() {
         if (m_nullObject == null) {
             try {

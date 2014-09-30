@@ -18,10 +18,10 @@
  */
 package org.apache.felix.dm.itest;
 
+import junit.framework.Assert;
+
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
-
-import junit.framework.Assert;
 
 public class AbstractServiceDependencyTest extends TestBase {
    public void testAbstractClassDependency() {

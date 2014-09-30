@@ -18,7 +18,12 @@
  */
 package org.apache.felix.dm.impl;
 
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
@@ -172,5 +177,67 @@ public class ServiceUtil {
             }
         }
         return buf.toString();
+    }
+    
+    /**
+     * Wraps ServiceReference properties behind a Dictionary object.
+     * @param ref the ServiceReference to wrap
+     * @return a new Dictionary used to wrap the ServiceReference properties
+     */
+    public static Dictionary<String, ?> propertiesToDictionary(final ServiceReference ref) {
+        return new Dictionary<String, Object>() {
+            private Dictionary<String, Object> m_wrapper;
+            
+            @Override
+            public int size() {
+                return getWrapper().size();
+            }
+
+            @Override
+            public boolean isEmpty() {
+                return getWrapper().isEmpty();
+            }
+
+            @Override
+            public Enumeration<String> keys() {
+                return getWrapper().keys();
+            }
+
+            @Override
+            public Enumeration<Object> elements() {
+                return getWrapper().elements();
+            }
+
+            @Override
+            public Object get(Object key) {
+                return ref.getProperty(key.toString());
+            }
+
+            @Override
+            public Object put(String key, Object value) {
+                throw new UnsupportedOperationException("Unmodified Dictionary.");
+            }
+
+            @Override
+            public Object remove(Object key) {
+                throw new UnsupportedOperationException("Unmodified Dictionary.");
+            }
+            
+            @Override
+            public String toString() {
+                return getWrapper().toString();
+            }
+            
+            private synchronized Dictionary<String, Object> getWrapper() {
+                if (m_wrapper == null) {
+                    m_wrapper = new Hashtable<String, Object>();
+                    String[] keys = ref.getPropertyKeys();
+                    for (String key : keys) {
+                        m_wrapper.put(key, ref.getProperty(key));
+                    }                    
+                }
+                return m_wrapper;
+            }
+        };
     }
 }

@@ -18,14 +18,11 @@
  */
 package org.apache.felix.dm.itest;
 
-import java.util.Arrays;
-import java.util.List;
+import junit.framework.Assert;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ServiceDependency;
-
-import junit.framework.Assert;
 
 /**
  * This testcase verify that a Service is not started if one of its extra required dependencies

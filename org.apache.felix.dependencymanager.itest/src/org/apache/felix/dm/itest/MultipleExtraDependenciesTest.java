@@ -18,9 +18,7 @@
  */
 package org.apache.felix.dm.itest;
 
-import java.util.ArrayList;
 import java.util.Hashtable;
-import java.util.List;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.Dependency;

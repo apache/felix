@@ -18,7 +18,10 @@
  */
 package org.apache.felix.dm.runtime;
 
+import java.util.Collection;
 import java.util.Dictionary;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.felix.dm.ComponentDependencyDeclaration;
 import org.apache.felix.dm.Dependency;
@@ -63,6 +66,17 @@ public class ToggleServiceDependency implements Dependency, ComponentDependencyD
 
         @Override
         public void close() {
+        }
+
+        @Override
+        public Object getEvent() {
+            return null;
+        }
+
+        @Override
+        public Dictionary getProperties()
+        {
+            return null;
         }
     }
 
@@ -179,10 +193,14 @@ public class ToggleServiceDependency implements Dependency, ComponentDependencyD
     }
 
     @Override
-    public Object getAutoConfigInstance() {
+    public Event getService() {
         return null;
     }
-
+    
+    @Override
+    public void copyToCollection(Collection to) {
+    }
+    
     @Override
     public boolean isAutoConfig() {
         return false;
@@ -227,5 +245,16 @@ public class ToggleServiceDependency implements Dependency, ComponentDependencyD
             return isRequired() ? ComponentDependencyDeclaration.STATE_REQUIRED
                 : ComponentDependencyDeclaration.STATE_OPTIONAL;
         }
+    }
+
+    @Override
+    public boolean isStarted()
+    {
+        return m_isStarted;
+    }
+
+    @Override
+    public void copyToMap(Map<Object, Dictionary> map)
+    {        
     }
 }

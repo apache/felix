@@ -21,6 +21,7 @@ package org.apache.felix.dm.impl;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Dictionary;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.felix.dm.ConfigurationDependency;
@@ -77,8 +78,7 @@ public class ConfigurationDependencyImpl extends DependencyImpl<ConfigurationDep
     }
 
     @Override
-    public void start() {
-        super.start();
+    protected void startTracking() {
         if (m_context != null) { // If null, we are in a test environment
 	        Properties props = new Properties();
 	        props.put(Constants.SERVICE_PID, m_pid);
@@ -91,8 +91,7 @@ public class ConfigurationDependencyImpl extends DependencyImpl<ConfigurationDep
     }
 
     @Override
-    public void stop() {
-        super.stop();
+    protected void stopTracking() {
         if (m_registration != null) {
             try {
                 m_registration.unregister();
@@ -118,12 +117,7 @@ public class ConfigurationDependencyImpl extends DependencyImpl<ConfigurationDep
     public String getType() {
         return "configuration";
     }
-
-    @Override
-    protected Object getService() {
-        return m_settings;
-    }
-        
+            
     public ConfigurationDependency add(PropertyMetaData properties)
     {
         createMetaTypeImpl();
@@ -190,17 +184,17 @@ public class ConfigurationDependencyImpl extends DependencyImpl<ConfigurationDep
 
         if ((oldSettings == null) && (settings != null)) {
             // Notify the component that our dependency is available.
-            add(new EventImpl());
+            add(new ConfigurationEventImpl(m_pid, settings));
         }
         else if ((oldSettings != null) && (settings != null)) {
             // Notify the component that our dependency has changed.
-            change(new EventImpl());
+            change(new ConfigurationEventImpl(m_pid, settings));
         }
         else if ((oldSettings != null) && (settings == null)) {
             // Notify the component that our dependency has been removed.
             // Notice that the component will be stopped, and then all required dependencies will be unbound
             // (including our configuration dependency).
-            remove(new EventImpl());
+            remove(new ConfigurationEventImpl(m_pid, oldSettings));
         }
     }
 

@@ -23,6 +23,7 @@ import java.net.URL;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentDependencyDeclaration;
@@ -61,33 +62,24 @@ public class ResourceDependencyImpl extends DependencyImpl<ResourceDependency> i
     }
     
     @Override
-    public void start() {
-        boolean wasStarted = isStarted();
-        super.start();
-        if (!wasStarted) {
-            Dictionary props = null;
-            if (m_trackedResource != null) {
+    protected void startTracking() {
+        Dictionary props = null;
+        if (m_trackedResource != null) {
+            props = new Properties();
+            props.put(ResourceHandler.URL, m_trackedResource);
+        } else {
+            if (m_resourceFilter != null) {
                 props = new Properties();
-                props.put(ResourceHandler.URL, m_trackedResource);
+                props.put(ResourceHandler.FILTER, m_resourceFilter);
             }
-            else { 
-                if (m_resourceFilter != null) {
-                    props = new Properties();
-                    props.put(ResourceHandler.FILTER, m_resourceFilter);
-                }
-            }
-            m_registration = m_context.registerService(ResourceHandler.class.getName(), this, props);
         }
+        m_registration = m_context.registerService(ResourceHandler.class.getName(), this, props);
     }
 
     @Override
-    public void stop() {
-        boolean wasStarted = isStarted();
-        super.stop();
-        if (wasStarted) {
-            m_registration.unregister();
-            m_registration = null;
-        }
+    protected void stopTracking() {
+        m_registration.unregister();
+        m_registration = null;
     }
 
     public void added(URL resource) {
@@ -130,7 +122,7 @@ public class ResourceDependencyImpl extends DependencyImpl<ResourceDependency> i
     public void invoke(String method, Event e) {
         ResourceEventImpl re = (ResourceEventImpl) e;
         URL serviceInstance = re.getResource();
-        Dictionary<?,?> resourceProperties = re.getResourceProperties();
+        Dictionary<?,?> resourceProperties = re.getProperties();
        
         m_component.invokeCallbackMethod(getInstances(), method,
             new Class[][] {
@@ -171,12 +163,6 @@ public class ResourceDependencyImpl extends DependencyImpl<ResourceDependency> i
     }
     
     @Override
-    protected Object getService() {
-        ResourceEventImpl re = (ResourceEventImpl) m_component.getDependencyEvent(this);
-        return re != null ? re.getResource() : null;
-    }
-            
-    @Override
     public Class<?> getAutoConfigType() {
         return URL.class;
     }
@@ -185,7 +171,7 @@ public class ResourceDependencyImpl extends DependencyImpl<ResourceDependency> i
         ResourceEventImpl re = (ResourceEventImpl) m_component.getDependencyEvent(this);
         if (re != null) {
             URL resource = re.getResource();
-            Dictionary<?,?> resourceProperties = re.getResourceProperties();
+            Dictionary<?,?> resourceProperties = re.getProperties();
             if (m_propagateCallbackInstance != null && m_propagateCallbackMethod != null) {
                 try {
                     return (Dictionary<?,?>) InvocationUtil.invokeCallbackMethod(m_propagateCallbackInstance, m_propagateCallbackMethod, new Class[][] {{ URL.class }}, new Object[][] {{ resource }});

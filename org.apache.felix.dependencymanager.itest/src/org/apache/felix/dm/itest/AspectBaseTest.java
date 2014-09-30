@@ -29,7 +29,7 @@ public class AspectBaseTest extends TestBase {
                 .setService(ServiceInterface.class)
                 .setRequired(true)
                 .setCallbacks("add", "remove")
-                .setAutoConfig(true)
+                .setAutoConfig("m_service")
             );
         Component sa = m.createAspectService(ServiceInterface.class, null, 20, null)
             .setImplementation(ServiceAspect.class);
@@ -63,7 +63,7 @@ public class AspectBaseTest extends TestBase {
         ServiceProvider p = new ServiceProvider(e, "a");
         ServiceConsumer c = new ServiceConsumer(e);
         Component sp = m.createComponent().setImplementation(p).setInterface(ServiceInterface.class.getName(), new Properties() {{ put("name", "a"); }});
-        Component sc = m.createComponent().setImplementation(c).add(m.createServiceDependency().setService(ServiceInterface.class).setRequired(true).setCallbacks("add", "remove").setAutoConfig(true));
+        Component sc = m.createComponent().setImplementation(c).add(m.createServiceDependency().setService(ServiceInterface.class).setRequired(true).setCallbacks("add", "remove").setAutoConfig("m_service"));
         Component sa = m.createAspectService(ServiceInterface.class, null, 20, null).setImplementation(ServiceAspect.class);
         // we first add the aspect
         m.add(sa);

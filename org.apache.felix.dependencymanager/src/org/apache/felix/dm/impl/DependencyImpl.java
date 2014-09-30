@@ -18,7 +18,11 @@
  */
 package org.apache.felix.dm.impl;
 
+import java.util.Collection;
 import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.felix.dm.ComponentDependencyDeclaration;
 import org.apache.felix.dm.Dependency;
@@ -143,14 +147,18 @@ public class DependencyImpl<T extends Dependency> implements Dependency, Depende
 
 	@Override
 	public void start() {
-        m_isStarted = true;
-		// you would normally start tracking this dependency here, so for example
-		// for a service dependency you might start a service tracker here
+	    if (! m_isStarted) {
+	        startTracking();
+	        m_isStarted = true;
+	    }
 	}
 
 	@Override
 	public void stop() {
-		m_isStarted = false;
+	    if (m_isStarted) {
+	        stopTracking();
+	        m_isStarted = false;
+	    }
 	}
 
 	@Override
@@ -272,11 +280,6 @@ public class DependencyImpl<T extends Dependency> implements Dependency, Depende
     }
     
     @Override
-    public Object getAutoConfigInstance() {
-        return getService();
-    }
-    
-    @Override
     public boolean isAutoConfig() {
         return m_autoConfig;
     }
@@ -313,11 +316,49 @@ public class DependencyImpl<T extends Dependency> implements Dependency, Depende
     	}
     }
    
-    protected Object getService() {
-        // only real dependencies can return actual service.
-        return null;
+    @Override
+    public Event getService() {
+        Event event = m_component.getDependencyEvent(this);
+        if (event == null) {
+            Object defaultService = getDefaultService();
+            if (defaultService != null) {
+                event = new EventImpl(0, defaultService);
+            }
+        }
+        return event;
     }
     
+    @Override
+    public void copyToCollection(Collection<Object> services) {
+        Set<Event> events = m_component.getDependencyEvents(this);
+        if (events.size() > 0) {
+            for (Event e : events) {
+                services.add(e.getEvent());
+            }
+        } else {
+            Object defaultService = getDefaultService();
+            if (defaultService != null) {
+                services.add(defaultService);
+            }
+        }
+    }
+    
+    @Override
+    public void copyToMap(Map<Object, Dictionary> map) {
+        Set<Event> events = m_component.getDependencyEvents(this);
+        if (events.size() > 0) {
+            for (Event e : events) {
+                map.put(e.getEvent(), e.getProperties());
+            }
+        } else {
+            Object defaultService = getDefaultService();
+            if (defaultService != null) {
+                map.put(defaultService, new Hashtable());
+            }
+        }
+    }
+    
+    @Override
     public boolean isStarted() {
     	return m_isStarted;
     }
@@ -337,9 +378,19 @@ public class DependencyImpl<T extends Dependency> implements Dependency, Depende
 		return m_component;
 	}
 	
+    protected Object getDefaultService() {
+        return null;
+    }
+        
     protected void ensureNotActive() {
         if (isStarted()) {
             throw new IllegalStateException("Cannot modify state while active.");
         }
+    }
+    
+    protected void startTracking() {
+    }
+    
+    protected void stopTracking() {
     }
 }

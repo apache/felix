@@ -10,7 +10,6 @@ import java.util.concurrent.TimeUnit;
 import junit.framework.Assert;
 
 import org.apache.felix.dm.Component;
-import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ServiceDependency;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;

@@ -29,6 +29,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -71,8 +72,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     private final Logger m_logger;
     private final BundleContext m_context;
     private final DependencyManager m_manager;
-    private final Object SYNC = new Object();
-	private Object m_componentDefinition;
+    private Object m_componentDefinition;
 	private Object m_componentInstance;
     private volatile Object m_serviceName;
     private volatile Dictionary m_serviceProperties;
@@ -81,6 +81,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     private final Map m_autoConfigInstance = new ConcurrentHashMap();
     private final long m_id;
     private static AtomicLong m_idGenerator = new AtomicLong();
+    // Holds all the services of a given dependency context. Caution: the last entry in the skiplist is the highest ranked service.
     private final Map<DependencyContext, ConcurrentSkipListSet<Event>> m_dependencyEvents = new HashMap<>();
     private volatile boolean m_active;
     
@@ -248,87 +249,110 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		if (debug) {
 			System.out.println("*" + debugKey + " T" + Thread.currentThread().getId() + " handleAdded " + e);
 		}
-
-	    Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
-	    dependencyEvents.add(e);
-	    dc.setAvailable(true);
-	    
-        switch (m_state) {
-        case WAITING_FOR_REQUIRED:
-            if (dc.isRequired())
-                handleChange();
-            break;
-        case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
-            if (!dc.isInstanceBound()) {
-                if (dc.isRequired()) {
-                    dc.invokeAdd(e);
-                }
-                updateInstance(dc);
-            }
-            else {
+		
+		Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
+		dependencyEvents.add(e);		
+		dc.setAvailable(true);
+		
+		// Recalculate state changes. We only do this if the dependency is started. If the dependency is not started,
+		// it means it is actually starting. And in this case, we don't recalculate state changes now. We'll do it 
+		// once all currently available services are found, and then after, we'll recalculate state change 
+		// (see the startDependencies method).
+		// All this is done for two reasons:
+		// 1- optimization: it is preferable to recalculate state changes once we know about all currently available dependency services
+		//    (after the tracker has returned from its open method).
+		// 2- This also allows to determine the list of currently available dependency services from within the component start method callback
+		//    (this will be extremely useful when porting the Felix SCR on top of DM4).
+		
+		if (dc.isStarted()) {
+            switch (m_state) {
+            case WAITING_FOR_REQUIRED:
                 if (dc.isRequired())
                     handleChange();
+                break;
+            case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
+                if (!dc.isInstanceBound()) {
+                    if (dc.isRequired()) {
+                        dc.invokeAdd(e);
+                    }
+                    updateInstance(dc, e, false, true);
+                }
+                else {
+                    if (dc.isRequired())
+                        handleChange();
+                }
+                break;
+            case TRACKING_OPTIONAL:
+                dc.invokeAdd(e);
+                updateInstance(dc, e, false, true);
+                break;
+            default:
             }
-            break;
-        case TRACKING_OPTIONAL:
-            dc.invokeAdd(e);
-            updateInstance(dc);
-            break;
-        default:
-        }
+		}
 	}
-	
+		
     @Override
     public void handleChanged(DependencyContext dc, Event e) {
         Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
         dependencyEvents.remove(e);
         dependencyEvents.add(e);
         
-        switch (m_state) {
-        case TRACKING_OPTIONAL:
-            dc.invokeChange(e);
-            updateInstance(dc);
-            break;
-
-        case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
-            if (!dc.isInstanceBound()) {
+        if (dc.isStarted()) {
+            switch (m_state) {
+            case TRACKING_OPTIONAL:
                 dc.invokeChange(e);
-                updateInstance(dc);
+                updateInstance(dc, e, true, false);
+                break;
+
+            case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
+                if (!dc.isInstanceBound()) {
+                    dc.invokeChange(e);
+                    updateInstance(dc, e, true, false);
+                }
+                break;
             }
-            break;
         }
     }
 
     @Override
     public void handleRemoved(DependencyContext dc, Event e) {
+        // Check if the dependency is still available.
         Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
         int size = dependencyEvents.size();
         if (dependencyEvents.contains(e)) {
             size --; // the dependency is currently registered and is about to be removed.
         }
         dc.setAvailable(size > 0);
-        handleChange();
         
-        // Now, really remove the dependency event, because next, we'll possibly invoke updateInstance, which will
-        // trigger getAutoConfigInstance, and at this point, we don't want to return the removed service, which might
-        // be the highest ranked service.
-        dependencyEvents.remove(e);
+        // If the dependency is now unavailable, we have to recalculate state change. This will result in invoking the
+        // "removed" callback with the removed dependency (which we have not yet removed from our dependency events list.).
+        // But we don't recalculate the state if the dependency is not started (if not started, it means that it is currently starting,
+        // and the tracker is detecting a removed service).
+        if (size == 0 && dc.isStarted()) {
+            handleChange();
+        }
         
-        // Depending on the state, we possible have to invoke the callbacks and update the component instance.        
-        switch (m_state) {
-        case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
-            if (! dc.isInstanceBound()) {
-                if (dc.isRequired()) {            
-                    dc.invokeRemove(e);
+        // Now, really remove the dependency event.
+        dependencyEvents.remove(e);    
+        
+        // Only check if the component instance has to be updated if the dependency is really started.
+        if (dc.isStarted()) {
+            // Depending on the state, we possible have to invoke the callbacks and update the component instance.        
+            switch (m_state) {
+            case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
+                if (!dc.isInstanceBound()) {
+                    if (dc.isRequired()) {
+                        dc.invokeRemove(e);
+                    }
+                    updateInstance(dc, e, false, false);
                 }
-                updateInstance(dc);
+                break;
+            case TRACKING_OPTIONAL:
+                dc.invokeRemove(e);
+                updateInstance(dc, e, false, false);
+                break;
+            default:
             }
-            break;
-        case TRACKING_OPTIONAL:
-            dc.invokeRemove(e);
-            updateInstance(dc);
-            break;
-        default:
         }
     }
 
@@ -337,23 +361,25 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         dependencyEvents.remove(event);
         dependencyEvents.add(newEvent);
                 
-        // Depending on the state, we possible have to invoke the callbacks and update the component instance.        
-        switch (m_state) {
-        case WAITING_FOR_REQUIRED:
-            // No need to swap, we don't have yet injected anything
-            break;
-        case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
-            // Only swap *non* instance-bound dependencies
-            if (!dc.isInstanceBound()) {
-                if (dc.isRequired()) {
-                    dc.invokeSwap(event, newEvent);
+        if (dc.isStarted()) {
+            // Depending on the state, we possible have to invoke the callbacks and update the component instance.        
+            switch (m_state) {
+            case WAITING_FOR_REQUIRED:
+                // No need to swap, we don't have yet injected anything
+                break;
+            case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
+                // Only swap *non* instance-bound dependencies
+                if (!dc.isInstanceBound()) {
+                    if (dc.isRequired()) {
+                        dc.invokeSwap(event, newEvent);
+                    }
                 }
+                break;
+            case TRACKING_OPTIONAL:
+                dc.invokeSwap(event, newEvent);
+                break;
+            default:
             }
-            break;
-        case TRACKING_OPTIONAL:
-            dc.invokeSwap(event, newEvent);
-            break;
-        default:
         }
     }
     
@@ -363,6 +389,11 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         return events.size() > 0 ? events.last() : null;
     }
     
+    @Override
+    public Set<Event> getDependencyEvents(DependencyContext dc) {
+        return m_dependencyEvents.get(dc);
+    }
+
     public Component setAutoConfig(Class clazz, boolean autoConfig) {
         m_autoConfig.put(clazz, Boolean.valueOf(autoConfig));
         return this;
@@ -530,12 +561,21 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         }
         return false;
     }
-
-    private void updateInstance(DependencyContext d) {
-        if (d.isAutoConfig()) {
-            configureImplementation(d.getAutoConfigType(), d.getAutoConfigInstance(), d.getAutoConfigName());
+    
+    /**
+     * Updates the component instance(s).
+     * @param dc the dependency context for the updating dependency service
+     * @param event the event holding the updating service (service + properties)
+     * @param update true if dependency service properties are updating, false if not. If false, it means
+     *        that a dependency service is being added or removed. (see the "add" flag).
+     * @param add true if the dependency service has been added, false if it has been removed. This flag is 
+     *        ignored if the "update" flag is true (because the dependency properties are just being updated).
+     */
+    private void updateInstance(DependencyContext dc, Event event, boolean update, boolean add) {
+        if (dc.isAutoConfig()) {
+            updateImplementation(dc.getAutoConfigType(), dc, dc.getAutoConfigName(), event, update, add);
         }
-        if (d.isPropagated() && m_registration != null) {
+        if (dc.isPropagated() && m_registration != null) {
             m_registration.setProperties(calculateServiceProperties());
         }
     }
@@ -563,6 +603,8 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             }
             d.start();
         }
+        // The started dependencies has probably called our handleAdded method: we now have to run our state machine.
+        handleChange();
     }
     
     private void stopDependencies() {
@@ -740,7 +782,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     private void invokeAutoConfigDependencies() {
         for (DependencyContext d : m_dependencies) {
             if (d.isAutoConfig() && !d.isInstanceBound()) {
-                configureImplementation(d.getAutoConfigType(), d.getAutoConfigInstance(), d.getAutoConfigName());
+                configureImplementation(d.getAutoConfigType(), d, d.getAutoConfigName());
             }
         }
     }
@@ -748,7 +790,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     private void invokeAutoConfigInstanceBoundDependencies() {
         for (DependencyContext d : m_dependencies) {
             if (d.isAutoConfig() && d.isInstanceBound()) {
-                configureImplementation(d.getAutoConfigType(), d.getAutoConfigInstance(), d.getAutoConfigName());
+                configureImplementation(d.getAutoConfigType(), d, d.getAutoConfigName());
             }
         }
     }
@@ -890,46 +932,39 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
      * and for each of these fields, the specified instance is filled in.
      *
      * @param clazz the class to search for
-     * @param instance the instance to fill in
+     * @param inject the object to fill in the implementation class(es) field
      * @param instanceName the name of the instance to fill in, or <code>null</code> if not used
      */
-    private void configureImplementation(Class clazz, Object instance, String instanceName) {
-        Object[] instances = getInstances();
-        if (instances != null && instance != null && clazz != null) {
-            for (int i = 0; i < instances.length; i++) {
-                Object serviceInstance = instances[i];
-                Class serviceClazz = serviceInstance.getClass();
-                if (Proxy.isProxyClass(serviceClazz)) {
-                    serviceInstance = Proxy.getInvocationHandler(serviceInstance);
-                    serviceClazz = serviceInstance.getClass();
-                }
-                while (serviceClazz != null) {
-                    Field[] fields = serviceClazz.getDeclaredFields();
-                    for (int j = 0; j < fields.length; j++) {
-                        Field field = fields[j];
-                        Class type = field.getType();
-                        if ((instanceName == null && type.equals(clazz)) 
-                            || (instanceName != null && field.getName().equals(instanceName) && type.isAssignableFrom(clazz))) {
-                            try {
-                                field.setAccessible(true);
-                                // synchronized makes sure the field is actually written to immediately
-                                synchronized (SYNC) {
-                                    field.set(serviceInstance, instance);
-                                }
-                            }
-                            catch (Exception e) {
-                                m_logger.log(Logger.LOG_ERROR, "Could not set field " + field, e);
-                                return;
-                            }
-                        }
-                    }
-                    serviceClazz = serviceClazz.getSuperclass();
-                }
-            }
-        }
+    private void configureImplementation(Class clazz, Object inject, String fieldName) {
+        Object[] targets = getInstances();
+        FieldUtil.injectField(targets, fieldName, clazz, inject, m_logger);
     }
 
-	@Override
+    private void configureImplementation(Class clazz, DependencyContext dc, String fieldName) {
+        Object[] targets = getInstances();
+        FieldUtil.injectDependencyField(targets, fieldName, clazz, dc, m_logger);
+    }
+
+    /**
+     * Update the component instances.
+     *
+     * @param clazz the class of the dependency service to inject in the component instances
+     * @param dc the dependency context for the updating dependency service
+     * @param fieldName the component instances fieldname to fill in with the updated dependency service
+     * @param event the event holding the updating service (service + properties)
+     * @param update true if dependency service properties are updating, false if not. If false, it means
+     *        that a dependency service is being added or removed. (see the "add" flag).
+     * @param add true if the dependency service has been added, false if it has been removed. This flag is 
+     *        ignored if the "update" flag is true (because the dependency properties are just being updated).
+     */
+    private void updateImplementation(Class clazz, DependencyContext dc, String fieldName, Event event, boolean update,
+        boolean add)
+    {
+        Object[] targets = getInstances();
+        FieldUtil.updateDependencyField(targets, fieldName, update, add, clazz, event, dc, m_logger);
+    }
+
+    @Override
 	public ServiceRegistration getServiceRegistration() {
         return m_registration;
 	}

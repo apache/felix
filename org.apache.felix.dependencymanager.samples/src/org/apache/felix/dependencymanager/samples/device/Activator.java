@@ -1,10 +1,7 @@
-package org.apache.felix.dependencymanager.samples.device.impl;
+package org.apache.felix.dependencymanager.samples.device;
 
 import java.util.Hashtable;
 
-import org.apache.felix.dependencymanager.samples.device.Device;
-import org.apache.felix.dependencymanager.samples.device.DeviceAccess;
-import org.apache.felix.dependencymanager.samples.device.DeviceParameter;
 import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.BundleContext;

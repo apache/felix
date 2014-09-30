@@ -18,7 +18,9 @@
  */
 package org.apache.felix.dm.context;
 
+import java.util.Collection;
 import java.util.Dictionary;
+import java.util.Map;
 
 
 public interface DependencyContext {
@@ -37,6 +39,7 @@ public interface DependencyContext {
 	/** Invoked by the component when the dependency should stop working. */
 	public void stop();
 	
+	public boolean isStarted();
 	public boolean isAvailable();
 	public void setAvailable(boolean available);
 	
@@ -49,7 +52,9 @@ public interface DependencyContext {
 	public boolean needsInstance();
 	
     public Class getAutoConfigType();
-    public Object getAutoConfigInstance();
+    public Event getService();
+    public void copyToCollection(Collection<Object> coll);
+    public void copyToMap(Map<Object, Dictionary> map);
     public boolean isAutoConfig();
     public String getAutoConfigName();
     public DependencyContext createCopy();

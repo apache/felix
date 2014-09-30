@@ -23,7 +23,9 @@ import java.lang.reflect.Proxy;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -200,41 +202,33 @@ public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> imp
     }
 
 	@Override
-	public void start() {
-		boolean wasStarted = isStarted();
-		super.start();
-
-        if (!wasStarted) {
-            if (m_trackedServiceName != null) {
-                if (m_trackedServiceFilter != null) {
-                    try {
-                        m_tracker = new ServiceTracker(m_context, m_context.createFilter(m_trackedServiceFilter), this);
-                    } catch (InvalidSyntaxException e) {
-                        throw new IllegalStateException("Invalid filter definition for dependency: " + m_trackedServiceFilter);
-                    }
-                } else if (m_trackedServiceReference != null) {
-                    m_tracker = new ServiceTracker(m_context, m_trackedServiceReference, this);
-                } else {
-                    m_tracker = new ServiceTracker(m_context, m_trackedServiceName.getName(), this);
+	protected void startTracking() {
+        if (m_trackedServiceName != null) {
+            if (m_trackedServiceFilter != null) {
+                try {
+                    m_tracker = new ServiceTracker(m_context, m_context.createFilter(m_trackedServiceFilter), this);
+                } catch (InvalidSyntaxException e) {
+                    throw new IllegalStateException("Invalid filter definition for dependency: "
+                        + m_trackedServiceFilter);
                 }
+            } else if (m_trackedServiceReference != null) {
+                m_tracker = new ServiceTracker(m_context, m_trackedServiceReference, this);
             } else {
-                throw new IllegalStateException("Could not create tracker for dependency, no service name specified.");
+                m_tracker = new ServiceTracker(m_context, m_trackedServiceName.getName(), this);
             }
-            if (debug) {
-            	m_tracker.setDebug(debugKey);
-            }
-            m_tracker.open();
+        } else {
+            throw new IllegalStateException("Could not create tracker for dependency, no service name specified.");
         }
+        if (debug) {
+            m_tracker.setDebug(debugKey);
+        }
+        m_tracker.open();
 	}
 	
 	@Override
-	public void stop() {
-		boolean wasStarted = isStarted();
-		super.stop();
-		if (wasStarted) {
-			m_tracker.close();
-			m_tracker = null;
-		}
+	protected void stopTracking() {
+	    m_tracker.close();
+	    m_tracker = null;
 	}
 
 	@Override
@@ -245,7 +239,7 @@ public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> imp
 	@Override
 	public void addedService(ServiceReference reference, Object service) {
 		if (debug) {
-			System.out.println(debugKey + " addedService");
+			System.out.println(debugKey + " addedService: ref=" + reference + ", service=" + service);
 		}
 		add(new ServiceEventImpl(m_bundle, m_context, reference, service));
 	}
@@ -281,20 +275,20 @@ public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> imp
             {Map.class, m_trackedServiceName}}, 
             
             new Object[][]{
-		    {m_component, se.getReference(), se.getService()},
-            {m_component, se.getReference(), se.getService()}, 
+		    {m_component, se.getReference(), se.getEvent()},
+            {m_component, se.getReference(), se.getEvent()}, 
             {m_component, se.getReference()}, 
-            {m_component, se.getService()},
-            {m_component, se.getService()},
+            {m_component, se.getEvent()},
+            {m_component, se.getEvent()},
             {m_component},
-            {m_component, new ServicePropertiesMap(se.getReference()), se.getService()},
-            {se.getReference(), se.getService()},
-            {se.getReference(), se.getService()}, 
+            {m_component, new ServicePropertiesMap(se.getReference()), se.getEvent()},
+            {se.getReference(), se.getEvent()},
+            {se.getReference(), se.getEvent()}, 
             {se.getReference()}, 
-            {se.getService()}, 
-            {se.getService()}, 
+            {se.getEvent()}, 
+            {se.getEvent()}, 
             {},
-            {new ServicePropertiesMap(se.getReference()), se.getService()}}
+            {new ServicePropertiesMap(se.getReference()), se.getEvent()}}
 		);
 	}
 	
@@ -347,7 +341,7 @@ public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> imp
                 try {
                     return (Dictionary) InvocationUtil.invokeCallbackMethod(m_propagateCallbackInstance, m_propagateCallbackMethod,
                             new Class[][]{{ServiceReference.class, Object.class}, {ServiceReference.class}}, new Object[][]{
-                                    {se.getReference(), se.getService()}, {se.getReference()}});
+                                    {se.getReference(), se.getEvent()}, {se.getReference()}});
                 } catch (InvocationTargetException e) {
                     m_logger.log(LogService.LOG_WARNING, "Exception while invoking callback method", e.getCause());
                 } catch (Exception e) {
@@ -368,11 +362,6 @@ public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> imp
             throw new IllegalStateException("cannot find service reference");
         }
     }	
-
-    @Override
-    public boolean isPropagated() {
-        return m_propagate;
-    }
 
     private BundleContext getBundleContext() {
         return m_context;
@@ -413,12 +402,9 @@ public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> imp
     }
     
     @Override
-    protected Object getService() {
+    public Object getDefaultService() {
         Object service = null;
-        ServiceEventImpl se = (ServiceEventImpl) m_component.getDependencyEvent(this);
-        if (se != null) {
-            service = se.getService();
-        } else if (isAutoConfig()) {
+        if (isAutoConfig()) {
             service = getDefaultImplementation();
             if (service == null) {
                 service = getNullObject();
@@ -426,7 +412,7 @@ public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> imp
         }
         return service;
     }
-    
+        
     private Object getNullObject() {
         if (m_nullObject == null) {
             Class trackedServiceName;
@@ -466,7 +452,7 @@ public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> imp
     public void invokeSwap(Event event, Event newEvent) {
         ServiceEventImpl oldE = (ServiceEventImpl) event;
         ServiceEventImpl newE = (ServiceEventImpl) newEvent;
-        invokeSwap(m_swap, oldE.getReference(), oldE.getService(), newE.getReference(), newE.getService(), getInstances());
+        invokeSwap(m_swap, oldE.getReference(), oldE.getEvent(), newE.getReference(), newE.getEvent(), getInstances());
     }
 
     public void invokeSwap(String swapMethod, ServiceReference previousReference, Object previous,
@@ -512,5 +498,5 @@ public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> imp
 			addedService(newReference, newService);
 			removedService(reference, service);
 		}
-	}
+	}	
 }

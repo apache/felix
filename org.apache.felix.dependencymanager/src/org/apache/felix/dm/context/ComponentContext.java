@@ -19,6 +19,7 @@
 package org.apache.felix.dm.context;
 
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Executor;
 
 import org.apache.felix.dm.Component;
@@ -40,4 +41,5 @@ public interface ComponentContext {
     public String getAutoConfigInstance(Class<?> clazz);
     public boolean getAutoConfig(Class<?> clazz);
     public Event getDependencyEvent(DependencyContext dc);
+    public Set<Event> getDependencyEvents(DependencyContext dc);
 }

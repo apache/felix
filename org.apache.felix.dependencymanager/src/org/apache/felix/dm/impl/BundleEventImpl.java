@@ -18,6 +18,8 @@
  */
 package org.apache.felix.dm.impl;
 
+import java.util.Dictionary;
+
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
 
@@ -28,6 +30,16 @@ public class BundleEventImpl extends EventImpl implements Comparable {
     public BundleEventImpl(Bundle bundle, BundleEvent event) {
         m_bundle = bundle;
         m_event = event;
+    }
+    
+    @Override
+    public Object getEvent() {
+        return getBundle();
+    }
+    
+    @Override
+    public Dictionary getProperties() {
+        return m_bundle.getHeaders();
     }
     
     public Bundle getBundle() {

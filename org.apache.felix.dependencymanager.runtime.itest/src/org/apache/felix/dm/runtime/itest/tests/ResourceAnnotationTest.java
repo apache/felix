@@ -25,6 +25,7 @@ import org.osgi.framework.ServiceRegistration;
 
 /**
  * Use case: Verify Bundle Dependency annotations usage.
+ * TODO: this test seems to fail when running with a threadpool.
  */
 public class ResourceAnnotationTest extends TestBase {
     

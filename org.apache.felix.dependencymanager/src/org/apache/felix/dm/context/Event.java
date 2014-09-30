@@ -18,12 +18,24 @@
  */
 package org.apache.felix.dm.context;
 
+import java.util.Dictionary;
+
 
 /** 
  * An event holds all data that belongs to some external event as it comes in via
  * the 'changed' callback of a dependency.
  */
 public interface Event extends Comparable {
+    /**
+     * Returns the actual event object wrapped by this event (a Service Dependency, a Bundle for Bundle Dependency, etc...).
+     */
+    Object getEvent();
+    
+    /**
+     * Returns the properties of the actual event object wrapped by this event (Service Dependency properties, ...).
+     */
+    Dictionary getProperties();
+    
     /**
      * Release the resources this event is holding (like service reference for example).
      */

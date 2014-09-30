@@ -25,7 +25,6 @@ import junit.framework.Assert;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.tracker.ServiceTracker;
 import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
 public class ServiceTrackerTest extends TestBase {

@@ -30,14 +30,20 @@ public class ResourceEventImpl extends EventImpl implements Comparable {
         m_resourceProperties = resourceProperties;
     }
     
+    @Override
+    public Object getEvent() {
+        return getResource();
+    }
+
+    @Override
+    public Dictionary getProperties() {
+        return m_resourceProperties;
+    }
+
     public URL getResource() {
         return m_resource;
     }
-    
-    public Dictionary<?, ?> getResourceProperties() {
-        return m_resourceProperties;
-    }
-    
+        
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof ResourceEventImpl) {
@@ -45,8 +51,8 @@ public class ResourceEventImpl extends EventImpl implements Comparable {
             ResourceEventImpl r2 = (ResourceEventImpl) obj;
             boolean match = r1.getResource().equals(r2.getResource());
             if (match) {
-                Dictionary<?,?> d1 = getResourceProperties();
-                Dictionary<?,?> d2 = r2.getResourceProperties();
+                Dictionary<?,?> d1 = getProperties();
+                Dictionary<?,?> d2 = r2.getProperties();
                 
                 if (d1 == null) {
                 	return d2 == null ? match : false;
@@ -64,7 +70,7 @@ public class ResourceEventImpl extends EventImpl implements Comparable {
         final int prime = 31;
         int result = 1;
         result = prime * result + getResource().hashCode();
-        result = prime * result + ((getResourceProperties() == null) ? 0 : getResourceProperties().hashCode());
+        result = prime * result + ((getProperties() == null) ? 0 : getProperties().hashCode());
         return result;
     }
 

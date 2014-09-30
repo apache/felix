@@ -18,20 +18,16 @@
  */
 package org.apache.felix.dm.itest;
 
-import java.util.ArrayList;
-import java.util.Dictionary;
 import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+
+import junit.framework.Assert;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
-
-import junit.framework.Assert;
 
 /**
  * This test does some injection tests on components being in INSTANTIATED_AND_WAITING_FOR_REQUIRED state.

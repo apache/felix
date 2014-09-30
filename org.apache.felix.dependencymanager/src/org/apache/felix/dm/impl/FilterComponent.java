@@ -20,6 +20,7 @@ package org.apache.felix.dm.impl;
 
 import java.util.Dictionary;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -311,8 +312,14 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
         return m_component.getInstances();
     }
     
+    @Override
     public Event getDependencyEvent(DependencyContext dc) {
         return m_component.getDependencyEvent(dc);
+    }
+    
+    @Override
+    public Set<Event> getDependencyEvents(DependencyContext dc) {
+        return m_component.getDependencyEvents(dc);
     }
     
     public ComponentDeclaration getComponentDeclaration() {

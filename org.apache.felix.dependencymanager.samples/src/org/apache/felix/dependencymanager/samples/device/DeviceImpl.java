@@ -1,6 +1,5 @@
-package org.apache.felix.dependencymanager.samples.device.impl;
+package org.apache.felix.dependencymanager.samples.device;
 
-import org.apache.felix.dependencymanager.samples.device.Device;
 
 public class DeviceImpl implements Device {
     final int id;

@@ -27,9 +27,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.felix.dm.DependencyManager;
-
 import junit.framework.Assert;
+
+import org.apache.felix.dm.DependencyManager;
 
 
 /**
