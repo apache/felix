@@ -18,36 +18,367 @@
  */
 package org.apache.felix.framework;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.ref.WeakReference;
+import java.net.JarURLConnection;
 import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLStreamHandler;
 import java.security.CodeSource;
 import java.security.Permission;
 import java.security.ProtectionDomain;
 import java.security.cert.Certificate;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.jar.JarOutputStream;
+import org.apache.felix.framework.cache.Content;
+import org.apache.felix.framework.cache.JarContent;
 
 import org.osgi.framework.wiring.BundleRevision;
 
 public class BundleProtectionDomain extends ProtectionDomain
 {
+    private static final class BundleInputStream extends InputStream
+    {
+        private final Content m_root;
+        private final Enumeration m_content;
+        private final OutputStreamBuffer m_outputBuffer = new OutputStreamBuffer();
+
+        private ByteArrayInputStream m_buffer = null;
+        private JarOutputStream m_output = null;
+
+        private static final String DUMMY_ENTRY = "__DUMMY-ENTRY__/";
+
+        public BundleInputStream(Content root) throws IOException
+        {
+            m_root = root;
+
+            List entries = new ArrayList();
+
+            int count = 0;
+            String manifest = null;
+            for (Enumeration e = m_root.getEntries(); e.hasMoreElements();)
+            {
+                String entry = (String) e.nextElement();
+                if (entry.endsWith("/"))
+                {
+                    // ignore
+                }
+                else if (entry.equalsIgnoreCase("META-INF/MANIFEST.MF"))
+                {
+                    if (manifest == null)
+                    {
+                        manifest = entry;
+                    }
+                }
+                else if (entry.toUpperCase().startsWith("META-INF/")
+                            && entry.indexOf('/', "META-INF/".length()) < 0)
+                {
+                    entries.add(count++, entry);
+                }
+                else
+                {
+                    entries.add(entry);
+                }
+            }
+            entries.add(count++, DUMMY_ENTRY);
+            if (manifest == null)
+            {
+                manifest = "META-INF/MANIFEST.MF";
+            }
+            m_content = Collections.enumeration(entries);
+
+            m_output = new JarOutputStream(m_outputBuffer);
+            readNext(manifest);
+            m_buffer = new ByteArrayInputStream(m_outputBuffer.m_outBuffer
+                .toByteArray());
+
+            m_outputBuffer.m_outBuffer = null;
+        }
+
+        public int read() throws IOException
+        {
+            if ((m_output == null) && (m_buffer == null))
+            {
+                return -1;
+            }
+
+            if (m_buffer != null)
+            {
+                int result = m_buffer.read();
+
+                if (result == -1)
+                {
+                    m_buffer = null;
+                    return read();
+                }
+
+                return result;
+            }
+
+            if (m_content.hasMoreElements())
+            {
+                String current = (String) m_content.nextElement();
+
+                readNext(current);
+
+                if (!m_content.hasMoreElements())
+                {
+                    m_output.close();
+                    m_output = null;
+                }
+
+                m_buffer = new ByteArrayInputStream(m_outputBuffer.m_outBuffer
+                    .toByteArray());
+
+                m_outputBuffer.m_outBuffer = null;
+            }
+            else
+            {
+                m_output.close();
+                m_output = null;
+            }
+
+            return read();
+        }
+
+        private void readNext(String path) throws IOException
+        {
+            m_outputBuffer.m_outBuffer = new ByteArrayOutputStream();
+
+            if (path == DUMMY_ENTRY)
+            {
+                JarEntry entry = new JarEntry(path);
+
+                m_output.putNextEntry(entry);
+            }
+            else
+            {
+                InputStream in = null;
+                try
+                {
+                    in = m_root.getEntryAsStream(path);
+
+                    if (in == null)
+                    {
+                        throw new IOException("Missing entry");
+                    }
+
+                    JarEntry entry = new JarEntry(path);
+
+                    m_output.putNextEntry(entry);
+
+                    byte[] buffer = new byte[4 * 1024];
+
+                    for (int c = in.read(buffer); c != -1; c = in.read(buffer))
+                    {
+                        m_output.write(buffer, 0, c);
+                    }
+                }
+                finally
+                {
+                    if (in != null)
+                    {
+                        try
+                        {
+                            in.close();
+                        }
+                        catch (Exception ex)
+                        {
+                            // Not much we can do
+                        }
+                    }
+                }
+            }
+
+            m_output.closeEntry();
+
+            m_output.flush();
+        }
+    }
+
+    private static final class OutputStreamBuffer extends OutputStream
+    {
+        ByteArrayOutputStream m_outBuffer = null;
+
+        public void write(int b)
+        {
+            m_outBuffer.write(b);
+        }
+
+        public void write(byte[] buffer) throws IOException
+        {
+            m_outBuffer.write(buffer);
+        }
+
+        public void write(byte[] buffer, int offset, int length)
+        {
+            m_outBuffer.write(buffer, offset, length);
+        }
+    }
+
+    private static final class RevisionAsJarURL extends URLStreamHandler
+    {
+        private final WeakReference m_revision;
+
+        private RevisionAsJarURL(BundleRevisionImpl revision)
+        {
+            m_revision = new WeakReference(revision);
+        }
+
+
+        @Override
+        protected URLConnection openConnection(URL u) throws IOException
+        {
+            return new JarURLConnection(u)
+            {
+                @Override
+                public JarFile getJarFile() throws IOException
+                {
+                    BundleRevisionImpl revision = (BundleRevisionImpl) m_revision.get();
+
+                    if (revision != null)
+                    {
+                        Content content = ((BundleRevisionImpl) m_revision.get()).getContent();
+                        if (content instanceof JarContent)
+                        {
+                            return Felix.m_secureAction.openJarFile(((JarContent) content).getFile());
+                        }
+                        else
+                        {
+                            File target = Felix.m_secureAction.createTempFile("jar", null, null);
+                            Felix.m_secureAction.deleteFileOnExit(target);
+                            FileOutputStream output = null;
+                            InputStream input = null;
+                            IOException rethrow = null;
+                            try
+                            {
+                                output = new FileOutputStream(target);
+                                input = new BundleInputStream(revision.getContent());
+                                byte[] buffer = new byte[64 * 1024];
+                                for (int i = input.read(buffer);i != -1; i = input.read(buffer))
+                                {
+                                    output.write(buffer,0, i);
+                                }
+                            }
+                            catch (IOException ex)
+                            {
+                                rethrow = ex;
+                            }
+                            finally
+                            {
+                                if (output != null)
+                                {
+                                    try
+                                    {
+                                        output.close();
+                                    }
+                                    catch (IOException ex)
+                                    {
+                                        if (rethrow == null)
+                                        {
+                                            rethrow = ex;
+                                        }
+                                    }
+                                }
+
+                                if (input != null)
+                                {
+                                    try
+                                    {
+                                        input.close();
+                                    }
+                                    catch (IOException ex)
+                                    {
+                                        if (rethrow == null)
+                                        {
+                                            rethrow = ex;
+                                        }
+                                    }
+                                }
+
+                                if (rethrow != null)
+                                {
+                                    throw rethrow;
+                                }
+                            }
+                            return Felix.m_secureAction.openJarFile(target);
+                        }
+                    }
+                    throw new IOException("Unable to access bundle revision.");
+                }
+
+                @Override
+                public void connect() throws IOException
+                {
+
+                }
+            };
+        }
+
+        private static URL create(BundleImpl bundle) throws MalformedURLException
+        {
+            String location = bundle._getLocation();
+
+            if (location.startsWith("reference:"))
+            {
+                location = location.substring("reference:".length());
+            }
+
+            BundleRevisionImpl revision = bundle.adapt(BundleRevisionImpl.class);
+            RevisionAsJarURL handler = new RevisionAsJarURL(revision);
+
+            URL url;
+            try
+            {
+                url = Felix.m_secureAction.createURL(
+                    Felix.m_secureAction.createURL(null, "jar:", handler), location, null);
+            }
+            catch (MalformedURLException ex)
+            {
+                url = null;
+            }
+
+            if (url != null && !url.getProtocol().equalsIgnoreCase("jar"))
+            {
+                return url;
+            }
+            else if (url == null)
+            {
+                location = "jar:" + revision.getEntry("/") + "!/";
+            }
+
+            return Felix.m_secureAction.createURL(
+                Felix.m_secureAction.createURL(null, "jar:", handler),
+                location,
+                handler
+            );
+        }
+    }
+
     private final WeakReference m_felix;
     private final WeakReference m_bundle;
     private final int m_hashCode;
     private final String m_toString;
     private final WeakReference m_revision;
 
-    // TODO: SECURITY - This should probably take a revision, not a bundle.
     BundleProtectionDomain(Felix felix, BundleImpl bundle, Object certificates)
         throws MalformedURLException
     {
         super(
             new CodeSource(
-                Felix.m_secureAction.createURL(
-                    Felix.m_secureAction.createURL(null, "location:", new FakeURLStreamHandler()),
-                    bundle._getLocation().startsWith("reference:") ? 
-                        bundle._getLocation().substring("reference:".length()) : 
-                        bundle._getLocation(),
-                    new FakeURLStreamHandler()
-                    ),
+                RevisionAsJarURL.create(bundle),
                 (Certificate[]) certificates),
             null, null, null);
         m_felix = new WeakReference(felix);
