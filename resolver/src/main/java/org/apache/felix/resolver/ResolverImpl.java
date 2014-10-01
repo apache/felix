@@ -244,7 +244,8 @@ public class ResolverImpl implements Resolver
                         List<Requirement> hostReq = hostReqs.get(resource);
                         if (hostReq != null)
                         {
-                            target = allCandidates.getFirstCandidate(hostReq.get(0)).getResource();
+                            target = allCandidates.getCandidates(hostReq.get(0))
+                                .iterator().next().getResource();
                         }
 
                         calculatePackageSpaces(
@@ -350,7 +351,8 @@ public class ResolverImpl implements Resolver
                         List<Requirement> hostReq = hostReqs.get(resource);
                         if (hostReq != null)
                         {
-                            target = allCandidates.getFirstCandidate(hostReq.get(0)).getResource();
+                            target = allCandidates.getCandidates(hostReq.get(0))
+                                .iterator().next().getResource();
                         }
 
                         if (allCandidates.isPopulated(target))
@@ -906,19 +908,17 @@ public class ResolverImpl implements Resolver
                             req.getDirectives()
                             .get(BundleNamespace.REQUIREMENT_VISIBILITY_DIRECTIVE);
                         if ((value != null)
-                            && value.equals(BundleNamespace.VISIBILITY_REEXPORT))
+                            && value.equals(BundleNamespace.VISIBILITY_REEXPORT)
+                            && (allCandidates.getCandidates(req) != null))
                         {
-                            Capability cap = allCandidates.getFirstCandidate(req);
-                            if (cap != null) {
-                                mergeCandidatePackages(
-                                        rc,
-                                        current,
-                                        currentReq,
-                                        cap,
-                                        resourcePkgMap,
-                                        allCandidates,
-                                        cycles);
-                            }
+                            mergeCandidatePackages(
+                                rc,
+                                current,
+                                currentReq,
+                                allCandidates.getCandidates(req).iterator().next(),
+                                resourcePkgMap,
+                                allCandidates,
+                                cycles);
                         }
                     }
                 }
@@ -1150,9 +1150,9 @@ public class ResolverImpl implements Resolver
                     else if (!sourceBlame.m_cap.getResource().equals(blame.m_cap.getResource()))
                     {
                         // Try to permutate the conflicting requirement.
-                        allCandidates.permutate(blame.m_reqs.get(0), importPermutations);
+                        permutate(allCandidates, blame.m_reqs.get(0), importPermutations);
                         // Try to permutate the source requirement.
-                        allCandidates.permutate(sourceBlame.m_reqs.get(0), importPermutations);
+                        permutate(allCandidates, sourceBlame.m_reqs.get(0), importPermutations);
                         // Report conflict.
                         ResolutionException ex = new ResolutionException(
                             "Uses constraint violation. Unable to resolve resource "
@@ -1248,9 +1248,17 @@ public class ResolverImpl implements Resolver
                             // See if we can permutate the candidates for blamed
                             // requirement; there may be no candidates if the resource
                             // associated with the requirement is already resolved.
-                            if (permutation.canRemoveCandidate(req)) {
-                                permutation.removeFirstCandidate(req);
+                            List<Capability> candidates = permutation.getCandidates(req);
+                            if ((candidates != null) && (candidates.size() > 1 || Util.isOptional(req)))
+                            {
                                 mutated.add(req);
+                                // Remove the conflicting candidate.
+                                candidates.remove(0);
+                                if (candidates.isEmpty())
+                                {
+                                    permutation.clearCandidates(req);
+                                }
+                                // Continue with the next uses constraint.
                                 break;
                             }
                         }
@@ -1353,9 +1361,17 @@ public class ResolverImpl implements Resolver
                             // See if we can permutate the candidates for blamed
                             // requirement; there may be no candidates if the resource
                             // associated with the requirement is already resolved.
-                            if (permutation.canRemoveCandidate(req)) {
-                                permutation.removeFirstCandidate(req);
+                            List<Capability> candidates = permutation.getCandidates(req);
+                            if ((candidates != null) && (candidates.size() > 1 || Util.isOptional(req)))
+                            {
                                 mutated.add(req);
+                                // Remove the conflicting candidate.
+                                candidates.remove(0);
+                                if (candidates.isEmpty())
+                                {
+                                    permutation.clearCandidates(req);
+                                }
+                                // Continue with the next uses constraint.
                                 break;
                             }
                         }
@@ -1388,7 +1404,7 @@ public class ResolverImpl implements Resolver
                             // with existing import decisions, we may end up trying
                             // to permutate the same import a lot of times, so we should
                             // try to check if that the case and only permutate it once.
-                            allCandidates.permutateIfNeeded(req, importPermutations);
+                            permutateIfNeeded(allCandidates, req, importPermutations);
                         }
                     }
 
@@ -1411,9 +1427,10 @@ public class ResolverImpl implements Resolver
         int permCount = usesPermutations.size() + importPermutations.size();
         for (Requirement req : resource.getRequirements(null))
         {
-            Capability cap = allCandidates.getFirstCandidate(req);
-            if (cap != null)
+            List<Capability> cands = allCandidates.getCandidates(req);
+            if (cands != null && !cands.isEmpty())
             {
+                Capability cap = cands.get(0);
                 if (!resource.equals(cap.getResource()))
                 {
                     try
@@ -1430,7 +1447,7 @@ public class ResolverImpl implements Resolver
                         // to backtrack on our current candidate selection.
                         if (permCount == (usesPermutations.size() + importPermutations.size()))
                         {
-                            allCandidates.permutate(req, importPermutations);
+                            permutate(allCandidates, req, importPermutations);
                         }
                         throw ex;
                     }
@@ -1459,11 +1476,62 @@ public class ResolverImpl implements Resolver
             }
             // Get the current candidate list and remove all the offending root
             // cause candidates from a copy of the current permutation.
-            candidates = session.getMultipleCardCandidates().clearCandidates(req, usedBlames.getRootCauses(req));
+            candidates = session.getMultipleCardCandidates().getCandidates(req);
+            candidates.removeAll(usedBlames.getRootCauses(req));
         }
         // We only are successful if there is at least one candidate left
         // for the requirement
         return (candidates != null) && !candidates.isEmpty();
+    }
+
+    private static void permutate(
+        Candidates allCandidates, Requirement req, List<Candidates> permutations)
+    {
+        if (!Util.isMultiple(req))
+        {
+            List<Capability> candidates = allCandidates.getCandidates(req);
+            if ((candidates != null) && (candidates.size() > 1 || Util.isOptional(req)))
+            {
+                Candidates perm = allCandidates.copy();
+                candidates = perm.getCandidates(req);
+                candidates.remove(0);
+                if (candidates.isEmpty())
+                {
+                    perm.clearCandidates(req);
+                }
+                permutations.add(perm);
+            }
+        }
+    }
+
+    static void permutateIfNeeded(
+        Candidates allCandidates, Requirement req, List<Candidates> permutations)
+    {
+        List<Capability> candidates = allCandidates.getCandidates(req);
+        if ((candidates != null) && (candidates.size() > 1))
+        {
+            // Check existing permutations to make sure we haven't
+            // already permutated this requirement. This check for
+            // duplicate permutations is simplistic. It assumes if
+            // there is any permutation that contains a different
+            // initial candidate for the requirement in question,
+            // then it has already been permutated.
+            boolean permutated = false;
+            for (Candidates existingPerm : permutations)
+            {
+                List<Capability> existingPermCands = existingPerm.getCandidates(req);
+                if (existingPermCands != null && !existingPermCands.get(0).equals(candidates.get(0)))
+                {
+                    permutated = true;
+                }
+            }
+            // If we haven't already permutated the existing
+            // import, do so now.
+            if (!permutated)
+            {
+                permutate(allCandidates, req, permutations);
+            }
+        }
     }
 
     private static void calculateExportedPackages(
@@ -1511,10 +1579,11 @@ public class ResolverImpl implements Resolver
                 {
                     if (req.getNamespace().equals(PackageNamespace.PACKAGE_NAMESPACE))
                     {
-                        Capability cand = allCandidates.getFirstCandidate(req);
-                        if (cand != null)
+                        List<Capability> cands = allCandidates.getCandidates(req);
+                        if ((cands != null) && !cands.isEmpty())
                         {
-                            String pkgName = (String) cand.getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE);
+                            String pkgName = (String) cands.get(0)
+                                .getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE);
                             exports.remove(pkgName);
                         }
                     }
@@ -1735,9 +1804,9 @@ public class ResolverImpl implements Resolver
                                 if (IdentityNamespace.IDENTITY_NAMESPACE.equals(cand.getNamespace())
                                     && Util.isFragment(targetCand))
                                 {
-                                    targetCand = allCandidates.getFirstCandidate(
-                                            targetCand.getRequirements(HostNamespace.HOST_NAMESPACE).get(0))
-                                        .getResource();
+                                    targetCand = allCandidates.getCandidates(
+                                        targetCand.getRequirements(HostNamespace.HOST_NAMESPACE).get(0))
+                                        .iterator().next().getResource();
                                     targetCand = allCandidates.getWrappedHost(targetCand);
                                 }
 
@@ -1839,10 +1908,12 @@ public class ResolverImpl implements Resolver
 
     private static Wire createWire(Requirement requirement, Candidates allCandidates)
     {
-        Capability cand = allCandidates.getFirstCandidate(requirement);
-        if (cand == null) {
+        List<Capability> candidates = allCandidates.getCandidates(requirement);
+        if (candidates == null || candidates.isEmpty())
+        {
             return null;
         }
+        Capability cand = candidates.get(0);
         return new WireImpl(
             getDeclaredResource(requirement.getResource()),
             getDeclaredRequirement(requirement),
@@ -1875,8 +1946,9 @@ public class ResolverImpl implements Resolver
         List<Wire> packageWires = new ArrayList<Wire>();
 
         // Get the candidates for the current dynamic requirement.
+        List<Capability> candCaps = allCandidates.getCandidates(dynReq);
         // Record the dynamic candidate.
-        Capability dynCand = allCandidates.getFirstCandidate(dynReq);
+        Capability dynCand = candCaps.get(0);
 
         if (!rc.getWirings().containsKey(dynCand.getResource()))
         {
@@ -2045,12 +2117,18 @@ public class ResolverImpl implements Resolver
     private static Capability getSatisfyingCapability(
         ResolveContext rc, Candidates allCandidates, Requirement req)
     {
+        Capability cap = null;
+
         // If the requiring revision is not resolved, then check in the
         // candidate map for its matching candidate.
-        Capability cap = allCandidates.getFirstCandidate(req);
+        List<Capability> cands = allCandidates.getCandidates(req);
+        if (cands != null)
+        {
+            cap = cands.get(0);
+        }
         // Otherwise, if the requiring revision is resolved then check
         // in its wires for the capability satisfying the requirement.
-        if (cap == null && rc.getWirings().containsKey(req.getResource()))
+        else if (rc.getWirings().containsKey(req.getResource()))
         {
             List<Wire> wires =
                 rc.getWirings().get(req.getResource()).getRequiredResourceWires(null);
