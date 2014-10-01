@@ -19,6 +19,7 @@
 package org.apache.felix.http.sslfilter.internal;
 
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.ATTR_SSL_CERTIFICATE;
+import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HDR_X_FORWARDED_PORT;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HTTPS;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.UTF_8;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.X_509;
@@ -100,4 +101,21 @@ class SslFilterRequest extends HttpServletRequestWrapper
         }
         return tmp;
     }
+    
+    public int getServerPort() 
+    {
+        int port;
+        
+        try
+        {            
+            String fwdPort = getHeader(HDR_X_FORWARDED_PORT);
+            port = Integer.valueOf(fwdPort);
+        }
+        catch (Exception e)
+        {
+            // Use default port for the used protocol...
+            port = -1;
+        }
+        return port;
+    }    
 }

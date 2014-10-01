@@ -21,6 +21,7 @@ package org.apache.felix.http.sslfilter.internal;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
+import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HDR_X_FORWARDED_PORT;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -80,5 +81,34 @@ public class SslFilterRequestTest
         assertEquals("https://some/page", req.getRequestURL().toString());
         assertEquals("https://some/page", sreq.getRequestURL().toString());
         assertEquals("https://some/page", req.getRequestURL().toString());
+    }
+    
+    @Test
+    public void test_getServerPort() throws Exception
+    {
+        HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
+        SslFilterRequest sreq = new SslFilterRequest(req, null);
+        
+        when(req.getHeader(HDR_X_FORWARDED_PORT)).thenReturn(null);        
+        assertEquals(-1, sreq.getServerPort());
+        
+        when(req.getHeader(HDR_X_FORWARDED_PORT)).thenReturn("");        
+        assertEquals(-1, sreq.getServerPort());
+        
+        when(req.getHeader(HDR_X_FORWARDED_PORT)).thenReturn("WRONG");        
+        assertEquals(-1, sreq.getServerPort());
+        
+        when(req.getHeader(HDR_X_FORWARDED_PORT)).thenReturn("W1");        
+        assertEquals(-1, sreq.getServerPort());
+        
+        when(req.getHeader(HDR_X_FORWARDED_PORT)).thenReturn("443");        
+        assertEquals(443, sreq.getServerPort());
+        
+        when(req.getHeader(HDR_X_FORWARDED_PORT)).thenReturn("80");        
+        assertEquals(80, sreq.getServerPort());
+        
+        when(req.getHeader(HDR_X_FORWARDED_PORT)).thenReturn("4502");        
+        assertEquals(4502, sreq.getServerPort());
+        
     }
 }
