@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.jar.JarFile;
 import java.util.zip.ZipFile;
 
 import org.osgi.framework.Bundle;
@@ -573,6 +574,32 @@ public class SecureAction
         }
     }
 
+    public void deleteFileOnExit(File file)
+        throws IOException
+    {
+        if (System.getSecurityManager() != null)
+        {
+            try
+            {
+                Actions actions = (Actions) m_actions.get();
+                actions.set(Actions.DELETE_FILEONEXIT_ACTION, file);
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException ex)
+            {
+                if (ex.getException() instanceof IOException)
+                {
+                    throw (IOException) ex.getException();
+                }
+                throw (RuntimeException) ex.getException();
+            }
+        }
+        else
+        {
+            file.deleteOnExit();
+        }
+    }
+
     public URLConnection openURLConnection(URL url) throws IOException
     {
         if (System.getSecurityManager() != null)
@@ -621,6 +648,31 @@ public class SecureAction
         else
         {
             return new ZipFile(file);
+        }
+    }
+
+    public JarFile openJarFile(File file) throws IOException
+    {
+        if (System.getSecurityManager() != null)
+        {
+            try
+            {
+                Actions actions = (Actions) m_actions.get();
+                actions.set(Actions.OPEN_JARFILE_ACTION, file);
+                return (JarFile) AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException ex)
+            {
+                if (ex.getException() instanceof IOException)
+                {
+                    throw (IOException) ex.getException();
+                }
+                throw (RuntimeException) ex.getException();
+            }
+        }
+        else
+        {
+            return new JarFile(file);
         }
     }
 
@@ -1453,6 +1505,8 @@ public class SecureAction
         public static final int INVOKE_RESOLVER_HOOK_MATCHES = 51;
         public static final int INVOKE_RESOLVER_HOOK_END = 52;
         public static final int INVOKE_BUNDLE_COLLISION_HOOK = 53;
+        public static final int OPEN_JARFILE_ACTION = 54;
+        public static final int DELETE_FILEONEXIT_ACTION = 55;
 
         private int m_action = -1;
         private Object m_arg1 = null;
@@ -1701,6 +1755,11 @@ public class SecureAction
                 case INVOKE_BUNDLE_COLLISION_HOOK:
                     ((org.osgi.framework.hooks.bundle.CollisionHook) arg1).filterCollisions((Integer) arg2,
                         (Bundle) arg3, (Collection<Bundle>) arg4);
+                    return null;
+                case OPEN_JARFILE_ACTION:
+                    return new JarFile((File) arg1);
+                case DELETE_FILEONEXIT_ACTION:
+                    ((File) arg1).deleteOnExit();
                     return null;
             }
 
