@@ -62,8 +62,14 @@
                               //scr12:component/reference">
             <xsl:value-of select="'Require-Capability: osgi.service;effective:=active;'" />
             <xsl:choose>
-                <xsl:when test="@cardinality = '0..1' or @cardinality = '0..n'">
+                <xsl:when test="@cardinality = '0..1'">
                     <xsl:value-of select="'resolution:=optional;'" />
+                </xsl:when>
+                <xsl:when test="@cardinality = '0..n'">
+                    <xsl:value-of select="'resolution:=optional;cardinality:=multiple;'" />
+                </xsl:when>
+                <xsl:when test="@cardinality = '1..n'">
+                    <xsl:value-of select="'cardinality:=multiple;'" />
                 </xsl:when>
             </xsl:choose>
             <xsl:choose>
