@@ -5,7 +5,7 @@
     aQute.lib.deployer.FileRepo;                    name=Build;        location=${workspace}/cnf/buildrepo,\
     aQute.bnd.deployer.repository.FixedIndexedRepo; name=Felix Obr;    locations=http://felix.apache.org/obr/releases.xml
     
--baseline: *
+#-baseline: *
 -releaserepo: Release
--baselinerepo: Felix Obr
+#-baselinerepo: Felix Obr
 -sources: false
