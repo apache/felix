@@ -136,15 +136,10 @@ public class DependencyImpl<T extends Dependency> implements Dependency, Depende
     }
 
     @Override
-	public void add(ComponentContext component) {
+	public void setComponentContext(ComponentContext component) {
 		m_component = component;
 	}
 	
-	@Override
-	public void remove(ComponentContext component) {
-		m_component = null;
-	}
-
 	@Override
 	public void start() {
 	    if (! m_isStarted) {

@@ -32,8 +32,7 @@ public interface DependencyContext {
 	public void add(final Event e);
 	public void change(final Event e);
 	public void remove(final Event e);
-	public void add(ComponentContext component);
-	public void remove(ComponentContext component);
+	public void setComponentContext(ComponentContext component);
 	/** Invoked by the component when the dependency should start working. */
 	public void start();
 	/** Invoked by the component when the dependency should stop working. */

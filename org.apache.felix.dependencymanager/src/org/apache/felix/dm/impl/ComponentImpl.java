@@ -171,7 +171,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 					DependencyContext dc = (DependencyContext) d;
 					m_dependencyEvents.put(dc,  new ConcurrentSkipListSet<Event>());
 					m_dependencies.add(dc);
-					dc.add(ComponentImpl.this);
+					dc.setComponentContext(ComponentImpl.this);
 					if (!(m_state == ComponentState.INACTIVE)) {
 						dc.setInstanceBound(true);
 						instanceBoundDeps.add(dc);
@@ -199,7 +199,6 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 				}
 				// Finally, cleanup the dependency events.
                 m_dependencyEvents.remove(d);
-				dc.remove(ComponentImpl.this);
 				handleChange();
 			}
 		});
@@ -246,8 +245,11 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 
 	@Override
 	public void handleAdded(DependencyContext dc, Event e) {
-		if (debug) {
-			System.out.println("*" + debugKey + " T" + Thread.currentThread().getId() + " handleAdded " + e);
+	    if (! m_isStarted) {
+	        return;
+	    }
+	    if (debug) {
+	          System.out.println("*" + debugKey + " T" + Thread.currentThread().getId() + " handleAdded " + e);
 		}
 		
 		Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
@@ -293,6 +295,9 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		
     @Override
     public void handleChanged(DependencyContext dc, Event e) {
+        if (! m_isStarted) {
+            return;
+        }
         Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
         dependencyEvents.remove(e);
         dependencyEvents.add(e);
@@ -316,11 +321,14 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 
     @Override
     public void handleRemoved(DependencyContext dc, Event e) {
+        if (! m_isStarted) {
+            return;
+        }
         // Check if the dependency is still available.
         Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
         int size = dependencyEvents.size();
         if (dependencyEvents.contains(e)) {
-            size --; // the dependency is currently registered and is about to be removed.
+            size--; // the dependency is currently registered and is about to be removed.
         }
         dc.setAvailable(size > 0);
         
@@ -357,6 +365,9 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     }
 
     public void handleSwapped(DependencyContext dc, Event event, Event newEvent) {
+        if (! m_isStarted) {
+            return;
+        }
         Set<Event> dependencyEvents = m_dependencyEvents.get(dc);        
         dependencyEvents.remove(event);
         dependencyEvents.add(newEvent);
