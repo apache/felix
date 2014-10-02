@@ -36,7 +36,10 @@ import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
 
 /**
- * Allow Services to configure dynamically their dependency filters from their init() method.
+ * Caution: this class *MUST* be immutable, because it may be shared between Aspects/Adapters 
+ * and concrete Aspect/Adapter instance.
+ * 
+ * This class allows Services to configure dynamically their dependency filters from their init() method.
  * Basically, this class acts as a service implementation lifecycle handler. When we detect that the Service is
  * called in its init() method, and if init() returns a Map, then the Map is assumed to contain
  * dependency filters, which will be applied to all named dependencies. The Map optionally returned by
@@ -95,7 +98,6 @@ public class ServiceLifecycleHandler
     private final String m_destroy;
     private final MetaData m_srvMeta;
     private final List<MetaData> m_depsMeta;
-    private final List<Dependency> m_instanceBoundDeps = new ArrayList<>();
     private final Bundle m_bundle;
     private final static Object SYNC = new Object();
 
@@ -144,6 +146,8 @@ public class ServiceLifecycleHandler
         String starter = m_srvMeta.getString(Params.starter, null);
         String stopper = m_srvMeta.getString(Params.stopper, null);
 
+        List<Dependency> instanceBoundDeps = new ArrayList<>();
+            
         if (starter != null)
         {
             // We'll inject two runnables: one that will start or service, when invoked, and the other
@@ -155,7 +159,7 @@ public class ServiceLifecycleHandler
             ToggleServiceDependency toggle = new ToggleServiceDependency();
             AtomicBoolean startFlag = new AtomicBoolean(false);
             // Add the toggle to the service.
-            m_instanceBoundDeps.add(toggle);
+            instanceBoundDeps.add(toggle);
             // Inject the runnable that will start our service, when invoked.
             setField(serviceInstance, starter, Runnable.class, new ComponentStarter(componentName, toggle, startFlag));
             if (stopper != null) {
@@ -212,16 +216,16 @@ public class ServiceLifecycleHandler
                 Log.instance().info("ServiceLifecycleHandler.init: adding dependency %s into service %s",
                                    dependency, m_srvMeta);
                 Dependency d = depBuilder.build(m_bundle, dm);
-                m_instanceBoundDeps.add(d);
+                instanceBoundDeps.add(d);
             }            
         }
         
         // Add all extra dependencies in one shot, in order to calculate state changes for all dependencies at a time.
-        if (m_instanceBoundDeps.size() > 0) 
+        if (instanceBoundDeps.size() > 0) 
         {
             Log.instance().info("ServiceLifecycleHandler.init: adding extra/named dependencies %s",
-                                m_instanceBoundDeps);
-            c.add(m_instanceBoundDeps.toArray(new Dependency[m_instanceBoundDeps.size()]));
+                instanceBoundDeps);
+            c.add(instanceBoundDeps.toArray(new Dependency[instanceBoundDeps.size()]));
         }     
     }
 
@@ -290,11 +294,6 @@ public class ServiceLifecycleHandler
     public void destroy(Component service)
         throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
     {
-        // Clear named dependencies eventuall returned by our service init callback. 
-        for (Dependency d : m_instanceBoundDeps) {
-            service.remove(d);
-        }
-        m_instanceBoundDeps.clear();
         callbackComposites(service, m_destroy);
     }
 
