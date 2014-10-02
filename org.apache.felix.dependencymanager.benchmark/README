@@ -28,34 +28,33 @@ You should see something like that in the eclipse console:
 -----------------------------------------------------------------------------------------------------------------
 Welcome to Apache Felix Gogo
 
-g! 
 	+++++ Starting benchmarks without processing done in components start/stop methods.
 
-Benchmarking bundle: org.apache.felix.dm.benchmark.dependencymanager
-  ....................................................................................................
-  results=138362237,182590925,238169860,365712274,8246024452
+Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.scr
+....................................................................................................
+  results=148183942,151816020,152593142,168381327,550953914
 
-Benchmarking bundle: org.apache.felix.dm.benchmark.dependencymanager.parallel
-  ....................................................................................................
-  results=58007254,113886816,161644014,248809313,964751449
+Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager
+....................................................................................................
+  results=97276169,98480544,99026696,120827182,315697938
 
-Benchmarking bundle: org.apache.felix.dm.benchmark.scr
-  ....................................................................................................
-  results=181468797,199847561,240200634,318892594,723789524
+Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel
+....................................................................................................
+  results=41748516,43030319,43902095,46535902,161389470
 
 	+++++ Starting benchmarks with processing done in components start/stop methods.
 
-Benchmarking bundle: org.apache.felix.dm.benchmark.dependencymanager
-  .....
-  results=3203962830,3204232653,3205555311,3220331851,3319273387
+Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.scr
+.....
+  results=3206278286,3209191723,3210389749,3223619309,3242734308
 
-Benchmarking bundle: org.apache.felix.dm.benchmark.dependencymanager.parallel
-  .....
-  results=820258470,825405394,862318292,885332987,890429938
+Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager
+.....
+  results=3152939984,3153659259,3154590124,3155489090,3182967777
 
-Benchmarking bundle: org.apache.felix.dm.benchmark.scr
-  .....
-  results=3257080433,3260117641,3271632555,3308487828,3330361529
+Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel
+.....
+  results=806825303,808750246,811454052,814643994,818675967
 -----------------------------------------------------------------------------------------------------------------
 
 How to interpret results:
@@ -73,7 +72,7 @@ execution time, the last entry is the slowest. the middle one is the average. We
 entry (fastest), the entry at 1/4 of the list, the middle of the list, the entry at 3/4 of the list,
 and the last entry (slowest time).
 
-We don't do an average, because usually, when running benchmark, some measurements does not reflect
+We don't do an average, because usually, when running benchmark, some measurements don't reflect
 reality, especially, when there is a full GC or when the JVM is warming up. (we actually do the same
 as in Java Chronicle: https://github.com/peter-lawrey/Java-Chronicle). 
 
@@ -108,7 +107,7 @@ By default, when a tested bundle is started, it will create several Artists (see
 constant). each Artist depends on several Albums (see Artists.ALBUMS constant), and each Album
 depends on several music Tracks (see Artists.TRACKS constants).
 
-Test bundles (DM, parallel DM, Apache SCR)
+Test bundles (DM, parallel DM, SCR)
 ==========================================
 
 - org.apache.felix.dm.benchmark.dependencymanager: 
