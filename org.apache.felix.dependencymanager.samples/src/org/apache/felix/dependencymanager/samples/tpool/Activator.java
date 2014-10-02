@@ -3,6 +3,7 @@ package org.apache.felix.dependencymanager.samples.tpool;
 import java.util.Hashtable;
 import java.util.concurrent.Executor;
 
+import org.apache.felix.dependencymanager.samples.util.Helper;
 import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.BundleContext;
@@ -23,6 +24,7 @@ import org.osgi.framework.BundleContext;
 public class Activator extends DependencyActivatorBase {  
     @Override
     public void init(BundleContext context, DependencyManager mgr) throws Exception {
+        Helper.log("tpool", "Activator.init: registering threadpool");
         Hashtable props = new Hashtable();
         props.put("target", DependencyManager.THREADPOOL);
         mgr.add(createComponent()

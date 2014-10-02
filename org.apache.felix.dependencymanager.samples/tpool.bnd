@@ -1,3 +1,4 @@
 Private-Package:  \
-	org.apache.felix.dependencymanager.samples.tpool
+	org.apache.felix.dependencymanager.samples.tpool,\
+	org.apache.felix.dependencymanager.samples.util
 Bundle-Activator: org.apache.felix.dependencymanager.samples.tpool.Activator

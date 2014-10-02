@@ -1,3 +1,4 @@
 Private-Package:  \
-	org.apache.felix.dependencymanager.samples.conf
+	org.apache.felix.dependencymanager.samples.conf,\
+	org.apache.felix.dependencymanager.samples.util
 Bundle-Activator: org.apache.felix.dependencymanager.samples.conf.Activator

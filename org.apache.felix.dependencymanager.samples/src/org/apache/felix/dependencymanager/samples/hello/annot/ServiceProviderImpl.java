@@ -1,5 +1,6 @@
 package org.apache.felix.dependencymanager.samples.hello.annot;
 
+import org.apache.felix.dependencymanager.samples.util.Helper;
 import org.apache.felix.dm.annotation.api.Component;
 
 
@@ -12,6 +13,6 @@ import org.apache.felix.dm.annotation.api.Component;
 public class ServiceProviderImpl implements ServiceProvider {
 	@Override
 	public void hello() {
-        System.out.println(Thread.currentThread().getName() + ": Hello");
+        Helper.log("hello.annot", "ServiceProviderImpl.hello");
 	}
 }

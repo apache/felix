@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Properties;
 
+import org.apache.felix.dependencymanager.samples.util.Helper;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 
@@ -19,7 +20,7 @@ public class Configurator {
 
     public void start() {
         try {
-            System.out.println(Thread.currentThread().getName() + ": Starting " + this.getClass().getName());
+            Helper.log("conf", "Configurator starting");
             // Provide configuration to the hello.ServiceConsumer component
             m_serviceConsumerConf = m_ca.getConfiguration("org.apache.felix.dependencymanager.samples.hello.ServiceConsumer", null);
             Hashtable props = new Properties();
@@ -31,7 +32,6 @@ public class Configurator {
             props = new Properties();
             props.put("key", "value");
             m_serviceConsumerAnnotConf.update(props);
-
         }
         catch (IOException e) {
             e.printStackTrace();

@@ -2,6 +2,7 @@ package org.apache.felix.dependencymanager.samples.hello.annot;
 
 import java.util.Dictionary;
 
+import org.apache.felix.dependencymanager.samples.util.Helper;
 import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ConfigurationDependency;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
@@ -19,12 +20,12 @@ public class ServiceConsumer {
 	
     @ConfigurationDependency
     protected void update(Dictionary<?, ?> conf) {
-        System.out.println("ServiceConsumer updated with conf " + conf);
+        Helper.log("hello.annot", "ServiceConsumer.update: " + conf);
     }
     
     @Start
 	public void start() {
-        System.out.println(Thread.currentThread().getName() + ": Starting " + this.getClass().getName());
+        Helper.log("hello.annot", "ServiceConsumer.start: calling service.hello() ...");
 		this.service.hello();
 	}
 }

@@ -1,5 +1,7 @@
 package org.apache.felix.dependencymanager.samples.hello;
 
+import org.apache.felix.dependencymanager.samples.util.Helper;
+
 
 /**
  * The implementation for our service provider.
@@ -9,6 +11,6 @@ package org.apache.felix.dependencymanager.samples.hello;
 public class ServiceProviderImpl implements ServiceProvider {
 	@Override
 	public void hello() {
-        System.out.println(Thread.currentThread().getName() + ": Hello");
+        Helper.log("hello", "ServiceProviderImpl.hello");
 	}
 }
