@@ -37,7 +37,6 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.service.log.LogService;
 import org.osgi.service.metatype.MetaTypeInformation;
-import org.osgi.service.metatype.MetaTypeProvider;
 import org.osgi.service.metatype.MetaTypeService;
 
 
@@ -141,7 +140,7 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
             }
 
             MetaTypeInformationImpl impl = null;
-            if ( bundle.getState() == Bundle.ACTIVE )
+            if ( bundle.getState() == Bundle.ACTIVE || bundle.getState() == Bundle.STARTING )
             {
                 putMetaTypeInformationInternal( bundle, mti );
             }

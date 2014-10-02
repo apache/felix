@@ -1,3 +1,10 @@
+Changes from 1.0.10 to 1.0.12
+-----------------------------
+
+** Improvement
+    * [FELIX-4649] - Get MetaTypeInformation while bundle is starting
+
+
 Changes from 1.0.8 to 1.0.10
 ----------------------------
 
