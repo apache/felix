@@ -130,21 +130,25 @@ public class ServiceRaceTest extends TestBase {
         };
         client.add(listener);
 
-        // Activate the client service dependencies concurrently.
-        for (int i = 0; i < DEPENDENCIES; i++) {
-            final DependencyImpl dep = dependencies[i];
-            final Event added = new EventImpl(i);
-            m_threadpool.execute(new Runnable() {
-                public void run() {
-                    dep.add(added);
-                }
-            });
-        }
 
         // Start the client (concurrently)
         m_threadpool.execute(new Runnable() {
             public void run() {
                 client.start();
+                
+                // Activate the client service dependencies concurrently.
+                // We *must* do this after having started the component (in a reality, the dependencies can be 
+                // injected only one the tracker has been opened ...
+                for (int i = 0; i < DEPENDENCIES; i++) {
+                    final DependencyImpl dep = dependencies[i];
+                    final Event added = new EventImpl(i);
+                    m_threadpool.execute(new Runnable() {
+                        public void run() {
+                            dep.add(added);
+                        }
+                    });
+                }
+
             }
         });
 
