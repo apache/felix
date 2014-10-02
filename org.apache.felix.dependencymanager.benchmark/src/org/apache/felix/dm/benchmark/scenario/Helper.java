@@ -1,6 +1,7 @@
 package org.apache.felix.dm.benchmark.scenario;
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -25,7 +26,7 @@ public class Helper {
      * Threadpool which can be optionally used by parallel scenarios.
      */
     private final static int CORES = Runtime.getRuntime().availableProcessors();
-    private final static ExecutorService TPOOL = new ThreadPoolExecutor(CORES, CORES, 0L, TimeUnit.MILLISECONDS, new LinkedTransferQueue<Runnable>());
+    private final static ExecutorService TPOOL = new ForkJoinPool(CORES);
     
     /**
      * Get the threadpool, possibly needed by some scenario supporting parallel mode
