@@ -143,13 +143,8 @@ public class ToggleServiceDependency implements Dependency, ComponentDependencyD
     }
 
     @Override
-    public void add(ComponentContext component) {
+    public void setComponentContext(ComponentContext component) {
         m_component = component;
-    }
-
-    @Override
-    public void remove(ComponentContext component) {
-        m_component = null;
     }
 
     @Override
