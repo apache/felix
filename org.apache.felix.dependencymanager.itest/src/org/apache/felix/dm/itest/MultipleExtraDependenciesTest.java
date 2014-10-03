@@ -20,6 +20,8 @@ package org.apache.felix.dm.itest;
 
 import java.util.Hashtable;
 
+import junit.framework.Assert;
+
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
@@ -157,9 +159,9 @@ public class MultipleExtraDependenciesTest extends TestBase {
     public static class Service3Impl2 implements Service3 {}
 
     public static class MyComponent1 implements Service1 {
-        Service1 m_service2;
-        Service2 m_service3_xx;
-        Service2 m_service3_yy;
+        Service2 m_service2;
+        Service3 m_service3_xx;
+        Service3 m_service3_yy;
         Ensure m_ensure;
         
         public MyComponent1(Ensure e) {
@@ -187,12 +189,14 @@ public class MultipleExtraDependenciesTest extends TestBase {
         
         void start() {
             System.out.println("MyComponent1.start");
+            Assert.assertNotNull(m_service2);
+            Assert.assertNotNull(m_service3_xx);
+            Assert.assertNotNull(m_service3_yy);
             m_ensure.step(2);
         }
     }
     
     public static class MyComponent2 {
-        Service1 m_service1;
         Ensure m_ensure;
         
         public MyComponent2(Ensure e) {
@@ -201,6 +205,7 @@ public class MultipleExtraDependenciesTest extends TestBase {
 
         void added(Service1 s1) {
             System.out.println("MyComponent2.bind(" + s1 + ")");
+            Assert.assertNotNull(s1);
             m_ensure.step(3);
         }
         
