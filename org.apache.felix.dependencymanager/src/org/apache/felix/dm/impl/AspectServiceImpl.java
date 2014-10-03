@@ -96,7 +96,7 @@ public class AspectServiceImpl extends FilterComponent {
         props.put(Constants.SERVICE_RANKING, Integer.valueOf(m_ranking));
         return props;
     }
-	
+    	
 	class AspectImpl extends AbstractDecorator {
 
 		private final Class<?> m_aspectInterface;
@@ -198,6 +198,9 @@ public class AspectServiceImpl extends FilterComponent {
             return "(&(|(!(" + Constants.SERVICE_RANKING + "=*))(" + Constants.SERVICE_RANKING + "<=" + (m_ranking - 1) + "))(|(" + Constants.SERVICE_ID + "=" + sid + ")(" + DependencyManager.ASPECT + "=" + sid + ")))";
         }
 		
+        public String toString() {
+            return "Aspect for " + m_aspectInterface.getName();
+        }
 	}
 	
     class CallbackProxy {
