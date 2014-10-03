@@ -72,7 +72,6 @@ public class MultipleExtraDependencyTest extends TestBase {
                    .setAutoConfig("m_service"))
               .setCallbacks(null, "start", "stop", null);
         
-        // Provide the Sequencer service to the MultipleAnnotationsTest class.
         Component sequencer = 
             m.createComponent().setImplementation(new SequencerImpl(e))
                              .setInterface(Sequencer.class.getName(), null);
@@ -81,7 +80,7 @@ public class MultipleExtraDependencyTest extends TestBase {
         m.add(sc);
         m.add(sequencer);
         
-        // Check if the test.annotation components have been initialized orderly
+        // Check if ServiceProvider component have been initialized orderly
         e.waitForStep(7, 5000);
         
         // Stop the test.annotation bundle
@@ -90,7 +89,7 @@ public class MultipleExtraDependencyTest extends TestBase {
         m.remove(sp2);
         m.remove(sc);
         
-        // And check if the test.annotation bundle has been deactivated orderly
+        // And check if ServiceProvider2 has been deactivated orderly
         e.waitForStep(11, 5000);
     }
     
