@@ -30,7 +30,7 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     protected final static int LOG_LEVEL = LogService.LOG_WARNING;
     
     // optional thread pool used by parallel dependency managers
-    private final static ExecutorService m_threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    private volatile ExecutorService m_threadPool;
     
     // flag used to check if the threadpool must be used for a given test.
     private boolean m_parallel;
@@ -65,6 +65,7 @@ public abstract class TestBase extends TestCase implements LogService, Framework
         m_dm = new DependencyManager(context);
         if (m_parallel) {
             warn("Using threadpool ...");
+            m_threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
             Hashtable props = new Hashtable();
             props.put("target", DependencyManager.THREADPOOL);
             m_threadPoolRegistration = context.registerService(Executor.class.getName(), m_threadPool, props);
@@ -75,10 +76,11 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     	warn("Tearing down test " + getClass().getName());
     	logService.unregister();
     	context.removeFrameworkListener(this);
-    	if (m_threadPoolRegistration != null) {
+        clearComponents();
+        if (m_parallel && m_threadPoolRegistration != null) {
     	    m_threadPoolRegistration.unregister();
+    	    m_threadPool.shutdown();
     	}
-    	clearComponents();
     }
         
     protected DependencyManager getDM() {
