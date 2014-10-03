@@ -19,6 +19,7 @@
 package org.apache.felix.webconsole;
 
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.net.URLDecoder;
@@ -138,6 +139,12 @@ public final class WebConsoleUtil
             // Create a factory for disk-based file items
             DiskFileItemFactory factory = new DiskFileItemFactory();
             factory.setSizeThreshold( 256000 );
+            // See https://issues.apache.org/jira/browse/FELIX-4660
+            final Object repo = request.getAttribute( AbstractWebConsolePlugin.ATTR_FILEUPLOAD_REPO );
+            if ( repo instanceof File )
+            {
+                factory.setRepository( (File) repo );
+            }
 
             // Create a new file upload handler
             ServletFileUpload upload = new ServletFileUpload( factory );
