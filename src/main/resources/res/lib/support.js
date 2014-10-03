@@ -152,7 +152,8 @@ function Xdialog(text) {
 	}
 
 	// init dialog
-	dialog.html(text).dialog('destroy'); // set text & reset dialog
+	dialog.html(text); // set text & reset dialog
+	if (dialog.is( ":data( 'dialog' )" )) dialog.dialog('destroy');
 	return dialog;
 }
 
