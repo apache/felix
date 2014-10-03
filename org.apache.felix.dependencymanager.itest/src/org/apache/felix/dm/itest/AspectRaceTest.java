@@ -1,339 +1,324 @@
 package org.apache.felix.dm.itest;
+
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import junit.framework.Assert;
 
 import org.apache.felix.dm.Component;
-import org.apache.felix.dm.ServiceDependency;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 
+/**
+ * This class validates that some aspect aware services are correctly managed and ordered when components and aspects are 
+ * registered concurrently.
+ * 
+ * By default, this class uses a custom threadpool, but a subclass may override this class and call "setParallel()" method, in 
+ * this case we won't use any threadpool, since calling setParallel() method means we are using a parallel Dependency Manager.
+ * 
+ * @see AspectRaceParallelTest
+ */
 public class AspectRaceTest extends TestBase {
-	volatile ExecutorService m_serviceExec;
-	volatile ExecutorService m_aspectExec;
-	final static int SERVICES = 3;
-	final static int ASPECTS_PER_SERVICE = 3;
-	final static int ITERATIONS = 3000;
+    final static int SERVICES = 3;
+    final static int ASPECTS_PER_SERVICE = 3;
+    final static int ITERATIONS = 3000;
+    final AtomicInteger m_IDGenerator = new AtomicInteger();
+    ExecutorService m_threadpool;
 
-	public void testConcurrentAspects() {
-		try {
-			warn("starting aspect race test");
-			int cores = Math.max(10, Runtime.getRuntime().availableProcessors());
-			// Used to inject S services
-			m_serviceExec = Executors.newFixedThreadPool(cores);
-			// Used to inject S Aspects
-			m_aspectExec = Executors.newFixedThreadPool(cores);
+    public void testConcurrentAspects() {
+        try {
+            warn("starting aspect race test");
+            initThreadPool(); // only if setParallel() has not been called (only if a parallel DM is not used).
 
-			// Setup test components using dependency manager.
-			// We create a Controller which is injected with some S services,
-			// and each S services has some aspects (SAspect).
+            for (int loop = 1; loop <= ITERATIONS; loop++) {
+                // Perform concurrent injections of "S" service and S aspects into the Controller component;
+                debug("Iteration: " + loop);
+                
+                // Use a helper class use to wait for components to be started/stopped.
+                int count = SERVICES + (SERVICES * ASPECTS_PER_SERVICE);
+                ComponentTracker tracker = new ComponentTracker(count, count);
+                
+                // Create the components (controller / services / aspects)
+                Ensure e = new Ensure(false);
+                Controller controller = new Controller(e);
+                Factory f = new Factory();
+                f.createComponents(controller, tracker);
+                
+                // Activate the components asynchronously
+                f.registerComponents();
+                
+                // Wait for the components to be started (using the tracker)
+                if (!tracker.awaitStarted(5000)) {
+                    throw new IllegalStateException("Could not start components timely.");
+                }
 
-			Controller controller = new Controller();
-			ServiceDependency dependency = m_dm.createServiceDependency().setService(S.class)
-					.setCallbacks("bind", null, "unbind", "swap")
-					.setRequired(true);
-//			dependency.setDebug("controller");
-			Component c = m_dm
-					.createComponent()
-					.setImplementation(controller)
-					.setInterface(Controller.class.getName(), null)
-					.setComposition("getComposition")
-					.add(dependency);
+                // Make sure the controller.start() method has been called.
+                e.waitForStep(1, 5000);
+                
+                // Check aspect chains consistency.
+                controller.checkConsistency();
+                
+                // unregister all services and aspects.
+                f.unregister();
+                
+                // use component tracker to wait for all components to be stopped.
+                if (!tracker.awaitStopped(5000)) {
+                    throw new IllegalStateException("Could not stop components timely.");
+                }
 
-			m_dm.add(c);
+                if ((loop) % 100 == 0) {
+                    warn("Performed " + loop + " tests.");
+                }
 
-			for (int loop = 1; loop <= ITERATIONS; loop++) {
-				//System.out.println("\niteration: " + loop);
-				// Perform concurrent injections of "S" service and S aspects
-				// into the Controller component;
-				debug("Iteration: " + loop);
-				Factory f = new Factory();
-				f.register();
-				
-//				System.out.println("Checking...");
+                if (super.errorsLogged()) {
+                    throw new IllegalStateException("Race test interrupted (some error occured, see previous logs)");
+                }
+            }
+        }
 
-				controller.check();
-				
-//				System.out.println("Done checking...");
+        catch (Throwable t) {
+            error("Test failed", t);
+            Assert.fail("Test failed: " + t.getMessage());
+        } finally {
+            m_dm.clear();
+            shutdownThreadPool();
+        }
+    }
 
-				// unregister all services and aspects concurrently
-				f.unregister();
+    private void initThreadPool() {
+        // Create a threadpool only if setParallel() method has not been called.
+        if (! m_parallel) {
+            int cores = Math.max(16, Runtime.getRuntime().availableProcessors());
+            m_threadpool = Executors.newFixedThreadPool(cores);
+        }
+    }
+    
+    void shutdownThreadPool() {
+        if (! m_parallel && m_threadpool != null) {
+            m_threadpool.shutdown();
+            try {
+                m_threadpool.awaitTermination(5, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+            }
+        }
+    }
 
-				if ((loop) % 100 == 0) {
-					warn("Performed " + loop + " tests.");
-				}				
+    public interface S {
+        void invoke(Ensure e);
 
-	            if (super.errorsLogged()) {
-	                throw new IllegalStateException("Race test interrupted (some error occured, see previous logs)");
-	            }
-			}
-		}
+        int getRank();
+    }
 
-		catch (Throwable t) {
-			error("Test failed", t);
-			Assert.fail("Test failed: " + t.getMessage());
-		} finally {
-			shutdown(m_serviceExec);
-			shutdown(m_aspectExec);
-			m_dm.clear();
-		}
-	}
+    public static class SImpl implements S {
 
-	void shutdown(ExecutorService exec) {
-		exec.shutdown();
-		try {
-			exec.awaitTermination(5, TimeUnit.SECONDS);
-		} catch (InterruptedException e) {
-		}
-	}
+        SImpl() {
+        }
 
-	public interface S {
-		void invoke(Ensure e);
-	}
+        public void invoke(Ensure e) {
+            e.step(1);
+        }
 
-	public static class SImpl implements S {
-		final int m_step;
+        public String toString() {
+            return "SImpl";
+        }
 
-		SImpl(int step) {
-			m_step = step;
-		}
+        @Override
+        public int getRank() {
+            return Integer.MIN_VALUE;
+        }
+    }
 
-		public void invoke(Ensure e) {
-			e.step(m_step);
-		}
+    public class SAspect implements S {
+        volatile S m_next;
+        final int m_rank;
+        volatile Component m_component;
 
-		public String toString() {
-			return "SImpl[" + m_step + "]";
-		}
-	}
+        SAspect(int rank) {
+            m_rank = rank;
+        }
 
-	public static class SAspect implements S {
-		volatile S m_next;
-		final int m_rank;
-		final int m_step;
-		final int m_id;
-		volatile Component m_component;
+        public synchronized void added(S s) {
+            debug("aspect.added: this rank=%d, next rank=%d", getRank(), s.getRank());
+            if (m_next != null) {
+                fail("Adding while expected swap... " + m_rank);
+            }
+            m_next = s;
+        }
 
-		SAspect(int id, int rank) {
-			m_rank = rank;
-			m_id = id;
-			m_step = ASPECTS_PER_SERVICE - rank + 1;
-		}
+        public synchronized void swap(S oldS, S newS) {
+            debug("aspect.swap: this rank=%d, old rank=%d, next rank=%d", getRank(), oldS.getRank(), newS.getRank());
+            m_next = newS;
+        }
 
-		public synchronized void added(S s) {
-			//System.out.println(Thread.currentThread().getId() + " ARTA aspect added " + m_rank + ": " + s );
-			if (m_next != null) {
-				fail("Adding while expected swap... " + m_rank);
-			}
-			m_next = s;
-		}
+        public synchronized void removed(S s) {
+            debug("aspect.remove: this rank=%d, removed rank=%d", getRank(), s.getRank());
+            m_next = null;
+        }
 
-		public synchronized void swap(S oldS, S newS) {
-			//System.out.println(Thread.currentThread().getId() + " ARTA aspect swap " + m_rank + ": " + oldS + " with " + newS);
-			m_next = newS;
-		}
-		
-		public synchronized void removed(S s) {
-			//System.out.println(Thread.currentThread().getId() + " ARTA aspect removed " + m_rank + ": " + s );
-			m_next = null;
-		}
+        public synchronized void invoke(Ensure e) {
+            debug("aspect.invoke: this rank=%d, next rank=%d", this.getRank(), m_next.getRank());
+            Assert.assertTrue(m_rank > m_next.getRank());
+            m_next.invoke(e);
+        }
 
-		public synchronized void invoke(Ensure e) {
-//			System.out.println("config " + m_rank + ": " + toString() + " " + m_component.getExecutor() + " " + m_component);
-			e.step(m_step);
-			m_next.invoke(e);
-		}
+        public String toString() {
+            return "[Aspect/rank=" + m_rank + "], next="
+                + ((m_next != null) ? m_next : "null");
+        }
 
-		public String toString() {
-			return "SAspect[" + m_id + ", " + m_rank + ", " + m_step + "], " + ((m_next != null) ? m_next.toString() : "null");
-		}
-	}
+        @Override
+        public int getRank() {
+            return m_rank;
+        }
+    }
 
-	class Factory {
-		final ConcurrentLinkedQueue<Component> m_services = new ConcurrentLinkedQueue<Component>();
-		final ConcurrentLinkedQueue<Component> m_aspects = new ConcurrentLinkedQueue<Component>();
+    class Factory {
+        int m_serviceId;
+        Component m_controller;
+        final ConcurrentLinkedQueue<Component> m_services = new ConcurrentLinkedQueue<Component>();
+        final ConcurrentLinkedQueue<Component> m_aspects = new ConcurrentLinkedQueue<Component>();   
+        
+        private void createComponents(Controller controller, ComponentTracker tracker) {
+            // create the controller
+            
+            int controllerID = m_IDGenerator.incrementAndGet();
+            
+            m_controller = m_dm.createComponent()
+                .setImplementation(controller)
+                .setComposition("getComposition");        
+            for (int i = 0; i < SERVICES; i ++) {
+                m_controller.add(m_dm.createServiceDependency()
+                    .setService(S.class, "(controller.id=" + controllerID + ")")
+                    .setCallbacks("bind", null, "unbind", "swap")
+                    .setRequired(true));
+            }
+            
+            // create the services
+            for (int i = 1; i <= SERVICES; i++) {
+                int aspectId = m_IDGenerator.incrementAndGet();
+                Component s = m_dm.createComponent();
+                Hashtable<String, String> props = new Hashtable<String, String>();
+                props.put("controller.id", String.valueOf(controllerID));
+                props.put("aspect.id", String.valueOf(aspectId));
+                s.setInterface(S.class.getName(), props)
+                 .setImplementation(new SImpl());
+                s.add(tracker);
+                m_services.add(s);
+                
+                // create the aspects for that service
+                for (int j = 1; j <= ASPECTS_PER_SERVICE; j++) {
+                    final int rank = j;
+                    SAspect sa = new SAspect(rank);
+                    Component a = 
+                        m_dm.createAspectService(S.class, "(aspect.id=" + aspectId + ")", rank, "added", null, "removed", "swap")
+                            .setImplementation(sa);
+                    a.add(tracker);
+                    m_aspects.add(a);
+                }
+            }
+        }
 
-		public void register() throws InterruptedException {
-			final CountDownLatch latch = new CountDownLatch(SERVICES
-					+ (ASPECTS_PER_SERVICE * SERVICES));
+        public void registerComponents() {
+            // If setParallel() has been called (we are using a parallel dependency manager), then no needs to use a custom thread pool.
+            if (m_parallel) { // using a parallel DM.
+                for (final Component s : m_services) {
+                    m_dm.add(s);
+                }
+                m_dm.add(m_controller);
+                for (final Component a : m_aspects) {
+                    m_dm.add(a);
+                }
+            } else {
+                m_threadpool.execute(new Runnable() {
+                    public void run() {
+                        for (final Component s : m_services) {
+                            m_dm.add(s);
+                        }
+                    }
+                });
+                m_threadpool.execute(new Runnable() {
+                    public void run() {
+                        m_dm.add(m_controller);
+                    }
+                });
+                m_threadpool.execute(new Runnable() {
+                    public void run() {
+                        for (final Component a : m_aspects) {
+                            m_dm.add(a);
+                        }
+                    }
+                });
+            }
+        }
 
-			for (int i = 1; i <= SERVICES; i++) {
-				final int serviceId = i;
-				m_serviceExec.execute(new Runnable() {
-					public void run() {
-						try {
-							Component c = m_dm.createComponent();
-							Hashtable<String, String> props = new Hashtable<String, String>();
-							props.put("id", String.valueOf(serviceId));
-							c.setInterface(S.class.getName(), props)
-									.setImplementation(
-											new SImpl(ASPECTS_PER_SERVICE + 1));
-							m_services.add(c);
-							m_dm.add(c);
-							latch.countDown();
-						} catch (Throwable e) {
-							error(e);
-						}
-					}
-				});
+        public void unregister() throws InterruptedException, InvalidSyntaxException {        
+            m_dm.remove(m_controller);
+            for (final Component s : m_services) {
+                m_dm.remove(s);
+            }
+            for (final Component a : m_aspects) {
+                m_dm.remove(a);
+            }
+        }
+    }
 
-				for (int j = 1; j <= ASPECTS_PER_SERVICE; j++) {
-					final int rank = j;
-					m_aspectExec.execute(new Runnable() {
-						public void run() {
-							try {
-								SAspect sa = new SAspect(serviceId, rank);
-								Component aspect = m_dm.createAspectService(
-										S.class, "(id=" + serviceId + ")",
-										rank, "added", null, "removed", "swap")
-										.setImplementation(sa);
-								m_aspects.add(aspect);
-								m_dm.add(aspect);
-								latch.countDown();
-							} catch (Throwable e) {
-								error(e);
-							}
-						}
-					});
-				}
-			}
+    public class Controller {
+        final Composition m_compo = new Composition();
+        final HashSet<S> m_services = new HashSet<S>();
+        final Ensure m_ensure;
 
-			if (!latch.await(5000, TimeUnit.MILLISECONDS)) {
-				throw new IllegalStateException(
-						"could not register services and aspects timely");
-			}
+        public Controller(Ensure e) {
+            m_ensure = e;
+        }
 
-			debug("all registered: aspects=" + m_aspects);
-//			System.out.println("all registered: aspects=" + m_aspects);
-			// Thread.sleep(5000);
-		}
+        Object[] getComposition() {
+            return new Object[] { this, m_compo };
+        }
 
-		public void unregister() throws InterruptedException,
-				InvalidSyntaxException {
-			final CountDownLatch latch = new CountDownLatch(SERVICES
-					+ (ASPECTS_PER_SERVICE * SERVICES));
+        synchronized void bind(ServiceReference sr, Object service) {
+            debug("controller.bind: %s", service);
+            S s = (S) service;
+            m_services.add(s);
+            debug("bind: service count after bind: %d", m_services.size());
+        }
 
-			unregisterAspects(latch);
-			unregisterServices(latch);
+        synchronized void swap(S previous, S current) {
+            debug("controller.swap: previous=%s, current=%s", previous, current);
+            if (!m_services.remove(previous)) {
+                debug("swap: unknow previous service: " + previous);
+            }
+            m_services.add(current);
+            debug("controller.swap: service count after swap: %d", m_services.size());
+        }
 
-			if (!latch.await(5000, TimeUnit.MILLISECONDS)) {
-				throw new IllegalStateException(
-						"could not unregister services and aspects timely");
-			}
+        synchronized void unbind(S a) {
+            debug("unbind " + a);
+            m_services.remove(a);
+        }
 
-			if (context.getServiceReference(S.class.getName()) != null) {
-				error("could not unregister some services or aspects !");
-			}
-			debug("unregistered all aspects and services concurrently");
-		}
+        /**
+         * Checks if the aspect chain is consstent. The chain may not have all the aspects, but at least, the list must be in consistent order, meaning that we 
+         * should never see an aspect with a lower rank of the its immediate next aspect in the chain.
+         */
+        void start() {
+            m_ensure.step(1);
+        }
+        
+        synchronized void checkConsistency() {
+            debug("service count: %d", m_services.size());
+            for (S s : m_services) {
+                debug("checking service: %s", s);
+                Ensure ensure = new Ensure(false);
+                s.invoke(ensure);
+            }
+        }
+    }
 
-		public void unregisterAspects(final CountDownLatch latch)
-				throws InterruptedException, InvalidSyntaxException {
-			Component c;
-			debug("unregister: aspects=" + m_aspects);
-
-			while ((c = m_aspects.poll()) != null) {
-				final Component c$ = c;
-				m_serviceExec.execute(new Runnable() {
-					public void run() {
-						try {
-							debug("removing service " + c$);
-							m_dm.remove(c$);
-							latch.countDown();
-						} catch (Throwable e) {
-							error(e);
-						}
-					}
-				});
-			}
-		}
-
-		public void unregisterServices(final CountDownLatch latch)
-				throws InterruptedException {
-			Component c;
-			debug("unregister: services=" + m_services);
-
-			while ((c = m_services.poll()) != null) {
-				final Component c$ = c;
-				m_serviceExec.execute(new Runnable() {
-					public void run() {
-						try {
-							debug("removing service " + c$);
-							m_dm.remove(c$);
-							latch.countDown();
-						} catch (Throwable e) {
-							error(e);
-						}
-					}
-				});
-			}
-
-			debug("unregistered all services");
-		}
-	}
-
-	public class Controller {
-		final Composition m_compo = new Composition();
-		final HashSet<S> m_services = new HashSet<S>();
-
-		Object[] getComposition() {
-			return new Object[] { this, m_compo };
-		}
-
-		void bind(ServiceReference sr, Object service) {
-//			System.out.println("ARTC bind... " + service);
-			S s = (S) sr.getBundle().getBundleContext().getService(sr);
-			if (s == null) {
-				throw new IllegalStateException(
-						"bindA: bundleContext.getService returned null");
-			}
-			debug("bind " + s);
-			synchronized (this) {
-				m_services.add(s);
-//				System.out.println("service count after bind: " + m_services.size());
-			}
-		}
-
-		void swap(S previous, S current) {
-//			System.out.println("swap...");
-//			System.out.println("ARTC swap: " + previous + " with " + current);
-			synchronized (this) {
-				if (!m_services.remove(previous)) {
-					System.out.println("swap: unknow previous service: " + previous);
-				}
-				m_services.add(current);
-//				System.out.println("service count after swap: " + m_services.size());
-			}
-		}
-
-		void unbind(S a) {
-//			System.out.println("ARTC unbind...");
-			debug("unbind " + a);
-			synchronized (this) {
-				m_services.remove(a);
-//				System.out.println("service count after unbind: " + m_services.size());
-			}
-		}
-
-		void check() {
-			synchronized (this) {
-//				System.out.println("service count: " + m_services.size());
-				for (S s : m_services) {
-//					System.out.println("checking service: " + s);
-					debug("checking service: " + s + " ...");
-					Ensure ensure = new Ensure(false);
-					s.invoke(ensure);
-				}
-			}
-		}
-	}
-
-	public static class Composition {
-	}
+    public static class Composition {
+    }
 }

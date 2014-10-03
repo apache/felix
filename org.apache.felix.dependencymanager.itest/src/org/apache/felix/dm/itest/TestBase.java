@@ -33,7 +33,7 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     private volatile ExecutorService m_threadPool;
     
     // flag used to check if the threadpool must be used for a given test.
-    private boolean m_parallel;
+    protected volatile boolean m_parallel;
         
     // Flag used to check if some errors have been logged during the execution of a given test.
     private volatile boolean m_errorsLogged;
