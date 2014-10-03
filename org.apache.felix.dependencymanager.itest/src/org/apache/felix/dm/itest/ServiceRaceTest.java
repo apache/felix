@@ -35,23 +35,12 @@ public class ServiceRaceTest extends TestBase {
     // Timestamp used to log the time consumed to execute 100 tests.
     long m_timeStamp;
     
-    // Tells whether we should use a custmo threadpool.
-    final private boolean m_useCustomThreadPool;
-
     public interface Dep {        
     }
     
     public class DepImpl implements Dep {        
     }
     
-    public ServiceRaceTest() {
-        this (true);
-    }
-    
-    public ServiceRaceTest(boolean useCustomThreadPool) {
-        m_useCustomThreadPool = useCustomThreadPool;
-    }
-
     /**
      * Creates many service dependencies, and activate/deactivate them concurrently.  
      */
@@ -77,7 +66,8 @@ public class ServiceRaceTest extends TestBase {
         int cores = Math.max(16, Runtime.getRuntime().availableProcessors());
         info("using " + cores + " cores.");
 
-        if (m_useCustomThreadPool) {
+        if (! m_parallel) { 
+            // We are not using a parallel DM, so we create a custom threadpool in order to add components concurrently.
             m_threadpool = Executors.newFixedThreadPool(Math.max(cores, DEPENDENCIES + 3 /* start/stop/configure */));
         }
 
@@ -97,7 +87,7 @@ public class ServiceRaceTest extends TestBase {
     }
 
     void shutdown(ExecutorService exec) {
-        if (m_useCustomThreadPool) {
+        if (! m_parallel && exec != null) {
             exec.shutdown();
             try {
                 exec.awaitTermination(5, TimeUnit.SECONDS);
@@ -224,7 +214,8 @@ public class ServiceRaceTest extends TestBase {
     }
 
     private void schedule(Runnable task) {
-        if (m_useCustomThreadPool) {
+        if (! m_parallel) {
+            // not using parallel DM, so use our custom threadpool.
             m_threadpool.execute(task);
         } else {
             task.run();
