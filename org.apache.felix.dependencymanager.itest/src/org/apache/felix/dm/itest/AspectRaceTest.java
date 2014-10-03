@@ -39,7 +39,7 @@ public class AspectRaceTest extends TestBase {
                 // Perform concurrent injections of "S" service and S aspects into the Controller component;
                 debug("Iteration: " + loop);
                 
-                // Use a helper class use to wait for components to be started/stopped.
+                // Use a helper class to wait for components to be started/stopped.
                 int count = SERVICES + (SERVICES * ASPECTS_PER_SERVICE);
                 ComponentTracker tracker = new ComponentTracker(count, count);
                 
