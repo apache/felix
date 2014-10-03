@@ -26,18 +26,30 @@ public class ServiceRaceTest extends TestBase {
     volatile ConfigurationAdmin m_cm;
     final static int STEP_WAIT = 5000;
     final static int DEPENDENCIES = 10;
-    final static int LOOPS = 5000;
+    final static int LOOPS = 3000;
     final Ensure m_done = new Ensure(true);
 
     // Executor used to bind/unbind service dependencies.
     ExecutorService m_threadpool;
+    
     // Timestamp used to log the time consumed to execute 100 tests.
     long m_timeStamp;
+    
+    // Tells whether we should use a custmo threadpool.
+    final private boolean m_useCustomThreadPool;
 
     public interface Dep {        
     }
     
     public class DepImpl implements Dep {        
+    }
+    
+    public ServiceRaceTest() {
+        this (true);
+    }
+    
+    public ServiceRaceTest(boolean useCustomThreadPool) {
+        m_useCustomThreadPool = useCustomThreadPool;
     }
 
     /**
@@ -65,7 +77,9 @@ public class ServiceRaceTest extends TestBase {
         int cores = Math.max(16, Runtime.getRuntime().availableProcessors());
         info("using " + cores + " cores.");
 
-        m_threadpool = Executors.newFixedThreadPool(Math.max(cores, DEPENDENCIES + 3 /* start/stop/configure */));
+        if (m_useCustomThreadPool) {
+            m_threadpool = Executors.newFixedThreadPool(Math.max(cores, DEPENDENCIES + 3 /* start/stop/configure */));
+        }
 
         try {
             m_timeStamp = System.currentTimeMillis();
@@ -83,11 +97,12 @@ public class ServiceRaceTest extends TestBase {
     }
 
     void shutdown(ExecutorService exec) {
-        exec.shutdown();
-        try {
-            exec.awaitTermination(5, TimeUnit.SECONDS);
-        }
-        catch (InterruptedException e) {
+        if (m_useCustomThreadPool) {
+            exec.shutdown();
+            try {
+                exec.awaitTermination(5, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+            }
         }
     }
 
@@ -118,7 +133,7 @@ public class ServiceRaceTest extends TestBase {
         final Configuration conf = m_cm.getConfiguration(pid, null);
         final Hashtable props = new Hashtable();
         props.put("foo", "bar");
-        m_threadpool.execute(new Runnable() {
+        schedule(new Runnable() {
             public void run() {
                 try {
                     conf.update(props);
@@ -138,7 +153,7 @@ public class ServiceRaceTest extends TestBase {
                 .setInterface(Dep.class.getName(), h)
                 .setImplementation(new DepImpl());
             deps.add(s);
-            m_threadpool.execute(new Runnable() {
+            schedule(new Runnable() {
                 public void run() {
                     m_dm.add(s);
                 }
@@ -146,7 +161,7 @@ public class ServiceRaceTest extends TestBase {
         }
 
         // Start the client (concurrently)
-        m_threadpool.execute(new Runnable() {
+        schedule(new Runnable() {
             public void run() {
                 m_dm.add(client);
             }
@@ -161,7 +176,7 @@ public class ServiceRaceTest extends TestBase {
         // Stop all dependencies concurrently.
         for (Component dep : deps) {
             final Component dependency = dep;
-            m_threadpool.execute(new Runnable() {
+            schedule(new Runnable() {
                 public void run() {
                     m_dm.remove(dependency);
                 }
@@ -169,14 +184,14 @@ public class ServiceRaceTest extends TestBase {
         }
         
         // Stop client concurrently.
-        m_threadpool.execute(new Runnable() {
+        schedule(new Runnable() {
             public void run() {
                 m_dm.remove(client);
             }
         });
         
         // Remove configuration (asynchronously)
-        m_threadpool.execute(new Runnable() {
+        schedule(new Runnable() {
             public void run() {
                 try {
                     conf.delete();
@@ -206,6 +221,14 @@ public class ServiceRaceTest extends TestBase {
             warn("Performed 100 tests (total=%d) in %d ms.", (loop + 1), duration);
             m_timeStamp = System.currentTimeMillis();
         }
+    }
+
+    private void schedule(Runnable task) {
+        if (m_useCustomThreadPool) {
+            m_threadpool.execute(task);
+        } else {
+            task.run();
+        }        
     }
 
     public class Client {
