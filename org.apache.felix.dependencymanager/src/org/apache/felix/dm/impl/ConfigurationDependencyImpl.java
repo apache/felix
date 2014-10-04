@@ -21,7 +21,6 @@ package org.apache.felix.dm.impl;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Dictionary;
 import java.util.Properties;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.felix.dm.ConfigurationDependency;
@@ -173,7 +172,12 @@ public class ConfigurationDependencyImpl extends DependencyImpl<ConfigurationDep
         if (settings != null) {
             Object[] instances = m_component.getInstances();
             if (instances != null) {
-                invokeUpdated(settings);
+                try {
+                    invokeUpdated(settings);
+                } catch (ConfigurationException e) {
+                    logConfigurationException(e);
+                    throw e;
+                }
             }
         }
         
@@ -203,7 +207,7 @@ public class ConfigurationDependencyImpl extends DependencyImpl<ConfigurationDep
 		try {
 			invokeUpdated(m_settings);
 		} catch (ConfigurationException e) {
-			e.printStackTrace(); // FIXME use a LogService
+            logConfigurationException(e);
 		}
     }
 
@@ -219,7 +223,7 @@ public class ConfigurationDependencyImpl extends DependencyImpl<ConfigurationDep
         	m_updateInvokedCache.set(false);
             invokeUpdated(null);
         } catch (ConfigurationException e) {
-            e.printStackTrace(); // FIXME use a LogService
+            logConfigurationException(e);
         } finally {
         	// Reset for the next time the state machine calls invokeAdd
         	m_updateInvokedCache.set(false);
@@ -268,6 +272,12 @@ public class ConfigurationDependencyImpl extends DependencyImpl<ConfigurationDep
     private synchronized void createMetaTypeImpl() {
         if (m_metaType == null) {
             m_metaType = new MetaTypeProviderImpl(getName(), m_context, m_logger, this, null);
+        }
+    }
+    
+    private void logConfigurationException(ConfigurationException e) {
+        if (m_logger != null) {
+            m_logger.log(Logger.LOG_ERROR, "Got exception while handling configuration update for pid " + m_pid, e);
         }
     }
 }

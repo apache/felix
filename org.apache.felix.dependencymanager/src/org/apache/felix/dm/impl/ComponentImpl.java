@@ -24,12 +24,10 @@ import static org.apache.felix.dm.ComponentState.TRACKING_OPTIONAL;
 import static org.apache.felix.dm.ComponentState.WAITING_FOR_REQUIRED;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -63,7 +61,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 			.newProxyInstance(ComponentImpl.class.getClassLoader(),
 					new Class[] { ServiceRegistration.class },
 					new DefaultNullObject());
-    private static final Class[] VOID = new Class[] {};
+    private static final Class<?>[] VOID = new Class[] {};
 	private volatile Executor m_executor = new SerialExecutor(new Logger(null));
 	private ComponentState m_state = ComponentState.INACTIVE;
 	private final CopyOnWriteArrayList<DependencyContext> m_dependencies = new CopyOnWriteArrayList<>();
@@ -75,10 +73,10 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     private Object m_componentDefinition;
 	private Object m_componentInstance;
     private volatile Object m_serviceName;
-    private volatile Dictionary m_serviceProperties;
+    private volatile Dictionary<String, ?> m_serviceProperties;
     private volatile ServiceRegistration m_registration;
-    private final Map m_autoConfig = new ConcurrentHashMap();
-    private final Map m_autoConfigInstance = new ConcurrentHashMap();
+    private final Map<Class<?>, Boolean> m_autoConfig = new ConcurrentHashMap<>();
+    private final Map<Class<?>, String> m_autoConfigInstance = new ConcurrentHashMap<>();
     private final long m_id;
     private static AtomicLong m_idGenerator = new AtomicLong();
     // Holds all the services of a given dependency context. Caution: the last entry in the skiplist is the highest ranked service.
@@ -166,7 +164,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		getExecutor().execute(new Runnable() {
 			@Override
 			public void run() {
-				List<DependencyContext> instanceBoundDeps = new ArrayList();
+				List<DependencyContext> instanceBoundDeps = new ArrayList<>();
 				for (Dependency d : dependencies) {
 					DependencyContext dc = (DependencyContext) d;
 					m_dependencyEvents.put(dc,  new ConcurrentSkipListSet<Event>());
@@ -405,23 +403,23 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         return m_dependencyEvents.get(dc);
     }
 
-    public Component setAutoConfig(Class clazz, boolean autoConfig) {
+    public Component setAutoConfig(Class<?> clazz, boolean autoConfig) {
         m_autoConfig.put(clazz, Boolean.valueOf(autoConfig));
         return this;
     }
     
-    public Component setAutoConfig(Class clazz, String instanceName) {
+    public Component setAutoConfig(Class<?> clazz, String instanceName) {
         m_autoConfig.put(clazz, Boolean.valueOf(instanceName != null));
         m_autoConfigInstance.put(clazz, instanceName);
         return this;
     }
     
-    public boolean getAutoConfig(Class clazz) {
+    public boolean getAutoConfig(Class<?> clazz) {
         Boolean result = (Boolean) m_autoConfig.get(clazz);
         return (result != null && result.booleanValue());
     }
     
-    public String getAutoConfigInstance(Class clazz) {
+    public String getAutoConfigInstance(Class<?> clazz) {
         return (String) m_autoConfigInstance.get(clazz);
     }
 
@@ -494,8 +492,8 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 				System.out.println("*" + debugKey + " T" + Thread.currentThread().getId() + " instantiate!");
 			}
 			instantiateComponent();
+            invokeAutoConfigDependencies();
 			invokeAddRequiredDependencies();
-			invokeAutoConfigDependencies();
 			ComponentState stateBeforeCallingInit = m_state;
 	        invoke(m_callbackInit); 
 	        if (stateBeforeCallingInit == m_state) {
@@ -504,8 +502,8 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 			return true;
 		}
 		if (oldState == ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED && newState == ComponentState.TRACKING_OPTIONAL) {
+            invokeAutoConfigInstanceBoundDependencies();
 			invokeAddRequiredInstanceBoundDependencies();
-			invokeAutoConfigInstanceBoundDependencies();
 			invoke(m_callbackStart);
 			invokeAddOptionalDependencies();
 			registerService();
@@ -596,7 +594,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     	if (debug) {
     		System.out.println("*" + debugKey + " T" + Thread.currentThread().getId() + " startDependencies.");
     	}
-        List<DependencyContext> requiredDeps = new ArrayList();
+        List<DependencyContext> requiredDeps = new ArrayList<>();
         for (DependencyContext d : dependencies) {
             if (d.isRequired()) {
                 requiredDeps.add(d);
@@ -636,7 +634,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             ServiceRegistration registration;
 
             // determine service properties
-            Dictionary properties = calculateServiceProperties();
+            Dictionary<?,?> properties = calculateServiceProperties();
 
             // register the service
             try {
@@ -872,7 +870,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     	return getCompositionInstances();
     }
     
-    public void invokeCallbackMethod(Object[] instances, String methodName, Class[][] signatures, Object[][] parameters) {
+    public void invokeCallbackMethod(Object[] instances, String methodName, Class<?>[][] signatures, Object[][] parameters) {
         for (int i = 0; i < instances.length; i++) {
             try {
                 InvocationUtil.invokeCallbackMethod(instances[i], methodName, signatures, parameters);
@@ -890,8 +888,8 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         }
     }
 
-    private Object createInstance(Class clazz) throws SecurityException, NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		Constructor constructor = clazz.getConstructor(VOID);
+    private Object createInstance(Class<?> clazz) throws SecurityException, NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		Constructor<?> constructor = clazz.getConstructor(VOID);
 		constructor.setAccessible(true);
         return constructor.newInstance(null);
     }
@@ -902,10 +900,6 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		}
 	}
 	
-	private void notifyListener(ComponentStateListener l, ComponentState state) {
-	    l.changed(this, state);
-	}
-
 	public boolean isAvailable() {
 		return m_state == TRACKING_OPTIONAL;
 	}
@@ -922,7 +916,8 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	    return this;
 	}
 
-	@Override
+	@SuppressWarnings("unchecked")
+    @Override
 	public List<DependencyContext> getDependencies() {
 		return (List<DependencyContext>) m_dependencies.clone();
 	}
@@ -933,7 +928,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		return this;
 	}
 	
-    private void configureImplementation(Class clazz, Object instance) {
+    private void configureImplementation(Class<?> clazz, Object instance) {
         configureImplementation(clazz, instance, null);
     }
 
@@ -946,12 +941,12 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
      * @param inject the object to fill in the implementation class(es) field
      * @param instanceName the name of the instance to fill in, or <code>null</code> if not used
      */
-    private void configureImplementation(Class clazz, Object inject, String fieldName) {
+    private void configureImplementation(Class<?> clazz, Object inject, String fieldName) {
         Object[] targets = getInstances();
         FieldUtil.injectField(targets, fieldName, clazz, inject, m_logger);
     }
 
-    private void configureImplementation(Class clazz, DependencyContext dc, String fieldName) {
+    private void configureImplementation(Class<?> clazz, DependencyContext dc, String fieldName) {
         Object[] targets = getInstances();
         FieldUtil.injectDependencyField(targets, fieldName, clazz, dc, m_logger);
     }
@@ -968,7 +963,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
      * @param add true if the dependency service has been added, false if it has been removed. This flag is 
      *        ignored if the "update" flag is true (because the dependency properties are just being updated).
      */
-    private void updateImplementation(Class clazz, DependencyContext dc, String fieldName, Event event, boolean update,
+    private void updateImplementation(Class<?> clazz, DependencyContext dc, String fieldName, Event event, boolean update,
         boolean add)
     {
         Object[] targets = getInstances();
@@ -1083,7 +1078,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	}
 	
     public ComponentDependencyDeclaration[] getComponentDependencies() {
-        List deps = getDependencies();
+        List<DependencyContext> deps = getDependencies();
         if (deps != null) {
             ComponentDependencyDeclaration[] result = new ComponentDependencyDeclaration[deps.size()];
             for (int i = 0; i < result.length; i++) {
@@ -1119,7 +1114,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             Object implementation = m_componentDefinition;
             if (implementation != null) {
                 if (implementation instanceof Class) {
-                    sb.append(((Class) implementation).getName());
+                    sb.append(((Class<?>) implementation).getName());
                 } else {
                     // If the implementation instance does not override "toString", just display
                     // the class name, else display the component using its toString method
@@ -1146,7 +1141,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         Dictionary properties = calculateServiceProperties();
         if (properties != null) {
             result.append("(");
-            Enumeration enumeration = properties.keys();
+            Enumeration<?> enumeration = properties.keys();
             while (enumeration.hasMoreElements()) {
                 Object key = enumeration.nextElement();
                 result.append(key.toString());
@@ -1242,5 +1237,9 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         ensureNotActive();
         m_executor = new DispatchExecutor(threadPool, m_logger);
         return this;
+    }
+    
+    public Logger getLogger() {
+        return m_logger;
     }
 }

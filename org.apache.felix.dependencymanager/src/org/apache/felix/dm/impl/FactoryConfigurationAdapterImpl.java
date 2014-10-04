@@ -46,9 +46,13 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
     // Our Managed Service Factory PID
     protected final String m_factoryPid;
     
+    // Our logger
+    protected final Logger m_logger;
+    
     public FactoryConfigurationAdapterImpl(DependencyManager dm, String factoryPid, String update, boolean propagate) {
         super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
         m_factoryPid = factoryPid;
+        m_logger = ((ComponentImpl) m_component).getLogger();
 
         Hashtable props = new Hashtable();
         props.put(Constants.SERVICE_PID, factoryPid);
@@ -62,6 +66,7 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
         BundleContext bctx, Logger logger, String heading, String description, String localization, PropertyMetaData[] properyMetaData) {
         super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
         m_factoryPid = factoryPid;
+        m_logger = logger;
         Hashtable props = new Hashtable();
         props.put(Constants.SERVICE_PID, factoryPid);
         m_component
@@ -159,7 +164,7 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
             Dictionary cmSettings = (Dictionary) properties[0];
             Component service = (Component) properties[1];
             Object impl = service.getInstances()[0];
-           
+
             try {
                 InvocationUtil.invokeCallbackMethod(impl, m_update, 
                     new Class[][] {{ Dictionary.class }, {}}, 
@@ -244,6 +249,7 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
         }
     
         private void handleException(Throwable t) {
+            m_logger.log(Logger.LOG_ERROR, "Got exception while handling configuration update for factory pid " + m_factoryPid, t);
             if (t instanceof InvocationTargetException) {
                 // Our super class will check if the target exception is itself a ConfigurationException.
                 // In this case, it will simply re-thrown.
