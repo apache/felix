@@ -28,7 +28,7 @@ public class DeviceAccessImpl implements DeviceAccess {
     }
     
     @Start
-    Map start() {
+    Map<?,?> start() {
         Helper.log("device.annot", "DeviceAccessImpl.start");
         // Dynamically add a service property, using the device.id
         Map<String, Object> props = new Hashtable<>();

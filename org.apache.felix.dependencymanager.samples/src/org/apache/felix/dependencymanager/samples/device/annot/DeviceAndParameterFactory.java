@@ -16,10 +16,10 @@ import org.apache.felix.dm.annotation.api.Start;
 @Component
 public class DeviceAndParameterFactory {
     @ServiceDependency(filter = "(" + Component.FACTORY_NAME + "=Device)")
-    volatile Set<Dictionary> m_deviceFactory;
+    volatile Set<Dictionary<?,?>> m_deviceFactory;
     
     @ServiceDependency(filter = "(" + Component.FACTORY_NAME + "=DeviceParameter)")
-    volatile Set<Dictionary> m_deviceParameterFactory;
+    volatile Set<Dictionary<?,?>> m_deviceParameterFactory;
 
     @Start
     public void start() {
@@ -32,11 +32,11 @@ public class DeviceAndParameterFactory {
     private void createDeviceAndParameter(int id) {
         Helper.log("device.annot", "DeviceAndParameterFactory: creating Device/DeviceParameter with id=" + id);
 
-        Dictionary device = new Hashtable<>();
+        Dictionary<String,Object> device = new Hashtable<>();
         device.put("device.id", new Integer(id));
         m_deviceFactory.add(device);
         
-        Dictionary param = new Hashtable<>();
+        Dictionary<String, Object> param = new Hashtable<>();
         param.put("device.id", new Integer(id));
         m_deviceParameterFactory.add(param);
     }
