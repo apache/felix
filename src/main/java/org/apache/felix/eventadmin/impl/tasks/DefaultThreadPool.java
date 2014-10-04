@@ -94,7 +94,7 @@ public class DefaultThreadPool
             }
         }
     }
-    
+
     /**
      * Returns current pool size.
      */
@@ -115,19 +115,20 @@ public class DefaultThreadPool
     /**
      * Execute the task in a free thread or create a new one.
      * @param task The task to execute
+     * @return {@code true} if the task execution could be scheduled, {@code false} otherwise.
      */
-    public void executeTask(final Runnable task)
-    {
+    public boolean executeTask(final Runnable task) {
         try
         {
             this.executor.submit(task);
+            return true;
         }
         catch (final Throwable t)
         {
             LogWrapper.getLogger().log(
                     LogWrapper.LOG_WARNING,
                     "Exception: " + t, t);
-            // ignore this
+            return false;
         }
     }
 }

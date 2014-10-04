@@ -92,7 +92,7 @@ public class SyncDeliverTasks
 
         final Iterator<EventHandlerProxy> i = tasks.iterator();
         final BlacklistLatch handlerLatch = new BlacklistLatch(tasks.size(), this.timeout/2);
-        
+
         while ( i.hasNext() )
         {
             final EventHandlerProxy task = i.next();
@@ -111,14 +111,18 @@ public class SyncDeliverTasks
                 }
                 else
                 {
-                	
+
                 	handlerLatch.addToBlacklistCheck(handlerTask);
-                    this.pool.executeTask(handlerTask);
+                    if ( !this.pool.executeTask(handlerTask) )
+                    {
+                        // scheduling failed: last resort, call directly
+                        handlerTask.run();
+                    }
                 }
-               
+
 //            }
         }
         handlerLatch.awaitAndBlacklistCheck();
-        
+
     }
 }

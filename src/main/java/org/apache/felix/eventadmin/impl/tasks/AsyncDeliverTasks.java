@@ -98,7 +98,11 @@ public class AsyncDeliverTasks
                 {
                     // reactivate thread
                     executer.setSyncDeliverTasks(m_deliver_task);
-                    m_pool.executeTask(executer);
+                    if ( !m_pool.executeTask(executer) )
+                    {
+                        // scheduling failed: last resort, call directly
+                        executer.run();
+                    }
                     m_running_threads.put(currentThreadId, executer);
                 }
             }
