@@ -35,7 +35,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
  */
 public class FactoryConfigurationAdapterAnnotationTest extends TestBase {
     
-    private final static int MAXWAIT = 10000;
+    private final static int MAXWAIT = 5000;
 
     public void testFactoryConfigurationAdapterAnnotation() throws Throwable {
         Ensure e = new Ensure();

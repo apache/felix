@@ -26,7 +26,6 @@ import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.FactoryConfigurationAdapterService;
 import org.apache.felix.dm.annotation.api.Inject;
 import org.apache.felix.dm.annotation.api.Property;
-import org.apache.felix.dm.annotation.api.Registered;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.annotation.api.Stop;
@@ -35,12 +34,14 @@ import org.osgi.framework.BundleContext;
 
 public class FactoryConfigurationAdapterAnnotation {
     public interface ServiceInterface {
-        public void doService();
     }
 
     @Component
     public static class ServiceClient {
-        @ServiceDependency(changed = "changeServiceProvider")
+        @ServiceDependency(filter="(name=" + ServiceProvider.ENSURE + ")")
+        private volatile Ensure m_sequencer;
+
+        @ServiceDependency(changed = "changeServiceProvider", removed="removedServiceProvider")
         void addServiceProvider(Map props, ServiceInterface si) {
             // props should contain foo=bar, foo2=bar2
             if (!"bar".equals(props.get("foo"))) {
@@ -49,10 +50,11 @@ public class FactoryConfigurationAdapterAnnotation {
             if (!"bar2".equals(props.get("foo2"))) {
                 throw new IllegalArgumentException("configuration does not contain foo2=bar2: " + props);
             }
-            si.doService();
+            m_sequencer.step(2);
         }
 
         void changeServiceProvider(Map props, ServiceInterface si) {
+            System.out.println("ServiceClient: changeServiceProvider");
             // props should contain foo=bar, foo2=bar2_modified
             if (!"bar".equals(props.get("foo"))) {
                 throw new IllegalArgumentException("configuration does not contain foo=bar: " + props);
@@ -60,7 +62,12 @@ public class FactoryConfigurationAdapterAnnotation {
             if (!"bar2_modified".equals(props.get("foo2"))) {
                 throw new IllegalArgumentException("configuration does not contain foo2=bar2: " + props);
             }
-            si.doService();
+            
+            m_sequencer.step(4);
+        }
+        
+        void removedServiceProvider(ServiceInterface si) {
+            m_sequencer.step(5);
         }
     }
 
@@ -96,7 +103,7 @@ public class FactoryConfigurationAdapterAnnotation {
                 if (!"bar2_modified".equals(conf.get("foo2"))) {
                     m_sequencer.throwable(new Exception("configuration does not contain foo=bar"));
                 }
-                m_sequencer.step(4);
+                m_sequencer.step(3);
             } else {
                 // conf should contain foo2=bar2
                 if (!"bar2".equals(conf.get("foo2"))) {
@@ -110,16 +117,6 @@ public class FactoryConfigurationAdapterAnnotation {
             checkInjectedFields();
             m_started = true;
             m_sequencer.step(1);
-        }
-
-        @Registered
-        void registered() {
-            m_sequencer.step(3);
-        }
-
-        // The ServiceClient is invoking our service
-        public void doService() {
-            m_sequencer.step(); /* 2 or 5 */
         }
 
         @Stop
