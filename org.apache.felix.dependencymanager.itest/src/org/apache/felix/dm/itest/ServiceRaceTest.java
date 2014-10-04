@@ -63,13 +63,7 @@ public class ServiceRaceTest extends TestBase {
     
     void doStart() {
         info("Starting createParallelComponentRegistgrationUnregistration test");
-        int cores = Math.max(16, Runtime.getRuntime().availableProcessors());
-        info("using " + cores + " cores.");
-
-        if (! m_parallel) { 
-            // We are not using a parallel DM, so we create a custom threadpool in order to add components concurrently.
-            m_threadpool = Executors.newFixedThreadPool(Math.max(cores, DEPENDENCIES + 3 /* start/stop/configure */));
-        }
+        initThreadPool(); // only if setParallel() has not been called (only if a parallel DM is not used).
 
         try {
             m_timeStamp = System.currentTimeMillis();
@@ -81,16 +75,25 @@ public class ServiceRaceTest extends TestBase {
             error("got unexpected exception", t);
         }
         finally {
-            shutdown(m_threadpool);
+            shutdownThreadPool();
             m_done.step(1);
         }
     }
 
-    void shutdown(ExecutorService exec) {
-        if (! m_parallel && exec != null) {
-            exec.shutdown();
+    private void initThreadPool() {
+        if (! m_parallel) { 
+            // We are not using a parallel DM, so we create a custom threadpool in order to add components concurrently.
+            int cores = Math.max(16, Runtime.getRuntime().availableProcessors());
+            info("using " + cores + " cores.");
+            m_threadpool = Executors.newFixedThreadPool(Math.max(cores, DEPENDENCIES + 3 /* start/stop/configure */));
+        }
+    }
+
+    void shutdownThreadPool() {
+        if (! m_parallel && m_threadpool != null) {
+            m_threadpool.shutdown();
             try {
-                exec.awaitTermination(5, TimeUnit.SECONDS);
+                m_threadpool.awaitTermination(5, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
             }
         }
@@ -233,11 +236,15 @@ public class ServiceRaceTest extends TestBase {
 
         public void updated(Dictionary conf) throws ConfigurationException {
             m_conf = conf;
-            if (conf != null) {
-                Assert.assertEquals("bar", conf.get("foo"));
-                m_step.step(1);
-            } else {
-                m_step.step();
+            try {
+                if (conf != null) {
+                    Assert.assertEquals("bar", conf.get("foo"));
+                    m_step.step(1);
+                } else {
+                    m_step.step();
+                }
+            } catch (Throwable t) {
+                m_step.throwable(t);
             }
         }
         

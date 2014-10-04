@@ -25,8 +25,8 @@ import org.osgi.framework.ServiceReference;
  */
 public class AspectRaceTest extends TestBase {
     final static int SERVICES = 3;
-    final static int ASPECTS_PER_SERVICE = 3;
-    final static int ITERATIONS = 3000;
+    final static int ASPECTS_PER_SERVICE = 10;
+    final static int ITERATIONS = 1000;
     final AtomicInteger m_IDGenerator = new AtomicInteger();
     ExecutorService m_threadpool;
 
@@ -40,12 +40,11 @@ public class AspectRaceTest extends TestBase {
                 debug("Iteration: " + loop);
                 
                 // Use a helper class to wait for components to be started/stopped.
-                int count = SERVICES + (SERVICES * ASPECTS_PER_SERVICE);
+                int count = 1 /* for controller */ + SERVICES + (SERVICES * ASPECTS_PER_SERVICE);
                 ComponentTracker tracker = new ComponentTracker(count, count);
                 
                 // Create the components (controller / services / aspects)
-                Ensure e = new Ensure(false);
-                Controller controller = new Controller(e);
+                Controller controller = new Controller();
                 Factory f = new Factory();
                 f.createComponents(controller, tracker);
                 
@@ -56,22 +55,19 @@ public class AspectRaceTest extends TestBase {
                 if (!tracker.awaitStarted(5000)) {
                     throw new IllegalStateException("Could not start components timely.");
                 }
-
-                // Make sure the controller.start() method has been called.
-                e.waitForStep(1, 5000);
                 
                 // Check aspect chains consistency.
                 controller.checkConsistency();
                 
                 // unregister all services and aspects.
-                f.unregister();
+                f.unregisterComponents();
                 
                 // use component tracker to wait for all components to be stopped.
                 if (!tracker.awaitStopped(5000)) {
                     throw new IllegalStateException("Could not stop components timely.");
                 }
 
-                if ((loop) % 100 == 0) {
+                if ((loop) % 50 == 0) {
                     warn("Performed " + loop + " tests.");
                 }
 
@@ -185,12 +181,11 @@ public class AspectRaceTest extends TestBase {
         
         private void createComponents(Controller controller, ComponentTracker tracker) {
             // create the controller
-            
             int controllerID = m_IDGenerator.incrementAndGet();
-            
             m_controller = m_dm.createComponent()
                 .setImplementation(controller)
-                .setComposition("getComposition");        
+                .setComposition("getComposition")
+                .add(tracker);
             for (int i = 0; i < SERVICES; i ++) {
                 m_controller.add(m_dm.createServiceDependency()
                     .setService(S.class, "(controller.id=" + controllerID + ")")
@@ -256,7 +251,7 @@ public class AspectRaceTest extends TestBase {
             }
         }
 
-        public void unregister() throws InterruptedException, InvalidSyntaxException {        
+        public void unregisterComponents() throws InterruptedException, InvalidSyntaxException {        
             m_dm.remove(m_controller);
             for (final Component s : m_services) {
                 m_dm.remove(s);
@@ -270,11 +265,6 @@ public class AspectRaceTest extends TestBase {
     public class Controller {
         final Composition m_compo = new Composition();
         final HashSet<S> m_services = new HashSet<S>();
-        final Ensure m_ensure;
-
-        public Controller(Ensure e) {
-            m_ensure = e;
-        }
 
         Object[] getComposition() {
             return new Object[] { this, m_compo };
@@ -300,19 +290,11 @@ public class AspectRaceTest extends TestBase {
             debug("unbind " + a);
             m_services.remove(a);
         }
-
-        /**
-         * Checks if the aspect chain is consstent. The chain may not have all the aspects, but at least, the list must be in consistent order, meaning that we 
-         * should never see an aspect with a lower rank of the its immediate next aspect in the chain.
-         */
-        void start() {
-            m_ensure.step(1);
-        }
         
         synchronized void checkConsistency() {
             debug("service count: %d", m_services.size());
             for (S s : m_services) {
-                debug("checking service: %s", s);
+                info("checking service: %s", s);
                 Ensure ensure = new Ensure(false);
                 s.invoke(ensure);
             }
