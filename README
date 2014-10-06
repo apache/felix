@@ -7,17 +7,10 @@ Dependency Manager 4.0.0 general README
 
 * to compile:
 
-- Install Eclipse Kepler SR2 + Java8 support (needed by benchmark) or Eclipse Luna
-- Install bndtools
-- Install java7/Java8 JREs in Eclipse:
-
-Window -> Preferences -> Java -> Installed JREs
-
-- add Java7 and Java8 JREs, but make sure the default JRE used is Java7 
-(Only the org.apache.felix.dependencymanager.benchmark module is needing Java8).
-
-- Open Bndtools perspective
-- Import Dependency Manager in Eclipse
+- Install either Eclipse Kepler SR2 (+ Java8 support which is needed by benchmark sub project) or Eclipse Luna.
+- Install java7/Java8 JREs in Eclipse (Window -> Preferences -> Java -> Installed JREs). Use JRE 1.7 as the default JRE.
+- Open BndTools perpective.
+- Import Dependency Manager in Eclipse.
 
 * To run tests:
 
