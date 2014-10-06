@@ -9,7 +9,7 @@ to other components.
 
 A simple example with a service provider and a service consumer component, both declared using the DM API.
 
-- src/org/apache/felix/dependencymanager/samples/hello:
+- src/org/apache/felix/dependencymanager/samples/hello/annot:
 
 Same example as src/org/apache/felix/dependencymanager/samples/hello, but using annotations.
 
