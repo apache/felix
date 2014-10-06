@@ -10,7 +10,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationAdmin;
 
 /**
- * This Activator defines a component that is used to injects configuration into the Configuration Admin service, 
+ * This Activator defines a component that is used to inject configuration into the Configuration Admin service, 
  * in order to configure some other components defined in other sample sub-projects.
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>

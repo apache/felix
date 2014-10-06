@@ -1,0 +1,39 @@
+This sub-project contains some examples using the Dependency Manager API and annotations:
+
+- src/org/apache/felix/dependencymanager/samples/conf:
+
+This directory contains a component that is used to inject configuration (using Configuration Admin) service
+to other components.  
+
+- src/org/apache/felix/dependencymanager/samples/hello:
+
+A simple example with a service provider and a service consumer component, both declared using the DM API.
+
+- src/org/apache/felix/dependencymanager/samples/hello:
+
+Same example as src/org/apache/felix/dependencymanager/samples/hello, but using annotations.
+
+- src/org/apache/felix/dependencymanager/samples/device:
+
+This is an example use case showing a Dependency Manager "Adapter" in action. Two services are registered in the
+registry ("Device", "DeviceParameter"), each one having a common "device.id" parameter.
+Then a "DeviceAccessImpl" adapter service is defined: it is used to "adapt" the "Device" service to a "DeviceAccess" service, which
+provides the union of each pair of Device/DeviceParameter having the same device.id. The adapter also dynamically configure
+the service properties of the adapted service.
+
+- src/org/apache/felix/dependencymanager/samples/device/annot:
+
+Same example as in src/org/apache/felix/dependencymanager/samples/device, except that the DM annotation is used instead
+of the DM API.
+
+- src/org/apache/felix/dependencymanager/samples/tpool:
+
+Provides a ThreadPool in the OSGi service registry, in order to configure Dependency Manager to handle components dependency management 
+and component lifecycle callbacks concurrently (Actor style). Notice that in the bnd.bnd file, we are using a special property:
+
+  org.apache.felix.dependencymanager.parallel='!org.apache.felix.dependencymanager.samples.tpool, *',\
+  
+This property indicates that all components (except the threadpool itself, which is also defined using the DM API).
+should be cached until the threadpool is registered in the registry. 
+Once the threadpool is registered in the OSGi registry, then, the dependency manager will use that threadpool for activating other components. 
+(see the org.apache.felix.dependencymanager/design.txt for more informations).
