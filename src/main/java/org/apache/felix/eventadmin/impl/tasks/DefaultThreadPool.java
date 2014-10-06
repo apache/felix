@@ -18,6 +18,7 @@ package org.apache.felix.eventadmin.impl.tasks;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadFactory;
 
 import org.apache.felix.eventadmin.impl.util.LogWrapper;
@@ -117,18 +118,25 @@ public class DefaultThreadPool
      * @param task The task to execute
      * @return {@code true} if the task execution could be scheduled, {@code false} otherwise.
      */
-    public boolean executeTask(final Runnable task) {
+    public boolean executeTask(final Runnable task)
+    {
         try
         {
             this.executor.submit(task);
-            return true;
+        }
+        catch ( final RejectedExecutionException ree )
+        {
+            LogWrapper.getLogger().log(
+                    LogWrapper.LOG_WARNING,
+                    "Exception: " + ree, ree);
+            return false;
         }
         catch (final Throwable t)
         {
             LogWrapper.getLogger().log(
                     LogWrapper.LOG_WARNING,
                     "Exception: " + t, t);
-            return false;
         }
+        return true;
     }
 }
