@@ -32,15 +32,16 @@ public class BundleDependencyAnnotationTest extends TestBase {
     
     /**
      * Tests a simple Consumer, which has a BundleDependency over the dependency manager bundle.
+     * TODO: this test is not currently working.
      */
     public void testBundleDependencyAnnotation() {
         Ensure e = new Ensure();
         ServiceRegistration sr = register(e, BundleDependencyAnnotation.ENSURE_CONSUMER);
-        e.waitForStep(1, 10000);
-        stopBundle(Utils.DM_RUNTIME_IT_COMPONENTS_BSN);
         e.waitForStep(2, 10000);
+        stopBundle(BundleDependencyAnnotation.METATYPE_BSN);
+        e.waitForStep(4, 10000);
         sr.unregister();
-        startBundle(Utils.DM_RUNTIME_IT_COMPONENTS_BSN);
+        startBundle(BundleDependencyAnnotation.METATYPE_BSN);
     }
 
     /**

@@ -4,13 +4,11 @@
 	org.apache.felix.dependencymanager.itest.api;version=latest,\
 	org.apache.felix.dependencymanager.annotation;version=latest,\
 	osgi.cmpn;version=4.2,\
-	biz.aQute.junit;version=999999999.0
+	junit.osgi;version=3.8
 -runbundles:  \
 	org.apache.felix.configadmin;version=1.8.0,\
 	org.apache.felix.dependencymanager;version=latest,\
 	org.apache.felix.dependencymanager.itest.api;version=latest,\
-	org.apache.felix.dependencymanager.runtime.itest.components;version=latest,\
-	org.apache.felix.dependencymanager.runtime.itest.tests;version=latest,\
 	org.apache.felix.dependencymanager.runtime;version=latest,\
 	org.apache.felix.metatype;version=1.0.4,\
 	org.apache.felix.gogo.runtime;version=0.10.0,\
@@ -20,7 +18,8 @@
 -runsystempackages: \
 	sun.reflect
 -runvm:-ea
--sub: \
-	*.bnd
 -plugin: org.apache.felix.dm.annotation.plugin.bnd.AnnotationPlugin;log=debug;\
 		 path:=${workspace}/org.apache.felix.dependencymanager.annotation/generated/org.apache.felix.dependencymanager.annotation.jar
+Private-Package:  \
+	org.apache.felix.dm.runtime.itest.tests,\
+	org.apache.felix.dm.runtime.itest.components

@@ -20,7 +20,6 @@ package org.apache.felix.dm.runtime.itest.components;
 
 public class Utils {
     public static final String DM_BSN = "org.apache.felix.dependencymanager"; 
-    public static final String DM_RUNTIME_IT_COMPONENTS_BSN = "org.apache.felix.dependencymanager.runtime.itest.components"; 
 
     public static void schedule(final Runnable task, final long n) {
         Thread t = new Thread() {

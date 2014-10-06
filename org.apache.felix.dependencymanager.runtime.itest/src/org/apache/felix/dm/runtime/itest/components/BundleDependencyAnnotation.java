@@ -36,6 +36,7 @@ import org.osgi.framework.BundleContext;
 public class BundleDependencyAnnotation {
     public static final String ENSURE_CONSUMER = "BundleDependencyAnnotation.consumer";
     public static final String ENSURE_ADAPTER = "BundleDependencyAnnotation.adapter";
+    public static final String METATYPE_BSN = "org.apache.felix.metatype";
 
     public interface ServiceInterface extends Runnable {
     }
@@ -45,38 +46,30 @@ public class BundleDependencyAnnotation {
      */
     @Component
     public static class Consumer {
-        protected volatile boolean m_added;
-        protected volatile boolean m_removed;
-
         @ServiceDependency(filter = "(name=" + ENSURE_CONSUMER + ")")
         private volatile Ensure m_sequencer;
 
-        @BundleDependency(required = false, removed = "removed", filter = "(Bundle-SymbolicName=" + DM_BSN + ")")
+        @BundleDependency(required = true, removed = "removed", filter = "(Bundle-SymbolicName=" + METATYPE_BSN + ")", stateMask = Bundle.ACTIVE)
         public void add(Bundle b) {
-            if (b != null && b.getSymbolicName().equals(DM_BSN)) {
-                m_added = true;
+            if (b != null && b.getSymbolicName().equals(METATYPE_BSN)) {
+                m_sequencer.step(1);
             }
-        }
-
-        protected void removed(Bundle b) {
-            m_removed = true;
         }
 
         @Start
         public void start() {
-            m_sequencer.step(1);
+            m_sequencer.step(2);
         }
 
         @Stop
         public void stop() {
-            if (!m_added) {
-                throw new IllegalStateException("Did not get DependencyManager bundle");
+            m_sequencer.step(3);
+        }
+        
+        protected void removed(Bundle b) {
+            if (b != null && b.getSymbolicName().equals(METATYPE_BSN)) {
+                m_sequencer.step(4);
             }
-
-            if (!m_removed) {
-                throw new IllegalStateException("Did not remove DependencyManager bundle");
-            }
-            m_sequencer.step(2);
         }
     }
 
@@ -101,7 +94,7 @@ public class BundleDependencyAnnotation {
     /**
      * A BundleAdapter test, which adapts the dependency manager bundle to the ServiceInterface service.
      */
-    @BundleAdapterService(filter = "(Bundle-SymbolicName=" + DM_BSN + ")", stateMask = Bundle.INSTALLED
+    @BundleAdapterService(filter = "(Bundle-SymbolicName=" + METATYPE_BSN + ")", stateMask = Bundle.INSTALLED
             | Bundle.RESOLVED | Bundle.ACTIVE, propagate = true, properties = {@Property(name = "foo", value = "bar")})
     public static class ServiceProvider implements ServiceInterface {
         // Adapted bundle (injected by reflection).
@@ -131,7 +124,7 @@ public class BundleDependencyAnnotation {
         }
 
         public void run() {
-            if (m_bundle == null || !m_bundle.getSymbolicName().equals(DM_BSN)) {
+            if (m_bundle == null || !m_bundle.getSymbolicName().equals(METATYPE_BSN)) {
                 throw new IllegalStateException("ServiceProvider did not get proper bundle: " + m_bundle);
             }
             m_sequencer.step(3);
