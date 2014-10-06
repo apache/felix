@@ -36,7 +36,6 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import org.junit.Test;
 
 public class SslFilterResponseTest
@@ -54,14 +53,14 @@ public class SslFilterResponseTest
     @Test
     public void testSetHttpLocationHeaderToNullValue() throws Exception
     {
-        HttpServletResponse resp = createServletResponse();
+        TestHttpServletResponse resp = createServletResponse();
         HttpServletRequest req = createServletRequest(BACKEND_SERVER);
 
         SslFilterResponse sresp = new SslFilterResponse(resp, req);
 
         sresp.setHeader(LOCATION, null);
 
-        assertEquals(null, sresp.getHeader(LOCATION));
+        assertEquals(null, resp.getHeader(LOCATION));
     }
 
     @Test
@@ -69,7 +68,7 @@ public class SslFilterResponseTest
     {
         String location, expected;
 
-        HttpServletResponse resp = createServletResponse();
+        TestHttpServletResponse resp = createServletResponse();
         HttpServletRequest req = createServletRequest(BACKEND_SERVER);
 
         SslFilterResponse sresp = new SslFilterResponse(resp, req);
@@ -79,7 +78,7 @@ public class SslFilterResponseTest
 
         sresp.setHeader(LOCATION, location);
 
-        assertEquals(expected, sresp.getHeader(LOCATION));
+        assertEquals(expected, resp.getHeader(LOCATION));
     }
 
     @Test
@@ -87,7 +86,7 @@ public class SslFilterResponseTest
     {
         String location, expected;
 
-        HttpServletResponse resp = createServletResponse();
+        TestHttpServletResponse resp = createServletResponse();
         HttpServletRequest req = createServletRequest(BACKEND_SERVER);
 
         SslFilterResponse sresp = new SslFilterResponse(resp, req);
@@ -97,7 +96,7 @@ public class SslFilterResponseTest
 
         sresp.setHeader(LOCATION, location);
 
-        assertEquals(expected, sresp.getHeader(LOCATION));
+        assertEquals(expected, resp.getHeader(LOCATION));
     }
 
     @Test
@@ -105,7 +104,7 @@ public class SslFilterResponseTest
     {
         String location, expected;
 
-        HttpServletResponse resp = createServletResponse();
+        TestHttpServletResponse resp = createServletResponse();
         HttpServletRequest req = createServletRequest(BACKEND_SERVER);
 
         SslFilterResponse sresp = new SslFilterResponse(resp, req);
@@ -115,7 +114,7 @@ public class SslFilterResponseTest
 
         sresp.setHeader(LOCATION, location);
 
-        assertEquals(expected, sresp.getHeader(LOCATION));
+        assertEquals(expected, resp.getHeader(LOCATION));
     }
 
     @Test
@@ -123,7 +122,7 @@ public class SslFilterResponseTest
     {
         String location, expected;
 
-        HttpServletResponse resp = createServletResponse();
+        TestHttpServletResponse resp = createServletResponse();
         HttpServletRequest req = createServletRequest(BACKEND_SERVER, DEFAULT_HTTP_PORT, HTTPS, ALT_HTTPS_PORT);
 
         SslFilterResponse sresp = new SslFilterResponse(resp, req);
@@ -133,7 +132,7 @@ public class SslFilterResponseTest
 
         sresp.setHeader(LOCATION, location);
 
-        assertEquals(expected, sresp.getHeader(LOCATION));
+        assertEquals(expected, resp.getHeader(LOCATION));
     }
 
     @Test
@@ -141,7 +140,7 @@ public class SslFilterResponseTest
     {
         String location, expected;
 
-        HttpServletResponse resp = createServletResponse();
+        TestHttpServletResponse resp = createServletResponse();
         HttpServletRequest req = createServletRequest(BACKEND_SERVER);
 
         SslFilterResponse sresp = new SslFilterResponse(resp, req);
@@ -151,13 +150,13 @@ public class SslFilterResponseTest
 
         sresp.setHeader(LOCATION, location);
 
-        assertEquals(expected, sresp.getHeader(LOCATION));
+        assertEquals(expected, resp.getHeader(LOCATION));
     }
 
     @Test
     public void testSetHttpLocationHeaderToOtherRequestURI() throws Exception
     {
-        HttpServletResponse resp = createServletResponse();
+        TestHttpServletResponse resp = createServletResponse();
         HttpServletRequest req = createServletRequest(BACKEND_SERVER);
 
         SslFilterResponse sresp = new SslFilterResponse(resp, req);
@@ -167,7 +166,7 @@ public class SslFilterResponseTest
 
         sresp.setHeader(LOCATION, location);
 
-        assertEquals(expected, sresp.getHeader(LOCATION));
+        assertEquals(expected, resp.getHeader(LOCATION));
     }
 
     private HttpServletRequest createServletRequest(String serverName)
@@ -185,194 +184,195 @@ public class SslFilterResponseTest
         return req;
     }
 
-    private HttpServletResponse createServletResponse()
+    private TestHttpServletResponse createServletResponse()
     {
-        HttpServletResponse resp = new HttpServletResponse()
+        return new TestHttpServletResponse();
+    }
+
+    private static class TestHttpServletResponse implements HttpServletResponse
+    {
+        private final Map<String, String> headers = new HashMap<String, String>();
+        private int status = -1;
+        private boolean committed = false;
+
+        public void setLocale(Locale loc)
         {
-            private final Map<String, String> headers = new HashMap<String, String>();
-            private int status = -1;
-            private boolean committed = false;
+            throw new UnsupportedOperationException();
+        }
 
-            public void setLocale(Locale loc)
-            {
-                throw new UnsupportedOperationException();
-            }
+        public void setContentType(String type)
+        {
+            throw new UnsupportedOperationException();
+        }
 
-            public void setContentType(String type)
-            {
-                throw new UnsupportedOperationException();
-            }
+        public void setContentLength(int len)
+        {
+            throw new UnsupportedOperationException();
+        }
 
-            public void setContentLength(int len)
-            {
-                throw new UnsupportedOperationException();
-            }
+        public void setCharacterEncoding(String charset)
+        {
+            throw new UnsupportedOperationException();
+        }
 
-            public void setCharacterEncoding(String charset)
-            {
-                throw new UnsupportedOperationException();
-            }
+        public void setBufferSize(int size)
+        {
+            throw new UnsupportedOperationException();
+        }
 
-            public void setBufferSize(int size)
-            {
-                throw new UnsupportedOperationException();
-            }
+        public void resetBuffer()
+        {
+        }
 
-            public void resetBuffer()
-            {
-            }
+        public void reset()
+        {
+        }
 
-            public void reset()
-            {
-            }
+        public boolean isCommitted()
+        {
+            return this.committed;
+        }
 
-            public boolean isCommitted()
-            {
-                return this.committed;
-            }
+        public PrintWriter getWriter() throws IOException
+        {
+            throw new UnsupportedOperationException();
+        }
 
-            public PrintWriter getWriter() throws IOException
-            {
-                throw new UnsupportedOperationException();
-            }
+        public ServletOutputStream getOutputStream() throws IOException
+        {
+            throw new UnsupportedOperationException();
+        }
 
-            public ServletOutputStream getOutputStream() throws IOException
-            {
-                throw new UnsupportedOperationException();
-            }
+        public Locale getLocale()
+        {
+            throw new UnsupportedOperationException();
+        }
 
-            public Locale getLocale()
-            {
-                throw new UnsupportedOperationException();
-            }
+        public String getContentType()
+        {
+            throw new UnsupportedOperationException();
+        }
 
-            public String getContentType()
-            {
-                throw new UnsupportedOperationException();
-            }
+        public String getCharacterEncoding()
+        {
+            throw new UnsupportedOperationException();
+        }
 
-            public String getCharacterEncoding()
-            {
-                throw new UnsupportedOperationException();
-            }
+        public int getBufferSize()
+        {
+            throw new UnsupportedOperationException();
+        }
 
-            public int getBufferSize()
-            {
-                throw new UnsupportedOperationException();
-            }
+        public void flushBuffer() throws IOException
+        {
+            committed = true;
+        }
 
-            public void flushBuffer() throws IOException
-            {
-                committed = true;
-            }
+        public void setStatus(int sc, String sm)
+        {
+            status = sc;
+            committed = true;
+        }
 
-            public void setStatus(int sc, String sm)
-            {
-                status = sc;
-                committed = true;
-            }
+        public void setStatus(int sc)
+        {
+            status = sc;
+            committed = true;
+        }
 
-            public void setStatus(int sc)
-            {
-                status = sc;
-                committed = true;
-            }
+        public void setIntHeader(String name, int value)
+        {
+            headers.put(name, Integer.toString(value));
+        }
 
-            public void setIntHeader(String name, int value)
-            {
-                headers.put(name, Integer.toString(value));
-            }
+        public void setHeader(String name, String value)
+        {
+            headers.put(name, value);
+        }
 
-            public void setHeader(String name, String value)
-            {
-                headers.put(name, value);
-            }
+        public void setDateHeader(String name, long date)
+        {
+            throw new UnsupportedOperationException();
+        }
 
-            public void setDateHeader(String name, long date)
-            {
-                throw new UnsupportedOperationException();
-            }
+        public void sendRedirect(String location) throws IOException
+        {
+            throw new UnsupportedOperationException();
+        }
 
-            public void sendRedirect(String location) throws IOException
-            {
-                throw new UnsupportedOperationException();
-            }
+        public void sendError(int sc, String msg) throws IOException
+        {
+            throw new UnsupportedOperationException();
+        }
 
-            public void sendError(int sc, String msg) throws IOException
-            {
-                throw new UnsupportedOperationException();
-            }
+        public void sendError(int sc) throws IOException
+        {
+            throw new UnsupportedOperationException();
+        }
 
-            public void sendError(int sc) throws IOException
-            {
-                throw new UnsupportedOperationException();
-            }
+        public int getStatus()
+        {
+            return status;
+        }
 
-            public int getStatus()
-            {
-                return status;
-            }
+        public Collection<String> getHeaders(String name)
+        {
+            return Collections.singleton(headers.get(name));
+        }
 
-            public Collection<String> getHeaders(String name)
-            {
-                return Collections.singleton(headers.get(name));
-            }
+        public Collection<String> getHeaderNames()
+        {
+            return headers.keySet();
+        }
 
-            public Collection<String> getHeaderNames()
-            {
-                return headers.keySet();
-            }
+        public String getHeader(String name)
+        {
+            return headers.get(name);
+        }
 
-            public String getHeader(String name)
-            {
-                return headers.get(name);
-            }
+        public String encodeUrl(String url)
+        {
+            throw new UnsupportedOperationException();
+        }
 
-            public String encodeUrl(String url)
-            {
-                throw new UnsupportedOperationException();
-            }
+        public String encodeURL(String url)
+        {
+            throw new UnsupportedOperationException();
+        }
 
-            public String encodeURL(String url)
-            {
-                throw new UnsupportedOperationException();
-            }
+        public String encodeRedirectUrl(String url)
+        {
+            throw new UnsupportedOperationException();
+        }
 
-            public String encodeRedirectUrl(String url)
-            {
-                throw new UnsupportedOperationException();
-            }
+        public String encodeRedirectURL(String url)
+        {
+            throw new UnsupportedOperationException();
+        }
 
-            public String encodeRedirectURL(String url)
-            {
-                throw new UnsupportedOperationException();
-            }
+        public boolean containsHeader(String name)
+        {
+            return headers.containsKey(name);
+        }
 
-            public boolean containsHeader(String name)
-            {
-                return headers.containsKey(name);
-            }
+        public void addIntHeader(String name, int value)
+        {
+            throw new UnsupportedOperationException();
+        }
 
-            public void addIntHeader(String name, int value)
-            {
-                throw new UnsupportedOperationException();
-            }
+        public void addHeader(String name, String value)
+        {
+            throw new UnsupportedOperationException();
+        }
 
-            public void addHeader(String name, String value)
-            {
-                throw new UnsupportedOperationException();
-            }
+        public void addDateHeader(String name, long date)
+        {
+            throw new UnsupportedOperationException();
+        }
 
-            public void addDateHeader(String name, long date)
-            {
-                throw new UnsupportedOperationException();
-            }
-
-            public void addCookie(Cookie cookie)
-            {
-                throw new UnsupportedOperationException();
-            }
-        };
-        return resp;
+        public void addCookie(Cookie cookie)
+        {
+            throw new UnsupportedOperationException();
+        }
     }
 }
