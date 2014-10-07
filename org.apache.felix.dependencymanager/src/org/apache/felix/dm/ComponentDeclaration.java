@@ -19,6 +19,7 @@
 package org.apache.felix.dm;
 
 import java.util.Dictionary;
+import java.util.Map;
 
 import org.osgi.framework.BundleContext;
 
@@ -54,5 +55,7 @@ public interface ComponentDeclaration {
     /** Returns the bundle context associated with this component. */
     public BundleContext getBundleContext();
     /** Returns the dependency manager for this component */
-    public DependencyManager getDependencyManager();    
+    public DependencyManager getDependencyManager();
+    /** Returns the execution time in nanos for each component callbacks (init/start/stop/destroy) */
+    public Map<String, Long> getCallbacksTime(); 
 }

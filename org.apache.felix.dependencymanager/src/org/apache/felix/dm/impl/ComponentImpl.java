@@ -77,6 +77,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     private volatile ServiceRegistration m_registration;
     private final Map<Class<?>, Boolean> m_autoConfig = new ConcurrentHashMap<>();
     private final Map<Class<?>, String> m_autoConfigInstance = new ConcurrentHashMap<>();
+    private final Map<String, Long> m_stopwatch = new ConcurrentHashMap<>();
     private final long m_id;
     private static AtomicLong m_idGenerator = new AtomicLong();
     // Holds all the services of a given dependency context. Caution: the last entry in the skiplist is the highest ranked service.
@@ -860,9 +861,15 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             // ask the service for its composition instances
             Object[] instances = m_callbackInstance != null ? new Object[] { m_callbackInstance } : getCompositionInstances();
 
-            invokeCallbackMethod(instances, name, 
-                new Class[][] {{ Component.class }, {}}, 
-                new Object[][] {{ this }, {}});
+            long t1 = System.nanoTime();
+            try {
+                invokeCallbackMethod(instances, name, 
+                    new Class[][] {{ Component.class }, {}}, 
+                    new Object[][] {{ this }, {}});
+            } finally {
+                long t2 = System.nanoTime();
+                m_stopwatch.put(name, t2 - t1);
+            }
         }
     }
     
@@ -1227,9 +1234,9 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     @Override
     public String toString() {
     	if (debug) {
-    		System.out.println(debugKey);
+    		return debugKey;
     	}
-    	return super.toString();
+    	return getClassName();
     }
     
     @Override
@@ -1241,5 +1248,10 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     
     public Logger getLogger() {
         return m_logger;
+    }
+
+    @Override
+    public Map<String, Long> getCallbacksTime() {
+        return m_stopwatch;
     }
 }

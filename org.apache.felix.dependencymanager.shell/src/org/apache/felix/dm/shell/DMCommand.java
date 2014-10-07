@@ -25,6 +25,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
@@ -143,33 +144,37 @@ public class DMCommand {
             boolean wtf,
 
             @Descriptor("Displays components statistics") 
-            @Parameter(names = {"stats", "st"}, presentValue = "true", absentValue = "false") 
+            @Parameter(names = {"stats", "stat", "st"}, presentValue = "true", absentValue = "false") 
             boolean stats,
 
-            @Descriptor("OSGi filter used to filter some service properties") 
+            @Descriptor("<OSGi filter used to filter some service properties>") 
             @Parameter(names = {"services", "s"}, absentValue = "") 
             String services,
 
-            @Descriptor("Regex(s) used to filter on component implementation class names (comma separated, can be negated using \"!\" prefix)") 
+            @Descriptor("<Regex(s) used to filter on component implementation class names (comma separated), can be negated using \"!\" prefix>") 
             @Parameter(names = {"components", "c"}, absentValue = "") 
             String components,
             
-            @Descriptor("Component identifiers to display (list of longs, comma separated)") 
+            @Descriptor("<List of component identifiers to display (comma separated)>") 
             @Parameter(names = {"componentIds", "cid", "ci"}, absentValue = "") 
             String componentIds,
 
-            @Descriptor("List of bundle ids or bundle symbolic names to display (comma separated)") 
-            @Parameter(names = {"bundleIds", "bid", "bi"}, absentValue = "") 
-            String bundleIds) {
+            @Descriptor("<List of bundle ids or bundle symbolic names to display (comma separated)>") 
+            @Parameter(names = {"bundleIds", "bid", "bi", "b"}, absentValue = "") 
+            String bundleIds,
+            
+            @Descriptor("<Max number of top components to display (0=all)> This command displays components callbacks (init/start) times>") 
+            @Parameter(names = {"top"}, absentValue = "-1") 
+            int top)
+        {
         
         try {
             boolean comp = Boolean.parseBoolean(getParam(session, ENV_COMPACT, compact));
             services = getParam(session, ENV_SERVICES, services);
             String[] componentsRegex = getParams(session, ENV_COMPONENTS, components);
-
             ArrayList<String> bids = new ArrayList<String>(); // list of bundle ids or bundle symbolic names
             ArrayList<Long> cids = new ArrayList<Long>(); // list of component ids
-
+            
             // Parse and check componentIds option
             StringTokenizer tok = new StringTokenizer(componentIds, ", ");
             while (tok.hasMoreTokens()) {
@@ -197,6 +202,11 @@ public class DMCommand {
             tok = new StringTokenizer(bundleIds, ", ");
             while (tok.hasMoreTokens()) {
                 bids.add(tok.nextToken());
+            }
+            
+            if (top != -1) {
+                showTopComponents(top);
+                return;
             }
             
             if (wtf) {
@@ -298,6 +308,55 @@ public class DMCommand {
             }
         } catch (Throwable t) {
             t.printStackTrace();
+        }
+    }
+
+    /**
+     * Displays components callbacks (init/start/stop/destroy) elapsed time.
+     * The components are sorted (the most time consuming components are displayed first).
+     * @param max the max number of components to display (0 means all components)
+     */
+    private void showTopComponents(int max) {
+        List<Component> components = new ArrayList<>();
+        for (DependencyManager manager : DependencyManager.getDependencyManagers()) {
+           components.addAll(manager.getComponents()); 
+        }
+        Collections.sort(components, new Comparator<Component>() {
+            @Override
+            public int compare(Component c1, Component c2) {
+                Map<String, Long> c1Times = c1.getComponentDeclaration().getCallbacksTime();
+                Map<String, Long> c2Times = c2.getComponentDeclaration().getCallbacksTime();
+                Long c1Start = c1Times.get("start");
+                Long c2Start = c2Times.get("start");
+                if (c1Start != null) {
+                    if (c2Start != null) {
+                        return c1Start > c2Start ? 1 : -1;
+                    } else {
+                        return 1;
+                    }
+                } else {
+                    if (c2Start != null) {
+                        return -1;
+                    } else {
+                        return 0;
+                    }
+                }
+            }
+        });
+        
+        Collections.reverse(components);
+
+        System.out.printf("%-100s %10s %10s%n%n", "Top components (sorted by start duration time)", "[init time]", "[start time]");
+        
+        if (components.size() > 0) {
+            System.out.println();
+            
+            max = max == 0 ? components.size() : Math.min(components.size(), max);
+            for (int i = 0 ; i < components.size()  && i < max; i++) {
+                ComponentDeclaration decl = components.get(i).getComponentDeclaration();
+                System.out.printf("%-100s %10d %10d%n", decl.getClassName(),
+                    decl.getCallbacksTime().get("init"), decl.getCallbacksTime().get("start"));
+            }
         }
     }
 

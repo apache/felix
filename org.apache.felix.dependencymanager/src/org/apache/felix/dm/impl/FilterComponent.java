@@ -20,6 +20,7 @@ package org.apache.felix.dm.impl;
 
 import java.util.Dictionary;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
@@ -336,5 +337,10 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     public Component setThreadPool(Executor threadPool) {
         m_component.setThreadPool(threadPool);
         return this;
+    }
+
+    @Override
+    public Map<String, Long> getCallbacksTime() {
+        return m_component.getCallbacksTime();
     }
 }
