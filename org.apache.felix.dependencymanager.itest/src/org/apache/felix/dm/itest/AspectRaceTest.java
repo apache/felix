@@ -229,25 +229,25 @@ public class AspectRaceTest extends TestBase {
                     m_dm.add(a);
                 }
             } else {
-                m_threadpool.execute(new Runnable() {
-                    public void run() {
-                        for (final Component s : m_services) {
+                for (final Component s : m_services) {
+                    m_threadpool.execute(new Runnable() {
+                        public void run() {
                             m_dm.add(s);
                         }
-                    }
-                });
+                    });
+                }
                 m_threadpool.execute(new Runnable() {
                     public void run() {
                         m_dm.add(m_controller);
                     }
                 });
-                m_threadpool.execute(new Runnable() {
-                    public void run() {
-                        for (final Component a : m_aspects) {
+                for (final Component a : m_aspects) {
+                    m_threadpool.execute(new Runnable() {
+                        public void run() {
                             m_dm.add(a);
                         }
-                    }
-                });
+                    });
+                }
             }
         }
 
