@@ -37,3 +37,27 @@ This property indicates that all components (except the threadpool itself, which
 should be cached until the threadpool is registered in the registry. 
 Once the threadpool is registered in the OSGi registry, then, the dependency manager will use that threadpool for activating other components. 
 (see the org.apache.felix.dependencymanager/design.txt for more informations).
+
+- src/org/apache/felix/dependencymanager/samples/dictionary/
+
+This sample shows a basic "SpellChecker" application (using DM API) which provides a "dictionary:spellcheck" GOGO shell
+command. The GOGO "dictionary:spellcheck" command accepts a string as parameter, which is checked for proper
+existence. The SpellChecker class has a required/multiple (1..N) dependency over every available
+"DictionaryService" services, which are internally used by the SpellChecker command, when checking
+word existence.
+
+A DictionaryService is defined using a FactoryConfigurationAdapterService , allowing to
+instantiate many "DictionaryService" instances, when some configurations are added to
+the "org.apache.felix.dependencymanager.samples.dictionary.DictionaryConfiguration" factory pid 
+from web console. The factory pid configuration metatypes are defined using the bnd "metatype" annotations (see 
+DictionaryConfiguration.java).
+
+The DictionaryService is decorated with a DictionaryAspect, which you can instantiate by adding
+a configuration from web console, using a "DictionaryAspectConfiguration" PID.
+The aspect configuration metatype is also declared using the bnd metatype annotations (see 
+DictionaryAspectConfiguration.java).
+
+- src/org/apache/felix/dependencymanager/samples/dictionary/annot/
+
+Same sample as previous, except that DM Annotations are used instead of the DM api.
+
