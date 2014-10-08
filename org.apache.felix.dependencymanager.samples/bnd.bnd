@@ -3,7 +3,9 @@ Bundle-Version: 1.0.0.${tstamp}
 	org.apache.felix.dependencymanager;version=latest,\
 	osgi.core;version=4.2,\
 	org.apache.felix.dependencymanager.annotation;version=latest,\
-	osgi.cmpn;version=4.2
+	osgi.cmpn;version=4.2,\
+	org.apache.felix.gogo.runtime;version=latest,\
+	biz.aQute.bnd.annotation;version=2.3
 -runfw: org.apache.felix.framework;version='[4.4.0,4.4.0]'
 -runee: OSGi/Minimum-1.1
 -runbundles:  \
@@ -19,10 +21,11 @@ Bundle-Version: 1.0.0.${tstamp}
 	org.apache.felix.dependencymanager.samples.tpool;version=latest,\
 	org.apache.felix.dependencymanager.samples.conf;version=latest,\
 	org.apache.felix.configadmin;version=1.8.0,\
-	org.apache.felix.dependencymanager.samples.device;version=latest
-Private-Package: \
-	org.apache.felix.dependencymanager.samples.tpool,\
-	org.apache.felix.dependencymanager.samples.hello
+	org.apache.felix.dependencymanager.samples.device;version=latest,\
+	org.apache.felix.webconsole;version=4.2.2,\
+	org.apache.felix.http.jetty;version=2.0.4,\
+	org.apache.felix.eventadmin;version=1.4.3,\
+	biz.aQute.bndlib;version=2.3.0
 -runproperties:  \
 	org.apache.felix.dependencymanager.parallel='!org.apache.felix.dependencymanager.samples.tpool, *',\
 	org.apache.felix.dependencymanager.runtime.log=debug,\
@@ -31,3 +34,4 @@ Private-Package: \
 	path:=${workspace}/org.apache.felix.dependencymanager.annotation/generated/org.apache.felix.dependencymanager.annotation.jar
 -sub:  \
 	*.bnd
+-metatype: *
