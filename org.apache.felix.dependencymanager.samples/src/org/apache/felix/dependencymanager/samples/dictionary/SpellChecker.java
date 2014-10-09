@@ -38,7 +38,7 @@ public class SpellChecker {
     private LogService m_log;
 
     /**
-     * We'll store all Dictionaries in a CopyOnWrite list, in order to avoid method synchronization.
+     * We'll store all Dictionaries in a concurrent list, in order to avoid method synchronization.
      * (Auto-Injected from Activator, at any time).
      */
     private final Iterable<DictionaryService> m_dictionaries = new ConcurrentLinkedQueue<>();
