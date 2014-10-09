@@ -18,7 +18,7 @@
  */
 package org.apache.felix.dependencymanager.samples.dictionary;
 
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.apache.felix.service.command.Descriptor;
 import org.osgi.service.log.LogService;
@@ -41,7 +41,7 @@ public class SpellChecker {
      * We'll store all Dictionaries in a CopyOnWrite list, in order to avoid method synchronization.
      * (Auto-Injected from Activator, at any time).
      */
-    private volatile CopyOnWriteArrayList<DictionaryService> m_dictionaries;
+    private final Iterable<DictionaryService> m_dictionaries = new ConcurrentLinkedQueue<>();
 
     /**
      * Lifecycle method callback, used to check if our service has been activated.

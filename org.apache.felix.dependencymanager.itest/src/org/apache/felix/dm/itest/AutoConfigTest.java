@@ -2,6 +2,7 @@ package org.apache.felix.dm.itest;
 
 import java.util.Collection;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,7 +20,7 @@ public class AutoConfigTest extends TestBase {
     public void testField() throws Exception {
         final DependencyManager dm = getDM();
         // Create a consumer, depending on some providers (autoconfig field).
-        ConsumerField consumer = new ConsumerField();
+        ConsumeWithProviderField consumer = new ConsumeWithProviderField();
         Component c = createConsumer(dm, consumer);
         // Create two providers
         Component p1 = createProvider(dm, 10, new Provider() {
@@ -46,9 +47,9 @@ public class AutoConfigTest extends TestBase {
         m_ensure.waitForStep(2, 5000);
     }
     
-    public void testCollectionField() throws Exception {
+    public void testIterableField() throws Exception {
         final DependencyManager dm = getDM();
-        ConsumerCollection consumer = new ConsumerCollection();
+        ConsumerWithIterableField consumer = new ConsumerWithIterableField();
         Component c = createConsumer(dm, consumer);
         Component p1 = createProvider(dm, 10, new Provider() {
             public void run() { m_ensure.step(); }
@@ -83,7 +84,7 @@ public class AutoConfigTest extends TestBase {
     
     public void testMapField() throws Exception {
         final DependencyManager dm = getDM();
-        ConsumerMap consumer = new ConsumerMap();
+        ConsumerWithMapField consumer = new ConsumerWithMapField();
         Component c = createConsumer(dm, consumer);
         Component p1 = createProvider(dm, 10, new Provider() {
             public void run() { m_ensure.step(); }
@@ -133,7 +134,7 @@ public class AutoConfigTest extends TestBase {
     public static interface Provider extends Runnable {      
     }
     
-    public class ConsumerField {
+    public class ConsumeWithProviderField {
         volatile Provider m_provider;
         
         void start() {
@@ -151,15 +152,17 @@ public class AutoConfigTest extends TestBase {
         }
     }
     
-    public class ConsumerCollection {
-        volatile ConcurrentLinkedQueue<Provider> m_providers;
+    public class ConsumerWithIterableField {
+        final Iterable<Provider> m_providers = new ConcurrentLinkedQueue<>();
         
         void start() {
             Assert.assertNotNull(m_providers);
-            Assert.assertTrue(m_providers.size() == 2);
+            int found = 0;
             for (Provider provider : m_providers) {
                 provider.run();
+                found ++;
             }
+            Assert.assertTrue(found == 2);
             m_ensure.step(3);
         }
         
@@ -172,18 +175,14 @@ public class AutoConfigTest extends TestBase {
             }
             return null;
         }
-
-        Collection<Provider> getProviders() {
-            return m_providers;
-        }
         
         void stop() {
             m_ensure.step(4);
         }
     }    
     
-    public class ConsumerMap {
-        volatile ConcurrentHashMap<Provider, Dictionary> m_providers;
+    public class ConsumerWithMapField {
+        final Map<Provider, Dictionary> m_providers = new ConcurrentHashMap<>();
         
         void start() {
             Assert.assertNotNull(m_providers);

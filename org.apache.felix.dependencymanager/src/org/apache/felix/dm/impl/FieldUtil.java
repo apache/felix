@@ -6,6 +6,8 @@ import java.lang.reflect.Proxy;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
@@ -20,13 +22,13 @@ public class FieldUtil {
      * Callbacks for fields to be injected
      */
     private interface FieldFunction {
-        // Inject an updated service in the given field for the the given target component instance.
+        // Inject an updated service in the given field for the the given target.
         void injectField(Field f, Object target);
 
-        // Inject a Collection field  in the given field for the the given target component instance.
-        void injectCollectionField(Field f, Object target);
+        // Inject an Iterable Field in the given target 
+        void injectIterableField(Field f, Object target);
 
-        // Inject a Map field (key = dependency service, value = Dictionary with dependency service properties).
+        // Inject a Map field in the given target (key = dependency service, value = Dictionary with dependency service properties).
         void injectMapField(Field f, Object target);
     }
 
@@ -55,7 +57,7 @@ public class FieldUtil {
                 }
             }
 
-            public void injectCollectionField(Field f, Object target) { // never called
+            public void injectIterableField(Field f, Object target) { // never called
             }
 
             public void injectMapField(Field f, Object target) { // never called
@@ -91,14 +93,17 @@ public class FieldUtil {
                 }
             }
 
-            public void injectCollectionField(Field f, Object target) {
+            public void injectIterableField(Field f, Object target) {
                 f.setAccessible(true);
                 Class<?> type = f.getType();
 
                 try {
-                    Collection<Object> coll = (Collection) type.newInstance();
-                    dc.copyToCollection(coll);
-                    f.set(target, coll);
+                    Iterable<Object> iter = (Iterable<Object>) f.get(target);
+                    if (iter == null) {
+                        iter = new ConcurrentLinkedQueue<Object>();
+                        f.set(target, iter);
+                    }
+                    dc.copyToCollection((Collection<Object>) iter);
                 } catch (Throwable e) {
                     logger.log(Logger.LOG_ERROR, "Could not set field " + f + " in class "
                         + target.getClass().getName(), e);
@@ -108,12 +113,13 @@ public class FieldUtil {
             @Override
             public void injectMapField(Field f, Object target) {
                 f.setAccessible(true);
-                Class<?> type = f.getType();
-
                 try {
-                    Map map = (Map) type.newInstance();
+                    Map<Object, Dictionary> map = (Map) f.get(target);
+                    if (map == null) {
+                        map = new ConcurrentHashMap<>();
+                        f.set(target, map);
+                    }
                     dc.copyToMap(map);
-                    f.set(target, map);
                 } catch (Throwable e) {
                     logger.log(Logger.LOG_ERROR, "Could not set field " + f + " in class "
                         + target.getClass().getName(), e);
@@ -148,7 +154,7 @@ public class FieldUtil {
                 }
             }
 
-            public void injectCollectionField(Field f, Object target) {
+            public void injectIterableField(Field f, Object target) {
                 if (update) {
                     return;
                 }
@@ -223,8 +229,8 @@ public class FieldUtil {
                             // Field type class must match injected service type
                             if (fieldType.equals(clazz)) {
                                 func.injectField(field, target);
-                            } else if (!strict && mayInjectToCollection(clazz, field, true)) {
-                                func.injectCollectionField(field, target);
+                            } else if (!strict && mayInjectToIterable(clazz, field, true)) {
+                                func.injectIterableField(field, target);
                             } else if (!strict && mayInjectToMap(clazz, field, true)) {
                                 func.injectMapField(field, target);
                             }
@@ -232,8 +238,8 @@ public class FieldUtil {
                             // Field type may be a superclass of the service type
                             if (fieldType.isAssignableFrom(clazz)) {
                                 func.injectField(field, target);
-                            } else if (!strict && mayInjectToCollection(clazz, field, false)) {
-                                func.injectCollectionField(field, target);
+                            } else if (!strict && mayInjectToIterable(clazz, field, false)) {
+                                func.injectIterableField(field, target);
                             } else if (!strict && mayInjectToMap(clazz, field, false)) {
                                 func.injectMapField(field, target);
                             } else {
@@ -251,9 +257,9 @@ public class FieldUtil {
         }
     }
 
-    private static boolean mayInjectToCollection(Class<?> clazz, Field field, boolean strictClassEquality) {
+    private static boolean mayInjectToIterable(Class<?> clazz, Field field, boolean strictClassEquality) {
         Class<?> fieldType = field.getType();
-        if (Collection.class.isAssignableFrom(fieldType)) {
+        if (Iterable.class.isAssignableFrom(fieldType)) {
             ParameterizedType parameterType = (ParameterizedType) field.getGenericType();
             if (parameterType == null) {
                 return false;
