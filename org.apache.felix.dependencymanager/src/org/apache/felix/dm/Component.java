@@ -152,6 +152,15 @@ public interface Component {
 	public ServiceRegistration getServiceRegistration();
 
     /**
+     * Returns the instance that make up this component. If the component has a composition of instances,
+     * then the first instance of the composition is returned. Null is returned if the component has not 
+     * even been instantiated.
+     * 
+     * @return the component instances
+     */
+	public <T> T getInstance();
+
+    /**
      * Returns the composition instances that make up this component, or just the
      * component instance if it does not have a composition, or an empty array if
      * the component has not even been instantiated.

@@ -873,6 +873,12 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         }
     }
     
+	@SuppressWarnings("unchecked")
+    public <T> T getInstance() {     
+	    Object[] instances  = getCompositionInstances();
+	    return instances.length == 0 ? null : (T) instances[0]; 
+    }
+
     public Object[] getInstances() {
     	return getCompositionInstances();
     }

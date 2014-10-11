@@ -309,6 +309,11 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     }
     
     @Override
+    public <T> T getInstance() {
+        return m_component.getInstance();
+    }
+
+    @Override
     public Object[] getInstances() {
         return m_component.getInstances();
     }
