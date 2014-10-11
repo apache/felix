@@ -1,8 +1,6 @@
 package org.apache.felix.dm.itest;
 
-import java.util.Collection;
 import java.util.Dictionary;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -188,13 +186,15 @@ public class AutoConfigTest extends TestBase {
             Assert.assertNotNull(m_providers);
             System.out.println("ConsumerMap.start: injected providers=" + m_providers);
             Assert.assertTrue(m_providers.size() == 2);
-            for (Provider provider : m_providers.keySet()) {
+            for (Map.Entry<Provider, Dictionary> e : m_providers.entrySet()) {
+                Provider provider = e.getKey();
+                Dictionary props = e.getValue();
+                
                 provider.run();
-
                 if (provider.toString().equals("provider1")) {
-                    Assert.assertEquals(m_providers.get(provider).get(Constants.SERVICE_RANKING), 10);
+                    Assert.assertEquals(props.get(Constants.SERVICE_RANKING), 10);
                 } else if (provider.toString().equals("provider2")) {
-                    Assert.assertEquals(m_providers.get(provider).get(Constants.SERVICE_RANKING), 20);
+                    Assert.assertEquals(props.get(Constants.SERVICE_RANKING), 20);
                 } else {
                     Assert.fail("Did not find any properties for provider " + provider);
                 }
