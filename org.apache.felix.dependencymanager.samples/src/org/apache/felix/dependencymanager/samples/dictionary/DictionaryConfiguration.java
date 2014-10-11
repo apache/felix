@@ -16,6 +16,6 @@ public interface DictionaryConfiguration {
     @AD(description = "Describes the dictionary language", deflt = "en")
     String lang();
 
-    @AD(description = "Declare here the list of words supported by this dictionary. This properties starts with a Dot and won't be propagated with Dictionary OSGi service properties")
+    @AD(description = "Declare here the list of words supported by this dictionary.")
     List<String> words();
 }
