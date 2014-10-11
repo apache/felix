@@ -30,6 +30,7 @@ import org.apache.felix.dm.ComponentDependencyDeclaration;
 import org.apache.felix.dm.ResourceDependency;
 import org.apache.felix.dm.ResourceHandler;
 import org.apache.felix.dm.context.DependencyContext;
+import org.apache.felix.dm.context.AbstractDependency;
 import org.apache.felix.dm.context.Event;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -38,7 +39,7 @@ import org.osgi.service.log.LogService;
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ResourceDependencyImpl extends DependencyImpl<ResourceDependency> implements ResourceDependency, ResourceHandler, ComponentDependencyDeclaration {
+public class ResourceDependencyImpl extends AbstractDependency<ResourceDependency> implements ResourceDependency, ResourceHandler, ComponentDependencyDeclaration {
     private volatile ServiceRegistration m_registration;
     private volatile String m_resourceFilter;
     private volatile URL m_trackedResource;

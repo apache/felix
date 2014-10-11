@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.felix.dm.ConfigurationDependency;
 import org.apache.felix.dm.PropertyMetaData;
 import org.apache.felix.dm.context.DependencyContext;
+import org.apache.felix.dm.context.AbstractDependency;
 import org.apache.felix.dm.context.Event;
 import org.apache.felix.dm.impl.metatype.MetaTypeProviderImpl;
 import org.osgi.framework.BundleContext;
@@ -34,7 +35,7 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 
-public class ConfigurationDependencyImpl extends DependencyImpl<ConfigurationDependency> implements ConfigurationDependency, ManagedService {
+public class ConfigurationDependencyImpl extends AbstractDependency<ConfigurationDependency> implements ConfigurationDependency, ManagedService {
     private Dictionary<?,?> m_settings;
     private String m_callback = "updated";
 	private final Logger m_logger;

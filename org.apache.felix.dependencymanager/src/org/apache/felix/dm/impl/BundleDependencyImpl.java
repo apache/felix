@@ -26,6 +26,7 @@ import java.util.Set;
 import org.apache.felix.dm.BundleDependency;
 import org.apache.felix.dm.ComponentDependencyDeclaration;
 import org.apache.felix.dm.context.DependencyContext;
+import org.apache.felix.dm.context.AbstractDependency;
 import org.apache.felix.dm.context.Event;
 import org.apache.felix.dm.tracker.BundleTracker;
 import org.apache.felix.dm.tracker.BundleTrackerCustomizer;
@@ -39,7 +40,7 @@ import org.osgi.service.log.LogService;
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class BundleDependencyImpl extends DependencyImpl<BundleDependency> implements BundleDependency, BundleTrackerCustomizer, ComponentDependencyDeclaration {
+public class BundleDependencyImpl extends AbstractDependency<BundleDependency> implements BundleDependency, BundleTrackerCustomizer, ComponentDependencyDeclaration {
     private BundleTracker m_tracker;
     private int m_stateMask = Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE;
     private Bundle m_bundleInstance;

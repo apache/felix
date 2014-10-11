@@ -22,8 +22,8 @@ import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentState;
 import org.apache.felix.dm.ComponentStateListener;
 import org.apache.felix.dm.Dependency;
+import org.apache.felix.dm.context.AbstractDependency;
 import org.apache.felix.dm.impl.ComponentImpl;
-import org.apache.felix.dm.impl.DependencyImpl;
 import org.apache.felix.dm.impl.EventImpl;
 import org.junit.Assert;
 import org.junit.Test;
@@ -73,7 +73,7 @@ public class ComponentTest {
 	@Test
 	public void testAddDependencyFromInitCallback() {
 		final Ensure e = new Ensure();
-		final DependencyImpl d = new DependencyImpl();
+		final AbstractDependency d = new SimpleServiceDependency();
 		d.setRequired(true);
 		ComponentImpl c = new ComponentImpl();
 		c.setImplementation(new Object() {
@@ -104,9 +104,9 @@ public class ComponentTest {
     @Test
     public void testAddAvailableDependencyFromInitCallback() {
         final Ensure e = new Ensure();
-        final DependencyImpl d = new DependencyImpl();
+        final AbstractDependency d = new SimpleServiceDependency();
         d.setRequired(true);
-        final DependencyImpl d2 = new DependencyImpl();
+        final AbstractDependency d2 = new SimpleServiceDependency();
         d2.setRequired(true);
         ComponentImpl c = new ComponentImpl();
         c.setImplementation(new Object() {
@@ -143,10 +143,10 @@ public class ComponentTest {
 	@Test
 	public void testAtomicallyAddMultipleDependenciesFromInitCallback() {
 		final Ensure e = new Ensure();
-		final DependencyImpl d = new DependencyImpl();
+		final AbstractDependency d = new SimpleServiceDependency();
 		d.setRequired(true);
 
-		final DependencyImpl d2 = new DependencyImpl();
+		final AbstractDependency d2 = new SimpleServiceDependency();
 		d2.setRequired(true);
 
 		ComponentImpl c = new ComponentImpl();
@@ -184,7 +184,7 @@ public class ComponentTest {
 	public void createComponentAddDependencyAndStartComponent() {
 		ComponentImpl c = new ComponentImpl();
 		c.setImplementation(MyComponent.class);
-		DependencyImpl d = new DependencyImpl();
+		AbstractDependency d = new SimpleServiceDependency();
 		d.setRequired(true);
 		c.add(d);
 		c.start();
@@ -197,7 +197,7 @@ public class ComponentTest {
 	public void createComponentStartItAndAddDependency() {
 		ComponentImpl c = new ComponentImpl();
 		c.setImplementation(MyComponent.class);
-		DependencyImpl d = new DependencyImpl();
+		AbstractDependency d = new SimpleServiceDependency();
 		d.setRequired(true);
 		c.start();
 		Assert.assertEquals("should be available when started", true, c.isAvailable());
@@ -212,7 +212,7 @@ public class ComponentTest {
 	public void createComponentStartItAddDependencyAndMakeDependencyAvailable() {
 		ComponentImpl c = new ComponentImpl();
 		c.setImplementation(MyComponent.class);
-		DependencyImpl d = new DependencyImpl();
+		AbstractDependency d = new SimpleServiceDependency();
 		d.setRequired(true);
 		c.start();
 		c.add(d);
@@ -231,7 +231,7 @@ public class ComponentTest {
 	public void createComponentStartItAddDependencyAndListenerMakeDependencyAvailableAndUnavailableImmediately() {
 		ComponentImpl c = new ComponentImpl();
 		c.setImplementation(MyComponent.class);
-		final DependencyImpl d = new DependencyImpl();
+		final AbstractDependency d = new SimpleServiceDependency();
 		d.setRequired(true);
 		ComponentStateListener l = new ComponentStateListener() {
 			@Override
@@ -262,9 +262,9 @@ public class ComponentTest {
 	public void createComponentAddTwoDependenciesMakeBothAvailableAndUnavailable() {
 		ComponentImpl c = new ComponentImpl();
 		c.setImplementation(MyComponent.class);
-		DependencyImpl d1 = new DependencyImpl();
+		AbstractDependency d1 = new SimpleServiceDependency();
 		d1.setRequired(true);
-		DependencyImpl d2 = new DependencyImpl();
+		AbstractDependency d2 = new SimpleServiceDependency();
 		d2.setRequired(true);
 		c.start();
 		c.add(d1);
@@ -298,7 +298,7 @@ public class ComponentTest {
 				e.step(3);
 			}
 		});
-		DependencyImpl d1 = new DependencyImpl();
+		AbstractDependency d1 = new SimpleServiceDependency();
 		d1.setCallbacks("add", "remove");
 		d1.setRequired(true);
 		// add the dependency to the component
@@ -329,7 +329,7 @@ public class ComponentTest {
 				e.step(3);
 			}
 		});
-		DependencyImpl d1 = new DependencyImpl();
+		AbstractDependency d1 = new SimpleServiceDependency();
 		d1.setCallbacks("add", "remove");
 		d1.setRequired(true);
 		// start the ComponentImpl (it should become available)
@@ -361,10 +361,10 @@ public class ComponentTest {
 				e.step();
 			}
 		});
-		DependencyImpl d1 = new DependencyImpl();
+		AbstractDependency d1 = new SimpleServiceDependency();
 		d1.setCallbacks("add", "remove");
 		d1.setRequired(true);
-		DependencyImpl d2 = new DependencyImpl();
+		AbstractDependency d2 = new SimpleServiceDependency();
 		d2.setCallbacks("add", "remove");
 		d2.setRequired(true);
 		// start the component, which should become active because there are no
@@ -409,10 +409,10 @@ public class ComponentTest {
 		});
 		// start the component, it should become available
 		c.start();
-		DependencyImpl d1 = new DependencyImpl();
+		AbstractDependency d1 = new SimpleServiceDependency();
 		d1.setCallbacks("add", "remove");
 		d1.setRequired(true);
-		DependencyImpl d2 = new DependencyImpl();
+		AbstractDependency d2 = new SimpleServiceDependency();
 		d2.setCallbacks("add", "remove");
 		d2.setRequired(true);
 		// add the first dependency, ComponentImpl should be unavailable
@@ -452,10 +452,10 @@ public class ComponentTest {
 		});
 		// start component
 		c.start();
-		DependencyImpl d1 = new DependencyImpl();
+		AbstractDependency d1 = new SimpleServiceDependency();
 		d1.setCallbacks("add", "remove");
 		d1.setRequired(true);
-		DependencyImpl d2 = new DependencyImpl();
+		AbstractDependency d2 = new SimpleServiceDependency();
 		d2.setCallbacks("add", "remove");
 		d2.setRequired(true);
 		c.add(d1);
@@ -506,7 +506,7 @@ public class ComponentTest {
 				e.step(5);
 			}
 		});
-		DependencyImpl d1 = new DependencyImpl();
+		AbstractDependency d1 = new SimpleServiceDependency();
 		d1.setCallbacks("add", "change", "remove");
 		d1.setRequired(true);
 		// add the dependency to the component
@@ -543,7 +543,7 @@ public class ComponentTest {
 				e.step(5);
 			}
 		});
-		DependencyImpl d1 = new DependencyImpl();
+		AbstractDependency d1 = new SimpleServiceDependency();
 		d1.setCallbacks("add", "change", "remove");
 		d1.setRequired(false);
 		// add the dependency to the component
@@ -581,10 +581,10 @@ public class ComponentTest {
 				e.step();
 			}
 		});
-		DependencyImpl d1 = new DependencyImpl();
+		AbstractDependency d1 = new SimpleServiceDependency();
 		d1.setCallbacks("add", "remove");
 		d1.setRequired(false);
-		DependencyImpl d2 = new DependencyImpl();
+		AbstractDependency d2 = new SimpleServiceDependency();
 		d2.setCallbacks("add", "remove");
 		d2.setRequired(true);
 		// add the dependencies to the component
@@ -632,7 +632,7 @@ public class ComponentTest {
 				e.step(5);
 			}
 		});
-		DependencyImpl d = new DependencyImpl();
+		AbstractDependency d = new SimpleServiceDependency();
 		d.setCallbacks("add", "remove");
 		d.setRequired(true);
 		// add the dependency to the component
@@ -675,7 +675,7 @@ public class ComponentTest {
 			}
 		};		
 		
-		DependencyImpl d = new DependencyImpl();
+		AbstractDependency d = new SimpleServiceDependency();
 		d.setCallbacks(callbackInstance, "add", "remove");
 		d.setRequired(true);
 		// add the dependency to the component

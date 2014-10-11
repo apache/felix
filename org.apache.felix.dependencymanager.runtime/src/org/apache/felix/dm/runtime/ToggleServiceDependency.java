@@ -18,18 +18,11 @@
  */
 package org.apache.felix.dm.runtime;
 
-import java.util.Collection;
 import java.util.Dictionary;
-import java.util.Map;
-import java.util.Set;
 
-import org.apache.felix.dm.ComponentDependencyDeclaration;
-import org.apache.felix.dm.Dependency;
-import org.apache.felix.dm.context.ComponentContext;
+import org.apache.felix.dm.context.AbstractDependency;
 import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 
 /**
  * This is a custom DependencyManager Dependency, allowing to take control of
@@ -39,12 +32,7 @@ import org.osgi.framework.BundleContext;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ToggleServiceDependency implements Dependency, ComponentDependencyDeclaration, DependencyContext {
-    private volatile boolean m_isAvailable;
-    protected volatile ComponentContext m_component;
-    protected boolean m_instanceBound;
-    private volatile boolean m_isStarted; // volatile because accessed by getState method
-    
+public class ToggleServiceDependency extends AbstractDependency<ToggleServiceDependency> {
     public static class ToggleEvent implements Event {
         @Override
         public boolean equals(Object e) {
@@ -53,12 +41,12 @@ public class ToggleServiceDependency implements Dependency, ComponentDependencyD
             }
             return false;
         }
-        
+
         @Override
         public int hashCode() {
             return ToggleEvent.class.hashCode();
         }
-        
+
         @Override
         public int compareTo(Object o) {
             return 0;
@@ -74,20 +62,22 @@ public class ToggleServiceDependency implements Dependency, ComponentDependencyD
         }
 
         @Override
-        public Dictionary getProperties()
-        {
+        public Dictionary getProperties() {
             return null;
         }
     }
-
+    
     public ToggleServiceDependency() {
+        super.setRequired(true);
     }
 
-    public ToggleServiceDependency(ToggleServiceDependency other) {
-        m_component = other.m_component;
-        m_instanceBound = other.m_instanceBound;
-        m_isAvailable = other.m_isAvailable;
-        m_isStarted = other.m_isStarted;
+    public ToggleServiceDependency(ToggleServiceDependency prototype) {
+        super(prototype);
+    }
+
+    @Override
+    public DependencyContext createCopy() {
+        return new ToggleServiceDependency(this);
     }
 
     public void activate(boolean active) {
@@ -97,159 +87,14 @@ public class ToggleServiceDependency implements Dependency, ComponentDependencyD
             remove(new ToggleEvent());
         }
     }
-    
-    @Override
-    public void setAvailable(boolean available) {
-        m_isAvailable = available;
-    }
-
-    @Override
-    public void invokeAdd(Event e) {
-    }
-
-    @Override
-    public void invokeChange(Event e) {
-    }
-
-    @Override
-    public void invokeRemove(Event e) {
-    }
-    
-    public void invokeSwap(Event event, Event newEvent) {        
-    }
-
-    @Override
-    public void add(final Event e) {
-        m_component.getExecutor().execute(new Runnable() {
-            @Override
-            public void run() {
-                m_component.handleAdded(ToggleServiceDependency.this, e);
-            }
-        });
-    }
-
-    @Override
-    public void change(Event e) {
-    }
-
-    @Override
-    public void remove(final Event e) {
-        m_component.getExecutor().execute(new Runnable() {
-            @Override
-            public void run() {
-                m_component.handleRemoved(ToggleServiceDependency.this, e);
-            }
-        });
-    }
-
-    @Override
-    public void setComponentContext(ComponentContext component) {
-        m_component = component;
-    }
-
-    @Override
-    public void start() {
-        m_isStarted = true;
-    }
-
-    @Override
-    public void stop() {
-        m_isStarted = false;
-    }
-
-    @Override
-    public boolean isAvailable() {
-        return m_isAvailable;
-    }
-
-    @Override
-    public boolean isRequired() {
-        return true;
-    }
-
-    @Override
-    public boolean isInstanceBound() {
-        return m_instanceBound;
-    }
-
-    @Override
-    public void setInstanceBound(boolean instanceBound) {
-        m_instanceBound = instanceBound;
-    }
-
-    @Override
-    public boolean needsInstance() {
-        return false;
-    }
-
-    @Override
-    public Class getAutoConfigType() {
-        return null;
-    }
-
-    @Override
-    public Event getService() {
-        return null;
-    }
-    
-    @Override
-    public void copyToCollection(Collection to) {
-    }
-    
-    @Override
-    public boolean isAutoConfig() {
-        return false;
-    }
-
-    @Override
-    public String getAutoConfigName() {
-        return null;
-    }
-
-    @Override
-    public DependencyContext createCopy() {
-        return new ToggleServiceDependency(this);
-    }
-
-    @Override
-    public boolean isPropagated() {
-        return false;
-    }
-
-    @Override
-    public Dictionary getProperties() {
-        return null;
-    }
 
     @Override
     public String getName() {
-        return "" + m_isAvailable;
+        return "" + isAvailable();
     }
 
     @Override
     public String getType() {
         return "toggle";
-    }
-
-    @Override
-    public int getState() {
-        if (m_isStarted) {
-            return (isAvailable() ? 1 : 0) + (isRequired() ? 2 : 0);
-        }
-        else {
-            return isRequired() ? ComponentDependencyDeclaration.STATE_REQUIRED
-                : ComponentDependencyDeclaration.STATE_OPTIONAL;
-        }
-    }
-
-    @Override
-    public boolean isStarted()
-    {
-        return m_isStarted;
-    }
-
-    @Override
-    public void copyToMap(Map<Object, Dictionary> map)
-    {        
     }
 }

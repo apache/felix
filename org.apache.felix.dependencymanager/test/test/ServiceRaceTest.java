@@ -28,10 +28,10 @@ import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentState;
 import org.apache.felix.dm.ComponentStateListener;
 import org.apache.felix.dm.Dependency;
+import org.apache.felix.dm.context.AbstractDependency;
 import org.apache.felix.dm.context.Event;
 import org.apache.felix.dm.impl.ComponentImpl;
 import org.apache.felix.dm.impl.ConfigurationDependencyImpl;
-import org.apache.felix.dm.impl.DependencyImpl;
 import org.apache.felix.dm.impl.EventImpl;
 import org.junit.Assert;
 import org.junit.Test;
@@ -95,9 +95,9 @@ public class ServiceRaceTest extends TestBase {
         client.setImplementation(theClient);
 
         // Create client service dependencies
-        final DependencyImpl[] dependencies = new DependencyImpl[DEPENDENCIES];
+        final AbstractDependency[] dependencies = new AbstractDependency[DEPENDENCIES];
         for (int i = 0; i < DEPENDENCIES; i++) {
-            dependencies[i] = new DependencyImpl();
+            dependencies[i] = new SimpleServiceDependency();
             dependencies[i].setRequired(true);
             dependencies[i].setCallbacks("add", "remove");
             client.add(dependencies[i]);
@@ -140,7 +140,7 @@ public class ServiceRaceTest extends TestBase {
                 // We *must* do this after having started the component (in a reality, the dependencies can be 
                 // injected only one the tracker has been opened ...
                 for (int i = 0; i < DEPENDENCIES; i++) {
-                    final DependencyImpl dep = dependencies[i];
+                    final AbstractDependency dep = dependencies[i];
                     final Event added = new EventImpl(i);
                     m_threadpool.execute(new Runnable() {
                         public void run() {
@@ -161,7 +161,7 @@ public class ServiceRaceTest extends TestBase {
 
         // Stop the client and all dependencies concurrently.
         for (int i = 0; i < DEPENDENCIES; i++) {
-            final DependencyImpl dep = dependencies[i];
+            final AbstractDependency dep = dependencies[i];
             final Event removed = new EventImpl(i);
             m_threadpool.execute(new Runnable() {
                 public void run() {

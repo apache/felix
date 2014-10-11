@@ -23,9 +23,9 @@ import java.util.Hashtable;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.Dependency;
+import org.apache.felix.dm.context.AbstractDependency;
 import org.apache.felix.dm.impl.ComponentImpl;
 import org.apache.felix.dm.impl.ConfigurationDependencyImpl;
-import org.apache.felix.dm.impl.DependencyImpl;
 import org.apache.felix.dm.impl.EventImpl;
 import org.junit.Test;
 import org.osgi.service.cm.ConfigurationException;
@@ -39,7 +39,7 @@ public class ConfigurationTest extends TestBase {
         final ConfigurationDependencyImpl conf = new ConfigurationDependencyImpl();
 
         // Create another required dependency
-        final DependencyImpl requiredDependency = new DependencyImpl();
+        final AbstractDependency requiredDependency = new SimpleServiceDependency();
         requiredDependency.setRequired(true);
         requiredDependency.setCallbacks("addDep", null);
 

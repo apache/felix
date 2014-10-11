@@ -23,9 +23,7 @@ import java.lang.reflect.Proxy;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Dictionary;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -33,18 +31,18 @@ import java.util.Set;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentDeclaration;
 import org.apache.felix.dm.ServiceDependency;
+import org.apache.felix.dm.context.AbstractDependency;
 import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
 import org.apache.felix.dm.tracker.ServiceTracker;
 import org.apache.felix.dm.tracker.ServiceTrackerCustomizer;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
 
-public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> implements ServiceDependency, ServiceTrackerCustomizer {
+public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency> implements ServiceDependency, ServiceTrackerCustomizer {
 	protected volatile ServiceTracker m_tracker;
     private final Logger m_logger;
     protected String m_swap;
@@ -291,11 +289,7 @@ public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> imp
             {new ServicePropertiesMap(se.getReference()), se.getEvent()}}
 		);
 	}
-	
-    public void invoke(String method, Event e) {
-		invoke(method, e, getInstances());
-	}
-	
+		
 	@Override
     public Class<?> getAutoConfigType() {
         return m_trackedServiceName;

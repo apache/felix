@@ -22,8 +22,10 @@ import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Map;
 
+import org.apache.felix.dm.Dependency;
 
-public interface DependencyContext {
+
+public interface DependencyContext extends Dependency {
 	public void invokeAdd(Event e);
 	public void invokeChange(Event e);
 	public void invokeRemove(Event e);
@@ -39,11 +41,8 @@ public interface DependencyContext {
 	public void stop();
 	
 	public boolean isStarted();
-	public boolean isAvailable();
 	public void setAvailable(boolean available);
-	
-	public boolean isRequired();
-	
+		
 	public boolean isInstanceBound();
 	public void setInstanceBound(boolean instanceBound);
 	
@@ -54,9 +53,5 @@ public interface DependencyContext {
     public Event getService();
     public void copyToCollection(Collection<Object> coll);
     public void copyToMap(Map<Object, Dictionary> map);
-    public boolean isAutoConfig();
-    public String getAutoConfigName();
     public DependencyContext createCopy();
-    public boolean isPropagated();
-    public Dictionary getProperties();
 }
