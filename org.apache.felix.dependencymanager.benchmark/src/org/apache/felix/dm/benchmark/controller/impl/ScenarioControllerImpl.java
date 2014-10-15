@@ -33,15 +33,12 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
     /**
      * List of bundles to be executed by the benchmark.
      */
-    final static List<String> BUNDLES = 
-        Arrays.asList(
-            /* Scenario based on dependency manager */
-            "org.apache.felix.dependencymanager.benchmark.scr",
-            /* Scenario using parallel dependency manager */
-            "org.apache.felix.dependencymanager.benchmark.dependencymanager",
-            /* Scenario using declarative service */
-            "org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel");
-
+    final List<String> TESTS = Arrays.asList(
+        "org.apache.felix.dependencymanager.benchmark.scr",
+        "org.apache.felix.dependencymanager.benchmark.dependencymanager",
+        "org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel"
+    );
+    
     /**
      * Our injected bundle context, used to lookup the bundles to benchmark.
      */
@@ -74,22 +71,22 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
     public void run() {
         // wait a bit in order to let the gogo banner be displayed before we start the bench.
         Unchecked.run(() -> Thread.sleep(500)); 
-        
-        // at this point, we have to stop all the tested bundle.
-        forEachScenarioBundle(Unchecked.consumer((bundle) -> {
+       
+        // Stop all tested bundles.
+        forEachScenarioBundle(TESTS, Unchecked.consumer((bundle) -> {
             debug(() -> "Stopping bundle " + bundle.getSymbolicName());
             bundle.stop();
         }));
-        
+
         // Start/stop several times the tested bundles. (no processing done in components start/stop methods).
         m_doProcessingInStartStop = false;
         out.println("\n\t+++++ Starting benchmarks without processing done in components start/stop methods.");
-        startStopScenarioBundles(100);
+        startStopScenarioBundles(TESTS, 10);
        
         // Start/stop several times the tested bundles (processing is done in components start/stop methods).
         m_doProcessingInStartStop = true;
         out.println("\n\t+++++ Starting benchmarks with processing done in components start/stop methods.");
-        startStopScenarioBundles(5);
+        startStopScenarioBundles(TESTS, 5);
     }
 
     @Override
@@ -109,11 +106,11 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
     
     @Override
     public void albumAdded(Album album) {
-        componentAdded();
         int size = album.getMusicTracks().size();
         if (size != Artist.TRACKS) {
             throw new IllegalStateException("Album does not contain expected number of music tracks:" + size);
         }
+        componentAdded();
     }
     
     @Override
@@ -133,9 +130,9 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
             
     // ------------------- Private methods -----------------------------------------------------
         
-    private void startStopScenarioBundles(int iterations) {
-        forEachScenarioBundle(bundle -> {
-            out.print("\nBenchmarking bundle: " + bundle.getSymbolicName() + "\n");
+    private void startStopScenarioBundles(List<String> tests, int iterations) {
+        forEachScenarioBundle(tests, bundle -> {
+            out.print("\nBenchmarking bundle: " + bundle.getSymbolicName() + "\n");            
             List<Long> sortedResults = LongStream.range(0, iterations)
                 .peek(i -> out.print("."))
                 .map(n -> durationOf(() -> startAndStop(bundle)))
@@ -168,7 +165,7 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
 
     private void doProcessing() {
         if (m_doProcessingInStartStop) {
-            long duration = TimeUnit.MILLISECONDS.toNanos(5);
+            long duration = 500000; // 5/100 of one millis
             long t1 = System.nanoTime();
             while (System.nanoTime() - t1 < duration)
                 ;
@@ -176,12 +173,12 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
     }
     
     /**
-     * Maps a consumer to all bundles participating in the benchmark.
+     * Maps a function to all bundles participating in the benchmark.
      */
-    private void forEachScenarioBundle(Consumer<Bundle> consumer) {
-        BUNDLES.stream().forEach(bsn -> {
-            Optional<Bundle> scenarioBundle = Stream.of(m_bctx.getBundles()).filter(b -> b.getSymbolicName().equals(bsn)).findFirst();
-            scenarioBundle.ifPresent(b -> {
+    private void forEachScenarioBundle(List<String> tests, Consumer<Bundle> consumer) {
+        tests.stream().forEach(test -> {
+            Optional<Bundle> bundle = Stream.of(m_bctx.getBundles()).filter(b -> b.getSymbolicName().equals(test)).findFirst();
+            bundle.ifPresent(b -> {
                 consumer.accept(b);
             });
         });   

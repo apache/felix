@@ -10,19 +10,19 @@ public interface Artist {
      * When a scenario bundles starts, it creates the following number of Artists (service)
      * (you have to regenerate the SCR xml descriptor if you modify this, see README)
      */
-    public final int ARTISTS = 5;
+    public final int ARTISTS = 2;
     
     /**
      * Each Artist creates the following number of musical Albums.
      * (you have to regenerate the SCR xml descriptor if you modify this, see README)
      */
-    public final int ALBUMS = 10;
+    public final int ALBUMS = 20;
     
     /**
      * Each Album contains the following number of musical Tracks.
      * (you have to regenerate the SCR xml descriptor if you modify this, see README)
      */
-    public final int TRACKS = 5;
+    public final int TRACKS = 30;
     
     /**
      * Returns the Albums that this Artist has created

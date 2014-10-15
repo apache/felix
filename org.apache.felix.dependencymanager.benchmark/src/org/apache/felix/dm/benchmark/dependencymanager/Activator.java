@@ -6,7 +6,7 @@ import static org.apache.felix.dm.benchmark.scenario.Artist.TRACKS;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
+import java.util.Hashtable;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -48,6 +48,7 @@ public class Activator extends DependencyActivatorBase {
     /**
      * Initialize our Artists, Albums/Tracks, possibly using a parallel dependency manager.
      */
+    @SuppressWarnings("unused")
     private void start(Component c) {
         Helper.debug(() -> "DependencyManager.Activator: start");
         DependencyManager dm = c.getDependencyManager();
@@ -77,7 +78,7 @@ public class Activator extends DependencyActivatorBase {
             artist.add(dm.createServiceDependency().setService(Album.class, filter).setRequired(true)
                          .setCallbacks("addAlbum", null));            
             
-            Properties props = new Properties();
+            Hashtable<String, Object> props = new Hashtable<>();
             props.put("id", String.valueOf(id));
             Component c = dm.createComponent()
                 .setInterface(Album.class.getName(), props)
@@ -95,7 +96,7 @@ public class Activator extends DependencyActivatorBase {
             album.add(dm.createServiceDependency()
                 .setService(Track.class, f).setRequired(true).setCallbacks("addTrack", null));
 
-            Properties p = new Properties();
+            Hashtable<String, Object> p = new Hashtable<>();
             p.put("id", String.valueOf(id));
             Component c = dm.createComponent()
                 .setInterface(Track.class.getName(), p)
