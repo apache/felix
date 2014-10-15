@@ -19,11 +19,7 @@
 package org.apache.felix.gogo.runtime;
 
 import java.io.EOFException;
-import java.util.AbstractList;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 
 import org.apache.felix.gogo.runtime.Tokenizer.Type;
@@ -293,6 +289,10 @@ public class Closure implements Function, Evaluate
                 v = t.type;
                 break;
 
+            case EXPR:
+                v = expr(t.value);
+                break;
+
             default:
                 throw new SyntaxError(t.line, t.column, "unexpected token: " + t.type);
         }
@@ -532,6 +532,11 @@ public class Closure implements Function, Evaluate
     {
         session.variables.put(name, value);
         return value;
+    }
+
+    private Object expr(CharSequence expr) throws Exception
+    {
+        return session.expr(expr);
     }
 
     private Object array(Token array) throws Exception

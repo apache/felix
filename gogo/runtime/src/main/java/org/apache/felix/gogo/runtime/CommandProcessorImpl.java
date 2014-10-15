@@ -21,6 +21,7 @@ package org.apache.felix.gogo.runtime;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -356,4 +357,7 @@ public class CommandProcessorImpl implements CommandProcessor
         }
     }
 
+    public Object expr(CommandSessionImpl session, CharSequence expr) {
+        return new Expression(expr.toString()).eval(session.variables);
+    }
 }
