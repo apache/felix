@@ -2,7 +2,7 @@ Changes 0.12.1 to 0.14.0
 ------------------------
 
 ** Bug
-    * [FELIX-4533] - Gogo runtime does not advertise published services
+    * [FELIX-4637] - Gogo can't cope without several commands with defined service.ranking 
 
 ** New Feature
     * [FELIX-4671] - Provide an expression parser
