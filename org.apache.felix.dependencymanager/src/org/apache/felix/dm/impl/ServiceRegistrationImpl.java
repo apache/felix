@@ -41,6 +41,7 @@ public final class ServiceRegistrationImpl implements ServiceRegistration {
         return ensureRegistration().getReference();
     }
 
+    @SuppressWarnings("rawtypes")
     public void setProperties(Dictionary dictionary) {
         ensureRegistration().setProperties(dictionary);
     }

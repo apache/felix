@@ -19,8 +19,8 @@
 package org.apache.felix.dm.itest;
 
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
-import java.util.Properties;
 
 import junit.framework.Assert;
 
@@ -32,6 +32,7 @@ import org.osgi.framework.ServiceReference;
 /**
  * This test does some injection tests on components being in INSTANTIATED_AND_WAITING_FOR_REQUIRED state.
  */
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class InstanceBoundDependencyTest extends TestBase {
     Ensure m_e;
     
@@ -46,7 +47,7 @@ public class InstanceBoundDependencyTest extends TestBase {
         m.add(c);
         
         // Add S1 (s1_1): C.add(S1 s1) is called, then init() is called where a dependency is declared on S2
-        Properties s1_1_props = new Properties();
+        Hashtable s1_1_props = new Hashtable();
         s1_1_props.put("name", "s1_1");
         s1_1_props.put(Constants.SERVICE_RANKING, new Integer(10));
         S1Impl s1_1_impl = new S1Impl();
@@ -61,7 +62,7 @@ public class InstanceBoundDependencyTest extends TestBase {
         // At this point, MyComponent is in INSTANTIATED_AND_WAITING_FOR_REQUIRED state. 
         // add now add another higher ranked S1 (s1_2) instance. C.add(s1_2) method should be called (the S1 dependency 
         // is not instance bound), and m_s1 autoconfig field should be updated.
-        Properties s1_2_props = new Properties();
+        Hashtable s1_2_props = new Hashtable();
         s1_2_props.put(Constants.SERVICE_RANKING, new Integer(20));
         s1_2_props.put("name", "s1_2");
         S1Impl s1_2_impl = new S1Impl();

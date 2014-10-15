@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.felix.dm.PropertyMetaData;
 import org.osgi.service.metatype.AttributeDefinition;
 import org.osgi.service.metatype.ObjectClassDefinition;
 
@@ -42,12 +43,12 @@ public class ObjectClassDefinitionImpl implements ObjectClassDefinition {
     private String m_id;
     
     // The list of Properties MetaData objects (from DependencyManager API)
-    private List m_propertiesMetaData;
+    private final List<PropertyMetaData> m_propertiesMetaData;
     
     // The localized resource that can be used when localizing some parameters
     private Resource m_resource;
 
-    public ObjectClassDefinitionImpl(String id, String name, String description, List propertiesMetaData, Resource resource) {
+    public ObjectClassDefinitionImpl(String id, String name, String description, List<PropertyMetaData> propertiesMetaData, Resource resource) {
         m_id = id;
         m_name = name;
         m_description = description;
@@ -58,7 +59,7 @@ public class ObjectClassDefinitionImpl implements ObjectClassDefinition {
     // --------------------- ObjectClassDefinition ----------------------------------------
 
     public AttributeDefinition[] getAttributeDefinitions(int filter) {
-        List attrs = new ArrayList();
+        List<AttributeDefinition> attrs = new ArrayList<>();
         for (int i = 0; i < m_propertiesMetaData.size(); i++) {
             PropertyMetaDataImpl metaData = (PropertyMetaDataImpl) m_propertiesMetaData.get(i);
             switch (filter) {
@@ -75,11 +76,12 @@ public class ObjectClassDefinitionImpl implements ObjectClassDefinition {
                         attrs.add(new AttributeDefinitionImpl(metaData, m_resource));
                     }
                     break;
+                default:
             }
         }
 
         AttributeDefinition[] array = new AttributeDefinitionImpl[attrs.size()];
-        return (AttributeDefinition[]) attrs.toArray(array);
+        return attrs.toArray(array);
     }
 
     public String getDescription() {

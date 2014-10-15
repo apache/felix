@@ -93,9 +93,9 @@ public class FieldUtil {
                 }
             }
 
+            @SuppressWarnings("unchecked")
             public void injectIterableField(Field f, Object target) {
                 f.setAccessible(true);
-                Class<?> type = f.getType();
 
                 try {
                     Iterable<Object> iter = (Iterable<Object>) f.get(target);
@@ -110,11 +110,12 @@ public class FieldUtil {
                 }
             }
 
+            @SuppressWarnings({ "unchecked", "rawtypes" })
             @Override
             public void injectMapField(Field f, Object target) {
                 f.setAccessible(true);
                 try {
-                    Map<Object, Dictionary> map = (Map) f.get(target);
+                    Map<Object, Dictionary<String, ?>> map = (Map) f.get(target);
                     if (map == null) {
                         map = new ConcurrentHashMap<>();
                         f.set(target, map);
@@ -154,16 +155,16 @@ public class FieldUtil {
                 }
             }
 
+            @SuppressWarnings("unchecked")
             public void injectIterableField(Field f, Object target) {
                 if (update) {
                     return;
                 }
 
                 f.setAccessible(true);
-                Class<?> type = f.getType();
 
                 try {
-                    Collection coll = (Collection) f.get(target);
+                    Collection<Object> coll = (Collection<Object>) f.get(target);
                     if (add) {
                         coll.add(event.getEvent());
                     } else {
@@ -175,13 +176,13 @@ public class FieldUtil {
                 }
             }
 
+            @SuppressWarnings({ "rawtypes", "unchecked" })
             @Override
             public void injectMapField(Field f, Object target) {
                 f.setAccessible(true);
-                Class<?> type = f.getType();
 
                 try {
-                    Map<Object, Dictionary> map = (Map) f.get(target);
+                    Map<Object, Dictionary<String, ?>> map = (Map) f.get(target);
                     if (add) {
                         map.put(event.getEvent(), event.getProperties());
                     } else {

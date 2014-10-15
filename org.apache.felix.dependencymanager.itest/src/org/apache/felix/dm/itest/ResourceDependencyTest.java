@@ -20,6 +20,7 @@ import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 
+@SuppressWarnings({"deprecation", "rawtypes", "unused"})
 public class ResourceDependencyTest extends TestBase {
     public void testResourceDependency() {
         DependencyManager m = getDM();

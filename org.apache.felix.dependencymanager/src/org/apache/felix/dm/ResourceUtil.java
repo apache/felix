@@ -20,7 +20,7 @@ package org.apache.felix.dm;
 
 import java.net.URL;
 import java.util.Dictionary;
-import java.util.Properties;
+import java.util.Hashtable;
 
 /**
  * Utility class for resource handling.
@@ -34,12 +34,12 @@ public class ResourceUtil {
 	 * @param url the URL
 	 * @return a set of properties
 	 */
-    public static Dictionary createProperties(URL url) {
-        Properties props = new Properties();
-        props.setProperty(ResourceHandler.PROTOCOL, url.getProtocol());
-        props.setProperty(ResourceHandler.HOST, url.getHost());
-        props.setProperty(ResourceHandler.PORT, Integer.toString(url.getPort()));
-        props.setProperty(ResourceHandler.PATH, url.getPath());
+    public static Dictionary<String, Object> createProperties(URL url) {
+        Hashtable<String, Object> props = new Hashtable<>();
+        props.put(ResourceHandler.PROTOCOL, url.getProtocol());
+        props.put(ResourceHandler.HOST, url.getHost());
+        props.put(ResourceHandler.PORT, Integer.toString(url.getPort()));
+        props.put(ResourceHandler.PATH, url.getPath());
         return props;
     }
 }

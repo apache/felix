@@ -38,6 +38,7 @@ import org.apache.felix.dm.DependencyManager;
  */
 public class FELIX4361_ConcurrentComponentListingTest extends TestBase {
 
+    @SuppressWarnings("rawtypes")
     public void testConcurrentGetComponentsManipulation() {
         DependencyManager dm = getDM();
         dm.add(dm.createComponent().setImplementation(Object.class));
@@ -55,6 +56,7 @@ public class FELIX4361_ConcurrentComponentListingTest extends TestBase {
 
         ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1);
         Runnable readTask = new Runnable() {
+            @SuppressWarnings({ "rawtypes", "unused" })
             public void run() {
                 while (isRunning.get()) {
                     try {

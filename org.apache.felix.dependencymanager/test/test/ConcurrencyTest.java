@@ -26,8 +26,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentState;
 import org.apache.felix.dm.ComponentStateListener;
-import org.apache.felix.dm.Dependency;
-import org.apache.felix.dm.context.AbstractDependency;
 import org.apache.felix.dm.impl.ComponentImpl;
 import org.apache.felix.dm.impl.EventImpl;
 import org.junit.Assert;
@@ -43,9 +41,9 @@ public class ConcurrencyTest {
 	public void createComponentAddDependencyAndListenerAndAddAnotherDependencyInAParallelThread() {
 		final Semaphore s = new Semaphore(0);
 		final ComponentImpl c = new ComponentImpl();
-		final AbstractDependency d = new SimpleServiceDependency();
+		final SimpleServiceDependency d = new SimpleServiceDependency();
 		d.setRequired(true);
-		final AbstractDependency d2 = new SimpleServiceDependency();
+		final SimpleServiceDependency d2 = new SimpleServiceDependency();
 		d2.setRequired(true);
 		final Thread t = new Thread() {
 			public void run() {
@@ -103,7 +101,7 @@ public class ConcurrencyTest {
 			e.execute(new Runnable() {
 				@Override
 				public void run() {
-				    AbstractDependency d = new SimpleServiceDependency();
+				    SimpleServiceDependency d = new SimpleServiceDependency();
 					d.setRequired(true);
 					c.add(d);
 //					d.changed(new EventImpl(true));

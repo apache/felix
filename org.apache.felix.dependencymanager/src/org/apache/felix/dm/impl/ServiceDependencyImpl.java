@@ -24,8 +24,8 @@ import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 
 import org.apache.felix.dm.Component;
@@ -64,7 +64,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
     /**
      * Entry to wrap service properties behind a Map.
      */
-    private static final class ServicePropertiesMapEntry implements Map.Entry {
+    private static final class ServicePropertiesMapEntry implements Map.Entry<String, Object> {
         private final String m_key;
         private Object m_value;
 
@@ -73,7 +73,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
             m_value = value;
         }
 
-        public Object getKey() {
+        public String getKey() {
             return m_key;
         }
 
@@ -91,11 +91,12 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
             return oldValue;
         }
 
+        @SuppressWarnings("unchecked")
         public boolean equals(Object o) {
             if (!(o instanceof Map.Entry)) {
                 return false;
             }
-            Map.Entry e = (Map.Entry) o;
+            Map.Entry<String, Object> e = (Map.Entry<String, Object>) o;
             return eq(m_key, e.getKey()) && eq(m_value, e.getValue());
         }
 
@@ -111,7 +112,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
     /**
      * Wraps service properties behind a Map.
      */
-    private final static class ServicePropertiesMap extends AbstractMap {
+    private final static class ServicePropertiesMap extends AbstractMap<String, Object> {
         private final ServiceReference m_ref;
 
         public ServicePropertiesMap(ServiceReference ref) {
@@ -126,8 +127,8 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
             return m_ref.getPropertyKeys().length;
         }
 
-        public Set entrySet() {
-            Set set = new HashSet();
+        public Set<Map.Entry<String, Object>> entrySet() {
+            Set<Map.Entry<String, Object>> set = new HashSet<>();
             String[] keys = m_ref.getPropertyKeys();
             for (int i = 0; i < keys.length; i++) {
                 set.add(new ServicePropertiesMapEntry(keys[i], m_ref.getProperty(keys[i])));
@@ -176,12 +177,12 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
     }   
 
     @Override
-   	public ServiceDependency setService(Class serviceName) {
+   	public ServiceDependency setService(Class<?> serviceName) {
         setService(serviceName, null, null);
         return this;
     }
 
-    public ServiceDependency setService(Class serviceName, String serviceFilter) {
+    public ServiceDependency setService(Class<?> serviceName, String serviceFilter) {
         setService(serviceName, null, serviceFilter);
         return this;
     }
@@ -194,7 +195,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
         return this;
     }
 
-    public ServiceDependency setService(Class serviceName, ServiceReference serviceReference) {
+    public ServiceDependency setService(Class<?> serviceName, ServiceReference serviceReference) {
         setService(serviceName, serviceReference, null);
         return this;
     }
@@ -326,14 +327,14 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
         return "service";
     }
 
-	@Override
-    public Dictionary getProperties() {
-        Object service = null;
+	@SuppressWarnings("unchecked")
+    @Override
+    public Dictionary<String, Object> getProperties() {
         ServiceEventImpl se = (ServiceEventImpl) m_component.getDependencyEvent(this);
         if (se != null) {
             if (m_propagateCallbackInstance != null && m_propagateCallbackMethod != null) {
                 try {
-                    return (Dictionary) InvocationUtil.invokeCallbackMethod(m_propagateCallbackInstance, m_propagateCallbackMethod,
+                    return (Dictionary<String, Object>) InvocationUtil.invokeCallbackMethod(m_propagateCallbackInstance, m_propagateCallbackMethod,
                             new Class[][]{{ServiceReference.class, Object.class}, {ServiceReference.class}}, new Object[][]{
                                     {se.getReference(), se.getEvent()}, {se.getReference()}});
                 } catch (InvocationTargetException e) {
@@ -343,7 +344,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
                 }
                 throw new IllegalStateException("Could not invoke callback");
             } else {
-                Properties props = new Properties();
+                Hashtable<String, Object> props = new Hashtable<>();
                 String[] keys = se.getReference().getPropertyKeys();
                 for (int i = 0; i < keys.length; i++) {
                     if (!(keys[i].equals(Constants.SERVICE_ID) || keys[i].equals(Constants.SERVICE_PID))) {
@@ -362,7 +363,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
     }
     
     /** Internal method to set the name, service reference and/or filter. */
-    private void setService(Class serviceName, ServiceReference serviceReference, String serviceFilter) {
+    private void setService(Class<?> serviceName, ServiceReference serviceReference, String serviceFilter) {
         ensureNotActive();
         if (serviceName == null) {
             m_trackedServiceName = Object.class;
@@ -409,7 +410,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
         
     private Object getNullObject() {
         if (m_nullObject == null) {
-            Class trackedServiceName;
+            Class<?> trackedServiceName;
             synchronized (this) {
                 trackedServiceName = m_trackedServiceName;
             }
@@ -428,7 +429,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
         if (m_defaultImplementation != null) {
             if (m_defaultImplementation instanceof Class) {
                 try {
-                    m_defaultImplementationInstance = ((Class) m_defaultImplementation).newInstance();
+                    m_defaultImplementationInstance = ((Class<?>) m_defaultImplementation).newInstance();
                 }
                 catch (Exception e) {
                     m_logger.log(Logger.LOG_ERROR, "Could not create default implementation instance of class "

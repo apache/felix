@@ -22,6 +22,7 @@ import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 
+@SuppressWarnings({"deprecation", "unchecked", "rawtypes"})
 public class FilterIndexResourceAdapterTest extends TestBase {
   public void testBasicResourceAdapter() throws Exception {
       System.setProperty("org.apache.felix.dependencymanager.filterindex", "objectClass");
@@ -59,6 +60,7 @@ public class FilterIndexResourceAdapterTest extends TestBase {
           Assert.assertNotNull("resource not injected", m_resource);
           m_ensure.step(2);
           try {
+              @SuppressWarnings("unused")
               InputStream in = m_resource.openStream();
           } 
           catch (FileNotFoundException e) {
@@ -76,12 +78,10 @@ public class FilterIndexResourceAdapterTest extends TestBase {
   
   static class ResourceProvider {
       private volatile BundleContext m_context;
-      private final Ensure m_ensure;
       private final Map m_handlers = new HashMap();
       private URL[] m_resources;
 
       public ResourceProvider(Ensure ensure) throws MalformedURLException {
-          m_ensure = ensure;
           m_resources = new URL[] {
               new URL("file://localhost/path/to/file1.txt")
           };

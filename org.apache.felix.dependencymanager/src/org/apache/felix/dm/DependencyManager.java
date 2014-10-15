@@ -25,9 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Executor;
 
-import org.apache.felix.dm.context.ComponentContext;
 import org.apache.felix.dm.impl.AdapterServiceImpl;
 import org.apache.felix.dm.impl.AspectServiceImpl;
 import org.apache.felix.dm.impl.BundleAdapterImpl;
@@ -46,6 +44,7 @@ import org.apache.felix.dm.impl.index.AspectFilterIndex;
 import org.apache.felix.dm.impl.index.ServiceRegistryCache;
 import org.apache.felix.dm.impl.index.multiproperty.MultiPropertyFilterIndex;
 import org.apache.felix.dm.impl.metatype.PropertyMetaDataImpl;
+import org.apache.felix.dm.impl.metatype.Resource;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -83,7 +82,7 @@ public class DependencyManager {
 
     // service registry cache
     private static ServiceRegistryCache m_serviceRegistryCache;
-    private static final Set /* WeakReference<DependencyManager> */m_dependencyManagers = new HashSet();
+    private static final Set<WeakReference<DependencyManager>> m_dependencyManagers = new HashSet<>();
     static {
         String index = System.getProperty(SERVICEREGISTRY_CACHE_INDICES);
         if (index != null) {
@@ -132,7 +131,7 @@ public class DependencyManager {
         m_context = createContext(context);
         m_logger = logger;
         synchronized (m_dependencyManagers) {
-            m_dependencyManagers.add(new WeakReference(this));
+            m_dependencyManagers.add(new WeakReference<DependencyManager>(this));
         }
     }
     
@@ -141,12 +140,12 @@ public class DependencyManager {
      * @return the list of currently created dependency managers
      */
     public static List<DependencyManager> getDependencyManagers() {
-        List /* DependencyManager */result = new ArrayList();
+        List<DependencyManager> result = new ArrayList<>();
         synchronized (m_dependencyManagers) {
-            Iterator iterator = m_dependencyManagers.iterator();
+            Iterator<WeakReference<DependencyManager>> iterator = m_dependencyManagers.iterator();
             while (iterator.hasNext()) {
-                WeakReference reference = (WeakReference) iterator.next();
-                DependencyManager manager = (DependencyManager) reference.get();
+                WeakReference<DependencyManager> reference = iterator.next();
+                DependencyManager manager = reference.get();
                 if (manager != null) {
                     try {
                         manager.getBundleContext().getBundle();
@@ -269,7 +268,7 @@ public class DependencyManager {
      * @param autoConfig the name of the member to inject the service into
      * @return a service that acts as a factory for generating adapters
      */
-    public Component createAdapterService(Class serviceInterface, String serviceFilter, String autoConfig) {
+    public Component createAdapterService(Class<?> serviceInterface, String serviceFilter, String autoConfig) {
         return new AdapterServiceImpl(this, serviceInterface, serviceFilter, autoConfig, null, null, null);
     }
 
@@ -323,7 +322,7 @@ public class DependencyManager {
      * @param swap name of the callback method to invoke on swap
      * @return a service that acts as a factory for generating adapters
      */
-    public Component createAdapterService(Class serviceInterface, String serviceFilter, String add, String change,
+    public Component createAdapterService(Class<?> serviceInterface, String serviceFilter, String add, String change,
         String remove, String swap)
     {
         return new AdapterServiceImpl(this, serviceInterface, serviceFilter, null, add, change, remove, swap);
@@ -354,7 +353,7 @@ public class DependencyManager {
      * @param swap name of the callback method to invoke on swap
      * @return a service that acts as a factory for generating adapters
      */
-    public Component createAdapterService(Class serviceInterface, String serviceFilter, String add, String change,
+    public Component createAdapterService(Class<?> serviceInterface, String serviceFilter, String add, String change,
         String remove)
     {
         return new AdapterServiceImpl(this, serviceInterface, serviceFilter, null, add, change, remove);
@@ -560,7 +559,7 @@ public class DependencyManager {
      *     If null, any field matching the original service will be injected.
      * @return a service that acts as a factory for generating aspects
      */
-    public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking, String autoConfig) {
+    public Component createAspectService(Class<?> serviceInterface, String serviceFilter, int ranking, String autoConfig) {
         return new AspectServiceImpl(this, serviceInterface, serviceFilter, ranking, autoConfig, null, null, null, null);
     }
 
@@ -586,7 +585,7 @@ public class DependencyManager {
      * @param ranking the level used to organize the aspect chain ordering
      * @return a service that acts as a factory for generating aspects
      */
-    public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking) {
+    public Component createAspectService(Class<?> serviceInterface, String serviceFilter, int ranking) {
         return new AspectServiceImpl(this, serviceInterface, serviceFilter, ranking, null, null, null, null, null);
     }
 
@@ -615,7 +614,7 @@ public class DependencyManager {
      * @param remove name of the callback method to invoke on remove
      * @return a service that acts as a factory for generating aspects
      */
-    public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking, String add,
+    public Component createAspectService(Class<?> serviceInterface, String serviceFilter, int ranking, String add,
         String change, String remove)
     {
         return new AspectServiceImpl(this, serviceInterface, serviceFilter, ranking, null, add, change, remove, null);
@@ -647,7 +646,7 @@ public class DependencyManager {
      * @param swap name of the callback method to invoke on swap
      * @return a service that acts as a factory for generating aspects
      */
-    public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking, String add,
+    public Component createAspectService(Class<?> serviceInterface, String serviceFilter, int ranking, String add,
         String change, String remove, String swap)
     {
         return new AspectServiceImpl(this, serviceInterface, serviceFilter, ranking, null, add, change, remove, swap);

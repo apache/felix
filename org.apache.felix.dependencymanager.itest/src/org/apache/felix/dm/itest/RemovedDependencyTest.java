@@ -1,6 +1,7 @@
 package org.apache.felix.dm.itest;
 
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Properties;
 
@@ -21,13 +22,14 @@ import org.osgi.framework.ServiceReference;
  *   - when we remove the dependency on provider2, then the consumer is not stopped.
  *   - when we remove the (instance-bound) dependency on provider3, then the consumer os not stopped.
  */
+@SuppressWarnings({"unchecked", "rawtypes", "unused"})
 public class RemovedDependencyTest extends TestBase {
     public void testRemoveDependencyAndConsumerMustRemainStarted() {
         DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // Create two providers
-        Properties props = new Properties();
+        Hashtable props = new Hashtable();
         props.put("name", "provider1");
         Component sp = m.createComponent().setImplementation(new ServiceProvider(e)).setInterface(ServiceInterface.class.getName(), props);
         props = new Properties();

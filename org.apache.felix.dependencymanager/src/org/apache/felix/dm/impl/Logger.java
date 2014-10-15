@@ -219,7 +219,7 @@ public class Logger implements ServiceListener {
             m_logger = null;
         }
         else {
-            Class[] formalParams = { ServiceReference.class, Integer.TYPE, String.class, Throwable.class };
+            Class<?>[] formalParams = { ServiceReference.class, Integer.TYPE, String.class, Throwable.class };
             try {
                 Method logMethod = logObj.getClass().getMethod("log", formalParams);
                 logMethod.setAccessible(true);

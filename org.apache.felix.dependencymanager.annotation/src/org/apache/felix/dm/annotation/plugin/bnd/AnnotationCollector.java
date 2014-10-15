@@ -1158,7 +1158,7 @@ public class AnnotationCollector extends ClassDataCollector
      * @param type the property type
      * @throws JSONException 
      */
-    private void addProperty(JSONObject props, String name, Object value, Class type) throws JSONException {
+    private void addProperty(JSONObject props, String name, Object value, Class<?> type) throws JSONException {
         if (value.getClass().isArray())
         {
             Object[] array = (Object[]) value;

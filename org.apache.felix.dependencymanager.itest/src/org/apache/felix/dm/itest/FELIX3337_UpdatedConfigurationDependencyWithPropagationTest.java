@@ -41,6 +41,7 @@ import org.osgi.service.cm.ManagedService;
  * - S1 is then called in its updated callback
  * - S2 is called in its "change" callback.
  */
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class FELIX3337_UpdatedConfigurationDependencyWithPropagationTest extends TestBase {    
     /*
      * This Pojo creates the configuration pid "test".

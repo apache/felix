@@ -78,5 +78,5 @@ public interface Dependency {
      * 
      * @return the properties
      */
-    public Dictionary getProperties();
+    public Dictionary<String, Object> getProperties();
 }

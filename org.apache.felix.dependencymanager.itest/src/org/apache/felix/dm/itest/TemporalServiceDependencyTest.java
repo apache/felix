@@ -8,6 +8,7 @@ import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ServiceDependency;
 
+@SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class TemporalServiceDependencyTest extends TestBase {
     public void testServiceConsumptionAndIntermittentAvailability() {
         final DependencyManager m = getDM();
@@ -92,7 +93,8 @@ public class TemporalServiceDependencyTest extends TestBase {
 
         Object consumer = new Object() {
         	volatile Runnable m_provider;
-        	void start() {
+        	@SuppressWarnings("unused")
+            void start() {
         		try {
         			ensure.step(1);
         			m_provider.run();

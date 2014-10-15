@@ -25,7 +25,7 @@ public class Activator extends DependencyActivatorBase {
     @Override
     public void init(BundleContext context, DependencyManager mgr) throws Exception {
         Helper.log("tpool", "Activator.init: registering threadpool");
-        Hashtable props = new Hashtable();
+        Hashtable<String, String> props = new Hashtable<>();
         props.put("target", DependencyManager.THREADPOOL);
         mgr.add(createComponent()
             .setInterface(Executor.class.getName(), props)

@@ -22,6 +22,7 @@ import org.osgi.service.cm.ConfigurationException;
 /**
  * This test class simulates a client having many dependencies being registered/unregistered concurrently.
  */
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class ServiceRaceTest extends TestBase {
     volatile ConfigurationAdmin m_cm;
     final static int STEP_WAIT = 5000;

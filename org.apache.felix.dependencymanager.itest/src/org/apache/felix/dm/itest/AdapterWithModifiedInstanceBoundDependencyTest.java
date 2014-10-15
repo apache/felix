@@ -41,6 +41,7 @@ import org.apache.felix.dm.DependencyManager;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class AdapterWithModifiedInstanceBoundDependencyTest extends TestBase {
     public static interface A {
     }

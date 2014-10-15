@@ -18,9 +18,6 @@
  */
 package org.apache.felix.dependencymanager.samples.dictionary;
 
-import java.util.Dictionary;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.apache.felix.service.command.Descriptor;

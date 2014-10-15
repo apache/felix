@@ -20,8 +20,8 @@ package org.apache.felix.dm.impl;
 
 import java.net.URL;
 import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.List;
-import java.util.Properties;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentStateListener;
@@ -99,11 +99,11 @@ public class ResourceAdapterImpl extends FilterComponent {
 
         public Component createService(Object[] properties) {
             URL resource = (URL) properties[0]; 
-            Properties props = new Properties();
+            Hashtable<String, Object> props = new Hashtable<>();
             if (m_serviceProperties != null) {
-                Enumeration e = m_serviceProperties.keys();
+                Enumeration<String> e = m_serviceProperties.keys();
                 while (e.hasMoreElements()) {
-                    Object key = e.nextElement();
+                    String key = e.nextElement();
                     props.put(key, m_serviceProperties.get(key));
                 }
             }

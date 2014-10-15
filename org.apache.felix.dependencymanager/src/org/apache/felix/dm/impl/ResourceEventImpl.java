@@ -21,13 +21,16 @@ package org.apache.felix.dm.impl;
 import java.net.URL;
 import java.util.Dictionary;
 
-public class ResourceEventImpl extends EventImpl implements Comparable {
+import org.apache.felix.dm.context.Event;
+
+public class ResourceEventImpl implements Event {
     final URL m_resource;
-    final Dictionary<?, ?> m_resourceProperties;
+    final Dictionary<String, Object> m_resourceProperties;
     
-    public ResourceEventImpl(URL resource, Dictionary<?,?> resourceProperties) {
+    @SuppressWarnings("unchecked")
+    public ResourceEventImpl(URL resource, Dictionary<String, ?> resourceProperties) {
         m_resource = resource;
-        m_resourceProperties = resourceProperties;
+        m_resourceProperties = (Dictionary<String, Object>) resourceProperties;
     }
     
     @Override
@@ -36,8 +39,12 @@ public class ResourceEventImpl extends EventImpl implements Comparable {
     }
 
     @Override
-    public Dictionary getProperties() {
-        return m_resourceProperties;
+    public Dictionary<String, Object> getProperties() {
+        return m_resourceProperties == null ? ServiceUtil.EMPTY_PROPERTIES : m_resourceProperties;
+    }
+
+    @Override
+    public void close() {
     }
 
     public URL getResource() {
@@ -75,7 +82,7 @@ public class ResourceEventImpl extends EventImpl implements Comparable {
     }
 
     @Override
-    public int compareTo(Object that) {
+    public int compareTo(Event that) {
         if (this.equals(that)) {
             return 0;
         }

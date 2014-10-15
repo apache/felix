@@ -62,7 +62,7 @@ public abstract class AbstractDecorator  {
     /**
      * Set some service properties to all already instantiated services.
      */
-    public void setServiceProperties(Dictionary<?,?> serviceProperties) {
+    public void setServiceProperties(Dictionary<String,?> serviceProperties) {
         for (Component component : m_services.values()) {
             component.setServiceProperties(serviceProperties);
         }
@@ -105,7 +105,7 @@ public abstract class AbstractDecorator  {
     }
     
     // callbacks for FactoryConfigurationAdapterImpl
-    public void updated(String pid, Dictionary properties) throws ConfigurationException {
+    public void updated(String pid, @SuppressWarnings("rawtypes") Dictionary properties) throws ConfigurationException {
         try {
             Component service = m_services.get(pid);
             if (service == null) { 
@@ -206,7 +206,7 @@ public abstract class AbstractDecorator  {
     }
     
     public Map<Object, Component> getServices() {
-        return new ConcurrentHashMap<Object, Component>(m_services);
+        return m_services;
     }
 
     private void configureAutoConfigState(Component target, ComponentContext source, Class<?> clazz) {

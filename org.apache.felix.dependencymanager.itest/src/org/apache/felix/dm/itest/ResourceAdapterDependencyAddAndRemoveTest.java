@@ -20,6 +20,7 @@ import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 
+@SuppressWarnings({"deprecation", "unchecked", "rawtypes", "unused"})
 public class ResourceAdapterDependencyAddAndRemoveTest extends TestBase {
     public void testBasicResourceAdapter() throws Exception {
         DependencyManager m = getDM();
@@ -238,6 +239,7 @@ public class ResourceAdapterDependencyAddAndRemoveTest extends TestBase {
             case INACTIVE:
                 System.out.println("stopped");
                 m_ensure.step(4);
+            default:
             }
         }
     }

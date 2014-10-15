@@ -121,7 +121,7 @@ public class FELIX2955_ShellCommandTest extends TestBase {
                         "", 
                         "");
                     m_ensure.step(7);
-                };
+                }
             };
             t.start();
         }

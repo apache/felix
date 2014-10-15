@@ -18,8 +18,6 @@
 */
 package org.apache.felix.dm.runtime.itest.components;
 
-import static org.apache.felix.dm.runtime.itest.components.Utils.DM_BSN;
-
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.annotation.api.BundleAdapterService;
 import org.apache.felix.dm.annotation.api.BundleDependency;

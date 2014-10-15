@@ -1,8 +1,8 @@
 package org.apache.felix.dm.itest;
 
 import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -12,6 +12,7 @@ import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Constants;
 
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class AutoConfigTest extends TestBase {
     private final Ensure m_ensure = new Ensure();
 
@@ -116,7 +117,7 @@ public class AutoConfigTest extends TestBase {
     }
 
     private Component createProvider(DependencyManager dm, int rank, Provider provider) {
-        Properties props = new Properties();
+        Hashtable props = new Hashtable();
         props.put(Constants.SERVICE_RANKING, new Integer(rank));
         return dm.createComponent()
             .setImplementation(provider)

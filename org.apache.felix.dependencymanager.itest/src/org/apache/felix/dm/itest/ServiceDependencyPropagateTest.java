@@ -29,6 +29,7 @@ import org.osgi.framework.ServiceReference;
 /**
  * Validates ServiceDependency service properties propagation.
  */
+@SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class ServiceDependencyPropagateTest extends TestBase {
     /**
      * Checks that a ServiceDependency propagates the dependency service properties to the provided service properties.

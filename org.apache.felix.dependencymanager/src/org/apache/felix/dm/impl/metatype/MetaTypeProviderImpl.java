@@ -51,11 +51,11 @@ import org.osgi.service.metatype.ObjectClassDefinition;
 public class MetaTypeProviderImpl implements MetaTypeProvider, ManagedService, ManagedServiceFactory {
     private ManagedService m_managedServiceDelegate;
     private ManagedServiceFactory m_managedServiceFactoryDelegate;
-    private ArrayList m_propertiesMetaData = new ArrayList();
+    private ArrayList<PropertyMetaData> m_propertiesMetaData = new ArrayList<>();
     private String m_description;
     private String m_heading;
     private String m_localization;
-    private HashMap m_localesProperties = new HashMap();
+    private HashMap<String, Properties> m_localesProperties = new HashMap<>();
     private Logger m_logger;
     private BundleContext m_bctx;
     private String m_pid;
@@ -76,16 +76,17 @@ public class MetaTypeProviderImpl implements MetaTypeProvider, ManagedService, M
         }
     }
     
+    @SuppressWarnings("unchecked")
     public MetaTypeProviderImpl(MetaTypeProviderImpl prototype, ManagedService msDelegate, ManagedServiceFactory msfDelegate) {
         m_pid = prototype.m_pid;
         m_bctx = prototype.m_bctx;
         m_logger = prototype.m_logger;
         m_localization = prototype.m_localization;
-        m_propertiesMetaData = prototype.m_propertiesMetaData != null ? (ArrayList) prototype.m_propertiesMetaData.clone() : null;
+        m_propertiesMetaData = prototype.m_propertiesMetaData != null ? (ArrayList<PropertyMetaData>) prototype.m_propertiesMetaData.clone() : null;
         m_description = prototype.m_description;
         m_heading = prototype.m_heading;
         m_localization = prototype.m_localization;
-        m_localesProperties = prototype.m_localesProperties != null ? (HashMap) prototype.m_localesProperties.clone() : null;
+        m_localesProperties = prototype.m_localesProperties != null ? (HashMap<String, Properties>) prototype.m_localesProperties.clone() : null;
         m_managedServiceDelegate = msDelegate;
         m_managedServiceFactoryDelegate = msfDelegate;
     }
@@ -139,6 +140,7 @@ public class MetaTypeProviderImpl implements MetaTypeProvider, ManagedService, M
      * "en_GB", "en_GB_welsh" ...
      * @return the list of Locale supported by our bundle.
      */
+    @SuppressWarnings("rawtypes")
     public String[] getLocales() {
         int lastSlash = m_localization.lastIndexOf("/");
         String path = (lastSlash == -1) ? "/" : ("/" + m_localization.substring(0, lastSlash - 1));
@@ -149,7 +151,7 @@ public class MetaTypeProviderImpl implements MetaTypeProvider, ManagedService, M
             return null;
         }
         
-        TreeSet set = new TreeSet();
+        TreeSet<String> set = new TreeSet<>();
         while (e.hasMoreElements()) {
             // We have found a locale property file in the form of "path/file[_language[_ country[_variation]].properties"
             // And now, we have to get the "language[_country[_variation]]" part ...
@@ -198,6 +200,7 @@ public class MetaTypeProviderImpl implements MetaTypeProvider, ManagedService, M
      * We also implements the ManagedService and we just delegates the configuration handling to
      * our associated ConfigurationDependency.
      */
+    @SuppressWarnings("rawtypes")
     public void updated(Dictionary properties) throws ConfigurationException {
         m_managedServiceDelegate.updated(properties);
     }
@@ -265,6 +268,7 @@ public class MetaTypeProviderImpl implements MetaTypeProvider, ManagedService, M
         return m_pid;
     }
 
+    @SuppressWarnings("rawtypes")
     public void updated(String pid, Dictionary properties) throws ConfigurationException {
         m_managedServiceFactoryDelegate.updated(pid, properties);
     }

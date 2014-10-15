@@ -54,7 +54,7 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
     protected volatile String m_propagateCallbackMethod;
     protected final BundleContext m_context;
     protected final Bundle m_bundle;
-    private final static Dictionary EMPTY_PROPERTIES = new Hashtable<>(0);
+    protected final static Dictionary<String, Object> EMPTY_PROPERTIES = new Hashtable<>(0);
 
     public AbstractDependency() {
         this(true, null);
@@ -112,7 +112,7 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
     }
 
     @Override
-    public Dictionary getProperties() {
+    public Dictionary<String, Object> getProperties() {
         return EMPTY_PROPERTIES;
     }
 
@@ -232,12 +232,14 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
         m_available = available;
     }
 
+    @SuppressWarnings("unchecked")
     public T setPropagate(boolean propagate) {
         ensureNotActive();
         m_propagate = propagate;
         return (T) this;
     }
 
+    @SuppressWarnings("unchecked")
     public T setPropagate(Object instance, String method) {
         setPropagate(instance != null && method != null);
         m_propagateCallbackInstance = instance;
@@ -265,6 +267,7 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
         return setCallbacks(instance, add, null, remove);
     }
 
+    @SuppressWarnings("unchecked")
     public T setCallbacks(Object instance, String add, String change, String remove) {
         if ((add != null || change != null || remove != null) && !m_autoConfigInvoked) {
             setAutoConfig(false);
@@ -293,6 +296,7 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
         invoke(method, e, getInstances());
     }
 
+    @SuppressWarnings("unchecked")
     public T setRequired(boolean required) {
         m_required = required;
         return (T) this;
@@ -308,12 +312,14 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
         return null; // must be implemented by subclasses if autoconfig mode is enabled
     }
 
+    @SuppressWarnings("unchecked")
     public T setAutoConfig(boolean autoConfig) {
         m_autoConfig = autoConfig;
         m_autoConfigInvoked = true;
         return (T) this;
     }
 
+    @SuppressWarnings("unchecked")
     public T setAutoConfig(String instanceName) {
         m_autoConfig = (instanceName != null);
         m_autoConfigInstance = instanceName;
@@ -349,7 +355,7 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
     }
 
     @Override
-    public void copyToMap(Map<Object, Dictionary> map) {
+    public void copyToMap(Map<Object, Dictionary<String, ?>> map) {
         Set<Event> events = m_component.getDependencyEvents(this);
         if (events.size() > 0) {
             for (Event e : events) {
@@ -358,7 +364,7 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
         } else {
             Object defaultService = getDefaultService();
             if (defaultService != null) {
-                map.put(defaultService, new Hashtable());
+                map.put(defaultService, EMPTY_PROPERTIES);
             }
         }
     }

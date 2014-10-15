@@ -142,7 +142,7 @@ public class ServiceUtil {
      * @param exclude a list of properties to exclude, or <code>null</code> to show everything
      * @return a string representation of the service properties
      */
-    public static String propertiesToString(ServiceReference ref, List /* <String> */ exclude) {
+    public static String propertiesToString(ServiceReference ref, List<String> exclude) {
         StringBuffer buf = new StringBuffer();
         String[] keys = ref.getPropertyKeys();
         for (int i = 0; i < keys.length; i++) {

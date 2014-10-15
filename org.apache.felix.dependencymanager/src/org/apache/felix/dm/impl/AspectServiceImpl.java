@@ -21,10 +21,9 @@ package org.apache.felix.dm.impl;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Enumeration;
-import java.util.Iterator;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentStateListener;
@@ -71,8 +70,8 @@ public class AspectServiceImpl extends FilterComponent {
         }  
 	}
 	
-    private Properties getServiceProperties(ServiceReference ref) {
-        Properties props = new Properties();
+    private Hashtable<String, Object> getServiceProperties(ServiceReference ref) {
+        Hashtable<String, Object> props = new Hashtable<>();
         String[] keys = ref.getPropertyKeys();
         for (int i = 0; i < keys.length; i++) {
             String key = keys[i];
@@ -84,9 +83,9 @@ public class AspectServiceImpl extends FilterComponent {
             }
         }
         if (m_serviceProperties != null) {
-            Enumeration<?> e = m_serviceProperties.keys();
+            Enumeration<String> e = m_serviceProperties.keys();
             while (e.hasMoreElements()) {
-                Object key = e.nextElement();
+                String key = e.nextElement();
                 props.put(key, m_serviceProperties.get(key));
             }
         }
@@ -118,7 +117,7 @@ public class AspectServiceImpl extends FilterComponent {
             List<DependencyContext> dependencies = m_component.getDependencies();
             // remove our internal dependency, replace it with one that points to the specific service that just was passed in.
             dependencies.remove(0);
-            Properties serviceProperties = getServiceProperties(ref);
+            Hashtable<String, Object> serviceProperties = getServiceProperties(ref);
             String[] serviceInterfaces = getServiceInterfaces();
             
             ServiceDependency aspectDependency = (ServiceDependencyImpl) 
@@ -164,16 +163,13 @@ public class AspectServiceImpl extends FilterComponent {
          * Modify some specific aspect service properties.
          */
 		@Override
-        public void setServiceProperties(Dictionary props) {
-            Map<Object, Component> services = super.getServices();
-            Iterator it = services.entrySet().iterator();
-            while (it.hasNext()) {
-                Map.Entry entry = (Map.Entry) it.next();
-                ServiceReference originalServiceRef = (ServiceReference) entry.getKey();
-                Component c = (Component) entry.getValue();
+        public void setServiceProperties(Dictionary<String,?> props) {
+		    for (Map.Entry<Object, Component> e : super.getServices().entrySet()) {
+		        ServiceReference originalServiceRef = (ServiceReference) e.getKey();
+                Component c = e.getValue();
                 // m_serviceProperties is already set to the new service properties; and the getServiceProperties will
                 // merge m_serviceProperties with the original service properties.
-                Dictionary newProps = getServiceProperties(originalServiceRef);                
+                Dictionary<String, Object> newProps = getServiceProperties(originalServiceRef);
                 c.setServiceProperties(newProps);
             }
         }
@@ -231,7 +227,7 @@ public class AspectServiceImpl extends FilterComponent {
             // Propagate change to immediate higher aspect, or to client using our aspect.
             // We always propagate our own properties, and the ones from the original service, but we don't inherit
             // from lower ranked aspect service properties.
-            Dictionary<?,?> props = getServiceProperties(m_originalServiceRef);
+            Dictionary<String, Object> props = getServiceProperties(m_originalServiceRef);
             c.setServiceProperties(props);
         }
 
@@ -245,12 +241,7 @@ public class AspectServiceImpl extends FilterComponent {
         @SuppressWarnings("unused")
 		private void swapAspect(Component c, ServiceReference prevRef, Object prev, ServiceReference currRef,
                                 Object curr) {
-        	Object[] instances = m_aspectDependency.getComponentContext().getInstances();
-        	
-        	// TODO ASPECTS: It sometimes appears (mostly on component/dependency remove) the size of the instances array is 0, meaning the component
-        	// is no longer registered. This should not happen! Figure out why it happens anyway. 
-//        	System.out.println("[proxy] swapAspect..." + instances.length);
-        	
+        	Object[] instances = m_aspectDependency.getComponentContext().getInstances();        	        	
             // Just forward "swap" service dependency callback.
         	m_aspectDependency.invokeSwap(m_swap, prevRef, prev, currRef, curr, m_aspectDependency.getComponentContext().getInstances());
         }

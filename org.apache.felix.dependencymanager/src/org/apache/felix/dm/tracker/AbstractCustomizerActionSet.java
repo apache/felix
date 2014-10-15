@@ -28,7 +28,7 @@ import java.util.List;
  */
 public abstract class AbstractCustomizerActionSet {
 
-	enum Type { ADDED, MODIFIED, REMOVED };
+	enum Type { ADDED, MODIFIED, REMOVED }
 
 	final List<CustomizerAction> m_actions = new ArrayList<>();
 

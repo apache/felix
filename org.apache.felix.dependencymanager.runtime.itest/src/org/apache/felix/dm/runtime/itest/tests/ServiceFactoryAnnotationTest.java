@@ -30,6 +30,7 @@ import org.apache.felix.dm.itest.TestBase;
 import org.apache.felix.dm.runtime.itest.components.ServiceFactoryAnnotation;
 import org.osgi.framework.ServiceRegistration;
 
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class ServiceFactoryAnnotationTest extends TestBase {
     
     private final Ensure m_ensure = new Ensure();

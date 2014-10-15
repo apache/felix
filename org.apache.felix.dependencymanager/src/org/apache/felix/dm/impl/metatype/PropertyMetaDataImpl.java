@@ -36,12 +36,12 @@ public class PropertyMetaDataImpl implements PropertyMetaData {
     /**
      * List of option labels (may be localized)
      */
-    List m_optionsLabels = new ArrayList();
+    List<String> m_optionsLabels = new ArrayList<>();
     
     /**
      * List of option values
      */
-    List m_optionsValues = new ArrayList();
+    List<String> m_optionsValues = new ArrayList<>();
     
     /**
      * Property cardinality.
@@ -84,7 +84,8 @@ public class PropertyMetaDataImpl implements PropertyMetaData {
      * Mapping between java types and valid MetaType types.
      * @see {@link AttributeDefinition#getType()}
      */
-    private final static Map m_typeMapping = new HashMap() {{
+    @SuppressWarnings({ "unchecked", "serial", "rawtypes" })
+    private final static Map<Class<?>, Integer> m_typeMapping = new HashMap() {{
         put(Boolean.class, new Integer(AttributeDefinition.BOOLEAN));
         put(Byte.class, new Integer(AttributeDefinition.BYTE));
         put(Character.class, new Integer(AttributeDefinition.CHARACTER));
@@ -131,7 +132,7 @@ public class PropertyMetaDataImpl implements PropertyMetaData {
         return this;
     }
 
-    public PropertyMetaData setType(Class classType) {
+    public PropertyMetaData setType(Class<?> classType) {
         Integer type = (Integer) m_typeMapping.get(classType);
         if (type == null) {
             throw new IllegalArgumentException("Invalid type: " + classType + ". Valid types are "

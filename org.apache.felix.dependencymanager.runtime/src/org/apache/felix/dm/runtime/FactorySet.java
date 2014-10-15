@@ -42,7 +42,7 @@ import org.osgi.framework.Bundle;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@SuppressWarnings( { "unchecked" })
+@SuppressWarnings( { "unchecked", "rawtypes"})
 public class FactorySet extends AbstractSet<Dictionary>
 {
     /**
@@ -198,7 +198,7 @@ public class FactorySet extends AbstractSet<Dictionary>
      * Create or Update a Service.
      */
     @Override
-    @SuppressWarnings("synthetic-access")
+    @SuppressWarnings({ "synthetic-access" })
     public boolean add(final Dictionary configuration)
     {
         // Check parameter validity
@@ -355,7 +355,7 @@ public class FactorySet extends AbstractSet<Dictionary>
                 // Create the Service / impl, unless it is explicitly provided from the
                 // configuration (using the specific key "dm.factory.instance").
                 Component s = m_dm.createComponent();
-                Class implClass = m_bundle.loadClass(m_srvMeta.getString(Params.impl));
+                Class<?> implClass = m_bundle.loadClass(m_srvMeta.getString(Params.impl));
                 Object impl = configuration.get(DM_FACTORY_INSTANCE);
                 if (impl == null)
                 {

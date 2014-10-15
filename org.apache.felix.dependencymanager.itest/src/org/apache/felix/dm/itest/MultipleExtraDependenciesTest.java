@@ -27,6 +27,7 @@ import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
 
 
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class MultipleExtraDependenciesTest extends TestBase {
     /**
      * Check that list of extra dependencies (defined from init method) are handled properly.

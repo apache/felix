@@ -32,6 +32,7 @@ import org.apache.felix.dm.itest.Ensure;
 
 import junit.framework.Assert;
 
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class ServiceFactoryAnnotation {
     public final static String FACTORY = "ServiceFactoryAnnotation.Factory";
     public final static String ENSURE = "ServiceFactoryAnnotation.Ensure";
@@ -68,7 +69,6 @@ public class ServiceFactoryAnnotation {
         /**
          * The configuration provided by MyServiceFactory
          */
-        @SuppressWarnings("unchecked")
         volatile Dictionary m_configuration;
 
         /**
@@ -100,6 +100,7 @@ public class ServiceFactoryAnnotation {
          * Initialize our Service: we'll dynamically configure our dependency whose
          * name is "extra".
          */
+        @SuppressWarnings("serial")
         @Init
         Map init() {
             return new HashMap() {

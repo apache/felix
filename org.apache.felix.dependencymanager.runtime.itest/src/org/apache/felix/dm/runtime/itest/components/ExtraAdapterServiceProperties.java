@@ -32,6 +32,7 @@ import org.apache.felix.dm.itest.Ensure;
  * This test validates that an adapter Service may specify some extra service properties
  * from it's start callback
  */
+@SuppressWarnings({"rawtypes", "serial"})
 public class ExtraAdapterServiceProperties {
     public final static String ENSURE = "ExtraAdapterServiceProperties";
 

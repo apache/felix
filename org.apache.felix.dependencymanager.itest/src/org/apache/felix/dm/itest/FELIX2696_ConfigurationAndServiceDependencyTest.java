@@ -32,6 +32,7 @@ import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 
 
+@SuppressWarnings("rawtypes")
 public class FELIX2696_ConfigurationAndServiceDependencyTest extends TestBase {
     final static String PID = "FELIX2696_ConfigurationAndServiceDependencyTest.pid";
 
@@ -77,6 +78,7 @@ public class FELIX2696_ConfigurationAndServiceDependencyTest extends TestBase {
             m_ensure = e;
         }
 
+        @SuppressWarnings("unchecked")
         public void init() {
             try {
                 m_conf = m_ca.getConfiguration(PID, null);

@@ -18,20 +18,17 @@
  */
 package org.apache.felix.dm.itest;
 
-import java.util.ArrayList;
 import java.util.Hashtable;
-import java.util.List;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ServiceDependency;
 
-
-
 /**
  * Tests for extra dependencies which are declared from service's init method.
  */
+@SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class MultipleExtraDependencyTest2 extends TestBase {
     public void testMultipleExtraDependencies()
     {
@@ -155,7 +152,6 @@ public class MultipleExtraDependencyTest2 extends TestBase {
         public void init(Component c)
         {
             DependencyManager m = c.getDependencyManager();
-            List<ServiceDependency> l = new ArrayList<ServiceDependency>();
             m_d1 = m.createServiceDependency()
                     .setService(Sequencer.class)
                     .setRequired(true)
@@ -205,7 +201,6 @@ public class MultipleExtraDependencyTest2 extends TestBase {
         {
             System.out.println("ServiceProvider2.init");
             DependencyManager m = c.getDependencyManager();
-            List<ServiceDependency> l = new ArrayList<ServiceDependency>();
             
             m_d1 = m.createServiceDependency()
                   .setService(Runnable.class, "(foo=bar)")

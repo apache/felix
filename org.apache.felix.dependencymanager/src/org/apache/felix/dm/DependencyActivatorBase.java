@@ -188,7 +188,7 @@ public abstract class DependencyActivatorBase implements BundleActivator {
      * @return the aspect service
      * @see DependencyManager#createAspectService(Class, String, int, String)
      */
-    public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking, String attributeName) {
+    public Component createAspectService(Class<?> serviceInterface, String serviceFilter, int ranking, String attributeName) {
         return m_manager.createAspectService(serviceInterface, serviceFilter, ranking, attributeName);
     }
     
@@ -198,7 +198,7 @@ public abstract class DependencyActivatorBase implements BundleActivator {
      * @return the aspect service
      * @see DependencyManager#createAspectService(Class, String, int)
      */
-    public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking) {
+    public Component createAspectService(Class<?> serviceInterface, String serviceFilter, int ranking) {
         return m_manager.createAspectService(serviceInterface, serviceFilter, ranking);
     }
     
@@ -208,7 +208,7 @@ public abstract class DependencyActivatorBase implements BundleActivator {
      * @return the aspect service
      * @see DependencyManager#createAspectService(Class, String, int, String, String, String)
      */
-    public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking, String add, String change, String remove) {
+    public Component createAspectService(Class<?> serviceInterface, String serviceFilter, int ranking, String add, String change, String remove) {
         return m_manager.createAspectService(serviceInterface, serviceFilter, ranking, add, change, remove);
     }
 
@@ -218,7 +218,7 @@ public abstract class DependencyActivatorBase implements BundleActivator {
      * @return the aspect service
      * @see DependencyManager#createAspectService(Class, String, int, String, String, String, String)
      */
-    public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking, String add, String change, String remove, String swap) {    
+    public Component createAspectService(Class<?> serviceInterface, String serviceFilter, int ranking, String add, String change, String remove, String swap) {    
         return m_manager.createAspectService(serviceInterface, serviceFilter, ranking, add, change, remove, swap);
     }
     	
@@ -228,7 +228,7 @@ public abstract class DependencyActivatorBase implements BundleActivator {
      * @return the adapter service
      * @see DependencyManager#createAdapterService(Class, String)
      */
-    public Component createAdapterService(Class serviceInterface, String serviceFilter) {
+    public Component createAdapterService(Class<?> serviceInterface, String serviceFilter) {
         return m_manager.createAdapterService(serviceInterface, serviceFilter);
     }
     
@@ -238,7 +238,7 @@ public abstract class DependencyActivatorBase implements BundleActivator {
      * @return the adapter service
      * @see DependencyManager#createAdapterService(Class, String, String)
      */
-    public Component createAdapterService(Class serviceInterface, String serviceFilter, String autoConfig) {
+    public Component createAdapterService(Class<?> serviceInterface, String serviceFilter, String autoConfig) {
         return m_manager.createAdapterService(serviceInterface, serviceFilter, autoConfig);
     }
     
@@ -248,7 +248,7 @@ public abstract class DependencyActivatorBase implements BundleActivator {
      * @return the adapter service
      * @see DependencyManager#createAdapterService(Class, String, String, String, String)
      */
-    public Component createAdapterService(Class serviceInterface, String serviceFilter, String add, String change, String remove) {
+    public Component createAdapterService(Class<?> serviceInterface, String serviceFilter, String add, String change, String remove) {
         return m_manager.createAdapterService(serviceInterface, serviceFilter, add, change, remove);
     }
     
@@ -257,7 +257,7 @@ public abstract class DependencyActivatorBase implements BundleActivator {
      * @return the adapter service
      * @see DependencyManager#createAdapterService(Class, String, String, String, String, String)
      */
-    public Component createAdapterService(Class serviceInterface, String serviceFilter, String add, String change, String remove, String swap) {
+    public Component createAdapterService(Class<?> serviceInterface, String serviceFilter, String add, String change, String remove, String swap) {
         return m_manager.createAdapterService(serviceInterface, serviceFilter, add, change, remove, swap);
     }  
     

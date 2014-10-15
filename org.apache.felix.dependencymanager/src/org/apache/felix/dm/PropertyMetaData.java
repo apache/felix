@@ -44,7 +44,7 @@ public interface PropertyMetaData {
      *    <li>Boolean.class</li>
      * </ul>
      */
-    public PropertyMetaData setType(Class type);
+    public PropertyMetaData setType(Class<?> type);
 
     /**
      * Returns a default for this property. The object must be of the appropriate type as defined by the cardinality and getType(). 

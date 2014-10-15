@@ -67,9 +67,7 @@ public class FELIX2078_ServiceDependencyTest extends TestBase {
     }
 
     static class ServiceProvider implements ServiceInterface {
-        private final Ensure m_ensure;
         public ServiceProvider(Ensure e) {
-            m_ensure = e;
         }
         public void invoke() {
         }

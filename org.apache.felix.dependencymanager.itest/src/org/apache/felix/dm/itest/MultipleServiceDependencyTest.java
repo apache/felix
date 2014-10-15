@@ -18,12 +18,13 @@
  */
 package org.apache.felix.dm.itest;
 
-import java.util.Properties;
+import java.util.Hashtable;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Constants;
 
+@SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class MultipleServiceDependencyTest extends TestBase {
    public void testMultipleServiceRegistrationAndConsumption() {
        DependencyManager m = getDM();
@@ -31,7 +32,7 @@ public class MultipleServiceDependencyTest extends TestBase {
        Ensure e = new Ensure();
        // create a service provider and consumer
        Component provider = m.createComponent().setImplementation(new ServiceProvider(e)).setInterface(ServiceInterface.class.getName(), null);
-       Component providerWithHighRank = m.createComponent().setImplementation(new ServiceProvider2(e)).setInterface(ServiceInterface.class.getName(), new Properties() {{ put(Constants.SERVICE_RANKING, Integer.valueOf(5)); }});
+       Component providerWithHighRank = m.createComponent().setImplementation(new ServiceProvider2(e)).setInterface(ServiceInterface.class.getName(), new Hashtable() {{ put(Constants.SERVICE_RANKING, Integer.valueOf(5)); }});
        Component consumer = m.createComponent().setImplementation(new ServiceConsumer(e)).add(m.createServiceDependency().setService(ServiceInterface.class).setRequired(true));
        m.add(provider);
        m.add(providerWithHighRank);
@@ -117,8 +118,11 @@ public class MultipleServiceDependencyTest extends TestBase {
        private volatile ServiceInterface m_service;
        private final Ensure m_ensure;
 
+       @SuppressWarnings("unused")
        private void add(ServiceInterface service) { m_service = service; }
-       private void remove(ServiceInterface service) { if (m_service == service) { m_service = null; }};
+       
+       @SuppressWarnings("unused")
+       private void remove(ServiceInterface service) { if (m_service == service) { m_service = null; }}
        public ServiceConsumer(Ensure e) { m_ensure = e; }
 
        public void start() {

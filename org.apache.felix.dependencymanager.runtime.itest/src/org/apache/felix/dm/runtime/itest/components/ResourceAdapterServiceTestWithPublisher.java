@@ -44,6 +44,7 @@ import org.osgi.framework.InvalidSyntaxException;
 /**
  * Test a ResourceAdapterService which provides its interface using a @ServiceLifecycle.
  */
+@SuppressWarnings({"deprecation", "unchecked", "rawtypes", "serial"})
 public class ResourceAdapterServiceTestWithPublisher {
     public static final String ENSURE = "ResourceAdapterServiceTestWithPublisher";
 

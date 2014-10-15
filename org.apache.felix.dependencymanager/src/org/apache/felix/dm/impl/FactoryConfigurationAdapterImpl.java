@@ -54,7 +54,7 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
         m_factoryPid = factoryPid;
         m_logger = ((ComponentImpl) m_component).getLogger();
 
-        Hashtable props = new Hashtable();
+        Hashtable<String, Object> props = new Hashtable<>();
         props.put(Constants.SERVICE_PID, factoryPid);
         m_component
             .setInterface(ManagedServiceFactory.class.getName(), props)
@@ -67,7 +67,7 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
         super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
         m_factoryPid = factoryPid;
         m_logger = logger;
-        Hashtable props = new Hashtable();
+        Hashtable<String, Object> props = new Hashtable<>();
         props.put(Constants.SERVICE_PID, factoryPid);
         m_component
             .setInterface(ManagedServiceFactory.class.getName(), props)
@@ -116,14 +116,15 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
         /**
          * Method called from our superclass, when we need to create a service.
          */
+        @SuppressWarnings("unchecked")
         public Component createService(Object[] properties) {
-            Dictionary settings = (Dictionary) properties[0];     
+            Dictionary<String, ?> settings = (Dictionary<String, ?>) properties[0];     
             Component newService = m_manager.createComponent();        
             Object impl = null;
             
             try {
                 if (m_serviceImpl != null) {
-                    impl = (m_serviceImpl instanceof Class) ? ((Class) m_serviceImpl).newInstance() : m_serviceImpl;
+                    impl = (m_serviceImpl instanceof Class) ? ((Class<?>) m_serviceImpl).newInstance() : m_serviceImpl;
                 }
                 else {
                     impl = instantiateFromFactory(m_factory, m_factoryCreateMethod);
@@ -138,7 +139,7 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
             }
 
             // Merge adapter service properties, with CM settings 
-            Dictionary serviceProperties = getServiceProperties(settings);
+            Dictionary<String, Object> serviceProperties = getServiceProperties(settings);
             newService.setInterface(m_serviceInterfaces, serviceProperties);
             newService.setImplementation(impl);
             newService.setComposition(m_compositionInstance, m_compositionMethod); // if not set, no effect
@@ -160,8 +161,9 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
          * Method called from our superclass, when we need to update a Service, because 
          * the configuration has changed.
          */
+        @SuppressWarnings("unchecked")
         public void updateService(Object[] properties) {
-            Dictionary cmSettings = (Dictionary) properties[0];
+            Dictionary<String, ?> cmSettings = (Dictionary<String, ?>) properties[0];
             Component service = (Component) properties[1];
             Object impl = service.getInstances()[0];
 
@@ -170,7 +172,7 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
                     new Class[][] {{ Dictionary.class }, {}}, 
                     new Object[][] {{ cmSettings }, {}});
                 if (m_serviceInterfaces != null && m_propagate == true) {
-                    Dictionary serviceProperties = getServiceProperties(cmSettings);
+                    Dictionary<String, ?> serviceProperties = getServiceProperties(cmSettings);
                     service.setServiceProperties(serviceProperties);
                 }
             }
@@ -188,14 +190,14 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
          * @param settings
          * @return
          */
-        private Dictionary getServiceProperties(Dictionary settings) {
-            Dictionary props = new Hashtable();
+        private Dictionary<String, Object> getServiceProperties(Dictionary<String, ?> settings) {
+            Dictionary<String, Object> props = new Hashtable<>();
             
             // Add adapter Service Properties
             if (m_serviceProperties != null) {
-                Enumeration keys = m_serviceProperties.keys();
+                Enumeration<String> keys = m_serviceProperties.keys();
                 while (keys.hasMoreElements()) {
-                    Object key = keys.nextElement();
+                    String key = keys.nextElement();
                     Object val = m_serviceProperties.get(key);
                     props.put(key, val);
                 }
@@ -204,9 +206,9 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
             if (m_propagate) {
                 // Add CM setting into adapter service properties.
                 // (CM setting will override existing adapter service properties).
-                Enumeration keys = settings.keys();
+                Enumeration<String> keys = settings.keys();
                 while (keys.hasMoreElements()) {
-                    Object key = keys.nextElement();
+                    String key = keys.nextElement();
                     if (! key.toString().startsWith(".")) {
                         // public properties are propagated
                         Object val = settings.get(key);
@@ -223,7 +225,7 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
             Object factory = null;
             if (m_factory instanceof Class) {
                 try {
-                    factory = createInstance((Class) m_factory);
+                    factory = createInstance((Class<?>) m_factory);
                 }
                 catch (Throwable t) {
                     handleException(t);
@@ -242,8 +244,8 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
             }
         }
 
-        private Object createInstance(Class clazz) throws SecurityException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-            Constructor constructor = clazz.getConstructor(new Class[] {});
+        private Object createInstance(Class<?> clazz) throws SecurityException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+            Constructor<?> constructor = clazz.getConstructor(new Class[] {});
             constructor.setAccessible(true);
             return clazz.newInstance();
         }

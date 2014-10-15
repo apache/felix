@@ -1,9 +1,5 @@
 package org.apache.felix.dependencymanager.samples.conf;
 
-import java.util.Hashtable;
-import java.util.concurrent.Executor;
-
-import org.apache.felix.dependencymanager.samples.tpool.ThreadPool;
 import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.BundleContext;

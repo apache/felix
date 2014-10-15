@@ -33,6 +33,7 @@ import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 
 
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class ConfigurationDependencyTest extends TestBase {
     final static String PID = "ConfigurationDependencyTest.pid";
     

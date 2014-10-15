@@ -24,6 +24,7 @@ import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 
 
+@SuppressWarnings("unused")
 public class FELIX2344_ExtraDependencyWithAutoConfigTest extends TestBase {
     /**
      * Test if an auto config extra dependency is injected in the expected order.

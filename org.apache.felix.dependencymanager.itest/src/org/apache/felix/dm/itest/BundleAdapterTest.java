@@ -7,9 +7,7 @@ import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
 
 // TODO add more tests
-public class BundleAdapterTest extends TestBase {
-    private final static String BSN = "org.apache.felix.metatype";
-    
+public class BundleAdapterTest extends TestBase {    
     public void testBundleAdapter() {
         DependencyManager m = getDM();
         // create a bundle adapter service (one is created for each bundle)

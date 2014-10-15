@@ -19,7 +19,6 @@
 package org.apache.felix.dm.impl;
 
 import java.util.Dictionary;
-import java.util.Hashtable;
 
 import org.apache.felix.dm.context.Event;
 
@@ -29,7 +28,6 @@ import org.apache.felix.dm.context.Event;
 public class EventImpl implements Event {
 	private final int m_id;
 	private final Object m_event;    // the actual event object (a Service, a Bundle, a Configuration, etc ...)
-	private final static Dictionary m_emptyProperties = new Hashtable();
 
 	public EventImpl() {
 		this(1);
@@ -61,7 +59,7 @@ public class EventImpl implements Event {
 	}
 	
     @Override
-    public int compareTo(Object o) {
+    public int compareTo(Event o) {
         EventImpl a = this, b = (EventImpl) o;
         if (a.m_id < b.m_id) {
             return -1;
@@ -82,7 +80,7 @@ public class EventImpl implements Event {
     }
     
     @Override
-    public Dictionary getProperties() {
-        return m_emptyProperties;
+    public Dictionary<String, Object> getProperties() {
+        return ServiceUtil.EMPTY_PROPERTIES;
     }
 }

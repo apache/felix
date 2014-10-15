@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.Properties;
 
 import junit.framework.Assert;
 
@@ -12,6 +11,7 @@ import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.osgi.service.cm.ConfigurationAdmin;
 
+@SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class FactoryConfigurationAdapterTest extends TestBase
 {
     private static Ensure m_ensure;
@@ -32,7 +32,7 @@ public class FactoryConfigurationAdapterTest extends TestBase
         // Create an Adapter that will be instantiated, once the configuration is created.
         // This Adapter provides an AdapterService, and depends on an AdapterExtraDependency service.
         Component s2 = m.createFactoryConfigurationAdapterService("MyFactoryPid", "updated", true /* propagate CM settings */)
-                      .setInterface(AdapterService.class.getName(), new Properties() {{ put("foo", "bar"); }})
+                      .setInterface(AdapterService.class.getName(), new Hashtable() {{ put("foo", "bar"); }})
                       .setImplementation(Adapter.class);
 
         s2.add(m.createServiceDependency()

@@ -36,8 +36,6 @@ public class BundleDependencyTest extends TestBase {
     
     public void testRequiredBundleDependency() {
         DependencyManager m = getDM();
-        // create a service provider and consumer
-        Consumer c = new Consumer();
         
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();

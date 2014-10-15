@@ -35,6 +35,7 @@ public class TestBase {
     // Set the enabled log level.
     final int m_level = WARN;
     
+    @SuppressWarnings("unused")
     void debug(String format, Object ... params) {
         if (m_level >= DEBUG) {
             out.println(Thread.currentThread().getName() + " - " + String.format(format, params));
@@ -45,6 +46,7 @@ public class TestBase {
         warn(format, null, params);
     }
     
+    @SuppressWarnings("unused")
     void info(String format, Object ... params) {
         if (m_level >= INFO) {
             out.println(Thread.currentThread().getName() + " - " + String.format(format, params));

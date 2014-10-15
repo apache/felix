@@ -22,7 +22,6 @@ package org.apache.felix.dm.runtime.itest.tests;
 import org.apache.felix.dm.itest.Ensure;
 import org.apache.felix.dm.itest.TestBase;
 import org.apache.felix.dm.runtime.itest.components.BundleDependencyAnnotation;
-import org.apache.felix.dm.runtime.itest.components.Utils;
 import org.osgi.framework.ServiceRegistration;
 
 /**

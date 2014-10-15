@@ -29,6 +29,7 @@ import org.osgi.framework.ServiceRegistration;
 /**
  * Use case: Verify Temporal Service dependency Annotations usage.
  */
+@SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class TemporalAnnotationsTest extends TestBase {
     
    public void testTemporalServiceDependency() {

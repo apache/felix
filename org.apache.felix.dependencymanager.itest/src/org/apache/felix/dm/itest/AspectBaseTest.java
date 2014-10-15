@@ -1,5 +1,6 @@
 package org.apache.felix.dm.itest;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Properties;
 
@@ -10,6 +11,7 @@ import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
+@SuppressWarnings({"unchecked", "rawtypes", "unused"})
 public class AspectBaseTest extends TestBase {    
 
 	public void testSingleAspect() {
@@ -20,8 +22,10 @@ public class AspectBaseTest extends TestBase {
         // create a service provider and consumer
         ServiceProvider p = new ServiceProvider(e, "a");
         ServiceConsumer c = new ServiceConsumer(e);
+        Hashtable<String, Object> props = new Hashtable<>();
+        props.put("name", "a");
         Component sp = m.createComponent()
-            .setInterface(ServiceInterface.class.getName(), new Properties() {{ put("name", "a"); }})
+            .setInterface(ServiceInterface.class.getName(), props)
             .setImplementation(p);
         Component sc = m.createComponent()
             .setImplementation(c)
@@ -54,6 +58,7 @@ public class AspectBaseTest extends TestBase {
         e.step(7);
     }
     
+    @SuppressWarnings("serial")
     public void testSingleAspectThatAlreadyExisted() {
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
@@ -62,7 +67,7 @@ public class AspectBaseTest extends TestBase {
         // create a service provider and consumer
         ServiceProvider p = new ServiceProvider(e, "a");
         ServiceConsumer c = new ServiceConsumer(e);
-        Component sp = m.createComponent().setImplementation(p).setInterface(ServiceInterface.class.getName(), new Properties() {{ put("name", "a"); }});
+        Component sp = m.createComponent().setImplementation(p).setInterface(ServiceInterface.class.getName(), new Hashtable() {{ put("name", "a"); }});
         Component sc = m.createComponent().setImplementation(c).add(m.createServiceDependency().setService(ServiceInterface.class).setRequired(true).setCallbacks("add", "remove").setAutoConfig("m_service"));
         Component sa = m.createAspectService(ServiceInterface.class, null, 20, null).setImplementation(ServiceAspect.class);
         // we first add the aspect
@@ -94,6 +99,7 @@ public class AspectBaseTest extends TestBase {
         e.step(6);
     }
 
+    @SuppressWarnings("serial")
     public void testMultipleAspects() {
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
@@ -101,8 +107,8 @@ public class AspectBaseTest extends TestBase {
         
         // create service providers and consumers
         ServiceConsumer c = new ServiceConsumer(e);
-        Component sp = m.createComponent().setImplementation(new ServiceProvider(e, "a")).setInterface(ServiceInterface.class.getName(), new Properties() {{ put("name", "a"); }});
-        Component sp2 = m.createComponent().setImplementation(new ServiceProvider(e, "b")).setInterface(ServiceInterface.class.getName(), new Properties() {{ put("name", "b"); }});
+        Component sp = m.createComponent().setImplementation(new ServiceProvider(e, "a")).setInterface(ServiceInterface.class.getName(), new Hashtable() {{ put("name", "a"); }});
+        Component sp2 = m.createComponent().setImplementation(new ServiceProvider(e, "b")).setInterface(ServiceInterface.class.getName(), new Hashtable() {{ put("name", "b"); }});
         Component sc = m.createComponent().setImplementation(c).add(m.createServiceDependency().setService(ServiceInterface.class).setRequired(true).setCallbacks("add", "remove"));
         Component sa = m.createAspectService(ServiceInterface.class, null, 20, null).setImplementation(ServiceAspect.class);
         Component sa2 = m.createAspectService(ServiceInterface.class, null, 10, null).setImplementation(ServiceAspect.class);

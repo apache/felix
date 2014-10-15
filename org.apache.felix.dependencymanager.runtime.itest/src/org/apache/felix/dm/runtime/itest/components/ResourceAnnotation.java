@@ -43,6 +43,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 
+@SuppressWarnings({"rawtypes"})
 public class ResourceAnnotation {
     public final static String ENSURE_RESOURCE = "ResourceAnnotation.resource";
     public final static String ENSURE_FIELD = "ResourceAnnotation.field";
@@ -143,6 +144,7 @@ public class ResourceAnnotation {
          * @param serviceProperties
          * @param handler
          */
+        @SuppressWarnings("unchecked")
         @ServiceDependency(removed = "remove", required = false)
         public void add(Map serviceProperties, ResourceHandler handler) {
             System.out.println("ResourceProvider.addResourceHandler " + handler);
@@ -193,6 +195,7 @@ public class ResourceAnnotation {
          * Our component is being destroyed: notify all our registered Resource consumers that we don't
          * provide our Resources anymore.
          */
+        @SuppressWarnings("unchecked")
         @Destroy
         public void destroy() {
             Entry[] handlers;

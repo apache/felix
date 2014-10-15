@@ -34,7 +34,6 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -227,7 +226,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	}
 
 	@Override
-	public Component setInterface(String serviceName, Dictionary properties) {
+	public Component setInterface(String serviceName, Dictionary<String, ?> properties) {
 		ensureNotActive();
 	    m_serviceName = serviceName;
 	    m_serviceProperties = properties;
@@ -235,7 +234,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	}
 
 	@Override
-	public Component setInterface(String[] serviceName, Dictionary properties) {
+	public Component setInterface(String[] serviceName, Dictionary<String, ?> properties) {
 	    ensureNotActive();
 	    m_serviceName = serviceName;
 	    m_serviceProperties = properties;
@@ -314,6 +313,8 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
                     updateInstance(dc, e, true, false);
                 }
                 break;
+            default:
+                // noop
             }
         }
     }
@@ -668,22 +669,12 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         }
     }
     
-    private boolean hasSomePropagateDependencies() {
-		for (int i = 0; i < m_dependencies.size(); i++) {
-			DependencyContext d = (DependencyContext) m_dependencies.get(i);
-			if (d.isPropagated()) {
-				return true;
-			}
-		}
-		return false;
-    }
-
-    private Dictionary calculateServiceProperties() {
-		Dictionary properties = new Properties();
+    private Dictionary<String, Object> calculateServiceProperties() {
+		Dictionary<String, Object> properties = new Hashtable<>();
 		for (int i = 0; i < m_dependencies.size(); i++) {
 			DependencyContext d = (DependencyContext) m_dependencies.get(i);
 			if (d.isPropagated() && d.isAvailable()) {
-				Dictionary dict = d.getProperties();
+				Dictionary<String, Object> dict = d.getProperties();
 				addTo(properties, dict);
 			}
 		}
@@ -696,14 +687,14 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		return properties;
 	}
 
-	private void addTo(Dictionary properties, Dictionary additional) {
+	private void addTo(Dictionary<String, Object> properties, Dictionary<String, ?> additional) {
 		if (properties == null) {
 			throw new IllegalArgumentException("Dictionary to add to cannot be null.");
 		}
 		if (additional != null) {
-			Enumeration e = additional.keys();
+			Enumeration<String> e = additional.keys();
 			while (e.hasMoreElements()) {
-				Object key = e.nextElement();
+				String key = e.nextElement();
 				properties.put(key, additional.get(key));
 			}
 		}
@@ -714,7 +705,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	    if (m_componentInstance == null) {
             if (m_componentDefinition instanceof Class) {
                 try {
-                    m_componentInstance = createInstance((Class) m_componentDefinition);
+                    m_componentInstance = createInstance((Class<?>) m_componentDefinition);
                 }
                 catch (Exception e) {
                     m_logger.log(Logger.LOG_ERROR, "Could not instantiate class " + m_componentDefinition, e);
@@ -726,7 +717,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		        	if (m_instanceFactory != null) {
 		        		if (m_instanceFactory instanceof Class) {
 		        			try {
-								factory = createInstance((Class) m_instanceFactory);
+								factory = createInstance((Class<?>) m_instanceFactory);
 							}
 		                    catch (Exception e) {
 		                        m_logger.log(Logger.LOG_ERROR, "Could not create factory instance of class " + m_instanceFactory + ".", e);
@@ -904,7 +895,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     private Object createInstance(Class<?> clazz) throws SecurityException, NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		Constructor<?> constructor = clazz.getConstructor(VOID);
 		constructor.setAccessible(true);
-        return constructor.newInstance(null);
+        return constructor.newInstance();
     }
 
 	private void notifyListeners(ComponentState state) {
@@ -989,10 +980,10 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	}
 
 	@Override
-	public Dictionary getServiceProperties() {
+	public Dictionary<String, Object> getServiceProperties() {
 		if (m_serviceProperties != null) {
 			// Applied patch from FELIX-4304
-			Hashtable serviceProperties = new Hashtable();
+			Hashtable<String, Object> serviceProperties = new Hashtable<>();
 			addTo(serviceProperties, m_serviceProperties);
 			return serviceProperties;
 		}
@@ -1000,11 +991,11 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	}
 
 	@Override
-	public Component setServiceProperties(final Dictionary serviceProperties) {
+	public Component setServiceProperties(final Dictionary<String, ?> serviceProperties) {
 	    getExecutor().execute(new Runnable() {
 			@Override
 			public void run() {
-			    Dictionary properties = null;
+			    Dictionary<String, Object> properties = null;
 		        m_serviceProperties = serviceProperties;
 		        if ((m_registration != null) && (m_serviceName != null)) {
 		            properties = calculateServiceProperties();
@@ -1151,7 +1142,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     }
     
     private void appendProperties(StringBuffer result) {
-        Dictionary properties = calculateServiceProperties();
+        Dictionary<String, Object> properties = calculateServiceProperties();
         if (properties != null) {
             result.append("(");
             Enumeration<?> enumeration = properties.keys();

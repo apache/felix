@@ -9,6 +9,7 @@ import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
+@SuppressWarnings({"rawtypes", "unchecked", "unused"})
 public class AspectWhiteboardTest extends TestBase {
 
 	public void testWhiteboardConsumer() {

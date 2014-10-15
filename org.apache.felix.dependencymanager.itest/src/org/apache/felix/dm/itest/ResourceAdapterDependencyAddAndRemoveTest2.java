@@ -3,9 +3,9 @@ package org.apache.felix.dm.itest;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Properties;
 
 import junit.framework.Assert;
 
@@ -21,6 +21,7 @@ import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 
+@SuppressWarnings({"deprecation", "unchecked", "rawtypes", "unused"})
 public class ResourceAdapterDependencyAddAndRemoveTest2 extends TestBase {
     public void testBasicResourceAdapter() throws Exception {
         DependencyManager m = getDM();
@@ -29,15 +30,15 @@ public class ResourceAdapterDependencyAddAndRemoveTest2 extends TestBase {
         // create a resource provider
         ResourceProvider provider = new ResourceProvider(e);
         // activate it
-        Properties props = new Properties();
-        props.setProperty("id", "1");
+        Hashtable props = new Hashtable();
+        props.put("id", "1");
         m.add(m.createComponent()
             .setInterface(ServiceInterface.class.getName(), props)
             .setImplementation(new ServiceProvider(e))
         );
         
-        props = new Properties();
-        props.setProperty("id", "2");
+        props = new Hashtable();
+        props.put("id", "2");
         m.add(m.createComponent()
             .setInterface(ServiceInterface.class.getName(), props)
             .setImplementation(new ServiceProvider(e))

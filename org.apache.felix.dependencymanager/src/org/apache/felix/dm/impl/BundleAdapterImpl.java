@@ -19,8 +19,8 @@
 package org.apache.felix.dm.impl;
 
 import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.List;
-import java.util.Properties;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentStateListener;
@@ -43,7 +43,7 @@ public class BundleAdapterImpl extends FilterComponent
     public BundleAdapterImpl(DependencyManager dm, int bundleStateMask, String bundleFilter, boolean propagate)
     {
         super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
-        m_component.setImplementation(new BundleAdapterDecorator(bundleStateMask, bundleFilter, propagate))
+        m_component.setImplementation(new BundleAdapterDecorator(bundleStateMask, propagate))
                  .add(dm.createBundleDependency()
                       .setFilter(bundleFilter)
                       .setStateMask(bundleStateMask)
@@ -54,21 +54,19 @@ public class BundleAdapterImpl extends FilterComponent
     public class BundleAdapterDecorator extends AbstractDecorator {
         private final boolean m_propagate;
         private final int m_bundleStateMask;
-        private final String m_bundleFilter;
 
-        public BundleAdapterDecorator(int bundleStateMask, String bundleFilter, boolean propagate) {
+        public BundleAdapterDecorator(int bundleStateMask, boolean propagate) {
             m_bundleStateMask = bundleStateMask;
-            m_bundleFilter = bundleFilter;
             m_propagate = propagate;
         }
         
         public Component createService(Object[] properties) {
             Bundle bundle = (Bundle) properties[0];
-            Properties props = new Properties();
+            Hashtable<String, Object> props = new Hashtable<>();
             if (m_serviceProperties != null) {
-                Enumeration e = m_serviceProperties.keys();
+                Enumeration<String> e = m_serviceProperties.keys();
                 while (e.hasMoreElements()) {
-                    Object key = e.nextElement();
+                    String key = e.nextElement();
                     props.put(key, m_serviceProperties.get(key));
                 }
             }

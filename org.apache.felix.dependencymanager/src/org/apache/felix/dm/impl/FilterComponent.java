@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentDeclaration;
@@ -46,7 +45,7 @@ import org.osgi.framework.ServiceRegistration;
  */
 public class FilterComponent implements Component, ComponentContext, ComponentDeclaration {
     protected volatile ComponentImpl m_component;
-    protected volatile List<ComponentStateListener> m_stateListeners = new CopyOnWriteArrayList();
+    protected volatile List<ComponentStateListener> m_stateListeners = new CopyOnWriteArrayList<>();
     protected volatile String m_init = "init";
     protected volatile String m_start = "start";
     protected volatile String m_stop = "stop";
@@ -58,7 +57,7 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     protected volatile Object m_serviceImpl;
     protected volatile Object m_factory;
     protected volatile String m_factoryCreateMethod;
-    protected volatile Dictionary<?,?> m_serviceProperties;
+    protected volatile Dictionary<String, Object> m_serviceProperties;
 
     public FilterComponent(Component service) {
         m_component = (ComponentImpl) service;
@@ -106,7 +105,7 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
         return m_component.getClassName();
     }
     
-    public  Dictionary<?,?> getServiceProperties() {
+    public  Dictionary<String, Object> getServiceProperties() {
         return m_serviceProperties;
     }
 
@@ -190,24 +189,24 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
         return this;
     }
 
-    public Component setInterface(String serviceName, Dictionary<?,?> properties) {
+    public Component setInterface(String serviceName, Dictionary<String, ?> properties) {
         return setInterface(new String[] { serviceName }, properties);
     }
 
-    public synchronized Component setInterface(String[] serviceInterfaces, Dictionary<?,?> properties) {
+    @SuppressWarnings("unchecked")
+    public synchronized Component setInterface(String[] serviceInterfaces, Dictionary<String, ?> properties) {
         m_component.ensureNotActive();
         if (serviceInterfaces != null) {
             m_serviceInterfaces = new String[serviceInterfaces.length];
             System.arraycopy(serviceInterfaces, 0, m_serviceInterfaces, 0, serviceInterfaces.length);
-            m_serviceProperties = properties;
+            m_serviceProperties = (Dictionary<String, Object>) properties;
         }
         return this;
     }
 
-    public Component setServiceProperties(Dictionary<?,?> serviceProperties) {
-        synchronized (this) {
-            m_serviceProperties = serviceProperties;
-        }
+    @SuppressWarnings("unchecked")
+    public Component setServiceProperties(Dictionary<String, ?> serviceProperties) {
+        m_serviceProperties = (Dictionary<String, Object>) serviceProperties;
         // Set the properties to all already instantiated services.
         if (serviceProperties != null) {
             Object[] instances = m_component.getInstances();

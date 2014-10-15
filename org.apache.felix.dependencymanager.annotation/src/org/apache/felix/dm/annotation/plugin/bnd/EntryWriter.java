@@ -19,7 +19,6 @@
 package org.apache.felix.dm.annotation.plugin.bnd;
 
 import java.util.Arrays;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 

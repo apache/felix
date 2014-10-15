@@ -36,6 +36,7 @@ public class AspectChainTest extends TestBase {
     }
     
     static class ServiceProvider implements ServiceInterface {
+        @SuppressWarnings("unused")
         private final Ensure m_ensure;
         public ServiceProvider(Ensure e) {
             m_ensure = e;

@@ -31,7 +31,7 @@ import org.osgi.framework.BundleContext;
 public class Activator implements BundleActivator {
     public void start(BundleContext context) throws Exception {
         // Provide DependencyManager shell commands for the Gogo Shell.
-        Hashtable props = new Hashtable();
+        Hashtable<String, Object> props = new Hashtable<>();
         props.put(org.apache.felix.service.command.CommandProcessor.COMMAND_SCOPE, "dependencymanager");
         props.put(org.apache.felix.service.command.CommandProcessor.COMMAND_FUNCTION, 
                 new String[] { "dm" });

@@ -58,7 +58,6 @@ public class DMCommandTest {
     @Spy @InjectMocks private DMCommand dme;
     @Mock private BundleContext m_bundleContext;
 
-    @SuppressWarnings("unchecked")
     @Before
     public void setUp() throws Exception {
         m_bundleContext = mock(BundleContext.class);
@@ -100,7 +99,6 @@ public class DMCommandTest {
         assertEquals("No missing dependencies found.\n", outContent.toString());
     }
     
-    @SuppressWarnings("unchecked")
     @Test
     public void testComponentThatDependsOnAOtheComponentShouldRegisterAsFailure() {
         OUT.println("testComponentThatDependsOnAOtheComponentShouldRegisterAsFailure");
@@ -123,7 +121,6 @@ public class DMCommandTest {
         dm.remove(component);
     }
     
-    @SuppressWarnings("unchecked")
     @Test
     public void testComponentThatHaveCycliclyDependencyOnAOtheComponentShouldRegisterAsFailure() {
         OUT.println("testComponentThatHaveCycliclyDependencyOnAOtheComponentShouldRegisterAsFailure");

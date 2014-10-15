@@ -133,20 +133,20 @@ public class AdapterServiceImpl extends FilterComponent {
             return "Adapter for " + m_adapteeInterface + ((m_adapteeFilter != null) ? " with filter " + m_adapteeFilter : "");
         }
         
-        public Dictionary<?,?> getServiceProperties(ServiceReference ref) {
-            Dictionary props = new Hashtable();
+        public Dictionary<String, Object> getServiceProperties(ServiceReference ref) {
+            Dictionary<String, Object> props = new Hashtable<>();
             if (m_serviceProperties != null) {
-                Enumeration e = m_serviceProperties.keys();
+                Enumeration<String> e = m_serviceProperties.keys();
                 while (e.hasMoreElements()) {
-                    Object key = e.nextElement();
+                    String key = e.nextElement();
                     props.put(key, m_serviceProperties.get(key));
                 }
             }
             return props;
         }
         
-        public Dictionary propagateAdapteeProperties(ServiceReference ref) {
-            Dictionary props = new Hashtable();
+        public Dictionary<String, Object> propagateAdapteeProperties(ServiceReference ref) {
+            Dictionary<String, Object> props = new Hashtable<>();
             String[] keys = ref.getPropertyKeys();
             for (int i = 0; i < keys.length; i++) {
                 String key = keys[i];

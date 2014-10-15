@@ -22,15 +22,14 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.Dictionary;
 import java.util.Enumeration;
-import java.util.Properties;
-import java.util.Set;
+import java.util.Hashtable;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentDependencyDeclaration;
 import org.apache.felix.dm.ResourceDependency;
 import org.apache.felix.dm.ResourceHandler;
-import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.AbstractDependency;
+import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -64,13 +63,13 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
     
     @Override
     protected void startTracking() {
-        Dictionary props = null;
+        Dictionary<String, Object> props = null;
         if (m_trackedResource != null) {
-            props = new Properties();
+            props = new Hashtable<>();
             props.put(ResourceHandler.URL, m_trackedResource);
         } else {
             if (m_resourceFilter != null) {
-                props = new Properties();
+                props = new Hashtable<>();
                 props.put(ResourceHandler.FILTER, m_resourceFilter);
             }
         }
@@ -89,7 +88,7 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
         }
     }
     
-    public void added(URL resource, Dictionary resourceProperties) {
+    public void added(URL resource, Dictionary<String, ?> resourceProperties) {
         if (m_trackedResource == null || m_trackedResource.equals(resource)) {
             add(new ResourceEventImpl(resource, resourceProperties));
         }
@@ -101,7 +100,7 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
         }
     }
     
-    public void changed(URL resource, Dictionary resourceProperties) {
+    public void changed(URL resource, Dictionary<String, ?> resourceProperties) {
         if (m_trackedResource == null || m_trackedResource.equals(resource)) {
             change(new ResourceEventImpl(resource, resourceProperties));
         }
@@ -113,7 +112,7 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
         }
     }
     
-    public void removed(URL resource, Dictionary resourceProperties) {
+    public void removed(URL resource, Dictionary<String, ?> resourceProperties) {
         if (m_trackedResource == null || m_trackedResource.equals(resource)) {
             remove(new ResourceEventImpl(resource, resourceProperties));
         }
@@ -168,14 +167,15 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
         return URL.class;
     }
         
-    public Dictionary<?,?> getProperties() {
+    @SuppressWarnings("unchecked")
+    public Dictionary<String, Object> getProperties() {
         ResourceEventImpl re = (ResourceEventImpl) m_component.getDependencyEvent(this);
         if (re != null) {
             URL resource = re.getResource();
-            Dictionary<?,?> resourceProperties = re.getProperties();
+            Dictionary<String, Object> resourceProperties = re.getProperties();
             if (m_propagateCallbackInstance != null && m_propagateCallbackMethod != null) {
                 try {
-                    return (Dictionary<?,?>) InvocationUtil.invokeCallbackMethod(m_propagateCallbackInstance, m_propagateCallbackMethod, new Class[][] {{ URL.class }}, new Object[][] {{ resource }});
+                    return (Dictionary<String, Object>) InvocationUtil.invokeCallbackMethod(m_propagateCallbackInstance, m_propagateCallbackMethod, new Class[][] {{ URL.class }}, new Object[][] {{ resource }});
                 }
                 catch (InvocationTargetException e) {
                     m_logger.log(LogService.LOG_WARNING, "Exception while invoking callback method", e.getCause());
@@ -186,21 +186,21 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
                 throw new IllegalStateException("Could not invoke callback");
             }
             else {
-                Properties props = new Properties();
-                props.setProperty(ResourceHandler.HOST, resource.getHost());
-                props.setProperty(ResourceHandler.PATH, resource.getPath());
-                props.setProperty(ResourceHandler.PROTOCOL, resource.getProtocol());
-                props.setProperty(ResourceHandler.PORT, Integer.toString(resource.getPort()));
+                Hashtable<String, Object> props = new Hashtable<>();
+                props.put(ResourceHandler.HOST, resource.getHost());
+                props.put(ResourceHandler.PATH, resource.getPath());
+                props.put(ResourceHandler.PROTOCOL, resource.getProtocol());
+                props.put(ResourceHandler.PORT, Integer.toString(resource.getPort()));
                 // add the custom resource properties
                 if (resourceProperties != null) {
-                    Enumeration properyKeysEnum = resourceProperties.keys(); 
+                    Enumeration<String> properyKeysEnum = resourceProperties.keys(); 
                     while (properyKeysEnum.hasMoreElements()) {
-                        String key = (String) properyKeysEnum.nextElement();
+                        String key = properyKeysEnum.nextElement();
                         if (!key.equals(ResourceHandler.HOST) &&
                                 !key.equals(ResourceHandler.PATH) &&
                                 !key.equals(ResourceHandler.PROTOCOL) &&
                                 !key.equals(ResourceHandler.PORT)) {
-                            props.setProperty(key, resourceProperties.get(key).toString());
+                            props.put(key, resourceProperties.get(key).toString());
                         } else {
                             m_logger.log(LogService.LOG_WARNING, "Custom resource property is overlapping with the default resource property for key: " + key);
                         }

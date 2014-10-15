@@ -5,6 +5,7 @@ import java.net.URL;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -20,6 +21,7 @@ import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 
+@SuppressWarnings({"deprecation", "unchecked", "rawtypes"})
 public class ServiceUpdateTest extends TestBase {
     public void testServiceUpdate() throws Exception {
         final DependencyManager m = getDM();
@@ -49,8 +51,8 @@ public class ServiceUpdateTest extends TestBase {
         // note that we can provide an actual implementation instance here because there will be only one
         // adapter, normally you'd want to specify a Class here
         CallbackInstance callbackInstance = new CallbackInstance(e);
-        Properties serviceProps = new Properties();
-        serviceProps.setProperty("number", "1");
+        Hashtable serviceProps = new Hashtable();
+        serviceProps.put("number", "1");
         Component component = m.createResourceAdapterService("(&(path=/path/to/*.txt)(host=localhost))", false, callbackInstance, "changed")
             .setImplementation(new ResourceAdapter(e))
             .setInterface(ServiceInterface.class.getName(), serviceProps)
@@ -72,10 +74,8 @@ public class ServiceUpdateTest extends TestBase {
     
     static class ResourceAdapter implements ServiceInterface {
         protected URL m_resource; // injected by reflection.
-        private Ensure m_ensure;
         
         ResourceAdapter(Ensure e) {
-            m_ensure = e;
         }
 
         public void invoke() {
@@ -86,12 +86,10 @@ public class ServiceUpdateTest extends TestBase {
     
     static class ResourceProvider {
         private volatile BundleContext m_context;
-        private final Ensure m_ensure;
         private final Map m_handlers = new HashMap();
         private URL[] m_resources;
 
         public ResourceProvider(Ensure ensure) throws MalformedURLException {
-            m_ensure = ensure;
             m_resources = new URL[] {
                 new URL("file://localhost/path/to/file1.txt")
             };

@@ -32,6 +32,7 @@ import org.apache.felix.dm.annotation.api.Stop;
 import org.apache.felix.dm.itest.Ensure;
 import org.osgi.framework.BundleContext;
 
+@SuppressWarnings({"rawtypes"})
 public class FactoryConfigurationAdapterAnnotation {
     public interface ServiceInterface {
     }

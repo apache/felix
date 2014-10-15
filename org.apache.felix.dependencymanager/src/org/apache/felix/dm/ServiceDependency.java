@@ -119,7 +119,73 @@ public interface ServiceDependency extends Dependency, ComponentDependencyDeclar
     /**
      * Sets auto configuration for this service. Auto configuration allows the
      * dependency to fill in the attribute in the service implementation that
-     * has the same type and instance name.
+     * has the same type and instance name. Dependency services will be injected
+     * in the following kind of fields:<p>
+     * <ul>
+     * <li> a field having the same type as the dependency. If the field may be accessed by anythread, then
+     * the field should be declared volatile, in order to ensure visibility when the field is auto injected concurrently.
+     * 
+     * <li> a field which is assignable to an <code>Iterable&#60;T&#62;</code> where T must match the dependency type. 
+     * In this case, an Iterable will be injected by DependencyManager before the start callback is called.
+     * The Iterable field may then be traversed to inspect the currently available dependency services. The Iterable 
+     * can possibly be set to a final value so you can choose the Iterable implementation of your choice
+     * (for example, a CopyOnWrite ArrayList, or a ConcurrentLinkedQueue).
+     * 
+     * <li> a <code>Map&#60;K,V&#62;</code> where K must match the dependency type and V must exactly equals <code>Dictionary</code>. 
+     * In this case, a ConcurrentHashMap will be injected by DependencyManager before the start callback is called.
+     * The Map may then be consulted to lookup current available dependency services, including the dependency service
+     * properties (the map key holds the dependency service, and the map value holds the dependency service properties).
+     * 
+     * The Map field may be set to a final value so you can choose a Map of your choice (Typically a ConcurrentHashMap).
+     * 
+     * A ConcurrentHashMap is "weakly consistent", meaning that when traversing 
+     * the elements, you may or may not see any concurrent updates made on the map. So, take care to traverse 
+     * the map using an iterator on the map entry set, which allows to atomically lookup pairs of Dependency service/Service properties.
+     * </ul> 
+     * 
+     * <p> Here are some example using an Iterable:
+     * <blockquote>
+     * 
+     * <pre>
+     * 
+     * public class SpellChecker {
+     *    // can be traversed to inspect currently available dependencies
+     *    final Iterable&#60;DictionaryService&#62; dictionaries = new ConcurrentLinkedQueue<>();
+     *    
+     *    Or
+     *    
+     *    // will be injected by DM automatically and can be traversed any time to inspect all currently available dependencies.
+     *    volatile Iterable&#60;DictionaryService&#62; dictionaries = null;
+     * }
+     * 
+     * </pre>
+     * </blockquote>
+     * 
+     * Here are some example using a Map:
+     * <blockquote>
+     * 
+     * <pre>
+     * 
+     * public class SpellChecker {
+     *    // can be traversed to inspect currently available dependencies
+     *    final Map&#60;DictionaryService, Dictionary&#62; dictionaries = new ConcurrentLinkedQueue<>();
+     *    
+     *    or
+     *    
+     *    // will be injected by DM automatically and can be traversed to inspect currently available dependencies
+     *    volatile Map&#60;DictionaryService, Dictionary&#62; dictionaries = null;
+     *
+     *    void iterateOnAvailableServices() {                 
+     *       for (Map.Entry<MyService, Dictionary> entry : this.services.entrySet()) {
+     *           MyService currentService = entry.getKey();
+     *           Dictionary currentServiceProperties = entry.getValue();
+     *           // ...
+     *       }
+     *    }
+     * }
+     * 
+     * </pre>
+     * </blockquote>
      * 
      * @param instanceName the name of attribute to auto config
      * @return this service dependency
@@ -133,6 +199,7 @@ public interface ServiceDependency extends Dependency, ComponentDependencyDeclar
      * 
      * @param instanceName the name of attribute to auto config
      * @return this service dependency
+     * @see #setAutoConfig(boolean)
      */
 	public ServiceDependency setAutoConfig(String instanceName);
 

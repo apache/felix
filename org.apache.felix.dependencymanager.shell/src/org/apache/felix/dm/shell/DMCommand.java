@@ -365,8 +365,9 @@ public class DMCommand {
             case ComponentDependencyDeclaration.STATE_UNAVAILABLE_OPTIONAL:
             case ComponentDependencyDeclaration.STATE_UNAVAILABLE_REQUIRED:
                 return true;
+            default:
+                return false;
         }
-        return false;
     }
 
     private boolean matchBundle(Bundle bundle, List<String> ids) {
@@ -546,6 +547,7 @@ public class DMCommand {
                     output.append(c);
                     lastIndex = i + 1;
                     break;
+                default:
             }
         }
         if (lastIndex < input.length()) {

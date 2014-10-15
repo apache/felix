@@ -81,7 +81,6 @@ public class DependencyManagerRuntime
     /**
      * Stops our service. We'll stop all activated DependencyManager services.
      */
-    @SuppressWarnings("unchecked")
     protected void stop()
     {
         Log.instance().info("Runtime: stopping services");
@@ -125,7 +124,6 @@ public class DependencyManagerRuntime
      * Unregisters all services for a stopping bundle.
      * @param b
      */
-    @SuppressWarnings("unchecked")
     protected void bundleStopped(Bundle b)
     {
         Log.instance().info("Runtime: Removing services from stopping bundle: %s", b.getSymbolicName());

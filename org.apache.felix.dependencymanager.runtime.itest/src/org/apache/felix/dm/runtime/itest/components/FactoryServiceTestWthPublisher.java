@@ -36,6 +36,7 @@ import org.apache.felix.dm.itest.Ensure;
  * A Service instantiated from a FactorySet, and which registers/unregisters its service,
  * using the @ServiceLifecycle annotation.
  */
+@SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class FactoryServiceTestWthPublisher {
     public final static String FACTORY_SET = "FactoryServiceTestWthPublisher.FACTORYSET";
     public final static String ENSURE = "FactoryServiceTestWthPublisher";

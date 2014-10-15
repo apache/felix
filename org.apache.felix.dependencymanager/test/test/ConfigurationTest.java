@@ -22,14 +22,13 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.felix.dm.Component;
-import org.apache.felix.dm.Dependency;
-import org.apache.felix.dm.context.AbstractDependency;
 import org.apache.felix.dm.impl.ComponentImpl;
 import org.apache.felix.dm.impl.ConfigurationDependencyImpl;
 import org.apache.felix.dm.impl.EventImpl;
 import org.junit.Test;
 import org.osgi.service.cm.ConfigurationException;
 
+@SuppressWarnings({"unchecked", "rawtypes", "unused"})
 public class ConfigurationTest extends TestBase {
     @Test
     public void testConfigurationFailure() throws Throwable {
@@ -39,7 +38,7 @@ public class ConfigurationTest extends TestBase {
         final ConfigurationDependencyImpl conf = new ConfigurationDependencyImpl();
 
         // Create another required dependency
-        final AbstractDependency requiredDependency = new SimpleServiceDependency();
+        final SimpleServiceDependency requiredDependency = new SimpleServiceDependency();
         requiredDependency.setRequired(true);
         requiredDependency.setCallbacks("addDep", null);
 

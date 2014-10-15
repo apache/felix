@@ -32,7 +32,7 @@ import java.util.Map;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class InvocationUtil {
-    private static final Map /* <Key, Method> */ m_methodCache;
+    private static final Map<Key, Method> m_methodCache;
     static {
         int size = 2048;
         // TODO enable this again
@@ -60,8 +60,8 @@ public class InvocationUtil {
      * @throws IllegalAccessException when the method cannot be accessed
      * @throws InvocationTargetException when the method that was invoked throws an exception
      */
-    public static Object invokeCallbackMethod(Object instance, String methodName, Class[][] signatures, Object[][] parameters) throws NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException {
-        Class currentClazz = instance.getClass();
+    public static Object invokeCallbackMethod(Object instance, String methodName, Class<?>[][] signatures, Object[][] parameters) throws NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException {
+        Class<?> currentClazz = instance.getClass();
         while (currentClazz != null && currentClazz != Object.class) {
             try {
                 return invokeMethod(instance, currentClazz, methodName, signatures, parameters, false);
@@ -89,7 +89,7 @@ public class InvocationUtil {
      * @throws IllegalAccessException when the method cannot be accessed
      * @throws InvocationTargetException when the method that was invoked throws an exception
      */
-    public static Object invokeMethod(Object object, Class clazz, String name, Class[][] signatures, Object[][] parameters, boolean isSuper) throws NoSuchMethodException, InvocationTargetException, IllegalArgumentException, IllegalAccessException {
+    public static Object invokeMethod(Object object, Class<?> clazz, String name, Class<?>[][] signatures, Object[][] parameters, boolean isSuper) throws NoSuchMethodException, InvocationTargetException, IllegalArgumentException, IllegalAccessException {
         if (object == null) {
             throw new IllegalArgumentException("Instance cannot be null");
         }
@@ -106,7 +106,7 @@ public class InvocationUtil {
         
         Method m = null;
         for (int i = 0; i < signatures.length; i++) {
-            Class[] signature = signatures[i];
+            Class<?>[] signature = signatures[i];
             m = getDeclaredMethod(clazz, name, signature, isSuper);
             if (m != null) {
                 return m.invoke(object, parameters[i]);
@@ -115,7 +115,7 @@ public class InvocationUtil {
         throw new NoSuchMethodException(name);
     }
     
-    private static Method getDeclaredMethod(Class clazz, String name, Class[] signature, boolean isSuper) {
+    private static Method getDeclaredMethod(Class<?> clazz, String name, Class<?>[] signature, boolean isSuper) {
         // first check our cache
         Key key = new Key(clazz, name, signature);
         Method m = null;
@@ -137,7 +137,6 @@ public class InvocationUtil {
             }
         }
         catch (NoSuchMethodException e) {
-            // ignore
         }
         synchronized (m_methodCache) {
             m_methodCache.put(key, m);
@@ -146,11 +145,11 @@ public class InvocationUtil {
     }
     
     public static class Key {
-        private final Class m_clazz;
+        private final Class<?> m_clazz;
         private final String m_name;
-        private final Class[] m_signature;
+        private final Class<?>[] m_signature;
 
-        public Key(Class clazz, String name, Class[] signature) {
+        public Key(Class<?> clazz, String name, Class<?>[] signature) {
             m_clazz = clazz;
             m_name = name;
             m_signature = signature;
@@ -191,14 +190,15 @@ public class InvocationUtil {
         }
     }
     
-    public static class LRUMap extends LinkedHashMap {
+    @SuppressWarnings("serial")
+    public static class LRUMap extends LinkedHashMap<Key, Method> {
         private final int m_size;
         
         public LRUMap(int size) {
             m_size = size;
         }
         
-        protected boolean removeEldestEntry(java.util.Map.Entry eldest) {
+        protected boolean removeEldestEntry(java.util.Map.Entry<Key, Method> eldest) {
             return size() > m_size;
         }
     }

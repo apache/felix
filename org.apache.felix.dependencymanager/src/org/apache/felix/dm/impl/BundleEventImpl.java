@@ -20,10 +20,11 @@ package org.apache.felix.dm.impl;
 
 import java.util.Dictionary;
 
+import org.apache.felix.dm.context.Event;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
 
-public class BundleEventImpl extends EventImpl implements Comparable {
+public class BundleEventImpl implements Event {
     final Bundle m_bundle;
     final BundleEvent m_event;
     
@@ -37,11 +38,16 @@ public class BundleEventImpl extends EventImpl implements Comparable {
         return getBundle();
     }
     
+    @SuppressWarnings("unchecked")
     @Override
-    public Dictionary getProperties() {
+    public Dictionary<String, Object> getProperties() {
         return m_bundle.getHeaders();
     }
     
+    @Override
+    public void close() {
+    }
+
     public Bundle getBundle() {
         return m_bundle;
     }
@@ -64,7 +70,7 @@ public class BundleEventImpl extends EventImpl implements Comparable {
     }
 
     @Override
-    public int compareTo(Object b) {
+    public int compareTo(Event b) {
         return Long.compare(getBundle().getBundleId(), ((BundleEventImpl) b).getBundle().getBundleId());
     }
 }

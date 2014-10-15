@@ -42,7 +42,7 @@ public final class DefaultNullObject implements InvocationHandler {
      * value without doing anything.
      */
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        Class returnType = method.getReturnType();
+        Class<?> returnType = method.getReturnType();
         if (returnType.equals(Boolean.class) || returnType.equals(Boolean.TYPE)) {
             return DEFAULT_BOOLEAN;
         }

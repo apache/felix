@@ -39,6 +39,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
 /**
  * Test a FactoryConfigurationAdapterService which provides its interface using a @ServiceLifecycle.
  */
+@SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class FactoryConfigurationAdapterServiceTestWithPublisher {
     public final static String PID="FactoryConfigurationAdapterServiceTestWithPublisher.PID";
     public final static String ENSURE = "FactoryConfigurationAdapterServiceTestWithPublisher";

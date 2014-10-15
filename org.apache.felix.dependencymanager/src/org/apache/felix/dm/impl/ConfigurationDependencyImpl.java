@@ -36,7 +36,7 @@ import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 
 public class ConfigurationDependencyImpl extends AbstractDependency<ConfigurationDependency> implements ConfigurationDependency, ManagedService {
-    private Dictionary<?,?> m_settings;
+    private Dictionary<String, Object> m_settings;
     private String m_callback = "updated";
 	private final Logger m_logger;
 	private String m_pid;
@@ -101,7 +101,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
     }
     
 	public ConfigurationDependency setPid(String pid) {
-		// ensureNotActive(); TODO
+		ensureNotActive();
 		m_pid = pid;
 		return this;
 	}
@@ -147,17 +147,18 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
     }
     
 	@Override
-	public Dictionary getProperties() {
+	public Dictionary<String, Object> getProperties() {
 		if (m_settings == null) {
             throw new IllegalStateException("cannot find configuration");
 		}
 		return m_settings;
 	}
     
+    @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public void updated(Dictionary settings) throws ConfigurationException {
     	m_updateInvokedCache.set(false);
-        Dictionary<?,?> oldSettings = null;
+        Dictionary<String, Object> oldSettings = null;
         synchronized (this) {
             oldSettings = m_settings;
         }

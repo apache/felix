@@ -21,12 +21,11 @@ package org.apache.felix.dm.impl;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.util.Dictionary;
-import java.util.Set;
 
 import org.apache.felix.dm.BundleDependency;
 import org.apache.felix.dm.ComponentDependencyDeclaration;
-import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.AbstractDependency;
+import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
 import org.apache.felix.dm.tracker.BundleTracker;
 import org.apache.felix.dm.tracker.BundleTrackerCustomizer;
@@ -177,14 +176,15 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
         return Bundle.class;
     }
         
+    @SuppressWarnings("unchecked")
     @Override
-    public Dictionary<?,?> getProperties() {
+    public Dictionary<String, Object> getProperties() {
         Event event = getService();
         if (event != null) {
             Bundle bundle = (Bundle) event.getEvent();
             if (m_propagateCallbackInstance != null && m_propagateCallbackMethod != null) {
                 try {
-                    return (Dictionary<?,?>) InvocationUtil.invokeCallbackMethod(m_propagateCallbackInstance, m_propagateCallbackMethod, new Class[][] {{ Bundle.class }}, new Object[][] {{ bundle }});
+                    return (Dictionary<String, Object>) InvocationUtil.invokeCallbackMethod(m_propagateCallbackInstance, m_propagateCallbackMethod, new Class[][] {{ Bundle.class }}, new Object[][] {{ bundle }});
                 }
                 catch (InvocationTargetException e) {
                     m_logger.log(LogService.LOG_WARNING, "Exception while invoking callback method", e.getCause());
@@ -195,7 +195,7 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
                 throw new IllegalStateException("Could not invoke callback");
             }
             else {
-                return bundle.getHeaders();
+                return (Dictionary<String, Object>) bundle.getHeaders();
             }
         }
         else {

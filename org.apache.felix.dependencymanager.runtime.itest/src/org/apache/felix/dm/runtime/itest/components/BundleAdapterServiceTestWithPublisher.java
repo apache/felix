@@ -34,6 +34,7 @@ import org.osgi.framework.Bundle;
 /**
  * Test a BundleAdapterService which provides its interface using a @ServiceLifecycle.
  */
+@SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class BundleAdapterServiceTestWithPublisher {
     public static final String ENSURE = "BundleAdapterServiceTestWithPublisher";
 

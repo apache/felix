@@ -94,6 +94,7 @@ public class JSONMetaData implements MetaData, Cloneable
 
     private Hashtable<String, Object> parseProperties(JSONObject properties) throws JSONException {
         Hashtable<String, Object> parsedProps = new Hashtable<String, Object>();
+        @SuppressWarnings("unchecked")
         Iterator<String> it = properties.keys();
         while (it.hasNext())
         {

@@ -27,8 +27,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentState;
 import org.apache.felix.dm.ComponentStateListener;
-import org.apache.felix.dm.Dependency;
-import org.apache.felix.dm.context.AbstractDependency;
 import org.apache.felix.dm.context.Event;
 import org.apache.felix.dm.impl.ComponentImpl;
 import org.apache.felix.dm.impl.ConfigurationDependencyImpl;
@@ -40,6 +38,7 @@ import org.osgi.service.cm.ConfigurationException;
 /**
  * This test class simulates a client having many dependencies being registered/unregistered concurrently.
  */
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class ServiceRaceTest extends TestBase {
     final static int STEP_WAIT = 5000;
     final static int DEPENDENCIES = 10;
@@ -95,7 +94,7 @@ public class ServiceRaceTest extends TestBase {
         client.setImplementation(theClient);
 
         // Create client service dependencies
-        final AbstractDependency[] dependencies = new AbstractDependency[DEPENDENCIES];
+        final SimpleServiceDependency[] dependencies = new SimpleServiceDependency[DEPENDENCIES];
         for (int i = 0; i < DEPENDENCIES; i++) {
             dependencies[i] = new SimpleServiceDependency();
             dependencies[i].setRequired(true);
@@ -103,6 +102,7 @@ public class ServiceRaceTest extends TestBase {
             client.add(dependencies[i]);
         }
         final ConfigurationDependencyImpl confDependency = new ConfigurationDependencyImpl();
+        confDependency.setPid("mypid");
         client.add(confDependency);
 
         // Create Configuration (concurrently).
@@ -140,7 +140,7 @@ public class ServiceRaceTest extends TestBase {
                 // We *must* do this after having started the component (in a reality, the dependencies can be 
                 // injected only one the tracker has been opened ...
                 for (int i = 0; i < DEPENDENCIES; i++) {
-                    final AbstractDependency dep = dependencies[i];
+                    final SimpleServiceDependency dep = dependencies[i];
                     final Event added = new EventImpl(i);
                     m_threadpool.execute(new Runnable() {
                         public void run() {
@@ -161,7 +161,7 @@ public class ServiceRaceTest extends TestBase {
 
         // Stop the client and all dependencies concurrently.
         for (int i = 0; i < DEPENDENCIES; i++) {
-            final AbstractDependency dep = dependencies[i];
+            final SimpleServiceDependency dep = dependencies[i];
             final Event removed = new EventImpl(i);
             m_threadpool.execute(new Runnable() {
                 public void run() {

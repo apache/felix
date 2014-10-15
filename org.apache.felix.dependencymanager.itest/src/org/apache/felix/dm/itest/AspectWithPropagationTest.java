@@ -19,6 +19,7 @@ import org.osgi.framework.ServiceRegistration;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+@SuppressWarnings({"rawtypes", "unchecked", "unused"})
 public class AspectWithPropagationTest extends TestBase {
     private final static int ASPECTS = 3;
     private final Set<Integer> _randoms = new HashSet<Integer>();
@@ -71,7 +72,7 @@ public class AspectWithPropagationTest extends TestBase {
         		m_invokeStep.step(1);
         	}
         	
-        	void change(Map props, S s) {
+            void change(Map props, S s) {
         		switch (++m_changeCount) {
         		case 1:
         			Assert.assertEquals("aspect", props.get("p"));

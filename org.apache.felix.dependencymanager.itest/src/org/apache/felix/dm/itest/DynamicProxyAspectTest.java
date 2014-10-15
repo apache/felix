@@ -27,6 +27,7 @@ import junit.framework.Assert;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 
+@SuppressWarnings({"rawtypes"})
 public class DynamicProxyAspectTest extends TestBase {
     public void testImplementGenericAspectWithDynamicProxy() {
         DependencyManager m = getDM();

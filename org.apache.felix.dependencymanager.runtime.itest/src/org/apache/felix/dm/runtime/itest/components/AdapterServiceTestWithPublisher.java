@@ -33,6 +33,7 @@ import org.apache.felix.dm.itest.Ensure;
 /**
  * Test an AdapterService which provides its interface using a @ServiceLifecycle.
  */
+@SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class AdapterServiceTestWithPublisher {
     public static final String ENSURE = "AdapterServiceTestWithPublisher";
 

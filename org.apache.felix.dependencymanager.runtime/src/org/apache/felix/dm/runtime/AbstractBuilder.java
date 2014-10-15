@@ -148,7 +148,7 @@ public abstract class AbstractBuilder
                         {
                             try
                             {
-                                Class[][] signatures = new Class[][] { { ServiceRegistration.class }, {} };
+                                Class<?>[][] signatures = new Class<?>[][] { { ServiceRegistration.class }, {} };
                                 Object[][] params = new Object[][] { { c.getServiceRegistration() }, {} };
                                 InvocationUtil.invokeCallbackMethod(instance, m_registered, signatures, params);
                             }
@@ -181,6 +181,9 @@ public abstract class AbstractBuilder
                             }
                         }
                     }
+                    break;
+                
+                default:
                     break;
             }
         }

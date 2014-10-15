@@ -4,7 +4,7 @@ package org.apache.felix.dependencymanager.samples.device;
 public class DeviceParameterImpl implements DeviceParameter {
     final int id;
     
-    DeviceParameterImpl(int id) {
+    public DeviceParameterImpl(int id) {
         this.id = id;
     }
 

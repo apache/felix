@@ -49,9 +49,9 @@ public interface DependencyContext extends Dependency {
 	/** Does this dependency need the component instances to determine if the dependency is available or not */
 	public boolean needsInstance();
 	
-    public Class getAutoConfigType();
+    public Class<?> getAutoConfigType();
     public Event getService();
     public void copyToCollection(Collection<Object> coll);
-    public void copyToMap(Map<Object, Dictionary> map);
+    public void copyToMap(Map<Object, Dictionary<String, ?>> map);
     public DependencyContext createCopy();
 }

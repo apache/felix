@@ -9,6 +9,7 @@ import junit.framework.Assert;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class ComponentTest extends TestBase {
     private final Ensure m_ensure = new Ensure();
 

@@ -33,7 +33,7 @@ import org.apache.felix.dm.context.Event;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ToggleServiceDependency extends AbstractDependency<ToggleServiceDependency> {
-    public static class ToggleEvent implements Event {
+    public class ToggleEvent implements Event {
         @Override
         public boolean equals(Object e) {
             if (e instanceof ToggleEvent) {
@@ -48,7 +48,7 @@ public class ToggleServiceDependency extends AbstractDependency<ToggleServiceDep
         }
 
         @Override
-        public int compareTo(Object o) {
+        public int compareTo(Event o) {
             return 0;
         }
 
@@ -58,12 +58,12 @@ public class ToggleServiceDependency extends AbstractDependency<ToggleServiceDep
 
         @Override
         public Object getEvent() {
-            return null;
+            return this;
         }
 
         @Override
-        public Dictionary getProperties() {
-            return null;
+        public Dictionary<String, Object> getProperties() {
+            return EMPTY_PROPERTIES;
         }
     }
     

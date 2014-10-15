@@ -31,8 +31,8 @@ import java.util.NoSuchElementException;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public final class SerialExecutor {
-	private static final Runnable DUMMY_RUNNABLE = new Runnable() { public void run() {}; };
-    private final LinkedList m_workQueue = new LinkedList();
+	private static final Runnable DUMMY_RUNNABLE = new Runnable() { public void run() {} };
+    private final LinkedList<Runnable> m_workQueue = new LinkedList<>();
     private Runnable m_active;
     
     /**

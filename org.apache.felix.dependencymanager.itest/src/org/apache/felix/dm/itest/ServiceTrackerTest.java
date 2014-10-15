@@ -27,6 +27,7 @@ import org.apache.felix.dm.tracker.ServiceTracker;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 
+@SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class ServiceTrackerTest extends TestBase {
     public void testPlainServiceTracker() {
         ServiceTracker st = new ServiceTracker(context, ServiceInterface.class.getName(), null);

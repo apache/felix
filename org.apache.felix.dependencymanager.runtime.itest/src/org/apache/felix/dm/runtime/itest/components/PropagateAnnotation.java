@@ -29,6 +29,7 @@ import org.apache.felix.dm.itest.Ensure;
 /**
  * Verifies ServiceDependencyservice properties propagation.
  */
+@SuppressWarnings({"rawtypes"})
 public class PropagateAnnotation {
     public final static String ENSURE = "PropagateAnnotation";
     

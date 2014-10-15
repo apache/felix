@@ -20,11 +20,12 @@ package org.apache.felix.dm.impl;
 
 import java.util.Dictionary;
 
+import org.apache.felix.dm.context.Event;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
-public class ServiceEventImpl extends EventImpl implements Comparable {
+public class ServiceEventImpl implements Event {
     /**
      * The service reference on which a service dependency depends on
      */
@@ -86,7 +87,7 @@ public class ServiceEventImpl extends EventImpl implements Comparable {
     }
     
     @Override
-    public Dictionary getProperties() {
+    public Dictionary<String, Object> getProperties() {
         return ServiceUtil.propertiesToDictionary(m_reference);
     }
 	
@@ -104,7 +105,7 @@ public class ServiceEventImpl extends EventImpl implements Comparable {
 	}
 
     @Override
-    public int compareTo(Object b) {
+    public int compareTo(Event b) {
     	return getReference().compareTo(((ServiceEventImpl) b).getReference());
     }
         

@@ -33,10 +33,12 @@ import org.osgi.service.cm.ConfigurationAdmin;
  * Use case: Verify that an annotated Configuration Factory Adapter Service is properly created when a factory configuration
  * is created from Config Admin.
  */
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class FactoryConfigurationAdapterAnnotationTest extends TestBase {
     
     private final static int MAXWAIT = 5000;
 
+    @SuppressWarnings("serial")
     public void testFactoryConfigurationAdapterAnnotation() throws Throwable {
         Ensure e = new Ensure();
         ServiceRegistration sr = register(e, ServiceProvider.ENSURE);

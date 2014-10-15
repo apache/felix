@@ -56,6 +56,7 @@ public class CompositionTest extends TestBase {
     static class ServiceConsumer {
         private final Ensure m_ensure;
         private ServiceConsumerComposite m_composite;
+        @SuppressWarnings("unused")
         private ServiceInterface m_service;
 
         public ServiceConsumer(Ensure e) {

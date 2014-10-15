@@ -39,6 +39,7 @@ import org.apache.felix.dm.DependencyManager;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class AdapterWithPropagationTest extends TestBase {
     public static interface S1 {}
     

@@ -32,6 +32,7 @@ import org.apache.felix.dm.itest.Ensure;
 /**
  * A Service that just registers/unregisters its service, using the @ServiceLifecycle annotation.
  */
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class ServiceTestWthPublisher {
     public final static String ENSURE = "ServiceTestWthPublisher";
     
@@ -78,6 +79,7 @@ public class ServiceTestWthPublisher {
             Utils.schedule(m_unpublisher, 2000);
         }
 
+        @SuppressWarnings("serial")
         @Start
         Map start() {
             // Add some extra service properties ... they will be appended to the one we have defined

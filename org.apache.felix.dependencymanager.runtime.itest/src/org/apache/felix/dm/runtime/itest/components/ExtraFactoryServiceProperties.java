@@ -30,6 +30,7 @@ import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.itest.Ensure;
 
+@SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class ExtraFactoryServiceProperties {
     public final static String FACTORYSET = "ExtraFactoryServiceProperties.FACTORYSET";
     public final static String ENSURE = "ExtraFactoryServiceProperties";

@@ -66,7 +66,7 @@ public abstract class TestBase extends TestCase implements LogService, Framework
         if (m_parallel) {
             warn("Using threadpool ...");
             m_threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-            Hashtable props = new Hashtable();
+            Hashtable<String, Object> props = new Hashtable<>();
             props.put("target", DependencyManager.THREADPOOL);
             m_threadPoolRegistration = context.registerService(Executor.class.getName(), m_threadPool, props);
         }
@@ -293,12 +293,14 @@ public abstract class TestBase extends TestCase implements LogService, Framework
 	}
     }
 
+    @SuppressWarnings("unused")
     protected void info(String msg, Object ... params) {
 	if (LOG_LEVEL >= LogService.LOG_INFO) {
 	    log(LogService.LOG_INFO, params.length > 0 ? String.format(msg, params) : msg);
 	}
     }
 
+    @SuppressWarnings("unused")
     protected void debug(String msg, Object ... params) {
 	if (LOG_LEVEL >= LogService.LOG_DEBUG) {
 	    log(LogService.LOG_DEBUG, params.length > 0 ? String.format(msg, params) : msg);

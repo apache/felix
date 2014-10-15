@@ -21,9 +21,7 @@ package org.apache.felix.dm.impl;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
@@ -36,6 +34,11 @@ import org.osgi.framework.ServiceReference;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ServiceUtil {
+    /**
+     * Useful when needing to provide empty service properties.
+     */
+    public final static Dictionary<String, Object> EMPTY_PROPERTIES = new Hashtable<>();
+
     /**
      * Returns the service ranking of a service, based on its service reference. If
      * the service has a property specifying its ranking, that will be returned. If
@@ -147,7 +150,7 @@ public class ServiceUtil {
      * @param exclude a list of properties to exclude, or <code>null</code> to show everything
      * @return a string representation of the service properties
      */
-    public static String propertiesToString(ServiceReference ref, List /* <String> */ exclude) {
+    public static String propertiesToString(ServiceReference ref, List<String> exclude) {
         StringBuffer buf = new StringBuffer();
         String[] keys = ref.getPropertyKeys();
         for (int i = 0; i < keys.length; i++) {
@@ -184,7 +187,7 @@ public class ServiceUtil {
      * @param ref the ServiceReference to wrap
      * @return a new Dictionary used to wrap the ServiceReference properties
      */
-    public static Dictionary<String, ?> propertiesToDictionary(final ServiceReference ref) {
+    public static Dictionary<String, Object> propertiesToDictionary(final ServiceReference ref) {
         return new Dictionary<String, Object>() {
             private Dictionary<String, Object> m_wrapper;
             

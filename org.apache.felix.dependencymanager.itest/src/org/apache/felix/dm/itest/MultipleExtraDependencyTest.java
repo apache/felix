@@ -26,7 +26,7 @@ import org.apache.felix.dm.DependencyManager;
 /**
  * Test which validates multi-dependencies combination.
  */
-
+@SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class MultipleExtraDependencyTest extends TestBase {
     public void testMultipleExtraDependencies()
     {

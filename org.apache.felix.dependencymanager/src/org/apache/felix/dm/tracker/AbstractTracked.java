@@ -35,6 +35,7 @@ import org.apache.felix.dm.impl.SerialExecutor;
  * @version $Revision: 5871 $
  * @since 1.4
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 abstract class AbstractTracked {
 	/* set this to true to compile in debug messages */
 	private static final boolean		DEBUG	= false;
@@ -102,7 +103,7 @@ abstract class AbstractTracked {
 	/**
 	 * AbstractTracked constructor.
 	 */
-	AbstractTracked() {
+    AbstractTracked() {
 	    this.tracked = new HashMap();
 	    trackingCount = 0;
 	    adding = new ArrayList(6);
@@ -125,7 +126,7 @@ abstract class AbstractTracked {
 	 *        entries in the list are ignored.
 	 * @GuardedBy this
 	 */
-	void setInitial(Object[] list) {
+    void setInitial(Object[] list) {
 		if (list == null) {
 			return;
 		}

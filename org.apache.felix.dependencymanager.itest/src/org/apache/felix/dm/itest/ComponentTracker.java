@@ -30,6 +30,8 @@ public class ComponentTracker implements ComponentStateListener {
         case INACTIVE:
             m_stopLatch.countDown();
             break;
+        
+        default:
         }
     }
     
