@@ -12,13 +12,14 @@ adjust the project specific setting and check if it's using your installed java 
 How to launch the stress test under bndtools:
 ============================================
 
-The stress test performs two kind of tests on different Felix DI framework (currently, we support DM4, Parallel DM4, and Felix SCR):
+The stress test performs two kind of tests on different Felix DI framework (currently, we support
+DM4, Parallel DM4, and Felix SCR): 
 
-1) first kind of test: starts/stops several times each tested bundles. When started, the test bundle
-is expected to register/unregister several services. And no processing is done at all in each
-component activation/deactivation methods (start/stop methods). 
+1) first kind of tests: starts/stops several times each tested bundle (SCR/DM/Parallel DM). When
+started, the test bundle is expected to register/unregister several services. And no processing is
+done at all in each component activation/deactivation methods (start/stop methods).
 
-2) second kind of test: same as before, but some processing is done in each component start/stop methods.
+2) second kind of tests: same as before, but some processing is done in each component start/stop methods.
 
 To launch the stress test under BndTools, click on the bnd.bnd file of the
 "org.apache.felix.dm.benchmark" project, then click on "Run", then in "Run OSGi". 
@@ -26,35 +27,54 @@ To launch the stress test under BndTools, click on the bnd.bnd file of the
 You should see something like that in the eclipse console:
 
 -----------------------------------------------------------------------------------------------------------------
-Welcome to Apache Felix Gogo
-
-	+++++ Starting benchmarks without processing done in components start/stop methods.
+        +++++ Starting benchmarks without processing done in components start/stop methods.
 
 Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.scr
-....................................................................................................
-  results=148183942,151816020,152593142,168381327,550953914
+..........
+  results=1246252843,1327149744,1365941150,1451005845,1962988382
 
 Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager
-....................................................................................................
-  results=97276169,98480544,99026696,120827182,315697938
+..........
+  results=1081571856,1120311799,1147294748,1180433380,1364416266
 
 Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel
-....................................................................................................
-  results=41748516,43030319,43902095,46535902,161389470
+..........
+  results=304332980,318642605,324083522,342478908,372528182
 
-	+++++ Starting benchmarks with processing done in components start/stop methods.
+        +++++ Starting benchmarks with processing done in components start/stop methods.
 
 Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.scr
 .....
-  results=3206278286,3209191723,3210389749,3223619309,3242734308
+  results=2504404520,2534018186,2541746956,2573198876,2630100397
 
 Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager
 .....
-  results=3152939984,3153659259,3154590124,3155489090,3182967777
+  results=2311565810,2322039712,2329461041,2333647181,2350342868
 
 Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel
 .....
-  results=806825303,808750246,811454052,814643994,818675967
+  results=332018499,334763664,341195822,344027160,348024405
+-----------------------------------------------------------------------------------------------------------------
+
+You can also possibly run the same test using optimized DM filter indices.
+To do so, add the following jvm system parameters in the run descriptor:
+
+   -Dorg.apache.felix.dependencymanager.filterindex=objectClass,id
+
+And you will then observer some significant performance improvements. In the following run output using filter indices, 
+we see that:
+
+- the "org.apache.felix.dependencymanager.benchmark.dependencymanager" takes around 679403552 nanos instead of 1147294748
+- the "org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel" takes around 176116868 nanos instead of 324083522
+
+-----------------------------------------------------------------------------------------------------------------
+Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager
+..........
+  results=664985253,669723795,679403552,743587884,891414633
+
+Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel
+..........
+  results=151237261,153245516,176116868,188048920,215333067
 -----------------------------------------------------------------------------------------------------------------
 
 How to interpret results:
