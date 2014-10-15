@@ -396,4 +396,9 @@ public class CommandSessionImpl implements CommandSession, Converter
         }
     }
 
+    public Object expr(CharSequence expr)
+    {
+        return processor.expr(this, expr);
+    }
+
 }
