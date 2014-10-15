@@ -1,3 +1,13 @@
+Changes 0.12.1 to 0.14.0
+------------------------
+
+** Bug
+    * [FELIX-4533] - Gogo runtime does not advertise published services
+
+** New Feature
+    * [FELIX-4671] - Provide an expression parser
+
+
 Changes 0.12.0 to 0.12.1
 ------------------------
 
