@@ -61,7 +61,7 @@ To do so, add the following jvm system parameters in the run descriptor:
 
    -Dorg.apache.felix.dependencymanager.filterindex=objectClass,id
 
-And you will then observer some significant performance improvements. In the following run output using filter indices, 
+And you will then observe some significant performance improvements. In the following run output using filter indices, 
 we see that:
 
 - the "org.apache.felix.dependencymanager.benchmark.dependencymanager" takes around 679403552 nanos instead of 1147294748
