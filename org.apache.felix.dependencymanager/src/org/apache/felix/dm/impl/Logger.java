@@ -21,8 +21,10 @@ package org.apache.felix.dm.impl;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
@@ -60,13 +62,14 @@ public class Logger implements ServiceListener {
     private Object[] m_logger = null;
 
     public Logger(BundleContext context) {
-//    	if ("true".equals(System.getProperty(LOG_SINGLE_CONTEXT))) {
-//    		m_context = FrameworkUtil.getBundle(DependencyManager.class).getBundleContext();
-//    	} else {
-//    		m_context = context;
-//    	}
-		m_context = context;
-//        startListeningForLogService();
+    	if ("true".equals(System.getProperty(LOG_SINGLE_CONTEXT))) {
+    		m_context = FrameworkUtil.getBundle(DependencyManager.class).getBundleContext();
+    	} else {
+    		m_context = context;
+    	}
+		if (m_context != null) {
+		    startListeningForLogService();
+		}
     }
 
     public final void log(int level, String msg) {

@@ -339,7 +339,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
                                     {se.getReference(), se.getEvent()}, {se.getReference()}});
                 } catch (InvocationTargetException e) {
                     m_logger.log(LogService.LOG_WARNING, "Exception while invoking callback method", e.getCause());
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     m_logger.log(LogService.LOG_WARNING, "Exception while trying to invoke callback method", e);
                 }
                 throw new IllegalStateException("Could not invoke callback");
@@ -418,8 +418,8 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
                 m_nullObject = Proxy.newProxyInstance(trackedServiceName.getClassLoader(),
                     new Class[] { trackedServiceName }, new DefaultNullObject());
             }
-            catch (Exception e) {
-                m_logger.log(Logger.LOG_ERROR, "Could not create null object for " + trackedServiceName + ".", e);
+            catch (Throwable err) {
+                m_logger.log(Logger.LOG_ERROR, "Could not create null object for " + trackedServiceName + ".", err);
             }
         }
         return m_nullObject;
@@ -431,7 +431,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
                 try {
                     m_defaultImplementationInstance = ((Class<?>) m_defaultImplementation).newInstance();
                 }
-                catch (Exception e) {
+                catch (Throwable e) {
                     m_logger.log(Logger.LOG_ERROR, "Could not create default implementation instance of class "
                         + m_defaultImplementation + ".", e);
                 }
@@ -475,7 +475,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
                     {m_component, previous, current}, {m_component, previousReference, previous, currentReference, current},
                     {m_component, previousReference, previous, currentReference, current}}
 			);
-    	} catch (Exception e) {
+    	} catch (Throwable e) {
             m_logger.log(Logger.LOG_ERROR, "Could not invoke swap callback", e);
     	}
 	}

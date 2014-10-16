@@ -180,7 +180,7 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
                 catch (InvocationTargetException e) {
                     m_logger.log(LogService.LOG_WARNING, "Exception while invoking callback method", e.getCause());
                 }
-                catch (Exception e) {
+                catch (Throwable e) {
                     m_logger.log(LogService.LOG_WARNING, "Exception while trying to invoke callback method", e);
                 }
                 throw new IllegalStateException("Could not invoke callback");

@@ -189,7 +189,7 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
                 catch (InvocationTargetException e) {
                     m_logger.log(LogService.LOG_WARNING, "Exception while invoking callback method", e.getCause());
                 }
-                catch (Exception e) {
+                catch (Throwable e) {
                     m_logger.log(LogService.LOG_WARNING, "Exception while trying to invoke callback method", e);
                 }
                 throw new IllegalStateException("Could not invoke callback");
@@ -221,7 +221,7 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
             try {
                 m_nullObject = Proxy.newProxyInstance(getClass().getClassLoader(), new Class[] { Bundle.class }, new DefaultNullObject()); 
             }
-            catch (Exception e) {
+            catch (Throwable e) {
                 m_logger.log(Logger.LOG_ERROR, "Could not create null object for Bundle.", e);
             }
         }
