@@ -18,10 +18,14 @@
  */
 package org.apache.felix.dm.itest;
 
+import java.util.Hashtable;
 import java.util.Map;
+
+import junit.framework.Assert;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
+import org.osgi.framework.ServiceRegistration;
 
 public class AdapterWithCallbackInstanceTest extends TestBase {
     
@@ -30,9 +34,10 @@ public class AdapterWithCallbackInstanceTest extends TestBase {
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
 
+        ServiceProvider serviceProvider = new ServiceProvider(e);
         Component provider = m.createComponent()
             .setInterface(OriginalService.class.getName(), null)
-            .setImplementation(new ServiceProvider(e));
+            .setImplementation(serviceProvider);
 
         Component consumer = m.createComponent()
             .setImplementation(new ServiceConsumer(e))
@@ -57,10 +62,15 @@ public class AdapterWithCallbackInstanceTest extends TestBase {
         m.add(consumer);
         // now validate that both have been invoked in the right order
         e.waitForStep(4, 5000);
-        // remove the provider again
-        m.remove(provider);
-        // ensure that the consumer is stopped
+        
+        // change the service properties of the provider, and check that the adapter callback instance is changed.
+        serviceProvider.changeServiceProperties();
         e.waitForStep(5, 5000);
+        
+        // remove the provider
+        m.remove(provider);
+        // ensure that the consumer is stopped, the adapter callback is called in its unset method, and the adapter is stopped.
+        e.waitForStep(8, 5000);
         // remove adapter and consumer
         m.remove(adapter);
         m.remove(consumer);
@@ -76,8 +86,14 @@ public class AdapterWithCallbackInstanceTest extends TestBase {
     
     static class ServiceProvider implements OriginalService {
         private final Ensure m_ensure;
+        private volatile ServiceRegistration m_registration; // auto injected when started.
         public ServiceProvider(Ensure e) {
             m_ensure = e;
+        }
+        public void changeServiceProperties() {
+            Hashtable<String, String> props = new Hashtable<>();
+            props.put("foo", "bar");
+            m_registration.setProperties(props);
         }
         public void invoke() {
             m_ensure.step(4);
@@ -88,16 +104,12 @@ public class AdapterWithCallbackInstanceTest extends TestBase {
         private volatile OriginalService m_originalService;
         private final Ensure m_ensure;
         
-        public String toString() {
-            return "XX: ServiceAdapter";
-        }
-        
         public ServiceAdapter(Ensure e) {
             m_ensure = e;
         }
 
-        public void start() { System.out.println("start"); m_ensure.step(2); }
-        public void stop() { System.out.println("stop"); }
+        public void start() { m_ensure.step(2); }
+        public void stop() { m_ensure.step(7); }
         public void invoke() {
             m_originalService.invoke();
         }
@@ -113,12 +125,13 @@ public class AdapterWithCallbackInstanceTest extends TestBase {
             m_ensure.step(1);
         }
         
-        public void changed(Map<String, String> props, OriginalService m_originalService) {            
-            m_ensure.step();
+        public void changed(Map<String, String> props, OriginalService m_originalService) {   
+            Assert.assertEquals("bar", props.get("foo"));
+            m_ensure.step(5);
         }
         
         public void unset(Map<String, String> props, OriginalService m_originalService) {            
-            m_ensure.step();
+            m_ensure.step(8);
         }
     }
 
@@ -134,7 +147,7 @@ public class AdapterWithCallbackInstanceTest extends TestBase {
             m_service.invoke();
         }
         public void stop() {
-            m_ensure.step(5);
+            m_ensure.step(6);
         }
     }
 }
