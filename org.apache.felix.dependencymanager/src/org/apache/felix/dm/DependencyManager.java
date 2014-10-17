@@ -258,6 +258,31 @@ public class DependencyManager {
      * <h3>Usage Example</h3>
      * 
      * <blockquote><pre>
+     * manager.createAdapterService(AdapteeService.class, "(foo=bar)")
+     *     .setInterface(AdapterService.class, new Hashtable() {{ put("extra", "property"); }})
+     *     .setImplementation(AdapterImpl.class);
+     * </pre></blockquote>
+     * 
+     * @param serviceInterface the service interface to apply the adapter to
+     * @param serviceFilter the filter condition to use with the service interface
+     * @return a service that acts as a factory for generating adapters
+     */
+    public Component createAdapterService(Class<?> serviceInterface, String serviceFilter) {
+        return new AdapterServiceImpl(this, serviceInterface, serviceFilter, null, null, null, null, null, null);
+    }
+
+    /**
+     * Creates a new adapter. The adapter will be applied to any service that
+     * matches the specified interface and filter. For each matching service
+     * an adapter will be created based on the adapter implementation class.
+     * The adapter will be registered with the specified interface and existing properties
+     * from the original service plus any extra properties you supply here.
+     * It will also inherit all dependencies, and if you declare the original
+     * service as a member it will be injected.
+     * 
+     * <h3>Usage Example</h3>
+     * 
+     * <blockquote><pre>
      * manager.createAdapterService(AdapteeService.class, "(foo=bar)", "m_service")
      *     .setInterface(AdapterService.class, new Hashtable() {{ put("extra", "property"); }})
      *     .setImplementation(AdapterImpl.class);
@@ -269,63 +294,7 @@ public class DependencyManager {
      * @return a service that acts as a factory for generating adapters
      */
     public Component createAdapterService(Class<?> serviceInterface, String serviceFilter, String autoConfig) {
-        return new AdapterServiceImpl(this, serviceInterface, serviceFilter, autoConfig, null, null, null);
-    }
-
-    /**
-     * Creates a new adapter. The adapter will be applied to any service that
-     * matches the specified interface and filter. For each matching service
-     * an adapter will be created based on the adapter implementation class.
-     * The adapter will be registered with the specified interface and existing properties
-     * from the original service plus any extra properties you supply here.
-     * It will also inherit all dependencies, and if you declare the original
-     * service as a member it will be injected.
-     * 
-     * <h3>Usage Example</h3>
-     * 
-     * <blockquote><pre>
-     * manager.createAdapterService(AdapteeService.class, "(foo=bar)")
-     *     .setInterface(AdapterService.class, new Hashtable() {{ put("extra", "property"); }})
-     *     .setImplementation(AdapterImpl.class);
-     * </pre></blockquote>
-     * 
-     * @param serviceInterface the service interface to apply the adapter to
-     * @param serviceFilter the filter condition to use with the service interface
-     * @return a service that acts as a factory for generating adapters
-     */
-    public Component createAdapterService(Class<?> serviceInterface, String serviceFilter) {
-        return new AdapterServiceImpl(this, serviceInterface, serviceFilter, null, null, null, null);
-    }
-
-    /**
-     * Creates a new adapter. The adapter will be applied to any service that
-     * matches the specified interface and filter. For each matching service
-     * an adapter will be created based on the adapter implementation class.
-     * The adapter will be registered with the specified interface and existing properties
-     * from the original service plus any extra properties you supply here.
-     * It will also inherit all dependencies, and if you declare the original
-     * service as a member it will be injected.
-     * 
-     * <h3>Usage Example</h3>
-     * 
-     * <blockquote><pre>
-     * manager.createAdapterService(AdapteeService.class, "(foo=bar)", "add", "change", "remove", "swap")
-     *     .setInterface(AdapterService.class, new Hashtable() {{ put("extra", "property"); }})
-     *     .setImplementation(AdapterImpl.class);
-     * </pre></blockquote>
-     * 
-     * @param serviceInterface the service interface to apply the adapter to
-     * @param serviceFilter the filter condition to use with the service interface
-     * @param add name of the callback method to invoke on add
-     * @param change name of the callback method to invoke on change
-     * @param remove name of the callback method to invoke on remove
-     * @param swap name of the callback method to invoke on swap
-     * @return a service that acts as a factory for generating adapters
-     */
-    public Component createAdapterService(Class<?> serviceInterface, String serviceFilter, String add, String change,
-        String remove, String swap)
-    {
-        return new AdapterServiceImpl(this, serviceInterface, serviceFilter, null, add, change, remove, swap);
+        return new AdapterServiceImpl(this, serviceInterface, serviceFilter, autoConfig, null, null, null, null, null);
     }
 
     /**
@@ -356,7 +325,71 @@ public class DependencyManager {
     public Component createAdapterService(Class<?> serviceInterface, String serviceFilter, String add, String change,
         String remove)
     {
-        return new AdapterServiceImpl(this, serviceInterface, serviceFilter, null, add, change, remove);
+        return new AdapterServiceImpl(this, serviceInterface, serviceFilter, null, null, add, change, remove, null);
+    }
+
+    /**
+     * Creates a new adapter. The adapter will be applied to any service that
+     * matches the specified interface and filter. For each matching service
+     * an adapter will be created based on the adapter implementation class.
+     * The adapter will be registered with the specified interface and existing properties
+     * from the original service plus any extra properties you supply here.
+     * It will also inherit all dependencies, and if you declare the original
+     * service as a member it will be injected.
+     * 
+     * <h3>Usage Example</h3>
+     * 
+     * <blockquote><pre>
+     * manager.createAdapterService(AdapteeService.class, "(foo=bar)", "add", "change", "remove", "swap")
+     *     .setInterface(AdapterService.class, new Hashtable() {{ put("extra", "property"); }})
+     *     .setImplementation(AdapterImpl.class);
+     * </pre></blockquote>
+     * 
+     * @param serviceInterface the service interface to apply the adapter to
+     * @param serviceFilter the filter condition to use with the service interface
+     * @param add name of the callback method to invoke on add
+     * @param change name of the callback method to invoke on change
+     * @param remove name of the callback method to invoke on remove
+     * @param swap name of the callback method to invoke on swap
+     * @return a service that acts as a factory for generating adapters
+     */
+    public Component createAdapterService(Class<?> serviceInterface, String serviceFilter, String add, String change,
+        String remove, String swap)
+    {
+        return new AdapterServiceImpl(this, serviceInterface, serviceFilter, null, null, add, change, remove, swap);
+    }
+
+    /**
+     * Creates a new adapter. The adapter will be applied to any service that
+     * matches the specified interface and filter. For each matching service
+     * an adapter will be created based on the adapter implementation class.
+     * The adapter will be registered with the specified interface and existing properties
+     * from the original service plus any extra properties you supply here.
+     * It will also inherit all dependencies, and if you declare the original
+     * service as a member it will be injected.
+     * 
+     * <h3>Usage Example</h3>
+     * 
+     * <blockquote><pre>
+     * manager.createAdapterService(AdapteeService.class, "(foo=bar)", "add", "change", "remove", "swap")
+     *     .setInterface(AdapterService.class, new Hashtable() {{ put("extra", "property"); }})
+     *     .setImplementation(AdapterImpl.class);
+     * </pre></blockquote>
+     * 
+     * @param serviceInterface the service interface to apply the adapter to
+     * @param serviceFilter the filter condition to use with the service interface
+     * @param autoConfig the name of the member to inject the service into, or null.
+     * @param callbackInstance the instance to invoke the callbacks on, or null if the callbacks have to be invoked on the adapter itself
+     * @param add name of the callback method to invoke on add
+     * @param change name of the callback method to invoke on change
+     * @param remove name of the callback method to invoke on remove
+     * @param swap name of the callback method to invoke on swap
+     * @return a service that acts as a factory for generating adapters
+     */
+    public Component createAdapterService(Class<?> serviceInterface, String serviceFilter, 
+        String autoConfig, Object callbackInstance, String add, String change, String remove, String swap)
+    {
+        return new AdapterServiceImpl(this, serviceInterface, serviceFilter, autoConfig, callbackInstance, add, change, remove, swap);
     }
 
     /**

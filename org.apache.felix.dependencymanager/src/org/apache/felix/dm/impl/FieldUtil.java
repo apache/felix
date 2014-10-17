@@ -275,8 +275,16 @@ public class FieldUtil {
     private static boolean mayInjectToMap(Class<?> clazz, Field field, boolean strictClassEquality) {
         Class<?> fieldType = field.getType();
         if (Map.class.isAssignableFrom(fieldType)) {
+            if (! (field.getGenericType() instanceof ParameterizedType)) {
+                return false;
+            }
             ParameterizedType parameterType = (ParameterizedType) field.getGenericType();
             if (parameterType == null) {
+                return false;
+            }
+            
+            if (! (parameterType.getActualTypeArguments()[0] instanceof Class<?>) ||
+                ! (parameterType.getActualTypeArguments()[1] instanceof Class<?>)) {
                 return false;
             }
             Class<?> K = (Class<?>) parameterType.getActualTypeArguments()[0];

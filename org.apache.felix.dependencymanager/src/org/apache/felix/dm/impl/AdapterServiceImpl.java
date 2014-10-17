@@ -45,43 +45,40 @@ public class AdapterServiceImpl extends FilterComponent {
      * @param dm the dependency manager used to create our internal adapter service
      * @param adapteeInterface the service interface to apply the adapter to
      * @param adapteeFilter the filter condition to use with the service interface
-     * @param add
-     * @param change
-     * @param remove
+     * @param autoConfig the name of the member to inject the service into
+     * @param callbackInstance the instance to invoke the callback on, or null 
+     * @param add name of the callback method to invoke on add
+     * @param change name of the callback method to invoke on change
+     * @param remove name of the callback method to invoke on remove
+     * @param swap name of the callback method to invoke on swap
      */
-    public AdapterServiceImpl(DependencyManager dm, Class<?> adapteeInterface, String adapteeFilter, String autoConfig, String add, String change, String remove, String swap) {
+    public AdapterServiceImpl(DependencyManager dm, Class<?> adapteeInterface, String adapteeFilter, String autoConfig, 
+        Object callbackInstance, String add, String change, String remove, String swap)
+    {
         super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
-        m_component.setImplementation(new AdapterImpl(adapteeInterface, adapteeFilter, autoConfig, add, change, remove, swap))
+        m_component.setImplementation(new AdapterImpl(adapteeInterface, adapteeFilter, autoConfig, callbackInstance, add, change, remove, swap))
                  .add(dm.createServiceDependency()
                       .setService(adapteeInterface, adapteeFilter)
                       .setAutoConfig(false)
                       .setCallbacks("added", null, "removed", "swapped"))
                  .setCallbacks("init", null, "stop", null);
     }	
-	
-    public AdapterServiceImpl(DependencyManager dm, Class<?> adapteeInterface, String adapteeFilter, String autoConfig, String add, String change, String remove) {
-        super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
-        m_component.setImplementation(new AdapterImpl(adapteeInterface, adapteeFilter, autoConfig, add, change, remove, null))
-                 .add(dm.createServiceDependency()
-                      .setService(adapteeInterface, adapteeFilter)
-                      .setAutoConfig(false)
-                      .setCallbacks("added", null, "removed", "swapped"))
-                 .setCallbacks("init", null, "stop", null);
-    }
-    
+	    
     public class AdapterImpl extends AbstractDecorator {
         private final Class<?> m_adapteeInterface;
         private final String m_adapteeFilter;
+        private final Object m_dependencyCallbackInstance;
         private final String m_add;
         private final String m_change;
         private final String m_remove;
         private final String m_swap;
         private final String m_autoConfig;
         
-        public AdapterImpl(Class<?> adapteeInterface, String adapteeFilter, String autoConfig, String add, String change, String remove, String swap) {
+        public AdapterImpl(Class<?> adapteeInterface, String adapteeFilter, String autoConfig, Object callbackInstance, String add, String change, String remove, String swap) {
             m_adapteeInterface = adapteeInterface;
             m_adapteeFilter = adapteeFilter;
             m_autoConfig = autoConfig;
+            m_dependencyCallbackInstance = callbackInstance;
             m_add = add;
             m_change = change;
             m_swap = swap;
@@ -99,11 +96,14 @@ public class AdapterServiceImpl extends FilterComponent {
             	 .setService(m_adapteeInterface, "(|(" + Constants.SERVICE_ID + "=" + serviceIdToTrack 
             			 	+ ")(" + DependencyManager.ASPECT + "=" + serviceIdToTrack + "))")
                  .setRequired(true);
+            if (m_add != null || m_change != null || m_remove != null || m_swap != null) {
+                dependency.setCallbacks(m_dependencyCallbackInstance, m_add, m_change, m_remove, m_swap);
+            }
             if (m_autoConfig != null) {
                 dependency.setAutoConfig(m_autoConfig);
-            }
-            if (m_add != null || m_change != null || m_remove != null || m_swap != null) {
-                dependency.setCallbacks(m_add, m_change, m_remove, m_swap);
+            } else {
+                // enable auto configuration if there is no add callback or if there is one on a callbackInstance
+                dependency.setAutoConfig(m_add == null || (m_add != null && m_dependencyCallbackInstance != null));
             }
             dependency.setPropagate(this, "propagateAdapteeProperties");
             
