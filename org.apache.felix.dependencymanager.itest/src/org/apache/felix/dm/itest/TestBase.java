@@ -8,6 +8,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import junit.framework.Assert;
 import junit.framework.TestCase;
 
 import org.apache.felix.dm.Component;
@@ -15,6 +16,7 @@ import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.FrameworkUtil;
@@ -60,13 +62,15 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     public void setUp() throws Exception {
     	warn("Setting up test " + getClass().getName());
     	context = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
-        logService = context.registerService(LogService.class.getName(), this, null);
+    	Hashtable<String, Object> props = new Hashtable<>();
+    	props.put(Constants.SERVICE_RANKING, new Integer(Integer.MAX_VALUE));
+        logService = context.registerService(LogService.class.getName(), this, props);
         context.addFrameworkListener(this);
         m_dm = new DependencyManager(context);
         if (m_parallel) {
             warn("Using threadpool ...");
             m_threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-            Hashtable<String, Object> props = new Hashtable<>();
+            props = new Hashtable<>();
             props.put("target", DependencyManager.THREADPOOL);
             m_threadPoolRegistration = context.registerService(Executor.class.getName(), m_threadPool, props);
         }
@@ -81,6 +85,7 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     	    m_threadPoolRegistration.unregister();
     	    m_threadPool.shutdown();
     	}
+        Assert.assertFalse(errorsLogged());
     }
         
     protected DependencyManager getDM() {
