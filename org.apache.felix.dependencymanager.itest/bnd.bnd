@@ -5,7 +5,7 @@
 	org.apache.felix.dependencymanager;version=latest,\
 	org.apache.felix.dependencymanager.shell;version=latest,\
 	org.apache.felix.log;version=1.0.1,\
-	org.apache.felix.configadmin;version=1.8.0
+	org.apache.felix.configadmin;version=1.8.1
 -runee:JavaSE-1.7
 -runvm:-ea
 -runfw:org.apache.felix.framework
