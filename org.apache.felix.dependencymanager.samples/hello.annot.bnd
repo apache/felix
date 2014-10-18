@@ -1,3 +1,2 @@
 Private-Package:  \
-	org.apache.felix.dependencymanager.samples.hello.annot,\
-	org.apache.felix.dependencymanager.samples.util
+	org.apache.felix.dependencymanager.samples.hello.annot

@@ -1,7 +1,5 @@
-package org.apache.felix.dependencymanager.samples.hello.annot;
+package org.apache.felix.dependencymanager.samples.hello.api;
 
-import org.apache.felix.dm.annotation.api.Component;
-import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.osgi.service.log.LogService;
 
 
@@ -10,9 +8,7 @@ import org.osgi.service.log.LogService;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@Component
 public class ServiceProviderImpl implements ServiceProvider {
-    @ServiceDependency
     volatile LogService log;
     
 	@Override

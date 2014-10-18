@@ -4,10 +4,10 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Set;
 
-import org.apache.felix.dependencymanager.samples.util.Helper;
 import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
+import org.osgi.service.log.LogService;
 
 /**
  * Component used to instantiate Device and DeviceParameter services, using DM annotation "factory set".
@@ -21,16 +21,19 @@ public class DeviceAndParameterFactory {
     @ServiceDependency(filter = "(" + Component.FACTORY_NAME + "=DeviceParameter)")
     volatile Set<Dictionary<?,?>> m_deviceParameterFactory;
 
+    @ServiceDependency
+    volatile LogService log;
+
     @Start
     public void start() {
-        Helper.log("device.annot", "DeviceAndParameterFactory.start");
+        log.log(LogService.LOG_INFO, "DeviceAndParameterFactory.start");
         for (int i = 0; i < 2; i ++) {
             createDeviceAndParameter(i);
         }
     }
     
     private void createDeviceAndParameter(int id) {
-        Helper.log("device.annot", "DeviceAndParameterFactory: creating Device/DeviceParameter with id=" + id);
+        log.log(LogService.LOG_INFO, "DeviceAndParameterFactory: creating Device/DeviceParameter with id=" + id);
 
         Dictionary<String,Object> device = new Hashtable<>();
         device.put("device.id", new Integer(id));

@@ -1,0 +1,6 @@
+This sample is an example usage of DM composite components. A composite component is implemented
+using a composition of multiple object instances, which are used to implement a given complex
+service. Here, we define a "Provider" service, which is implemented by three object instances:
+ProviderImpl, ProviderParticipant1, ProviderParticipant2.
+
+Dependencies are injected in all objects being part of the composition.

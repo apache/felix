@@ -17,18 +17,18 @@ Bundle-Version: 1.0.0.${tstamp}
 	org.apache.felix.gogo.shell;version=0.10.0,\
 	org.apache.felix.dependencymanager.shell;version=latest,\
 	org.apache.felix.dependencymanager.runtime;version=latest,\
-	org.apache.felix.dependencymanager.samples.hello;version=latest,\
+	org.apache.felix.dependencymanager.samples.hello.api;version=latest,\
 	org.apache.felix.dependencymanager.samples.tpool;version=latest,\
 	org.apache.felix.dependencymanager.samples.conf;version=latest,\
 	org.apache.felix.configadmin;version=1.8.0,\
-	org.apache.felix.dependencymanager.samples.device;version=latest,\
+	org.apache.felix.dependencymanager.samples.device.api;version=latest,\
 	org.apache.felix.webconsole;version=4.2.2,\
 	org.apache.felix.http.jetty;version=2.0.4,\
 	org.apache.felix.eventadmin;version=1.4.3,\
 	biz.aQute.bndlib;version=2.3.0
 -runproperties:  \
 	org.apache.felix.dependencymanager.parallel='!org.apache.felix.dependencymanager.samples.tpool, *',\
-	org.apache.felix.dependencymanager.runtime.log=debug,\
+	org.apache.felix.dependencymanager.runtime.log=warn,\
 	org.apache.felix.log.maxSize=100000
 -plugin: org.apache.felix.dm.annotation.plugin.bnd.AnnotationPlugin;log=debug;\
 	path:=${workspace}/org.apache.felix.dependencymanager.annotation/generated/org.apache.felix.dependencymanager.annotation.jar

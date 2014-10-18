@@ -1,4 +1,0 @@
-Private-Package:  \
-	org.apache.felix.dependencymanager.samples.dictionary
-
-Bundle-Activator: org.apache.felix.dependencymanager.samples.dictionary.Activator

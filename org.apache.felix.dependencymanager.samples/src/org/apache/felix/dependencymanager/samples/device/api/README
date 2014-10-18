@@ -1,0 +1,8 @@
+This is an example showing a Dependency Manager "Adapter" in action. two kinds of services are
+registered in the registry: some Device, and some DeviceParameter services. For each Device (having
+a given id), there is also a corresponding "DeviceParameter" service, having the same id.
+
+Then a "DeviceAccessImpl" adapter service is defined: it is used to "adapt" the "Device" service to
+a "DeviceAccess" service, which provides the union of each pair of Device/DeviceParameter having the
+same device.id . The adapter also dynamically propagate the service properties of the adapted Device
+service.

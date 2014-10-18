@@ -1,0 +1,9 @@
+This Activator is an example usage of DM composite components. A composite component is implemented
+using a composition of multiple object instances, which are used to implement a given service. 
+
+The sample also uses a Factory approach in order to instantiate the composition of objects: A
+"CompositionManager" is first injected with a Configuration that can be possibly be used to create
+and configure all the composites.
+
+Dependencies are injected in all objects in the composition.
+

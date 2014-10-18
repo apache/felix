@@ -1,4 +1,0 @@
-Private-Package:  \
-	org.apache.felix.dependencymanager.samples.hello,\
-	org.apache.felix.dependencymanager.samples.util
-Bundle-Activator: org.apache.felix.dependencymanager.samples.hello.Activator
