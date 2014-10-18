@@ -48,7 +48,31 @@ public class ConfigurationDependencyTest extends TestBase {
         m.add(s1);
         m.add(s2);
         m.add(s3);
-        e.waitForStep(4, 5000);
+        e.waitForStep(4, 50000000);
+        m.remove(s1);
+        m.remove(s2);
+        m.remove(s3);
+        // ensure we executed all steps inside the component instance
+        e.step(6);
+    }
+    
+    public void testComponentWithRequiredConfigurationAndCallbackInstanceAndServicePropertyPropagation() {
+        DependencyManager m = getDM();
+        // helper class that ensures certain steps get executed in sequence
+        Ensure e = new Ensure();
+        // create a service provider and consumer
+        ConfigurationConsumerCallbackInstance callbackInstance = new ConfigurationConsumerCallbackInstance(e);
+        Component s1 = m.createComponent().setImplementation(new ConfigurationConsumerWithCallbackInstance(e))
+            .setInterface(Runnable.class.getName(), null)
+            .add(m.createConfigurationDependency().setPid(PID).setPropagate(true).setCallback(callbackInstance, "updateConfiguration"));
+        Component s2 = m.createComponent().setImplementation(new ConfigurationCreator(e))
+            .add(m.createServiceDependency().setService(ConfigurationAdmin.class).setRequired(true));
+        Component s3 = m.createComponent().setImplementation(new ConfiguredServiceConsumer(e))
+            .add(m.createServiceDependency().setService(Runnable.class, ("(testkey=testvalue)")).setRequired(true));
+        m.add(s1);
+        m.add(s2);
+        m.add(s3);
+        e.waitForStep(4, 50000000);
         m.remove(s1);
         m.remove(s2);
         m.remove(s3);
@@ -128,6 +152,35 @@ public class ConfigurationDependencyTest extends TestBase {
                     Assert.fail("Could not find the configured property.");
                 }
             }
+        }
+        
+        public void run() {
+            m_ensure.step(4);
+        }
+    }
+    
+    static class ConfigurationConsumerCallbackInstance {
+        private final Ensure m_ensure;
+
+        public ConfigurationConsumerCallbackInstance(Ensure e) {
+            m_ensure = e;
+        }
+        
+        public void updateConfiguration(Dictionary props) throws Exception {
+            if (props != null) {
+                m_ensure.step(2);
+                if (!"testvalue".equals(props.get("testkey"))) {
+                    Assert.fail("Could not find the configured property.");
+                }
+            } 
+        }
+    }
+    
+    static class ConfigurationConsumerWithCallbackInstance implements Runnable {
+        private final Ensure m_ensure;
+
+        public ConfigurationConsumerWithCallbackInstance(Ensure e) {
+            m_ensure = e;
         }
         
         public void run() {

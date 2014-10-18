@@ -47,6 +47,16 @@ public interface ConfigurationDependency extends Dependency, ComponentDependency
 	ConfigurationDependency setCallback(String callback);
 
     /**
+     * Sets the name of the callback method that should be invoked when a configuration
+     * is available. The contract for this method is identical to that of
+     * <code>ManagedService.updated(Dictionary) throws ConfigurationException</code>.
+     * 
+     * @param instance the instance to call the callbacks on
+     * @param callback the name of the callback method
+     */
+    ConfigurationDependency setCallback(Object instance, String callback);
+
+    /**
      * Sets the <code>service.pid</code> of the configuration you are depending
      * on.
      */

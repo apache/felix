@@ -37,7 +37,6 @@ import org.osgi.service.cm.ManagedService;
 
 public class ConfigurationDependencyImpl extends AbstractDependency<ConfigurationDependency> implements ConfigurationDependency, ManagedService {
     private Dictionary<String, Object> m_settings;
-    private String m_callback = "updated";
 	private final Logger m_logger;
 	private String m_pid;
 	private ServiceRegistration m_registration;
@@ -52,12 +51,12 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
     	super(false /* not autoconfig */, context);
     	m_logger = logger;
         setRequired(true);
+        setCallback("updated");
     }
     
 	public ConfigurationDependencyImpl(ConfigurationDependencyImpl prototype) {
 	    super(prototype);
 	    m_pid = prototype.m_pid;
-	    m_callback = prototype.m_callback;
 	    m_logger = prototype.m_logger;
         m_metaType = prototype.m_metaType != null ? new MetaTypeProviderImpl(prototype.m_metaType, this, null) : null;
 	}
@@ -68,7 +67,12 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 	}
 
     public ConfigurationDependencyImpl setCallback(String callback) {
-        m_callback = callback;
+        super.setCallbacks(callback, null);
+        return this;
+    }
+    
+    public ConfigurationDependencyImpl setCallback(Object instance, String callback) {
+        super.setCallbacks(instance, callback, null);
         return this;
     }
 
@@ -234,12 +238,12 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
     
     private void invokeUpdated(Dictionary<?,?> settings) throws ConfigurationException {
     	if (m_updateInvokedCache.compareAndSet(false, true)) {
-			Object[] instances = m_component.getInstances();
+			Object[] instances = super.getInstances(); // either the callback instance or the component instances
 			if (instances != null) {
 				for (int i = 0; i < instances.length; i++) {
 					try {
 						InvocationUtil.invokeCallbackMethod(instances[i],
-								m_callback, new Class[][] {
+								m_add, new Class[][] {
 										{ Dictionary.class }, {} },
 								new Object[][] { { settings }, {} });
 					}
