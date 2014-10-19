@@ -78,7 +78,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 
     @Override
     public boolean needsInstance() {
-        return true;
+        return m_callbackInstance == null;
     }
 
     @Override
