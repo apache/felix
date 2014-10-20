@@ -49,6 +49,8 @@
         <AD id="org.apache.felix.https.jetty.cipersuites.excluded" type="String" cardinality="2147483647" name="%org.apache.felix.https.jetty.cipersuites.excluded.name" description="%org.apache.felix.https.jetty.cipersuites.excluded.description"/>
         <AD id="org.apache.felix.https.jetty.cipersuites.included" type="String" cardinality="2147483647" name="%org.apache.felix.https.jetty.cipersuites.included.name" description="%org.apache.felix.https.jetty.cipersuites.included.description"/>
         <AD id="org.apache.felix.http.jetty.sendServerHeader" type="Boolean" default="true" name="%org.apache.felix.http.jetty.sendServerHeader.name" description="%org.apache.felix.http.jetty.sendServerHeader.description"/>
+        <AD id="org.apache.felix.https.jetty.protocols.included" type="String" cardinality="2147483647" name="%org.apache.felix.https.jetty.protocols.included.name" description="%org.apache.felix.https.jetty.protocols.included.description"/>
+        <AD id="org.apache.felix.https.jetty.protocols.excluded" type="String" cardinality="2147483647" name="%org.apache.felix.https.jetty.protocols.excluded.name" description="%org.apache.felix.https.jetty.protocols.excluded.description"/>
     </OCD>
     <Designate pid="org.apache.felix.http">
         <Object ocdref="org.apache.felix.http"/>
