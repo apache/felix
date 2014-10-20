@@ -3,8 +3,8 @@ package org.apache.felix.dm;
 import java.util.concurrent.Executor;
 
 /**
- * A ComponentExecutorFactory service allows to provide a custom Executor (typically a threadpool) 
- * for a given Component.<p>
+ * A ComponentExecutorFactory service can be registered by a management agent bundle in order to
+ * supply custom Executors used to manage DependencyManager components.<p>
  * When a Component is added to a DependencyManager, the ComponentExecutorFactory is then 
  * used to create an Executor for that component and the Executor will be used to execute 
  * all the DM internal code related to the component's dependency management. The Executor 
