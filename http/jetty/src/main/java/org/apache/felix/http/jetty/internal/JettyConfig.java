@@ -127,6 +127,12 @@ public final class JettyConfig
     /** Felix specific property to specify whether a server header should be sent (defaults to true) */
     public static final String FELIX_JETTY_SEND_SERVER_HEADER = "org.apache.felix.http.jetty.sendServerHeader";
 
+    /** Felix specific property to configure the included protocols */
+    public static final String FELIX_JETTY_INCLUDED_PROTOCOLS = "org.apache.felix.https.jetty.protocols.included";
+
+    /** Felix specific property to configure the excluded protocols */
+    public static final String FELIX_JETTY_EXCLUDED_PROTOCOLS = "org.apache.felix.https.jetty.protocols.excluded";
+
     private static String validateContextPath(String ctxPath)
     {
         // undefined, empty, or root context path
@@ -195,6 +201,16 @@ public final class JettyConfig
     public String[] getExcludedCipherSuites()
     {
         return getStringArrayProperty(FELIX_JETTY_EXCLUDED_SUITES, getStringArrayProperty(FELIX_JETTY_EXCLUDED_SUITES_OLD, null));
+    }
+
+    public String[] getIncludedProtocols()
+    {
+        return getStringArrayProperty(FELIX_JETTY_INCLUDED_PROTOCOLS, null);
+    }
+
+    public String[] getExcludedProtocols()
+    {
+        return getStringArrayProperty(FELIX_JETTY_EXCLUDED_PROTOCOLS, null);
     }
 
     public int getHeaderSize()
