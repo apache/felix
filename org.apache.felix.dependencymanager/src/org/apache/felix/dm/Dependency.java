@@ -43,12 +43,12 @@ public interface Dependency {
     public boolean isAvailable();
 
     /**
-     * Returns <code>true>code> if auto configuration is enabled for this dependency.
+     * Returns <code>true</code> if auto configuration is enabled for this dependency.
      * Auto configuration means that a dependency is injected in the component instance
      * when it's available, and if it's unavailable, a "null object" will be inserted
      * instead.
      * 
-     * @return <code>true</code> if auto configuration is enabled for this dependency
+     * @return true if auto configuration is enabled for this dependency
      */
     public boolean isAutoConfig();
     
@@ -57,7 +57,7 @@ public interface Dependency {
      * to inject into. If you specify this, not all members of the right
      * type will be injected, only the member whose name matches.
      * 
-     * @return
+     * @return the name of the member in the class of the component instance to inject into
      */
     public String getAutoConfigName();
     

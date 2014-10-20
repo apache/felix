@@ -32,8 +32,8 @@ public interface ServiceDependency extends Dependency, ComponentDependencyDeclar
      * feature is automatically turned off, because we're assuming you don't need it in this 
      * case.
      * 
-     * @param added the method to call when a service was added
-     * @param removed the method to call when a service was removed
+     * @param add the method to call when a service was added
+     * @param remove the method to call when a service was removed
      * @return this service dependency
      */
 	public ServiceDependency setCallbacks(String add, String remove);
@@ -44,9 +44,9 @@ public interface ServiceDependency extends Dependency, ComponentDependencyDeclar
      * configuration feature is automatically turned off, because we're assuming you don't 
      * need it in this case.
      * 
-     * @param added the method to call when a service was added
-     * @param changed the method to call when a service was changed
-     * @param removed the method to call when a service was removed
+     * @param add the method to call when a service was added
+     * @param change the method to call when a service was changed
+     * @param remove the method to call when a service was removed
      * @return this service dependency
      */
 	public ServiceDependency setCallbacks(String add, String change, String remove);
@@ -56,14 +56,14 @@ public interface ServiceDependency extends Dependency, ComponentDependencyDeclar
      * dependency is added, changed or removed. When you specify callbacks, the auto 
      * configuration feature is automatically turned off, because we're assuming you don't 
      * need it in this case.
-     * @param added the method to call when a service was added
-     * @param changed the method to call when a service was changed
-     * @param removed the method to call when a service was removed
-     * @param swapped the method to call when the service was swapped due to addition or 
+     * @param add the method to call when a service was added
+     * @param change the method to call when a service was changed
+     * @param remove the method to call when a service was removed
+     * @param swap the method to call when the service was swapped due to addition or 
      * removal of an aspect
      * @return this service dependency
      */
-	public ServiceDependency setCallbacks(String added, String changed, String removed, String swapped);
+	public ServiceDependency setCallbacks(String add, String change, String remove, String swap);
 
     /**
      * Sets the callbacks for this service. These callbacks can be used as hooks whenever a
@@ -72,8 +72,8 @@ public interface ServiceDependency extends Dependency, ComponentDependencyDeclar
      * we're assuming you don't need it in this case.
      * 
      * @param instance the instance to call the callbacks on
-     * @param added the method to call when a service was added
-     * @param removed the method to call when a service was removed
+     * @param add the method to call when a service was added
+     * @param remove the method to call when a service was removed
      * @return this service dependency
      */
 	public ServiceDependency setCallbacks(Object instance, String add, String remove);
@@ -85,9 +85,9 @@ public interface ServiceDependency extends Dependency, ComponentDependencyDeclar
      * we're assuming you don't need it in this case.
      * 
      * @param instance the instance to call the callbacks on
-     * @param added the method to call when a service was added
-     * @param changed the method to call when a service was changed
-     * @param removed the method to call when a service was removed
+     * @param add the method to call when a service was added
+     * @param change the method to call when a service was changed
+     * @param remove the method to call when a service was removed
      * @return this service dependency
      */
 	public ServiceDependency setCallbacks(Object instance, String add, String change, String remove);
@@ -187,7 +187,7 @@ public interface ServiceDependency extends Dependency, ComponentDependencyDeclar
      * </pre>
      * </blockquote>
      * 
-     * @param instanceName the name of attribute to auto config
+     * @param autoConfig the name of attribute to auto configure
      * @return this service dependency
      */
 	public ServiceDependency setAutoConfig(boolean autoConfig);
@@ -278,8 +278,8 @@ public interface ServiceDependency extends Dependency, ComponentDependencyDeclar
     
     /**
      * Enabled debug logging for this dependency instance. The logging is prefixed with the given identifier.
-     * @param identifier
+     * @param debugKey a prefix log identifier
      * @return this service dependency.
      */
-    public void setDebug(String debugKey);
+    public ServiceDependency setDebug(String debugKey);
 }

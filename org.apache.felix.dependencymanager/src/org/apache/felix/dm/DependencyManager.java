@@ -179,7 +179,7 @@ public class DependencyManager {
      * Removes a service from the dependency manager. Before the service is removed
      * it is stopped first.
      * 
-     * @param service the service to remove
+     * @param c the component to remove
      */
     public void remove(Component c) {
         ComponentScheduler.instance().remove(c);
@@ -314,7 +314,6 @@ public class DependencyManager {
      * @param add name of the callback method to invoke on add
      * @param change name of the callback method to invoke on change
      * @param remove name of the callback method to invoke on remove
-     * @param swap name of the callback method to invoke on swap
      * @return a service that acts as a factory for generating adapters
      */
     public Component createAdapterService(Class<?> serviceInterface, String serviceFilter, String add, String change,
@@ -518,7 +517,6 @@ public class DependencyManager {
      * </pre></blockquote>
      *
      * @param resourceFilter the filter condition to use with the resource
-     * @param resourcePropertiesFilter the filter condition on the resource properties to use with the resource
      * @param propagate <code>true</code> if properties from the resource should be propagated to the service
      * @param callbackInstance instance to invoke the callback on
      * @param callbackChanged the name of the callback method

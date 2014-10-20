@@ -68,9 +68,10 @@ public interface Component {
     /**
      * Adds dependency(ies) to this component, atomically. If the component is already active or if you add
      * dependencies from the init method, then you should add all the dependencies in one single add method call 
-     * (using the varargs argument).
+     * (using the varargs argument), because this method may trigger component activation (like
+     * the ServiceTracker.open() method does).
      * 
-     * @param dependency the dependency(ies) to add
+     * @param dependencies the dependencies to add.
      * @return this component
      */
 	public Component add(Dependency ... dependencies);
@@ -87,14 +88,14 @@ public interface Component {
      * 
      * @param listener the state listener
      */
-	public Component add(ComponentStateListener l);
+	public Component add(ComponentStateListener listener);
 
     /**
      * Removes a component state listener from this component.
      * 
      * @param listener the state listener
      */
-	public Component remove(ComponentStateListener l);
+	public Component remove(ComponentStateListener listener);
 
     /**
      * Sets the public interface under which this component should be registered
@@ -137,7 +138,7 @@ public interface Component {
      * 
      * @param clazz the class (from the list above)
      * @param instanceName the name of the instance to inject the class into
-     * @see setAutoConfig(Class, boolean)
+     * @see #setAutoConfig(Class, boolean)
      */
 	public Component setAutoConfig(Class<?> clazz, String instanceName);
 

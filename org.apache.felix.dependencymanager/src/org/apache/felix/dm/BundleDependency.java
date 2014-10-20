@@ -126,7 +126,7 @@ public interface BundleDependency extends Dependency, ComponentDependencyDeclara
     
     /**
      * Sets an Object instance and a callback method used to propagate some properties to the provided service properties.
-     * The method will be invoked on the specified object instance and must have one of the following signatures:<p>
+     * The method will be invoked on the specified object instance and must have one of the following signatures:
      * <ul><li>Dictionary callback(ServiceReference, Object service) 
      * <li>Dictionary callback(ServiceReference)
      * </ul>

@@ -56,9 +56,10 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
     private boolean debug = false;
     private String debugKey;
     
-    public void setDebug(String debugKey) {
+    public ServiceDependency setDebug(String debugKey) {
     	this.debugKey = debugKey;
     	this.debug = true;
+    	return this;
     }
 
     /**
