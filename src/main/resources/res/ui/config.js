@@ -151,7 +151,8 @@ function printForm( /* Element */ parent, /* Object */ properties ) {
         if (attr.value != undefined)
         {
             // check is required to also handle empty strings, 0 and false
-            tdEl.appendChild( createInput( prop, attr.value, attr.type, '99%' ) );
+            var inputName = (prop == "action" || prop == "propertylist" || prop == "apply" || prop == "delete") ? '$' + prop : prop;
+            tdEl.appendChild( createInput( inputName, attr.value, attr.type, '99%' ) );
             tdEl.appendChild( createElement( "br" ) );
         }
         else if (typeof(attr.type) == 'object')

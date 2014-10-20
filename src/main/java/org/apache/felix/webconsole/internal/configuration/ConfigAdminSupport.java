@@ -186,6 +186,12 @@ class ConfigAdminSupport
             while ( propTokens.hasMoreTokens() )
             {
                 String propName = propTokens.nextToken();
+                String paramName = "action".equals(propName) //$NON-NLS-1$
+                    || ConfigManager.ACTION_DELETE.equals(propName)
+                    || ConfigManager.ACTION_APPLY.equals(propName)
+                    || ConfigManager.PROPERTY_LIST.equals(propName) 
+                    ? '$' + propName : propName;
+                
                 PropertyDescriptor ad = (PropertyDescriptor) adMap.get( propName );
 
                 // try to derive from current value
@@ -199,7 +205,7 @@ class ConfigAdminSupport
                 if ( ad == null
                     || ( ad.getCardinality() == 0 && ( attributeType == AttributeDefinition.STRING || attributeType == MetaTypeServiceSupport.ATTRIBUTE_TYPE_PASSWORD ) ) )
                 {
-                    String prop = request.getParameter( propName );
+                    String prop = request.getParameter( paramName );
                     if ( prop != null
                         && ( attributeType != MetaTypeSupport.ATTRIBUTE_TYPE_PASSWORD || !MetaTypeSupport.PASSWORD_PLACEHOLDER_VALUE.equals( prop ) ) )
                     {
@@ -209,7 +215,7 @@ class ConfigAdminSupport
                 else if ( ad.getCardinality() == 0 )
                 {
                     // scalar of non-string
-                    String prop = request.getParameter( propName );
+                    String prop = request.getParameter( paramName );
                     if ( prop != null )
                     {
                         try
@@ -227,7 +233,7 @@ class ConfigAdminSupport
                     // array or vector of any type
                     Vector vec = new Vector();
 
-                    String[] properties = request.getParameterValues( propName );
+                    String[] properties = request.getParameterValues( paramName );
                     if ( properties != null )
                     {
                         if ( attributeType == MetaTypeSupport.ATTRIBUTE_TYPE_PASSWORD )
