@@ -12,6 +12,7 @@ import junit.framework.Assert;
 import junit.framework.TestCase;
 
 import org.apache.felix.dm.Component;
+import org.apache.felix.dm.ComponentExecutorFactory;
 import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -50,7 +51,7 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     protected volatile DependencyManager m_dm;
 
     // The Registration for the DM threadpool.
-    private ServiceRegistration m_threadPoolRegistration;
+    private ServiceRegistration m_componentExecutorFactoryReg;
 
     public TestBase() {
     }
@@ -70,9 +71,14 @@ public abstract class TestBase extends TestCase implements LogService, Framework
         if (m_parallel) {
             warn("Using threadpool ...");
             m_threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-            props = new Hashtable<>();
-            props.put("target", DependencyManager.THREADPOOL);
-            m_threadPoolRegistration = context.registerService(Executor.class.getName(), m_threadPool, props);
+            m_componentExecutorFactoryReg = context.registerService(ComponentExecutorFactory.class.getName(), 
+                new ComponentExecutorFactory() {
+                    @Override
+                    public Executor getExecutorFor(Component component) {
+                        return m_threadPool;
+                    }
+                },
+                null);
         }
     }
     
@@ -81,8 +87,8 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     	logService.unregister();
     	context.removeFrameworkListener(this);
         clearComponents();
-        if (m_parallel && m_threadPoolRegistration != null) {
-    	    m_threadPoolRegistration.unregister();
+        if (m_parallel && m_componentExecutorFactoryReg != null) {
+    	    m_componentExecutorFactoryReg.unregister();
     	    m_threadPool.shutdown();
     	}
         Assert.assertFalse(errorsLogged());

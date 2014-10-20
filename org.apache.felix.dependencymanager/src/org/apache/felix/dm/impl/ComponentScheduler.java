@@ -24,50 +24,23 @@ import java.util.concurrent.Executor;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentDeclaration;
+import org.apache.felix.dm.ComponentExecutorFactory;
 import org.apache.felix.dm.context.ComponentContext;
 import org.osgi.framework.BundleContext;
+import org.osgi.service.component.ComponentFactory;
 
 /**
- * The Dependency Manager delegates all components addition/removal to this class, which is in charge of tracking
- * a threadpool from the OSGi registry in order to handle components concurrently.
+ * The Dependency Manager delegates all components addition/removal to this class.
+ * If a ComponentExecutorFactory is registered in the OSGi registry, this class will use it to get an 
+ * Executor used for components management and lifecycle callbacks.
  * 
- * By default, an external management bundle may register a threadpool (java.util.concurrent.Executor) with a
- * special "target=org.apache.felix.dependencymanager" service property. So, if the threadpool is registered, then 
- * any components added will use that threadpool. 
- * 
- * If you want to ensure that all components must wait for a threadpool, before they are actually added
- * in a dependency manager, you can simply use the "org.apache.felix.dependencymanager.parallel" OSGi system 
- * property, which can specify the list of components which  must wait for the threadpool.
- * This property value can be a wildcard ("*"), or a list of components implementation class prefixes 
- * (comma seperated). So, all components class names starting with the specified prefixes will be cached until the 
- * threadpool becomes available.
- * Some class name prefixes can also be negated (using "!"), in order to exclude some components from the list of 
- * components using the threadpool.
- * 
- * Notice that if the threadpool and all the services it may depends on are also declared using the 
- * Dependency Manager API, then you have to list the package of such components with a "!" prefix, in order to 
- * indicate that those components must not wait for a threadpool (since they are part of the threadpool 
- * implementation !).
- * 
- * Examples:
- * 
- * org.apache.felix.dependencymanager.parallel=*   
- *      -> means all components must be cached until a threadpool comes up.
- * 
- * org.apache.felix.dependencymanager.parallel=foo.bar, foo.zoo
- *      -> means only components whose implementation class names is starting with "foo.bar" or "foo.zoo" must wait for and 
- *      use a threadpool.   
- * 
- * org.apache.felix.dependencymanager.parallel=!foo.threadpool, *
- *      -> means all components must wait for and use a threadpool, except the threadpool components implementations class names
- *       (starting with foo.threadpool prefix). 
- *       
+ * @see {@link ComponentFactory}
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ComponentScheduler {
     private final static ComponentScheduler m_instance = new ComponentScheduler();
     private final static String PARALLEL = "org.apache.felix.dependencymanager.parallel";
-    private volatile Executor m_threadPool;
+    private volatile ComponentExecutorFactory m_componentExecutorFactory;
     private final Executor m_serial = new SerialExecutor(null);
     private Set<Component> m_pending = new LinkedHashSet<>();
 
@@ -75,13 +48,13 @@ public class ComponentScheduler {
         return m_instance;
     }
 
-    protected void bind(final Executor threadPool) {
-        m_threadPool = threadPool;
+    protected void bind(final ComponentExecutorFactory componentExecutorFactory) {
+        m_componentExecutorFactory = componentExecutorFactory;
         m_serial.execute(new Runnable() {
             @Override
             public void run() {
                 for (Component c : m_pending) {
-                    ((ComponentContext) c).setThreadPool(threadPool);
+                    createComponentExecutor(m_componentExecutorFactory, c);
                     ((ComponentContext) c).start();
                 }
                 m_pending.clear();
@@ -90,7 +63,7 @@ public class ComponentScheduler {
     }
 
     protected void unbind(Executor threadPool) {
-        m_threadPool = null;
+        m_componentExecutorFactory = null;
     }
 
     public void add(final Component c) {
@@ -102,12 +75,12 @@ public class ComponentScheduler {
             m_serial.execute(new Runnable() {
                 @Override
                 public void run() {
-                    Executor threadPool = m_threadPool;
-                    if (threadPool == null) {
+                    ComponentExecutorFactory execFactory = m_componentExecutorFactory;
+                    if (execFactory == null) {
                         m_pending.add(c);
                     }
                     else {
-                        ((ComponentContext) c).setThreadPool(threadPool);
+                        createComponentExecutor(execFactory, c);
                         ((ComponentContext) c).start();
                     }
                 }
@@ -127,14 +100,14 @@ public class ComponentScheduler {
     }
 
     private boolean mayStartNow(Component c) {
-        Executor threadPool = m_threadPool;
+        ComponentExecutorFactory execFactory = m_componentExecutorFactory;
         BundleContext ctx = c.getDependencyManager().getBundleContext();
         String parallel = ctx.getProperty(PARALLEL);
 
-        if (threadPool == null) {
-            // No threadpool available. If a "parallel" OSGi system property is specified, we have to wait for a
-            // threadpool if the component class name is matching one of the prefixes specified in the "parallel"
-            // system property.
+        if (execFactory == null) {
+            // No ComponentExecutorFactory available. If a "parallel" OSGi system property is specified, 
+            // we have to wait for a ComponentExecutorFactory servoce if the component class name is matching one of the 
+            // prefixes specified in the "parallel" system property.
             if (parallel != null && requiresThreadPool(c, parallel)) {
                 return false; // wait for a threadpool
             } else {
@@ -147,7 +120,7 @@ public class ComponentScheduler {
             // But if the "parallel" system property is specified, the component will use the threadpool only if it's
             // classname is starting with one of the prefixes specified in the property.
             if (parallel == null || requiresThreadPool(c, parallel)) {
-                ((ComponentContext) c).setThreadPool(threadPool);
+                ((ComponentContext) c).setThreadPool(execFactory.getExecutorFor(c));
             }
             return true; // start the component now, possibly using the threadpool (see above).
         }
@@ -171,5 +144,12 @@ public class ComponentScheduler {
             }
         }
         return false;
+    }
+    
+    private void createComponentExecutor(ComponentExecutorFactory execFactory, Component c) {
+        Executor exec = execFactory.getExecutorFor(c);
+        if (exec != null) {
+            ((ComponentContext) c).setThreadPool(exec);
+        }
     }
 }

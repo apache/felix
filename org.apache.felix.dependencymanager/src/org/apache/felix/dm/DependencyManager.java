@@ -60,12 +60,7 @@ import org.osgi.framework.FrameworkUtil;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class DependencyManager {
-    /**
-     * A management agent can register a threadpool in the registry using a "target" property with the following value
-     */
-    public static final String THREADPOOL = "org.apache.felix.dependencymanager";
-    
+public class DependencyManager {    
     /**
      * The DependencyManager Activator will wait for a threadpool before creating any DM components if the following
      * OSGi system property is set to true.

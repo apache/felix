@@ -72,7 +72,7 @@ public class ConfigurationDependencyTest extends TestBase {
         m.add(s1);
         m.add(s2);
         m.add(s3);
-        e.waitForStep(4, 50000000);
+        e.waitForStep(4, 5000);
         m.remove(s1);
         m.remove(s2);
         m.remove(s3);

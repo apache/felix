@@ -1,4 +1,4 @@
-This is an example showing a Dependency Manager "Adapter" in action. two kinds of services are
+This is an example showing a Dependency Manager "Adapter" in action. Two kinds of services are
 registered in the registry: some Device, and some DeviceParameter services. For each Device (having
 a given id), there is also a corresponding "DeviceParameter" service, having the same id.
 

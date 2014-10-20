@@ -19,6 +19,5 @@ public class Activator extends DependencyActivatorBase {
             .add(createConfigurationDependency()
                 .setPid(ServiceConsumer.class.getName()).setCallback("updated"))
             .add(createServiceDependency().setService(ServiceProvider.class).setRequired(true)));
-    
     }
 }

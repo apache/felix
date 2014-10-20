@@ -18,18 +18,16 @@
  */
 package org.apache.felix.dm.impl;
 
-import java.util.concurrent.Executor;
-
+import org.apache.felix.dm.ComponentExecutorFactory;
 import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.BundleContext;
 
 /**
- * DependencyManager Activator. We are using this activator in order to track and use a threadpool, which can be 
- * optionally registered by any management agent bundle.
- * The management agent can just register a <code>java.util.Executor</code> service in the service registry
- * using the "target=org.apache.felix.dependencymanager" property. 
- *    
+ * DependencyManager Activator used to track a ComponentExecutorFactory service optionally registered by 
+ * a management agent bundle.
+ * 
+ * @see {@link ComponentExecutorFactory}
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class Activator extends DependencyActivatorBase {
@@ -38,7 +36,7 @@ public class Activator extends DependencyActivatorBase {
         mgr.add(createComponent()
                .setImplementation(ComponentScheduler.instance())
                .add(createServiceDependency()
-                   .setService(Executor.class, "(target=" + DependencyManager.THREADPOOL + ")")
+                   .setService(ComponentExecutorFactory.class)
                    .setRequired(true)
                    .setCallbacks("bind", "unbind")));
     }
