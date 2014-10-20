@@ -102,7 +102,7 @@ public interface BundleDependency extends Dependency, ComponentDependencyDeclara
      * 
      * @param filter the filter condition
      * @return the bundle dependency
-     * @throws IllegalArgumentException
+     * @throws IllegalArgumentException if the filter is invalid
      */
     public BundleDependency setFilter(String filter) throws IllegalArgumentException;
 
