@@ -27,14 +27,14 @@ import java.util.concurrent.Executor;
  * Some class name prefixes can also be negated (using "!"), in order to exclude some components from the 
  * list of components using the ComponentExecutorFactory service.<p>
  * 
- * Notice that if the ComponentExecutorFactory itself and all it's dependent services are defined using 
+ * Notice that if the ComponentExecutorFactory itself and all its dependent services are defined using 
  * the Dependency Manager API, then you have to list the package of such components with a "!" 
  * prefix, in order to indicate that those components must not wait for a ComponentExecutorFactory service
  * (since they are part of the ComponentExecutorFactory implementation !).<p>
  * 
  * Examples:
  * 
- *  * <blockquote>
+ * <blockquote>
  * 
  * <pre>
  * org.apache.felix.dependencymanager.parallel=*   

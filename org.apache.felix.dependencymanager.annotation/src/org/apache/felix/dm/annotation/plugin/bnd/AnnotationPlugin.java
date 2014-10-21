@@ -39,11 +39,16 @@ import aQute.service.reporter.Reporter;
 public class AnnotationPlugin implements AnalyzerPlugin, Plugin {
     private static final String IMPORT_SERVICE = "Import-Service";
     private static final String EXPORT_SERVICE = "Export-Service";
+    private static final String REQUIRE_CAPABILITY = "Require-Capability";
+
     private static final String LOGLEVEL = "log";
     private static final String BUILD_IMPEXT = "build-import-export-service";
+    private static final String ADD_REQUIRE_CAPABILITY = "add-require-capability";
+    private static final String DM_RUNTIME_CAPABILITY = "osgi.extender; filter:=\"(&(osgi.extender=org.apache.felix.dependencymanager.runtime)(version>=4.0.0))\"";
     private BndLogger m_logger;
     private Reporter m_reporter;
     private boolean m_buildImportExportService;
+    private boolean m_addRequireCapability;
     private Map<String, String> m_properties;
 
     public void setReporter(Reporter reporter) {
@@ -77,6 +82,11 @@ public class AnnotationPlugin implements AnalyzerPlugin, Plugin {
                 // We have parsed some annotations: set the OSGi "DependencyManager-Component" header in the target bundle.
                 analyzer.setProperty("DependencyManager-Component", generator.getDescriptorPaths());
 
+                if (m_addRequireCapability) {
+                    // Add our Require-Capability header
+                    buildRequireCapability(analyzer);
+                }
+                
                 // Possibly set the Import-Service/Export-Service header
                 if (m_buildImportExportService) {
                     // Don't override Import-Service header, if it is found from the bnd directives.
@@ -117,7 +127,8 @@ public class AnnotationPlugin implements AnalyzerPlugin, Plugin {
 
     private void init(Analyzer analyzer) {
         m_logger.setLevel(parseOption(m_properties, LOGLEVEL, BndLogger.Level.Warn.toString()));
-        m_buildImportExportService = parseOption(m_properties, BUILD_IMPEXT, true);
+        m_buildImportExportService = parseOption(m_properties, BUILD_IMPEXT, false);
+        m_addRequireCapability = parseOption(m_properties, ADD_REQUIRE_CAPABILITY, true);
         analyzer.setExceptions(true);
         m_logger.info("Initialized Bnd DependencyManager plugin: buildImportExport=%b", m_buildImportExportService);
     }
@@ -142,6 +153,16 @@ public class AnnotationPlugin implements AnalyzerPlugin, Plugin {
             }
             sb.setLength(sb.length() - 1); // skip last comma
             analyzer.setProperty(header, sb.toString());
+        }
+    }
+
+    private void buildRequireCapability(Analyzer analyzer) {
+        String requireCapability = analyzer.getProperty(REQUIRE_CAPABILITY);
+        if (requireCapability == null) {
+            analyzer.setProperty(REQUIRE_CAPABILITY, DM_RUNTIME_CAPABILITY);
+        } else {
+            StringBuilder sb = new StringBuilder(requireCapability).append(",").append(DM_RUNTIME_CAPABILITY);
+            analyzer.setProperty(REQUIRE_CAPABILITY, sb.toString());
         }
     }
 
