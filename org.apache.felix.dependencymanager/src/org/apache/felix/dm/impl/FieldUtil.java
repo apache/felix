@@ -3,6 +3,7 @@ package org.apache.felix.dm.impl;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Map;
@@ -275,6 +276,7 @@ public class FieldUtil {
     private static boolean mayInjectToMap(Class<?> clazz, Field field, boolean strictClassEquality) {
         Class<?> fieldType = field.getType();
         if (Map.class.isAssignableFrom(fieldType)) {
+            // The field must be a parameterized map (generics).
             if (! (field.getGenericType() instanceof ParameterizedType)) {
                 return false;
             }
@@ -282,17 +284,28 @@ public class FieldUtil {
             if (parameterType == null) {
                 return false;
             }
+                   
+            // The map field generic key parameter must be "Class".
+            if (! (parameterType.getActualTypeArguments()[0] instanceof Class<?>)) {
+                return false;
+            }
             
-            if (! (parameterType.getActualTypeArguments()[0] instanceof Class<?>) ||
-                ! (parameterType.getActualTypeArguments()[1] instanceof Class<?>)) {
-                return false;
+            // The map generic value parameter must be Dictionary, or Dictionary<String, ...>
+            if (parameterType.getActualTypeArguments()[1] instanceof Class<?>) {
+                // The map field is in the form "Map m_field<Class, Dictionary>"
+                Class<?> mapValueGenericType = (Class<?>) parameterType.getActualTypeArguments()[1];
+                if (! mapValueGenericType.equals(Dictionary.class)) {
+                    return false;
+                }
+            } else if (parameterType.getActualTypeArguments()[1] instanceof ParameterizedType) {
+                // The map field is in the form "Map m_field<Class, Dictionary<String, ...>"
+                ParameterizedType mapValueGenericType = (ParameterizedType) parameterType.getActualTypeArguments()[1];
+                if (! mapValueGenericType.getRawType().equals(Dictionary.class)) {
+                    return false;
+                }
             }
+            
             Class<?> K = (Class<?>) parameterType.getActualTypeArguments()[0];
-            Class<?> V = (Class<?>) parameterType.getActualTypeArguments()[1];
-
-            if (!V.equals(Dictionary.class)) {
-                return false;
-            }
             return strictClassEquality ? K.equals(clazz) : K.isAssignableFrom(clazz);
         }
         return false;
