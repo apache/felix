@@ -20,6 +20,7 @@ package org.apache.felix.framework.util.manifestparser;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import junit.framework.TestCase;
@@ -28,6 +29,7 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 import org.osgi.framework.namespace.IdentityNamespace;
+import org.osgi.framework.namespace.NativeNamespace;
 import org.osgi.framework.wiring.BundleCapability;
 
 public class ManifestParserTest extends TestCase
@@ -72,6 +74,30 @@ public class ManifestParserTest extends TestCase
 
         assertEquals(1, ic.getDirectives().size());
         assertEquals("true", ic.getDirectives().get(IdentityNamespace.CAPABILITY_SINGLETON_DIRECTIVE));
+    }
+    
+    @SuppressWarnings("unchecked")
+	public void testNativeCapability() throws BundleException {
+        Map<String, String> headers = new HashMap<String, String>();
+        headers.put(Constants.BUNDLE_MANIFESTVERSION,  "2");
+        headers.put(Constants.BUNDLE_SYMBOLICNAME, "foo.bar");
+        headers.put(Constants.PROVIDE_CAPABILITY, " osgi.native;" +
+        		"osgi.native.osname:List<String>=\"Windows7,Windows 7,Win7,Win32\";"+
+        		"osgi.native.osversion:Version=\"7.0\";"+
+        		"osgi.native.processor:List<String>=\"x86-64,amd64,em64t,x86_64\";"+
+        		"osgi.native.language=\"en\"");
+    	
+        ManifestParser mp = new ManifestParser(null, null, null, headers);
+
+        BundleCapability ic = findCapability(mp.getCapabilities(), NativeNamespace.NATIVE_NAMESPACE);
+    	
+        assertEquals("en", ic.getAttributes().get(NativeNamespace.CAPABILITY_LANGUAGE_ATTRIBUTE));
+        List<String> osList = (List<String>) ic.getAttributes().get(NativeNamespace.CAPABILITY_OSNAME_ATTRIBUTE);
+        assertEquals(4, osList.size());
+        assertEquals(new Version("7.0"), ic.getAttributes().get(NativeNamespace.CAPABILITY_OSVERSION_ATTRIBUTE));
+        List<String> nativeProcesserList = (List<String>) ic.getAttributes().get(NativeNamespace.CAPABILITY_PROCESSOR_ATTRIBUTE);
+        assertEquals(4, nativeProcesserList.size());
+    
     }
 
     private BundleCapability findCapability(Collection<BundleCapability> capabilities, String namespace)
