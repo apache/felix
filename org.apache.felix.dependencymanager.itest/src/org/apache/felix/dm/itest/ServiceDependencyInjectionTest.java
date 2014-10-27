@@ -61,6 +61,7 @@ public class ServiceDependencyInjectionTest extends TestBase {
         m.remove(sc5);
         m.remove(sp);
         e.waitForStep(11, 5000);
+        m.clear();
     }
     
     static interface ServiceInterface {

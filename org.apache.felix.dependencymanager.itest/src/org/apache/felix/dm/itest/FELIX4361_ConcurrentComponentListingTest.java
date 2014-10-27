@@ -45,6 +45,7 @@ public class FELIX4361_ConcurrentComponentListingTest extends TestBase {
         Iterator iterator = dm.getComponents().iterator();
         dm.add(dm.createComponent().setImplementation(Object.class));
         iterator.next();
+        dm.clear();
     }
 
     public void testConcurrentGetComponentsMultipleThreads() {
@@ -100,5 +101,6 @@ public class FELIX4361_ConcurrentComponentListingTest extends TestBase {
         }
         Assert.assertEquals(0, errors.get());
         Assert.assertEquals(max, componentsAdded.get());
+        m.clear();
     }
 }

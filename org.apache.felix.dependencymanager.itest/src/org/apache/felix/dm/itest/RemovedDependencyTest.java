@@ -75,6 +75,8 @@ public class RemovedDependencyTest extends TestBase {
         Assert.assertNotNull(consumer.getProvider("provider1"));
         Assert.assertNull(consumer.getProvider("provider2"));
         Assert.assertNull(consumer.getProvider("provider3"));
+        
+        m.clear();
     }
     
     static interface ServiceInterface {

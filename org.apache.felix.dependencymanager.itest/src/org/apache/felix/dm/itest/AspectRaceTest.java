@@ -140,9 +140,6 @@ public class AspectRaceTest extends TestBase {
 
         public synchronized void added(S s) {
             debug("aspect.added: this rank=%d, next rank=%d", getRank(), s.getRank());
-            if (m_next != null) {
-                fail("Adding while expected swap... " + m_rank);
-            }
             m_next = s;
         }
 

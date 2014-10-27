@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
@@ -90,6 +91,10 @@ public abstract class TestBase extends TestCase implements LogService, Framework
         if (m_parallel && m_componentExecutorFactoryReg != null) {
     	    m_componentExecutorFactoryReg.unregister();
     	    m_threadPool.shutdown();
+            try {
+                m_threadPool.awaitTermination(5, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+            }
     	}
         Assert.assertFalse(errorsLogged());
     }
@@ -99,10 +104,8 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     }
                 
     protected void clearComponents() throws InterruptedException {
-        List<Component> list = m_dm.getComponents();
-        int count = list.size();
-        m_dm.clear(); // can be asynchronous if test is running in parallel.
-        warn("All component cleared (" + count + ")");
+        m_dm.clear();
+        warn("All component cleared.");
     }
 
     /**

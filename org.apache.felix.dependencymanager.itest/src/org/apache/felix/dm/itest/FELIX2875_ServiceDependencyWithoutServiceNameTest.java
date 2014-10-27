@@ -37,7 +37,8 @@ public class FELIX2875_ServiceDependencyWithoutServiceNameTest extends TestBase 
        dm.add(provider1);
        dm.add(provider2);
        dm.add(consumer);
-       m_e.waitForStep(5, 5000);                
+       m_e.waitForStep(5, 5000);    
+       dm.clear();
     }
     
     private class ConsumeServiceDependencyWithoutName {

@@ -44,6 +44,7 @@ public class AutoConfigTest extends TestBase {
         // remove the provider1, the consumer should have been stopped
         dm.remove(p1);
         m_ensure.waitForStep(2, 5000);
+        dm.clear();
     }
     
     public void testIterableField() throws Exception {
@@ -79,6 +80,7 @@ public class AutoConfigTest extends TestBase {
         // remove provider2, the consumer should be stopped
         dm.remove(p2);
         m_ensure.waitForStep(4, 5000);
+        dm.clear();
     }   
     
     public void testMapField() throws Exception {
@@ -114,6 +116,7 @@ public class AutoConfigTest extends TestBase {
         // remove provider2, the consumer should be stopped
         dm.remove(p2);
         m_ensure.waitForStep(4, 5000);
+        dm.clear();
     }
 
     private Component createProvider(DependencyManager dm, int rank, Provider provider) {

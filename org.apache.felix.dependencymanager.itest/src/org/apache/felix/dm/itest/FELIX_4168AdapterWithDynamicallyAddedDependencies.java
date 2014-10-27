@@ -51,6 +51,7 @@ public class FELIX_4168AdapterWithDynamicallyAddedDependencies extends TestBase 
 
         // make sure both adapters have their "remove" callbacks invoked
         e.waitForStep(4, 5000);
+        m.clear();
     }
 
     static interface S1 {
