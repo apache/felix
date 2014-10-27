@@ -41,13 +41,13 @@ public class FieldUtil {
      * @param service the injected service
      * @param logger the component logger.
      */
-    public static void injectField(Object[] targets, String fieldName, Class<?> clazz, final Object service,
+    public static boolean injectField(Object[] targets, String fieldName, Class<?> clazz, final Object service,
         final Logger logger)
     {
         if (service == null) {
-            return;
+            return true; // TODO why service can be null ?
         }
-        mapField(true, clazz, targets, fieldName, logger, new FieldFunction() {
+        return mapField(true, clazz, targets, fieldName, logger, new FieldFunction() {
             public void injectField(Field f, Object target) {
                 try {
                     f.setAccessible(true);
@@ -76,14 +76,14 @@ public class FieldUtil {
      * @param service the injected service
      * @param logger the component logger.
      */
-    public static void injectDependencyField(Object[] targets, String fieldName, Class<?> clazz,
+    public static boolean injectDependencyField(Object[] targets, String fieldName, Class<?> clazz,
         final DependencyContext dc, final Logger logger)
     {
         final Event event = dc.getService();
         if (event == null) {
-            return;
+            return true; // TODO check why event can be null
         }
-        mapField(false, clazz, targets, fieldName, logger, new FieldFunction() {
+        return mapField(false, clazz, targets, fieldName, logger, new FieldFunction() {
             public void injectField(Field f, Object target) {
                 try {
                     f.setAccessible(true);
@@ -210,9 +210,10 @@ public class FieldUtil {
      * @param func the callback used to notify when we find either a field with the same dependency service type, or
      * with a "Collection" type, or with a "Map" type.
      */
-    private static void mapField(boolean strict, Class<?> clazz, Object[] targets, String fieldName, Logger logger,
+    private static boolean mapField(boolean strict, Class<?> clazz, Object[] targets, String fieldName, Logger logger,
         FieldFunction func)
     {
+        boolean injected = false;
         if (targets != null && clazz != null) {
             for (int i = 0; i < targets.length; i++) {
                 Object target = targets[i];
@@ -230,19 +231,25 @@ public class FieldUtil {
                         if (fieldName == null) {
                             // Field type class must match injected service type
                             if (fieldType.equals(clazz)) {
+                                injected = true;
                                 func.injectField(field, target);
                             } else if (!strict && mayInjectToIterable(clazz, field, true)) {
+                                injected = true;
                                 func.injectIterableField(field, target);
                             } else if (!strict && mayInjectToMap(clazz, field, true)) {
+                                injected = true;
                                 func.injectMapField(field, target);
                             }
                         } else if (field.getName().equals(fieldName)) {
                             // Field type may be a superclass of the service type
                             if (fieldType.isAssignableFrom(clazz)) {
+                                injected = true;
                                 func.injectField(field, target);
                             } else if (!strict && mayInjectToIterable(clazz, field, false)) {
+                                injected = true;
                                 func.injectIterableField(field, target);
                             } else if (!strict && mayInjectToMap(clazz, field, false)) {
+                                injected = true;
                                 func.injectMapField(field, target);
                             } else {
                                 logger.log(
@@ -257,6 +264,7 @@ public class FieldUtil {
                 }
             }
         }
+        return injected;
     }
 
     private static boolean mayInjectToIterable(Class<?> clazz, Field field, boolean strictClassEquality) {

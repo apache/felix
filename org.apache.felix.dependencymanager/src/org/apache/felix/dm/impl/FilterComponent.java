@@ -228,8 +228,8 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
         m_component.stop();
     }
     
-    public void invokeCallbackMethod(Object[] instances, String methodName, Class<?>[][] signatures, Object[][] parameters) {
-        m_component.invokeCallbackMethod(instances, methodName, signatures, parameters);
+    public boolean invokeCallbackMethod(Object[] instances, String methodName, Class<?>[][] signatures, Object[][] parameters) {
+        return m_component.invokeCallbackMethod(instances, methodName, signatures, parameters);
     }
         
     public DependencyManager getDependencyManager() {

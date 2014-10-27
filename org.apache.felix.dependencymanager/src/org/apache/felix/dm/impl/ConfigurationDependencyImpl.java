@@ -37,7 +37,6 @@ import org.osgi.service.cm.ManagedService;
 
 public class ConfigurationDependencyImpl extends AbstractDependency<ConfigurationDependency> implements ConfigurationDependency, ManagedService {
     private Dictionary<String, Object> m_settings;
-	private final Logger m_logger;
 	private String m_pid;
 	private ServiceRegistration m_registration;
     private MetaTypeProviderImpl m_metaType;
@@ -48,8 +47,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
     }
     
     public ConfigurationDependencyImpl(BundleContext context, Logger logger) {
-    	super(false /* not autoconfig */, context);
-    	m_logger = logger;
+    	super(false /* not autoconfig */, context, logger);
         setRequired(true);
         setCallback("updated");
     }
@@ -57,7 +55,6 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 	public ConfigurationDependencyImpl(ConfigurationDependencyImpl prototype) {
 	    super(prototype);
 	    m_pid = prototype.m_pid;
-	    m_logger = prototype.m_logger;
         m_metaType = prototype.m_metaType != null ? new MetaTypeProviderImpl(prototype.m_metaType, this, null) : null;
 	}
 	

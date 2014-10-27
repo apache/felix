@@ -28,6 +28,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -628,9 +629,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         if (m_context != null && m_serviceName != null) {
             ServiceRegistrationImpl wrapper = new ServiceRegistrationImpl();
             m_registration = wrapper;
-            if (((Boolean) m_autoConfig.get(ServiceRegistration.class)).booleanValue()) {
-                configureImplementation(ServiceRegistration.class, m_registration, (String) m_autoConfigInstance.get(ServiceRegistration.class));
-            }
+            autoConfigureImplementation(ServiceRegistration.class, m_registration);
             
             // service name can either be a string or an array of strings
             ServiceRegistration registration;
@@ -664,7 +663,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
                     m_registration.unregister();
                 }
             } catch (IllegalStateException e) { /* Should we really log this ? */}
-            configureImplementation(ServiceRegistration.class, NULL_REGISTRATION);
+            autoConfigureImplementation(ServiceRegistration.class, NULL_REGISTRATION);
             m_registration = null;
         }
     }
@@ -751,18 +750,10 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             }
             
 	        // configure the bundle context
-	        if (((Boolean) m_autoConfig.get(BundleContext.class)).booleanValue()) {
-	            configureImplementation(BundleContext.class, m_context, (String) m_autoConfigInstance.get(BundleContext.class));
-	        }
-            if (((Boolean) m_autoConfig.get(ServiceRegistration.class)).booleanValue()) {
-                configureImplementation(ServiceRegistration.class, NULL_REGISTRATION, (String) m_autoConfigInstance.get(ServiceRegistration.class));
-            }
-            if (((Boolean) m_autoConfig.get(DependencyManager.class)).booleanValue()) {
-                configureImplementation(DependencyManager.class, m_manager, (String) m_autoConfigInstance.get(DependencyManager.class));
-            }
-            if (((Boolean) m_autoConfig.get(Component.class)).booleanValue()) {
-                configureImplementation(Component.class, this, (String) m_autoConfigInstance.get(Component.class));
-            }
+            autoConfigureImplementation(BundleContext.class, m_context);
+            autoConfigureImplementation(ServiceRegistration.class, NULL_REGISTRATION);
+            autoConfigureImplementation(DependencyManager.class, m_manager);
+            autoConfigureImplementation(Component.class, this);
 	    }
 	}
 	
@@ -874,10 +865,12 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     	return getCompositionInstances();
     }
     
-    public void invokeCallbackMethod(Object[] instances, String methodName, Class<?>[][] signatures, Object[][] parameters) {
+    public boolean invokeCallbackMethod(Object[] instances, String methodName, Class<?>[][] signatures, Object[][] parameters) {
+        boolean callbackFound = false;
         for (int i = 0; i < instances.length; i++) {
             try {
                 InvocationUtil.invokeCallbackMethod(instances[i], methodName, signatures, parameters);
+                callbackFound |= true;
             }
             catch (NoSuchMethodException e) {
                 // if the method does not exist, ignore it
@@ -890,6 +883,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
                 m_logger.log(Logger.LOG_ERROR, "Could not invoke '" + methodName + "'.", e);
             }
         }
+        return callbackFound;
     }
 
     private Object createInstance(Class<?> clazz) throws SecurityException, NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
@@ -932,27 +926,43 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		return this;
 	}
 	
-    private void configureImplementation(Class<?> clazz, Object instance) {
-        configureImplementation(clazz, instance, null);
+    private void autoConfigureImplementation(Class<?> clazz, Object instance) {
+        if (((Boolean) m_autoConfig.get(clazz)).booleanValue()) {
+            configureImplementation(clazz, instance, (String) m_autoConfigInstance.get(clazz));
+        }
     }
-
-    /**
+    
+   /**
      * Configure a field in the service implementation. The service implementation
      * is searched for fields that have the same type as the class that was specified
      * and for each of these fields, the specified instance is filled in.
      *
      * @param clazz the class to search for
-     * @param inject the object to fill in the implementation class(es) field
+     * @param instance the object to fill in the implementation class(es) field
      * @param instanceName the name of the instance to fill in, or <code>null</code> if not used
      */
-    private void configureImplementation(Class<?> clazz, Object inject, String fieldName) {
+    private void configureImplementation(Class<?> clazz, Object instance, String fieldName) {
         Object[] targets = getInstances();
-        FieldUtil.injectField(targets, fieldName, clazz, inject, m_logger);
+        if (! FieldUtil.injectField(targets, fieldName, clazz, instance, m_logger) && fieldName != null) {
+            // If the target is an abstract decorator (i.e: an adapter, or an aspect), we must not log warnings
+            // if field has not been injected.
+            if (! (getInstance() instanceof AbstractDecorator)) {
+                m_logger.log(Logger.LOG_WARNING, "Could not inject " + instance + " to field \"" + fieldName
+                    + "\" at any of the following component instances: " + Arrays.toString(targets));
+            }
+        }
     }
 
     private void configureImplementation(Class<?> clazz, DependencyContext dc, String fieldName) {
         Object[] targets = getInstances();
-        FieldUtil.injectDependencyField(targets, fieldName, clazz, dc, m_logger);
+        if (! FieldUtil.injectDependencyField(targets, fieldName, clazz, dc, m_logger) && fieldName != null) {
+            // If the target is an abstract decorator (i.e: an adapter, or an aspect), we must not log warnings
+            // if field has not been injected.
+            if (! (getInstance() instanceof AbstractDecorator)) {
+                m_logger.log(Logger.LOG_WARNING, "Could not inject dependency " + clazz.getName() + " to field \""
+                    + fieldName + "\" at any of the following component instances: " + Arrays.toString(targets));
+            }
+        }
     }
 
     /**

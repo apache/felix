@@ -42,18 +42,15 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
     private volatile ServiceRegistration m_registration;
     private volatile String m_resourceFilter;
     private volatile URL m_trackedResource;
-    private final Logger m_logger;
 
     public ResourceDependencyImpl(BundleContext context, Logger logger) {
-        super(true /* autoconfig */, context);
-        m_logger = logger;
+        super(true /* autoconfig */, context, logger);
     }
     
     public ResourceDependencyImpl(ResourceDependencyImpl prototype) {
         super(prototype);
         m_resourceFilter = prototype.m_resourceFilter;
         m_trackedResource = prototype.m_trackedResource;
-        m_logger = prototype.m_logger;
     }
     
     @Override
@@ -119,12 +116,12 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
     }
     
     @Override
-    public void invoke(String method, Event e) {
+    public boolean invoke(String method, Event e) {
         ResourceEventImpl re = (ResourceEventImpl) e;
         URL serviceInstance = re.getResource();
         Dictionary<?,?> resourceProperties = re.getProperties();
        
-        m_component.invokeCallbackMethod(getInstances(), method,
+        return m_component.invokeCallbackMethod(getInstances(), method,
             new Class[][] {
                     { Component.class, URL.class, Dictionary.class }, 
                     { Component.class, URL.class },

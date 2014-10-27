@@ -62,7 +62,7 @@ public class ComponentScheduler {
         });
     }
 
-    protected void unbind(Executor threadPool) {
+    protected void unbind(ComponentExecutorFactory threadPool) {
         m_componentExecutorFactory = null;
     }
 

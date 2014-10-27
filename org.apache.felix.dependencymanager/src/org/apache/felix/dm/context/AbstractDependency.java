@@ -18,6 +18,7 @@
  */
 package org.apache.felix.dm.context;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -26,9 +27,13 @@ import java.util.Set;
 
 import org.apache.felix.dm.ComponentDependencyDeclaration;
 import org.apache.felix.dm.Dependency;
+import org.apache.felix.dm.impl.AbstractDecorator;
+import org.apache.felix.dm.impl.AdapterServiceImpl;
 import org.apache.felix.dm.impl.EventImpl;
+import org.apache.felix.dm.impl.Logger;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.service.log.LogService;
 
 /**
  * Abstract class for implementing Dependencies
@@ -55,15 +60,21 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
     protected final BundleContext m_context;
     protected final Bundle m_bundle;
     protected final static Dictionary<String, Object> EMPTY_PROPERTIES = new Hashtable<>(0);
-
+    protected final Logger m_logger;
+    
     public AbstractDependency() {
         this(true, null);
     }
 
     public AbstractDependency(boolean autoConfig, BundleContext bc) {
+        this(autoConfig, bc, null);
+    }
+    
+    public AbstractDependency(boolean autoConfig, BundleContext bc, Logger logger) {
         m_autoConfig = autoConfig;
         m_context = bc;
         m_bundle = m_context != null ? m_context.getBundle() : null;
+        m_logger = logger;
     }
 
     public AbstractDependency(AbstractDependency<T> prototype) {
@@ -82,6 +93,7 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
         m_propagateCallbackMethod = prototype.m_propagateCallbackMethod;
         m_context = prototype.m_context;
         m_bundle = prototype.m_bundle;
+        m_logger = prototype.m_logger;
     }
 
     // ----------------------- Dependency interface -----------------------------
@@ -121,21 +133,33 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
     @Override
     public void invokeAdd(Event e) {
         if (m_add != null) {
-            invoke(m_add, e);
+            // If the add callback is not found and if the component instance is not an abstract decorator, then
+            // log a warn message. (AbstractDecorator, like Aspect or Adapter are not interested in user dependency callbacks).
+            if (! invoke(m_add, e) && ! (m_component.getInstance() instanceof AbstractDecorator)) {
+                callbackNotFound(m_add);
+            }
         }
     }
 
     @Override
     public void invokeChange(Event e) {
         if (m_change != null) {
-            invoke(m_change, e);
+            // If the change callback is not found and if the component instance is not an abstract decorator, then
+            // log a warn message. (AbstractDecorator, like Aspect or Adapter are not interested in user dependency callbacks).
+            if (! invoke(m_change, e) && ! (m_component.getInstance() instanceof AbstractDecorator)) {
+                callbackNotFound(m_change);
+            }
         }
     }
 
     @Override
     public void invokeRemove(Event e) {
         if (m_remove != null) {
-            invoke(m_remove, e);
+            // If the remove callback is not found and if the component instance is not an abstract decorator, then
+            // log a warn message. (AbstractDecorator, like Aspect or Adapter are not interested in user dependency callbacks).
+            if (! invoke(m_remove, e) && ! (m_component.getInstance() instanceof AbstractDecorator)) {
+                callbackNotFound(m_remove);
+            }
         }
     }
 
@@ -287,13 +311,13 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
         }
     }
 
-    public void invoke(String method, Event e, Object[] instances) {
+    public boolean invoke(String method, Event e, Object[] instances) {
         // specific for this type of dependency
-        m_component.invokeCallbackMethod(instances, method, new Class[][] { {} }, new Object[][] { {} });
+        return m_component.invokeCallbackMethod(instances, method, new Class[][] { {} }, new Object[][] { {} });
     }
 
-    public void invoke(String method, Event e) {
-        invoke(method, e, getInstances());
+    public boolean invoke(String method, Event e) {
+        return invoke(method, e, getInstances());
     }
 
     @SuppressWarnings("unchecked")
@@ -407,6 +431,18 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
         } else {
             return isRequired() ? ComponentDependencyDeclaration.STATE_REQUIRED
                 : ComponentDependencyDeclaration.STATE_OPTIONAL;
+        }
+    }
+    
+    // -------------- Private methods ---------------------------------------------------
+    
+    private void callbackNotFound(String callback) {
+        if (m_logger == null) {
+        System.out.println("Dependency \"" + callback + "\" callback not found on componnent instances "
+            + Arrays.toString(m_component.getInstances()));
+        } else {
+            m_logger.log(LogService.LOG_WARNING, "Dependency \"" + callback + "\" callback not found on componnent instances "
+                + Arrays.toString(m_component.getInstances()));
         }
     }
 }

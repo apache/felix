@@ -49,16 +49,13 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
     private boolean m_propagate;
     private Object m_propagateCallbackInstance;
     private String m_propagateCallbackMethod;
-    private final Logger m_logger;
 
     public BundleDependencyImpl(BundleContext context, Logger logger) {
-        super(true /* autoconfig */, context);
-        m_logger = logger;
+        super(true /* autoconfig */, context, logger);
     }
     
     public BundleDependencyImpl(BundleDependencyImpl prototype) {
         super(prototype);
-        m_logger = prototype.m_logger;
         m_stateMask = prototype.m_stateMask;
         m_nullObject = prototype.m_nullObject;
         m_bundleInstance = prototype.m_bundleInstance;
@@ -141,9 +138,9 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
     }
     
     @Override
-    public void invoke(String method, Event e) {
+    public boolean invoke(String method, Event e) {
         BundleEventImpl be = (BundleEventImpl) e;
-        m_component.invokeCallbackMethod(getInstances(), method,
+        return m_component.invokeCallbackMethod(getInstances(), method,
             new Class[][] {{Bundle.class}, {Object.class}, {}},             
             new Object[][] {{be.getBundle()}, {be.getBundle()}, {}}
         );

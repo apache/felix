@@ -24,8 +24,7 @@ import java.util.concurrent.Executor;
 
 import org.apache.felix.dm.Component;
 
-//TODO should this interface extend Component ?
-public interface ComponentContext {
+public interface ComponentContext extends Component {
     public Executor getExecutor(); // shared between a component and its dependencies
     public Component setThreadPool(Executor threadPool);
     public void start();
@@ -36,7 +35,7 @@ public interface ComponentContext {
     public void handleRemoved(DependencyContext dc, Event e);
     public void handleSwapped(DependencyContext dc, Event event, Event newEvent);
     public List<DependencyContext> getDependencies(); // for testing only...
-    public void invokeCallbackMethod(Object[] instances, String methodName, Class<?>[][] signatures, Object[][] parameters);
+    public boolean invokeCallbackMethod(Object[] instances, String methodName, Class<?>[][] signatures, Object[][] parameters);
     public Object[] getInstances();
     public String getAutoConfigInstance(Class<?> clazz);
     public boolean getAutoConfig(Class<?> clazz);

@@ -44,7 +44,6 @@ import org.osgi.service.log.LogService;
 
 public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency> implements ServiceDependency, ServiceTrackerCustomizer {
 	protected volatile ServiceTracker m_tracker;
-    private final Logger m_logger;
     protected String m_swap;
     protected volatile Class<?> m_trackedServiceName;
     private volatile String m_trackedServiceFilter;
@@ -139,13 +138,11 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
     }
     
 	public ServiceDependencyImpl(BundleContext ctx, Logger logger) {
-		super(true /* autoconfig */, ctx);
-	    m_logger = logger;
+		super(true /* autoconfig */, ctx, logger);
 	}
 	
 	public ServiceDependencyImpl(ServiceDependencyImpl prototype) {
 		super(prototype);
-		m_logger = prototype.m_logger;
         m_trackedServiceName = prototype.m_trackedServiceName;
         m_nullObject = prototype.m_nullObject;
         m_trackedServiceFilter = prototype.m_trackedServiceFilter;
@@ -255,11 +252,11 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
 	}
 	
 	@Override
-	public void invoke(String method, Event e, Object[] instances) {
+	public boolean invoke(String method, Event e, Object[] instances) {
 		ServiceEventImpl se = (ServiceEventImpl) e;
 		ServicePropertiesMap propertiesMap = new ServicePropertiesMap(se.getReference());
 		Dictionary<?,?> properties = se.getProperties();
-		m_component.invokeCallbackMethod(instances, method,
+		return m_component.invokeCallbackMethod(instances, method,
 		    new Class[][]{
                 {Component.class, ServiceReference.class, m_trackedServiceName},
                 {Component.class, ServiceReference.class, Object.class}, 
