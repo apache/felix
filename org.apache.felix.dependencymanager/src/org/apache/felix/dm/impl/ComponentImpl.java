@@ -947,7 +947,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             // If the target is an abstract decorator (i.e: an adapter, or an aspect), we must not log warnings
             // if field has not been injected.
             if (! (getInstance() instanceof AbstractDecorator)) {
-                m_logger.log(Logger.LOG_WARNING, "Could not inject " + instance + " to field \"" + fieldName
+                m_logger.log(Logger.LOG_ERROR, "Could not inject " + instance + " to field \"" + fieldName
                     + "\" at any of the following component instances: " + Arrays.toString(targets));
             }
         }
@@ -959,7 +959,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             // If the target is an abstract decorator (i.e: an adapter, or an aspect), we must not log warnings
             // if field has not been injected.
             if (! (getInstance() instanceof AbstractDecorator)) {
-                m_logger.log(Logger.LOG_WARNING, "Could not inject dependency " + clazz.getName() + " to field \""
+                m_logger.log(Logger.LOG_ERROR, "Could not inject dependency " + clazz.getName() + " to field \""
                     + fieldName + "\" at any of the following component instances: " + Arrays.toString(targets));
             }
         }

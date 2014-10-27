@@ -438,10 +438,10 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
     
     private void callbackNotFound(String callback) {
         if (m_logger == null) {
-        System.out.println("Dependency \"" + callback + "\" callback not found on componnent instances "
-            + Arrays.toString(m_component.getInstances()));
+            System.out.println("Dependency \"" + callback + "\" callback not found on componnent instances "
+                + Arrays.toString(m_component.getInstances()));
         } else {
-            m_logger.log(LogService.LOG_WARNING, "Dependency \"" + callback + "\" callback not found on componnent instances "
+            m_logger.log(LogService.LOG_ERROR, "Dependency \"" + callback + "\" callback not found on componnent instances "
                 + Arrays.toString(m_component.getInstances()));
         }
     }
