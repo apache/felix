@@ -124,9 +124,17 @@ public final class HttpServiceImpl implements ExtHttpService
     public void unregister(String alias)
     {
         final Servlet servlet = this.handlerRegistry.getServletByAlias(alias);
-        if ( servlet == null )
+        if (servlet == null)
         {
-            throw new IllegalArgumentException("Nothing registered at " + alias);
+            // FELIX-4561 - don't bother throwing an exception if we're stopping anyway...
+            if ((bundle.getState() & Bundle.STOPPING) != 0)
+            {
+                throw new IllegalArgumentException("Nothing registered at " + alias);
+            }
+            else
+            {
+                SystemLogger.debug("Nothing registered at " + alias + "; ignoring this because the bundle is stopping!", null);
+            }
         }
         unregisterServlet(servlet);
     }

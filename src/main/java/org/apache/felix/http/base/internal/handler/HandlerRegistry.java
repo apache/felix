@@ -68,7 +68,7 @@ public final class HandlerRegistry
             servletMap.remove(handler.getServlet(), handler);
 
             handler.destroy();
-            throw new NamespaceException("Servlet with alias already registered");
+            throw new NamespaceException("Servlet with alias '" + handler.getAlias() + "' already registered");
         }
 
         updateServletArray();
