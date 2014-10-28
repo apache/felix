@@ -23,7 +23,7 @@ import org.osgi.dto.DTO;
  * 
  * @since 1.3
  * @NotThreadSafe
- * @author $Id: a02ee5ad7b783a19bf7e1d8f9dcc6f44685ccd41 $
+ * @author $Id: 906b26512776b149670ec3048a8714dc99ff447a $
  */
 public class ReferenceDTO extends DTO {
 
@@ -32,28 +32,28 @@ public class ReferenceDTO extends DTO {
 	 * 
 	 * @see #strategy
 	 */
-	String			STRATEGY_LOOKUP			= "LOOKUP";
+	public static final String	STRATEGY_LOOKUP			= "LOOKUP";
 
 	/**
 	 * Constant for the method strategy
 	 * 
 	 * @see #strategy
 	 */
-	String			STRATEGY_METHOD			= "METHOD";
+	public static final String	STRATEGY_METHOD			= "METHOD";
 
 	/**
 	 * Constant for the field replace strategy
 	 * 
 	 * @see #strategy
 	 */
-	String			STRATEGY_FIELD_REPLACE	= "FIELD_REPLACE";
+	public static final String	STRATEGY_FIELD_REPLACE	= "FIELD_REPLACE";
 
 	/**
 	 * Constant for the field update strategy
 	 * 
 	 * @see #strategy
 	 */
-	String			STRATEGY_FIELD_UPDATE	= "FIELD_UPDATE";
+	public static final String	STRATEGY_FIELD_UPDATE	= "FIELD_UPDATE";
 
 	/**
 	 * The strategy of the reference.
