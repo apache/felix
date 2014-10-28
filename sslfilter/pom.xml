@@ -38,7 +38,7 @@
     </scm>
     
     <properties>
-    	<felix.http.api.version>2.3.0-SNAPSHOT</felix.http.api.version>
+    	<felix.http.api.version>2.3.2-SNAPSHOT</felix.http.api.version>
     </properties>
 
     <build>
@@ -93,7 +93,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.api</artifactId>
-            <version>2.4.0-SNAPSHOT</version>
+            <version>${felix.http.api.version}</version>
         </dependency>
 
         <!-- Test Dependencies -->
