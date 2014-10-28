@@ -22,8 +22,7 @@ import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpService;
 
-public final class ServletMapping
-    extends AbstractMapping
+public final class ServletMapping extends AbstractMapping
 {
     private final Servlet servlet;
     private final String alias;
@@ -35,6 +34,44 @@ public final class ServletMapping
         this.alias = alias;
     }
 
+    public void register(HttpService httpService)
+    {
+        if (!isRegistered() && getContext() != null)
+        {
+            try
+            {
+                httpService.registerServlet(this.alias, this.servlet, getInitParams(), getContext());
+                setRegistered(true);
+            }
+            catch (Exception e)
+            {
+                // Warn that something might have gone astray...
+                SystemLogger.warning("Failed to register servlet for " + this.alias, e);
+            }
+        }
+    }
+
+    public void unregister(HttpService httpService)
+    {
+        if (isRegistered())
+        {
+            try
+            {
+                httpService.unregister(this.alias);
+            }
+            catch (Exception e)
+            {
+                // Warn that something might have gone astray...
+                SystemLogger.debug("Failed to unregister servlet for " + this.alias, e);
+            }
+            finally
+            {
+                // Best effort: avoid mappings that are registered which is reality aren't registered...
+                setRegistered(false);
+            }
+        }
+    }
+
     String getAlias()
     {
         return this.alias;
@@ -43,30 +80,5 @@ public final class ServletMapping
     Servlet getServlet()
     {
         return this.servlet;
-    }
-
-    public void register(HttpService httpService)
-    {
-        if (!this.isRegistered() && getContext() != null)
-        {
-            try
-            {
-                httpService.registerServlet(this.alias, this.servlet, getInitParams(), getContext());
-                this.setRegistered(true);
-            }
-            catch (Exception e)
-            {
-                SystemLogger.error("Failed to register servlet", e);
-            }
-        }
-    }
-
-    public void unregister(HttpService httpService)
-    {
-        if (this.isRegistered())
-        {
-            httpService.unregister(this.alias);
-            this.setRegistered(false);
-        }
     }
 }
