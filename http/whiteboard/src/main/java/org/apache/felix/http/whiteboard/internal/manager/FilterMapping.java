@@ -23,8 +23,7 @@ import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpService;
 
-public final class FilterMapping
-    extends AbstractMapping
+public final class FilterMapping extends AbstractMapping
 {
     private final Filter filter;
     private final int ranking;
@@ -38,14 +37,35 @@ public final class FilterMapping
         this.ranking = ranking;
     }
 
+    public void register(HttpService httpService)
+    {
+        if (httpService instanceof ExtHttpService)
+        {
+            register((ExtHttpService) httpService);
+        }
+        else
+        {
+            // Warn the user that something strange is going on...
+            SystemLogger.warning("Unable to register filter for " + this.pattern + ", as no ExtHttpService seems to be present!", null);
+        }
+    }
+
+    public void unregister(HttpService httpService)
+    {
+        if (httpService instanceof ExtHttpService)
+        {
+            unregister((ExtHttpService) httpService);
+        }
+        else
+        {
+            // Warn the user that something strange is going on...
+            SystemLogger.warning("Unable to unregister filter for " + this.pattern + ", as no ExtHttpService seems to be present!", null);
+        }
+    }
+
     Filter getFilter()
     {
         return filter;
-    }
-
-    int getRanking()
-    {
-        return ranking;
     }
 
     String getPattern()
@@ -53,16 +73,14 @@ public final class FilterMapping
         return pattern;
     }
 
-    public void register(HttpService httpService)
+    int getRanking()
     {
-       if (httpService instanceof ExtHttpService) {
-            register((ExtHttpService)httpService);
-        }
+        return ranking;
     }
 
     private void register(ExtHttpService httpService)
     {
-        if (!this.isRegistered() && getContext() != null)
+        if (!isRegistered() && getContext() != null)
         {
             try
             {
@@ -71,22 +89,31 @@ public final class FilterMapping
             }
             catch (Exception e)
             {
-                SystemLogger.error("Failed to register filter", e);
+                // Warn that something might have gone astray...
+                SystemLogger.warning("Failed to register filter for " + this.pattern, null);
+                SystemLogger.debug("Failed to register filter for " + this.pattern + "; details:", e);
             }
-        }
-    }
-
-    public void unregister(HttpService httpService)
-    {
-        if (httpService instanceof ExtHttpService && this.isRegistered())
-        {
-            unregister((ExtHttpService) httpService);
-            setRegistered(false);
         }
     }
 
     private void unregister(ExtHttpService httpService)
     {
-        httpService.unregisterFilter(this.filter);
+        if (isRegistered())
+        {
+            try
+            {
+                httpService.unregisterFilter(this.filter);
+            }
+            catch (Exception e)
+            {
+                // Warn that something might have gone astray...
+                SystemLogger.debug("Failed to unregister filter for " + this.pattern, e);
+            }
+            finally
+            {
+                // Best effort: avoid mappings that are registered which is reality aren't registered...
+                setRegistered(false);
+            }
+        }
     }
 }
