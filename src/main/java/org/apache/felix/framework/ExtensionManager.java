@@ -52,6 +52,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
+import org.osgi.framework.namespace.NativeNamespace;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
@@ -229,6 +230,7 @@ class ExtensionManager extends URLStreamHandler implements Content
             ManifestParser mp = new ManifestParser(
                 m_logger, m_configMap, m_systemBundleRevision, m_headerMap);
             List<BundleCapability> caps = aliasSymbolicName(mp.getCapabilities());
+            caps.add(buildNativeCapabilites());
             appendCapabilities(caps);
         }
         catch (Exception ex)
@@ -241,6 +243,36 @@ class ExtensionManager extends URLStreamHandler implements Content
         }
     }
 
+	protected BundleCapability buildNativeCapabilites() {
+		String osArchitecture = (String)m_configMap.get(FelixConstants.FRAMEWORK_PROCESSOR);
+		String osName = (String)m_configMap.get(FelixConstants.FRAMEWORK_OS_NAME);
+		String osVersion = (String)m_configMap.get(FelixConstants.FRAMEWORK_OS_VERSION);
+		String userLang = (String)m_configMap.get(FelixConstants.FRAMEWORK_LANGUAGE);
+		Map<String, Object> attributes = new HashMap<String, Object>();
+		
+		if( osArchitecture != null ) 
+		{
+			attributes.put(NativeNamespace.CAPABILITY_PROCESSOR_ATTRIBUTE, osArchitecture);
+		}
+		
+		if( osName != null)
+		{
+			attributes.put(NativeNamespace.CAPABILITY_OSNAME_ATTRIBUTE, osName);
+		}
+		
+		if( osVersion != null)
+		{
+			attributes.put(NativeNamespace.CAPABILITY_OSVERSION_ATTRIBUTE, new Version(osVersion));
+		}
+		
+		if( userLang != null) 
+		{
+			attributes.put(NativeNamespace.CAPABILITY_LANGUAGE_ATTRIBUTE, userLang);
+		}
+		
+		return new BundleCapabilityImpl(getRevision(), NativeNamespace.NATIVE_NAMESPACE, Collections.<String, String> emptyMap(), attributes);
+	}
+	
     private static List<BundleCapability> aliasSymbolicName(List<BundleCapability> caps)
     {
         if (caps == null)
