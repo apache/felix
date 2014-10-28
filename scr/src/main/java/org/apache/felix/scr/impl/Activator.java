@@ -117,6 +117,7 @@ public class Activator extends AbstractExtender
         }
         if ( m_packageAdmin != null )
         {
+            log( LogService.LOG_INFO, m_bundle, "Stopping to restart with new globalExtender setting: " + globalExtender, null );
             //this really is a restart, not the initial start
             try
             {
@@ -129,6 +130,7 @@ public class Activator extends AbstractExtender
         }
         try
         {
+            log( LogService.LOG_INFO, m_bundle, "Starting with globalExtender setting: " + globalExtender, null );
             super.start( context );
         }
         catch ( Exception e )
@@ -381,12 +383,14 @@ public class Activator extends AbstractExtender
 
     @Override
     protected void debug(Bundle bundle, String msg) {
-        log( LogService.LOG_DEBUG, bundle, msg, null );
+        final String message = MessageFormat.format( msg + " bundle: {0}/{1}", bundle.getSymbolicName(), bundle.getBundleId() );
+        log( LogService.LOG_DEBUG, bundle, message, null );
     }
 
     @Override
     protected void warn(Bundle bundle, String msg, Throwable t) {
-        log( LogService.LOG_WARNING, bundle, msg, t );
+        final String message = MessageFormat.format( msg + " bundle: {0}/{1}", bundle.getSymbolicName(), bundle.getBundleId() );
+        log( LogService.LOG_WARNING, bundle, message, t );
     }
 
     @Override
