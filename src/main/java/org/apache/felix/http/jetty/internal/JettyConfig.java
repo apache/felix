@@ -457,22 +457,9 @@ public final class JettyConfig
 
         // asking for random port, so let ServerSocket handle it and return the answer
         portProp = portProp.trim();
-        if ("*".equals(portProp))
+        if ("*".equals(portProp) || "0".equals(portProp))
         {
-            ServerSocket ss = null;
-            try
-            {
-                ss = new ServerSocket(0);
-                return ss.getLocalPort();
-            }
-            catch (IOException e)
-            {
-                throw new RuntimeException(e.getMessage(), e);
-            }
-            finally
-            {
-                closeSilently(ss);
-            }
+            return getSocketPort(0);
         }
         else
         {
@@ -482,14 +469,15 @@ public final class JettyConfig
             // * start, end of interval defaults to 1, 65535, respectively, if missing.
             char startsWith = portProp.charAt(0);
             char endsWith = portProp.charAt(portProp.length() - 1);
-            String interval = portProp.substring(1, portProp.length() - 1);
 
             int minPort = 1;
             int maxPort = 65535;
 
-            int comma = interval.indexOf(',');
-            if (comma >= 0 && (startsWith == '[' || startsWith == '(') && (endsWith == ']' || endsWith == ')'))
+            if (portProp.contains(",") && (startsWith == '[' || startsWith == '(') && (endsWith == ']' || endsWith == ')'))
             {
+                String interval = portProp.substring(1, portProp.length() - 1);
+                int comma = interval.indexOf(',');
+
                 // check if the comma is first (start port in range is missing)
                 int start = (comma == 0) ? minPort : parseInt(interval.substring(0, comma), minPort);
                 // check if the comma is last (end port in range is missing)
@@ -507,20 +495,7 @@ public final class JettyConfig
                 int port = start - 1;
                 for (int i = start; port < start && i <= end; i++)
                 {
-                    ServerSocket ss = null;
-                    try
-                    {
-                        ss = new ServerSocket(i);
-                        port = ss.getLocalPort();
-                    }
-                    catch (IOException e)
-                    {
-                        SystemLogger.debug("Unable to bind to port: " + port + " | " + portProp);
-                    }
-                    finally
-                    {
-                        closeSilently(ss);
-                    }
+                    port = getSocketPort(i);
                 }
 
                 return (port < start) ? dflt : port;
@@ -531,6 +506,25 @@ public final class JettyConfig
                 return parseInt(portProp, dflt);
             }
         }
+    }
+    
+    private int getSocketPort(int i) {
+        int port = -1;
+        ServerSocket ss = null;
+        try
+        {
+            ss = new ServerSocket(i);
+            port = ss.getLocalPort();
+        }
+        catch (IOException e)
+        {
+            SystemLogger.debug("Unable to bind to port: " + i);
+        }
+        finally
+        {
+            closeSilently(ss);
+        }
+        return port;
     }
 
     private Object getProperty(String name)
