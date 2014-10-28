@@ -26,7 +26,7 @@ import org.osgi.service.component.ComponentContext;
  * 
  * @since 1.3
  * @NotThreadSafe
- * @author $Id: f519b5fddd8002ffc252d039856acc8ba6f422d6 $
+ * @author $Id: a3e98bbac97a1d79805f9be0ed7f2ae811f112d0 $
  */
 public class ComponentConfigurationDTO extends DTO {
 	/**
@@ -65,22 +65,24 @@ public class ComponentConfigurationDTO extends DTO {
 	public ComponentDescriptionDTO	description;
 
 	/**
-	 * The id of the component configuration.
-	 * 
-	 * <p>
-	 * The id is a non-persistent, unique value assigned at runtime. The id is
-	 * also available as the {@code component.id} component property.
-	 */
-	public long						id;
-
-	/**
 	 * The current state of the component configuration.
 	 * 
 	 * <p>
 	 * This is one of {@link #UNSATISFIED_CONFIGURATION},
 	 * {@link #UNSATISFIED_REFERENCE}, {@link #SATISFIED} or {@link #ACTIVE}.
 	 */
-	public int					state;
+	public int							state;
+
+	/**
+	 * The id of the component configuration.
+	 * 
+	 * <p>
+	 * The id is a non-persistent, unique value assigned at runtime. The id is
+	 * also available as the {@code component.id} component property. The value
+	 * of this field is unspecified if the state of this component configuration
+	 * is unsatisfied.
+	 */
+	public long							id;
 
 	/**
 	 * The component properties for the component configuration.
