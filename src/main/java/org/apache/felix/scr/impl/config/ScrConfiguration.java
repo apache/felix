@@ -130,11 +130,8 @@ public class ScrConfiguration
         managedService = ( ServiceRegistration<ManagedService> ) bundleContext.registerService("org.osgi.service.cm.ManagedService", new ScrManagedServiceServiceFactory(this),
             props);
         
-        if ( globalExtender == null)  //no config admin or no configuration
-        {
-            // configure from bundle context properties
-            configure( null );            
-        }
+        // configure from bundle context properties
+        configure( null, false );            
     }
 
     public void stop() {
@@ -153,51 +150,64 @@ public class ScrConfiguration
     }
 
     // Called from the ScrManagedService.updated method to reconfigure
-    void configure( Dictionary<String, ?> config )
+    void configure( Dictionary<String, ?> config, boolean fromConfig )
     {
-        Boolean oldGlobalExtender = globalExtender;
-        if ( config == null )
+        Boolean newGlobalExtender;
+        Boolean oldGlobalExtender;
+        synchronized (this)
         {
-            if ( this.bundleContext == null )
+            if ( config == null )
             {
-                logLevel = LogService.LOG_ERROR;
-                factoryEnabled = false;
-                keepInstances = false;
-                infoAsService = false;
-                lockTimeout = DEFAULT_LOCK_TIMEOUT_MILLISECONDS;
-                stopTimeout = DEFAULT_STOP_TIMEOUT_MILLISECONDS;
-                globalExtender = false;
+                if (!fromConfig)
+                {
+                    if (this.bundleContext == null)
+                    {
+                        logLevel = LogService.LOG_ERROR;
+                        factoryEnabled = false;
+                        keepInstances = false;
+                        infoAsService = false;
+                        lockTimeout = DEFAULT_LOCK_TIMEOUT_MILLISECONDS;
+                        stopTimeout = DEFAULT_STOP_TIMEOUT_MILLISECONDS;
+                        newGlobalExtender = false;
+                    }
+                    else
+                    {
+                        logLevel = getDefaultLogLevel();
+                        factoryEnabled = getDefaultFactoryEnabled();
+                        keepInstances = getDefaultKeepInstances();
+                        infoAsService = getDefaultInfoAsService();
+                        lockTimeout = getDefaultLockTimeout();
+                        stopTimeout = getDefaultStopTimeout();
+                        newGlobalExtender = getDefaultGlobalExtender();
+                    }
+                }
+                else
+                {
+                    newGlobalExtender = this.globalExtender;
+                }
             }
             else
             {
-                logLevel = getDefaultLogLevel();
-                factoryEnabled = getDefaultFactoryEnabled();
-                keepInstances = getDefaultKeepInstances();
-                infoAsService = getDefaultInfoAsService();
-                lockTimeout = getDefaultLockTimeout();
-                stopTimeout = getDefaultStopTimeout();
-                globalExtender = getDefaultGlobalExtender();
+                logLevel = getLogLevel( config.get( PROP_LOGLEVEL ) );
+                factoryEnabled = VALUE_TRUE.equalsIgnoreCase( String.valueOf( config.get( PROP_FACTORY_ENABLED ) ) );
+                keepInstances = VALUE_TRUE.equalsIgnoreCase( String.valueOf( config.get( PROP_DELAYED_KEEP_INSTANCES ) ) );
+                infoAsService = VALUE_TRUE.equalsIgnoreCase( String.valueOf( config.get( PROP_INFO_SERVICE) ) );
+                Long timeout = ( Long ) config.get( PROP_LOCK_TIMEOUT );
+                lockTimeout = timeout == null? DEFAULT_LOCK_TIMEOUT_MILLISECONDS: timeout;
+                timeout = ( Long ) config.get( PROP_STOP_TIMEOUT );
+                stopTimeout = timeout == null? DEFAULT_STOP_TIMEOUT_MILLISECONDS: timeout;
+                newGlobalExtender = VALUE_TRUE.equalsIgnoreCase( String.valueOf( config.get( PROP_GLOBAL_EXTENDER) ) );
             }
+            if ( scrCommand != null )
+            {
+                scrCommand.update( infoAsService() );
+            }
+            oldGlobalExtender = this.globalExtender;
+            this.globalExtender = newGlobalExtender;
         }
-        else
+        if ( newGlobalExtender != oldGlobalExtender )
         {
-            logLevel = getLogLevel( config.get( PROP_LOGLEVEL ) );
-            factoryEnabled = VALUE_TRUE.equalsIgnoreCase( String.valueOf( config.get( PROP_FACTORY_ENABLED ) ) );
-            keepInstances = VALUE_TRUE.equalsIgnoreCase( String.valueOf( config.get( PROP_DELAYED_KEEP_INSTANCES ) ) );
-            infoAsService = VALUE_TRUE.equalsIgnoreCase( String.valueOf( config.get( PROP_INFO_SERVICE) ) );
-            Long timeout = ( Long ) config.get( PROP_LOCK_TIMEOUT );
-            lockTimeout = timeout == null? DEFAULT_LOCK_TIMEOUT_MILLISECONDS: timeout;
-            timeout = ( Long ) config.get( PROP_STOP_TIMEOUT );
-            stopTimeout = timeout == null? DEFAULT_STOP_TIMEOUT_MILLISECONDS: timeout;
-            globalExtender = VALUE_TRUE.equalsIgnoreCase( String.valueOf( config.get( PROP_GLOBAL_EXTENDER) ) );
-        }
-        if ( scrCommand != null )
-        {
-            scrCommand.update( infoAsService() );
-        }
-        if ( globalExtender != oldGlobalExtender )
-        {
-            activator.restart( globalExtender );
+            activator.restart( newGlobalExtender );
         }
     }
 
