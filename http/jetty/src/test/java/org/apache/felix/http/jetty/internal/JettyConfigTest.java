@@ -19,7 +19,6 @@ package org.apache.felix.http.jetty.internal;
 import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.replay;
 
-import java.net.ServerSocket;
 import java.util.Hashtable;
 
 import junit.framework.TestCase;
@@ -76,6 +75,14 @@ public class JettyConfigTest extends TestCase
         assertEquals(8443, this.config.getHttpsPort());
     }
 
+    public void testGetSpecificPortOne() throws Exception
+    {
+        Hashtable<String, Object> props = new Hashtable<String, Object>();
+        props.put("org.osgi.service.http.port", "1");
+        this.config.update(props);
+        assertTrue(this.config.getHttpPort() == 1);
+    }
+
     public void testGetRandomPort()
     {
         Hashtable<String, Object> props = new Hashtable<String, Object>();
@@ -86,11 +93,18 @@ public class JettyConfigTest extends TestCase
         assertTrue(this.config.getHttpsPort() != 433);
     }
 
+    public void testGetRandomPortZero() throws Exception
+    {
+        Hashtable<String, Object> props = new Hashtable<String, Object>();
+        props.put("org.osgi.service.http.port", "0");
+        this.config.update(props);
+        assertTrue(this.config.getHttpPort() != 0);
+    }
+
     public void testGetSpecificPort() throws Exception
     {
-        ServerSocket ss = new ServerSocket(0);
-        int port = ss.getLocalPort();
-        ss.close();
+        int port = 80;
+
         Hashtable<String, Object> props = new Hashtable<String, Object>();
         props.put("org.osgi.service.http.port", port);
         props.put("org.osgi.service.http.port.secure", port);
