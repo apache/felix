@@ -40,6 +40,11 @@ public final class SystemLogger
         getLogger().log(LogService.LOG_DEBUG, message);
     }
 
+    public static void debug(String message, Throwable cause)
+    {
+        getLogger().log(LogService.LOG_DEBUG, message, cause);
+    }
+
     public static void info(String message)
     {
         getLogger().log(LogService.LOG_INFO, message);
