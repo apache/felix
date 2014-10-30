@@ -201,12 +201,12 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
     }
     
     @Override
-    public Object getDefaultService() {
+    public Object getDefaultService(boolean nullObject) {
         Object service = null;
         if (isAutoConfig()) {
             // TODO does it make sense to add support for custom bundle impls?
 //            service = getDefaultImplementation();
-            if (service == null) {
+            if (service == null && nullObject) {
                 service = getNullObject();
             }
         }

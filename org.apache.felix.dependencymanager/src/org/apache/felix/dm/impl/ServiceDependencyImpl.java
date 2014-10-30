@@ -403,11 +403,11 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
     }
     
     @Override
-    public Object getDefaultService() {
+    public Object getDefaultService(boolean nullObject) {
         Object service = null;
         if (isAutoConfig()) {
             service = getDefaultImplementation();
-            if (service == null) {
+            if (service == null && nullObject) {
                 service = getNullObject();
             }
         }

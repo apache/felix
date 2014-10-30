@@ -28,7 +28,6 @@ import java.util.Set;
 import org.apache.felix.dm.ComponentDependencyDeclaration;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.impl.AbstractDecorator;
-import org.apache.felix.dm.impl.AdapterServiceImpl;
 import org.apache.felix.dm.impl.EventImpl;
 import org.apache.felix.dm.impl.Logger;
 import org.osgi.framework.Bundle;
@@ -355,7 +354,7 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
     public Event getService() {
         Event event = m_component.getDependencyEvent(this);
         if (event == null) {
-            Object defaultService = getDefaultService();
+            Object defaultService = getDefaultService(true);
             if (defaultService != null) {
                 event = new EventImpl(0, defaultService);
             }
@@ -371,7 +370,7 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
                 services.add(e.getEvent());
             }
         } else {
-            Object defaultService = getDefaultService();
+            Object defaultService = getDefaultService(false);
             if (defaultService != null) {
                 services.add(defaultService);
             }
@@ -386,7 +385,7 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
                 map.put(e.getEvent(), e.getProperties());
             }
         } else {
-            Object defaultService = getDefaultService();
+            Object defaultService = getDefaultService(false);
             if (defaultService != null) {
                 map.put(defaultService, EMPTY_PROPERTIES);
             }
@@ -397,7 +396,7 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
         return m_component;
     }
 
-    protected Object getDefaultService() {
+    protected Object getDefaultService(boolean nullObject) {
         return null;
     }
 
