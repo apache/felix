@@ -42,6 +42,8 @@ public class SslFilterResponseTest
 {
     private static final String BACKEND_SERVER = "backend.server";
     private static final String OTHER_SERVER = "other.server";
+    
+    private static final String PATH = "http://localhost:8080/";
 
     private static final String DEFAULT_HTTP_PORT = "80";
     private static final String ALT_HTTP_PORT = "8080";
@@ -54,7 +56,7 @@ public class SslFilterResponseTest
     public void testSetHttpLocationHeaderToNullValue() throws Exception
     {
         TestHttpServletResponse resp = createServletResponse();
-        HttpServletRequest req = createServletRequest(BACKEND_SERVER);
+        HttpServletRequest req = createServletRequest(BACKEND_SERVER, PATH);
 
         SslFilterResponse sresp = new SslFilterResponse(resp, req);
 
@@ -69,7 +71,7 @@ public class SslFilterResponseTest
         String location, expected;
 
         TestHttpServletResponse resp = createServletResponse();
-        HttpServletRequest req = createServletRequest(BACKEND_SERVER);
+        HttpServletRequest req = createServletRequest(BACKEND_SERVER, PATH);
 
         SslFilterResponse sresp = new SslFilterResponse(resp, req);
 
@@ -87,7 +89,7 @@ public class SslFilterResponseTest
         String location, expected;
 
         TestHttpServletResponse resp = createServletResponse();
-        HttpServletRequest req = createServletRequest(BACKEND_SERVER);
+        HttpServletRequest req = createServletRequest(BACKEND_SERVER, PATH);
 
         SslFilterResponse sresp = new SslFilterResponse(resp, req);
 
@@ -105,7 +107,7 @@ public class SslFilterResponseTest
         String location, expected;
 
         TestHttpServletResponse resp = createServletResponse();
-        HttpServletRequest req = createServletRequest(BACKEND_SERVER);
+        HttpServletRequest req = createServletRequest(BACKEND_SERVER, PATH);
 
         SslFilterResponse sresp = new SslFilterResponse(resp, req);
 
@@ -123,7 +125,7 @@ public class SslFilterResponseTest
         String location, expected;
 
         TestHttpServletResponse resp = createServletResponse();
-        HttpServletRequest req = createServletRequest(BACKEND_SERVER, DEFAULT_HTTP_PORT, HTTPS, ALT_HTTPS_PORT);
+        HttpServletRequest req = createServletRequest(BACKEND_SERVER, DEFAULT_HTTP_PORT, HTTPS, ALT_HTTPS_PORT, PATH);
 
         SslFilterResponse sresp = new SslFilterResponse(resp, req);
 
@@ -141,7 +143,7 @@ public class SslFilterResponseTest
         String location, expected;
 
         TestHttpServletResponse resp = createServletResponse();
-        HttpServletRequest req = createServletRequest(BACKEND_SERVER);
+        HttpServletRequest req = createServletRequest(BACKEND_SERVER, PATH);
 
         SslFilterResponse sresp = new SslFilterResponse(resp, req);
 
@@ -157,7 +159,7 @@ public class SslFilterResponseTest
     public void testSetHttpLocationHeaderToOtherRequestURI() throws Exception
     {
         TestHttpServletResponse resp = createServletResponse();
-        HttpServletRequest req = createServletRequest(BACKEND_SERVER);
+        HttpServletRequest req = createServletRequest(BACKEND_SERVER, PATH);
 
         SslFilterResponse sresp = new SslFilterResponse(resp, req);
 
@@ -169,16 +171,17 @@ public class SslFilterResponseTest
         assertEquals(expected, resp.getHeader(LOCATION));
     }
 
-    private HttpServletRequest createServletRequest(String serverName)
+    private HttpServletRequest createServletRequest(String serverName, String requestURL)
     {
-        return createServletRequest(serverName, DEFAULT_HTTP_PORT, HTTPS, DEFAULT_HTTPS_PORT);
+        return createServletRequest(serverName, DEFAULT_HTTP_PORT, HTTPS, DEFAULT_HTTPS_PORT, requestURL);
     }
 
-    private HttpServletRequest createServletRequest(String serverName, String serverPort, String forwardedProto, String forwardedPort)
+    private HttpServletRequest createServletRequest(String serverName, String serverPort, String forwardedProto, String forwardedPort, String requestURL)
     {
         HttpServletRequest req = mock(HttpServletRequest.class);
         when(req.getServerName()).thenReturn(serverName);
         when(req.getServerPort()).thenReturn(Integer.parseInt(serverPort));
+        when(req.getRequestURL()).thenReturn(new StringBuffer(requestURL));
         when(req.getHeader("X-Forwarded-Proto")).thenReturn(forwardedProto);
         when(req.getHeader("X-Forwarded-Port")).thenReturn(forwardedPort);
         return req;

@@ -26,6 +26,7 @@ import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HTTPS;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HTTPS_PORT;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HTTP_PORT;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -38,15 +39,18 @@ import javax.servlet.http.HttpServletResponseWrapper;
  */
 class SslFilterResponse extends HttpServletResponseWrapper
 {
+    private final URL requestURL;
     private final String serverName;
     private final String serverProto;
     private final int serverPort;
     private final String clientProto;
     private final int clientPort;
 
-    public SslFilterResponse(HttpServletResponse response, HttpServletRequest request)
+    public SslFilterResponse(HttpServletResponse response, HttpServletRequest request) throws MalformedURLException
     {
         super(response);
+
+        this.requestURL = new URL(request.getRequestURL().toString());
 
         // Only rewrite URLs for the host & port the request was sent to...
         this.serverName = request.getServerName();
@@ -102,6 +106,17 @@ class SslFilterResponse extends HttpServletResponseWrapper
         super.setHeader(name, value);
     }
 
+    @Override
+    public void sendRedirect(String location) throws IOException
+    {
+        URL rewritten = rewriteUrlIfNeeded(location);
+        if (rewritten != null)
+        {
+            location = rewritten.toExternalForm();
+        }
+        super.sendRedirect(location);
+    }
+
     private int normalizePort(String protocol, int port)
     {
         if (port > 0)
@@ -117,9 +132,22 @@ class SslFilterResponse extends HttpServletResponseWrapper
 
     private URL rewriteUrlIfNeeded(String value)
     {
+        if (value == null)
+        {
+            return null;
+        }
+
         try
         {
-            URL url = new URL(value);
+            URL url;
+            if (value.startsWith(this.serverProto.concat("://")))
+            {
+                url = new URL(value);
+            }
+            else
+            {
+                url = new URL(this.requestURL, value);
+            }
 
             String actualProto = url.getProtocol();
 
