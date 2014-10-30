@@ -18,8 +18,8 @@
  */
 package org.apache.felix.dm.itest;
 
+import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Map;
 
 import junit.framework.Assert;
 
@@ -27,62 +27,57 @@ import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.ServiceRegistration;
 
-public class AdapterWithCallbackInstanceTest extends TestBase {
+public class AdapterWithoutPropagationTest extends TestBase {
     
-    public void testServiceWithAdapterAndConsumer() {
+    public void testAdapterNoPropagate() {
         DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
 
+        // The provider has a "foo=bar" property
+        Hashtable<String, String> props = new Hashtable<>();
+        props.put("foo", "bar");
         ServiceProvider serviceProvider = new ServiceProvider(e);
         Component provider = m.createComponent()
-            .setInterface(OriginalService.class.getName(), null)
-            .setImplementation(serviceProvider);
+            .setInterface(OriginalService.class.getName(), props).setImplementation(serviceProvider);
 
+        // The Adapter will see the "foo=bar" property from the adaptee
+        Component adapter = m.createAdapterService(OriginalService.class, null, null,
+                                                   null, "set", "change", null, null, false)
+            .setInterface(AdaptedService.class.getName(), null)
+            .setImplementation(new ServiceAdapter(e));
+
+        // The consumer depends on the AdaptedService, but won't see foo=bar property from the adaptee 
         Component consumer = m.createComponent()
             .setImplementation(new ServiceConsumer(e))
             .add(m.createServiceDependency()
                 .setService(AdaptedService.class)
                 .setRequired(true)
+                .setCallbacks("set", "change", null)
             );
-
-        ServiceAdapterCallbackInstance callbackInstance = new ServiceAdapterCallbackInstance(e);
-        Component adapter = m.createAdapterService(OriginalService.class, null, "m_originalService", 
-                                                   callbackInstance, "set", "changed","unset", null, true)
-            .setInterface(AdaptedService.class.getName(), null)
-            .setImplementation(new ServiceAdapter(e));
         
         // add the provider and the adapter
         m.add(provider);
         m.add(adapter);
-        // Checks if the callbackInstances is called, and if the adapter start method is called
+        // Checks if the adapter has been started and has seen the adaptee properties
+        e.waitForStep(1, 5000);
+        
+        // add a consumer that must not see the adaptee service properties
+        m.add(consumer);
         e.waitForStep(2, 5000);
         
-        // add a consumer that will invoke the adapter
-        // which will in turn invoke the original provider
-        m.add(consumer);
-        // now validate that both have been invoked in the right order
-        e.waitForStep(4, 5000);
-        
-        // change the service properties of the provider, and check that the adapter callback instance is changed.
+        // change the service properties of the provider, and check that the adapter callback instance is caled.
         serviceProvider.changeServiceProperties();
-        e.waitForStep(5, 5000);
+        e.waitForStep(3, 5000);
         
-        // remove the provider
-        m.remove(provider);
-        // ensure that the consumer is stopped, the adapter callback is called in its unset method, and the adapter is stopped.
-        e.waitForStep(8, 5000);
-        // remove adapter and consumer
-        m.remove(adapter);
-        m.remove(consumer);
+        // cleanup
+        m.clear();
     }
 
     static interface OriginalService {
-        public void invoke();
     }
     
     static interface AdaptedService {
-        public void invoke();
     }
     
     static class ServiceProvider implements OriginalService {
@@ -93,11 +88,8 @@ public class AdapterWithCallbackInstanceTest extends TestBase {
         }
         public void changeServiceProperties() {
             Hashtable<String, String> props = new Hashtable<>();
-            props.put("foo", "bar");
+            props.put("foo", "bar2");
             m_registration.setProperties(props);
-        }
-        public void invoke() {
-            m_ensure.step(4);
         }
     }
     
@@ -109,30 +101,15 @@ public class AdapterWithCallbackInstanceTest extends TestBase {
             m_ensure = e;
         }
 
-        public void start() { m_ensure.step(2); }
-        public void stop() { m_ensure.step(7); }
-        public void invoke() {
-            m_originalService.invoke();
-        }
-    }
-
-    public static class ServiceAdapterCallbackInstance {
-        private final Ensure m_ensure;
-        public ServiceAdapterCallbackInstance(Ensure e) {
-            m_ensure = e;
-        }
-        
-        public void set(OriginalService m_originalService) {
+        public void set(OriginalService adaptee, Dictionary<String, String> props) {
+            m_originalService = adaptee;
+            Assert.assertEquals("bar", props.get("foo"));
             m_ensure.step(1);
         }
         
-        public void changed(Map<String, String> props, OriginalService m_originalService) {   
-            Assert.assertEquals("bar", props.get("foo"));
-            m_ensure.step(5);
-        }
-        
-        public void unset(Map<String, String> props, OriginalService m_originalService) {            
-            m_ensure.step(8);
+        void change(OriginalService adapted, Dictionary<String, String> props) {
+            Assert.assertEquals("bar2", props.get("foo"));
+            m_ensure.step(3);
         }
     }
 
@@ -143,12 +120,15 @@ public class AdapterWithCallbackInstanceTest extends TestBase {
         public ServiceConsumer(Ensure e) {
             m_ensure = e;
         }
-        public void start() {
-            m_ensure.step(3);
-            m_service.invoke();
+        
+        void set(AdaptedService adapted, Dictionary<String, String> props) {
+            Assert.assertNull(props.get("foo"));
+            m_ensure.step(2);
         }
-        public void stop() {
-            m_ensure.step(6);
+        
+        void change(AdaptedService adapted, Dictionary<String, String> props) {
+            Assert.assertNull(props.get("foo"));
+            Assert.fail("Change callback should not be called");
         }
     }
 }

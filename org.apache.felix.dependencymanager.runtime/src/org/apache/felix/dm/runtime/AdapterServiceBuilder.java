@@ -55,7 +55,8 @@ public class AdapterServiceBuilder extends AbstractBuilder
         String changed = srvMeta.getString(Params.changed, null);
         String removed = srvMeta.getString(Params.removed, null);
         String swap = srvMeta.getString(Params.swap, null);
-
+        boolean propagate = "true".equals(srvMeta.getString(Params.propagate, "true"));
+        
         if (field != null && (added != null || changed != null || removed != null || swap != null))
         {
             throw new IllegalArgumentException("autoconfig field " + field + " can't be defined with both added/changed/removed/swap calllbacks");
@@ -65,18 +66,18 @@ public class AdapterServiceBuilder extends AbstractBuilder
         
         if (field != null)
         {
-            c = dm.createAdapterService(adapteeService, adapteeFilter, field);
+            c = dm.createAdapterService(adapteeService, adapteeFilter, field, null, null, null, null, null, propagate);
         }
         else
         {
             if (added != null || changed != null || removed != null || swap != null)
             {
-                c = dm.createAdapterService(adapteeService, adapteeFilter, added, changed, removed, swap);
+                c = dm.createAdapterService(adapteeService, adapteeFilter, null, null, added, changed, removed, swap, propagate);
 
             }
             else
             {
-                c = dm.createAdapterService(adapteeService, adapteeFilter);
+                c = dm.createAdapterService(adapteeService, adapteeFilter, null, null, null, null, null, null, propagate);
             }
         }
         

@@ -659,6 +659,10 @@ public class AnnotationCollector extends ClassDataCollector
         // Parse factoryMethod attribute
         writer.putString(annotation, EntryParam.factoryMethod, null);
         
+        // Parse propagate flag.
+        // Parse factoryMethod attribute
+        writer.putString(annotation, EntryParam.propagate, null);
+
         // Parse field/added/changed/removed attributes
         parseAspectOrAdapterCallbackMethods(annotation, writer);
     }

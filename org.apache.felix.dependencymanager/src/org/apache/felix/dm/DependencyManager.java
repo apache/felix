@@ -263,7 +263,7 @@ public class DependencyManager {
      * @return a service that acts as a factory for generating adapters
      */
     public Component createAdapterService(Class<?> serviceInterface, String serviceFilter) {
-        return new AdapterServiceImpl(this, serviceInterface, serviceFilter, null, null, null, null, null, null);
+        return new AdapterServiceImpl(this, serviceInterface, serviceFilter, null, null, null, null, null, null, true);
     }
 
     /**
@@ -289,7 +289,7 @@ public class DependencyManager {
      * @return a service that acts as a factory for generating adapters
      */
     public Component createAdapterService(Class<?> serviceInterface, String serviceFilter, String autoConfig) {
-        return new AdapterServiceImpl(this, serviceInterface, serviceFilter, autoConfig, null, null, null, null, null);
+        return new AdapterServiceImpl(this, serviceInterface, serviceFilter, autoConfig, null, null, null, null, null, true);
     }
 
     /**
@@ -319,7 +319,7 @@ public class DependencyManager {
     public Component createAdapterService(Class<?> serviceInterface, String serviceFilter, String add, String change,
         String remove)
     {
-        return new AdapterServiceImpl(this, serviceInterface, serviceFilter, null, null, add, change, remove, null);
+        return new AdapterServiceImpl(this, serviceInterface, serviceFilter, null, null, add, change, remove, null, true);
     }
 
     /**
@@ -350,15 +350,15 @@ public class DependencyManager {
     public Component createAdapterService(Class<?> serviceInterface, String serviceFilter, String add, String change,
         String remove, String swap)
     {
-        return new AdapterServiceImpl(this, serviceInterface, serviceFilter, null, null, add, change, remove, swap);
+        return new AdapterServiceImpl(this, serviceInterface, serviceFilter, null, null, add, change, remove, swap, true);
     }
 
     /**
      * Creates a new adapter. The adapter will be applied to any service that
      * matches the specified interface and filter. For each matching service
      * an adapter will be created based on the adapter implementation class.
-     * The adapter will be registered with the specified interface and existing properties
-     * from the original service plus any extra properties you supply here.
+     * The adapter will be registered with the specified interface (and existing properties
+     * from the original service if you set the propagate flag) plus any extra properties you supply here.
      * It will also inherit all dependencies, and if you declare the original
      * service as a member it will be injected.
      * 
@@ -378,12 +378,14 @@ public class DependencyManager {
      * @param change name of the callback method to invoke on change
      * @param remove name of the callback method to invoke on remove
      * @param swap name of the callback method to invoke on swap
+     * @param propagate true if the adaptee service properties should be propagated to the adapter service consumers
      * @return a service that acts as a factory for generating adapters
      */
     public Component createAdapterService(Class<?> serviceInterface, String serviceFilter, 
-        String autoConfig, Object callbackInstance, String add, String change, String remove, String swap)
+        String autoConfig, Object callbackInstance, String add, String change, String remove, 
+        String swap, boolean propagate)
     {
-        return new AdapterServiceImpl(this, serviceInterface, serviceFilter, autoConfig, callbackInstance, add, change, remove, swap);
+        return new AdapterServiceImpl(this, serviceInterface, serviceFilter, autoConfig, callbackInstance, add, change, remove, swap, propagate);
     }
 
     /**

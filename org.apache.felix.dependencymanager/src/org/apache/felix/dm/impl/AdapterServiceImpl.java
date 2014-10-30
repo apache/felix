@@ -51,12 +51,14 @@ public class AdapterServiceImpl extends FilterComponent {
      * @param change name of the callback method to invoke on change
      * @param remove name of the callback method to invoke on remove
      * @param swap name of the callback method to invoke on swap
+     * @param propagate true if the adaptee service properties should be propagated to the adapter service consumers
      */
     public AdapterServiceImpl(DependencyManager dm, Class<?> adapteeInterface, String adapteeFilter, String autoConfig, 
-        Object callbackInstance, String add, String change, String remove, String swap)
+        Object callbackInstance, String add, String change, String remove, String swap, boolean propagate)
     {
         super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
-        m_component.setImplementation(new AdapterImpl(adapteeInterface, adapteeFilter, autoConfig, callbackInstance, add, change, remove, swap))
+        m_component.setImplementation(new AdapterImpl(adapteeInterface, adapteeFilter, autoConfig, callbackInstance, add, 
+            change, remove, swap, propagate))
                  .add(dm.createServiceDependency()
                       .setService(adapteeInterface, adapteeFilter)
                       .setAutoConfig(false)
@@ -73,8 +75,10 @@ public class AdapterServiceImpl extends FilterComponent {
         private final String m_remove;
         private final String m_swap;
         private final String m_autoConfig;
+        private final boolean m_propagate;
         
-        public AdapterImpl(Class<?> adapteeInterface, String adapteeFilter, String autoConfig, Object callbackInstance, String add, String change, String remove, String swap) {
+        public AdapterImpl(Class<?> adapteeInterface, String adapteeFilter, String autoConfig, Object callbackInstance, String add, 
+            String change, String remove, String swap, boolean propagate) {
             m_adapteeInterface = adapteeInterface;
             m_adapteeFilter = adapteeFilter;
             m_autoConfig = autoConfig;
@@ -83,6 +87,7 @@ public class AdapterServiceImpl extends FilterComponent {
             m_change = change;
             m_swap = swap;
             m_remove = remove;
+            m_propagate = propagate;
         }
         
         public Component createService(Object[] properties) {
@@ -105,7 +110,10 @@ public class AdapterServiceImpl extends FilterComponent {
                 // enable auto configuration if there is no add callback or if there is one on a callbackInstance
                 dependency.setAutoConfig(m_add == null || (m_add != null && m_dependencyCallbackInstance != null));
             }
-            dependency.setPropagate(this, "propagateAdapteeProperties");
+            
+            if (m_propagate) {
+                dependency.setPropagate(this, "propagateAdapteeProperties");
+            }
             
 //            dependency.setDebug("AdapterDependency#" + m_adapteeInterface.getSimpleName());
 

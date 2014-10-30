@@ -115,4 +115,9 @@ public @interface AdapterService
      * must also be used.
      */
     String removed() default "";
+    
+    /**
+     * Specifies if adaptee service properties should be propagated to the adapter service.
+     */
+    boolean propagate() default true;
 }
