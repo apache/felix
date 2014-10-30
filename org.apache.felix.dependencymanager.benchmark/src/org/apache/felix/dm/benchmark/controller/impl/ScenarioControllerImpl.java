@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.LongStream;
@@ -20,6 +21,7 @@ import java.util.stream.Stream;
 import org.apache.felix.dm.benchmark.controller.ScenarioController;
 import org.apache.felix.dm.benchmark.scenario.Album;
 import org.apache.felix.dm.benchmark.scenario.Artist;
+import org.apache.felix.dm.benchmark.scenario.Helper;
 import org.apache.felix.dm.benchmark.scenario.Track;
 import org.apache.felix.dm.benchmark.scenario.Unchecked;
 import org.osgi.framework.Bundle;
@@ -34,6 +36,7 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
      * List of bundles to be executed by the benchmark.
      */
     final List<String> TESTS = Arrays.asList(
+        "org.apache.felix.dependencymanager.benchmark.ipojo",
         "org.apache.felix.dependencymanager.benchmark.scr",
         "org.apache.felix.dependencymanager.benchmark.dependencymanager",
         "org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel"
@@ -71,6 +74,9 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
     public void run() {
         // wait a bit in order to let the gogo banner be displayed before we start the bench.
         Unchecked.run(() -> Thread.sleep(500)); 
+        
+        out.println("Starting benchmarks (each tested bundle will create " + (ARTISTS + (ARTISTS * (ALBUMS + (ALBUMS * TRACKS)))) 
+           + " components).");
        
         // Stop all tested bundles.
         forEachScenarioBundle(TESTS, Unchecked.consumer((bundle) -> {
@@ -80,12 +86,12 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
 
         // Start/stop several times the tested bundles. (no processing done in components start/stop methods).
         m_doProcessingInStartStop = false;
-        out.println("\n\t+++++ Starting benchmarks without processing done in components start/stop methods.");
+        out.println("\n\t[Starting benchmarks without processing done in components start/stop methods]");
         startStopScenarioBundles(TESTS, 15);
        
         // Start/stop several times the tested bundles (processing is done in components start/stop methods).
         m_doProcessingInStartStop = true;
-        out.println("\n\t+++++ Starting benchmarks with processing done in components start/stop methods.");
+        out.println("\n\t[Starting benchmarks with processing done in components start/stop methods]");
         startStopScenarioBundles(TESTS, 5);
     }
 
@@ -97,11 +103,13 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
         }
         artist.play();
         componentAdded();
+        Helper.debug(() -> "Artist added : " + artist);
     }
     
     @Override
     public void artistRemoved(Artist artist) {
         componentRemoved();
+        Helper.debug(() -> "Artist removed : " + artist);
     }
     
     @Override
@@ -111,21 +119,25 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
             throw new IllegalStateException("Album does not contain expected number of music tracks:" + size);
         }
         componentAdded();
+        Helper.debug(() -> "Album added : " + album);
     }
     
     @Override
     public void albumRemoved(Album album) {
         componentRemoved();
+        Helper.debug(() -> "Album removed : " + album);
     }
     
     @Override
-    public void trackAdded(Track album) {
+    public void trackAdded(Track track) {
         componentAdded();
+        Helper.debug(() -> "Track added : " + track);
     }
     
     @Override
-    public void trackRemoved(Track album) {
+    public void trackRemoved(Track track) {
         componentRemoved();
+        Helper.debug(() -> "Track removed : " + track);
     }
             
     // ------------------- Private methods -----------------------------------------------------
@@ -165,7 +177,7 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
 
     private void doProcessing() {
         if (m_doProcessingInStartStop) {
-            long duration = 500000; // 5/100 of one millis
+            long duration = TimeUnit.MILLISECONDS.toNanos(ThreadLocalRandom.current().nextLong(10));
             long t1 = System.nanoTime();
             while (System.nanoTime() - t1 < duration)
                 ;
