@@ -73,12 +73,12 @@ public class PathDependency extends AbstractDependency<PathDependency> implement
 
     @Override
     public String getName() {
-        return "" + isAvailable();
+        return m_path;
     }
 
     @Override
     public String getType() {
-        return "file";
+        return "path";
     }
 
     protected void startTracking() {
@@ -108,10 +108,8 @@ public class PathDependency extends AbstractDependency<PathDependency> implement
             WatchKey watckKey = watcher.take();
             List<WatchEvent<?>> events = watckKey.pollEvents();
 
-            for (WatchEvent event : events) {
-                if (event.kind() == StandardWatchEventKinds.ENTRY_MODIFY) {
-                    add(new PathEvent(event.context().toString()));
-                }
+            for (WatchEvent event : events) {                
+                add(new PathEvent(event.context().toString()));
             }
         } catch (Exception e) {
             System.out.println("Error: " + e.toString());
