@@ -29,10 +29,26 @@ import org.osgi.framework.BundleContext;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class Activator implements BundleActivator {
+    /**
+     * You can configure the DM commands scope, by specifying this property in the bundle context.
+     */
+    private final static String SCOPE = "org.apache.felix.dependencymanager.shell.scope";
+    
+    /**
+     * Default gogo shell "scope" used.
+     */
+    private final static String DEFAULT_SCOPE = "dependencymanager";
+
     public void start(BundleContext context) throws Exception {
         // Provide DependencyManager shell commands for the Gogo Shell.
+        
+        String scope = context.getProperty(SCOPE);
+        if (scope == null) {
+            scope = DEFAULT_SCOPE;
+        }
+        
         Hashtable<String, Object> props = new Hashtable<>();
-        props.put(org.apache.felix.service.command.CommandProcessor.COMMAND_SCOPE, "dependencymanager");
+        props.put(org.apache.felix.service.command.CommandProcessor.COMMAND_SCOPE, scope);
         props.put(org.apache.felix.service.command.CommandProcessor.COMMAND_FUNCTION, 
                 new String[] { "dm" });
         context.registerService(DMCommand.class.getName(), new DMCommand(context), props);        
