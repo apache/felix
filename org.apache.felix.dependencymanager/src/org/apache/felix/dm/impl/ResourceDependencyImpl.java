@@ -214,13 +214,23 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
     @Override
     public String getName() {
         StringBuilder sb = new StringBuilder();
-        if (m_resourceFilter != null) {
-            sb.append(m_resourceFilter);
-        }
         if (m_trackedResource != null) {
             sb.append(m_trackedResource.toString());
         }
+        if (m_resourceFilter != null) {
+            sb.append(m_resourceFilter);
+        }
         return sb.toString();
+    }
+    
+    @Override
+    public String getSimpleName() {
+        return m_trackedResource != null ? m_trackedResource.toString() : null;
+    }
+
+    @Override
+    public String getFilter() {
+        return m_resourceFilter;
     }
 
     @Override

@@ -125,6 +125,14 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         public String getName() {
             return m_name;
         }
+        
+        public String getSimpleName() {
+            return m_name;
+        }
+        
+        public String getFilter() {
+            return null;
+        }
 
         public int getState() {
             return m_state;

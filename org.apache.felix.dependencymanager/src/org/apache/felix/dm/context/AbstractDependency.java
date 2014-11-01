@@ -415,13 +415,23 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
     @Override
     public abstract DependencyContext createCopy();
 
-    // -------------- DependencyContext -----------------------------------------------
+    // -------------- ComponentDependencyDeclaration -----------------------------------------------
 
     @Override
     public abstract String getName();
 
     @Override
     public abstract String getType();
+    
+    @Override
+    public String getSimpleName() {
+        return getName();
+    }
+    
+    @Override
+    public String getFilter() {
+        return null;
+    }
 
     @Override
     public int getState() { // Can be called from any threads, but our class attributes are volatile

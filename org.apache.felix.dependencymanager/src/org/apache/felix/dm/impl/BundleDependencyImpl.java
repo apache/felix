@@ -99,9 +99,24 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
             sb.append(m_filter.toString());
         }
         if (m_bundleId != -1) {
-            sb.append("bundle.id=" + m_bundleId);
+            sb.append("{bundle.id=" + m_bundleId + "}");
         }
         return sb.toString();
+    }
+
+    @Override
+    public String getFilter() {
+        if (m_filter != null || m_bundleId != -1) {
+            StringBuilder sb = new StringBuilder();
+            if (m_filter != null) {
+                sb.append(m_filter.toString());
+            }
+            if (m_bundleId != -1) {
+                sb.append("{bundle.id=" + m_bundleId + "}");
+            }
+            return sb.toString();
+        }
+        return null;
     }
 
     @Override

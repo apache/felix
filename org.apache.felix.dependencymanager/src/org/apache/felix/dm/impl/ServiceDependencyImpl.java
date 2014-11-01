@@ -54,6 +54,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
     private volatile Object m_nullObject;
     private boolean debug = false;
     private String debugKey;
+    private long m_trackedServiceReferenceId;
     
     public ServiceDependency setDebug(String debugKey) {
     	this.debugKey = debugKey;
@@ -329,6 +330,26 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
     }
     
     @Override
+    public String getSimpleName() {
+        if (m_trackedServiceName != null) {
+            return m_trackedServiceName.getName();
+        }
+        return null;
+    }
+
+    @Override
+    public String getFilter() {
+        if (m_trackedServiceFilterUnmodified != null) {
+            return m_trackedServiceFilterUnmodified;
+        } else if (m_trackedServiceReference != null) {
+            return new StringBuilder("(").append(Constants.SERVICE_ID).append("=").append(
+                String.valueOf(m_trackedServiceReferenceId)).append(")").toString();
+        } else {
+            return null;
+        }
+    }
+    
+    @Override
     public String getType() {
         return "service";
     }
@@ -396,6 +417,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
             if (serviceFilter != null) {
                 throw new IllegalArgumentException("Cannot specify both a filter and a service reference.");
             }
+            m_trackedServiceReferenceId = (Long) m_trackedServiceReference.getProperty(Constants.SERVICE_ID);
         }
         else {
             m_trackedServiceReference = null;

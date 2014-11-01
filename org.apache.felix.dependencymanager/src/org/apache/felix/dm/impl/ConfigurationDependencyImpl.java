@@ -111,10 +111,16 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
     	return "ConfigurationDependency[" + m_pid + "]";
     }
     
+    @Override
     public String getName() {
         return m_pid;
     }
     
+    @Override
+    public String getFilter() {
+        return null;
+    }
+
     public String getType() {
         return "configuration";
     }
