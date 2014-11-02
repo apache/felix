@@ -52,6 +52,7 @@ public enum EntryParam
     stateMask,
     ranking,
     factorySet,
+    factoryName,
     factoryConfigure,
     factoryMethod,
     field,

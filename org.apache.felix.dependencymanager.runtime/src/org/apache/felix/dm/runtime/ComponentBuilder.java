@@ -25,6 +25,7 @@ import java.util.Set;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.runtime.api.ComponentFactory;
 import org.osgi.framework.Bundle;
 
 /**
@@ -49,12 +50,13 @@ public class ComponentBuilder extends AbstractBuilder
     {
         Component c = dm.createComponent();
         String factory = srvMeta.getString(Params.factorySet, null);
+        String factoryName = srvMeta.getString(Params.factoryName, null);
 
         // Setup Component auto config fields
         setCommonServiceParams(c, srvMeta);
         
-        // Check if we must provide a Component factory set.
-        if (factory == null)
+        // Check if we must provide a Component factory set (deprecated), or a ComponentFactory.
+        if (factory == null && factoryName == null)
         {
             Log.instance().info("ComponentBuilder: building service %s with dependencies %s",
                                 srvMeta,
@@ -86,7 +88,7 @@ public class ComponentBuilder extends AbstractBuilder
             String[] services = srvMeta.getStrings(Params.provides, null);
             c.setInterface(services, properties);
         }
-        else
+        else if (factory != null) /* deprecated */ 
         {
             Log.instance()
                     .info("ComponentBuilder: providing factory set for service %s with dependencies %s",
@@ -102,6 +104,21 @@ public class ComponentBuilder extends AbstractBuilder
             Hashtable<String, String> props = new Hashtable<String, String>();
             props.put(DM_FACTORY_NAME, factory);
             c.setInterface(Set.class.getName(), props);
+        } 
+        else if (factoryName != null) {
+            Log.instance()
+            .info("ComponentBuilder: providing component factory for service %s with dependencies %s",
+                  srvMeta,
+                  depsMeta);
+
+            // We don't instantiate the service, but instead we provide a ComponentFactory in the registry.
+            // (similar to DS ComponentFactory).
+            ComponentFactoryImpl compFactory = new ComponentFactoryImpl(b, srvMeta, depsMeta);
+            c.setImplementation(compFactory);
+            c.setCallbacks(null, "start", "stop", null);
+            Hashtable<String, String> props = new Hashtable<String, String>();
+            props.put(ComponentFactory.FACTORY_NAME, factoryName);
+            c.setInterface(ComponentFactory.class.getName(), props);
         }
 
         dm.add(c);

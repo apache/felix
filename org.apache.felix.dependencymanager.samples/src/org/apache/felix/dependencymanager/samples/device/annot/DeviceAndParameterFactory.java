@@ -7,6 +7,7 @@ import java.util.Set;
 import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
+import org.apache.felix.dm.runtime.api.ComponentFactory;
 import org.osgi.service.log.LogService;
 
 /**
@@ -15,11 +16,11 @@ import org.osgi.service.log.LogService;
  */
 @Component
 public class DeviceAndParameterFactory {
-    @ServiceDependency(filter = "(" + Component.FACTORY_NAME + "=Device)")
-    volatile Set<Dictionary<?,?>> m_deviceFactory;
+    @ServiceDependency(filter = "(" + ComponentFactory.FACTORY_NAME + "=Device)")
+    volatile ComponentFactory m_deviceFactory;
     
-    @ServiceDependency(filter = "(" + Component.FACTORY_NAME + "=DeviceParameter)")
-    volatile Set<Dictionary<?,?>> m_deviceParameterFactory;
+    @ServiceDependency(filter = "(" + ComponentFactory.FACTORY_NAME + "=DeviceParameter)")
+    volatile ComponentFactory m_deviceParameterFactory;
 
     @ServiceDependency
     volatile LogService log;
@@ -37,10 +38,10 @@ public class DeviceAndParameterFactory {
 
         Dictionary<String,Object> device = new Hashtable<>();
         device.put("device.id", new Integer(id));
-        m_deviceFactory.add(device);
+        m_deviceFactory.newInstance(device);
         
         Dictionary<String, Object> param = new Hashtable<>();
         param.put("device.id", new Integer(id));
-        m_deviceParameterFactory.add(param);
+        m_deviceParameterFactory.newInstance(param);
     }
 }

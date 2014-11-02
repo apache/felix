@@ -350,7 +350,7 @@ public class AnnotationCollector extends ClassDataCollector
             checkRegisteredUnregisteredNotPresent();
         }
 
-        // factorySet attribute
+        // factorySet attribute (deprecated, replaced by factoryName)
         String factorySetName = writer.putString(annotation, EntryParam.factorySet, null);
         if (factorySetName != null)
         {
@@ -360,6 +360,17 @@ public class AnnotationCollector extends ClassDataCollector
             // So, we have to indicate that the Set is provided as a service, in the Export-Serviec
             // header.
             m_exportService.add("java.util.Set");
+        }
+
+        // factoryName attribute
+        String factoryName = writer.putString(annotation, EntryParam.factoryName, null);
+        if (factoryName != null)
+        {
+            // When a component defines a factoryName, it means that a ComponentFactory will 
+            // be provided into the OSGi registry, in order to let another component create some component instances.
+            // So, we have to indicate that the ComponentFactory is provided as a service, in the Export-Serviec
+            // header.
+            m_exportService.add("org.apache.felix.dependencymanager.runtime.api.ComponentFactory");
         }
 
         // factoryConfigure attribute

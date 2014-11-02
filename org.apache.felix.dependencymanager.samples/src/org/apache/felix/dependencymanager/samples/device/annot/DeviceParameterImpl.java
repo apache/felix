@@ -4,7 +4,7 @@ import java.util.Dictionary;
 
 import org.apache.felix.dm.annotation.api.Component;
 
-@Component(factorySet="DeviceParameter", factoryConfigure="configure")
+@Component(factoryName="DeviceParameter", factoryConfigure="configure")
 public class DeviceParameterImpl implements DeviceParameter {
     int id;
         

@@ -5,7 +5,8 @@ Bundle-Version: 1.0.0.${tstamp}
 	org.apache.felix.dependencymanager.annotation;version=latest,\
 	osgi.cmpn;version=4.2,\
 	org.apache.felix.gogo.runtime;version=latest,\
-	biz.aQute.bnd.annotation;version=2.3
+	biz.aQute.bnd.annotation;version=2.3,\
+	org.apache.felix.dependencymanager.runtime;version=latest
 -runfw: org.apache.felix.framework;version='[4.4.0,4.4.0]'
 -runee: OSGi/Minimum-1.1
 -runbundles:  \

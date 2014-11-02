@@ -8,5 +8,7 @@ Private-Package: \
 	org.apache.felix.dependencymanager;version=latest,\
 	de.twentyeleven.skysail.org.json-osgi;version=20080701.0
 Bundle-Activator:org.apache.felix.dm.runtime.Activator
+Export-Package:  \
+	org.apache.felix.dm.runtime.api
 Provide-Capability: osgi.extender; osgi.extender="org.apache.felix.dependencymanager.runtime";\
 	uses:="org.apache.felix.dm";version:Version="4.0.0"

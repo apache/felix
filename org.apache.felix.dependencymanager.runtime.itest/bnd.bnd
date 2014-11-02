@@ -4,7 +4,8 @@
 	org.apache.felix.dependencymanager.itest.api;version=latest,\
 	org.apache.felix.dependencymanager.annotation;version=latest,\
 	osgi.cmpn;version=4.2,\
-	junit.osgi;version=3.8
+	junit.osgi;version=3.8,\
+	org.apache.felix.dependencymanager.runtime;version=latest
 -runbundles:  \
 	org.apache.felix.configadmin;version=1.8.0,\
 	org.apache.felix.dependencymanager;version=latest,\

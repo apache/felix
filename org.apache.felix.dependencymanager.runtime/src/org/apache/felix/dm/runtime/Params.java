@@ -53,6 +53,7 @@ public enum Params
     ranking,
     factoryPid,    
     factorySet,
+    factoryName,
     factoryConfigure,
     factoryMethod,
     name,

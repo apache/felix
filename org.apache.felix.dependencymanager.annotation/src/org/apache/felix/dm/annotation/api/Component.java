@@ -31,15 +31,13 @@ import java.lang.annotation.Target;
  * By default, all directly implemented interfaces are registered into the OSGi registry,
  * and the component is instantiated automatically, when the component bundle is started and 
  * when the component dependencies are available. If you need to take control of when and how 
- * much component instances must be created, then you can use the <code>factorySet</code> 
+ * much component instances must be created, then you can use the <code>factoryName</code> 
  * annotation attribute.<p> 
- * If a <code>factorySet</code> attribute is set, the component is not started automatically 
- * during bundle startup, and a <code>java.util.Set&lt;Dictionary&gt;</code> 
- * object is registered into the OSGi registry on behalf of the component. This Set will act 
- * as a Factory API, and another component may use this Set and add some configuration 
- * dictionaries in it, in order to fire some component activations (there is one component 
- * instantiated per dictionary, which is passed to component instances via a configurable 
- * callback method).
+ * If a <code>factoryName</code> attribute is set, the component is not started automatically 
+ * during bundle startup, and a <code>org.apache.felix.dm.runtime.api.ComponentFactory</code> 
+ * object is registered into the OSGi registry on behalf of the component. This ComponentFactory
+ * can then be used by another component in order to instantiate multiple instances of the component 
+ * (DM ComponentFactory are really similar to DS ComponentFactory).
  *
  * <h3>Usage Examples</h3>
  * 
@@ -71,14 +69,14 @@ import java.lang.annotation.Target;
  * </blockquote>
  * 
  * Here is a sample showing how a Y component may dynamically instantiate several X component instances, 
- * using the {@link #factorySet()} attribute:<p>
+ * using the {@link #factoryName()} attribute:<p>
  * <blockquote>
  * 
  * <pre>
  *  &#47;**
  *    * All component instances will be created/updated/removed by the "Y" component
  *    *&#47;
- *  &#64;Component(factorySet="MyComponentFactory", factoryConfigure="configure")
+ *  &#64;Component(factoryName="MyComponentFactory", factoryConfigure="configure")
  *  class X implements Z {                 
  *      void configure(Dictionary conf) {
  *          // Configure or reconfigure our component. The conf is provided by the factory,
@@ -106,31 +104,31 @@ import java.lang.annotation.Target;
  *    *&#47;
  *  &#64;Component 
  *  class Y {
- *      &#64;ServiceDependency(filter="(dm.factory.name=MyComponentFactory)")
- *      Set&lt;Dictionary&gt; _XFactory; // This Set acts as a Factory API for creating X component instances.
+ *      &#64;ServiceDependency(filter="(" + ComponentFactory.FACTORY_NAME + "=MyComponentFactory)")
+ *      ComponentFactory _XFactory;
  *    
  *      &#64;Start
  *      void start() {
  *          // Instantiate a X component instance
- *          Dictionary x1 = new Hashtable() {{ put("foo", "bar1"); }};
- *          _XFactory.add(x1);
+ *          Dictionary instance1Conf = new Hashtable() {{ put("foo", "bar1"); }};
+ *          ComponentInstance instance1 = _XFactory.newInstance(instance1Conf);
  *      
  *          // Instantiate another X component instance
- *          Dictionary x2 = new Hashtable() {{ put("foo", "bar2"); }};
- *          _XFactory.add(x2);
+ *          Dictionary instance2Conf = new Hashtable() {{ put("foo2", "bar2"); }};
+ *          ComponentInstance instance2 = _XFactory.newInstance(instance2Conf);
  *      
  *          // Update the first X component instance
- *          x1.put("foo", "bar1_modified");
- *          _XFactory.add(x1);
+ *          instance1Conf = new Hashtable() {{ put("foo", "bar1 modified"); }};
+ *          instance1.update(instance1Conf);
  *          
  *          // Instantiate a third X instance, by explicitly providing the implementation object
- *          Dictionary x3 = new Hashtable() {{ put(Component.FACTORY_INSTANCE, new X()); }};
- *          _XFactory.add(x3);
+ *          Dictionary instance3Conf = new Hashtable() {{ put(ComponentFactory.FACTORY_INSTANCE, new X()); }};
+ *          ComponentInstance instance3 = _XFactory.newInstance(instance3Conf);
  *      
- *          // Destroy x1/x2/x3 components (Notice that invoking XFactory.clear() will destroy all X component  instances).
- *          _XFactory.remove(x1);
- *          _XFactory.remove(x2); 
- *          _XFactory.remove(x3); 
+ *          // Destroy x1/x2/x3 components
+ *          instance1.dispose();
+ *          instance2.dispose();
+ *          instance3.dispose();
  *      }
  *  }
  * </pre>
@@ -172,12 +170,32 @@ public @interface Component
      * 
      * <p>Optionally, the dictionary registered into the factory set may provide an implementation instance for the component to be created,
      * using the {@value #FACTORY_INSTANCE} key. 
+     * 
+     * @deprecated use {@link #factoryName()} instead of a factorySet.
      */
     String factorySet() default "";
+    
+    /**
+     * Returns the name of the <code>ComponentFactory</code> used to dynamically instantiate this component.
+     * When you set this attribute, a <code>org.apache.felix.dm.runtime.api.ComponentFactory</code> OSGi Service will 
+     * be provided with a <code>dm.runtime.factory.name</code> service property matching 
+     * your specified <code>factoryName</code> attribute.
+     * The ComponentFactory will be provided once the component bundle is started, even if required dependencies are not available, and the
+     * ComponentFactory will be unregistered from the OSGi registry once the component bundle is stopped or being updated.<p>
+     * So, another component may then be injected with this ComponentFactory in order to dynamically instantiate some component instances:
+     * 
+     * <p>The dictionary passed to the ComponentFactory.newInstance method will be provided to the created component instance using a callback 
+     * method that you can optionally specify in the {@link Component#factoryConfigure()} attribute. Each public properties from that dictionary 
+     * (which don't start with a dot) will be propagated along with the annotated component service properties.
+     * 
+     * <p>Optionally, the dictionary registered into the factory set may provide an implementation instance for the component to be created,
+     * using a "dm.runtime.factory.instance" key.
+     */
+    String factoryName() default "";
 
     /**
      * Sets "configure" callback method name to be called with the factory configuration. This attribute only makes sense if the 
-     * {@link #factorySet()} attribute is used. If specified, then this attribute references a callback method, which is called 
+     * {@link #factoryName()} attribute is used. If specified, then this attribute references a callback method, which is called 
      * for providing the configuration supplied by the factory that instantiated this component. The current component service properties will be 
      * also updated with all public properties (which don't start with a dot).
      */
@@ -191,12 +209,18 @@ public @interface Component
     /**
      * Service property name used to match a given Factory Set.
      * @see #factorySet() for more information about factory sets.
+     * @deprecated This constant was used by a {@link #factorySet()} annotation which is deprecated. Now a {@link #factoryName()}
+     * and the org.apache.felix.dm.runtime.api.ComponentFactory service can be filtered using the 
+     * org.apache.felix.dm.runtime.api.ComponentFactory.FACTORY_NAME constant.
      */
     final static String FACTORY_NAME = "dm.factory.name";
     
     /**
      * Key used when providing an implementation in a factory Set dictionary configuration.
      * @see #factorySet()
+     * @deprecated This constant was used by a {@link #factorySet()} annotation which is deprecated. Now a {@link #factoryName()}
+     * should be used instead, and a component instance can be stored in the dictionary passed to the ComponentFactory.newInstance() method
+     * using the org.apache.felix.dm.runtime.api.ComponentFactory.FACTORY_INSTANCE key.
      */
     final static String FACTORY_INSTANCE = "dm.factory.instance";
 }
