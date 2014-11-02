@@ -86,16 +86,9 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
     @Override
     public String getName() {
         StringBuilder sb = new StringBuilder();
-        if ((m_stateMask & Bundle.ACTIVE) != 0) {
-            sb.append("active ");
-        }
-        if ((m_stateMask & Bundle.INSTALLED) != 0) {
-            sb.append("installed ");
-        }
-        if ((m_stateMask & Bundle.RESOLVED) != 0) {
-            sb.append("resolved ");
-        }
+        getSimpleName(sb);
         if (m_filter != null) {
+            sb.append(" ");
             sb.append(m_filter.toString());
         }
         if (m_bundleId != -1) {
@@ -104,6 +97,28 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
         return sb.toString();
     }
 
+    @Override
+    public String getSimpleName() {
+        // Return the state mask, but don't include the filter or bundle id.
+        StringBuilder sb = new StringBuilder();
+        if ((m_stateMask & Bundle.ACTIVE) != 0) {
+            sb.append("active");
+        }
+        if ((m_stateMask & Bundle.INSTALLED) != 0) {
+            if (sb.length() > 0) {
+                sb.append(" ");
+            }
+            sb.append("installed");
+        }
+        if ((m_stateMask & Bundle.RESOLVED) != 0) {
+            if (sb.length() > 0) {
+                sb.append(" ");
+            }
+            sb.append("resolved");
+        }
+        return sb.toString();
+    }
+    
     @Override
     public String getFilter() {
         if (m_filter != null || m_bundleId != -1) {
@@ -238,6 +253,24 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
             }
         }
         return (Bundle) m_nullObject;
+    }
+    
+    private void getSimpleName(StringBuilder sb) {
+        if ((m_stateMask & Bundle.ACTIVE) != 0) {
+            sb.append("active");
+        }
+        if ((m_stateMask & Bundle.INSTALLED) != 0) {
+            if (sb.length() > 0) {
+                sb.append(" ");
+            }
+            sb.append("installed");
+        }
+        if ((m_stateMask & Bundle.RESOLVED) != 0) {
+            if (sb.length() > 0) {
+                sb.append(" ");
+            }
+            sb.append("resolved");
+        }
     }
 }
 
