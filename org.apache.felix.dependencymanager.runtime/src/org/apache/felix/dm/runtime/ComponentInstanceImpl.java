@@ -14,9 +14,9 @@ import org.apache.felix.dm.runtime.api.ComponentInstance;
 import org.osgi.framework.Bundle;
 
 /**
+ * Implemantation for our DM Runtime ComponentInstance.
  * 
- * @author nxuser
- *
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ComponentInstanceImpl implements ComponentInstance {
     /**
