@@ -150,7 +150,7 @@ public @interface Component
     final static String FACTORY_NAME = "dm.factory.name";
     
     /**
-     * Key used when providing an implementation for the instantiation of in a component factory.
+     * Key used when providing an implementation when using a Component Factory .
      * @see #factoryName()
      */
     final static String FACTORY_INSTANCE = "dm.factory.instance";
