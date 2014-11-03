@@ -12,17 +12,16 @@ public class DeviceAccessImpl implements DeviceAccess {
     void init(Component c) {
         // Dynamically add an extra dependency on a DeviceParameter.
         DependencyManager dm = c.getDependencyManager();
-        c.add(dm.createServiceDependency()
-            .setService(DeviceParameter.class, "(device.id=" + device.getDeviceId() + ")")
-            .setRequired(true));
+        c.add(dm.createServiceDependency().setService(DeviceParameter.class, "(device.id=" + device.getDeviceId() + ")").setRequired(
+            true));
     }
-    
+
     void start(Component c) {
         // Our service is starting: before being registered in the OSGi service registry,
         // add here a service property, using the device.id.
         Hashtable<String, Object> props = new Hashtable<>();
         props.put("device.access.id", device.getDeviceId());
-        c.setServiceProperties(props);  
+        c.setServiceProperties(props);
     }
 
     @Override
@@ -32,6 +31,6 @@ public class DeviceAccessImpl implements DeviceAccess {
 
     @Override
     public DeviceParameter getDeviceParameter() {
-        return deviceParameter;    
+        return deviceParameter;
     }
 }

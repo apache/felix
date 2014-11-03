@@ -19,7 +19,13 @@
 package org.apache.felix.dm.runtime.itest.components;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.annotation.api.*;
+import org.apache.felix.dm.annotation.api.AspectService;
+import org.apache.felix.dm.annotation.api.Component;
+import org.apache.felix.dm.annotation.api.Destroy;
+import org.apache.felix.dm.annotation.api.Init;
+import org.apache.felix.dm.annotation.api.Inject;
+import org.apache.felix.dm.annotation.api.ServiceDependency;
+import org.apache.felix.dm.annotation.api.Stop;
 import org.apache.felix.dm.itest.Ensure;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;

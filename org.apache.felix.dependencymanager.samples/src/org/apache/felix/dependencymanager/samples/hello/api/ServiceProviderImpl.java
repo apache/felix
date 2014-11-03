@@ -2,7 +2,6 @@ package org.apache.felix.dependencymanager.samples.hello.api;
 
 import org.osgi.service.log.LogService;
 
-
 /**
  * The implementation for our service provider.
  * 
@@ -10,9 +9,9 @@ import org.osgi.service.log.LogService;
  */
 public class ServiceProviderImpl implements ServiceProvider {
     volatile LogService log;
-    
-	@Override
-	public void hello() {
+
+    @Override
+    public void hello() {
         log.log(LogService.LOG_INFO, "ServiceProviderImpl.hello");
-	}
+    }
 }

@@ -50,7 +50,7 @@ public class SpellChecker {
     /**
      * We'll store all Dictionaries in a concurrent list, in order to avoid method synchronization.
      */
-    @ServiceDependency(service=DictionaryService.class)
+    @ServiceDependency(service = DictionaryService.class)
     private final Iterable<DictionaryService> m_dictionaries = new ConcurrentLinkedQueue<>();
 
     /**

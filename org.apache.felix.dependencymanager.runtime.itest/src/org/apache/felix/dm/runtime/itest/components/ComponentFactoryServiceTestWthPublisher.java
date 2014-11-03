@@ -18,11 +18,9 @@
  */
 package org.apache.felix.dm.runtime.itest.components;
 
-import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.Init;
@@ -103,7 +101,7 @@ public class ComponentFactoryServiceTestWthPublisher {
 
     @Component
     public static class ProviderImplFactory {
-        @ServiceDependency(filter = "(" + ComponentFactory.FACTORY_NAME + "=" + FACTORY + ")")
+        @ServiceDependency(filter = "(" + Component.FACTORY_NAME + "=" + FACTORY + ")")
         void bind(ComponentFactory providerImplFactory) {
             providerImplFactory.newInstance(new Hashtable() {
                 {

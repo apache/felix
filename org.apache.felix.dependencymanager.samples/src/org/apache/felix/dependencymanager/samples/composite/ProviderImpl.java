@@ -19,7 +19,7 @@ public class ProviderImpl implements Provider {
         // validate configuration and throw an exception if the properties are invalid
         m_conf = conf;
     }
-    
+
     Object[] getComposition() {
         return new Object[] { this, m_participant1, m_participant2 };
     }

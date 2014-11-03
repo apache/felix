@@ -99,12 +99,14 @@ import java.lang.annotation.Target;
  *      }   
  *  }
  * 
+ *  import import org.apache.felix.dm.runtime.api.ComponentFactory;
+ *
  *  &#47;**
  *    * This class will instantiate some X component instances
  *    *&#47;
  *  &#64;Component 
  *  class Y {
- *      &#64;ServiceDependency(filter="(" + ComponentFactory.FACTORY_NAME + "=MyComponentFactory)")
+ *      &#64;ServiceDependency(filter="(" + Component.FACTORY_NAME + "=MyComponentFactory)")
  *      ComponentFactory _XFactory;
  *    
  *      &#64;Start
@@ -122,7 +124,7 @@ import java.lang.annotation.Target;
  *          instance1.update(instance1Conf);
  *          
  *          // Instantiate a third X instance, by explicitly providing the implementation object
- *          Dictionary instance3Conf = new Hashtable() {{ put(ComponentFactory.FACTORY_INSTANCE, new X()); }};
+ *          Dictionary instance3Conf = new Hashtable() {{ put(Component.FACTORY_INSTANCE, new X()); }};
  *          ComponentInstance instance3 = _XFactory.newInstance(instance3Conf);
  *      
  *          // Destroy x1/x2/x3 components
@@ -141,6 +143,18 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface Component
 {
+    /**
+     * Service property name used to match a given Component Factory.
+     * @see #factoryName() for more information about factory sets.
+     */
+    final static String FACTORY_NAME = "dm.factory.name";
+    
+    /**
+     * Key used when providing an implementation for the instantiation of in a component factory.
+     * @see #factoryName()
+     */
+    final static String FACTORY_INSTANCE = "dm.factory.instance";
+
     /**
      * Sets list of provided interfaces. By default, the directly implemented interfaces are provided.
      */
@@ -178,8 +192,8 @@ public @interface Component
     /**
      * Returns the name of the <code>ComponentFactory</code> used to dynamically instantiate this component.
      * When you set this attribute, a <code>org.apache.felix.dm.runtime.api.ComponentFactory</code> OSGi Service will 
-     * be provided with a <code>dm.runtime.factory.name</code> service property matching 
-     * your specified <code>factoryName</code> attribute.
+     * be provided with a <code>dm.factory.name</code> service property matching your specified <code>factoryName</code> attribute.
+     * 
      * The ComponentFactory will be provided once the component bundle is started, even if required dependencies are not available, and the
      * ComponentFactory will be unregistered from the OSGi registry once the component bundle is stopped or being updated.<p>
      * So, another component may then be injected with this ComponentFactory in order to dynamically instantiate some component instances:
@@ -204,23 +218,5 @@ public @interface Component
     /**
      * Sets the static method used to create the components implementation instance.
      */
-    String factoryMethod() default "";
-        
-    /**
-     * Service property name used to match a given Factory Set.
-     * @see #factorySet() for more information about factory sets.
-     * @deprecated This constant was used by a {@link #factorySet()} annotation which is deprecated. Now a {@link #factoryName()}
-     * and the org.apache.felix.dm.runtime.api.ComponentFactory service can be filtered using the 
-     * org.apache.felix.dm.runtime.api.ComponentFactory.FACTORY_NAME constant.
-     */
-    final static String FACTORY_NAME = "dm.factory.name";
-    
-    /**
-     * Key used when providing an implementation in a factory Set dictionary configuration.
-     * @see #factorySet()
-     * @deprecated This constant was used by a {@link #factorySet()} annotation which is deprecated. Now a {@link #factoryName()}
-     * should be used instead, and a component instance can be stored in the dictionary passed to the ComponentFactory.newInstance() method
-     * using the org.apache.felix.dm.runtime.api.ComponentFactory.FACTORY_INSTANCE key.
-     */
-    final static String FACTORY_INSTANCE = "dm.factory.instance";
+    String factoryMethod() default "";        
 }

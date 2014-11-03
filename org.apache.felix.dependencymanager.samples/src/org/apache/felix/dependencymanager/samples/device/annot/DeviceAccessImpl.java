@@ -10,11 +10,11 @@ import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.osgi.service.log.LogService;
 
-@AdapterService(adapteeService=Device.class)
+@AdapterService(adapteeService = Device.class)
 public class DeviceAccessImpl implements DeviceAccess {
     volatile Device device;
-    
-    @ServiceDependency(name="deviceparam")
+
+    @ServiceDependency(name = "deviceparam")
     volatile DeviceParameter deviceParameter;
 
     @ServiceDependency
@@ -29,9 +29,9 @@ public class DeviceAccessImpl implements DeviceAccess {
         filters.put("deviceparam.required", "true");
         return filters;
     }
-    
+
     @Start
-    Map<?,?> start() {
+    Map<?, ?> start() {
         log.log(LogService.LOG_INFO, "DeviceAccessImpl.start");
         // Dynamically add a service property, using the device.id
         Map<String, Object> props = new Hashtable<>();
@@ -46,6 +46,6 @@ public class DeviceAccessImpl implements DeviceAccess {
 
     @Override
     public DeviceParameter getDeviceParameter() {
-        return deviceParameter;    
+        return deviceParameter;
     }
 }

@@ -16,21 +16,21 @@ import org.osgi.service.log.LogService;
 @Component
 public class ServiceConsumer {
     @ServiceDependency
-	volatile ServiceProvider service;
-    
+    volatile ServiceProvider service;
+
     @ServiceDependency
     volatile LogService log;
-    
+
     Dictionary<?, ?> conf;
-    
+
     @ConfigurationDependency
     protected void update(Dictionary<?, ?> conf) {
         this.conf = conf;
     }
-    
+
     @Start
-	public void start() {
+    public void start() {
         log.log(LogService.LOG_INFO, "ServiceConsumer.start: calling service.hello() ...");
-		this.service.hello();
-	}
+        this.service.hello();
+    }
 }

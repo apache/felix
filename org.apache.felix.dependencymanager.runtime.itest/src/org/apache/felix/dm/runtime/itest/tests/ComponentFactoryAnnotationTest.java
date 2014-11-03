@@ -21,6 +21,7 @@ package org.apache.felix.dm.runtime.itest.tests;
 import java.util.Hashtable;
 
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.itest.Ensure;
 import org.apache.felix.dm.itest.TestBase;
 import org.apache.felix.dm.runtime.api.ComponentFactory;
@@ -42,7 +43,7 @@ public class ComponentFactoryAnnotationTest extends TestBase {
                 .setImplementation(this)
                 .add(m.createServiceDependency()
                         .setService(ComponentFactory.class,
-                                "(" + ComponentFactory.FACTORY_NAME + "=" + ComponentFactoryAnnotation.FACTORY + ")")
+                                "(" + Component.FACTORY_NAME + "=" + ComponentFactoryAnnotation.FACTORY + ")")
                         .setRequired(true).setCallbacks("bindFactory", null)));
 
         // Check if the test.annotation components have been initialized orderly

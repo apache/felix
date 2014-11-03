@@ -36,7 +36,8 @@ import org.osgi.framework.Bundle;
 public class ComponentBuilder extends AbstractBuilder
 {
     private final static String TYPE = "Component";
-    private final static String DM_FACTORY_NAME = "dm.factory.name";
+    public final static String FACTORY_NAME = "dm.factory.name";
+    public final static String FACTORY_INSTANCE = "dm.factory.instance";
 
     @Override
     public String getType()
@@ -102,7 +103,7 @@ public class ComponentBuilder extends AbstractBuilder
             c.setImplementation(factorySet);
             c.setCallbacks(null, "start", "stop", null);
             Hashtable<String, String> props = new Hashtable<String, String>();
-            props.put(DM_FACTORY_NAME, factory);
+            props.put(ComponentBuilder.FACTORY_NAME, factory);
             c.setInterface(Set.class.getName(), props);
         } 
         else if (factoryName != null) {
@@ -117,7 +118,7 @@ public class ComponentBuilder extends AbstractBuilder
             c.setImplementation(compFactory);
             c.setCallbacks(null, "start", "stop", null);
             Hashtable<String, String> props = new Hashtable<String, String>();
-            props.put(ComponentFactory.FACTORY_NAME, factoryName);
+            props.put(ComponentBuilder.FACTORY_NAME, factoryName);
             c.setInterface(ComponentFactory.class.getName(), props);
         }
 

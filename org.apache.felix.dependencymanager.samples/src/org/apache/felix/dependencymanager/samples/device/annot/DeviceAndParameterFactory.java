@@ -2,7 +2,6 @@ package org.apache.felix.dependencymanager.samples.device.annot;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Set;
 
 import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
@@ -16,10 +15,10 @@ import org.osgi.service.log.LogService;
  */
 @Component
 public class DeviceAndParameterFactory {
-    @ServiceDependency(filter = "(" + ComponentFactory.FACTORY_NAME + "=Device)")
+    @ServiceDependency(filter = "(" + Component.FACTORY_NAME + "=Device)")
     volatile ComponentFactory m_deviceFactory;
-    
-    @ServiceDependency(filter = "(" + ComponentFactory.FACTORY_NAME + "=DeviceParameter)")
+
+    @ServiceDependency(filter = "(" + Component.FACTORY_NAME + "=DeviceParameter)")
     volatile ComponentFactory m_deviceParameterFactory;
 
     @ServiceDependency
@@ -28,18 +27,18 @@ public class DeviceAndParameterFactory {
     @Start
     public void start() {
         log.log(LogService.LOG_INFO, "DeviceAndParameterFactory.start");
-        for (int i = 0; i < 2; i ++) {
+        for (int i = 0; i < 2; i++) {
             createDeviceAndParameter(i);
         }
     }
-    
+
     private void createDeviceAndParameter(int id) {
         log.log(LogService.LOG_INFO, "DeviceAndParameterFactory: creating Device/DeviceParameter with id=" + id);
 
-        Dictionary<String,Object> device = new Hashtable<>();
+        Dictionary<String, Object> device = new Hashtable<>();
         device.put("device.id", new Integer(id));
         m_deviceFactory.newInstance(device);
-        
+
         Dictionary<String, Object> param = new Hashtable<>();
         param.put("device.id", new Integer(id));
         m_deviceParameterFactory.newInstance(param);

@@ -46,6 +46,15 @@ import org.osgi.framework.Bundle;
 public class FactorySet extends AbstractSet<Dictionary>
 {
     /**
+     * When a Dictionary is registered in a factory Set, we use this special 
+     * property key, whose value may provide the instance to use when
+     * creating a service.
+     */
+    private final static String DM_FACTORY_INSTANCE = "dm.factory.instance";
+    
+    public final static String DM_FACTORY_NAME = "dm.factory.name";
+
+    /**
      * The actual Service instance that is allocated for each dictionaries added in this Set.
      */
     private Object m_impl;
@@ -106,13 +115,6 @@ public class FactorySet extends AbstractSet<Dictionary>
      * Flag used to check if a service is being created
      */
     private final static Object SERVICE_CREATING = new Object();
-
-    /**
-     * When a Dictionary is registered in a factory Set, we use this special 
-     * property key, whose value may provide the instance to use when
-     * creating a service.
-     */
-    private final static String DM_FACTORY_INSTANCE = "dm.factory.instance";
 
     /**
      * This class wraps <tt>Dictionary</tt>, allowing to store the dictionary into a Map, using

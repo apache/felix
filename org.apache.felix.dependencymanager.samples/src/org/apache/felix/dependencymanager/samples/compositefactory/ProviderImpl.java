@@ -12,14 +12,14 @@ import org.osgi.service.log.LogService;
 public class ProviderImpl implements Provider {
     private final ProviderParticipant1 m_participant1;
     private final ProviderParticipant2 m_participant2;
-    
+
     private volatile LogService m_log; // Injected
 
     ProviderImpl(ProviderParticipant1 participant1, ProviderParticipant2 participant2) {
         m_participant1 = participant1;
         m_participant2 = participant2;
     }
-    
+
     void start() {
         m_log.log(LogService.LOG_INFO, "ProviderImpl.start(): participants=" + m_participant1 + "," + m_participant2);
     }

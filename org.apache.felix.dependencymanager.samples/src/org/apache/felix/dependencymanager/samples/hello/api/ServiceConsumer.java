@@ -10,16 +10,16 @@ import org.osgi.service.log.LogService;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ServiceConsumer {
-	volatile ServiceProvider service;
-	volatile LogService log;
-	Dictionary<?, ?> conf;
-	
+    volatile ServiceProvider service;
+    volatile LogService log;
+    Dictionary<?, ?> conf;
+
     protected void update(Dictionary<?, ?> conf) {
         this.conf = conf;
     }
-    
-	public void start() {
+
+    public void start() {
         log.log(LogService.LOG_INFO, "ServiceConsumer.start: calling service.hello()");
-		this.service.hello();
-	}
+        this.service.hello();
+    }
 }

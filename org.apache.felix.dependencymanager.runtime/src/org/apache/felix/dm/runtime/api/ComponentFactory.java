@@ -9,18 +9,6 @@ import java.util.Dictionary;
  */
 public interface ComponentFactory {
     /**
-     * A ComponentFactory is registered in the OSGI service registry with a FACTORY_NAME matching the "factoryName" attribute
-     * value used in the DM Component annotation.
-     */
-    public final static String FACTORY_NAME = "dm.runtime.factory.name";
-    
-    /**
-     * When instantiating a Component, you can specify the component instance in the dictionary passed to the {@link #newInstance(Dictionary)}
-     * method using this key.
-     */
-    public final static String FACTORY_INSTANCE = "dm.runtime.factory.instance";
-
-    /**
      * Instantiates a Component instance. Any properties starts with a "." are considered as private. Other properties will be
      * published as the component instance service properties (if the component provides a services).
      * @param conf the properties passed to the component "configure" method which is specified with the "configure" attribute

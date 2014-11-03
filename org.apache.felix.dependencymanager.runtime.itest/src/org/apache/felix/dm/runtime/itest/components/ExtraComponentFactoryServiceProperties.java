@@ -51,7 +51,7 @@ public class ExtraComponentFactoryServiceProperties {
 
     @Component
     public static class ProviderImplFactory {
-        @ServiceDependency(filter = "(" + ComponentFactory.FACTORY_NAME + "=" + FACTORYNAME + ")")
+        @ServiceDependency(filter = "(" + Component.FACTORY_NAME + "=" + FACTORYNAME + ")")
         volatile ComponentFactory m_factory;
 
         @Start

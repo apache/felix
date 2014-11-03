@@ -12,12 +12,12 @@ public class CompositionManager {
     private ProviderParticipant2 m_participant2;
     private ProviderImpl m_providerImpl;
     private Dictionary<String, String> m_conf;
-    
+
     public void updated(Dictionary<String, String> conf) throws Exception {
         // validate configuration and throw an exception if the properties are invalid
         m_conf = conf;
     }
-    
+
     /**
      * Builds the composition of objects used to implement the "Provider" service.
      * The Configuration injected by Config Admin will be used to configure the components
@@ -30,7 +30,7 @@ public class CompositionManager {
         m_providerImpl = new ProviderImpl(m_participant1, m_participant2);
         return m_providerImpl; // Main object implementing the Provider service
     }
-    
+
     Object[] getComposition() {
         return new Object[] { m_providerImpl, m_participant1, m_participant2 };
     }

@@ -4,7 +4,6 @@ import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.osgi.service.log.LogService;
 
-
 /**
  * The implementation for our service provider.
  * 
@@ -14,9 +13,9 @@ import org.osgi.service.log.LogService;
 public class ServiceProviderImpl implements ServiceProvider {
     @ServiceDependency
     volatile LogService log;
-    
-	@Override
-	public void hello() {
+
+    @Override
+    public void hello() {
         log.log(LogService.LOG_INFO, "ServiceProviderImpl.hello");
-	}
+    }
 }

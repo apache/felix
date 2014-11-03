@@ -58,7 +58,7 @@ public class ComponentInstanceImpl implements ComponentInstance {
         m_component = m_dm.createComponent();
         
         Class<?> implClass = m_bundle.loadClass(m_srvMeta.getString(Params.impl));
-        Object impl = conf.get(ComponentFactory.FACTORY_INSTANCE);
+        Object impl = conf.get(ComponentBuilder.FACTORY_INSTANCE);
         if (impl == null) {
             String factoryMethod = m_srvMeta.getString(Params.factoryMethod, null);
             if (factoryMethod == null) {
