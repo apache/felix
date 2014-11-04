@@ -37,6 +37,10 @@
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/http</developerConnection>
         <url>http://svn.apache.org/viewvc/felix/trunk/http/</url>
     </scm>
+    
+    <prerequisites>
+    	<maven>2.2.1</maven>
+    </prerequisites>
 
     <modules>
         <module>api</module>
