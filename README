@@ -11,6 +11,8 @@ Dependency Manager 4.0.0 general README
 - Install java7/Java8 JREs in Eclipse (Window -> Preferences -> Java -> Installed JREs). Use JRE 1.7 as the default JRE.
 - Open BndTools perpective.
 - Import Dependency Manager in Eclipse.
+- Open BndTools perspective and recompile every sub projects
+- Restart Eclipse
 
 * To run tests:
 
