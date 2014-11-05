@@ -2,7 +2,7 @@
 	osgi.core;version=4.2,\
 	osgi.cmpn;version=4.2,\
 	org.mockito.mockito-all;version=1.9,\
-	biz.aQute.junit;version=999999999.0
+	${junit}
 Private-Package: \
 	org.apache.felix.dm.impl,\
 	org.apache.felix.dm.impl.index,\

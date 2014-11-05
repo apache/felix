@@ -1,4 +1,4 @@
-Bundle-Version: 1.0.0.${tstamp}
+Bundle-Version: 4.0.0
 -buildpath:  \
 	org.apache.felix.dependencymanager;version=latest,\
 	osgi.core;version=4.2,\
@@ -8,13 +8,13 @@ Bundle-Version: 1.0.0.${tstamp}
 	biz.aQute.bnd.annotation;version=2.3,\
 	org.apache.felix.dependencymanager.runtime;version=latest
 -runfw: org.apache.felix.framework;version='[4.4.0,4.4.0]'
--runee: OSGi/Minimum-1.1
+-runee: JavaSE-1.7
 -runbundles:  \
 	org.apache.felix.dependencymanager;version=latest,\
 	org.apache.felix.metatype;version=1.0.4,\
 	org.apache.felix.log;version=1.0.1,\
-	org.apache.felix.gogo.command;version=0.12.0,\
-	org.apache.felix.gogo.runtime;version=0.10.0,\
+	org.apache.felix.gogo.command;version=0.14.0,\
+	org.apache.felix.gogo.runtime;version=0.12.0,\
 	org.apache.felix.gogo.shell;version=0.10.0,\
 	org.apache.felix.dependencymanager.shell;version=latest,\
 	org.apache.felix.dependencymanager.runtime;version=latest,\
@@ -23,10 +23,12 @@ Bundle-Version: 1.0.0.${tstamp}
 	org.apache.felix.dependencymanager.samples.conf;version=latest,\
 	org.apache.felix.configadmin;version=1.8.0,\
 	org.apache.felix.dependencymanager.samples.device.api;version=latest,\
-	org.apache.felix.webconsole;version=4.2.2,\
-	org.apache.felix.http.jetty;version=2.0.4,\
 	org.apache.felix.eventadmin;version=1.4.3,\
-	biz.aQute.bndlib;version=2.3.0
+	biz.aQute.bndlib;version=2.3.0,\
+	org.apache.felix.webconsole;version=4.2.2,\
+	org.apache.felix.http.api;version=2.3.0,\
+	org.apache.felix.http.servlet-api;version=1.0.0,\
+	org.apache.felix.http.jetty;version=2.3.0
 -runproperties:  \
 	org.apache.felix.dependencymanager.parallel='!org.apache.felix.dependencymanager.samples.tpool, *',\
 	org.apache.felix.dependencymanager.runtime.log=warn,\

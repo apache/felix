@@ -1,4 +1,4 @@
-Bundle-Version:0.0.0.${tstamp}
+Bundle-Version:4.0.0
 -buildpath:  \
 	osgi.core;version=4.2,\
 	de.twentyeleven.skysail.org.json-osgi;version=20080701.0,\

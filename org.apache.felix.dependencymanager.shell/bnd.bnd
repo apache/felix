@@ -4,7 +4,7 @@
 	org.mockito.mockito-all,\
 	osgi.cmpn,\
 	org.apache.felix.dependencymanager;version=latest,\
-	biz.aQute.junit;version=999999999.0
+	biz.aQute.junit
 Private-Package: \
 	org.apache.felix.dm.shell
 Bundle-Activator:org.apache.felix.dm.shell.Activator
