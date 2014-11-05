@@ -38,7 +38,6 @@
     </scm>
     
     <properties>
-    	<felix.http.api.version>2.3.2-SNAPSHOT</felix.http.api.version>
 		<pax.exam.version>2.6.0</pax.exam.version>
 		<pax.exam.plugin.version>1.2.4</pax.exam.plugin.version>
 		<pax.url.aether.version>2.1.0</pax.url.aether.version>
@@ -65,7 +64,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.api</artifactId>
-            <version>${felix.http.api.version}</version>
+            <version>2.3.2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
@@ -75,7 +74,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.jetty</artifactId>
-            <version>${felix.http.api.version}</version>
+            <version>2.3.2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
