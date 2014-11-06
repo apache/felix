@@ -463,6 +463,13 @@ public class ClassScanner {
 
             final Collection<File> dependencies = this.project.getDependencies();
             for ( final File artifact : dependencies ) {
+                // Protect against the case where the dependency is in the file system, and
+                // the project that represents the dependency has no code and therefore no
+                // target/classes directory. Otherwise the component service component 
+                // descriptor reader will be sad.
+                if ( !artifact.exists() ) {
+                    continue;
+                }
                 try {
                     this.log.debug( "Trying to get scrinfo from artifact " + artifact );
                     // First try to read the private scr info file from previous scr generator versions
