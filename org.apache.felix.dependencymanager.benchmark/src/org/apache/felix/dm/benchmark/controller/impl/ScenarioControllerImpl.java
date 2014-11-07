@@ -8,8 +8,12 @@ import static org.apache.felix.dm.benchmark.scenario.Artist.ARTISTS;
 import static org.apache.felix.dm.benchmark.scenario.Artist.TRACKS;
 import static org.apache.felix.dm.benchmark.scenario.Helper.debug;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadLocalRandom;
@@ -86,7 +90,7 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
 
         // Start/stop several times the tested bundles. (no processing done in components start/stop methods).
         m_doProcessingInStartStop = false;
-        out.println("\n\t[Starting benchmarks without processing done in components start/stop methods]");
+        out.println("\n\t[Starting benchmarks with no processing done in components start/stop methods]");
         startStopScenarioBundles(TESTS, 15);
        
         // Start/stop several times the tested bundles (processing is done in components start/stop methods).
@@ -144,25 +148,42 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
         
     private void startStopScenarioBundles(List<String> tests, int iterations) {
         forEachScenarioBundle(tests, bundle -> {
-            out.print("\nBenchmarking bundle: " + bundle.getSymbolicName() + "\n");            
+            out.print("\nBenchmarking bundle: " + bundle.getSymbolicName() + " ");            
             List<Long> sortedResults = LongStream.range(0, iterations)
                 .peek(i -> out.print("."))
                 .map(n -> durationOf(() -> startAndStop(bundle)))
                 .sorted().boxed().collect(toList());
+            out.println();
             displaySortedResults(sortedResults);
             Unchecked.run(() -> Thread.sleep(500));
         });        
     }
 
+    /**
+     * Displays meaningful values in the sorted results (first=fastest, midle=average, last entry=slowest)
+     * @param sortedResults
+     */
     private void displaySortedResults(List<Long> sortedResults) {
         // We don't display an average of the duration times; Instead, we sort the results,
         // and we display the significant results (the first entry is the fastest, the middle entry is the
         // average, the last entry is the slowest ...)
-        out.println("\n  results=" +  
+        out.printf("-> results in nanos: [%s]%n",  
             Stream.of(0f, 24.99f, 49.99f, 74.99f, 99.99f)
                 .mapToInt(perc -> (int) (perc * sortedResults.size() / 100))
-                .mapToObj(sortedResults::get).map(Object::toString)
-                .collect(joining(",")));
+                .mapToObj(sortedResults::get)
+                .map(this::formatNano)
+                .collect(joining(" | ")));
+    }
+    
+    /**
+     * Displays a nanosecond value using thousands separator. 
+     * Example: 1000000 -> 1,000,000
+     */
+    private String formatNano(Long nanoseconds) {
+		DecimalFormat formatter = (DecimalFormat) NumberFormat.getInstance(Locale.US);
+		DecimalFormatSymbols symbols = formatter.getDecimalFormatSymbols();
+		symbols.setGroupingSeparator(',');
+		return formatter.format(nanoseconds);
     }
 
     private void componentAdded() {
