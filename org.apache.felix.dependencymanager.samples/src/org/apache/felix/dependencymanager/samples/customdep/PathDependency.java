@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
+import java.nio.file.WatchEvent.Kind;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.Dictionary;
@@ -12,6 +13,7 @@ import java.util.List;
 import org.apache.felix.dm.context.AbstractDependency;
 import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
+import org.osgi.service.log.LogService;
 
 public class PathDependency extends AbstractDependency<PathDependency> implements Runnable {
     private final String m_path;
@@ -104,15 +106,28 @@ public class PathDependency extends AbstractDependency<PathDependency> implement
 
         try {
             WatchService watcher = myDir.getFileSystem().newWatchService();
-            myDir.register(watcher, StandardWatchEventKinds.ENTRY_MODIFY);
-            WatchKey watckKey = watcher.take();
-            List<WatchEvent<?>> events = watckKey.pollEvents();
+            myDir.register(watcher, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_DELETE);
+            while (! Thread.currentThread().isInterrupted()) {
+				WatchKey watckKey = watcher.take();
 
-            for (WatchEvent event : events) {                
-                add(new PathEvent(event.context().toString()));
+				List<WatchEvent<?>> events = watckKey.pollEvents();
+
+				for (WatchEvent event : events) {
+					final Kind<?> kind = event.kind();
+					if (StandardWatchEventKinds.OVERFLOW == kind) {
+						continue;
+					}
+					if (StandardWatchEventKinds.ENTRY_CREATE == kind) {
+						add(new PathEvent(event.context().toString()));
+					} else if (StandardWatchEventKinds.ENTRY_DELETE == kind) {
+						remove(new PathEvent(event.context().toString()));
+					}
+				}
+				
+				watckKey.reset();
             }
-        } catch (Exception e) {
-            System.out.println("Error: " + e.toString());
+        } catch (Throwable e) {
+            e.printStackTrace();
         }
     }
 }

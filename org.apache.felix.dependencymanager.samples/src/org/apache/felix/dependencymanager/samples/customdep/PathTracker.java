@@ -8,4 +8,8 @@ public class PathTracker {
     void add(String path) {
         logService.log(LogService.LOG_INFO, "PathTracker.add: " + path);
     }
+    
+    void remove(String path) {
+        logService.log(LogService.LOG_INFO, "PathTracker.remove: " + path);
+    }
 }

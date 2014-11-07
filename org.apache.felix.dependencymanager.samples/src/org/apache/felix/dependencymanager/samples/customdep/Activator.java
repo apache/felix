@@ -11,6 +11,6 @@ public class Activator extends DependencyActivatorBase {
         m.add(createComponent()
             .setImplementation(PathTracker.class)
             .add(createServiceDependency().setService(LogService.class).setRequired(true))
-            .add(new PathDependency("/tmp").setCallbacks("add", "change", "remove")));
+            .add(new PathDependency("/tmp").setCallbacks("add", "remove")));
     }
 }
