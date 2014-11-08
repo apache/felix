@@ -29,33 +29,27 @@ You should see something like that in the eclipse console:
 -----------------------------------------------------------------------------------------------------------------
 g! Starting benchmarks (each tested bundle will create 210 components).
 
-	[Starting benchmarks without processing done in components start/stop methods]
+	[Starting benchmarks with no processing done in components start/stop methods]
 
-Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.scr
-...............
-  results=165388453,181692533,194633665,209987756,509355533
+Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.scr ...............
+-> results in nanos: [159,064,470 | 179,014,754 | 197,853,177 | 212,896,041 | 472,387,401]
 
-Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager
-...............
-  results=108093209,109428066,118706035,130904884,217105864
+Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager ...............
+-> results in nanos: [108,856,562 | 114,055,223 | 118,687,448 | 126,819,846 | 212,840,128]
 
-Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel
-...............
-  results=53079063,54634229,56280294,60804732,87662602
+Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel ...............
+-> results in nanos: [50,952,636 | 59,165,868 | 61,674,388 | 67,884,568 | 87,306,289]
 
 	[Starting benchmarks with processing done in components start/stop methods]
 
-Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.scr
-.....
-  results=1901046940,2046071061,2049699013,2106044239,2135788954
+Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.scr .....
+-> results in nanos: [1,976,142,748 | 2,029,509,642 | 2,033,458,458 | 2,040,403,279 | 2,153,307,987]
 
-Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager
-.....
-  results=1838457950,1955358415,1995759988,2019227314,2020718867
+Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager .....
+-> results in nanos: [1,944,204,422 | 1,990,961,405 | 1,993,826,956 | 2,005,007,625 | 2,044,245,042]
 
-Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel
-.....
-  results=495143352,502357811,503702791,523781479,528263945
+Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel .....
+-> results in nanos: [488,746,303 | 497,815,004 | 514,073,517 | 515,736,048 | 531,009,623]
 -----------------------------------------------------------------------------------------------------------------
 
 You can also possibly run the same test using optimized DM filter indices.
