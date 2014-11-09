@@ -39,8 +39,7 @@ public class FieldMethods implements ReferenceMethods
         handler = new FieldHandler(
                 m_dependencyMetadata.getField(),
                 instanceClass,
-                m_dependencyMetadata.getInterface(),
-                m_dependencyMetadata.getScope()
+                m_dependencyMetadata.getInterface()
         );
     }
 
