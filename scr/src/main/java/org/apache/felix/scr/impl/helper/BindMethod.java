@@ -26,18 +26,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.scr.impl.Activator;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.RefPair;
 import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata.ReferenceScope;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceObjects;
-import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
-import org.osgi.service.packageadmin.ExportedPackage;
-import org.osgi.service.packageadmin.PackageAdmin;
 
 
 /**
@@ -46,24 +41,6 @@ import org.osgi.service.packageadmin.PackageAdmin;
 public class BindMethod extends BaseMethod<BindParameters>
 implements org.apache.felix.scr.impl.helper.ReferenceMethod
 {
-
-    private static final Class<?> OBJECT_CLASS = Object.class;
-
-    protected static final Class<?> SERVICE_REFERENCE_CLASS = ServiceReference.class;
-    private static final Class<?> SERVICE_OBJECTS_CLASS;
-
-    static {
-        Class<?> serviceObjectsClass = null;
-        try {
-            serviceObjectsClass = ServiceObjects.class;
-        }
-        catch (Throwable t)
-        {
-            //can't load class
-        }
-        SERVICE_OBJECTS_CLASS = serviceObjectsClass;
-    }
-
     private final String m_referenceClassName;
 
     private final ReferenceMetadata.ReferenceScope m_referenceScope;
@@ -168,7 +145,7 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
         }
 
         // for further methods we need the class of the service object
-        final Class<?> parameterClass = getParameterClass( targetClass, logger );
+        final Class<?> parameterClass = ClassUtils.getClassFromComponentClassLoader( targetClass, m_referenceClassName, logger );
         if ( parameterClass != null )
         {
 
@@ -262,9 +239,9 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
                         boolean specialMatch = true;
                         List<ParamType> paramTypes = new ArrayList<ParamType>(parameterTypes.length);
                         for (Class<?> paramType: parameterTypes) {
-                            if (paramType == SERVICE_REFERENCE_CLASS)
+                            if (paramType == ClassUtils.SERVICE_REFERENCE_CLASS)
                             {
-                                if (specialMatch && parameterClass == SERVICE_REFERENCE_CLASS)
+                                if (specialMatch && parameterClass == ClassUtils.SERVICE_REFERENCE_CLASS)
                                 {
                                     specialMatch = false;
                                     paramTypes.add(ParamType.serviceType);
@@ -274,9 +251,9 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
                                     paramTypes.add(ParamType.serviceReference);
                                 }
                             }
-                            else if (paramType == SERVICE_OBJECTS_CLASS)
+                            else if (paramType == ClassUtils.SERVICE_OBJECTS_CLASS)
                             {
-                                if (specialMatch && parameterClass == SERVICE_OBJECTS_CLASS)
+                                if (specialMatch && parameterClass == ClassUtils.SERVICE_OBJECTS_CLASS)
                                 {
                                     specialMatch = false;
                                     paramTypes.add(ParamType.serviceType);
@@ -343,118 +320,6 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
         return null;
     }
 
-
-    /**
-     * Returns the class object representing the class of the service reference
-     * named by the {@link #m_referenceClassName} field. The class loader of
-     * the <code>targetClass</code> is used to load the service class.
-     * <p>
-     * It may well be possible, that the classloader of the target class cannot
-     * see the service object class, for example if the service reference is
-     * inherited from a component class of another bundle.
-     *
-     * @return The class object for the referred to service or <code>null</code>
-     *      if the class loader of the <code>targetClass</code> cannot see that
-     *      class.
-     */
-    private Class<?> getParameterClass( final Class<?> targetClass, SimpleLogger logger )
-    {
-        if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
-        {
-            logger.log(
-                LogService.LOG_DEBUG,
-                "getParameterClass: Looking for interface class {0} through loader of {1}",
-                    new Object[] {m_referenceClassName, targetClass.getName()}, null );
-        }
-
-        try
-        {
-            // need the class loader of the target class, which may be the
-            // system classloader, which case getClassLoader may retur null
-            ClassLoader loader = targetClass.getClassLoader();
-            if ( loader == null )
-            {
-                loader = ClassLoader.getSystemClassLoader();
-            }
-
-            final Class<?> referenceClass = loader.loadClass( m_referenceClassName );
-            if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
-            {
-                logger.log( LogService.LOG_DEBUG,
-                    "getParameterClass: Found class {0}", new Object[] {referenceClass.getName()}, null );
-            }
-            return referenceClass;
-        }
-        catch ( ClassNotFoundException cnfe )
-        {
-            // if we can't load the class, perhaps the method is declared in a
-            // super class so we try this class next
-        }
-
-        if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
-        {
-            logger.log( LogService.LOG_DEBUG,
-                "getParameterClass: Not found through component class, using PackageAdmin service", null );
-        }
-
-        // try to load the class with the help of the PackageAdmin service
-        PackageAdmin pa = ( PackageAdmin ) Activator.getPackageAdmin();
-        if ( pa != null )
-        {
-            final String referenceClassPackage = m_referenceClassName.substring( 0, m_referenceClassName
-                .lastIndexOf( '.' ) );
-            ExportedPackage[] pkg = pa.getExportedPackages( referenceClassPackage );
-            if ( pkg != null )
-            {
-                for ( int i = 0; i < pkg.length; i++ )
-                {
-                    try
-                    {
-                        if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
-                        {
-                            logger.log(
-                                LogService.LOG_DEBUG,
-                                "getParameterClass: Checking Bundle {0}/{1}",
-                                    new Object[] {pkg[i].getExportingBundle().getSymbolicName(), pkg[i].getExportingBundle().getBundleId()}, null );
-                        }
-
-                        Class<?> referenceClass = pkg[i].getExportingBundle().loadClass( m_referenceClassName );
-                        if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
-                        {
-                            logger.log( LogService.LOG_DEBUG,
-                                    "getParameterClass: Found class {0}", new Object[] {referenceClass.getName()}, null );
-                        }
-                        return referenceClass;
-                    }
-                    catch ( ClassNotFoundException cnfe )
-                    {
-                        // exported package does not provide the interface !!!!
-                    }
-                }
-            }
-            else if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
-            {
-                logger.log( LogService.LOG_DEBUG,
-                    "getParameterClass: No bundles exporting package {0} found", new Object[] {referenceClassPackage}, null );
-            }
-        }
-        else if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
-        {
-            logger.log( LogService.LOG_DEBUG,
-                "getParameterClass: PackageAdmin service not available, cannot find class", null );
-        }
-
-        // class cannot be found, neither through the component nor from an
-        // export, so we fall back to assuming Object
-        if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
-        {
-            logger.log( LogService.LOG_DEBUG,
-                "getParameterClass: No class found, falling back to class Object", null );
-        }
-        return OBJECT_CLASS;
-    }
-
-
     /**
      * Returns a method taking a single <code>ServiceReference</code> object
      * as a parameter or <code>null</code> if no such method exists.
@@ -478,7 +343,7 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
         throws SuitableMethodNotAccessibleException, InvocationTargetException
     {
         return getMethod( targetClass, getMethodName(), new Class[]
-            { SERVICE_REFERENCE_CLASS }, acceptPrivate, acceptPackage, logger );
+            { ClassUtils.SERVICE_REFERENCE_CLASS }, acceptPrivate, acceptPackage, logger );
     }
 
     private Method getServiceObjectsMethod( final Class<?> targetClass, boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger )
@@ -487,7 +352,7 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
         if ( m_referenceScope == ReferenceMetadata.ReferenceScope.prototype )
         {
             return getMethod(targetClass, getMethodName(),
-                new Class[] { SERVICE_OBJECTS_CLASS }, acceptPrivate, acceptPackage,
+                new Class[] { ClassUtils.SERVICE_OBJECTS_CLASS }, acceptPrivate, acceptPackage,
                 logger);
         }
         return null;
@@ -641,7 +506,7 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
         InvocationTargetException
     {
         return getMethod( targetClass, getMethodName(), new Class[]
-            { parameterClass, MAP_CLASS }, acceptPrivate, acceptPackage, logger );
+            { parameterClass, ClassUtils.MAP_CLASS }, acceptPrivate, acceptPackage, logger );
     }
 
 
@@ -678,7 +543,7 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
             {
 
                 // parameters must be refclass,map
-                if ( parameters[0].isAssignableFrom( parameterClass ) && parameters[1] == MAP_CLASS )
+                if ( parameters[0].isAssignableFrom( parameterClass ) && parameters[1] == ClassUtils.MAP_CLASS )
                 {
                     if ( accept( method, acceptPrivate, acceptPackage, false ) )
                     {

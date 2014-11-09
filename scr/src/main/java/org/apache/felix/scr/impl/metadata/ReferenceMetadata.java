@@ -695,7 +695,7 @@ public class ReferenceMetadata
             {
                 throw componentMetadata.validationFailure( "Field strategy must be one of " + FIELD_STRATEGY_VALID );
             }
-            if ( m_cardinality.equals(CARDINALITY_1_1) || m_cardinality.equals(CARDINALITY_0_1) )
+            if ( !m_isMultiple )
             {
                 // update is not allowed for unary references
                 if ( m_field_strategy.equals(FIELD_STRATEGY_UPDATE) )
@@ -705,7 +705,7 @@ public class ReferenceMetadata
             }
 
             // field value type
-            if ( m_cardinality.equals(CARDINALITY_1_1) || m_cardinality.equals(CARDINALITY_0_1) )
+            if ( !m_isMultiple )
             {
                 // value type must not be specified for unary references
                 if ( m_field_value_type != null )
