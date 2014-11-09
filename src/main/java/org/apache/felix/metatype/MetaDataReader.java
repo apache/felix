@@ -62,17 +62,22 @@ public class MetaDataReader
      * Specification 4.2. We still have to support this namespace for
      * backwards compatibility.
      */
-    private static final String NAMESPACE_1_0 = "http://www.osgi.org/xmlns/metatype/v1.0.0";
+    static final String NAMESPACE_1_0 = "http://www.osgi.org/xmlns/metatype/v1.0.0";
 
     /**
      * The XML Namespace for Metatype 1.1 descriptors.
      */
-    private static final String NAMESPACE_1_1 = "http://www.osgi.org/xmlns/metatype/v1.1.0";
+    static final String NAMESPACE_1_1 = "http://www.osgi.org/xmlns/metatype/v1.1.0";
 
     /**
      * The XML Namespace for Metatype 1.2 descriptors.
      */
-    private static final String NAMESPACE_1_2 = "http://www.osgi.org/xmlns/metatype/v1.2.0";
+    static final String NAMESPACE_1_2 = "http://www.osgi.org/xmlns/metatype/v1.2.0";
+
+    /**
+     * The XML Namespace for Metatype 1.2 descriptors.
+     */
+    static final String NAMESPACE_1_3 = "http://www.osgi.org/xmlns/metatype/v1.3.0";
 
     /** The XML parser used to read the XML documents */
     private KXmlParser parser = new KXmlParser();
@@ -151,8 +156,11 @@ public class MetaDataReader
     private void checkMetatypeNamespace() throws IOException
     {
         final String namespace = this.parser.getNamespace();
-        if ( namespace != null && namespace.length() > 0 && !NAMESPACE_1_0.equals( namespace )
-            && !NAMESPACE_1_1.equals( namespace ) && !NAMESPACE_1_2.equals( namespace ) )
+        if ( namespace != null && namespace.length() > 0 && 
+            !NAMESPACE_1_0.equals( namespace ) &&
+            !NAMESPACE_1_1.equals( namespace ) &&
+            !NAMESPACE_1_2.equals( namespace ) &&
+            !NAMESPACE_1_3.equals( namespace ) )
         {
             throw new IOException( "Unsupported Namespace " + namespace );
         }

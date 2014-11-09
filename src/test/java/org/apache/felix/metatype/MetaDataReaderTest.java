@@ -85,7 +85,7 @@ public class MetaDataReaderTest extends TestCase
 
     public void testWithNamespace_1_0_0() throws IOException, XmlPullParserException
     {
-        String empty = "<metatype:MetaData xmlns:metatype=\"http://www.osgi.org/xmlns/metatype/v1.0.0\" "
+        String empty = "<metatype:MetaData xmlns:metatype=\"" + MetaDataReader.NAMESPACE_1_0 + "\" "
             + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ></metatype:MetaData>";
         MetaData mti = read( empty );
 
@@ -97,7 +97,7 @@ public class MetaDataReaderTest extends TestCase
 
     public void testWithNamespace_1_1_0() throws IOException, XmlPullParserException
     {
-        String empty = "<metatype:MetaData xmlns:metatype=\"http://www.osgi.org/xmlns/metatype/v1.1.0\" "
+        String empty = "<metatype:MetaData xmlns:metatype=\"" + MetaDataReader.NAMESPACE_1_1 + "\" "
             + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ></metatype:MetaData>";
         MetaData mti = read( empty );
 
@@ -109,7 +109,19 @@ public class MetaDataReaderTest extends TestCase
 
     public void testWithNamespace_1_2_0() throws IOException, XmlPullParserException
     {
-        String empty = "<metatype:MetaData xmlns:metatype=\"http://www.osgi.org/xmlns/metatype/v1.1.0\" "
+        String empty = "<metatype:MetaData xmlns:metatype=\"" + MetaDataReader.NAMESPACE_1_2 + "\" "
+            + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ></metatype:MetaData>";
+        MetaData mti = read( empty );
+
+        assertNotNull( mti );
+        assertNull( mti.getLocalePrefix() );
+        assertNull( mti.getObjectClassDefinitions() );
+    }
+
+
+    public void testWithNamespace_1_3_0() throws IOException, XmlPullParserException
+    {
+        String empty = "<metatype:MetaData xmlns:metatype=\"" + MetaDataReader.NAMESPACE_1_3 + "\" "
             + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ></metatype:MetaData>";
         MetaData mti = read( empty );
 
@@ -188,6 +200,27 @@ public class MetaDataReaderTest extends TestCase
 
     public void testSingleOCDSingleRequiredAttr() throws IOException, XmlPullParserException
     {
+        testSingleOCDSingleRequiredAttr("String", AttributeDefinition.STRING, MetaDataReader.NAMESPACE_1_0);
+        testSingleOCDSingleRequiredAttr("String", AttributeDefinition.STRING, MetaDataReader.NAMESPACE_1_1);
+        testSingleOCDSingleRequiredAttr("String", AttributeDefinition.STRING, MetaDataReader.NAMESPACE_1_2);
+        testSingleOCDSingleRequiredAttr("String", AttributeDefinition.STRING, MetaDataReader.NAMESPACE_1_3);
+
+        testSingleOCDSingleRequiredAttr("Char", AttributeDefinition.CHARACTER, MetaDataReader.NAMESPACE_1_0);
+        testSingleOCDSingleRequiredAttr("Char", AttributeDefinition.CHARACTER, MetaDataReader.NAMESPACE_1_1);
+        testSingleOCDSingleRequiredAttr("Char", AttributeDefinition.CHARACTER, MetaDataReader.NAMESPACE_1_2);
+        testSingleOCDSingleRequiredAttr("Char", AttributeDefinition.CHARACTER, MetaDataReader.NAMESPACE_1_3);
+        
+        testSingleOCDSingleRequiredAttr("Character", AttributeDefinition.CHARACTER, MetaDataReader.NAMESPACE_1_0);
+        testSingleOCDSingleRequiredAttr("Character", AttributeDefinition.CHARACTER, MetaDataReader.NAMESPACE_1_1);
+        testSingleOCDSingleRequiredAttr("Character", AttributeDefinition.CHARACTER, MetaDataReader.NAMESPACE_1_2);
+        testSingleOCDSingleRequiredAttr("Character", AttributeDefinition.CHARACTER, MetaDataReader.NAMESPACE_1_3);
+
+    }
+
+
+    private void testSingleOCDSingleRequiredAttr(String adType, int typeCode,
+        String namespace) throws IOException
+    {
         String ocdName = "ocd0";
         String ocdId = "id.ocd0";
         String ocdDescription = "ocd0 description";
@@ -195,14 +228,13 @@ public class MetaDataReaderTest extends TestCase
         String adId = "id.ad0";
         String adName = "ad0";
         String adDescription = "ad0 description";
-        String adType = "String";
         int adCardinality = 789;
         String adDefault = "    a    ,   b    ,    c    ";
 
-        String empty = "<MetaData>" + "<OCD id=\"" + ocdId + "\" name=\"" + ocdName + "\" description=\""
+        String empty = "<metatype:MetaData xmlns:metatype=\"" + namespace + "\">" + "<OCD id=\"" + ocdId + "\" name=\"" + ocdName + "\" description=\""
             + ocdDescription + "\">" + "<AD id=\"" + adId + "\" name=\"" + adName + "\" type=\"" + adType
             + "\" description=\"" + adDescription + "\" cardinality=\"" + adCardinality + "\" default=\"" + adDefault
-            + "\">" + "</AD>" + "</OCD>" + "</MetaData>";
+            + "\">" + "</AD>" + "</OCD>" + "</metatype:MetaData>";
         MetaData mti = read( empty );
 
         assertNull( mti.getLocalePrefix() );
@@ -218,7 +250,7 @@ public class MetaDataReaderTest extends TestCase
         assertEquals( adId, ad.getID() );
         assertEquals( adName, ad.getName() );
         assertEquals( adDescription, ad.getDescription() );
-        assertEquals( AttributeDefinition.STRING, ad.getType() );
+        assertEquals( typeCode, ad.getType() );
         assertEquals( adCardinality, ad.getCardinality() );
         assertNotNull( ad.getDefaultValue() );
         assertEquals( 3, ad.getDefaultValue().length );
