@@ -24,80 +24,60 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.Map;
 
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.RefPair;
-import org.apache.felix.scr.impl.metadata.ReferenceMetadata.ReferenceScope;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 
-
 /**
- * Component method to be invoked on service (un)binding.
+ * Handler for field references
  */
 public class FieldHandler
 {
-
-    // class references to simplify parameter checking
-    protected static final Class<?> MAP_CLASS = Map.class;
-
+    /** The name of the field. */
     private final String fieldName;
+
+    /** The component class. */
     private final Class<?> componentClass;
 
+    /** The field used for the injection. */
     private volatile Field field;
 
+    /** State handling. */
     private volatile State state;
 
+    /**
+     * Create a new field handler
+     * @param fieldName name of the field
+     * @param componentClass component class
+     * @param referenceClassName service class name
+     */
     public FieldHandler( final String fieldName, final Class<?> componentClass,
-            final String referenceClassName, final ReferenceScope referenceScope)
+            final String referenceClassName)
     {
         this.fieldName = fieldName;
         this.componentClass = componentClass;
         this.state = NotResolved.INSTANCE;
     }
 
-    protected final String getFieldName()
-    {
-        return this.fieldName;
-    }
-
-    final Field getField()
-    {
-        return this.field;
-    }
-
-    protected final Class<?> getComponentClass()
-    {
-        return this.componentClass;
-    }
-
-
-    void setField( final Field f, final SimpleLogger logger )
+    private void setField( final Field f, final SimpleLogger logger )
     {
         this.field = f;
 
         if ( f != null )
         {
             state = Resolved.INSTANCE;
-            logger.log( LogService.LOG_DEBUG, "Found field: {0}", new Object[]
-                { field }, null );
+            logger.log( LogService.LOG_DEBUG, "Found field: {0}",
+                    new Object[] { field }, null );
         }
         else
         {
             state = NotFound.INSTANCE;
             logger.log(LogService.LOG_ERROR, "Field [{0}] not found; Component will fail",
-                new Object[]
-                    { getFieldName() }, null);
+                new Object[] { this.fieldName }, null);
         }
     }
-
-
-    State getState()
-    {
-        return state;
-    }
-
 
     /**
      * Finds the field named in the {@link #fieldName} field in the given
@@ -113,7 +93,7 @@ public class FieldHandler
      */
     private Field findField( final SimpleLogger logger ) throws InvocationTargetException
     {
-        final Class<?> targetClass = getComponentClass();
+        final Class<?> targetClass = this.componentClass;
         final ClassLoader targetClasslLoader = targetClass.getClassLoader();
         final String targetPackage = getPackageName( targetClass );
         Class<?> theClass = targetClass;
@@ -125,12 +105,12 @@ public class FieldHandler
             if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
             {
                 logger.log( LogService.LOG_DEBUG,
-                    "Locating field " + getFieldName() + " in class " + theClass.getName(), null );
+                    "Locating field " + this.fieldName + " in class " + theClass.getName(), null );
             }
 
             try
             {
-                final Field field = doFindField( theClass, acceptPrivate, acceptPackage, logger );
+                final Field field = getField( theClass, acceptPrivate, acceptPackage, logger );
                 if ( field != null )
                 {
                     return field;
@@ -141,7 +121,7 @@ public class FieldHandler
                 // log and return null
                 logger.log( LogService.LOG_ERROR,
                     "findField: Suitable but non-accessible field {0} found in class {1}, subclass of {2}", new Object[]
-                        { getFieldName(), theClass.getName(), targetClass.getName() }, null );
+                        { this.fieldName, theClass.getName(), targetClass.getName() }, null );
                 break;
             }
 
@@ -166,40 +146,32 @@ public class FieldHandler
         return null;
     }
 
-
     /**
-     * Finds the method named in the {@link #m_methodName} field in the given
-     * <code>targetClass</code>. If the target class has no acceptable method
-     * the class hierarchy is traversed until a method is found or the root
-     * of the class hierarchy is reached without finding a method.
+     * Finds the field named in the {@link #fieldName} field in the given
+     * <code>targetClass</code>. If the target class has no acceptable field
+     * the class hierarchy is traversed until a field is found or the root
+     * of the class hierarchy is reached without finding a field.
      *
      *
      * @param targetClass The class in which to look for the method
-     * @param acceptPrivate <code>true</code> if private methods should be
+     * @param acceptPrivate <code>true</code> if private fields should be
      *      considered.
-     * @param acceptPackage <code>true</code> if package private methods should
+     * @param acceptPackage <code>true</code> if package private fields should
      *      be considered.
      * @param logger
-     * @return The requested method or <code>null</code> if no acceptable method
+     * @return The requested field or <code>null</code> if no acceptable field
      *      can be found in the target class or any super class.
      * @throws InvocationTargetException If an unexpected Throwable is caught
-     *      trying to find the requested method.
+     *      trying to find the requested field.
      */
-    private Field doFindField( Class<?> targetClass, boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger )
-        throws SuitableMethodNotAccessibleException, InvocationTargetException
-    {
-        // TODO - check field type(!)
-        return getField( targetClass, this.getFieldName(), acceptPrivate, acceptPackage, logger);
-    }
-
-    private Field getField( final Class<?> clazz, final String name, final boolean acceptPrivate,
+    private Field getField( final Class<?> clazz, final boolean acceptPrivate,
             final boolean acceptPackage, final SimpleLogger logger )
     throws SuitableMethodNotAccessibleException, InvocationTargetException
     {
         try
         {
             // find the declared field in this class
-            final Field field = clazz.getDeclaredField( name );
+            final Field field = clazz.getDeclaredField( this.fieldName );
 
             // accept public and protected fields only and ensure accessibility
             if ( accept( field, acceptPrivate, acceptPackage ) )
@@ -217,7 +189,7 @@ public class FieldHandler
             if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
             {
                 logger.log( LogService.LOG_DEBUG, "Declared Field {0}.{1} not found", new Object[]
-                    { clazz.getName(), name }, null );
+                    { clazz.getName(), this.fieldName }, null );
             }
         }
         catch ( NoClassDefFoundError cdfe )
@@ -228,7 +200,7 @@ public class FieldHandler
             if ( logger.isLogEnabled( LogService.LOG_WARNING ) )
             {
                 StringBuffer buf = new StringBuffer();
-                buf.append( "Failure loooking up field " ).append( name );
+                buf.append( "Failure loooking up field " ).append( this.fieldName );
                 buf.append( " in class class " ).append( clazz.getName() ).append( ". Assuming no such field." );
                 logger.log( LogService.LOG_WARNING, buf.toString(), cdfe );
             }
@@ -241,45 +213,13 @@ public class FieldHandler
         {
             // unexpected problem accessing the field, don't let everything
             // blow up in this situation, just throw a declared exception
-            throw new InvocationTargetException( throwable, "Unexpected problem trying to get field " + name );
+            throw new InvocationTargetException( throwable, "Unexpected problem trying to get field " + this.fieldName );
         }
 
         // caught and ignored exception, assume no field and continue search
         return null;
     }
-/*
-    @Override
-    protected Object[] getParameters( Method method, BindParameters bp )
-    {
-        ComponentContextImpl key = bp.getComponentContext();
-        Object[] result = new Object[ m_paramTypes.size()];
-        RefPair<?, ?> refPair = bp.getRefPair();
-        int i = 0;
-        for ( ParamType pt: m_paramTypes ) {
-            switch (pt) {
-                case serviceReference:
-                    result[i++] = refPair.getRef();
-                    break;
 
-                case serviceObjects:
-                    result[i++] = refPair.getServiceObjects();
-                    break;
-
-                case map:
-                    result[i++] = new ReadOnlyDictionary<String, Object>( refPair.getRef() );
-                    break;
-
-                case serviceType:
-                    result[i++] = refPair.getServiceObject(key);
-                    break;
-
-                default: throw new IllegalStateException("unexpected ParamType: " + pt);
-
-            }
-        }
-        return result;
-    }
-*/
     private enum METHOD_TYPE {
         BIND,
         UNBIND,
@@ -414,7 +354,7 @@ public class FieldHandler
         private synchronized void resolve( final FieldHandler baseMethod, SimpleLogger logger )
         {
             logger.log( LogService.LOG_DEBUG, "getting field: {0}", new Object[]
-                    {baseMethod.getFieldName()}, null );
+                    {baseMethod.fieldName}, null );
 
             // resolve the field
             Field field = null;
@@ -425,7 +365,7 @@ public class FieldHandler
             catch ( InvocationTargetException ex )
             {
                 logger.log( LogService.LOG_WARNING, "{0} cannot be found", new Object[]
-                        {baseMethod.getFieldName()}, ex.getTargetException() );
+                        {baseMethod.fieldName}, ex.getTargetException() );
             }
 
             baseMethod.setField( field, logger );
@@ -440,7 +380,7 @@ public class FieldHandler
         throws InvocationTargetException
         {
             resolve( baseMethod, logger );
-            return baseMethod.getState().invoke( baseMethod, mType, componentInstance, rawParameter, logger );
+            return baseMethod.state.invoke( baseMethod, mType, componentInstance, rawParameter, logger );
         }
     }
 
@@ -456,7 +396,7 @@ public class FieldHandler
                 final SimpleLogger logger )
         {
             logger.log( LogService.LOG_ERROR, "Field [{1}] not found", new Object[]
-                { baseMethod.getFieldName() }, null );
+                { baseMethod.fieldName }, null );
             return null;
         }
     }
@@ -490,7 +430,7 @@ public class FieldHandler
                 catch ( InvocationTargetException ite )
                 {
                     logger.log( LogService.LOG_ERROR, "The {0} field has thrown an exception", new Object[]
-                        { getFieldName() }, ite.getCause() );
+                        { fieldName }, ite.getCause() );
                 }
 
                 return methodCallFailureResult;
@@ -522,7 +462,7 @@ public class FieldHandler
                 catch ( InvocationTargetException ite )
                 {
                     logger.log( LogService.LOG_ERROR, "The {0} field has thrown an exception", new Object[]
-                        { getFieldName() }, ite.getCause() );
+                        { fieldName }, ite.getCause() );
                 }
 
                 return methodCallFailureResult;
@@ -550,7 +490,7 @@ public class FieldHandler
                 catch ( InvocationTargetException ite )
                 {
                     logger.log( LogService.LOG_ERROR, "The {0} field has thrown an exception", new Object[]
-                        { getFieldName() }, ite.getCause() );
+                        { fieldName }, ite.getCause() );
                 }
 
                 return methodCallFailureResult;
