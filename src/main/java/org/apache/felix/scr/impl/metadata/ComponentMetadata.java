@@ -22,11 +22,8 @@ package org.apache.felix.scr.impl.metadata;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,7 +33,6 @@ import org.apache.felix.scr.impl.TargetedPID;
 import org.apache.felix.scr.impl.helper.Logger;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata.Scope;
 import org.osgi.service.component.ComponentException;
-import org.osgi.service.log.LogService;
 
 
 /**
@@ -117,7 +113,7 @@ public class ComponentMetadata
 
     // List of service references, (required services 0..*)
     private List<ReferenceMetadata> m_references = new ArrayList<ReferenceMetadata>();
-    
+
     private boolean m_configurableServiceProperties;
     private boolean m_persistentFactoryComponent;
     private boolean m_deleteCallsModify;
@@ -411,7 +407,7 @@ public class ComponentMetadata
 		this.m_delayedKeepInstances = delayedKeepInstances;
 	}
 
-    
+
 
     /////////////////////////////////////////// GETTERS //////////////////////////////////////
 
@@ -425,7 +421,7 @@ public class ComponentMetadata
         return m_dsVersion;
     }
 
-    
+
     /**
      * Returns the name of the component
      *
@@ -461,7 +457,7 @@ public class ComponentMetadata
         }
         return m_configurationPid;
     }
-    
+
     public int getPidIndex(TargetedPID pid)
     {
         if ( !m_validated )
@@ -631,10 +627,10 @@ public class ComponentMetadata
     {
         return m_service;
     }
-    
+
     public Scope getServiceScope()
     {
-    	if (m_service == null) 
+    	if (m_service == null)
     	{
     		return Scope.singleton;
     	}
@@ -841,7 +837,7 @@ public class ComponentMetadata
                 {
                     if (!m_dsVersion.isDS13())
                     {
-                        throw validationFailure( "Use of '$' configuration-pid wildcard requires DS 1.3 or later namespace " );                        
+                        throw validationFailure( "Use of '$' configuration-pid wildcard requires DS 1.3 or later namespace " );
                     }
                     m_configurationPid.set( i, getName() );
                 }
@@ -915,8 +911,8 @@ public class ComponentMetadata
                 throw validationFailure( "factory or immediate must be scope singleton not " +  m_service.getScope());
             }
         }
-        
-        if (m_dsVersion == DSVersion.DS12Felix) 
+
+        if (m_dsVersion == DSVersion.DS12Felix)
         {
         	m_configurableServiceProperties = true;
         }
@@ -940,7 +936,7 @@ public class ComponentMetadata
         {
         	throw validationFailure("Only a factory component can be a persistent factory component");
         }
-        
+
 
         m_validated = true;
     }

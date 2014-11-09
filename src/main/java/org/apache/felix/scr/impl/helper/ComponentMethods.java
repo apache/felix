@@ -27,9 +27,8 @@ import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 
-
 /**
- * @version $Rev:$ $Date:$
+ * @version $Rev$ $Date$
  */
 public class ComponentMethods
 {
@@ -37,7 +36,7 @@ public class ComponentMethods
     private ModifiedMethod m_modifiedMethod;
     private DeactivateMethod m_deactivateMethod;
 
-    private final Map<String, BindMethods> bindMethodMap = new HashMap<String, BindMethods>();
+    private final Map<String, ReferenceMethods> bindMethodMap = new HashMap<String, ReferenceMethods>();
 
     public synchronized void initComponentMethods( ComponentMetadata componentMetadata, Class<?> implementationObjectClass )
     {
@@ -57,9 +56,17 @@ public class ComponentMethods
 
         for ( ReferenceMetadata referenceMetadata: componentMetadata.getDependencies() )
         {
-            String refName = referenceMetadata.getName();
-            BindMethods bindMethods = new BindMethods( referenceMetadata, implementationObjectClass, dsVersion, configurableServiceProperties);
-            bindMethodMap.put( refName, bindMethods );
+            final String refName = referenceMetadata.getName();
+            final ReferenceMethods methods;
+            if ( referenceMetadata.getField() != null )
+            {
+                methods = new FieldMethods( referenceMetadata, implementationObjectClass, dsVersion, configurableServiceProperties);
+            }
+            else
+            {
+                methods = new BindMethods( referenceMetadata, implementationObjectClass, dsVersion, configurableServiceProperties);
+            }
+            bindMethodMap.put( refName, methods );
         }
     }
 
@@ -78,9 +85,9 @@ public class ComponentMethods
         return m_modifiedMethod;
     }
 
-    public BindMethods getBindMethods(String refName )
+    public ReferenceMethods getBindMethods(String refName )
     {
-        return ( BindMethods ) bindMethodMap.get( refName );
+        return bindMethodMap.get( refName );
     }
 
 }

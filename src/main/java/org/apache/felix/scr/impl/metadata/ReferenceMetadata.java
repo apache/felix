@@ -30,7 +30,7 @@ import org.apache.felix.scr.impl.helper.Logger;
 public class ReferenceMetadata
 {
 	public enum ReferenceScope {bundle, prototype}
-	
+
     // constant for option single reference - 0..1
     public static final String CARDINALITY_0_1 = "0..1";
 
@@ -64,6 +64,33 @@ public class ReferenceMetadata
     // set of valid policy option settings
     private static final Set<String> POLICY_OPTION_VALID;
 
+    // constant for update field strategy
+    public static final String FIELD_STRATEGY_UPDATE = "update";
+
+    // constant for replace field strategy
+    public static final String FIELD_STRATEGY_REPLACE = "replace";
+
+    // set of valid field strategy settings
+    private static final Set<String> FIELD_STRATEGY_VALID;
+
+    // constant for field value type service
+    public static final String FIELD_VALUE_TYPE_SERVICE = "service";
+
+    // constant for field value type properties
+    public static final String FIELD_VALUE_TYPE_PROPERTIES = "properties";
+
+    // constant for field value type reference
+    public static final String FIELD_VALUE_TYPE_REFERENCE = "reference";
+
+    // constant for field value type serviceobjects
+    public static final String FIELD_VALUE_TYPE_SERVICEOBJECTS = "serviceobjects";
+
+    // constant for field value type tuple
+    public static final String FIELD_VALUE_TYPE_TUPLE = "tuple";
+
+    // set of valid field value type settings
+    private static final Set<String> FIELD_VALUE_TYPE_VALID;
+
     // Name for the reference (required)
     private String m_name = null;
 
@@ -85,12 +112,21 @@ public class ReferenceMetadata
     // Name of the unbind method (optional)
     private String m_unbind = null;
 
+    // Name of the field (optional, since DS 1.3)
+    private String m_field;
+
+    // Name of the strategy for the field (optional, since DS 1.3)
+    private String m_field_strategy;
+
+    // Name of the value type for the field (optional, since DS 1.3)
+    private String m_field_value_type;
+
     // Policy attribute (optional, default = static)
     private String m_policy = null;
 
     // Policy option attribute (optional, default = reluctant)
     private String m_policy_option = null;
-    
+
     private String m_scopeName;
     private ReferenceScope m_scope = ReferenceScope.bundle;
 
@@ -102,6 +138,9 @@ public class ReferenceMetadata
 
     // Flag that is set once the component is verified (its properties cannot be changed)
     private boolean m_validated = false;
+
+    // flag indicating this is a field reference
+    private final boolean m_fieldReference;
 
     static
     {
@@ -118,8 +157,26 @@ public class ReferenceMetadata
         POLICY_OPTION_VALID = new TreeSet<String>();
         POLICY_OPTION_VALID.add( POLICY_OPTION_RELUCTANT );
         POLICY_OPTION_VALID.add( POLICY_OPTION_GREEDY );
+
+        FIELD_STRATEGY_VALID = new TreeSet<String>();
+        FIELD_STRATEGY_VALID.add( FIELD_STRATEGY_REPLACE );
+        FIELD_STRATEGY_VALID.add( FIELD_STRATEGY_UPDATE );
+
+        FIELD_VALUE_TYPE_VALID = new TreeSet<String>();
+        FIELD_VALUE_TYPE_VALID.add ( FIELD_VALUE_TYPE_PROPERTIES );
+        FIELD_VALUE_TYPE_VALID.add ( FIELD_VALUE_TYPE_REFERENCE );
+        FIELD_VALUE_TYPE_VALID.add ( FIELD_VALUE_TYPE_SERVICE );
+        FIELD_VALUE_TYPE_VALID.add ( FIELD_VALUE_TYPE_SERVICEOBJECTS );
+        FIELD_VALUE_TYPE_VALID.add ( FIELD_VALUE_TYPE_TUPLE );
     }
 
+    public ReferenceMetadata() {
+        this(false);
+    }
+
+    public ReferenceMetadata(final boolean flag) {
+        this.m_fieldReference = flag;
+    }
 
     /////////////////////////////////////////////// setters ///////////////////////////////////
 
@@ -277,7 +334,53 @@ public class ReferenceMetadata
         m_unbind = unbind;
     }
 
-	public void setScope(String scopeName) {
+
+    /**
+     * Setter for the field attribute
+     *
+     * @param field the field name
+     */
+    public void setField( final String field )
+    {
+        if ( m_validated )
+        {
+            return;
+        }
+
+        m_field = field;
+    }
+
+    /**
+     * Setter for the field strategy attribute
+     *
+     * @param strategy the field strategy
+     */
+    public void setFieldStrategy( final String strategy )
+    {
+        if ( m_validated )
+        {
+            return;
+        }
+
+        m_field_strategy = strategy;
+    }
+
+    /**
+     * Setter for the field value type attribute
+     *
+     * @param valuetype the field value type
+     */
+    public void setFieldValueType( final String valuetype )
+    {
+        if ( m_validated )
+        {
+            return;
+        }
+
+        m_field_value_type = valuetype;
+    }
+
+    public void setScope(String scopeName) {
         if ( m_validated )
         {
             return;
@@ -390,6 +493,40 @@ public class ReferenceMetadata
     }
 
 
+    /**
+     * Get the name of a field in the component implementation class that is used to hold
+     * the reference
+     *
+     * @return a String with the name of the field
+     */
+    public String getField()
+    {
+        return m_field;
+    }
+
+
+    /**
+     * Get the strategy of a field in the component implementation class that is used to hold
+     * the reference
+     *
+     * @return a String with the strategy name for the field
+     */
+    public String getFieldStrategy()
+    {
+        return m_field_strategy;
+    }
+
+    /**
+     * Get the value type of a field in the component implementation class that is used to hold
+     * the reference
+     *
+     * @return a String with the value type for the field
+     */
+    public String getFieldValueType()
+    {
+        return m_field_value_type;
+    }
+
     // Getters for boolean values that determine both policy and cardinality
 
     /**
@@ -447,7 +584,7 @@ public class ReferenceMetadata
     {
         return getName() + ".target";
     }
-    
+
     public String getMinCardinalityName()
     {
         return getName() + ".cardinality.minimum";
@@ -464,7 +601,8 @@ public class ReferenceMetadata
      */
     void validate( final ComponentMetadata componentMetadata, final Logger logger )
     {
-        DSVersion dsVersion = componentMetadata.getDSVersion();
+        final DSVersion dsVersion = componentMetadata.getDSVersion();
+
         if ( m_name == null )
         {
             // 112.10 name attribute is optional, defaults to interface since DS 1.1
@@ -512,30 +650,103 @@ public class ReferenceMetadata
             throw componentMetadata.validationFailure( "Policy option must be reluctant for DS < 1.2" );
         }
 
-
-        // updated method is only supported in namespace xxx and later
-        if ( m_updated != null && !(dsVersion.isDS12() || dsVersion == DSVersion.DS11Felix) )
-        {
-            // FELIX-3648 validation must fail (instead of just ignore)
-            throw componentMetadata.validationFailure( "updated method declaration requires DS 1.2 or later namespace " );
-        }
-
         if (m_scopeName != null) {
         	if ( !dsVersion.isDS13() )
         	{
         		throw componentMetadata.validationFailure( "reference scope can be set only for DS >= 1.3");
         	}
-        	try 
+        	try
         	{
         		m_scope = ReferenceScope.valueOf(m_scopeName);
         	}
         	catch (IllegalArgumentException e)
         	{
         		throw componentMetadata.validationFailure( "reference scope must be 'bundle' or 'prototype' not " + m_scopeName);
-       		
+
         	}
         }
+
+        // checks for event based injection
+        if ( !m_fieldReference )
+        {
+            // updated method is only supported in namespace xxx and later
+            if ( m_updated != null && !(dsVersion.isDS12() || dsVersion == DSVersion.DS11Felix) )
+            {
+                // FELIX-3648 validation must fail (instead of just ignore)
+                throw componentMetadata.validationFailure( "updated method declaration requires DS 1.2 or later namespace " );
+            }
+        }
+
+        // checks for field injection
+        if ( m_fieldReference )
+        {
+            // field reference requires DS 1.3
+            if ( !dsVersion.isDS13() )
+            {
+                throw componentMetadata.validationFailure( "Field reference requires DS >= 1.3" );
+            }
+
+            // field strategy
+            if ( m_field_strategy == null )
+            {
+                setFieldStrategy( FIELD_STRATEGY_REPLACE );
+            }
+            else if ( !FIELD_STRATEGY_VALID.contains( m_field_strategy ) )
+            {
+                throw componentMetadata.validationFailure( "Field strategy must be one of " + FIELD_STRATEGY_VALID );
+            }
+            if ( m_cardinality.equals(CARDINALITY_1_1) || m_cardinality.equals(CARDINALITY_0_1) )
+            {
+                // update is not allowed for unary references
+                if ( m_field_strategy.equals(FIELD_STRATEGY_UPDATE) )
+                {
+                    throw componentMetadata.validationFailure( "Field strategy update not allowed for unary field references." );
+                }
+            }
+
+            // field value type
+            if ( m_cardinality.equals(CARDINALITY_1_1) || m_cardinality.equals(CARDINALITY_0_1) )
+            {
+                // value type must not be specified for unary references
+                if ( m_field_value_type != null )
+                {
+                    throw componentMetadata.validationFailure( "Field value type must not be set for unary field references." );
+                }
+            }
+            else
+            {
+                if ( m_field_value_type == null )
+                {
+                    setFieldValueType( FIELD_VALUE_TYPE_SERVICE );
+                }
+                else if ( !FIELD_VALUE_TYPE_VALID.contains( m_field_value_type ) )
+                {
+                    throw componentMetadata.validationFailure( "Field value type must be one of " + FIELD_VALUE_TYPE_VALID );
+                }
+            }
+
+        }
+
+
         m_validated = true;
     }
 
+    public String getDebugInfo()
+    {
+        if ( this.m_fieldReference )
+        {
+            return getField() +
+                    "interface=" + this.getInterface() +
+                    ", filter=" + this.getTarget() +
+                    ", policy=" + this.getPolicy() +
+                    ", cardinality=" + this.getCardinality();
+        }
+        return getName() +
+                "interface=" + this.getInterface() +
+                ", filter=" + this.getTarget() +
+                ", policy=" + this.getPolicy() +
+                ", cardinality=" + this.getCardinality() +
+                ", bind=" + this.getBind() +
+                ", unbind=" + this.getUnbind();
+    }
 }

@@ -25,31 +25,31 @@ import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 
 /**
- * @version $Rev:$ $Date:$
+ * @version $Rev$ $Date$
  */
-public class BindMethods
+public class BindMethods implements ReferenceMethods
 {
-    private final BindMethod m_bind;
-    private final UpdatedMethod m_updated;
-    private final UnbindMethod m_unbind;
+    private final ReferenceMethod m_bind;
+    private final ReferenceMethod m_updated;
+    private final ReferenceMethod m_unbind;
 
-    BindMethods( ReferenceMetadata m_dependencyMetadata, Class<?> instanceClass,
+    public BindMethods( ReferenceMetadata m_dependencyMetadata, Class<?> instanceClass,
             final DSVersion dsVersion, final boolean configurableServiceProperties )
     {
         ReferenceMetadata.ReferenceScope referenceScope = m_dependencyMetadata.getScope();
-        m_bind = new BindMethod(
+        m_bind = new org.apache.felix.scr.impl.helper.BindMethod(
                 m_dependencyMetadata.getBind(),
                 instanceClass,
                 m_dependencyMetadata.getInterface(),
                 dsVersion, configurableServiceProperties, referenceScope
         );
-        m_updated = new UpdatedMethod(
+        m_updated = new org.apache.felix.scr.impl.helper.UpdatedMethod(
                 m_dependencyMetadata.getUpdated(),
                 instanceClass,
                 m_dependencyMetadata.getInterface(),
                 dsVersion, configurableServiceProperties, referenceScope
         );
-        m_unbind = new UnbindMethod(
+        m_unbind = new org.apache.felix.scr.impl.helper.UnbindMethod(
                 m_dependencyMetadata.getUnbind(),
                 instanceClass,
                 m_dependencyMetadata.getInterface(),
@@ -57,17 +57,17 @@ public class BindMethods
         );
     }
 
-    public BindMethod getBind()
+    public ReferenceMethod getBind()
     {
         return m_bind;
     }
 
-    public UnbindMethod getUnbind()
+    public ReferenceMethod getUnbind()
     {
         return m_unbind;
     }
 
-    public UpdatedMethod getUpdated()
+    public ReferenceMethod getUpdated()
     {
         return m_updated;
     }
