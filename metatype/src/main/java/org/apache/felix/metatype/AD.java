@@ -317,7 +317,7 @@ public class AD extends OptionalAttributes
         {
             return AttributeDefinition.BYTE;
         }
-        else if ("Char".equals(typeString))
+        else if ("Character".equals(typeString) || "Char".equals(typeString))
         {
             return AttributeDefinition.CHARACTER;
         }
