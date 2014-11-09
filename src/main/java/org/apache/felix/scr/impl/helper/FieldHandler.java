@@ -24,6 +24,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.Collections;
+import java.util.Map;
 
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.RefPair;
@@ -36,6 +38,14 @@ import org.osgi.service.log.LogService;
  */
 public class FieldHandler
 {
+    private enum ParamType {
+        serviceReference,
+        serviceObjects,
+        serviceType,
+        map,
+        tuple
+    }
+
     /** The reference metadata. */
     private final ReferenceMetadata metadata;
 
@@ -44,6 +54,9 @@ public class FieldHandler
 
     /** The field used for the injection. */
     private volatile Field field;
+
+    /** Value type. */
+    private volatile ParamType valueType;
 
     /** State handling. */
     private volatile State state;
@@ -248,30 +261,52 @@ public class FieldHandler
         {
             if ( fieldType.isAssignableFrom(referenceType) )
             {
-                // service
+                valueType = ParamType.serviceType;
             }
             else if ( fieldType == ClassUtils.SERVICE_REFERENCE_CLASS )
             {
-                // service reference
+                valueType = ParamType.serviceReference;
             }
             else if ( fieldType == ClassUtils.SERVICE_OBJECTS_CLASS )
             {
-                // service objects
+                valueType = ParamType.serviceObjects;
             }
             else if ( fieldType == ClassUtils.MAP_CLASS )
             {
-                // map
+                valueType = ParamType.map;
             }
             else if ( fieldType == ClassUtils.MAP_ENTRY_CLASS )
             {
-                // map entry
+                valueType = ParamType.tuple;
             }
             else
             {
-                logger.log( LogService.LOG_WARNING, "Field {0} in component {1} has unsupported type {2}", new Object[]
+                logger.log( LogService.LOG_ERROR, "Field {0} in component {1} has unsupported type {2}", new Object[]
                         {metadata.getField(), this.componentClass, fieldType.getName()}, null );
                 return null;
             }
+
+            // if the field is dynamic and optional it has to be volatile
+            if ( !metadata.isStatic() && metadata.isOptional() )
+            {
+                if ( !Modifier.isVolatile(f.getModifiers()) )
+                {
+                    logger.log( LogService.LOG_ERROR, "Field {0} in component {1} must be declared volatile to handle a dynamic reference", new Object[]
+                            {metadata.getField(), this.componentClass}, null );
+                    return null;
+                }
+            }
+        }
+        else
+        {
+            // multiple cardinality, field type must be collection or subtype
+            if ( !ClassUtils.COLLECTION_CLASS.isAssignableFrom(fieldType) )
+            {
+                logger.log( LogService.LOG_ERROR, "Field {0} in component {1} has unsupported type {2}", new Object[]
+                        {metadata.getField(), this.componentClass, fieldType.getName()}, null );
+                return null;
+            }
+
         }
         return f;
     }
@@ -282,7 +317,7 @@ public class FieldHandler
         UPDATED
     };
 
-    private MethodResult invokeMethod( final METHOD_TYPE mType,
+    private MethodResult updateField( final METHOD_TYPE mType,
             final Object componentInstance,
             final BindParameters bp,
             final SimpleLogger logger )
@@ -291,11 +326,23 @@ public class FieldHandler
         final ComponentContextImpl key = bp.getComponentContext();
         final RefPair<?, ?> refPair = bp.getRefPair();
 
-        final Object serviceObject = refPair.getServiceObject(key);
+        final Object obj;
+        switch ( this.valueType ) {
+            case serviceType : obj = refPair.getServiceObject(key); break;
+            case serviceReference : obj = refPair.getRef(); break;
+            case serviceObjects : obj = refPair.getServiceObjects(); break;
+            case map : obj = new ReadOnlyDictionary<String, Object>( refPair.getRef() ); break;
+            case tuple : final Object tupleKey = new ReadOnlyDictionary<String, Object>( refPair.getRef() );
+                         final Object tupleValue = refPair.getServiceObject(key);
+                         final Map<?, ?> tupleMap = Collections.singletonMap(tupleKey, tupleValue);
+                         obj = tupleMap.entrySet().iterator().next();
+                         break;
+            default: obj = null;
+        }
 
         try {
             if ( mType == METHOD_TYPE.BIND ) {
-                field.set(componentInstance, serviceObject);
+                field.set(componentInstance, obj);
             } else if ( mType == METHOD_TYPE.UNBIND ) {
                 field.set(componentInstance, null);
             }
@@ -480,99 +527,69 @@ public class FieldHandler
                 final SimpleLogger logger )
             throws InvocationTargetException
         {
-            return baseMethod.invokeMethod( mType, componentInstance, rawParameter, logger );
+            return baseMethod.updateField( mType, componentInstance, rawParameter, logger );
         }
     }
 
-    public ReferenceMethod getBind() {
-        return new ReferenceMethod() {
+    public static final class ReferenceMethodImpl implements ReferenceMethod {
 
-            public MethodResult invoke(Object componentInstance,
-                    BindParameters rawParameter,
-                    MethodResult methodCallFailureResult, SimpleLogger logger) {
-                try
-                {
-                    return state.invoke( FieldHandler.this, METHOD_TYPE.BIND, componentInstance, rawParameter, logger );
-                }
-                catch ( InvocationTargetException ite )
-                {
-                    logger.log( LogService.LOG_ERROR, "The {0} field has thrown an exception", new Object[]
-                        { metadata.getField() }, ite.getCause() );
-                }
+        private final METHOD_TYPE methodType;
 
-                return methodCallFailureResult;
+        private final FieldHandler handler;
+
+        public ReferenceMethodImpl(final METHOD_TYPE mt, final FieldHandler handler) {
+            this.methodType = mt;
+            this.handler = handler;
+        }
+
+        public MethodResult invoke(final Object componentInstance,
+                final BindParameters rawParameter,
+                final MethodResult methodCallFailureResult,
+                final SimpleLogger logger) {
+            try
+            {
+                return handler.state.invoke( handler,
+                        methodType,
+                        componentInstance,
+                        rawParameter,
+                        logger );
+            }
+            catch ( final InvocationTargetException ite )
+            {
+                logger.log( LogService.LOG_ERROR, "The {0} field has thrown an exception", new Object[]
+                    { handler.metadata.getField() }, ite.getCause() );
             }
 
-            public <S, T> boolean getServiceObject(ComponentContextImpl<S> key,
-                    RefPair<S, T> refPair, BundleContext context,
-                    SimpleLogger logger) {
+            return methodCallFailureResult;
+        }
+
+        public <S, T> boolean getServiceObject(final ComponentContextImpl<S> key,
+                final RefPair<S, T> refPair,
+                final BundleContext context,
+                final SimpleLogger logger) {
+            if ( methodType != METHOD_TYPE.UNBIND )
+            {
                 //??? this resolves which we need.... better way?
-                if ( refPair.getServiceObject(key) == null )
+                if ( refPair.getServiceObject(key) == null
+                    )
+                    // TODO: && (handler.valueType == ParamType.serviceType || handler.valueType == ParamType.tuple ) )
                 {
                     return refPair.getServiceObject(key, context, logger);
                 }
-                return true;
             }
-        };
+            return true;
+        }
+
+    }
+    public ReferenceMethod getBind() {
+        return new ReferenceMethodImpl(METHOD_TYPE.BIND, this);
     }
 
     public ReferenceMethod getUnbind() {
-        return new ReferenceMethod() {
-
-            public MethodResult invoke(Object componentInstance,
-                    BindParameters rawParameter,
-                    MethodResult methodCallFailureResult, SimpleLogger logger) {
-                try
-                {
-                    return state.invoke( FieldHandler.this, METHOD_TYPE.UNBIND, componentInstance, rawParameter, logger );
-                }
-                catch ( InvocationTargetException ite )
-                {
-                    logger.log( LogService.LOG_ERROR, "The {0} field has thrown an exception", new Object[]
-                        { metadata.getField() }, ite.getCause() );
-                }
-
-                return methodCallFailureResult;
-            }
-
-            public <S, T> boolean getServiceObject(ComponentContextImpl<S> key,
-                    RefPair<S, T> refPair, BundleContext context,
-                    SimpleLogger logger) {
-                // TODO ?!?
-                return true;
-            }
-        };
+        return new ReferenceMethodImpl(METHOD_TYPE.UNBIND, this);
     }
 
     public ReferenceMethod getUpdated() {
-        return new ReferenceMethod() {
-
-            public MethodResult invoke(Object componentInstance,
-                    BindParameters rawParameter,
-                    MethodResult methodCallFailureResult, SimpleLogger logger) {
-                try
-                {
-                    return state.invoke( FieldHandler.this, METHOD_TYPE.UPDATED, componentInstance, rawParameter, logger );
-                }
-                catch ( InvocationTargetException ite )
-                {
-                    logger.log( LogService.LOG_ERROR, "The {0} field has thrown an exception", new Object[]
-                        { metadata.getField() }, ite.getCause() );
-                }
-
-                return methodCallFailureResult;
-            }
-
-            public <S, T> boolean getServiceObject(ComponentContextImpl<S> key,
-                    RefPair<S, T> refPair, BundleContext context,
-                    SimpleLogger logger) {
-                //??? this resolves which we need.... better way?
-                if ( refPair.getServiceObject(key) == null )
-                {
-                    return refPair.getServiceObject(key, context, logger);
-                }
-                return true;
-            }
-        };
+        return new ReferenceMethodImpl(METHOD_TYPE.UPDATED, this);
     }
 }

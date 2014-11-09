@@ -19,6 +19,7 @@
 package org.apache.felix.scr.impl.helper;
 
 
+import java.util.Collection;
 import java.util.Map;
 
 import org.apache.felix.scr.impl.Activator;
@@ -43,6 +44,7 @@ public class ClassUtils
     public static final Class<?> MAP_CLASS = Map.class;
     public static final Class<?> MAP_ENTRY_CLASS = Map.Entry.class;
 
+    public static final Class<?> COLLECTION_CLASS = Collection.class;
 
     static {
         Class<?> serviceObjectsClass = null;
