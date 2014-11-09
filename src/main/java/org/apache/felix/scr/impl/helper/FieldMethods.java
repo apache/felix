@@ -37,9 +37,8 @@ public class FieldMethods implements ReferenceMethods
             final boolean configurableServiceProperties )
     {
         handler = new FieldHandler(
-                m_dependencyMetadata.getField(),
-                instanceClass,
-                m_dependencyMetadata.getInterface()
+                m_dependencyMetadata,
+                instanceClass
         );
     }
 

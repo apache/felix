@@ -46,8 +46,8 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter>
     public ActivateMethod( final String methodName,
             final boolean methodRequired,
             final Class<?> componentClass,
-            final DSVersion dsVersion, 
-            final boolean configurableServiceProperties, 
+            final DSVersion dsVersion,
+            final boolean configurableServiceProperties,
             boolean supportsInterfaces )
     {
         super( methodName, methodRequired, componentClass, dsVersion, configurableServiceProperties );
@@ -55,6 +55,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter>
     }
 
 
+    @Override
     protected Method doFindMethod( Class<?> targetClass, boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger )
         throws SuitableMethodNotAccessibleException, InvocationTargetException
     {
@@ -92,7 +93,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter>
                         {
                             return m;
                         }
-                        suitableMethodNotAccessible = true;                   
+                        suitableMethodNotAccessible = true;
                     }
                     if (getDSVersion().isDS13() && isAnnotation(type))
                     {
@@ -100,15 +101,15 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter>
                         {
                             return m;
                         }
-                        suitableMethodNotAccessible = true;                   
+                        suitableMethodNotAccessible = true;
                     }
-                    if (type == MAP_CLASS)
+                    if (type == ClassUtils.MAP_CLASS)
                     {
                         if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
                         {
                             return m;
                         }
-                        suitableMethodNotAccessible = true;                   
+                        suitableMethodNotAccessible = true;
                     }
                     if (type == int.class)
                     {
@@ -116,7 +117,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter>
                         {
                             return m;
                         }
-                        suitableMethodNotAccessible = true;                   
+                        suitableMethodNotAccessible = true;
                     }
                     if (type == Integer.class)
                     {
@@ -124,9 +125,9 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter>
                         {
                             return m;
                         }
-                        suitableMethodNotAccessible = true;                   
+                        suitableMethodNotAccessible = true;
                     }
-                    
+
                 }
                 else if (parameterTypes.length > 1)
                 {
@@ -135,14 +136,14 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter>
                     {
                         accept = type == COMPONENT_CONTEXT_CLASS
                             || type == BUNDLE_CONTEXT_CLASS
-                            || type == MAP_CLASS
+                            || type == ClassUtils.MAP_CLASS
                             || ( isDeactivate() && ( type == int.class || type == Integer.class))
                             || ( getDSVersion().isDS13() && isAnnotation(type));
-                        if ( !accept ) 
+                        if ( !accept )
                         {
                             break;
                         }
-                            
+
                     }
                     if (accept)
                     {
@@ -150,9 +151,9 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter>
                         {
                             return m;
                         }
-                        suitableMethodNotAccessible = true;                                           
+                        suitableMethodNotAccessible = true;
                     }
-                    
+
                 }
                 else //no parameters
                 {
@@ -160,12 +161,12 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter>
                     {
                         return m;
                     }
-                    suitableMethodNotAccessible = true;                   
+                    suitableMethodNotAccessible = true;
                 }
-                
+
             }
         }
-        
+
         if ( suitableMethodNotAccessible )
         {
             throw new SuitableMethodNotAccessibleException();
@@ -222,8 +223,8 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter>
                     if (t2 == BUNDLE_CONTEXT_CLASS) return 1;
                     if (isAnnotation(t1)) return isAnnotation(t2)? 0: -1;
                     if (isAnnotation(t2)) return 1;
-                    if (t1 == MAP_CLASS) return -1;
-                    if (t2 == MAP_CLASS) return 1;
+                    if (t1 == ClassUtils.MAP_CLASS) return -1;
+                    if (t2 == ClassUtils.MAP_CLASS) return 1;
                     if (t1 == int.class) return -1;
                     if (t2 == int.class) return 1;
                     if (t1 == Integer.class) return -1;
@@ -239,14 +240,15 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter>
 
     private boolean isAnnotation(final Class<?> t1)
     {
-        return t1.isAnnotation() || (m_supportsInterfaces && t1.isInterface() && !(t1 == MAP_CLASS));
+        return t1.isAnnotation() || (m_supportsInterfaces && t1.isInterface() && !(t1 == ClassUtils.MAP_CLASS));
     }
-    
 
+
+    @Override
     protected Object[] getParameters( Method method, ActivatorParameter rawParameter )
     {
         final Class<?>[] parameterTypes = method.getParameterTypes();
-        final ActivatorParameter ap = ( ActivatorParameter ) rawParameter;
+        final ActivatorParameter ap = rawParameter;
         final Object[] param = new Object[parameterTypes.length];
         for ( int i = 0; i < param.length; i++ )
         {
@@ -258,7 +260,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter>
             {
                 param[i] = ap.getComponentContext().getBundleContext();
             }
-            else if ( parameterTypes[i] == MAP_CLASS )
+            else if ( parameterTypes[i] == ClassUtils.MAP_CLASS )
             {
                 // note: getProperties() returns a ReadOnlyDictionary which is a Map
                 param[i] = ap.getComponentContext().getProperties();
@@ -266,10 +268,10 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter>
             else if ( parameterTypes[i] == INTEGER_CLASS || parameterTypes[i] == Integer.TYPE )
             {
                 param[i] = ap.getReason();
-            } 
+            }
             else
             {
-                param[i] = Annotations.toObject(parameterTypes[i], 
+                param[i] = Annotations.toObject(parameterTypes[i],
                     (Map<String, Object>) ap.getComponentContext().getProperties(),
                     ap.getComponentContext().getBundleContext().getBundle(), m_supportsInterfaces);
             }
@@ -279,11 +281,13 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter>
     }
 
 
+    @Override
     protected String getMethodNamePrefix()
     {
         return "activate";
     }
 
+    @Override
     public MethodResult invoke( Object componentInstance, ActivatorParameter rawParameter, final MethodResult methodCallFailureResult, SimpleLogger logger )
     {
         if (methodExists( logger ))

@@ -37,9 +37,6 @@ import org.osgi.service.log.LogService;
 public abstract class BaseMethod<P>
 {
 
-    // class references to simplify parameter checking
-    protected static final Class<?> MAP_CLASS = Map.class;
-
     private final DSVersion dsVersion;
     private final boolean configurableServiceProperties;
 
@@ -401,7 +398,7 @@ public abstract class BaseMethod<P>
      */
     protected static boolean accept( final Method method, boolean acceptPrivate, boolean acceptPackage, boolean allowReturnValue )
     {
-        if (!(Void.TYPE == method.getReturnType() || (MAP_CLASS == method.getReturnType() && allowReturnValue)))
+        if (!(Void.TYPE == method.getReturnType() || (ClassUtils.MAP_CLASS == method.getReturnType() && allowReturnValue)))
         {
             return false;
         }
