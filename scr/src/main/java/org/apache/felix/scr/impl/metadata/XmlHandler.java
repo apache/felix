@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+
 import org.apache.felix.scr.impl.helper.Logger;
 import org.apache.felix.scr.impl.parser.KXml2SAXHandler;
 import org.apache.felix.scr.impl.parser.KXml2SAXParser.Attributes;
@@ -63,18 +64,18 @@ public class XmlHandler implements KXml2SAXHandler
     // Namespace URI of DS 1.3
     public static final String NAMESPACE_URI_1_3 = "http://www.osgi.org/xmlns/scr/v1.3.0";
 
-    // Namespace URI of felis DS extensions 1.0
+    // Namespace URI of Felix DS extensions 1.0
     public static final String NAMESPACE_URI_1_0_FELIX_EXTENSIONS = "http://felix.apache.org/xmlns/scr/extensions/v1.0.0";
-    
+
     //extension features
     public static final String CONFIGURABLE_SERVICE_PROPERTIES = "configurableServiceProperties";
 
     public static final String PERSISTENT_FACTORY_COMPONENT = "persistentFactoryComponent";
-    
+
     public static final String DELETE_CALLS_MODIFY = "deleteCallsModify";
-    
+
     public static final String OBSOLETE_FACTORY_COMPONENT_FACTORY = "obsoleteFactoryComponentFactory";
-    
+
     public static final String CONFIGURE_WITH_INTERFACES = "configureWithInterfaces";
 
     public static final String DELAYED_KEEP_INSTANCES = "delayedKeepInstances";
@@ -108,9 +109,9 @@ public class XmlHandler implements KXml2SAXHandler
 
     // logger for any messages
     private final Logger m_logger;
-    
+
     private final boolean m_globalObsoleteFactoryComponentFactory;
-    
+
     private final boolean m_globalDelayedKeepInstances;
 
     // A reference to the current component
@@ -275,7 +276,7 @@ public class XmlHandler implements KXml2SAXHandler
                         String[] configurationPid = configurationPidString.split( " " );
                         m_currentComponent.setConfigurationPid( configurationPid );
                     }
-                    
+
                     m_currentComponent.setConfigurableServiceProperties("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, CONFIGURABLE_SERVICE_PROPERTIES)));
                     m_currentComponent.setPersistentFactoryComponent("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, PERSISTENT_FACTORY_COMPONENT)));
                     m_currentComponent.setDeleteCallsModify("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, DELETE_CALLS_MODIFY)));
@@ -343,7 +344,7 @@ public class XmlHandler implements KXml2SAXHandler
                     {
                         m_currentService.setServiceFactory( attributes.getAttribute( "servicefactory" ).equals( "true" ) );
                     }
-                    
+
                     if ( attributes.getAttribute( "scope" ) != null )
                     {
                     	m_currentService.setScope( attributes.getAttribute( "scope" ) );
@@ -397,11 +398,55 @@ public class XmlHandler implements KXml2SAXHandler
                         prop.setName( (ref.getName() == null? ref.getInterface(): ref.getName()) + ".target");
                         prop.setValue( attributes.getAttribute( "target" ) );
                         m_currentComponent.addProperty( prop );
-                                               
+
                     }
                     ref.setBind( attributes.getAttribute( "bind" ) );
                     ref.setUpdated( attributes.getAttribute( "updated" ) );
                     ref.setUnbind( attributes.getAttribute( "unbind" ) );
+
+                    m_currentComponent.addDependency( ref );
+                }
+                // 112.x.x Field Reference element
+                else if ( localName.equals( "field-reference" ) )
+                {
+                    ReferenceMetadata ref = new ReferenceMetadata(true);
+
+                    ref.setInterface( attributes.getAttribute( "interface" ) );
+
+                    // Cardinality
+                    if ( attributes.getAttribute( "cardinality" ) != null )
+                    {
+                        ref.setCardinality( attributes.getAttribute( "cardinality" ) );
+                    }
+
+                    if ( attributes.getAttribute( "policy" ) != null )
+                    {
+                        ref.setPolicy( attributes.getAttribute( "policy" ) );
+                    }
+
+                    if ( attributes.getAttribute( "policy-option" ) != null )
+                    {
+                        ref.setPolicyOption( attributes.getAttribute( "policy-option" ) );
+                    }
+
+                    if ( attributes.getAttribute( "scope" ) != null )
+                    {
+                        ref.setScope( attributes.getAttribute( "scope" ) );
+                    }
+
+                    if ( attributes.getAttribute( "target" ) != null)
+                    {
+                        ref.setTarget( attributes.getAttribute( "target" ) );
+                        PropertyMetadata prop = new PropertyMetadata();
+                        prop.setName( (ref.getName() == null? ref.getInterface(): ref.getName()) + ".target");
+                        prop.setValue( attributes.getAttribute( "target" ) );
+                        m_currentComponent.addProperty( prop );
+
+                    }
+
+                    ref.setField( attributes.getAttribute( "field" ) );
+                    ref.setFieldStrategy( attributes.getAttribute( "strategy" ) );
+                    ref.setFieldValueType( attributes.getAttribute( "valuetype" ) );
 
                     m_currentComponent.addDependency( ref );
                 }

@@ -44,13 +44,14 @@ import org.osgi.service.packageadmin.PackageAdmin;
  * Component method to be invoked on service (un)binding.
  */
 public class BindMethod extends BaseMethod<BindParameters>
+implements org.apache.felix.scr.impl.helper.ReferenceMethod
 {
 
     private static final Class<?> OBJECT_CLASS = Object.class;
-    
+
     protected static final Class<?> SERVICE_REFERENCE_CLASS = ServiceReference.class;
     private static final Class<?> SERVICE_OBJECTS_CLASS;
-    
+
     static {
         Class<?> serviceObjectsClass = null;
         try {
@@ -64,16 +65,16 @@ public class BindMethod extends BaseMethod<BindParameters>
     }
 
     private final String m_referenceClassName;
-    
+
     private final ReferenceMetadata.ReferenceScope m_referenceScope;
 
-    private enum ParamType { 
+    private enum ParamType {
         serviceReference,
         serviceObjects,
         serviceType,
         map
     }
-    
+
     //initialized for cases where there is no method.
     private volatile List<ParamType> m_paramTypes = Collections.emptyList();
 
@@ -105,6 +106,7 @@ public class BindMethod extends BaseMethod<BindParameters>
      * @throws InvocationTargetException If an unexpected Throwable is caught
      *      trying to find the requested method.
      */
+    @Override
     protected Method doFindMethod( Class<?> targetClass, boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger )
         throws SuitableMethodNotAccessibleException, InvocationTargetException
     {
@@ -712,6 +714,7 @@ public class BindMethod extends BaseMethod<BindParameters>
         return true;
     }
 
+    @Override
     protected Object[] getParameters( Method method, BindParameters bp )
     {
         ComponentContextImpl key = bp.getComponentContext();
@@ -720,30 +723,31 @@ public class BindMethod extends BaseMethod<BindParameters>
         int i = 0;
         for ( ParamType pt: m_paramTypes ) {
             switch (pt) {
-                case serviceReference: 
+                case serviceReference:
                     result[i++] = refPair.getRef();
                     break;
-                
+
                 case serviceObjects:
                     result[i++] = refPair.getServiceObjects();
                     break;
-                
+
                 case map:
                     result[i++] = new ReadOnlyDictionary<String, Object>( refPair.getRef() );
                     break;
-                
+
                 case serviceType:
                     result[i++] = refPair.getServiceObject(key);
                     break;
-                
+
                 default: throw new IllegalStateException("unexpected ParamType: " + pt);
-                
+
             }
         }
         return result;
     }
 
 
+    @Override
     protected String getMethodNamePrefix()
     {
         return "bind";

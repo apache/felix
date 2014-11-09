@@ -18,28 +18,20 @@
  */
 package org.apache.felix.scr.impl.helper;
 
-import org.apache.felix.scr.impl.metadata.DSVersion;
-import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
+import org.apache.felix.scr.impl.manager.ComponentContextImpl;
+import org.apache.felix.scr.impl.manager.RefPair;
+import org.osgi.framework.BundleContext;
+
+
 
 
 /**
- * Component method to be invoked on service property update of a bound service.
+ * Component method to be invoked on service (un)binding.
  */
-public class UpdatedMethod extends BindMethod
-implements org.apache.felix.scr.impl.helper.ReferenceMethod
+public interface ReferenceMethod
 {
+    MethodResult invoke( final Object componentInstance, final BindParameters rawParameter,
+            final MethodResult methodCallFailureResult, SimpleLogger logger );
 
-    public UpdatedMethod( final String methodName,
-            final Class<?> componentClass, final String referenceClassName, final DSVersion dsVersion, final boolean configurableServiceProperties, ReferenceMetadata.ReferenceScope referenceScope )
-    {
-        super( methodName, componentClass, referenceClassName, dsVersion, configurableServiceProperties, referenceScope );
-    }
-
-
-    @Override
-    protected String getMethodNamePrefix()
-    {
-        return "update";
-    }
-
+    <S, T> boolean getServiceObject( ComponentContextImpl<S> key, RefPair<S, T> refPair, BundleContext context, SimpleLogger logger );
 }

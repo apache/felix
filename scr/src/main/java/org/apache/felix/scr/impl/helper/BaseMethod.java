@@ -28,16 +28,13 @@ import java.util.Arrays;
 import java.util.Map;
 
 import org.apache.felix.scr.impl.metadata.DSVersion;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
 
 
 /**
  * Component method to be invoked on service (un)binding.
  */
-abstract class BaseMethod<P>
+public abstract class BaseMethod<P>
 {
 
     // class references to simplify parameter checking
@@ -163,7 +160,7 @@ abstract class BaseMethod<P>
         final String targetPackage = getPackageName( targetClass );
         Class<?> theClass = targetClass;
 
-        while (true) 
+        while (true)
         {
 
             if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
@@ -402,7 +399,7 @@ abstract class BaseMethod<P>
      * @param allowReturnValue whether the method can return a value (to update service registration properties)
      * @return whether the method is acceptable
      */
-    static boolean accept( final Method method, boolean acceptPrivate, boolean acceptPackage, boolean allowReturnValue )
+    protected static boolean accept( final Method method, boolean acceptPrivate, boolean acceptPackage, boolean allowReturnValue )
     {
         if (!(Void.TYPE == method.getReturnType() || (MAP_CLASS == method.getReturnType() && allowReturnValue)))
         {
