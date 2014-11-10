@@ -65,10 +65,10 @@ public class ReferenceMetadata
     private static final Set<String> POLICY_OPTION_VALID;
 
     // constant for update field strategy
-    public static final String FIELD_STRATEGY_UPDATE = "update";
+    private static final String FIELD_STRATEGY_UPDATE = "update";
 
     // constant for replace field strategy
-    public static final String FIELD_STRATEGY_REPLACE = "replace";
+    private static final String FIELD_STRATEGY_REPLACE = "replace";
 
     // set of valid field strategy settings
     private static final Set<String> FIELD_STRATEGY_VALID;
@@ -135,6 +135,7 @@ public class ReferenceMetadata
     private boolean m_isOptional = false;
     private boolean m_isMultiple = false;
     private boolean m_isReluctant = true;
+    private boolean m_isReplace = true;
 
     // Flag that is set once the component is verified (its properties cannot be changed)
     private boolean m_validated = false;
@@ -363,6 +364,8 @@ public class ReferenceMetadata
         }
 
         m_field_strategy = strategy;
+
+        m_isReplace = FIELD_STRATEGY_REPLACE.equals(strategy);
     }
 
     /**
@@ -539,7 +542,6 @@ public class ReferenceMetadata
         return m_isStatic;
     }
 
-
     /**
      * Test if dependency is optional (0..1 or 0..n)
      *
@@ -572,6 +574,15 @@ public class ReferenceMetadata
         return m_isReluctant;
     }
 
+    /**
+     * Test if field strategy is replace.
+     *
+     * @return true if field strategy is replace
+     */
+    public boolean isReplace()
+    {
+        return m_isReplace;
+    }
 
     /**
      * Returns the name of the component property referring to the {@link #getTarget() target}
@@ -746,6 +757,7 @@ public class ReferenceMetadata
             return getField() +
                     "interface=" + this.getInterface() +
                     ", filter=" + this.getTarget() +
+                    ", strategy=" + this.getFieldStrategy() +
                     ", policy=" + this.getPolicy() +
                     ", cardinality=" + this.getCardinality();
         }
