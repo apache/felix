@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -19,18 +19,11 @@
 package org.apache.felix.scr.impl.helper;
 
 
+
 /**
- * @version $Rev$ $Date$
+ * Callback for initializing the reference
  */
-public interface ReferenceMethods
+public interface InitReferenceMethod
 {
-
-    ReferenceMethod getBind();
-
-    ReferenceMethod getUnbind();
-
-    ReferenceMethod getUpdated();
-
-    /** Optional. */
-    InitReferenceMethod getInit();
+    boolean init( final Object componentInstance, final SimpleLogger logger );
 }

@@ -29,31 +29,43 @@ import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
  */
 public class FieldMethods implements ReferenceMethods
 {
-    private final FieldHandler handler;
+    private final ReferenceMethod bind;
+    private final ReferenceMethod updated;
+    private final ReferenceMethod unbind;
+    private final InitReferenceMethod init;
 
     public FieldMethods( final ReferenceMetadata m_dependencyMetadata,
             final Class<?> instanceClass,
             final DSVersion dsVersion,
             final boolean configurableServiceProperties )
     {
-        handler = new FieldHandler(
+        final FieldHandler handler = new FieldHandler(
                 m_dependencyMetadata,
                 instanceClass
         );
+        bind = handler.getBind();
+        unbind = handler.getUnbind();
+        updated = handler.getUpdated();
+        init = handler.getInit();
     }
 
     public ReferenceMethod getBind()
     {
-        return handler.getBind();
+        return bind;
     }
 
     public ReferenceMethod getUnbind()
     {
-        return handler.getUnbind();
+        return unbind;
     }
 
     public ReferenceMethod getUpdated()
     {
-        return handler.getUpdated();
+        return updated;
+    }
+
+    public InitReferenceMethod getInit()
+    {
+        return init;
     }
 }
