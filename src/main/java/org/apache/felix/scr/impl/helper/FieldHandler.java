@@ -324,7 +324,7 @@ public class FieldHandler
             }
 
             // if the field is dynamic with the replace strategy it has to be volatile
-            if ( !metadata.isStatic() && metadata.getFieldStrategy().equals(ReferenceMetadata.FIELD_STRATEGY_REPLACE) )
+            if ( !metadata.isStatic() && metadata.isReplace() )
             {
                 if ( !Modifier.isVolatile(f.getModifiers()) )
                 {
@@ -336,7 +336,7 @@ public class FieldHandler
 
             // replace strategy: field must not be final
             //                   only collection and list allowed
-            if ( metadata.getFieldStrategy().equals(ReferenceMetadata.FIELD_STRATEGY_REPLACE) )
+            if ( metadata.isReplace()  )
             {
                 if ( Modifier.isFinal(f.getModifiers()) )
                 {
@@ -410,7 +410,7 @@ public class FieldHandler
             if ( metadata.isMultiple()
                  && !metadata.isStatic() )
             {
-                if ( ReferenceMetadata.FIELD_STRATEGY_REPLACE.equals(metadata.getFieldStrategy()) )
+                if ( metadata.isReplace()  )
                 {
                     this.setFieldValue(componentInstance, Collections.emptyList());
                 }
@@ -517,7 +517,7 @@ public class FieldHandler
             {
                 final Object obj = getValue(key, refPair);
                 this.boundValues.put(refPair, obj);
-                if ( ReferenceMetadata.FIELD_STRATEGY_REPLACE.equals(metadata.getFieldStrategy()) )
+                if ( metadata.isReplace() )
                 {
                     this.setFieldValue(componentInstance, getReplaceCollection());
                 }
@@ -534,7 +534,7 @@ public class FieldHandler
                 if ( !metadata.isStatic() )
                 {
                     final Object obj = this.boundValues.remove(refPair);
-                    if ( ReferenceMetadata.FIELD_STRATEGY_REPLACE.equals(metadata.getFieldStrategy()) )
+                    if ( metadata.isReplace() )
                     {
                         this.setFieldValue(componentInstance, getReplaceCollection());
                     }
@@ -556,7 +556,7 @@ public class FieldHandler
                     final Object obj = getValue(key, refPair);
                     final Object oldObj = this.boundValues.put(refPair, obj);
 
-                    if ( ReferenceMetadata.FIELD_STRATEGY_REPLACE.equals(metadata.getFieldStrategy()) )
+                    if ( metadata.isReplace() )
                     {
                         this.setFieldValue(componentInstance, getReplaceCollection());
                     }

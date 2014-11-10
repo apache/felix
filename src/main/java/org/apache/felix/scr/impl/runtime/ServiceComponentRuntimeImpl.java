@@ -317,14 +317,7 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
 			dto.scope = r.getScope().name();
 			if ( r.getField() != null )
 			{
-			    if ( ReferenceMetadata.FIELD_STRATEGY_REPLACE.equals(r.getFieldStrategy()) )
-			    {
-			        dto.strategy = ReferenceDTO.STRATEGY_FIELD_REPLACE;
-			    }
-			    else
-			    {
-                    dto.strategy = ReferenceDTO.STRATEGY_FIELD_UPDATE;
-			    }
+		        dto.strategy = r.isReplace() ? ReferenceDTO.STRATEGY_FIELD_REPLACE : ReferenceDTO.STRATEGY_FIELD_UPDATE;
 			}
 			else
 			{
