@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.felix.scr.impl.BundleComponentActivator;
@@ -43,7 +42,6 @@ import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentInstance;
 import org.osgi.service.log.LogService;
 import org.osgi.util.promise.Deferred;
-import org.osgi.util.promise.Promise;
 
 
 /**
@@ -61,7 +59,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
     // Merged properties from xml descriptor and all configurations
     private Map<String, Object> m_configurationProperties;
-    
+
     // optional properties provided in the ComponentFactory.newInstance method
     private Map<String, Object> m_factoryProperties;
 
@@ -73,7 +71,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     private Dictionary<String, Object> m_serviceProperties;
 
     private final ThreadLocal<Boolean> m_circularReferences = new ThreadLocal<Boolean>();
-    
+
    /**
      * The constructor receives both the activator and the metadata
  * @param componentMethods
@@ -82,13 +80,14 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     {
         this(container, componentMethods, false);
     }
-    
+
     public SingleComponentManager( ComponentContainer<S> container, ComponentMethods componentMethods,
             boolean factoryInstance )
     {
         super( container, componentMethods, factoryInstance );
     }
 
+    @Override
     void clear()
     {
         m_container.disposed( this );
@@ -145,6 +144,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     }
 
 
+    @Override
     protected void deleteComponent( int reason )
     {
         if ( !isStateLocked() )
@@ -245,7 +245,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             log( LogService.LOG_ERROR, "Error during instantiation of the implementation object", t );
             return null;
         }
-        
+
         componentContext.setImplementationObject(implementationObject);
 
         // 3. set the implementation object prematurely
@@ -353,11 +353,13 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
     }
 
+    @Override
     boolean hasInstance()
     {
         return m_componentContext != null;
     }
 
+    @Override
     <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> refPair, int trackingCount )
     {
         ComponentContextImpl<S> componentContext = m_componentContext;
@@ -368,6 +370,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         }
     }
 
+    @Override
     <T> void invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> refPair, int trackingCount )
     {
         ComponentContextImpl<S> componentContext = m_componentContext;
@@ -378,6 +381,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         }
     }
 
+    @Override
     <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> oldRefPair, int trackingCount )
     {
         ComponentContextImpl<S> componentContext = m_componentContext;
@@ -394,6 +398,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     }
 
 
+    @Override
     void registerComponentId()
     {
         super.registerComponentId();
@@ -401,6 +406,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     }
 
 
+    @Override
     void unregisterComponentId()
     {
         super.unregisterComponentId();
@@ -417,6 +423,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
      *
      * @return a private map of component properties
      */
+    @Override
     public Map<String, Object> getProperties()
     {
 
@@ -426,7 +433,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
             // 1. Merge all the config properties
             Map<String, Object> props = new HashMap<String, Object>();
-            if ( m_configurationProperties != null ) 
+            if ( m_configurationProperties != null )
             {
                 props.putAll(m_configurationProperties);
             }
@@ -436,7 +443,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 if (getComponentMetadata().getDSVersion().isDS13() && m_factoryProperties.containsKey(Constants.SERVICE_PID))
                 {
                     List<String> servicePids = (List<String>) m_configurationProperties.get(Constants.SERVICE_PID);
-                    if (servicePids == null) 
+                    if (servicePids == null)
                     {
                         servicePids = new ArrayList<String>();
                     }
@@ -458,6 +465,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         return m_properties;
     }
 
+    @Override
     public void setServiceProperties( Dictionary<String, ?> serviceProperties )
     {
         if ( serviceProperties == null || serviceProperties.isEmpty() )
@@ -475,6 +483,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         updateServiceRegistration();
     }
 
+    @Override
     public Dictionary<String, Object> getServiceProperties()
     {
         if ( m_serviceProperties != null )
@@ -533,6 +542,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
      * @param changeCount Change count for the configuration
      * @param targetedPID TargetedPID for the configuration
      */
+    @Override
     public void reconfigure( Map<String, Object> configuration, boolean configurationDeleted )
     {
         // store the properties
@@ -622,7 +632,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     	if ( configurationDeleted && !getComponentMetadata().isDeleteCallsModify()){
     		return false;
     	}
-    	
+
         // 1. no live update if there is no declared method
         if ( getComponentMetadata().getModified() == null )
         {
@@ -747,7 +757,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         }
     }
 
-    
+
     @Override
     boolean getServiceInternal()
     {
@@ -755,7 +765,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         {
             log( LogService.LOG_ERROR,  "Circular reference detected, getService returning null", null );
             dumpThreads();
-            return false;             
+            return false;
         }
         m_circularReferences.set( Boolean.TRUE );
         try

@@ -725,6 +725,14 @@ public class ReferenceMetadata
                 }
             }
 
+            // static references only allow replace strateg
+            if ( m_isStatic )
+            {
+                if ( ! m_field_strategy.equals(FIELD_STRATEGY_REPLACE) )
+                {
+                    throw componentMetadata.validationFailure( "Field strategy update not allowed for static field references." );
+                }
+            }
         }
 
 

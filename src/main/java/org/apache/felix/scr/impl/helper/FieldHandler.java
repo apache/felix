@@ -24,8 +24,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.RefPair;
@@ -61,8 +66,8 @@ public class FieldHandler
     /** State handling. */
     private volatile State state;
 
-    /** Last ref pair used to set. */
-    private volatile RefPair<?, ?> lastRefPair;
+    /** Mapping of ref pairs to value bound */
+    private final Map<RefPair<?, ?>, Object> boundValues = new IdentityHashMap<RefPair<?,?>, Object>();
 
     /**
      * Create a new field handler
@@ -299,6 +304,14 @@ public class FieldHandler
                     return null;
                 }
             }
+
+            // the field must not be final
+            if ( Modifier.isFinal(f.getModifiers()) )
+            {
+                logger.log( LogService.LOG_ERROR, "Field {0} in component {1} must not be declared as final", new Object[]
+                        {metadata.getField(), this.componentClass}, null );
+                return null;
+            }
         }
         else
         {
@@ -310,6 +323,57 @@ public class FieldHandler
                 return null;
             }
 
+            // if the field is dynamic with the replace strategy it has to be volatile
+            if ( !metadata.isStatic() && metadata.getFieldStrategy().equals(ReferenceMetadata.FIELD_STRATEGY_REPLACE) )
+            {
+                if ( !Modifier.isVolatile(f.getModifiers()) )
+                {
+                    logger.log( LogService.LOG_ERROR, "Field {0} in component {1} must be declared volatile to handle a dynamic reference", new Object[]
+                            {metadata.getField(), this.componentClass}, null );
+                    return null;
+                }
+            }
+
+            // replace strategy: field must not be final
+            //                   only collection and list allowed
+            if ( metadata.getFieldStrategy().equals(ReferenceMetadata.FIELD_STRATEGY_REPLACE) )
+            {
+                if ( Modifier.isFinal(f.getModifiers()) )
+                {
+                    logger.log( LogService.LOG_ERROR, "Field {0} in component {1} must not be declared as final", new Object[]
+                            {metadata.getField(), this.componentClass}, null );
+                    return null;
+                }
+                if ( fieldType != ClassUtils.LIST_CLASS && fieldType != ClassUtils.COLLECTION_CLASS )
+                {
+                    logger.log( LogService.LOG_ERROR, "Field {0} in component {1} has unsupported type {2}."+
+                    " It must be one of java.util.Collection or java.util.List.",
+                    new Object[] {metadata.getField(), this.componentClass, fieldType.getName()}, null );
+                    return null;
+
+                }
+            }
+
+            if ( ReferenceMetadata.FIELD_VALUE_TYPE_SERVICE.equals(metadata.getFieldValueType()) )
+            {
+                valueType = ParamType.serviceType;
+            }
+            else if ( ReferenceMetadata.FIELD_VALUE_TYPE_REFERENCE.equals(metadata.getFieldValueType()) )
+            {
+                valueType = ParamType.serviceReference;
+            }
+            else if ( ReferenceMetadata.FIELD_VALUE_TYPE_SERVICEOBJECTS.equals(metadata.getFieldValueType()) )
+            {
+                valueType = ParamType.serviceObjects;
+            }
+            else if ( ReferenceMetadata.FIELD_VALUE_TYPE_PROPERTIES.equals(metadata.getFieldValueType()) )
+            {
+                valueType = ParamType.map;
+            }
+            else if ( ReferenceMetadata.FIELD_VALUE_TYPE_TUPLE.equals(metadata.getFieldValueType()) )
+            {
+                valueType = ParamType.tuple;
+            }
         }
         return f;
     }
@@ -331,11 +395,70 @@ public class FieldHandler
             case tuple : final Object tupleKey = new ReadOnlyDictionary<String, Object>( refPair.getRef() );
                          final Object tupleValue = refPair.getServiceObject(key);
                          final Map<?, ?> tupleMap = Collections.singletonMap(tupleKey, tupleValue);
-                         obj = tupleMap.entrySet().iterator().next();
+                         obj = tupleMap.entrySet().iterator().next(); // TODO check/make entry comparable
                          break;
             default: obj = null;
         }
         return obj;
+    }
+
+    private boolean initField(final Object componentInstance,
+            final SimpleLogger logger )
+    {
+        try
+        {
+            if ( metadata.isMultiple()
+                 && !metadata.isStatic() )
+            {
+                if ( ReferenceMetadata.FIELD_STRATEGY_REPLACE.equals(metadata.getFieldStrategy()) )
+                {
+                    this.setFieldValue(componentInstance, Collections.emptyList());
+                }
+                else
+                {
+                    final Class<?> fieldType = this.field.getType();
+
+                    // update strategy: if DS implementation provides collection implementation
+                    //                  only list and collection are allowed, field must not be final
+                    final Object providedImpl = this.getFieldValue(componentInstance);
+                    if ( providedImpl == null)
+                    {
+                        if ( Modifier.isFinal(this.field.getModifiers()) )
+                        {
+                            logger.log( LogService.LOG_ERROR, "Field {0} in component {1} must not be declared as final", new Object[]
+                                    {metadata.getField(), this.componentClass}, null );
+                            return false;
+                        }
+                        if ( fieldType != ClassUtils.LIST_CLASS && fieldType != ClassUtils.COLLECTION_CLASS )
+                        {
+                            logger.log( LogService.LOG_ERROR, "Field {0} in component {1} has unsupported type {2}."+
+                            " It must be one of java.util.Collection or java.util.List.",
+                                new Object[] {metadata.getField(), this.componentClass, fieldType.getName()}, null );
+                            return false;
+                        }
+                        this.setFieldValue(componentInstance, new CopyOnWriteArraySet<Object>());
+                    }
+                }
+            }
+        }
+        catch ( final InvocationTargetException ite)
+        {
+            logger.log( LogService.LOG_ERROR, "Field {0} in component {1} can't be initialized.",
+                    new Object[] {metadata.getField(), this.componentClass}, ite );
+            return false;
+
+        }
+        return true;
+    }
+
+    private Collection<Object> getReplaceCollection() {
+        // TODO sort!
+        final List<Object> objects = new ArrayList<Object>();
+        for(final Object val : this.boundValues.values())
+        {
+            objects.add(val);
+        }
+        return objects;
     }
 
     private MethodResult updateField( final METHOD_TYPE mType,
@@ -356,29 +479,25 @@ public class FieldHandler
                 if ( this.metadata.isOptional() && !this.metadata.isStatic() )
                 {
                     // we only reset if it was previously set with this value
-                    if ( refPair == lastRefPair )
+                    if ( this.boundValues.size() == 1 )
                     {
                         this.setFieldValue(componentInstance, null);
-                        this.lastRefPair = null;
                     }
                 }
-                else
-                {
-                    this.lastRefPair = null;
-                }
+                this.boundValues.remove(refPair);
             }
             // updated needs only be done, if reference is dynamic and optional
+            // and the value type is map or tuple
             else if ( mType == METHOD_TYPE.UPDATED )
             {
                 if ( this.metadata.isOptional() && !this.metadata.isStatic() )
                 {
-                    final Object obj = getValue(key, refPair);
-                    this.setFieldValue(componentInstance, obj);
-                    this.lastRefPair = refPair;
-                }
-                else
-                {
-                    this.lastRefPair = null;
+                    if ( this.valueType == ParamType.map || this.valueType == ParamType.tuple )
+                    {
+                        final Object obj = getValue(key, refPair);
+                        this.setFieldValue(componentInstance, obj);
+                        this.boundValues.put(refPair, obj);
+                    }
                 }
             }
             // bind needs always be done
@@ -386,7 +505,69 @@ public class FieldHandler
             {
                 final Object obj = getValue(key, refPair);
                 this.setFieldValue(componentInstance, obj);
-                this.lastRefPair = refPair;
+                this.boundValues.put(refPair, obj);
+            }
+        }
+        else
+        {
+            // multiple references
+
+            // bind: replace or update the field
+            if ( mType == METHOD_TYPE.BIND )
+            {
+                final Object obj = getValue(key, refPair);
+                this.boundValues.put(refPair, obj);
+                if ( ReferenceMetadata.FIELD_STRATEGY_REPLACE.equals(metadata.getFieldStrategy()) )
+                {
+                    this.setFieldValue(componentInstance, getReplaceCollection());
+                }
+                else
+                {
+                    @SuppressWarnings("unchecked")
+                    final Collection<Object> col = (Collection<Object>)this.getFieldValue(componentInstance);
+                    col.add(obj);
+                }
+            }
+            // unbind needs only be done, if reference is dynamic
+            else if ( mType == METHOD_TYPE.UNBIND)
+            {
+                if ( !metadata.isStatic() )
+                {
+                    final Object obj = this.boundValues.remove(refPair);
+                    if ( ReferenceMetadata.FIELD_STRATEGY_REPLACE.equals(metadata.getFieldStrategy()) )
+                    {
+                        this.setFieldValue(componentInstance, getReplaceCollection());
+                    }
+                    else
+                    {
+                        @SuppressWarnings("unchecked")
+                        final Collection<Object> col = (Collection<Object>)this.getFieldValue(componentInstance);
+                        col.remove(obj);
+                    }
+                }
+            }
+            // updated needs only be done, if reference is dynamic
+            // and the value type is map or tuple
+            else if ( mType == METHOD_TYPE.UPDATED)
+            {
+                if ( !this.metadata.isStatic()
+                     && (this.valueType == ParamType.map || this.valueType == ParamType.tuple ) )
+                {
+                    final Object obj = getValue(key, refPair);
+                    final Object oldObj = this.boundValues.put(refPair, obj);
+
+                    if ( ReferenceMetadata.FIELD_STRATEGY_REPLACE.equals(metadata.getFieldStrategy()) )
+                    {
+                        this.setFieldValue(componentInstance, getReplaceCollection());
+                    }
+                    else
+                    {
+                        @SuppressWarnings("unchecked")
+                        final Collection<Object> col = (Collection<Object>)this.getFieldValue(componentInstance);
+                        col.add(obj);
+                        col.remove(oldObj);
+                    }
+                }
             }
         }
 
@@ -617,13 +798,16 @@ public class FieldHandler
         return this.state.fieldExists( this, logger );
     }
 
-    public static final class ReferenceMethodImpl implements ReferenceMethod {
+    public static final class ReferenceMethodImpl
+        implements ReferenceMethod
+    {
 
         private final METHOD_TYPE methodType;
 
         private final FieldHandler handler;
 
-        public ReferenceMethodImpl(final METHOD_TYPE mt, final FieldHandler handler) {
+        public ReferenceMethodImpl(final METHOD_TYPE mt, final FieldHandler handler)
+        {
             this.methodType = mt;
             this.handler = handler;
         }
@@ -631,7 +815,8 @@ public class FieldHandler
         public MethodResult invoke(final Object componentInstance,
                 final BindParameters rawParameter,
                 final MethodResult methodCallFailureResult,
-                final SimpleLogger logger) {
+                final SimpleLogger logger)
+        {
             try
             {
                 return handler.state.invoke( handler,
@@ -652,7 +837,8 @@ public class FieldHandler
         public <S, T> boolean getServiceObject(final ComponentContextImpl<S> key,
                 final RefPair<S, T> refPair,
                 final BundleContext context,
-                final SimpleLogger logger) {
+                final SimpleLogger logger)
+        {
             if ( methodType != METHOD_TYPE.UNBIND )
             {
                 //??? this resolves which we need.... better way?
@@ -667,15 +853,37 @@ public class FieldHandler
         }
 
     }
-    public ReferenceMethod getBind() {
+    public ReferenceMethod getBind()
+    {
         return new ReferenceMethodImpl(METHOD_TYPE.BIND, this);
     }
 
-    public ReferenceMethod getUnbind() {
+    public ReferenceMethod getUnbind()
+    {
         return new ReferenceMethodImpl(METHOD_TYPE.UNBIND, this);
     }
 
-    public ReferenceMethod getUpdated() {
+    public ReferenceMethod getUpdated()
+    {
         return new ReferenceMethodImpl(METHOD_TYPE.UPDATED, this);
+    }
+
+    public InitReferenceMethod getInit() {
+        if ( metadata.isMultiple() )
+        {
+            return new InitReferenceMethod()
+            {
+
+                public boolean init(final Object componentInstance, final SimpleLogger logger)
+                {
+                    if ( fieldExists( logger) )
+                    {
+                        return initField(componentInstance, logger);
+                    }
+                    return false;
+                }
+            };
+        }
+        return null;
     }
 }

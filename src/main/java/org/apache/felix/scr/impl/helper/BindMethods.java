@@ -71,4 +71,9 @@ public class BindMethods implements ReferenceMethods
     {
         return m_updated;
     }
+
+    public InitReferenceMethod getInit()
+    {
+        return null;
+    }
 }

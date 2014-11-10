@@ -1415,6 +1415,14 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
      */
     boolean open( ComponentContextImpl<S> componentContext, EdgeInfo edgeInfo )
     {
+        if ( !invokeInitMethod(componentContext) )
+        {
+            m_componentManager.log( LogService.LOG_DEBUG,
+                    "For dependency {0}, failed to initialize object",
+                    new Object[] {getName()}, null );
+            return false;
+        }
+
         int serviceCount = 0;
         AtomicInteger trackingCount =  new AtomicInteger( );
         Collection<RefPair<S, T>> refs;
@@ -1515,6 +1523,24 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
 //            return;
 //        }
         m_componentManager.invokeBindMethod( this, refPair, trackingCount );
+    }
+
+    /**
+     * Calls the optional init reference method.
+     */
+    boolean invokeInitMethod( final ComponentContextImpl<S> componentContext )
+    {
+        // The bind method is only invoked if the implementation object is not
+        // null. This is valid for both immediate and delayed components
+        if ( m_bindMethods.getInit() != null )
+        {
+            final Object componentInstance = componentContext.getImplementationObject( false );
+            if ( componentInstance != null )
+            {
+                return m_bindMethods.getInit().init(componentInstance, m_componentManager);
+            }
+        }
+        return true;
     }
 
     /**
