@@ -61,6 +61,9 @@ public class FieldHandler
     /** State handling. */
     private volatile State state;
 
+    /** Last ref pair used to set. */
+    private volatile RefPair<?, ?> lastRefPair;
+
     /**
      * Create a new field handler
      * @param fieldName name of the field
@@ -317,15 +320,8 @@ public class FieldHandler
         UPDATED
     };
 
-    private MethodResult updateField( final METHOD_TYPE mType,
-            final Object componentInstance,
-            final BindParameters bp,
-            final SimpleLogger logger )
-        throws InvocationTargetException
-    {
-        final ComponentContextImpl key = bp.getComponentContext();
-        final RefPair<?, ?> refPair = bp.getRefPair();
-
+    private Object getValue(final ComponentContextImpl key,
+            final RefPair<?, ?> refPair) {
         final Object obj;
         switch ( this.valueType ) {
             case serviceType : obj = refPair.getServiceObject(key); break;
@@ -339,20 +335,86 @@ public class FieldHandler
                          break;
             default: obj = null;
         }
+        return obj;
+    }
 
-        try {
-            if ( mType == METHOD_TYPE.BIND ) {
-                field.set(componentInstance, obj);
-            } else if ( mType == METHOD_TYPE.UNBIND ) {
-                field.set(componentInstance, null);
+    private MethodResult updateField( final METHOD_TYPE mType,
+            final Object componentInstance,
+            final BindParameters bp,
+            final SimpleLogger logger )
+        throws InvocationTargetException
+    {
+        final ComponentContextImpl key = bp.getComponentContext();
+        final RefPair<?, ?> refPair = bp.getRefPair();
+
+        if ( !this.metadata.isMultiple() )
+        {
+            // unary references
+            // unbind needs only be done, if reference is dynamic and optional
+            if ( mType == METHOD_TYPE.UNBIND )
+            {
+                if ( this.metadata.isOptional() && !this.metadata.isStatic() )
+                {
+                    // we only reset if it was previously set with this value
+                    if ( refPair == lastRefPair )
+                    {
+                        this.setFieldValue(componentInstance, null);
+                        this.lastRefPair = null;
+                    }
+                }
+                else
+                {
+                    this.lastRefPair = null;
+                }
             }
+            // updated needs only be done, if reference is dynamic and optional
+            else if ( mType == METHOD_TYPE.UPDATED )
+            {
+                if ( this.metadata.isOptional() && !this.metadata.isStatic() )
+                {
+                    final Object obj = getValue(key, refPair);
+                    this.setFieldValue(componentInstance, obj);
+                    this.lastRefPair = refPair;
+                }
+                else
+                {
+                    this.lastRefPair = null;
+                }
+            }
+            // bind needs always be done
+            else
+            {
+                final Object obj = getValue(key, refPair);
+                this.setFieldValue(componentInstance, obj);
+                this.lastRefPair = refPair;
+            }
+        }
+
+        return MethodResult.VOID;
+    }
+
+    private void setFieldValue(final Object componentInstance, final Object value)
+    throws InvocationTargetException
+    {
+        try {
+            field.set(componentInstance, value);
         } catch ( final IllegalArgumentException iae ) {
             throw new InvocationTargetException(iae);
         } catch ( final IllegalAccessException iae ) {
             throw new InvocationTargetException(iae);
         }
+    }
 
-        return MethodResult.VOID;
+    private Object getFieldValue(final Object componentInstance)
+    throws InvocationTargetException
+    {
+        try {
+            return field.get(componentInstance);
+        } catch ( final IllegalArgumentException iae ) {
+            throw new InvocationTargetException(iae);
+        } catch ( final IllegalAccessException iae ) {
+            throw new InvocationTargetException(iae);
+        }
     }
 
     /**
@@ -374,10 +436,12 @@ public class FieldHandler
      * @param acceptPackage Whether a package private field is acceptable
      * @return whether the field is acceptable
      */
-    private static boolean accept( final Field field, boolean acceptPrivate, boolean acceptPackage )
+    private static boolean accept( final Field field,
+            final boolean acceptPrivate,
+            final boolean acceptPackage )
     {
         // check modifiers now
-        int mod = field.getModifiers();
+        final int mod = field.getModifiers();
 
         // no static fields
         if ( Modifier.isStatic( mod ) )
@@ -445,12 +509,14 @@ public class FieldHandler
     private static interface State
     {
 
-        MethodResult invoke( final FieldHandler baseMethod,
+        MethodResult invoke( final FieldHandler handler,
                 final METHOD_TYPE mType,
                 final Object componentInstance,
                 final BindParameters rawParameter,
                 final SimpleLogger logger )
         throws InvocationTargetException;
+
+        boolean fieldExists( final FieldHandler handler, final SimpleLogger logger);
     }
 
     /**
@@ -460,36 +526,42 @@ public class FieldHandler
     {
         private static final State INSTANCE = new NotResolved();
 
-        private synchronized void resolve( final FieldHandler baseMethod, final SimpleLogger logger )
+        private synchronized void resolve( final FieldHandler handler, final SimpleLogger logger )
         {
             logger.log( LogService.LOG_DEBUG, "getting field: {0}", new Object[]
-                    {baseMethod.metadata.getField()}, null );
+                    {handler.metadata.getField()}, null );
 
             // resolve the field
             Field field = null;
             try
             {
-                field = baseMethod.findField( logger );
-                field = baseMethod.validateField( field, logger );
+                field = handler.findField( logger );
+                field = handler.validateField( field, logger );
             }
             catch ( final InvocationTargetException ex )
             {
                 logger.log( LogService.LOG_WARNING, "{0} cannot be found", new Object[]
-                        {baseMethod.metadata.getField()}, ex.getTargetException() );
+                        {handler.metadata.getField()}, ex.getTargetException() );
             }
 
-            baseMethod.setField( field, logger );
+            handler.setField( field, logger );
         }
 
-        public MethodResult invoke( final FieldHandler baseMethod,
+        public MethodResult invoke( final FieldHandler handler,
                 final METHOD_TYPE mType,
                 final Object componentInstance,
                 final BindParameters rawParameter,
                 SimpleLogger logger )
         throws InvocationTargetException
         {
-            resolve( baseMethod, logger );
-            return baseMethod.state.invoke( baseMethod, mType, componentInstance, rawParameter, logger );
+            resolve( handler, logger );
+            return handler.state.invoke( handler, mType, componentInstance, rawParameter, logger );
+        }
+
+        public boolean fieldExists( final FieldHandler handler, final SimpleLogger logger)
+        {
+            resolve( handler, logger );
+            return handler.state.fieldExists( handler, logger );
         }
     }
 
@@ -500,16 +572,20 @@ public class FieldHandler
     {
         private static final State INSTANCE = new NotFound();
 
-
-        public MethodResult invoke( final FieldHandler baseMethod,
+        public MethodResult invoke( final FieldHandler handler,
                 final METHOD_TYPE mType,
                 final Object componentInstance,
                 final BindParameters rawParameter,
                 final SimpleLogger logger )
         {
             logger.log( LogService.LOG_ERROR, "Field [{0}] not found", new Object[]
-                { baseMethod.metadata.getField() }, null );
+                { handler.metadata.getField() }, null );
             return null;
+        }
+
+        public boolean fieldExists( final FieldHandler handler, final SimpleLogger logger)
+        {
+            return false;
         }
     }
 
@@ -520,15 +596,25 @@ public class FieldHandler
     {
         private static final State INSTANCE = new Resolved();
 
-        public MethodResult invoke( final FieldHandler baseMethod,
+        public MethodResult invoke( final FieldHandler handler,
                 final METHOD_TYPE mType,
                 final Object componentInstance,
                 final BindParameters rawParameter,
                 final SimpleLogger logger )
             throws InvocationTargetException
         {
-            return baseMethod.updateField( mType, componentInstance, rawParameter, logger );
+            return handler.updateField( mType, componentInstance, rawParameter, logger );
         }
+
+        public boolean fieldExists( final FieldHandler handler, final SimpleLogger logger)
+        {
+            return true;
+        }
+    }
+
+    public boolean fieldExists( SimpleLogger logger )
+    {
+        return this.state.fieldExists( this, logger );
     }
 
     public static final class ReferenceMethodImpl implements ReferenceMethod {
@@ -571,8 +657,8 @@ public class FieldHandler
             {
                 //??? this resolves which we need.... better way?
                 if ( refPair.getServiceObject(key) == null
-                    )
-                    // TODO: && (handler.valueType == ParamType.serviceType || handler.valueType == ParamType.tuple ) )
+                  && handler.fieldExists( logger )
+                  && (handler.valueType == ParamType.serviceType || handler.valueType == ParamType.tuple ) )
                 {
                     return refPair.getServiceObject(key, context, logger);
                 }
