@@ -27,15 +27,17 @@ import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.IdentityHashMap;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.RefPair;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
 
 /**
@@ -67,7 +69,15 @@ public class FieldHandler
     private volatile State state;
 
     /** Mapping of ref pairs to value bound */
-    private final Map<RefPair<?, ?>, Object> boundValues = new IdentityHashMap<RefPair<?,?>, Object>();
+    private final Map<RefPair<?, ?>, Object> boundValues = new TreeMap<RefPair<?,?>, Object>(
+        new Comparator<RefPair<?, ?>>()
+        {
+
+            public int compare(final RefPair<?, ?> o1, final RefPair<?, ?> o2)
+            {
+                return o1.getRef().compareTo(o2.getRef());
+            }
+        });
 
     /**
      * Create a new field handler
@@ -378,24 +388,75 @@ public class FieldHandler
         return f;
     }
 
-    private enum METHOD_TYPE {
+    private enum METHOD_TYPE
+    {
         BIND,
         UNBIND,
         UPDATED
     };
 
+    @SuppressWarnings("rawtypes")
+    private final class MapEntryImpl implements Map.Entry, Comparable<Map.Entry<?, ?>>
+    {
+
+        private final Object key;
+        private final Object value;
+        private final ServiceReference<?> ref;
+
+        public MapEntryImpl(final Object key,
+                final Object value,
+                final ServiceReference<?> ref)
+        {
+            this.key = key;
+            this.value = value;
+            this.ref = ref;
+        }
+
+        public Object getKey()
+        {
+            return this.key;
+        }
+
+        public Object getValue()
+        {
+            return this.value;
+        }
+
+        public Object setValue(final Object value)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public int compareTo(final Map.Entry<?, ?> o)
+        {
+            if ( o == null )
+            {
+                return 1;
+            }
+            if ( o instanceof MapEntryImpl )
+            {
+                final MapEntryImpl other = (MapEntryImpl)o;
+                return ref.compareTo(other.ref);
+
+            }
+            return new Integer(this.hashCode()).compareTo(o.hashCode());
+        }
+
+    }
+
     private Object getValue(final ComponentContextImpl key,
-            final RefPair<?, ?> refPair) {
+            final RefPair<?, ?> refPair)
+    {
         final Object obj;
-        switch ( this.valueType ) {
+        switch ( this.valueType )
+        {
             case serviceType : obj = refPair.getServiceObject(key); break;
             case serviceReference : obj = refPair.getRef(); break;
             case serviceObjects : obj = refPair.getServiceObjects(); break;
             case map : obj = new ReadOnlyDictionary<String, Object>( refPair.getRef() ); break;
             case tuple : final Object tupleKey = new ReadOnlyDictionary<String, Object>( refPair.getRef() );
                          final Object tupleValue = refPair.getServiceObject(key);
-                         final Map<?, ?> tupleMap = Collections.singletonMap(tupleKey, tupleValue);
-                         obj = tupleMap.entrySet().iterator().next(); // TODO check/make entry comparable
+                         obj = new MapEntryImpl(tupleKey, tupleValue, refPair.getRef());
                          break;
             default: obj = null;
         }
@@ -451,8 +512,8 @@ public class FieldHandler
         return true;
     }
 
-    private Collection<Object> getReplaceCollection() {
-        // TODO sort!
+    private Collection<Object> getReplaceCollection()
+    {
         final List<Object> objects = new ArrayList<Object>();
         for(final Object val : this.boundValues.values())
         {
@@ -577,11 +638,16 @@ public class FieldHandler
     private void setFieldValue(final Object componentInstance, final Object value)
     throws InvocationTargetException
     {
-        try {
+        try
+        {
             field.set(componentInstance, value);
-        } catch ( final IllegalArgumentException iae ) {
+        }
+        catch ( final IllegalArgumentException iae )
+        {
             throw new InvocationTargetException(iae);
-        } catch ( final IllegalAccessException iae ) {
+        }
+        catch ( final IllegalAccessException iae )
+        {
             throw new InvocationTargetException(iae);
         }
     }
@@ -589,11 +655,16 @@ public class FieldHandler
     private Object getFieldValue(final Object componentInstance)
     throws InvocationTargetException
     {
-        try {
+        try
+        {
             return field.get(componentInstance);
-        } catch ( final IllegalArgumentException iae ) {
+        }
+        catch ( final IllegalArgumentException iae )
+        {
             throw new InvocationTargetException(iae);
-        } catch ( final IllegalAccessException iae ) {
+        }
+        catch ( final IllegalAccessException iae )
+        {
             throw new InvocationTargetException(iae);
         }
     }
@@ -868,7 +939,8 @@ public class FieldHandler
         return new ReferenceMethodImpl(METHOD_TYPE.UPDATED, this);
     }
 
-    public InitReferenceMethod getInit() {
+    public InitReferenceMethod getInit()
+    {
         if ( metadata.isMultiple() )
         {
             return new InitReferenceMethod()
