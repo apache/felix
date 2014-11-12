@@ -280,7 +280,14 @@ public class XmlHandler implements KXml2SAXHandler
                     m_currentComponent.setConfigurableServiceProperties("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, CONFIGURABLE_SERVICE_PROPERTIES)));
                     m_currentComponent.setPersistentFactoryComponent("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, PERSISTENT_FACTORY_COMPONENT)));
                     m_currentComponent.setDeleteCallsModify("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, DELETE_CALLS_MODIFY)));
-                    m_currentComponent.setObsoleteFactoryComponentFactory(m_globalObsoleteFactoryComponentFactory ||  "true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, OBSOLETE_FACTORY_COMPONENT_FACTORY)));
+                    if ( attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS) != null)
+                    {
+                        m_currentComponent.setObsoleteFactoryComponentFactory("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, OBSOLETE_FACTORY_COMPONENT_FACTORY)));
+                    }
+                    else if ( !namespaceCode.isDS13() )
+                    {
+                        m_currentComponent.setObsoleteFactoryComponentFactory(m_globalObsoleteFactoryComponentFactory);
+                    }
                     m_currentComponent.setConfigureWithInterfaces("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, CONFIGURE_WITH_INTERFACES)));
                     m_currentComponent.setDelayedKeepInstances(m_globalDelayedKeepInstances || "true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, DELAYED_KEEP_INSTANCES)));
 
