@@ -117,7 +117,7 @@ public class ComponentMetadata
     private boolean m_configurableServiceProperties;
     private boolean m_persistentFactoryComponent;
     private boolean m_deleteCallsModify;
-    private boolean m_obsoleteFactoryComponentFactory;
+    private Boolean m_obsoleteFactoryComponentFactory;
     private boolean m_configureWithInterfaces;
     private boolean m_delayedKeepInstances;
 
@@ -726,7 +726,7 @@ public class ComponentMetadata
 	}
 
 	public boolean isObsoleteFactoryComponentFactory() {
-		return m_obsoleteFactoryComponentFactory;
+		return m_obsoleteFactoryComponentFactory == null ? false : m_obsoleteFactoryComponentFactory;
 	}
 
 	public boolean isConfigureWithInterfaces() {
@@ -928,7 +928,7 @@ public class ComponentMetadata
         {
         	throw validationFailure("Configuration with interfaces or annotations only possible with version 1.3 or later");
         }
-        if (m_dsVersion.isDS13() && m_obsoleteFactoryComponentFactory)
+        if (m_dsVersion.isDS13() && m_obsoleteFactoryComponentFactory != null)
         {
         	throw validationFailure("Configuration of component factory instances through config admin factory pids supported only through the 1.2 namespace");
         }
