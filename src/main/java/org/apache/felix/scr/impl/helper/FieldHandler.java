@@ -794,6 +794,7 @@ public class FieldHandler
             {
                 logger.log( LogService.LOG_WARNING, "{0} cannot be found", new Object[]
                         {handler.metadata.getField()}, ex.getTargetException() );
+                field = null;
             }
 
             handler.setField( field, logger );
@@ -941,21 +942,17 @@ public class FieldHandler
 
     public InitReferenceMethod getInit()
     {
-        if ( metadata.isMultiple() )
+        return new InitReferenceMethod()
         {
-            return new InitReferenceMethod()
-            {
 
-                public boolean init(final Object componentInstance, final SimpleLogger logger)
+            public boolean init(final Object componentInstance, final SimpleLogger logger)
+            {
+                if ( fieldExists( logger) )
                 {
-                    if ( fieldExists( logger) )
-                    {
-                        return initField(componentInstance, logger);
-                    }
-                    return false;
+                    return initField(componentInstance, logger);
                 }
-            };
-        }
-        return null;
+                return false;
+            }
+        };
     }
 }
