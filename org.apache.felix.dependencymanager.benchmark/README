@@ -1,19 +1,12 @@
 Installation:
 ============
 
-- Eclipse Kepler SR2 + java8 support or Eclipse Luna.
-- BndTools
-- Install java7 + java8 JREs in eclipse, and set default Jvm to java 7. 
-- checkout DM4: checkout http://svn.apache.org/repos/asf/felix/sandbox/pderop/dependencymanager-prototype dependencymanager-prototype
-- import dependencymanager-prototype in Eclipse. Check if the org.apache.felix.dm.benchmark bundle compiles correctly (if not, possibly
-adjust the project specific setting and check if it's using your installed java 8.
-- build all the projects.
+- see toplevel README on how to import dependencymanager into bndtools
 
 How to launch the stress test under bndtools:
 ============================================
 
-The stress test performs two kind of tests on different Felix DI framework (currently, we support
-DM4, Parallel DM4, and Felix SCR): 
+The stress test performs two kind of tests on DM and parallel DM.
 
 1) first kind of tests: starts/stops several times each tested bundle (SCR/DM/Parallel DM). When
 started, the test bundle is expected to register/unregister several services. And no processing is
@@ -31,25 +24,19 @@ g! Starting benchmarks (each tested bundle will create 210 components).
 
 	[Starting benchmarks with no processing done in components start/stop methods]
 
-Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.scr ...............
--> results in nanos: [159,064,470 | 179,014,754 | 197,853,177 | 212,896,041 | 472,387,401]
-
 Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager ...............
--> results in nanos: [108,856,562 | 114,055,223 | 118,687,448 | 126,819,846 | 212,840,128]
+-> results in nanos: [85,865,048 | 98,607,629 | 127,745,901 | 148,501,547 | 358,559,677]
 
 Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel ...............
--> results in nanos: [50,952,636 | 59,165,868 | 61,674,388 | 67,884,568 | 87,306,289]
+-> results in nanos: [62,455,799 | 65,343,664 | 69,237,440 | 76,452,266 | 82,839,040]
 
 	[Starting benchmarks with processing done in components start/stop methods]
 
-Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.scr .....
--> results in nanos: [1,976,142,748 | 2,029,509,642 | 2,033,458,458 | 2,040,403,279 | 2,153,307,987]
-
 Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager .....
--> results in nanos: [1,944,204,422 | 1,990,961,405 | 1,993,826,956 | 2,005,007,625 | 2,044,245,042]
+-> results in nanos: [1,950,203,709 | 1,969,656,854 | 2,004,276,779 | 2,034,080,987 | 2,104,094,347]
 
 Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel .....
--> results in nanos: [488,746,303 | 497,815,004 | 514,073,517 | 515,736,048 | 531,009,623]
+-> results in nanos: [498,377,362 | 515,902,895 | 524,460,514 | 542,052,780 | 606,619,382]
 -----------------------------------------------------------------------------------------------------------------
 
 You can also possibly run the same test using optimized DM filter indices.
@@ -60,8 +47,7 @@ To do so, add the following jvm system parameters in the bnd.bnd "-runproperties
 	org.osgi.framework.bootdelegation='sun.*,com.sun.*,org.netbeans.*',\
    -Dorg.apache.felix.dependencymanager.filterindex=objectClass,id
 
-And you will then observe better performances for the org.apache.felix.dependencymanager.benchmark.dependencymanager and
-for the org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel tests.
+You should then observe better performance results
 
 How to interpret results:
 ========================
@@ -113,8 +99,8 @@ By default, when a tested bundle is started, it will create several Artists (see
 constant). each Artist depends on several Albums (see Artists.ALBUMS constant), and each Album
 depends on several music Tracks (see Artists.TRACKS constants).
 
-Test bundles (DM, parallel DM, SCR)
-==========================================
+Test bundles (DM, parallel DM)
+==============================
 
 - org.apache.felix.dm.benchmark.dependencymanager: 
 It contains a simple activator, which creates the various services using dependency manager API.
@@ -122,15 +108,6 @@ It contains a simple activator, which creates the various services using depende
 - org.apache.felix.dm.benchmark.dependencymanager.parallel: 
 same as above, but using parallel dependency manager where components dependency management and
 components activation/deactivation processing is performed concurrently, using a fixed thread pool.
-
-- org.apache.felix.dm.benchmark.scr: 
-contains a DS xml descriptor for declaring the Artist/Album/Track services. If you change the
-constants values of Artists.ARTISTS/Artists.ALBUMS/Artists.TRACKS in order to support more or less
-services, then you have to regenerate the xml descriptor in
-./src/org/apache/felix/dm/benchmark/scr/scr.xml. To do so, you can modify the constants (in the
-Artists interface), then you have to run under eclipse the
-src/org/apache/felix/dm/benchmark/scr/XMLGenerator.java class. It will generate "/tmp/scr.xml" which
-you have to copy to ./src/org/apache/felix/dm/benchmark/scr/scr.xml. 
 
 The org.apache.felix.dm.benchmark.controller bundle, when starting, first stops all tested bundles.
 Then for each one, it performs the following test (multiple times):
