@@ -1,3 +1,0 @@
-Private-Package:  \
-	org.apache.felix.dm.benchmark.ipojo
-Bundle-Activator: org.apache.felix.dm.benchmark.ipojo.Activator

@@ -1,9 +1,6 @@
 -buildpath:  \
 	org.apache.felix.dependencymanager;version=latest,\
 	osgi.core;version=4.2,\
-	org.apache.felix.ipojo.composite;version=1.12,\
-	org.apache.felix.ipojo;version=1.12,\
-	org.apache.felix.ipojo.api;version=1.12,\
 	osgi.cmpn;version=4.2
 -runbundles:  \
 	org.apache.felix.dependencymanager;version=latest,\
@@ -13,12 +10,7 @@
 	org.apache.felix.gogo.command;version=0.12.0,\
 	org.apache.felix.gogo.shell;version=0.10.0,\
 	org.apache.felix.gogo.runtime;version=0.10.0,\
-	org.apache.felix.scr;version=1.8.2,\
-	org.apache.felix.configadmin;version=1.8.0,\
-	org.apache.felix.ipojo;version=1.12.0,\
-	org.apache.felix.ipojo.api;version=1.12.0,\
-	org.apache.felix.ipojo.composite;version=1.12.0,\
-	org.apache.felix.ipojo.gogo;version=1.12.0
+	org.apache.felix.configadmin;version=1.8.0
 -runfw: org.apache.felix.framework;version='[4.4.0,4.4.0]'
 
 -sub:  \
