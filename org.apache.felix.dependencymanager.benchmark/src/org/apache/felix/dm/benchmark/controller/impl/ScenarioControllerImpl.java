@@ -40,10 +40,10 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
      * List of bundles to be executed by the benchmark.
      */
     final List<String> TESTS = Arrays.asList(
-        "org.apache.felix.dependencymanager.benchmark.ipojo",
         "org.apache.felix.dependencymanager.benchmark.scr",
         "org.apache.felix.dependencymanager.benchmark.dependencymanager",
-        "org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel"
+        "org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel",
+        "org.apache.felix.dependencymanager.benchmark.ipojo"
     );
     
     /**
