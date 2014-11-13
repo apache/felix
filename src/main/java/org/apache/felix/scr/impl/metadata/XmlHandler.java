@@ -418,6 +418,12 @@ public class XmlHandler implements KXml2SAXHandler
                 {
                     ReferenceMetadata ref = new ReferenceMetadata(true);
 
+                    // name attribute is optional 
+                    if ( attributes.getAttribute( "name" ) != null )
+                    {
+                        ref.setName( attributes.getAttribute( "name" ) );
+                    }
+
                     ref.setInterface( attributes.getAttribute( "interface" ) );
 
                     // Cardinality
