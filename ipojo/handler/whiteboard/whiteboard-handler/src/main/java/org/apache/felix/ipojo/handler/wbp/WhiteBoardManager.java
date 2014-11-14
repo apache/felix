@@ -114,8 +114,8 @@ public class WhiteBoardManager implements TrackerCustomizer {
             m_handler.error("The onArrival method " + m_onArrival.getMethod() + " cannot be invoked", e);
             m_handler.getInstanceManager().stop();
         } catch (InvocationTargetException e) {
-            m_handler.error("The onArrival method " + m_onArrival.getMethod() + " has thrown an exception", e.getTargetException());
-            m_handler.getInstanceManager().stop();
+            m_handler.error("The onArrival method " + m_onArrival.getMethod() + " has thrown an exception", e
+                    .getTargetException());
         }
     }
 
@@ -147,7 +147,6 @@ public class WhiteBoardManager implements TrackerCustomizer {
                 m_handler.getInstanceManager().stop();
             } catch (InvocationTargetException e) {
                 m_handler.error("The onModification method " + m_onModification.getMethod() + " has thrown an exception", e.getTargetException());
-                m_handler.getInstanceManager().stop();
             }
         }
     }
@@ -169,7 +168,6 @@ public class WhiteBoardManager implements TrackerCustomizer {
             m_handler.getInstanceManager().stop();
         } catch (InvocationTargetException e) {
             m_handler.error("The onDeparture method " + m_onDeparture.getMethod() + " has thrown an exception", e.getTargetException());
-            m_handler.getInstanceManager().stop();
         }
     }
 
