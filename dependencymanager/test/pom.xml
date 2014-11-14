@@ -25,7 +25,7 @@
 	</parent>
 
 	<artifactId>org.apache.felix.dependencymanager.test</artifactId>
-	<version>3.2.0-SNAPSHOT</version>
+	<version>3.2.1-SNAPSHOT</version>
 	<packaging>bundle</packaging>
 
 	<name>Apache Felix Dependency Manager Integration Tests</name>
@@ -61,7 +61,7 @@
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.dependencymanager</artifactId>
-			<version>3.2.0-SNAPSHOT</version>
+			<version>3.2.1-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
         <dependency>
@@ -139,7 +139,7 @@
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.dependencymanager.annotation</artifactId>
-			<version>3.2.0-SNAPSHOT</version>
+			<version>3.2.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 
@@ -174,7 +174,7 @@
 			<plugin>
 				<groupId>org.apache.felix</groupId>
 				<artifactId>org.apache.felix.dependencymanager.annotation</artifactId>
-				<version>3.2.0-SNAPSHOT</version>
+				<version>3.2.1-SNAPSHOT</version>
 				<executions>
 					<execution>
 						<goals>
