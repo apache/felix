@@ -47,7 +47,7 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
     /**
      * Our injected bundle context, used to lookup the bundles to benchmark.
      */
-    private volatile BundleContext m_bctx;
+    private final BundleContext m_bctx;
     
     /**
      * Latches used to detect when expected services are registered, or unregistered.
@@ -59,6 +59,10 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
      * attribute is true.
      */
     private volatile boolean m_doProcessingInStartStop;
+    
+    public ScenarioControllerImpl(BundleContext context) {
+    	m_bctx = context;
+    }
     
     /**
      * Our component is starting: we'll first stop all bundles participating in the benchmark, then we'll 
@@ -89,7 +93,7 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
         // Start/stop several times the tested bundles. (no processing done in components start/stop methods).
         m_doProcessingInStartStop = false;
         out.println("\n\t[Starting benchmarks with no processing done in components start/stop methods]");
-        startStopScenarioBundles(TESTS, 15);
+        startStopScenarioBundles(TESTS, 10);
        
         // Start/stop several times the tested bundles (processing is done in components start/stop methods).
         m_doProcessingInStartStop = true;
@@ -247,6 +251,9 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
             }
             debug(() -> "all components unregistered, stopping bundle " + b.getSymbolicName());
             b.stop();
+            
+            // Make sure all pending tasks in the threadpool have been fully executed, before restarting a new test
+            Helper.getThreadPool().awaitQuiescence(60, TimeUnit.SECONDS);
         } catch (Throwable t) {
             t.printStackTrace();
         }

@@ -23,12 +23,12 @@ public class Helper {
      * Threadpool which can be optionally used by parallel scenarios.
      */
     private final static int CORES = Runtime.getRuntime().availableProcessors();
-    private final static ExecutorService TPOOL = new ForkJoinPool(CORES);
+    private final static ForkJoinPool TPOOL = new ForkJoinPool(CORES);
     
     /**
      * Get the threadpool, possibly needed by some scenario supporting parallel mode
      */
-    public static ExecutorService getThreadPool() {
+    public static ForkJoinPool getThreadPool() {
         return TPOOL;
     }
     
