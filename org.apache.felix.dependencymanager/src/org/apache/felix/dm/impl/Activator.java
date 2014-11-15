@@ -19,9 +19,12 @@
 package org.apache.felix.dm.impl;
 
 import org.apache.felix.dm.ComponentExecutorFactory;
-import org.apache.felix.dm.DependencyActivatorBase;
-import org.apache.felix.dm.DependencyManager;
+import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Filter;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
  * DependencyManager Activator used to track a ComponentExecutorFactory service optionally registered by 
@@ -30,14 +33,35 @@ import org.osgi.framework.BundleContext;
  * @see {@link ComponentExecutorFactory}
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class Activator extends DependencyActivatorBase {
-    @Override
-    public void init(BundleContext ctx, DependencyManager mgr) throws Exception {
-        mgr.add(createComponent()
-               .setImplementation(ComponentScheduler.instance())
-               .add(createServiceDependency()
-                   .setService(ComponentExecutorFactory.class)
-                   .setRequired(true)
-                   .setCallbacks("bind", "unbind")));
-    }
+public class Activator implements BundleActivator, ServiceTrackerCustomizer {
+    private BundleContext m_context;
+    
+	@Override
+	public void start(BundleContext context) throws Exception {
+		m_context = context;
+        Filter filter = context.createFilter("(objectClass=" + ComponentExecutorFactory.class.getName() + ")");
+        ServiceTracker tracker = new ServiceTracker(context, filter, this);
+        tracker.open();
+	}
+
+	@Override
+	public void stop(BundleContext context) throws Exception {
+	}
+
+	@Override
+	public Object addingService(ServiceReference reference) {
+		ComponentExecutorFactory factory = (ComponentExecutorFactory) m_context.getService(reference);
+		ComponentScheduler.instance().bind(factory);
+		return factory;
+	}
+
+	@Override
+	public void modifiedService(ServiceReference reference, Object service) {
+	}
+
+	@Override
+	public void removedService(ServiceReference reference, Object service) {
+		ComponentExecutorFactory factory = (ComponentExecutorFactory) service;
+		ComponentScheduler.instance().unbind(factory);
+	}
 }
