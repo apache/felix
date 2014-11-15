@@ -105,7 +105,7 @@ public class DependencyManager {
             }
             catch (BundleException e) {
                 // if we cannot start ourselves, we cannot use the indices
-                // TODO we might want to warn people about this
+            	e.printStackTrace();
             }
         }
     }
