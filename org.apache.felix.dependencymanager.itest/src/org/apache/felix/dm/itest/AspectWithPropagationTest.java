@@ -477,7 +477,7 @@ public class AspectWithPropagationTest extends TestBase {
                 .add(m.createServiceDependency()
                      .setService(S2.class)
                      .setRequired(true)
-                     .setCallbacks("add", "change", "remove"));
+                     .setCallbacks("add", "change", null));
               
         // Register client2
         m.add(client2);
