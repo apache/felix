@@ -92,7 +92,7 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     	    m_componentExecutorFactoryReg.unregister();
     	    m_threadPool.shutdown();
             try {
-                m_threadPool.awaitTermination(5, TimeUnit.SECONDS);
+                m_threadPool.awaitTermination(60, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
             }
     	}

@@ -98,7 +98,7 @@ public class AspectRaceTest extends TestBase {
         if (! m_parallel && m_threadpool != null) {
             m_threadpool.shutdown();
             try {
-                m_threadpool.awaitTermination(5, TimeUnit.SECONDS);
+                m_threadpool.awaitTermination(60, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
             }
         }
