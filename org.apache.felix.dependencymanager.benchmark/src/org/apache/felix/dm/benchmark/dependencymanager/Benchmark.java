@@ -57,8 +57,8 @@ public class Benchmark {
         return IntStream.range(0, ALBUMS).mapToObj(i -> {
             long id = Helper.generateId();
             String filter = "(id=" + id + ")";
-            artist.add(dm.createServiceDependency().setService(Album.class, filter).setRequired(true)
-                         .setCallbacks("addAlbum", null));            
+            artist.add(dm.createServiceDependency()
+                         .setService(Album.class, filter).setRequired(true).setCallbacks("addAlbum", null));            
             
             Hashtable<String, Object> props = new Hashtable<>();
             props.put("id", String.valueOf(id));
