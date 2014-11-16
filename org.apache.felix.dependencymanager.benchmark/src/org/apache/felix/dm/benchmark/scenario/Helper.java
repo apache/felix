@@ -1,6 +1,5 @@
 package org.apache.felix.dm.benchmark.scenario;
 
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;

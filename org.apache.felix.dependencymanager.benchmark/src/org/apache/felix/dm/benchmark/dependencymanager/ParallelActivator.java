@@ -1,7 +1,6 @@
 package org.apache.felix.dm.benchmark.dependencymanager;
 
 import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentExecutorFactory;
