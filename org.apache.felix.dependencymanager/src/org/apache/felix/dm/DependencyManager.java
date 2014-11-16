@@ -20,11 +20,12 @@ package org.apache.felix.dm;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.felix.dm.impl.AdapterServiceImpl;
 import org.apache.felix.dm.impl.AspectServiceImpl;
@@ -73,7 +74,7 @@ public class DependencyManager {
     
     private final BundleContext m_context;
     private final Logger m_logger;
-    private final List<Component> m_components = new CopyOnWriteArrayList<>();
+    private final ConcurrentHashMap<Component, Component> m_components = new ConcurrentHashMap<>();
 
     // service registry cache
     private static ServiceRegistryCache m_serviceRegistryCache;
@@ -171,7 +172,7 @@ public class DependencyManager {
      * @param c the service to add
      */
     public void add(Component c) {
-        m_components.add(c);
+        m_components.put(c, c);
         ComponentScheduler.instance().add(c);
     }
 
@@ -560,7 +561,7 @@ public class DependencyManager {
      * @return a list of components
      */
     public List<Component> getComponents() {
-        return m_components;
+        return Collections.list(m_components.elements());
     }
 
     /**
@@ -684,7 +685,7 @@ public class DependencyManager {
      * Removes all components and their dependencies.
      */
     public void clear() {
-        for (Component component : m_components) {
+        for (Component component : m_components.keySet()) {
             remove(component);
         }
         m_components.clear();
