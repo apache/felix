@@ -29,6 +29,7 @@ public interface ComponentContext extends Component {
     public Component setThreadPool(Executor threadPool);
     public void start();
     public void stop();
+    public boolean isActive();
     public boolean isAvailable();
     public void handleAdded(DependencyContext dc, Event e);
     public void handleChanged(DependencyContext dc, Event e);

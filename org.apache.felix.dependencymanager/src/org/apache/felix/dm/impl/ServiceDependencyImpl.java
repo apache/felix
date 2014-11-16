@@ -36,6 +36,7 @@ import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
 import org.apache.felix.dm.tracker.ServiceTracker;
 import org.apache.felix.dm.tracker.ServiceTrackerCustomizer;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
@@ -231,7 +232,16 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
 
 	@Override
 	public Object addingService(ServiceReference reference) {
-		return getBundleContext().getService(reference);
+		try {
+		    return getBundleContext().getService(reference);
+		} catch (IllegalStateException e) {
+		    // most likely our bundle is being stopped. Only log an exception if our component is enabled.
+		    if (m_component.isActive()) {
+                m_logger.log(Logger.LOG_WARNING, "could not handle service dependency for component "
+                    + m_component.getComponentDeclaration().getClassName(), e);
+		    }
+		    return null;		    
+		}
 	}
 
 	@Override

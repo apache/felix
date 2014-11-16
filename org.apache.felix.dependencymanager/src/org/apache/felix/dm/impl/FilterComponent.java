@@ -284,6 +284,11 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     }
         
     @Override
+    public boolean isActive() {
+        return m_component.isActive();
+    }
+
+    @Override
     public boolean isAvailable() {
         return m_component.isAvailable();
     }

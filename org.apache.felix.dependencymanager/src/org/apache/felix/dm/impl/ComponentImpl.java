@@ -40,6 +40,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.felix.dm.Component;
@@ -82,7 +83,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     private static AtomicLong m_idGenerator = new AtomicLong();
     // Holds all the services of a given dependency context. Caution: the last entry in the skiplist is the highest ranked service.
     private final Map<DependencyContext, ConcurrentSkipListSet<Event>> m_dependencyEvents = new HashMap<>();
-    private volatile boolean m_active;
+    private final AtomicBoolean m_active = new AtomicBoolean(false);
     
     private boolean debug = false;
     private String debugKey;
@@ -213,25 +214,27 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	}
 
 	public void start() {
-	    m_active = true;
-		getExecutor().execute(new Runnable() {
-			@Override
-			public void run() {
-				m_isStarted = true;
-				handleChange();
-			}
-		});
+	    if (m_active.compareAndSet(false, true)) {
+            getExecutor().execute(new Runnable() {
+                @Override
+                public void run() {
+                    m_isStarted = true;
+                    handleChange();
+                }
+            });
+	    }
 	}
 	
 	public void stop() {
-		getExecutor().execute(new Runnable() {
-			@Override
-			public void run() {
-				m_isStarted = false;
-				handleChange();
-				m_active = false;
-			}
-		});
+	    if (m_active.compareAndSet(true, false)) {
+            getExecutor().execute(new Runnable() {
+                @Override
+                public void run() {
+                    m_isStarted = false;
+                    handleChange();
+                }
+            });
+	    }
 	}
 
 	@Override
@@ -667,7 +670,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     private void unregisterService() {
         if (m_serviceName != null && m_registration != null) {
             try {
-                if (m_bundle == null || m_bundle.getState() == Bundle.ACTIVE) {
+                if (m_bundle != null && m_bundle.getState() == Bundle.ACTIVE) {
                     m_registration.unregister();
                 }
             } catch (IllegalStateException e) { /* Should we really log this ? */}
@@ -906,8 +909,14 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		}
 	}
 	
+	@Override
 	public boolean isAvailable() {
 		return m_state == TRACKING_OPTIONAL;
+	}
+	
+	@Override
+	public boolean isActive() {
+	    return m_active.get();
 	}
 	
 	@Override
@@ -1237,7 +1246,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     }
 
     public void ensureNotActive() {
-        if (m_active) {
+        if (m_active.get()) {
             throw new IllegalStateException("Can't modify an already started component.");
         }
     }
