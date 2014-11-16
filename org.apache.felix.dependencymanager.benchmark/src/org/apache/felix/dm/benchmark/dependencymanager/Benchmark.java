@@ -74,7 +74,7 @@ public class Benchmark {
             long id = Helper.generateId();
             String f = "(id=" + String.valueOf(id) + ")";
             album.add(dm.createServiceDependency()
-                .setService(Track.class, f).setRequired(true).setCallbacks("addTrack", null));
+                        .setService(Track.class, f).setRequired(true).setCallbacks("addTrack", null));
 
             Hashtable<String, Object> p = new Hashtable<>();
             p.put("id", String.valueOf(id));
