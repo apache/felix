@@ -92,9 +92,15 @@ public class PathDependency extends AbstractDependency<PathDependency> implement
         m_thread.interrupt();
     }
     
-    public boolean invoke(String method, Event e, Object[] instances) {
+    public void invokeAdd(Event e) {
+        if (m_add != null) {
+            invoke(m_add, e, getInstances());
+        }
+    }
+    
+    private void invoke(String method, Event e, Object[] instances) {
         // specific for this type of dependency
-        return m_component.invokeCallbackMethod(instances, method, 
+        m_component.invokeCallbackMethod(instances, method, 
             new Class[][] { {String.class}, 
                             {}}, 
             new Object[][] { { e.getEvent() }, 
@@ -118,9 +124,9 @@ public class PathDependency extends AbstractDependency<PathDependency> implement
 						continue;
 					}
 					if (StandardWatchEventKinds.ENTRY_CREATE == kind) {
-						add(new PathEvent(event.context().toString()));
+				        m_component.handleAdded(this, new PathEvent(event.context().toString()));
 					} else if (StandardWatchEventKinds.ENTRY_DELETE == kind) {
-						remove(new PathEvent(event.context().toString()));
+					    m_component.handleRemoved(this, new PathEvent(event.context().toString()));
 					}
 				}
 				

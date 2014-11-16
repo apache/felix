@@ -24,16 +24,11 @@ import java.util.Map;
 
 import org.apache.felix.dm.Dependency;
 
-
 public interface DependencyContext extends Dependency {
 	public void invokeAdd(Event e);
 	public void invokeChange(Event e);
 	public void invokeRemove(Event e);
 	public void invokeSwap(Event event, Event newEvent);
-	/** Whenever the dependency changes state, this method is invoked with the Event containing the new state information. */
-	public void add(final Event e);
-	public void change(final Event e);
-	public void remove(final Event e);
 	public void setComponentContext(ComponentContext component);
 	/** Invoked by the component when the dependency should start working. */
 	public void start();

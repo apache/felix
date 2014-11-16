@@ -95,7 +95,7 @@ public class TemporalServiceDependencyImpl extends ServiceDependencyImpl impleme
             }
         }
         if (makeAvailable) {
-            add(new ServiceEventImpl(m_bundle, m_context, ref, m_serviceInstance));
+            getComponentContext().handleAdded(this, new ServiceEventImpl(m_bundle, m_context, ref, m_serviceInstance));
         } else {
             // This added will possibly unblock our invoke() method (if it's blocked in m_tracker.waitForService method).
         }
@@ -130,7 +130,7 @@ public class TemporalServiceDependencyImpl extends ServiceDependencyImpl impleme
                 }
             }
             if (makeUnavailable) {
-                remove(new ServiceEventImpl(m_bundle, m_context, ref, m_serviceInstance)); // will unget the service ref
+                m_component.handleRemoved(this, new ServiceEventImpl(m_bundle, m_context, ref, m_serviceInstance)); // will unget the service ref
             }
         } else {
             // Unget what we got in addingService (see ServiceTracker 701.4.1)

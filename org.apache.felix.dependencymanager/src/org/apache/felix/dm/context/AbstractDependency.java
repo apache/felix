@@ -18,7 +18,6 @@
  */
 package org.apache.felix.dm.context;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -27,12 +26,10 @@ import java.util.Set;
 
 import org.apache.felix.dm.ComponentDependencyDeclaration;
 import org.apache.felix.dm.Dependency;
-import org.apache.felix.dm.impl.AbstractDecorator;
 import org.apache.felix.dm.impl.EventImpl;
 import org.apache.felix.dm.impl.Logger;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.log.LogService;
 
 /**
  * Abstract class for implementing Dependencies
@@ -130,98 +127,19 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
     // -------------- DependencyContext -----------------------------------------------
 
     @Override
-    public void invokeAdd(Event e) {
-        if (m_add != null) {
-            // If the add callback is not found and if the component instance is not an abstract decorator, then
-            // log a warn message. (AbstractDecorator, like Aspect or Adapter are not interested in user dependency callbacks).
-            if (! invoke(m_add, e) && ! (m_component.getInstance() instanceof AbstractDecorator)) {
-                callbackNotFound(m_add);
-            }
-        }
+    public void invokeAdd(Event e) {        
     }
 
     @Override
-    public void invokeChange(Event e) {
-        if (m_change != null) {
-            // If the change callback is not found and if the component instance is not an abstract decorator, then
-            // log a warn message. (AbstractDecorator, like Aspect or Adapter are not interested in user dependency callbacks).
-            if (! invoke(m_change, e) && ! (m_component.getInstance() instanceof AbstractDecorator)) {
-                callbackNotFound(m_change);
-            }
-        }
+    public void invokeChange(Event e) {        
     }
 
     @Override
-    public void invokeRemove(Event e) {
-        if (m_remove != null) {
-            // If the remove callback is not found and if the component instance is not an abstract decorator, then
-            // log a warn message. (AbstractDecorator, like Aspect or Adapter are not interested in user dependency callbacks).
-            if (! invoke(m_remove, e) && ! (m_component.getInstance() instanceof AbstractDecorator)) {
-                callbackNotFound(m_remove);
-            }
-        }
+    public void invokeRemove(Event e) {        
     }
 
     @Override
-    public void invokeSwap(Event event, Event newEvent) {
-        // Has to be implemented by sub classes
-        throw new IllegalStateException("This method must be implemented by the class " + getClass().getName());
-    }
-
-    public void add(final Event e) {
-        // since this method can be invoked by anyone from any thread, we need to
-        // pass on the event to a runnable that we execute using the component's
-        // executor
-        m_component.getExecutor().execute(new Runnable() {
-            @Override
-            public void run() {
-                m_component.handleAdded(AbstractDependency.this, e);
-            }
-        });
-    }
-
-    public void change(final Event e) {
-        // since this method can be invoked by anyone from any thread, we need to
-        // pass on the event to a runnable that we execute using the component's
-        // executor
-        m_component.getExecutor().execute(new Runnable() {
-            @Override
-            public void run() {
-                m_component.handleChanged(AbstractDependency.this, e);
-            }
-        });
-    }
-
-    public void remove(final Event e) {
-        // since this method can be invoked by anyone from any thread, we need to
-        // pass on the event to a runnable that we execute using the component's
-        // executor
-        m_component.getExecutor().execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    m_component.handleRemoved(AbstractDependency.this, e);
-                } finally {
-                    e.close();
-                }
-            }
-        });
-    }
-
-    public void swap(final Event event, final Event newEvent) {
-        // since this method can be invoked by anyone from any thread, we need to
-        // pass on the event to a runnable that we execute using the component's
-        // executor
-        m_component.getExecutor().execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    m_component.handleSwapped(AbstractDependency.this, event, newEvent);
-                } finally {
-                    event.close();
-                }
-            }
-        });
+    public void invokeSwap(Event event, Event newEvent) {        
     }
 
     @Override
@@ -255,74 +173,12 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
         m_available = available;
     }
 
-    @SuppressWarnings("unchecked")
-    public T setPropagate(boolean propagate) {
-        ensureNotActive();
-        m_propagate = propagate;
-        return (T) this;
-    }
-
-    @SuppressWarnings("unchecked")
-    public T setPropagate(Object instance, String method) {
-        setPropagate(instance != null && method != null);
-        m_propagateCallbackInstance = instance;
-        m_propagateCallbackMethod = method;
-        return (T) this;
-    }
-
     public boolean isInstanceBound() {
         return m_instanceBound;
     }
 
     public void setInstanceBound(boolean instanceBound) {
         m_instanceBound = instanceBound;
-    }
-
-    public T setCallbacks(String add, String remove) {
-        return setCallbacks(add, null, remove);
-    }
-
-    public T setCallbacks(String add, String change, String remove) {
-        return setCallbacks(null, add, change, remove);
-    }
-
-    public T setCallbacks(Object instance, String add, String remove) {
-        return setCallbacks(instance, add, null, remove);
-    }
-
-    @SuppressWarnings("unchecked")
-    public T setCallbacks(Object instance, String add, String change, String remove) {
-        if ((add != null || change != null || remove != null) && !m_autoConfigInvoked) {
-            setAutoConfig(false);
-        }
-        m_callbackInstance = instance;
-        m_add = add;
-        m_change = change;
-        m_remove = remove;
-        return (T) this;
-    }
-
-    public Object[] getInstances() {
-        if (m_callbackInstance == null) {
-            return m_component.getInstances();
-        } else {
-            return new Object[] { m_callbackInstance };
-        }
-    }
-
-    public boolean invoke(String method, Event e, Object[] instances) {
-        // specific for this type of dependency
-        return m_component.invokeCallbackMethod(instances, method, new Class[][] { {} }, new Object[][] { {} });
-    }
-
-    public boolean invoke(String method, Event e) {
-        return invoke(method, e, getInstances());
-    }
-
-    @SuppressWarnings("unchecked")
-    public T setRequired(boolean required) {
-        m_required = required;
-        return (T) this;
     }
 
     @Override
@@ -333,21 +189,6 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
     @Override
     public Class<?> getAutoConfigType() {
         return null; // must be implemented by subclasses if autoconfig mode is enabled
-    }
-
-    @SuppressWarnings("unchecked")
-    public T setAutoConfig(boolean autoConfig) {
-        m_autoConfig = autoConfig;
-        m_autoConfigInvoked = true;
-        return (T) this;
-    }
-
-    @SuppressWarnings("unchecked")
-    public T setAutoConfig(String instanceName) {
-        m_autoConfig = (instanceName != null);
-        m_autoConfigInstance = instanceName;
-        m_autoConfigInvoked = true;
-        return (T) this;
     }
 
     @Override
@@ -392,26 +233,6 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
         }
     }
 
-    public ComponentContext getComponentContext() {
-        return m_component;
-    }
-
-    protected Object getDefaultService(boolean nullObject) {
-        return null;
-    }
-
-    protected void ensureNotActive() {
-        if (isStarted()) {
-            throw new IllegalStateException("Cannot modify state while active.");
-        }
-    }
-
-    protected void startTracking() {
-    }
-
-    protected void stopTracking() {
-    }
-
     @Override
     public abstract DependencyContext createCopy();
 
@@ -443,15 +264,93 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
         }
     }
     
-    // -------------- Private methods ---------------------------------------------------
+    // -------------- Methods common to sub interfaces of Dependendency
     
-    private void callbackNotFound(String callback) {
-        if (m_logger == null) {
-            System.out.println("Dependency \"" + callback + "\" callback not found on componnent instances "
-                + Arrays.toString(m_component.getInstances()));
-        } else {
-            m_logger.log(LogService.LOG_ERROR, "Dependency \"" + callback + "\" callback not found on componnent instances "
-                + Arrays.toString(m_component.getInstances()));
+    @SuppressWarnings("unchecked")
+    public T setPropagate(boolean propagate) {
+        ensureNotActive();
+        m_propagate = propagate;
+        return (T) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public T setPropagate(Object instance, String method) {
+        setPropagate(instance != null && method != null);
+        m_propagateCallbackInstance = instance;
+        m_propagateCallbackMethod = method;
+        return (T) this;
+    }
+    
+    public T setCallbacks(String add, String remove) {
+        return setCallbacks(add, null, remove);
+    }
+
+    public T setCallbacks(String add, String change, String remove) {
+        return setCallbacks(null, add, change, remove);
+    }
+
+    public T setCallbacks(Object instance, String add, String remove) {
+        return setCallbacks(instance, add, null, remove);
+    }
+
+    @SuppressWarnings("unchecked")
+    public T setCallbacks(Object instance, String add, String change, String remove) {
+        if ((add != null || change != null || remove != null) && !m_autoConfigInvoked) {
+            setAutoConfig(false);
         }
+        m_callbackInstance = instance;
+        m_add = add;
+        m_change = change;
+        m_remove = remove;
+        return (T) this;
+    }
+
+    public Object[] getInstances() {
+        if (m_callbackInstance == null) {
+            return m_component.getInstances();
+        } else {
+            return new Object[] { m_callbackInstance };
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public T setRequired(boolean required) {
+        m_required = required;
+        return (T) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public T setAutoConfig(boolean autoConfig) {
+        m_autoConfig = autoConfig;
+        m_autoConfigInvoked = true;
+        return (T) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public T setAutoConfig(String instanceName) {
+        m_autoConfig = (instanceName != null);
+        m_autoConfigInstance = instanceName;
+        m_autoConfigInvoked = true;
+        return (T) this;
+    }
+
+    public ComponentContext getComponentContext() {
+        return m_component;
+    }
+
+    protected Object getDefaultService(boolean nullObject) {
+        return null;
+    }
+
+    protected void ensureNotActive() {
+        if (isStarted()) {
+            throw new IllegalStateException("Cannot modify state while active.");
+        }
+    }
+
+    protected void startTracking() {
+    }
+
+    protected void stopTracking() {
     }
 }

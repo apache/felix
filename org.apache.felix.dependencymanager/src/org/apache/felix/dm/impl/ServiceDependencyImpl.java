@@ -36,7 +36,6 @@ import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
 import org.apache.felix.dm.tracker.ServiceTracker;
 import org.apache.felix.dm.tracker.ServiceTrackerCustomizer;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
@@ -249,65 +248,49 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
 		if (debug) {
 			System.out.println(debugKey + " addedService: ref=" + reference + ", service=" + service);
 		}
-		add(new ServiceEventImpl(m_bundle, m_context, reference, service));
+		m_component.handleAdded(this, new ServiceEventImpl(m_bundle, m_context, reference, service));
 	}
 
 	@Override
 	public void modifiedService(ServiceReference reference, Object service) {
-		change(new ServiceEventImpl(m_bundle, m_context, reference, service));
+	    m_component.handleChanged(this, new ServiceEventImpl(m_bundle, m_context, reference, service));
 	}
 
 	@Override
 	public void removedService(ServiceReference reference, Object service) {
-		remove(new ServiceEventImpl(m_bundle, m_context, reference, service));
+	    m_component.handleRemoved(this, new ServiceEventImpl(m_bundle, m_context, reference, service));
 	}
 	
 	@Override
-	public boolean invoke(String method, Event e, Object[] instances) {
-		ServiceEventImpl se = (ServiceEventImpl) e;
-		ServicePropertiesMap propertiesMap = new ServicePropertiesMap(se.getReference());
-		Dictionary<?,?> properties = se.getProperties();
-		return m_component.invokeCallbackMethod(instances, method,
-		    new Class[][]{
-                {Component.class, ServiceReference.class, m_trackedServiceName},
-                {Component.class, ServiceReference.class, Object.class}, 
-                {Component.class, ServiceReference.class},
-                {Component.class, m_trackedServiceName}, 
-                {Component.class, Object.class}, 
-                {Component.class},
-                {Component.class, Map.class, m_trackedServiceName},
-                {ServiceReference.class, m_trackedServiceName},
-                {ServiceReference.class, Object.class}, 
-                {ServiceReference.class},
-                {m_trackedServiceName}, 
-                {m_trackedServiceName, Map.class}, 
-                {Map.class, m_trackedServiceName}, 
-                {m_trackedServiceName, Dictionary.class}, 
-                {Dictionary.class, m_trackedServiceName}, 
-                {Object.class}, 
-                {}},
-            
-            new Object[][]{
-		        {m_component, se.getReference(), se.getEvent()},
-		        {m_component, se.getReference(), se.getEvent()}, 
-		        {m_component, se.getReference()}, 
-		        {m_component, se.getEvent()},
-		        {m_component, se.getEvent()},
-		        {m_component},
-		        {m_component, propertiesMap, se.getEvent()},
-		        {se.getReference(), se.getEvent()},
-		        {se.getReference(), se.getEvent()}, 
-		        {se.getReference()}, 
-		        {se.getEvent()}, 
-		        {se.getEvent(), propertiesMap},
-		        {propertiesMap, se.getEvent()},
-                {se.getEvent(), properties},
-                {properties, se.getEvent()},
-                {se.getEvent()}, 
-		        {}}
-		);
+    public void invokeAdd(Event e) {
+        if (m_add != null) {
+            invoke (m_add, e, getInstances());
+        }
+    }
+	
+	@Override
+	public void invokeChange(Event e) {
+	    if (m_change != null) {
+	        invoke (m_change, e, getInstances());
+	    }
 	}
-		
+
+	@Override
+	public void invokeRemove(Event e) {
+	    if (m_remove != null) {
+	        invoke (m_remove, e, getInstances());
+	    }
+	}
+	
+    @Override   
+    public void invokeSwap(Event event, Event newEvent) {
+        if (m_swap != null) {
+            ServiceEventImpl oldE = (ServiceEventImpl) event;
+            ServiceEventImpl newE = (ServiceEventImpl) newEvent;
+            invokeSwap(m_swap, oldE.getReference(), oldE.getEvent(), newE.getReference(), newE.getEvent(), getInstances());
+        }
+    }
+
 	@Override
     public Class<?> getAutoConfigType() {
         return m_trackedServiceName;
@@ -481,13 +464,51 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
         return m_defaultImplementationInstance;
     }
 
-    @Override   
-    public void invokeSwap(Event event, Event newEvent) {
-        ServiceEventImpl oldE = (ServiceEventImpl) event;
-        ServiceEventImpl newE = (ServiceEventImpl) newEvent;
-        invokeSwap(m_swap, oldE.getReference(), oldE.getEvent(), newE.getReference(), newE.getEvent(), getInstances());
+    public void invoke(String method, Event e, Object[] instances) {
+        ServiceEventImpl se = (ServiceEventImpl) e;
+        ServicePropertiesMap propertiesMap = new ServicePropertiesMap(se.getReference());
+        Dictionary<?,?> properties = se.getProperties();
+        m_component.invokeCallbackMethod(instances, method,
+            new Class[][]{
+                {Component.class, ServiceReference.class, m_trackedServiceName},
+                {Component.class, ServiceReference.class, Object.class}, 
+                {Component.class, ServiceReference.class},
+                {Component.class, m_trackedServiceName}, 
+                {Component.class, Object.class}, 
+                {Component.class},
+                {Component.class, Map.class, m_trackedServiceName},
+                {ServiceReference.class, m_trackedServiceName},
+                {ServiceReference.class, Object.class}, 
+                {ServiceReference.class},
+                {m_trackedServiceName}, 
+                {m_trackedServiceName, Map.class}, 
+                {Map.class, m_trackedServiceName}, 
+                {m_trackedServiceName, Dictionary.class}, 
+                {Dictionary.class, m_trackedServiceName}, 
+                {Object.class}, 
+                {}},
+            
+            new Object[][]{
+                {m_component, se.getReference(), se.getEvent()},
+                {m_component, se.getReference(), se.getEvent()}, 
+                {m_component, se.getReference()}, 
+                {m_component, se.getEvent()},
+                {m_component, se.getEvent()},
+                {m_component},
+                {m_component, propertiesMap, se.getEvent()},
+                {se.getReference(), se.getEvent()},
+                {se.getReference(), se.getEvent()}, 
+                {se.getReference()}, 
+                {se.getEvent()}, 
+                {se.getEvent(), propertiesMap},
+                {propertiesMap, se.getEvent()},
+                {se.getEvent(), properties},
+                {properties, se.getEvent()},
+                {se.getEvent()}, 
+                {}}
+        );
     }
-
+        
     public void invokeSwap(String swapMethod, ServiceReference previousReference, Object previous,
 			ServiceReference currentReference, Object current, Object[] instances) {
     	if (debug) {
@@ -526,7 +547,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
 			// getting out of order.		    		    
 		    // We delegate the swap handling to the ComponentImpl, which is the class responsible for state management.
 		    // The ComponentImpl will first check if the component is in the proper state so the swap method can be invoked.		    
-		    swap(new ServiceEventImpl(m_bundle, m_context, reference, service), new ServiceEventImpl(m_bundle, m_context, newReference, newService));
+		    m_component.handleSwapped(this, new ServiceEventImpl(m_bundle, m_context, reference, service), new ServiceEventImpl(m_bundle, m_context, newReference, newService));
 		} else {
 			addedService(newReference, newService);
 			removedService(reference, service);

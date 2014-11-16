@@ -82,9 +82,9 @@ public class ToggleServiceDependency extends AbstractDependency<ToggleServiceDep
 
     public void activate(boolean active) {
         if (active) {
-            add(new ToggleEvent());
+            m_component.handleAdded(this, new ToggleEvent());
         } else {
-            remove(new ToggleEvent());
+            m_component.handleRemoved(this, new ToggleEvent());
         }
     }
 

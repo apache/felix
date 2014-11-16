@@ -50,12 +50,14 @@ import org.apache.felix.dm.ComponentState;
 import org.apache.felix.dm.ComponentStateListener;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.context.AbstractDependency;
 import org.apache.felix.dm.context.ComponentContext;
 import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.log.LogService;
 
 public class ComponentImpl implements Component, ComponentContext, ComponentDeclaration {
 	private static final ServiceRegistration NULL_REGISTRATION = (ServiceRegistration) Proxy
@@ -164,11 +166,6 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         m_id = m_idGenerator.getAndIncrement();
     }
 
-    @Override
-    public Executor getExecutor() {
-		return m_executor;
-	}
-		
 	@Override
 	public Component add(final Dependency ... dependencies) {
 		getExecutor().execute(new Runnable() {
@@ -254,7 +251,19 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	}
 
 	@Override
-	public void handleAdded(DependencyContext dc, Event e) {
+	public void handleAdded(final DependencyContext dc, final Event e) {
+        // since this method can be invoked by anyone from any thread, we need to
+        // pass on the event to a runnable that we execute using the component's
+        // executor
+	    getExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                doHandleAdded(dc, e);
+            }
+        });
+	}
+	
+	private void doHandleAdded(DependencyContext dc, Event e) {
 	    if (! m_isStarted) {
 	        return;
 	    }
@@ -304,7 +313,19 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	}
 		
     @Override
-    public void handleChanged(DependencyContext dc, Event e) {
+    public void handleChanged(final DependencyContext dc, final Event e) {
+        // since this method can be invoked by anyone from any thread, we need to
+        // pass on the event to a runnable that we execute using the component's
+        // executor
+        getExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                doHandleChanged(dc, e);
+            }
+        });  
+    }
+        
+    private void doHandleChanged(DependencyContext dc, Event e) {
         if (! m_isStarted) {
             return;
         }
@@ -332,7 +353,23 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     }
 
     @Override
-    public void handleRemoved(DependencyContext dc, Event e) {
+    public void handleRemoved(final DependencyContext dc, final Event e) {
+        // since this method can be invoked by anyone from any thread, we need to
+        // pass on the event to a runnable that we execute using the component's
+        // executor
+        getExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    doHandleRemoved(dc, e);
+                } finally {
+                    e.close();
+                }
+            }
+        });
+    }
+    
+    private void doHandleRemoved(DependencyContext dc, Event e) {
         if (! m_isStarted) {
             return;
         }
@@ -376,7 +413,24 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         }
     }
 
-    public void handleSwapped(DependencyContext dc, Event event, Event newEvent) {
+    @Override
+    public void handleSwapped(final DependencyContext dc, final Event event, final Event newEvent) {
+        // since this method can be invoked by anyone from any thread, we need to
+        // pass on the event to a runnable that we execute using the component's
+        // executor
+        getExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    doHandleSwapped(dc, event, newEvent);
+                } finally {
+                    event.close();
+                }
+            }
+        });  
+    }
+    
+    private void doHandleSwapped(DependencyContext dc, Event event, Event newEvent) {
         if (! m_isStarted) {
             return;
         }
@@ -858,7 +912,8 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             try {
                 invokeCallbackMethod(instances, name, 
                     new Class[][] {{ Component.class }, {}}, 
-                    new Object[][] {{ this }, {}});
+                    new Object[][] {{ this }, {}},
+                    false);
             } finally {
                 long t2 = System.nanoTime();
                 m_stopwatch.put(name, t2 - t1);
@@ -876,7 +931,12 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     	return getCompositionInstances();
     }
     
-    public boolean invokeCallbackMethod(Object[] instances, String methodName, Class<?>[][] signatures, Object[][] parameters) {
+    public void invokeCallbackMethod(Object[] instances, String methodName, Class<?>[][] signatures, Object[][] parameters) {
+        invokeCallbackMethod(instances, methodName, signatures, parameters, true);
+    }
+
+    public void invokeCallbackMethod(Object[] instances, String methodName, Class<?>[][] signatures,
+        Object[][] parameters, boolean logIfNotFound) {
         boolean callbackFound = false;
         for (int i = 0; i < instances.length; i++) {
             try {
@@ -894,10 +954,22 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
                 m_logger.log(Logger.LOG_ERROR, "Could not invoke '" + methodName + "'.", e);
             }
         }
-        return callbackFound;
+        
+        // If the callback is not found, we don't log if the method is on an AbstractDecorator.
+        // (Aspect or Adapter are not interested in user dependency callbacks)        
+        if (logIfNotFound && ! callbackFound && ! (getInstance() instanceof AbstractDecorator)) {
+            if (m_logger == null) {
+                System.out.println("Callback \"" + methodName + "\" not found on componnent instances "
+                    + Arrays.toString(getInstances()));
+            } else {
+                m_logger.log(LogService.LOG_ERROR, "Callback \"" + methodName + "\" callback not found on componnent instances "
+                    + Arrays.toString(getInstances()));
+            }
+
+        }
     }
 
-    private Object createInstance(Class<?> clazz) throws SecurityException, NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+   private Object createInstance(Class<?> clazz) throws SecurityException, NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		Constructor<?> constructor = clazz.getConstructor(VOID);
 		constructor.setAccessible(true);
         return constructor.newInstance();
@@ -1278,4 +1350,8 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     public Map<String, Long> getCallbacksTime() {
         return m_stopwatch;
     }
+    
+    private Executor getExecutor() {
+        return m_executor;
+    }        
 }

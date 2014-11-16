@@ -81,47 +81,67 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
 
     public void added(URL resource) {
         if (m_trackedResource == null || m_trackedResource.equals(resource)) {
-            add(new ResourceEventImpl(resource, null));
+            getComponentContext().handleAdded(this, new ResourceEventImpl(resource, null));
         }
     }
     
     public void added(URL resource, Dictionary<String, ?> resourceProperties) {
         if (m_trackedResource == null || m_trackedResource.equals(resource)) {
-            add(new ResourceEventImpl(resource, resourceProperties));
+            getComponentContext().handleAdded(this, new ResourceEventImpl(resource, resourceProperties));
         }
     }
         
     public void changed(URL resource) {
         if (m_trackedResource == null || m_trackedResource.equals(resource)) {
-            change(new ResourceEventImpl(resource, null));
+            m_component.handleChanged(this, new ResourceEventImpl(resource, null));
         }
     }
     
     public void changed(URL resource, Dictionary<String, ?> resourceProperties) {
         if (m_trackedResource == null || m_trackedResource.equals(resource)) {
-            change(new ResourceEventImpl(resource, resourceProperties));
+            m_component.handleChanged(this, new ResourceEventImpl(resource, resourceProperties));
         }
     }
 
     public void removed(URL resource) {
         if (m_trackedResource == null || m_trackedResource.equals(resource)) {
-            remove(new ResourceEventImpl(resource, null));
+            m_component.handleRemoved(this, new ResourceEventImpl(resource, null));
         }
     }
     
     public void removed(URL resource, Dictionary<String, ?> resourceProperties) {
         if (m_trackedResource == null || m_trackedResource.equals(resource)) {
-            remove(new ResourceEventImpl(resource, resourceProperties));
+            m_component.handleRemoved(this, new ResourceEventImpl(resource, resourceProperties));
         }
     }
     
     @Override
-    public boolean invoke(String method, Event e) {
+    public void invokeAdd(Event e) {
+        if (m_add != null) {
+            invoke(m_add, e);
+        }
+    }
+
+    @Override
+    public void invokeChange(Event e) {
+        if (m_change != null) {
+            invoke (m_change, e);
+        }
+    }
+
+    @Override
+    public void invokeRemove(Event e) {
+        if (m_remove != null) {
+            invoke (m_remove, e);
+        }
+    }
+    
+    private void invoke(String method, Event e) {
         ResourceEventImpl re = (ResourceEventImpl) e;
         URL serviceInstance = re.getResource();
         Dictionary<?,?> resourceProperties = re.getProperties();
        
-        return m_component.invokeCallbackMethod(getInstances(), method,
+        m_component.invokeCallbackMethod(getInstances(), method,
             new Class[][] {
                     { Component.class, URL.class, Dictionary.class }, 
                     { Component.class, URL.class },

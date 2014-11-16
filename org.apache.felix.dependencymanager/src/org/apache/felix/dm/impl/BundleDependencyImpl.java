@@ -156,26 +156,45 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
     }
     
     public void addedBundle(Bundle bundle, BundleEvent event, Object object) {
-        add(new BundleEventImpl(bundle, event));
+        m_component.handleAdded(this, new BundleEventImpl(bundle, event));
     }
         
     public void modifiedBundle(Bundle bundle, BundleEvent event, Object object) {
-        change(new BundleEventImpl(bundle, event));
+        m_component.handleChanged(this, new BundleEventImpl(bundle, event));
     }
 
     public void removedBundle(Bundle bundle, BundleEvent event, Object object) {
-        remove(new BundleEventImpl(bundle, event));
+        m_component.handleRemoved(this, new BundleEventImpl(bundle, event));
     }
     
     @Override
-    public boolean invoke(String method, Event e) {
-        BundleEventImpl be = (BundleEventImpl) e;
-        return m_component.invokeCallbackMethod(getInstances(), method,
-            new Class[][] {{Bundle.class}, {Object.class}, {}},             
-            new Object[][] {{be.getBundle()}, {be.getBundle()}, {}}
-        );
-    }  
+    public void invokeAdd(Event e) {
+        if (m_add != null) {
+            invoke(m_add, e);
+        }
+    }
+    
+    @Override
+    public void invokeChange(Event e) {
+        if (m_change != null) {
+            invoke (m_change, e);
+        }
+    }
+
+    @Override
+    public void invokeRemove(Event e) {
+        if (m_remove != null) {
+            invoke (m_remove, e);
+        }
+    }
         
+    private void invoke(String method, Event e) {
+        BundleEventImpl be = (BundleEventImpl) e;
+        m_component.invokeCallbackMethod(getInstances(), method,
+            new Class[][] {{Bundle.class}, {Object.class}, {}},             
+            new Object[][] {{be.getBundle()}, {be.getBundle()}, {}});
+    }
+    
     public BundleDependency setBundle(Bundle bundle) {
         m_bundleId = bundle.getBundleId();
         return this;
