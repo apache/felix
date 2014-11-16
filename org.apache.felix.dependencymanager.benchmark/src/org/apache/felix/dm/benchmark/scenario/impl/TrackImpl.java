@@ -7,9 +7,9 @@ import org.apache.felix.dm.benchmark.scenario.Track;
  * One single music.
  */
 public class TrackImpl implements Track {
-    ScenarioController m_controller;
+    final ScenarioController m_controller;
 
-    void bindController(ScenarioController controller) {
+    public TrackImpl(ScenarioController controller) {
         m_controller = controller;
     }
 

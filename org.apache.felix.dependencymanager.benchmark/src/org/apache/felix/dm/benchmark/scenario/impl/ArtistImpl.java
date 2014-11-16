@@ -12,12 +12,12 @@ import org.apache.felix.dm.benchmark.scenario.Artist;
  */
 public class ArtistImpl implements Artist {
     final List<Album> m_albums = new ArrayList<>();
-    volatile ScenarioController m_controller;
+    final ScenarioController m_controller;
     
-    void bindController(ScenarioController controller) {
+    public ArtistImpl(ScenarioController controller) {
         m_controller = controller;
     }
-
+    
     void addAlbum(Album dep) {
         m_albums.add(dep);
     }

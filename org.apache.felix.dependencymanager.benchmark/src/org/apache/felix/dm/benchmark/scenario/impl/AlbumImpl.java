@@ -12,9 +12,9 @@ import org.apache.felix.dm.benchmark.scenario.Track;
  */
 public class AlbumImpl implements Album {
     final List<Track> m_musicTracks = new ArrayList<>();
-    ScenarioController m_controller;
-
-    void bindController(ScenarioController controller) {
+    final ScenarioController m_controller;
+    
+    public AlbumImpl(ScenarioController controller) {
         m_controller = controller;
     }
     
