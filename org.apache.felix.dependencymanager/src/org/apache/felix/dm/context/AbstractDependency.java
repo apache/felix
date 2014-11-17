@@ -140,18 +140,12 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
 
     @Override
     public void start() {
-        if (!m_isStarted) {
-            startTracking();
-            m_isStarted = true;
-        }
+        m_isStarted = true;
     }
 
     @Override
     public void stop() {
-        if (m_isStarted) {
-            stopTracking();
-            m_isStarted = false;
-        }
+        m_isStarted = false;
     }
 
     @Override
@@ -337,11 +331,5 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
         if (isStarted()) {
             throw new IllegalStateException("Cannot modify state while active.");
         }
-    }
-
-    protected void startTracking() {
-    }
-
-    protected void stopTracking() {
     }
 }

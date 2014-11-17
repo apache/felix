@@ -200,7 +200,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
     }
 
 	@Override
-	protected void startTracking() {
+	public void start() {
         if (m_trackedServiceName != null) {
             if (m_trackedServiceFilter != null) {
                 try {
@@ -221,12 +221,14 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
             m_tracker.setDebug(debugKey);
         }
         m_tracker.open();
+        super.start();
 	}
 	
 	@Override
-	protected void stopTracking() {
+	public void stop() {
 	    m_tracker.close();
 	    m_tracker = null;
+	    super.stop();
 	}
 
 	@Override

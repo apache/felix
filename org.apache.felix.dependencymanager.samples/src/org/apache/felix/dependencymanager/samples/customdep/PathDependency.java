@@ -7,13 +7,11 @@ import java.nio.file.WatchEvent;
 import java.nio.file.WatchEvent.Kind;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
-import java.util.Dictionary;
 import java.util.List;
 
 import org.apache.felix.dm.context.AbstractDependency;
 import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
-import org.osgi.service.log.LogService;
 
 public class PathDependency extends AbstractDependency<PathDependency> implements Runnable {
     private final String m_path;
@@ -44,18 +42,30 @@ public class PathDependency extends AbstractDependency<PathDependency> implement
         return "path";
     }
 
-    protected void startTracking() {
+    @Override
+    public void start() {
         m_thread = new Thread(this);
         m_thread.start();
+        super.start();
     }
 
-    protected void stopTracking() {
+    @Override   
+    public void stop() {
         m_thread.interrupt();
+        super.stop();
     }
     
+    @Override   
     public void invokeAdd(Event e) {
         if (m_add != null) {
             invoke(m_add, e, getInstances());
+        }
+    }
+    
+    @Override   
+    public void invokeRemove(Event e) {
+        if (m_remove != null) {
+            invoke(m_remove, e, getInstances());
         }
     }
     

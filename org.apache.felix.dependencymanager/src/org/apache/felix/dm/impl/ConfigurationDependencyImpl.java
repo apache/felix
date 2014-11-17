@@ -82,7 +82,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
     }
 
     @Override
-    protected void startTracking() {
+    public void start() {
         if (m_context != null) { // If null, we are in a test environment
 	        Properties props = new Properties();
 	        props.put(Constants.SERVICE_PID, m_pid);
@@ -92,16 +92,18 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 	        }
 	        m_registration = m_context.registerService(ManagedService.class.getName(), ms, props);
         }
+        super.start();
     }
 
     @Override
-    protected void stopTracking() {
+    public void stop() {
         if (m_registration != null) {
             try {
                 m_registration.unregister();
             } catch (IllegalStateException e) {}
         	m_registration = null;
         }
+        super.stop();
     }
     
 	public ConfigurationDependency setPid(String pid) {

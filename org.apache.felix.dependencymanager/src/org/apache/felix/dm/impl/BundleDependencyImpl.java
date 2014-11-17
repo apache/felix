@@ -72,15 +72,17 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
     }
     
     @Override
-    protected void startTracking() {
+    public void start() {
         m_tracker = new BundleTracker(m_context, m_stateMask, this);
         m_tracker.open();
+        super.start();
     }
 
     @Override
-    protected void stopTracking() {
+    public void stop() {
         m_tracker.close();
         m_tracker = null;
+        super.stop();
     }
 
     @Override

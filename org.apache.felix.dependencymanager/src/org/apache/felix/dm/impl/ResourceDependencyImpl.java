@@ -59,7 +59,7 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
     }
     
     @Override
-    protected void startTracking() {
+    public void start() {
         Dictionary<String, Object> props = null;
         if (m_trackedResource != null) {
             props = new Hashtable<>();
@@ -71,12 +71,14 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
             }
         }
         m_registration = m_context.registerService(ResourceHandler.class.getName(), this, props);
+        super.start();
     }
 
     @Override
-    protected void stopTracking() {
+    public void stop() {
         m_registration.unregister();
         m_registration = null;
+        super.stop();
     }
 
     public void added(URL resource) {
