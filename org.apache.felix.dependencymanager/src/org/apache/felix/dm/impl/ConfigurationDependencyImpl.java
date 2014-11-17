@@ -41,13 +41,15 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 	private ServiceRegistration m_registration;
     private MetaTypeProviderImpl m_metaType;
 	private final AtomicBoolean m_updateInvokedCache = new AtomicBoolean();
+	private final Logger m_logger;
 
     public ConfigurationDependencyImpl() {
-    	this(null, null);
+        this(null, null);
     }
-    
+	
     public ConfigurationDependencyImpl(BundleContext context, Logger logger) {
-    	super(false /* not autoconfig */, context, logger);
+    	super(false /* not autoconfig */, context);
+    	m_logger = logger;
         setRequired(true);
         setCallback("updated");
     }
@@ -55,6 +57,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 	public ConfigurationDependencyImpl(ConfigurationDependencyImpl prototype) {
 	    super(prototype);
 	    m_pid = prototype.m_pid;
+	    m_logger = prototype.m_logger;
         m_metaType = prototype.m_metaType != null ? new MetaTypeProviderImpl(prototype.m_metaType, this, null) : null;
 	}
 	
@@ -211,6 +214,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
         }
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public void invokeAdd(Event event) {
 		try {
@@ -220,11 +224,13 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 		}
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public void invokeChange(Event event) {
         // We already did that synchronously, from our updated method
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public void invokeRemove(Event event) {
         // The state machine is stopping us. We have to invoke updated(null).

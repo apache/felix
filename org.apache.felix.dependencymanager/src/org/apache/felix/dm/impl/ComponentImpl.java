@@ -1353,5 +1353,10 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     
     private Executor getExecutor() {
         return m_executor;
+    }
+
+    @Override
+    public void log(int level, String msg, Throwable err) {
+        m_logger.log(level, msg, err);        
     }        
 }

@@ -19,45 +19,6 @@ public class PathDependency extends AbstractDependency<PathDependency> implement
     private final String m_path;
     private volatile Thread m_thread;
 
-    public class PathEvent implements Event {
-        final String m_path;
-        public PathEvent(String path) {
-            m_path = path;
-        }
-
-        @Override
-        public boolean equals(Object e) {
-            if (e instanceof PathEvent) {
-                return m_path.equals(((PathEvent) e).m_path);
-            }
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            return m_path.hashCode();
-        }
-
-        @Override
-        public int compareTo(Event o) {
-            return m_path.compareTo(((PathEvent) o).m_path);
-        }
-
-        @Override
-        public void close() {
-        }
-
-        @Override
-        public Object getEvent() {
-            return m_path;
-        }
-
-        @Override
-        public Dictionary<String, Object> getProperties() {
-            return EMPTY_PROPERTIES;
-        }
-    }
-
     public PathDependency(String path) {
         super.setRequired(true);
         m_path = path;
@@ -124,9 +85,9 @@ public class PathDependency extends AbstractDependency<PathDependency> implement
 						continue;
 					}
 					if (StandardWatchEventKinds.ENTRY_CREATE == kind) {
-				        m_component.handleAdded(this, new PathEvent(event.context().toString()));
+				        m_component.handleAdded(this, new Event(event.context().toString()));
 					} else if (StandardWatchEventKinds.ENTRY_DELETE == kind) {
-					    m_component.handleRemoved(this, new PathEvent(event.context().toString()));
+					    m_component.handleRemoved(this, new Event(event.context().toString()));
 					}
 				}
 				

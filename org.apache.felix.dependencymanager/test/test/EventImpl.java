@@ -16,18 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.dm.impl;
-
-import java.util.Dictionary;
+package test;
 
 import org.apache.felix.dm.context.Event;
 
 /* in real life, this event might contain a service reference and service instance
  * or something similar
  */
-public class EventImpl implements Event {
+public class EventImpl extends Event<Object> { // the actual event object (a Service, a Bundle, a Configuration, etc ...)
 	private final int m_id;
-	private final Object m_event;    // the actual event object (a Service, a Bundle, a Configuration, etc ...)
 
 	public EventImpl() {
 		this(1);
@@ -38,8 +35,8 @@ public class EventImpl implements Event {
 	}
 	
 	public EventImpl(int id, Object event) {
+	    super(event);
 	    m_id = id;
-	    m_event = event;
 	}
 	
 
@@ -58,6 +55,7 @@ public class EventImpl implements Event {
 		return false;
 	}
 	
+    @SuppressWarnings("rawtypes")
     @Override
     public int compareTo(Event o) {
         EventImpl a = this, b = (EventImpl) o;
@@ -68,19 +66,5 @@ public class EventImpl implements Event {
         } else {
             return 1;
         }
-    }
-    
-    @Override
-    public void close() {
-    }
-    
-    @Override
-    public Object getEvent() {
-        return m_event;
-    }
-    
-    @Override
-    public Dictionary<String, Object> getProperties() {
-        return ServiceUtil.EMPTY_PROPERTIES;
-    }
+    }            
 }

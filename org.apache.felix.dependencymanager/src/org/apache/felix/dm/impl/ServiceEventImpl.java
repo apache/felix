@@ -25,17 +25,12 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
-public class ServiceEventImpl implements Event {
+public class ServiceEventImpl extends Event<Object> {
     /**
      * The service reference on which a service dependency depends on
      */
 	private final ServiceReference m_reference; 
-	
-	/**
-	 * The service instance on which the service dependency depends on
-	 */
-	private final Object m_service; 
-	
+		
     /**
      * The bundle context of the bundle which has created the service dependency. If not null, 
      * will be used in close method when ugetting the service reference of the dependency.
@@ -53,11 +48,11 @@ public class ServiceEventImpl implements Event {
 	    this(null, null, reference, service);
 	}
 
-	public ServiceEventImpl(Bundle bundle, BundleContext bundleContext, ServiceReference reference, Object service) {
+    public ServiceEventImpl(Bundle bundle, BundleContext bundleContext, ServiceReference reference, Object service) {
+	    super(service);
 	    m_bundle = bundle;
 	    m_bundleContext = bundleContext;
 		m_reference = reference;
-		m_service = service;
 	}
 	
 	/**
@@ -80,12 +75,7 @@ public class ServiceEventImpl implements Event {
 	public ServiceReference getReference() {
 		return m_reference;
 	}
-	
-    @Override
-    public Object getEvent() {
-        return m_service;
-    }
-    
+	    
     @Override
     public Dictionary<String, Object> getProperties() {
         return ServiceUtil.propertiesToDictionary(m_reference);
@@ -104,6 +94,7 @@ public class ServiceEventImpl implements Event {
 		return getReference().hashCode();
 	}
 
+    @SuppressWarnings("rawtypes")
     @Override
     public int compareTo(Event b) {
     	return getReference().compareTo(((ServiceEventImpl) b).getReference());
@@ -111,7 +102,7 @@ public class ServiceEventImpl implements Event {
         
     @Override
     public String toString() {
-    	return m_service.toString();
+    	return getEvent().toString();
     }
 
     @Override

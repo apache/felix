@@ -24,7 +24,6 @@ import java.util.Hashtable;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.impl.ComponentImpl;
 import org.apache.felix.dm.impl.ConfigurationDependencyImpl;
-import org.apache.felix.dm.impl.EventImpl;
 import org.junit.Test;
 import org.osgi.service.cm.ConfigurationException;
 

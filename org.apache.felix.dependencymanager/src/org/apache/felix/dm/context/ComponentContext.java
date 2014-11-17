@@ -23,8 +23,10 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 
 import org.apache.felix.dm.Component;
+import org.osgi.service.log.LogService;
 
 public interface ComponentContext extends Component {
+    public void log(int level, String msg, Throwable err);
     public Component setThreadPool(Executor threadPool);
     public void start();
     public void stop();

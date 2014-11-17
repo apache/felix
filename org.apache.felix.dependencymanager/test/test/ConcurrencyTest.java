@@ -27,7 +27,6 @@ import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentState;
 import org.apache.felix.dm.ComponentStateListener;
 import org.apache.felix.dm.impl.ComponentImpl;
-import org.apache.felix.dm.impl.EventImpl;
 import org.junit.Assert;
 import org.junit.Test;
 

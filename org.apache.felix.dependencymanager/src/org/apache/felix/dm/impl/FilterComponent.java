@@ -347,4 +347,9 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     public Map<String, Long> getCallbacksTime() {
         return m_component.getCallbacksTime();
     }
+
+    @Override
+    public void log(int level, String msg, Throwable err) {
+        m_component.log(level, msg, err);
+    }
 }

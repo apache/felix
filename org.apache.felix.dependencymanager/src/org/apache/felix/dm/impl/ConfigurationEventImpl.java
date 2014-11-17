@@ -4,24 +4,19 @@ import java.util.Dictionary;
 
 import org.apache.felix.dm.context.Event;
 
-public class ConfigurationEventImpl implements Event {
-    private final Dictionary<String, Object> m_conf;
+public class ConfigurationEventImpl extends Event<Dictionary<String, Object>> {
     private final String m_pid;
     
     public ConfigurationEventImpl(String pid, Dictionary<String, Object> conf) {
+        super(conf);
         m_pid = pid;
-        m_conf = conf;
     }
     
     public String getPid() {
         return m_pid;
     }
         
-    @Override
-    public Object getEvent() {
-        return m_conf;
-    }
-
+    @SuppressWarnings("rawtypes")
     @Override
     public int compareTo(Event other) {
         return m_pid.compareTo(((ConfigurationEventImpl) other).m_pid);
@@ -29,10 +24,6 @@ public class ConfigurationEventImpl implements Event {
 
     @Override
     public Dictionary<String, Object> getProperties() {
-        return m_conf;
-    }
-
-    @Override
-    public void close() {
+        return getEvent();
     }
 }

@@ -138,8 +138,8 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
         }
     }
     
-	public ServiceDependencyImpl(BundleContext ctx, Logger logger) {
-		super(true /* autoconfig */, ctx, logger);
+	public ServiceDependencyImpl(BundleContext ctx) {
+		super(true /* autoconfig */, ctx);
 	}
 	
 	public ServiceDependencyImpl(ServiceDependencyImpl prototype) {
@@ -236,7 +236,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
 		} catch (IllegalStateException e) {
 		    // most likely our bundle is being stopped. Only log an exception if our component is enabled.
 		    if (m_component.isActive()) {
-                m_logger.log(Logger.LOG_WARNING, "could not handle service dependency for component "
+                m_component.log(Logger.LOG_WARNING, "could not handle service dependency for component "
                     + m_component.getComponentDeclaration().getClassName(), e);
 		    }
 		    return null;		    
@@ -261,13 +261,15 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
 	    m_component.handleRemoved(this, new ServiceEventImpl(m_bundle, m_context, reference, service));
 	}
 	
-	@Override
+	@SuppressWarnings("rawtypes")
+    @Override
     public void invokeAdd(Event e) {
         if (m_add != null) {
             invoke (m_add, e, getInstances());
         }
     }
 	
+    @SuppressWarnings("rawtypes")
 	@Override
 	public void invokeChange(Event e) {
 	    if (m_change != null) {
@@ -275,6 +277,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
 	    }
 	}
 
+    @SuppressWarnings("rawtypes")
 	@Override
 	public void invokeRemove(Event e) {
 	    if (m_remove != null) {
@@ -282,6 +285,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
 	    }
 	}
 	
+    @SuppressWarnings("rawtypes")
     @Override   
     public void invokeSwap(Event event, Event newEvent) {
         if (m_swap != null) {
@@ -358,9 +362,9 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
                             new Class[][]{{ServiceReference.class, Object.class}, {ServiceReference.class}}, new Object[][]{
                                     {se.getReference(), se.getEvent()}, {se.getReference()}});
                 } catch (InvocationTargetException e) {
-                    m_logger.log(LogService.LOG_WARNING, "Exception while invoking callback method", e.getCause());
+                    m_component.log(LogService.LOG_WARNING, "Exception while invoking callback method", e.getCause());
                 } catch (Throwable e) {
-                    m_logger.log(LogService.LOG_WARNING, "Exception while trying to invoke callback method", e);
+                    m_component.log(LogService.LOG_WARNING, "Exception while trying to invoke callback method", e);
                 }
                 throw new IllegalStateException("Could not invoke callback");
             } else {
@@ -440,7 +444,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
                     new Class[] { trackedServiceName }, new DefaultNullObject());
             }
             catch (Throwable err) {
-                m_logger.log(Logger.LOG_ERROR, "Could not create null object for " + trackedServiceName + ".", err);
+                m_component.log(Logger.LOG_ERROR, "Could not create null object for " + trackedServiceName + ".", err);
             }
         }
         return m_nullObject;
@@ -453,7 +457,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
                     m_defaultImplementationInstance = ((Class<?>) m_defaultImplementation).newInstance();
                 }
                 catch (Throwable e) {
-                    m_logger.log(Logger.LOG_ERROR, "Could not create default implementation instance of class "
+                    m_component.log(Logger.LOG_ERROR, "Could not create default implementation instance of class "
                         + m_defaultImplementation + ".", e);
                 }
             }
@@ -464,6 +468,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
         return m_defaultImplementationInstance;
     }
 
+    @SuppressWarnings("rawtypes")
     public void invoke(String method, Event e, Object[] instances) {
         ServiceEventImpl se = (ServiceEventImpl) e;
         ServicePropertiesMap propertiesMap = new ServicePropertiesMap(se.getReference());
@@ -535,7 +540,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
                     {m_component, previousReference, previous, currentReference, current}}
 			);
     	} catch (Throwable e) {
-            m_logger.log(Logger.LOG_ERROR, "Could not invoke swap callback", e);
+    	    m_component.log(Logger.LOG_ERROR, "Could not invoke swap callback", e);
     	}
 	}
 

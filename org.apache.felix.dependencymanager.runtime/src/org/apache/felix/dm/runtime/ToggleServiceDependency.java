@@ -32,41 +32,7 @@ import org.apache.felix.dm.context.Event;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ToggleServiceDependency extends AbstractDependency<ToggleServiceDependency> {
-    public class ToggleEvent implements Event {
-        @Override
-        public boolean equals(Object e) {
-            if (e instanceof ToggleEvent) {
-                return true;
-            }
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            return ToggleEvent.class.hashCode();
-        }
-
-        @Override
-        public int compareTo(Event o) {
-            return 0;
-        }
-
-        @Override
-        public void close() {
-        }
-
-        @Override
-        public Object getEvent() {
-            return this;
-        }
-
-        @Override
-        public Dictionary<String, Object> getProperties() {
-            return EMPTY_PROPERTIES;
-        }
-    }
-    
+public class ToggleServiceDependency extends AbstractDependency<ToggleServiceDependency> {    
     public ToggleServiceDependency() {
         super.setRequired(true);
     }
@@ -82,9 +48,9 @@ public class ToggleServiceDependency extends AbstractDependency<ToggleServiceDep
 
     public void activate(boolean active) {
         if (active) {
-            m_component.handleAdded(this, new ToggleEvent());
+            m_component.handleAdded(this, new Event(active));
         } else {
-            m_component.handleRemoved(this, new ToggleEvent());
+            m_component.handleRemoved(this, new Event(active));
         }
     }
 

@@ -30,7 +30,6 @@ import org.apache.felix.dm.ComponentStateListener;
 import org.apache.felix.dm.context.Event;
 import org.apache.felix.dm.impl.ComponentImpl;
 import org.apache.felix.dm.impl.ConfigurationDependencyImpl;
-import org.apache.felix.dm.impl.EventImpl;
 import org.junit.Assert;
 import org.junit.Test;
 import org.osgi.service.cm.ConfigurationException;

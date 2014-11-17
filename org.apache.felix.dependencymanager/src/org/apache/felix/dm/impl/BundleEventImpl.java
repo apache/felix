@@ -24,32 +24,22 @@ import org.apache.felix.dm.context.Event;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
 
-public class BundleEventImpl implements Event {
-    final Bundle m_bundle;
+public class BundleEventImpl extends Event<Bundle> {
     final BundleEvent m_event;
     
     public BundleEventImpl(Bundle bundle, BundleEvent event) {
-        m_bundle = bundle;
+        super(bundle);
         m_event = event;
     }
-    
-    @Override
-    public Object getEvent() {
-        return getBundle();
+        
+    public Bundle getBundle() {
+        return getEvent();
     }
     
     @SuppressWarnings("unchecked")
     @Override
     public Dictionary<String, Object> getProperties() {
-        return m_bundle.getHeaders();
-    }
-    
-    @Override
-    public void close() {
-    }
-
-    public Bundle getBundle() {
-        return m_bundle;
+        return getBundle().getHeaders();
     }
     
     public BundleEvent getBundleEvent() {
@@ -69,6 +59,7 @@ public class BundleEventImpl implements Event {
         return getBundle().hashCode();
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public int compareTo(Event b) {
         return Long.compare(getBundle().getBundleId(), ((BundleEventImpl) b).getBundle().getBundleId());

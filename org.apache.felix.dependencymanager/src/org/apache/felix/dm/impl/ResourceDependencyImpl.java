@@ -43,8 +43,8 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
     private volatile String m_resourceFilter;
     private volatile URL m_trackedResource;
 
-    public ResourceDependencyImpl(BundleContext context, Logger logger) {
-        super(true /* autoconfig */, context, logger);
+    public ResourceDependencyImpl(BundleContext context) {
+        super(true /* autoconfig */, context);
     }
     
     public ResourceDependencyImpl(ResourceDependencyImpl prototype) {
@@ -115,6 +115,7 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
         }
     }
     
+    @SuppressWarnings("rawtypes")
     @Override
     public void invokeAdd(Event e) {
         if (m_add != null) {
@@ -122,6 +123,7 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
         }
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public void invokeChange(Event e) {
         if (m_change != null) {
@@ -129,6 +131,7 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
         }
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public void invokeRemove(Event e) {
         if (m_remove != null) {
@@ -136,6 +139,7 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
         }
     }
     
+    @SuppressWarnings("rawtypes")
     private void invoke(String method, Event e) {
         ResourceEventImpl re = (ResourceEventImpl) e;
         URL serviceInstance = re.getResource();
@@ -195,10 +199,10 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
                     return (Dictionary<String, Object>) InvocationUtil.invokeCallbackMethod(m_propagateCallbackInstance, m_propagateCallbackMethod, new Class[][] {{ URL.class }}, new Object[][] {{ resource }});
                 }
                 catch (InvocationTargetException e) {
-                    m_logger.log(LogService.LOG_WARNING, "Exception while invoking callback method", e.getCause());
+                    m_component.log(LogService.LOG_WARNING, "Exception while invoking callback method", e.getCause());
                 }
                 catch (Throwable e) {
-                    m_logger.log(LogService.LOG_WARNING, "Exception while trying to invoke callback method", e);
+                    m_component.log(LogService.LOG_WARNING, "Exception while trying to invoke callback method", e);
                 }
                 throw new IllegalStateException("Could not invoke callback");
             }
@@ -219,7 +223,7 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
                                 !key.equals(ResourceHandler.PORT)) {
                             props.put(key, resourceProperties.get(key).toString());
                         } else {
-                            m_logger.log(LogService.LOG_WARNING, "Custom resource property is overlapping with the default resource property for key: " + key);
+                            m_component.log(LogService.LOG_WARNING, "Custom resource property is overlapping with the default resource property for key: " + key, null);
                         }
                     }
                 }

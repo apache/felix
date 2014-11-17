@@ -19,25 +19,58 @@
 package org.apache.felix.dm.context;
 
 import java.util.Dictionary;
-
+import java.util.Hashtable;
 
 /** 
  * An event holds all data that belongs to some external event as it comes in via
  * the 'changed' callback of a dependency.
  */
-public interface Event extends Comparable<Event> {
-    /**
-     * Returns the actual event object wrapped by this event (a Service Dependency, a Bundle for Bundle Dependency, etc...).
-     */
-    Object getEvent();
+public class Event<T> implements Comparable<Event<T>> {
+    protected final static Dictionary<String, Object> EMPTY_PROPERTIES = new Hashtable<>();
+    private final T m_event;    // the actual event object (a Service, a Bundle, a Configuration, etc ...)
     
-    /**
-     * Returns the properties of the actual event object wrapped by this event (Service Dependency properties, ...).
-     */
-    Dictionary<String, Object> getProperties();
+    public Event(T event) {
+        m_event = event;
+    }
+
+    @Override
+    public int hashCode() {
+        return m_event.hashCode();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public boolean equals(Object obj) {
+        // an instanceof check here is not "strong" enough with subclasses overriding the
+        // equals: we need to be sure that a.equals(b) == b.equals(a) at all times
+        if (obj != null && obj.getClass().equals(Event.class)) {
+            return (((Event<T>) obj).m_event).equals(m_event);
+        }
+        return false;
+    }
+    
+    @Override
+    public int compareTo(Event<T> o) {
+        return 0;
+    }
     
     /**
      * Release the resources this event is holding (like service reference for example).
      */
-    public void close();
+    public void close() {
+    }
+    
+    /**
+     * Returns the actual event object wrapped by this event (a Service Dependency, a Bundle for Bundle Dependency, etc...).
+     */
+    public T getEvent() {
+        return m_event;
+    }
+    
+    /**
+     * Returns the properties of the actual event object wrapped by this event (Service Dependency properties, ...).
+     */
+    public Dictionary<String, Object> getProperties() {
+        return EMPTY_PROPERTIES;
+    }
 }

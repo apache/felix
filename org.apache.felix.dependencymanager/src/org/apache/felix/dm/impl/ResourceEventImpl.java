@@ -23,32 +23,22 @@ import java.util.Dictionary;
 
 import org.apache.felix.dm.context.Event;
 
-public class ResourceEventImpl implements Event {
-    final URL m_resource;
+public class ResourceEventImpl extends Event<URL> {
     final Dictionary<String, Object> m_resourceProperties;
     
     @SuppressWarnings("unchecked")
     public ResourceEventImpl(URL resource, Dictionary<String, ?> resourceProperties) {
-        m_resource = resource;
+        super(resource);
         m_resourceProperties = (Dictionary<String, Object>) resourceProperties;
     }
     
     @Override
-    public Object getEvent() {
-        return getResource();
-    }
-
-    @Override
     public Dictionary<String, Object> getProperties() {
-        return m_resourceProperties == null ? ServiceUtil.EMPTY_PROPERTIES : m_resourceProperties;
-    }
-
-    @Override
-    public void close() {
+        return m_resourceProperties == null ? EMPTY_PROPERTIES : m_resourceProperties;
     }
 
     public URL getResource() {
-        return m_resource;
+        return getEvent();
     }
         
     @Override
@@ -81,6 +71,7 @@ public class ResourceEventImpl implements Event {
         return result;
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public int compareTo(Event that) {
         if (this.equals(that)) {

@@ -52,8 +52,8 @@ public class TemporalServiceDependencyImpl extends ServiceDependencyImpl impleme
      * @param logger the logger our Internal logger for logging events.
      * @see DependencyActivatorBase#createTemporalServiceDependency()
      */
-    public TemporalServiceDependencyImpl(BundleContext context, Logger logger, long timeout) {
-        super(context, logger);
+    public TemporalServiceDependencyImpl(BundleContext context, long timeout) {
+        super(context);
         super.setRequired(true);
         if (timeout < 0) {
             throw new IllegalArgumentException("Invalid timeout value: " + timeout);

@@ -26,8 +26,6 @@ import java.util.Set;
 
 import org.apache.felix.dm.ComponentDependencyDeclaration;
 import org.apache.felix.dm.Dependency;
-import org.apache.felix.dm.impl.EventImpl;
-import org.apache.felix.dm.impl.Logger;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
@@ -56,21 +54,15 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
     protected final BundleContext m_context;
     protected final Bundle m_bundle;
     protected final static Dictionary<String, Object> EMPTY_PROPERTIES = new Hashtable<>(0);
-    protected final Logger m_logger;
     
     public AbstractDependency() {
         this(true, null);
     }
-
-    public AbstractDependency(boolean autoConfig, BundleContext bc) {
-        this(autoConfig, bc, null);
-    }
     
-    public AbstractDependency(boolean autoConfig, BundleContext bc, Logger logger) {
+    public AbstractDependency(boolean autoConfig, BundleContext bc) {
         m_autoConfig = autoConfig;
         m_context = bc;
         m_bundle = m_context != null ? m_context.getBundle() : null;
-        m_logger = logger;
     }
 
     public AbstractDependency(AbstractDependency<T> prototype) {
@@ -89,7 +81,6 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
         m_propagateCallbackMethod = prototype.m_propagateCallbackMethod;
         m_context = prototype.m_context;
         m_bundle = prototype.m_bundle;
-        m_logger = prototype.m_logger;
     }
 
     // ----------------------- Dependency interface -----------------------------
@@ -197,7 +188,7 @@ public abstract class AbstractDependency<T extends Dependency> implements Depend
         if (event == null) {
             Object defaultService = getDefaultService(true);
             if (defaultService != null) {
-                event = new EventImpl(0, defaultService);
+                event = new Event(defaultService);
             }
         }
         return event;

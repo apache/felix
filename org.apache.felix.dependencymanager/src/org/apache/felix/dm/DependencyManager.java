@@ -202,7 +202,7 @@ public class DependencyManager {
      * @return the service dependency
      */
     public ServiceDependency createServiceDependency() {
-        return new ServiceDependencyImpl(m_context, m_logger);
+        return new ServiceDependencyImpl(m_context);
     }
 
     /**
@@ -220,7 +220,7 @@ public class DependencyManager {
      * @return a new BundleDependency instance.
      */
     public BundleDependency createBundleDependency() {
-        return new BundleDependencyImpl(m_context, m_logger);
+        return new BundleDependencyImpl(m_context);
     }
 
     /**
@@ -229,7 +229,7 @@ public class DependencyManager {
      * @return the resource dependency
      */
     public ResourceDependency createResourceDependency() {
-        return new ResourceDependencyImpl(m_context, m_logger);
+        return new ResourceDependencyImpl(m_context);
     }
 
     /**
@@ -239,7 +239,7 @@ public class DependencyManager {
      * @return a new timed service dependency
      */
     public ServiceDependency createTemporalServiceDependency(long timeout) {
-        return new TemporalServiceDependencyImpl(m_context, m_logger, timeout);
+        return new TemporalServiceDependencyImpl(m_context, timeout);
     }
 
     /**
