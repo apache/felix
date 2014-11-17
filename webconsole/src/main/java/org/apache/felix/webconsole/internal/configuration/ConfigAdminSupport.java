@@ -21,11 +21,13 @@ package org.apache.felix.webconsole.internal.configuration;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.SortedMap;
@@ -183,6 +185,7 @@ class ConfigAdminSupport
             final MetaTypeServiceSupport mtss = getMetaTypeSupport();
             final Map adMap = ( mtss != null ) ? mtss.getAttributeDefinitionMap( config, null ) : new HashMap();
             final StringTokenizer propTokens = new StringTokenizer( propertyList, "," ); //$NON-NLS-1$
+            final List propsToKeep = new ArrayList();
             while ( propTokens.hasMoreTokens() )
             {
                 String propName = propTokens.nextToken();
@@ -191,6 +194,7 @@ class ConfigAdminSupport
                     || ConfigManager.ACTION_APPLY.equals(propName)
                     || ConfigManager.PROPERTY_LIST.equals(propName) 
                     ? '$' + propName : propName;
+                propsToKeep.add(propName);
                 
                 PropertyDescriptor ad = (PropertyDescriptor) adMap.get( propName );
 
@@ -281,6 +285,16 @@ class ConfigAdminSupport
                         // convert to an array
                         props.put( propName, MetaTypeSupport.toArray( attributeType, vec ) );
                     }
+                }
+            }
+            
+            // remove the properties that are not specified in the request
+            for ( Enumeration e = props.keys(); e.hasMoreElements(); )
+            {
+                final Object key = e.nextElement();
+                if ( !propsToKeep.contains(key) )
+                {
+                    props.remove(key);
                 }
             }
 

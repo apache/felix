@@ -33,3 +33,6 @@ html>select { width: auto; min-width: 50em }
 .subpid   { margin-left: 1em; float: left }
 tr.fpid   td   { font-style:italic }
 #factoryTableCaption { margin-top: 1.5em }
+span.default_value {
+	float: left; margin-right: .3em;
+}

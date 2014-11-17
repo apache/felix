@@ -107,7 +107,7 @@ function displayConfigForm(obj) {
     if (obj.description)
     {
         trEl = tr( );
-        tdEl = td( null, { colSpan: "2" } );
+        tdEl = td( null, { colSpan: "3" } );
         addText( tdEl, obj.description );
         trEl.appendChild( tdEl );
         bodyEl.appendChild( trEl );
@@ -134,13 +134,41 @@ function displayConfigForm(obj) {
 		.dialog('open'));
 }
 
+/* Element */ function addDefaultValue( /* Element */ element ) {
+	if (element) {
+		element.appendChild( 
+			createElement('span', 'default_value ui-state-highlight1 ui-icon ui-icon-alert', {
+				title : i18n.dflt_value
+			})
+		);
+	}
+	return element;
+}
+
 function printForm( /* Element */ parent, /* Object */ properties ) {
     var propList;
     for (var prop in properties)
     {
         var attr = properties[prop];
-  
+
+		// create optionality element
+		var optElement = false;
+		if (attr.optional) {
+			var elAttributes = {
+                type: "checkbox",
+                name: "opt" + prop,
+				title: i18n.opt_value
+            };
+			if (attr.is_set) {
+				elAttributes['checked'] = 'checked';
+			}
+			optElement = createElement( "input", "optionality", elAttributes);
+		} else {
+			optElement = text( "" );
+		}
+		// create the raw
         var trEl = tr( null, null, [
+				td( null, null, [ optElement ] ),
                 td( null, null, [ text( attr.name ) ] )
             ]);
         parent.appendChild( trEl );
@@ -152,7 +180,8 @@ function printForm( /* Element */ parent, /* Object */ properties ) {
         {
             // check is required to also handle empty strings, 0 and false
             var inputName = (prop == "action" || prop == "propertylist" || prop == "apply" || prop == "delete") ? '$' + prop : prop;
-            tdEl.appendChild( createInput( inputName, attr.value, attr.type, '99%' ) );
+			var inputEl = createInput( inputName, attr.value, attr.type, '99%' );
+            tdEl.appendChild( inputEl );
             tdEl.appendChild( createElement( "br" ) );
         }
         else if (typeof(attr.type) == 'object')
@@ -173,6 +202,10 @@ function printForm( /* Element */ parent, /* Object */ properties ) {
             }
         }
         
+		if (!attr.is_set) {
+			addDefaultValue( tdEl );
+		}
+
         if (attr.description)
         {
             addText( tdEl, attr.description );
@@ -514,6 +547,20 @@ $(document).ready(function() {
 	    	unbindConfig($(this).attr('__pid'), $(this).attr('__location'));
 	}
 	_buttons[i18n.save] = function() {
+		// get all the configuration properties names
+		var propListElement = $(this).find('form').find('[name=propertylist]');
+		var propListArray = propListElement.val().split(',');
+
+		// removes the properties, that are unchecked
+		$(this).find('form').find('input.optionality:not(:checked)').each( function(idx, el) {
+			var name = $(el).attr('name').substring(3); // name - 'opt'
+			var index = propListArray.indexOf(name);
+			if (index >= 0) {
+				propListArray.splice(index, 1);
+			}
+		});
+		propListElement.val(propListArray.join(','));
+
 		$.post(pluginRoot + '/' + $(this).attr('__pid'), $(this).find('form').serialize(), function() {
 			// reload on success - prevents AJAX errors - see FELIX-3116
 			document.location.href = pluginRoot; 

@@ -94,4 +94,10 @@ class PropertyDescriptor
     {
         return null;
     }
+
+    public boolean isOptional()
+    {
+        return false;
+    }
+    
 }

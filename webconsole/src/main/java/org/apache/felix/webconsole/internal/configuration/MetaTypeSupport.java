@@ -102,6 +102,10 @@ class MetaTypeSupport
 
         json.key( "name" ); //$NON-NLS-1$
         json.value( ad.getName() );
+        json.key( "optional" ); //$NON-NLS-1$
+        json.value( ad.isOptional() );
+        json.key( "is_set" ); //$NON-NLS-1$
+        json.value( propValue != null );
 
         // attribute type - overwrite metatype provided type
         // if the property name contains "password" and the
