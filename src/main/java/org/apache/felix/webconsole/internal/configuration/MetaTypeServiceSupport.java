@@ -17,9 +17,13 @@
 package org.apache.felix.webconsole.internal.configuration;
 
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
 import org.json.JSONException;
 import org.json.JSONWriter;
 import org.osgi.framework.Bundle;
@@ -249,7 +253,7 @@ class MetaTypeServiceSupport extends MetaTypeSupport
             {
                 for ( int i = 0; i < ad.length; i++ )
                 {
-                    adMap.put( ad[i].getID(), new MetatypePropertyDescriptor( ad[i] ) );
+                    adMap.put( ad[i].getID(), new MetatypePropertyDescriptor( ad[i], false ) );
                 }
             }
         }
@@ -267,6 +271,8 @@ class MetaTypeServiceSupport extends MetaTypeSupport
         }
 
         AttributeDefinition[] ad = ocd.getAttributeDefinitions( ObjectClassDefinition.ALL );
+        AttributeDefinition[] optionalArray = ocd.getAttributeDefinitions( ObjectClassDefinition.OPTIONAL );
+        List/*<AttributeDefinition>*/ optional = optionalArray == null ? Collections.EMPTY_LIST : Arrays.asList( optionalArray ); 
         if ( ad != null )
         {
             json.key( "properties" ).object(); //$NON-NLS-1$
@@ -275,7 +281,8 @@ class MetaTypeServiceSupport extends MetaTypeSupport
                 final AttributeDefinition adi = ad[i];
                 final String attrId = adi.getID();
                 json.key( attrId );
-                attributeToJson( json, new MetatypePropertyDescriptor( adi ), props.get( attrId ) );
+                boolean isOptional = optional.contains( adi );
+                attributeToJson( json, new MetatypePropertyDescriptor( adi, isOptional ), props.get( attrId ) );
             }
             json.endObject();
         }

@@ -30,12 +30,14 @@ import org.osgi.service.metatype.AttributeDefinition;
 public class MetatypePropertyDescriptor extends PropertyDescriptor
 {
     private final AttributeDefinition ad;
+    private final boolean optional; 
 
 
-    public MetatypePropertyDescriptor( AttributeDefinition ad )
+    public MetatypePropertyDescriptor( AttributeDefinition ad, boolean optional )
     {
         super( ad.getID(), ad.getType(), ad.getCardinality() );
         this.ad = ad;
+        this.optional = optional;
     }
 
 
@@ -78,5 +80,10 @@ public class MetatypePropertyDescriptor extends PropertyDescriptor
     public String[] getDefaultValue()
     {
         return ad.getDefaultValue();
+    }
+
+    public boolean isOptional()
+    {
+        return optional;
     }
 }
