@@ -191,10 +191,11 @@ class FrameworkWiringImpl implements FrameworkWiring, Runnable
         }
     }
 
-    /* (non-Javadoc)
+    /**
      * @see org.osgi.framework.wiring.FrameworkWiring#findProviders(org.osgi.resource.Requirement)
      */
-    public Collection<BundleCapability> findProviders(Requirement requirement) {
-        throw new UnsupportedOperationException(); // TODO
+    public Collection<BundleCapability> findProviders(final Requirement requirement)
+    {
+        return m_felix.findProviders(requirement);
     }
 }

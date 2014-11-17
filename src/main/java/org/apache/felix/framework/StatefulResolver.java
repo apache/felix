@@ -59,6 +59,7 @@ import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
+import org.osgi.resource.Requirement;
 
 class StatefulResolver
 {
@@ -175,11 +176,14 @@ class StatefulResolver
     {
         ResolverHookRecord record = new ResolverHookRecord(
             Collections.<ServiceReference<ResolverHookFactory>, ResolverHook>emptyMap(), null);
-        return findProvidersInternal(record, req, obeyMandatory);
+        return findProvidersInternal(record, req, obeyMandatory, true);
     }
 
     synchronized List<BundleCapability> findProvidersInternal(
-        ResolverHookRecord record, BundleRequirement req, boolean obeyMandatory)
+        final ResolverHookRecord record,
+        final Requirement req,
+        final boolean obeyMandatory,
+        final boolean invokeHooksAndSecurity)
     {
         List<BundleCapability> result = new ArrayList<BundleCapability>();
 
@@ -213,7 +217,7 @@ class StatefulResolver
             for (BundleCapability cap : matches)
             {
                 // Filter according to security.
-                if (filteredBySecurity(req, cap))
+                if (invokeHooksAndSecurity && filteredBySecurity((BundleRequirement)req, cap))
                 {
                     continue;
                 }
@@ -229,36 +233,39 @@ class StatefulResolver
             }
         }
 
-        // If we have resolver hooks, then we may need to filter our results
-        // based on a whitelist and/or fine-grained candidate filtering.
-        if (!result.isEmpty() && !record.getResolverHookRefs().isEmpty())
+        if ( invokeHooksAndSecurity )
         {
-            // It we have a whitelist, then first filter out candidates
-            // from disallowed revisions.
-            if (record.getBundleRevisionWhitelist() != null)
+            // If we have resolver hooks, then we may need to filter our results
+            // based on a whitelist and/or fine-grained candidate filtering.
+            if (!result.isEmpty() && !record.getResolverHookRefs().isEmpty())
             {
-                for (Iterator<BundleCapability> it = result.iterator(); it.hasNext(); )
+                // It we have a whitelist, then first filter out candidates
+                // from disallowed revisions.
+                if (record.getBundleRevisionWhitelist() != null)
                 {
-                    if (!record.getBundleRevisionWhitelist().contains(it.next().getRevision()))
+                    for (Iterator<BundleCapability> it = result.iterator(); it.hasNext(); )
                     {
-                        it.remove();
+                        if (!record.getBundleRevisionWhitelist().contains(it.next().getRevision()))
+                        {
+                            it.remove();
+                        }
                     }
                 }
-            }
 
-            // Now give the hooks a chance to do fine-grained filtering.
-            ShrinkableCollection<BundleCapability> shrinkable =
-                new ShrinkableCollection<BundleCapability>(result);
-            for (ResolverHook hook : record.getResolverHooks())
-            {
-                try
+                // Now give the hooks a chance to do fine-grained filtering.
+                ShrinkableCollection<BundleCapability> shrinkable =
+                    new ShrinkableCollection<BundleCapability>(result);
+                for (ResolverHook hook : record.getResolverHooks())
                 {
-                    Felix.m_secureAction
-                        .invokeResolverHookMatches(hook, req, shrinkable);
-                }
-                catch (Throwable th)
-                {
-                    m_logger.log(Logger.LOG_WARNING, "Resolver hook exception.", th);
+                    try
+                    {
+                        Felix.m_secureAction
+                            .invokeResolverHookMatches(hook, (BundleRequirement)req, shrinkable);
+                    }
+                    catch (Throwable th)
+                    {
+                        m_logger.log(Logger.LOG_WARNING, "Resolver hook exception.", th);
+                    }
                 }
             }
         }
