@@ -42,6 +42,7 @@ import org.apache.felix.framework.util.SecurityManagerEx;
 import org.apache.felix.framework.util.ShrinkableCollection;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.Util;
+import org.osgi.dto.DTO;
 import org.osgi.framework.AdaptPermission;
 import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
@@ -1113,6 +1114,11 @@ class BundleImpl implements Bundle, BundleRevisions
             }
             return (A) new AccessControlContext(new ProtectionDomain[] {pd});
 
+        }
+        else if (DTO.class.isAssignableFrom(type) ||
+                DTO[].class.isAssignableFrom(type))
+        {
+            return DTOFactory.createDTO(this, type);
         }
         return null;
     }
