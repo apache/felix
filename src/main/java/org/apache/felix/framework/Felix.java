@@ -99,6 +99,7 @@ import org.osgi.framework.wiring.BundleRevisions;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.framework.wiring.FrameworkWiring;
+import org.osgi.resource.Requirement;
 import org.osgi.service.packageadmin.ExportedPackage;
 
 public class Felix extends BundleImpl implements Framework
@@ -5328,5 +5329,10 @@ public class Felix extends BundleImpl implements Framework
                 }
             }
         }
+    }
+
+    Collection<BundleCapability> findProviders(final Requirement requirement)
+    {
+        return m_resolver.findProvidersInternal(null, requirement, true, false);
     }
 }

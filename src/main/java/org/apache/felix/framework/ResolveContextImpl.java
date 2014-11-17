@@ -77,11 +77,13 @@ public class ResolveContextImpl extends ResolveContext
         return new ArrayList<BundleRevision>(m_ondemand);
     }
 
+    @Override
     public List<BundleCapability> findProviders(BundleRequirement br, boolean obeyMandatory)
     {
-        return m_state.findProvidersInternal(m_resolverHookrecord, br, obeyMandatory);
+        return m_state.findProvidersInternal(m_resolverHookrecord, br, obeyMandatory, true);
     }
 
+    @Override
     public int insertHostedCapability(List<BundleCapability> caps, HostedCapability hc)
     {
         int idx = Collections.binarySearch(caps, hc, new CandidateComparator());
@@ -93,11 +95,13 @@ public class ResolveContextImpl extends ResolveContext
         return idx;
     }
 
+    @Override
     public boolean isEffective(BundleRequirement br)
     {
         return m_state.isEffective(br);
     }
 
+    @Override
     public Map<BundleRevision, BundleWiring> getWirings()
     {
         return m_wirings;
