@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -27,20 +27,35 @@ public class AutoProcessor
 {
     /**
      * The property name used for the bundle directory.
+     * @deprecated use {@link AutoProcessor#AUTO_DEPLOY_DIR_PROPERTY}
     **/
     public static final String AUTO_DEPLOY_DIR_PROPERY = "felix.auto.deploy.dir";
+    /**
+     * The property name used for the bundle directory.
+    **/
+    public static final String AUTO_DEPLOY_DIR_PROPERTY = "felix.auto.deploy.dir";
     /**
      * The default name used for the bundle directory.
     **/
     public static final String AUTO_DEPLOY_DIR_VALUE = "bundle";
     /**
      * The property name used to specify auto-deploy actions.
+     * @deprecated use {@link AutoProcessor#AUTO_DEPLOY_ACTION_PROPERTY}
     **/
     public static final String AUTO_DEPLOY_ACTION_PROPERY = "felix.auto.deploy.action";
     /**
+     * The property name used to specify auto-deploy actions.
+    **/
+    public static final String AUTO_DEPLOY_ACTION_PROPERTY = "felix.auto.deploy.action";
+    /**
      * The property name used to specify auto-deploy start level.
+     * @deprecated use {@link AutoProcessor#AUTO_DEPLOY_STARTLEVEL_PROPERTY}
     **/
     public static final String AUTO_DEPLOY_STARTLEVEL_PROPERY = "felix.auto.deploy.startlevel";
+    /**
+     * The property name used to specify auto-deploy start level.
+    **/
+    public static final String AUTO_DEPLOY_STARTLEVEL_PROPERTY = "felix.auto.deploy.startlevel";
     /**
      * The name used for the auto-deploy install action.
     **/
@@ -88,7 +103,7 @@ public class AutoProcessor
     private static void processAutoDeploy(Map configMap, BundleContext context)
     {
         // Determine if auto deploy actions to perform.
-        String action = (String) configMap.get(AUTO_DEPLOY_ACTION_PROPERY);
+        String action = (String) configMap.get(AUTO_DEPLOY_ACTION_PROPERTY);
         action = (action == null) ? "" : action;
         List actionList = new ArrayList();
         StringTokenizer st = new StringTokenizer(action, ",");
@@ -114,12 +129,12 @@ public class AutoProcessor
 
             // Get start level for auto-deploy bundles.
             int startLevel = sl.getInitialBundleStartLevel();
-            if (configMap.get(AUTO_DEPLOY_STARTLEVEL_PROPERY) != null)
+            if (configMap.get(AUTO_DEPLOY_STARTLEVEL_PROPERTY) != null)
             {
                 try
                 {
                     startLevel = Integer.parseInt(
-                        configMap.get(AUTO_DEPLOY_STARTLEVEL_PROPERY).toString());
+                        configMap.get(AUTO_DEPLOY_STARTLEVEL_PROPERTY).toString());
                 }
                 catch (NumberFormatException ex)
                 {
@@ -136,7 +151,7 @@ public class AutoProcessor
             }
 
             // Get the auto deploy directory.
-            String autoDir = (String) configMap.get(AUTO_DEPLOY_DIR_PROPERY);
+            String autoDir = (String) configMap.get(AUTO_DEPLOY_DIR_PROPERTY);
             autoDir = (autoDir == null) ? AUTO_DEPLOY_DIR_VALUE : autoDir;
             // Look in the specified bundle directory to create a list
             // of all JAR files to install.
