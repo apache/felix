@@ -246,7 +246,7 @@ public class Main
         // that overwrites anything in the config file.
         if (bundleDir != null)
         {
-            configProps.put(AutoProcessor.AUTO_DEPLOY_DIR_PROPERY, bundleDir);
+            configProps.put(AutoProcessor.AUTO_DEPLOY_DIR_PROPERTY, bundleDir);
         }
 
         // If there is a passed in bundle cache directory, then
