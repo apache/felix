@@ -20,7 +20,6 @@ import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.useradmin.UserAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
@@ -35,7 +34,6 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
     private BundleContext context;
 
     private SimpleWebConsolePlugin plugin;
-    private ServiceRegistration printerRegistration;
 
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
@@ -92,20 +90,12 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
     public final void removedService(ServiceReference reference, Object service)
     {
         SimpleWebConsolePlugin plugin = this.plugin;
+        this.plugin = null;
 
-        if (tracker.size() <= 1 && plugin != null)
+        if (plugin != null)
         {
             // remove service
             plugin.unregister();
-            this.plugin = null;
-            // unregister configuration printer too
-            ServiceRegistration reg = printerRegistration;
-            if (reg != null)
-            {
-                reg.unregister();
-                printerRegistration = null;
-            }
         }
-
     }
 }
