@@ -1,4 +1,21 @@
-/* your java script code here */
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+// fix for jQuery tree to work with this version of jQuery
+jQuery.curCSS = jQuery.css;
 
 var userTree = false;
 var selectedRole = false;
@@ -94,6 +111,21 @@ var treeSettings = {
 }
 
 $(function() {
+	// read the available digest algorithms
+	$.ajax({
+		type    : "POST",
+		url     : pluginRoot,
+		async   : false,
+		data    : {'action': 'getDigestAlgorithms' },
+		dataType: 'json',
+		success : function(data) {
+			var _select  = $('select.propertyType');
+			$.each(data, function(id, alg) {
+				_select.append('<option value="password-{0}">{1} {2}</option>'.msgFormat(alg, i18n.paswd, alg));
+			});
+		}
+	});
+
 	userTree = $('#userTree');
 	roleDetails = $('#roleDetails');
 	roleDetailsTable = roleDetails.find('table');
@@ -163,6 +195,24 @@ $(function() {
 	}).click();
 });
 
+function digest(val, alg) {
+	var _ret = false;
+	$.ajax({
+		type    : "POST",
+		url     : pluginRoot,
+		async   : false,
+		data    : {
+			'action': 'digest', 
+			'data' : val, 
+			'algorithm' : alg
+		},
+		dataType: 'json',
+		success : function(data) {
+			_ret = data['encoded'];
+		}
+	});
+	return _ret;
+}
 function newProp() {
 	var tr = roleDetailsTemplate.clone()
 		.find('li').click( function() {
@@ -207,8 +257,10 @@ function doSaveRole() {
 			var t = _.find('select').val();
 			
 			if (t.indexOf('password-') == 0) {
-				var hash =  CryptoJS[t.substring(9)](v).toString(CryptoJS.enc.Hex);
-				v = hashToArray(hash);
+				var hash = digest(v, t.substring(9));
+				//CryptoJS[t.substring(9)](v).toString(CryptoJS.enc.Hex);
+				//v = hashToArray(hash);
+				v = hash;
 			} else if (t == 'byte[]') {
 				v = strToArray(v);
 			}

@@ -1,11 +1,4 @@
 ﻿<script type="text/javascript" src="${pluginRoot}/res/jsTree.v.0.9.9a/jquery.tree.min.js"></script>
-<script type="text/javascript" src="${pluginRoot}/res/crypto-js-3.0.2/core-min.js"></script>
-<script type="text/javascript" src="${pluginRoot}/res/crypto-js-3.0.2/x64-core-min.js"></script>
-<script type="text/javascript" src="${pluginRoot}/res/crypto-js-3.0.2/md5-min.js"></script>
-<script type="text/javascript" src="${pluginRoot}/res/crypto-js-3.0.2/sha1-min.js"></script>
-<script type="text/javascript" src="${pluginRoot}/res/crypto-js-3.0.2/sha256-min.js"></script>
-<script type="text/javascript" src="${pluginRoot}/res/crypto-js-3.0.2/sha512-min.js"></script>
-<script type="text/javascript" src="${pluginRoot}/res/json2.min.js"></script>
 <script type="text/javascript" src="${pluginRoot}/res/plugin.js"></script>
 <script type="text/javascript">
 // <![CDATA[
@@ -14,7 +7,8 @@ var i18n = {
 	close : '${abort}',
 	add   : '${save}',
 	root  : '${role.tree.root}',
-	status: '${role.statline}'
+	status: '${role.statline}',
+	paswd : '${type.password}'
 }
 // ]]>
 </script>
@@ -76,13 +70,15 @@ var i18n = {
 						<td><input class="k" /></td>
 						<td><input class="v" /></td>
 						<td>
-							<select class="dynhover">
+							<select class="dynhover propertyType">
 								<option value="string">${type.string}</option>
 								<option value="byte[]">${type.bytes}</option>
+								<!--
 								<option value="password-MD5">${type.password-MD5}</option>
 								<option value="password-SHA1">${type.password-SHA1}</option>
 								<option value="password-SHA256">${type.password-SHA256}</option>
 								<option value="password-SHA512">${type.password-SHA512}</option>
+								-->
 							</select>
 						</td>
 						<td class="actions">

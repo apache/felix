@@ -18,6 +18,9 @@ package org.apache.felix.webconsole.plugins.useradmin.internal;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.security.MessageDigest;
+import java.security.Provider;
+import java.security.Security;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -60,7 +63,6 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         TEMPLATE = readTemplateFile("/res/plugin.html"); //$NON-NLS-1$
     }
 
-
     public String getCategory()
     {
         return CATEGORY;
@@ -90,6 +92,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
 
         try
         {
+
             if ("addMember".equals(action)) { //$NON-NLS-1$
                 final Role xrole = userAdmin.getRole(role);
                 final Group xgroup = (Group) userAdmin.getRole(group);
@@ -107,6 +110,19 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                 final Group xgroup = (Group) userAdmin.getRole(group);
                 xgroup.removeMember(xrole);
                 toJSON(jw, xgroup, false);
+            }
+            else if ("getDigestAlgorithms".equals(action)) { //$NON-NLS-1$
+                getMessageDigestAlgorithms(jw);
+            }
+            else if ("digest".equals(action)) { //$NON-NLS-1$
+                final String dataRaw = req.getParameter("data"); //$NON-NLS-1$
+                final String algorithm = req.getParameter("algorithm"); //$NON-NLS-1$
+                final MessageDigest digest = MessageDigest.getInstance(algorithm);
+                final byte[] encoded = digest.digest(dataRaw.getBytes());
+                jw.object();
+                jw.key("encoded"); //$NON-NLS-1$
+                jw.value(encoded);
+                jw.endObject();
             }
             else if ("del".equals(action)) { //$NON-NLS-1$
                 out.print(userAdmin.removeRole(role));
@@ -264,6 +280,27 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         for (int i = 0; roles != null && i < roles.length; i++)
         {
             toJSON(jw, roles[i], details);
+        }
+        jw.endArray();
+    }
+
+    private static final String DIGEST_KEY_PREFIX = "MessageDigest."; //$NON-NLS-1$
+
+    private static void getMessageDigestAlgorithms(final JSONWriter jw)
+        throws JSONException
+    {
+        Provider[] providers = Security.getProviders();
+        jw.array();
+        for (int i = 0; providers != null && i < providers.length; i++)
+        {
+            for (Iterator keys = providers[i].keySet().iterator(); keys.hasNext();)
+            {
+                final String key = (String) keys.next();
+                if (key.startsWith(DIGEST_KEY_PREFIX) && key.indexOf(' ') == -1)
+                {
+                    jw.value(key.substring(DIGEST_KEY_PREFIX.length()));
+                }
+            }
         }
         jw.endArray();
     }
