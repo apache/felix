@@ -19,14 +19,15 @@
 package org.apache.felix.framework;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.security.AllPermission;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,12 +37,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
+
+import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.ImmutableList;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
-import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.util.manifestparser.R4Library;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleWireImpl;
@@ -249,30 +251,30 @@ class ExtensionManager extends URLStreamHandler implements Content
 		String osVersion = (String)m_configMap.get(FelixConstants.FRAMEWORK_OS_VERSION);
 		String userLang = (String)m_configMap.get(FelixConstants.FRAMEWORK_LANGUAGE);
 		Map<String, Object> attributes = new HashMap<String, Object>();
-		
-		if( osArchitecture != null ) 
+
+		if( osArchitecture != null )
 		{
 			attributes.put(NativeNamespace.CAPABILITY_PROCESSOR_ATTRIBUTE, osArchitecture);
 		}
-		
+
 		if( osName != null)
 		{
 			attributes.put(NativeNamespace.CAPABILITY_OSNAME_ATTRIBUTE, osName);
 		}
-		
+
 		if( osVersion != null)
 		{
 			attributes.put(NativeNamespace.CAPABILITY_OSVERSION_ATTRIBUTE, new Version(osVersion));
 		}
-		
-		if( userLang != null) 
+
+		if( userLang != null)
 		{
 			attributes.put(NativeNamespace.CAPABILITY_LANGUAGE_ATTRIBUTE, userLang);
 		}
-		
+
 		return new BundleCapabilityImpl(getRevision(), NativeNamespace.NATIVE_NAMESPACE, Collections.<String, String> emptyMap(), attributes);
 	}
-	
+
     private static List<BundleCapability> aliasSymbolicName(List<BundleCapability> caps)
     {
         if (caps == null)
@@ -463,9 +465,10 @@ class ExtensionManager extends URLStreamHandler implements Content
      */
     void startExtensionBundle(Felix felix, BundleImpl bundle)
     {
-        String activatorClass = (String)
-            ((BundleRevisionImpl) bundle.adapt(BundleRevision.class))
-                .getHeaders().get(FelixConstants.FELIX_EXTENSION_ACTIVATOR);
+        Dictionary<?,?> headers = bundle.getHeaders();
+        String activatorClass = (String) headers.get(Constants.EXTENSION_BUNDLE_ACTIVATOR);
+        if (activatorClass == null)
+            activatorClass = (String) headers.get(FelixConstants.FELIX_EXTENSION_ACTIVATOR);
 
         if (activatorClass != null)
         {
@@ -491,7 +494,7 @@ class ExtensionManager extends URLStreamHandler implements Content
             catch (Throwable ex)
             {
                 m_logger.log(bundle, Logger.LOG_WARNING,
-                    "Unable to start Felix Extension Activator", ex);
+                    "Unable to start Extension Activator", ex);
             }
         }
     }
