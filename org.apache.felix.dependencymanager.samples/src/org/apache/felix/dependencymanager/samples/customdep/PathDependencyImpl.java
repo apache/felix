@@ -12,6 +12,7 @@ import java.util.List;
 import org.apache.felix.dm.context.AbstractDependency;
 import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
+import org.apache.felix.dm.context.EventType;
 
 /**
  * This is our own "path" Dependency Manager Dependency, which can track the presence of files in a given path dir.
@@ -67,26 +68,29 @@ public class PathDependencyImpl extends AbstractDependency<PathDependencyImpl> i
     }
     
     @Override   
-    public void invokeAdd(Event e) {
-        if (m_add != null) {
-            invoke(m_add, e, getInstances());
+    public void invokeCallback(EventType type, Event ...events) {
+        switch (type) {
+        case ADDED:        
+            if (m_add != null) {
+                invoke(m_add, events[0], getInstances());
+            }
+            break;
+        case CHANGED:
+            if (m_change != null) {
+                invoke(m_change, events[0], getInstances());
+            }
+            break;
+        case REMOVED:
+            if (m_remove != null) {
+                invoke(m_remove, events[0], getInstances());
+            }
+            break;
+        default:
+            // We don't support other kind of callbacks.
+            break;
         }
     }
-    
-    @Override   
-    public void invokeChange(Event e) {
-        if (m_change != null) {
-            invoke(m_change, e, getInstances());
-        }
-    }
-    
-    @Override   
-    public void invokeRemove(Event e) {
-        if (m_remove != null) {
-            invoke(m_remove, e, getInstances());
-        }
-    }
-    
+        
     // ---------- ComponentDependencyDeclaration interface -----------
     
     /**
@@ -121,7 +125,7 @@ public class PathDependencyImpl extends AbstractDependency<PathDependencyImpl> i
 
 				List<WatchEvent<?>> events = watckKey.pollEvents();
 
-				for (WatchEvent event : events) {
+				for (@SuppressWarnings("rawtypes") WatchEvent event : events) {
 					final Kind<?> kind = event.kind();
 					if (StandardWatchEventKinds.OVERFLOW == kind) {
 						continue;
@@ -130,15 +134,15 @@ public class PathDependencyImpl extends AbstractDependency<PathDependencyImpl> i
 					    // Notify the component implementation context that a file has been created.
 					    // Later, the component will call our invokeAdd method in order to inject the file
 					    // in the component instance
-				        m_component.handleAdded(this, new Event(event.context().toString()));
+				        m_component.handleEvent(this, EventType.ADDED, new Event(event.context().toString()));
 					} else if (StandardWatchEventKinds.ENTRY_MODIFY == kind) {
 					    // Notify the component implementation context that a file has changed.
                         // Later, the component will call our invokeChange method in order to call our component "change" callback
-                        m_component.handleChanged(this, new Event(event.context().toString()));
+                        m_component.handleEvent(this, EventType.CHANGED, new Event(event.context().toString()));
                     } else if (StandardWatchEventKinds.ENTRY_DELETE == kind) {
 					    // Notify the component implementation context that a file has been removed.
 					    // Later, the component will call our invokeRemove method in order to call our component "remove" callback
-					    m_component.handleRemoved(this, new Event(event.context().toString()));
+					    m_component.handleEvent(this, EventType.REMOVED, new Event(event.context().toString()));
 					}
 				}
 				

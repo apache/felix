@@ -34,6 +34,7 @@ import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.context.ComponentContext;
 import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
+import org.apache.felix.dm.context.EventType;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -290,22 +291,8 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     }
 
     @Override
-    public void handleAdded(DependencyContext dc, Event e) {
-        m_component.handleAdded(dc, e);
-    }
-
-    @Override
-    public void handleChanged(DependencyContext dc, Event e) {
-        m_component.handleChanged(dc, e);
-    }
-
-    @Override
-    public void handleRemoved(DependencyContext dc, Event e) {
-        m_component.handleRemoved(dc, e);
-    }
-
-    public void handleSwapped(DependencyContext dc, Event event, Event newEvent) {
-        m_component.handleSwapped(dc, event, newEvent);
+    public void handleEvent(DependencyContext dc, EventType type, Event ... e) {
+        m_component.handleEvent(dc, type, e);
     }
     
     @Override

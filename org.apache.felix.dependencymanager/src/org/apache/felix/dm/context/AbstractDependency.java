@@ -34,7 +34,6 @@ import org.apache.felix.dm.ServiceDependency;
  *
  * @param <T> The type of the interface representing a Dependency Manager Dependency (must extends the Dependency interface).
  */
-@SuppressWarnings("rawtypes")
 public abstract class AbstractDependency<T extends Dependency> implements
     Dependency, DependencyContext, ComponentDependencyDeclaration {
 
@@ -214,36 +213,14 @@ public abstract class AbstractDependency<T extends Dependency> implements
     }
 
     /**
-     * The Component "add" callback must be invoked with the added dependency event.
-     * @param Event the added dependency service event
+     * A Component callback must be invoked with dependency event(s).
+     * @param type the dependency event type
+     * @param events the dependency service event to inject in the component. 
+     * The number of events depends on the dependency event type: ADDED/CHANGED/REMOVED types only has one event parameter, 
+     * but the SWAPPED type has two event parameters: the first one is the old event which must be replaced by the second one.
      */
     @Override
-    public void invokeAdd(Event e) {
-    }
-
-    /**
-     * The Component "change" callback must be invoked with the changed dependency event.
-     * @param Event the changed dependency service event
-     */
-    @Override
-    public void invokeChange(Event e) {
-    }
-
-    /**
-     * The Component "remove" callback must be invoked with the removed dependency event.
-     * @param Event the removed dependency service event
-     */
-    @Override
-    public void invokeRemove(Event e) {
-    }
-
-    /**
-     * If the Dependency supports "swap" callback, then invoke the swap callback on the component instance
-     * @param event the previous dependency event that was injected in the component instance
-     * @param newEvent the new dependency event that has to replace the old one
-     */
-    @Override
-    public void invokeSwap(Event event, Event newEvent) {
+    public void invokeCallback(EventType type, Event ... events) {
     }
 
     /**
@@ -310,7 +287,6 @@ public abstract class AbstractDependency<T extends Dependency> implements
     /**
      * TODO move this method elsewhere, to DependencyBase for example.
      */
-    @SuppressWarnings("unchecked")
     @Override
     public Event getService() {
         Event event = m_component.getDependencyEvent(this);
@@ -344,7 +320,6 @@ public abstract class AbstractDependency<T extends Dependency> implements
     /**
      * Copy all dependency service instances to the given map (key = dependency service, value = dependency service properties.
      */
-    @SuppressWarnings("unchecked")
     @Override
     public void copyToMap(Map<Object, Dictionary<String, ?>> map) {
         Set<Event> events = m_component.getDependencyEvents(this);

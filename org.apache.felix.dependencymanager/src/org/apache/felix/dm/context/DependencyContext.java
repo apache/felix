@@ -38,37 +38,16 @@ public interface DependencyContext extends Dependency {
     public void setComponentContext(ComponentContext component);
     
     /**
-     * The Component implementation ask this dependency to invoke the component "add" callback for the given dependency service event.
-     * @param e the dependency service event, that has previously been submitted to the component implementation using
-     * the ComponentContext.handleAdded method.
-     * @see ComponentContext#handleAdded(DependencyContext, Event)
+     * The Component implementation ask this dependency to invoke a component callback for the given dependency service event(s).
+     * 
+     * @param type the type of the callback to invoke (add/change/remove/swap ...)
+     * @param events the dependency service event(s) that has previously been submitted to the component implementation using
+     * the ComponentContext.handleEvent method.
+     * @see ComponentContext#handleEvent(DependencyContext, EventType, Event...)
+     * @see EventType
      */
-	public void invokeAdd(Event e);
-	
-    /**
-     * The Component implementation ask this dependency to invoke the component "change" callback for the given dependency service event.
-     * @param e the dependency service event, that has previously been submitted to in the component implementation using
-     * the ComponentContext.handleChanged method.
-     * @see ComponentContext#handleChanged(DependencyContext, Event)
-     */
-	public void invokeChange(Event e);
-	
-    /**
-     * The Component implementation ask this dependency to invoke the component "remove" callback for the given dependency service event.
-     * @param e the dependency service event, that has previously been submitted to in the component implementation using
-     * the ComponentContext.handleRemoved method.
-     * @see ComponentContext#handleRemoved(DependencyContext, Event)
-     */
-	public void invokeRemove(Event e);
-	
-    /**
-     * The Component implementation ask this dependency to invoke the component "swap" callback for the given dependency service event.
-     * @param e the dependency service event, that has previously been submitted to in the component implementation using
-     * the ComponentContext.handleSwapped method.
-     * @see ComponentContext#handleSwapped(DependencyContext, Event, Event)
-     */
-	public void invokeSwap(Event event, Event newEvent);
-	
+	public void invokeCallback(EventType type, Event ... events);
+			
 	/**
 	 *  Invoked by the component when the dependency should start working. 
 	 **/

@@ -18,11 +18,10 @@
  */
 package org.apache.felix.dm.runtime;
 
-import java.util.Dictionary;
-
 import org.apache.felix.dm.context.AbstractDependency;
 import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
+import org.apache.felix.dm.context.EventType;
 
 /**
  * This is a custom DependencyManager Dependency, allowing to take control of
@@ -47,11 +46,7 @@ public class ToggleServiceDependency extends AbstractDependency<ToggleServiceDep
     }
 
     public void activate(boolean active) {
-        if (active) {
-            m_component.handleAdded(this, new Event(active));
-        } else {
-            m_component.handleRemoved(this, new Event(active));
-        }
+        m_component.handleEvent(this, active ? EventType.ADDED : EventType.REMOVED, new Event(active));
     }
 
     @Override

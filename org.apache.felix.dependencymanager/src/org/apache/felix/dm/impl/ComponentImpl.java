@@ -50,9 +50,9 @@ import org.apache.felix.dm.ComponentState;
 import org.apache.felix.dm.ComponentStateListener;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.context.AbstractDependency;
 import org.apache.felix.dm.context.ComponentContext;
 import org.apache.felix.dm.context.DependencyContext;
+import org.apache.felix.dm.context.EventType;
 import org.apache.felix.dm.context.Event;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -249,217 +249,33 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	    m_serviceProperties = properties;
 	    return this;
 	}
-
-	@Override
-	public void handleAdded(final DependencyContext dc, final Event e) {
-        // since this method can be invoked by anyone from any thread, we need to
-        // pass on the event to a runnable that we execute using the component's
-        // executor
-	    getExecutor().execute(new Runnable() {
-            @Override
-            public void run() {
-                doHandleAdded(dc, e);
-            }
-        });
-	}
 	
-	private void doHandleAdded(DependencyContext dc, Event e) {
-	    if (! m_isStarted) {
-	        return;
-	    }
-	    if (debug) {
-	          System.out.println("*" + debugKey + " T" + Thread.currentThread().getId() + " handleAdded " + e);
-		}
-		
-		Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
-		dependencyEvents.add(e);		
-		dc.setAvailable(true);
-		
-		// Recalculate state changes. We only do this if the dependency is started. If the dependency is not started,
-		// it means it is actually starting. And in this case, we don't recalculate state changes now. We'll do it 
-		// once all currently available services are found, and then after, we'll recalculate state change 
-		// (see the startDependencies method).
-		// All this is done for two reasons:
-		// 1- optimization: it is preferable to recalculate state changes once we know about all currently available dependency services
-		//    (after the tracker has returned from its open method).
-		// 2- This also allows to determine the list of currently available dependency services from within the component start method callback
-		//    (this will be extremely useful when porting the Felix SCR on top of DM4).
-		
-		if (dc.isStarted()) {
-            switch (m_state) {
-            case WAITING_FOR_REQUIRED:
-                if (dc.isRequired())
-                    handleChange();
-                break;
-            case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
-                if (!dc.isInstanceBound()) {
-                    if (dc.isRequired()) {
-                        dc.invokeAdd(e);
-                    }
-                    updateInstance(dc, e, false, true);
-                }
-                else {
-                    if (dc.isRequired())
-                        handleChange();
-                }
-                break;
-            case TRACKING_OPTIONAL:
-                dc.invokeAdd(e);
-                updateInstance(dc, e, false, true);
-                break;
-            default:
-            }
-		}
-	}
-		
-    @Override
-    public void handleChanged(final DependencyContext dc, final Event e) {
+	@Override
+    public void handleEvent(final DependencyContext dc, final EventType type, final Event... event) {
         // since this method can be invoked by anyone from any thread, we need to
         // pass on the event to a runnable that we execute using the component's
         // executor
         getExecutor().execute(new Runnable() {
             @Override
             public void run() {
-                doHandleChanged(dc, e);
-            }
-        });  
-    }
-        
-    private void doHandleChanged(DependencyContext dc, Event e) {
-        if (! m_isStarted) {
-            return;
-        }
-        Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
-        dependencyEvents.remove(e);
-        dependencyEvents.add(e);
-        
-        if (dc.isStarted()) {
-            switch (m_state) {
-            case TRACKING_OPTIONAL:
-                dc.invokeChange(e);
-                updateInstance(dc, e, true, false);
-                break;
-
-            case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
-                if (!dc.isInstanceBound()) {
-                    dc.invokeChange(e);
-                    updateInstance(dc, e, true, false);
-                }
-                break;
-            default:
-                // noop
-            }
-        }
-    }
-
-    @Override
-    public void handleRemoved(final DependencyContext dc, final Event e) {
-        // since this method can be invoked by anyone from any thread, we need to
-        // pass on the event to a runnable that we execute using the component's
-        // executor
-        getExecutor().execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    doHandleRemoved(dc, e);
-                } finally {
-                    e.close();
+                switch (type) {
+                case ADDED:
+                    handleAdded(dc, event[0]);
+                    break;
+                case CHANGED:
+                    handleChanged(dc, event[0]);
+                    break;
+                case REMOVED:
+                    handleRemoved(dc, event[0]);
+                    break;
+                case SWAPPED:
+                    handleSwapped(dc, event[0], event[1]);
+                    break;
                 }
             }
         });
-    }
-    
-    private void doHandleRemoved(DependencyContext dc, Event e) {
-        if (! m_isStarted) {
-            return;
-        }
-        // Check if the dependency is still available.
-        Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
-        int size = dependencyEvents.size();
-        if (dependencyEvents.contains(e)) {
-            size--; // the dependency is currently registered and is about to be removed.
-        }
-        dc.setAvailable(size > 0);
-        
-        // If the dependency is now unavailable, we have to recalculate state change. This will result in invoking the
-        // "removed" callback with the removed dependency (which we have not yet removed from our dependency events list.).
-        // But we don't recalculate the state if the dependency is not started (if not started, it means that it is currently starting,
-        // and the tracker is detecting a removed service).
-        if (size == 0 && dc.isStarted()) {
-            handleChange();
-        }
-        
-        // Now, really remove the dependency event.
-        dependencyEvents.remove(e);    
-        
-        // Only check if the component instance has to be updated if the dependency is really started.
-        if (dc.isStarted()) {
-            // Depending on the state, we possible have to invoke the callbacks and update the component instance.        
-            switch (m_state) {
-            case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
-                if (!dc.isInstanceBound()) {
-                    if (dc.isRequired()) {
-                        dc.invokeRemove(e);
-                    }
-                    updateInstance(dc, e, false, false);
-                }
-                break;
-            case TRACKING_OPTIONAL:
-                dc.invokeRemove(e);
-                updateInstance(dc, e, false, false);
-                break;
-            default:
-            }
-        }
-    }
+	}
 
-    @Override
-    public void handleSwapped(final DependencyContext dc, final Event event, final Event newEvent) {
-        // since this method can be invoked by anyone from any thread, we need to
-        // pass on the event to a runnable that we execute using the component's
-        // executor
-        getExecutor().execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    doHandleSwapped(dc, event, newEvent);
-                } finally {
-                    event.close();
-                }
-            }
-        });  
-    }
-    
-    private void doHandleSwapped(DependencyContext dc, Event event, Event newEvent) {
-        if (! m_isStarted) {
-            return;
-        }
-        Set<Event> dependencyEvents = m_dependencyEvents.get(dc);        
-        dependencyEvents.remove(event);
-        dependencyEvents.add(newEvent);
-                
-        if (dc.isStarted()) {
-            // Depending on the state, we possible have to invoke the callbacks and update the component instance.        
-            switch (m_state) {
-            case WAITING_FOR_REQUIRED:
-                // No need to swap, we don't have yet injected anything
-                break;
-            case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
-                // Only swap *non* instance-bound dependencies
-                if (!dc.isInstanceBound()) {
-                    if (dc.isRequired()) {
-                        dc.invokeSwap(event, newEvent);
-                    }
-                }
-                break;
-            case TRACKING_OPTIONAL:
-                dc.invokeSwap(event, newEvent);
-                break;
-            default:
-            }
-        }
-    }
-    
     @Override
     public Event getDependencyEvent(DependencyContext dc) {
         ConcurrentSkipListSet<Event> events = m_dependencyEvents.get(dc);
@@ -491,6 +307,156 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         return (String) m_autoConfigInstance.get(clazz);
     }
 
+    private void handleAdded(DependencyContext dc, Event e) {
+        if (! m_isStarted) {
+            return;
+        }
+        if (debug) {
+              System.out.println("*" + debugKey + " T" + Thread.currentThread().getId() + " handleAdded " + e);
+        }
+        
+        Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
+        dependencyEvents.add(e);        
+        dc.setAvailable(true);
+        
+        // Recalculate state changes. We only do this if the dependency is started. If the dependency is not started,
+        // it means it is actually starting. And in this case, we don't recalculate state changes now. We'll do it 
+        // once all currently available services are found, and then after, we'll recalculate state change 
+        // (see the startDependencies method).
+        // All this is done for two reasons:
+        // 1- optimization: it is preferable to recalculate state changes once we know about all currently available dependency services
+        //    (after the tracker has returned from its open method).
+        // 2- This also allows to determine the list of currently available dependency services from within the component start method callback
+        //    (this will be extremely useful when porting the Felix SCR on top of DM4).
+        
+        if (dc.isStarted()) {
+            switch (m_state) {
+            case WAITING_FOR_REQUIRED:
+                if (dc.isRequired())
+                    handleChange();
+                break;
+            case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
+                if (!dc.isInstanceBound()) {
+                    if (dc.isRequired()) {
+                        dc.invokeCallback(EventType.ADDED, e);
+                    }
+                    updateInstance(dc, e, false, true);
+                }
+                else {
+                    if (dc.isRequired())
+                        handleChange();
+                }
+                break;
+            case TRACKING_OPTIONAL:
+                dc.invokeCallback(EventType.ADDED, e);
+                updateInstance(dc, e, false, true);
+                break;
+            default:
+            }
+        }
+    }
+        
+    private void handleChanged(final DependencyContext dc, final Event e) {
+        if (! m_isStarted) {
+            return;
+        }
+        Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
+        dependencyEvents.remove(e);
+        dependencyEvents.add(e);
+        
+        if (dc.isStarted()) {
+            switch (m_state) {
+            case TRACKING_OPTIONAL:
+                dc.invokeCallback(EventType.CHANGED, e);
+                updateInstance(dc, e, true, false);
+                break;
+
+            case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
+                if (!dc.isInstanceBound()) {
+                    dc.invokeCallback(EventType.CHANGED, e);
+                    updateInstance(dc, e, true, false);
+                }
+                break;
+            default:
+                // noop
+            }
+        }
+    }
+    
+    private void handleRemoved(DependencyContext dc, Event e) {
+        if (! m_isStarted) {
+            return;
+        }
+        // Check if the dependency is still available.
+        Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
+        int size = dependencyEvents.size();
+        if (dependencyEvents.contains(e)) {
+            size--; // the dependency is currently registered and is about to be removed.
+        }
+        dc.setAvailable(size > 0);
+        
+        // If the dependency is now unavailable, we have to recalculate state change. This will result in invoking the
+        // "removed" callback with the removed dependency (which we have not yet removed from our dependency events list.).
+        // But we don't recalculate the state if the dependency is not started (if not started, it means that it is currently starting,
+        // and the tracker is detecting a removed service).
+        if (size == 0 && dc.isStarted()) {
+            handleChange();
+        }
+        
+        // Now, really remove the dependency event.
+        dependencyEvents.remove(e);    
+        
+        // Only check if the component instance has to be updated if the dependency is really started.
+        if (dc.isStarted()) {
+            // Depending on the state, we possible have to invoke the callbacks and update the component instance.        
+            switch (m_state) {
+            case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
+                if (!dc.isInstanceBound()) {
+                    if (dc.isRequired()) {
+                        dc.invokeCallback(EventType.REMOVED, e);
+                    }
+                    updateInstance(dc, e, false, false);
+                }
+                break;
+            case TRACKING_OPTIONAL:
+                dc.invokeCallback(EventType.REMOVED, e);
+                updateInstance(dc, e, false, false);
+                break;
+            default:
+            }
+        }
+    }
+    
+    private void handleSwapped(DependencyContext dc, Event oldEvent, Event newEvent) {
+        if (! m_isStarted) {
+            return;
+        }
+        Set<Event> dependencyEvents = m_dependencyEvents.get(dc);        
+        dependencyEvents.remove(oldEvent);
+        dependencyEvents.add(newEvent);
+                
+        if (dc.isStarted()) {
+            // Depending on the state, we possible have to invoke the callbacks and update the component instance.        
+            switch (m_state) {
+            case WAITING_FOR_REQUIRED:
+                // No need to swap, we don't have yet injected anything
+                break;
+            case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
+                // Only swap *non* instance-bound dependencies
+                if (!dc.isInstanceBound()) {
+                    if (dc.isRequired()) {
+                        dc.invokeCallback(EventType.SWAPPED, oldEvent, newEvent); 
+                    }
+                }
+                break;
+            case TRACKING_OPTIONAL:
+                dc.invokeCallback(EventType.SWAPPED, oldEvent, newEvent);
+                break;
+            default:
+            }
+        }
+    }
+    
 	private void handleChange() {
 		if (debug) {
 			System.out.println("*" + debugKey + " T" + Thread.currentThread().getId() + " handleChange");
@@ -830,7 +796,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		for (DependencyContext d : m_dependencies) {
 			if (d.isRequired() && !d.isInstanceBound()) {
 			    for (Event e : m_dependencyEvents.get(d)) {
-			        d.invokeAdd(e);
+			        d.invokeCallback(EventType.ADDED, e);
 			    }
 			}
 		}
@@ -856,7 +822,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		for (DependencyContext d : m_dependencies) {
 			if (d.isRequired() && d.isInstanceBound()) {
 	             for (Event e : m_dependencyEvents.get(d)) {
-	                 d.invokeAdd(e);
+	                 d.invokeCallback(EventType.ADDED, e);
 	             }
 			}
 		}
@@ -866,7 +832,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         for (DependencyContext d : m_dependencies) {
             if (! d.isRequired()) {
                 for (Event e : m_dependencyEvents.get(d)) {
-                    d.invokeAdd(e);
+                    d.invokeCallback(EventType.ADDED, e);
                 }
             }
         }
@@ -876,7 +842,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		for (DependencyContext d : m_dependencies) {
 			if (!d.isInstanceBound() && d.isRequired()) {
                 for (Event e : m_dependencyEvents.get(d)) {
-                    d.invokeRemove(e);
+                    d.invokeCallback(EventType.REMOVED, e);
                 }
 			}
 		}
@@ -886,7 +852,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         for (DependencyContext d : m_dependencies) {
             if (! d.isRequired()) {
                 for (Event e : m_dependencyEvents.get(d)) {
-                    d.invokeRemove(e);
+                    d.invokeCallback(EventType.REMOVED, e);
                 }
             }
         }
@@ -896,7 +862,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		for (DependencyContext d : m_dependencies) {
 			if (d.isInstanceBound()) {
                 for (Event e : m_dependencyEvents.get(d)) {
-                    d.invokeRemove(e);
+                    d.invokeCallback(EventType.REMOVED, e);
                 }
 			}
 		}

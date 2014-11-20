@@ -31,6 +31,7 @@ import org.apache.felix.dm.ResourceHandler;
 import org.apache.felix.dm.context.AbstractDependency;
 import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
+import org.apache.felix.dm.context.EventType;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
 
@@ -81,65 +82,63 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
 
     public void added(URL resource) {
         if (m_trackedResource == null || m_trackedResource.equals(resource)) {
-            getComponentContext().handleAdded(this, new ResourceEventImpl(resource, null));
+            getComponentContext().handleEvent(this, EventType.ADDED, new ResourceEventImpl(resource, null));
         }
     }
     
     public void added(URL resource, Dictionary<String, ?> resourceProperties) {
         if (m_trackedResource == null || m_trackedResource.equals(resource)) {
-            getComponentContext().handleAdded(this, new ResourceEventImpl(resource, resourceProperties));
+            getComponentContext().handleEvent(this, EventType.ADDED, new ResourceEventImpl(resource, resourceProperties));
         }
     }
         
     public void changed(URL resource) {
         if (m_trackedResource == null || m_trackedResource.equals(resource)) {
-            m_component.handleChanged(this, new ResourceEventImpl(resource, null));
+            m_component.handleEvent(this, EventType.CHANGED, new ResourceEventImpl(resource, null));
         }
     }
     
     public void changed(URL resource, Dictionary<String, ?> resourceProperties) {
         if (m_trackedResource == null || m_trackedResource.equals(resource)) {
-            m_component.handleChanged(this, new ResourceEventImpl(resource, resourceProperties));
+            m_component.handleEvent(this, EventType.CHANGED, new ResourceEventImpl(resource, resourceProperties));
         }
     }
 
     public void removed(URL resource) {
         if (m_trackedResource == null || m_trackedResource.equals(resource)) {
-            m_component.handleRemoved(this, new ResourceEventImpl(resource, null));
+            m_component.handleEvent(this, EventType.REMOVED, new ResourceEventImpl(resource, null));
         }
     }
     
     public void removed(URL resource, Dictionary<String, ?> resourceProperties) {
         if (m_trackedResource == null || m_trackedResource.equals(resource)) {
-            m_component.handleRemoved(this, new ResourceEventImpl(resource, resourceProperties));
+            m_component.handleEvent(this, EventType.REMOVED, new ResourceEventImpl(resource, resourceProperties));
         }
     }
     
-    @SuppressWarnings("rawtypes")
     @Override
-    public void invokeAdd(Event e) {
-        if (m_add != null) {
-            invoke(m_add, e);
-        }
-    }
-
-    @SuppressWarnings("rawtypes")
-    @Override
-    public void invokeChange(Event e) {
-        if (m_change != null) {
-            invoke (m_change, e);
-        }
-    }
-
-    @SuppressWarnings("rawtypes")
-    @Override
-    public void invokeRemove(Event e) {
-        if (m_remove != null) {
-            invoke (m_remove, e);
+    public void invokeCallback(EventType type, Event ... e) {
+        switch (type) {
+        case ADDED:
+            if (m_add != null) {
+                invoke(m_add, e[0]);
+            }
+            break;
+        case CHANGED:
+            if (m_change != null) {
+                invoke (m_change, e[0]);
+            }
+            break;
+        case REMOVED:
+            if (m_remove != null) {
+                invoke (m_remove, e[0]);
+            }
+            break;
+        default:
+            break;
         }
     }
     
-    @SuppressWarnings("rawtypes")
     private void invoke(String method, Event e) {
         ResourceEventImpl re = (ResourceEventImpl) e;
         URL serviceInstance = re.getResource();

@@ -32,6 +32,21 @@ public class Event implements Comparable<Event> {
     public Event(Object event) {
         m_event = event;
     }
+    
+    /**
+     * Returns the actual event object wrapped by this event (a Service Dependency, a Bundle for Bundle Dependency, etc...).
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T getEvent() {
+        return (T) m_event;
+    }
+    
+    /**
+     * Returns the properties of the actual event object wrapped by this event (Service Dependency properties, ...).
+     */
+    public Dictionary<String, Object> getProperties() {
+        return EMPTY_PROPERTIES;
+    }
 
     @Override
     public int hashCode() {
@@ -57,20 +72,5 @@ public class Event implements Comparable<Event> {
      * Release the resources this event is holding (like service reference for example).
      */
     public void close() {
-    }
-    
-    /**
-     * Returns the actual event object wrapped by this event (a Service Dependency, a Bundle for Bundle Dependency, etc...).
-     */
-    @SuppressWarnings("unchecked")
-    public <T> T getEvent() {
-        return (T) m_event;
-    }
-    
-    /**
-     * Returns the properties of the actual event object wrapped by this event (Service Dependency properties, ...).
-     */
-    public Dictionary<String, Object> getProperties() {
-        return EMPTY_PROPERTIES;
     }
 }

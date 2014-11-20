@@ -27,6 +27,7 @@ import org.apache.felix.dm.ComponentDependencyDeclaration;
 import org.apache.felix.dm.context.AbstractDependency;
 import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
+import org.apache.felix.dm.context.EventType;
 import org.apache.felix.dm.tracker.BundleTracker;
 import org.apache.felix.dm.tracker.BundleTrackerCustomizer;
 import org.osgi.framework.Bundle;
@@ -157,42 +158,40 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
     }
     
     public void addedBundle(Bundle bundle, BundleEvent event, Object object) {
-        m_component.handleAdded(this, new BundleEventImpl(bundle, event));
+        m_component.handleEvent(this, EventType.ADDED, new BundleEventImpl(bundle, event));
     }
         
     public void modifiedBundle(Bundle bundle, BundleEvent event, Object object) {
-        m_component.handleChanged(this, new BundleEventImpl(bundle, event));
+        m_component.handleEvent(this, EventType.CHANGED, new BundleEventImpl(bundle, event));
     }
 
     public void removedBundle(Bundle bundle, BundleEvent event, Object object) {
-        m_component.handleRemoved(this, new BundleEventImpl(bundle, event));
+        m_component.handleEvent(this, EventType.REMOVED, new BundleEventImpl(bundle, event));
     }
     
-    @SuppressWarnings("rawtypes")
     @Override
-    public void invokeAdd(Event e) {
-        if (m_add != null) {
-            invoke(m_add, e);
+    public void invokeCallback(EventType type, Event ... e) {
+        switch (type) {
+        case ADDED:
+            if (m_add != null) {
+                invoke(m_add, e[0]);
+            }
+            break;
+        case CHANGED:
+            if (m_change != null) {
+                invoke (m_change, e[0]);
+            }
+            break;
+        case REMOVED:
+            if (m_remove != null) {
+                invoke (m_remove, e[0]);
+            }
+            break;
+        default:
+            break;
         }
     }
-    
-    @SuppressWarnings("rawtypes")
-    @Override
-    public void invokeChange(Event e) {
-        if (m_change != null) {
-            invoke (m_change, e);
-        }
-    }
-
-    @SuppressWarnings("rawtypes")
-    @Override
-    public void invokeRemove(Event e) {
-        if (m_remove != null) {
-            invoke (m_remove, e);
-        }
-    }
-        
-    @SuppressWarnings("rawtypes")
+            
     private void invoke(String method, Event e) {
         BundleEventImpl be = (BundleEventImpl) e;
         m_component.invokeCallbackMethod(getInstances(), method,
@@ -227,7 +226,7 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
         return Bundle.class;
     }
         
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings("unchecked")
     @Override
     public Dictionary<String, Object> getProperties() {
         Event event = getService();

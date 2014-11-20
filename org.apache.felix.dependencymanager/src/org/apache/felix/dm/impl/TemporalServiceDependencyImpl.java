@@ -25,6 +25,7 @@ import java.lang.reflect.Proxy;
 
 import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.ServiceDependency;
+import org.apache.felix.dm.context.EventType;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -94,7 +95,8 @@ public class TemporalServiceDependencyImpl extends ServiceDependencyImpl impleme
             }
         }
         if (makeAvailable) {
-            getComponentContext().handleAdded(this, new ServiceEventImpl(m_component.getBundle(), m_component.getBundleContext(), ref, m_serviceInstance));
+            getComponentContext().handleEvent(this, EventType.ADDED,
+                new ServiceEventImpl(m_component.getBundle(), m_component.getBundleContext(), ref, m_serviceInstance));
         } else {
             // This added will possibly unblock our invoke() method (if it's blocked in m_tracker.waitForService method).
         }
@@ -130,8 +132,8 @@ public class TemporalServiceDependencyImpl extends ServiceDependencyImpl impleme
             }
             if (makeUnavailable) {
                 // the event.close method will unget the service.
-                m_component.handleRemoved(this, 
-                    new ServiceEventImpl(m_component.getBundle(), m_component.getBundleContext(), ref, m_serviceInstance)); 
+                m_component.handleEvent(this, EventType.REMOVED, new ServiceEventImpl(m_component.getBundle(),
+                    m_component.getBundleContext(), ref, m_serviceInstance));
             }
         } else {
             // Unget what we got in addingService (see ServiceTracker 701.4.1)

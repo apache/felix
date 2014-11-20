@@ -19,16 +19,16 @@
 package org.apache.felix.dm.impl;
 
 import java.lang.reflect.InvocationTargetException;
-import java.net.URL;
 import java.util.Dictionary;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.felix.dm.ConfigurationDependency;
 import org.apache.felix.dm.PropertyMetaData;
-import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.AbstractDependency;
+import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
+import org.apache.felix.dm.context.EventType;
 import org.apache.felix.dm.impl.metatype.MetaTypeProviderImpl;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -211,48 +211,47 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 
         if ((oldSettings == null) && (settings != null)) {
             // Notify the component that our dependency is available.
-            m_component.handleAdded(this, new ConfigurationEventImpl(m_pid, settings));
+            m_component.handleEvent(this, EventType.ADDED, new ConfigurationEventImpl(m_pid, settings));
         }
         else if ((oldSettings != null) && (settings != null)) {
             // Notify the component that our dependency has changed.
-            m_component.handleChanged(this, new ConfigurationEventImpl(m_pid, settings));
+            m_component.handleEvent(this, EventType.CHANGED, new ConfigurationEventImpl(m_pid, settings));
         }
         else if ((oldSettings != null) && (settings == null)) {
             // Notify the component that our dependency has been removed.
             // Notice that the component will be stopped, and then all required dependencies will be unbound
             // (including our configuration dependency).
-            m_component.handleRemoved(this, new ConfigurationEventImpl(m_pid, oldSettings));
+            m_component.handleEvent(this, EventType.REMOVED, new ConfigurationEventImpl(m_pid, oldSettings));
         }
     }
 
-    @SuppressWarnings("rawtypes")
     @Override
-    public void invokeAdd(Event event) {
-		try {
-			invokeUpdated(m_settings);
-		} catch (ConfigurationException e) {
-            logConfigurationException(e);
-		}
-    }
-
-    @SuppressWarnings("rawtypes")
-    @Override
-    public void invokeChange(Event event) {
-        // We already did that synchronously, from our updated method
-    }
-
-    @SuppressWarnings("rawtypes")
-    @Override
-    public void invokeRemove(Event event) {
-        // The state machine is stopping us. We have to invoke updated(null).
-        try {
-        	m_updateInvokedCache.set(false);
-            invokeUpdated(null);
-        } catch (ConfigurationException e) {
-            logConfigurationException(e);
-        } finally {
-        	// Reset for the next time the state machine calls invokeAdd
-        	m_updateInvokedCache.set(false);
+    public void invokeCallback(EventType type, Event ... event) {
+        switch (type) {
+        case ADDED:
+            try {
+                invokeUpdated(m_settings);
+            } catch (ConfigurationException e) {
+                logConfigurationException(e);
+            }
+            break;
+        case CHANGED:
+            // We already did that synchronously, from our updated method
+            break;
+        case REMOVED:
+            // The state machine is stopping us. We have to invoke updated(null).
+            try {
+                m_updateInvokedCache.set(false);
+                invokeUpdated(null);
+            } catch (ConfigurationException e) {
+                logConfigurationException(e);
+            } finally {
+                // Reset for the next time the state machine calls invokeAdd
+                m_updateInvokedCache.set(false);
+            }
+            break;
+        default:
+            break;
         }
     }
     

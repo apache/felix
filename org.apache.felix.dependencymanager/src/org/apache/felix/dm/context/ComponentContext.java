@@ -82,34 +82,21 @@ public interface ComponentContext extends Component {
     public boolean isAvailable();
     
     /**
-     * Notifies the Component about a new available dependency service. 
+     * Notifies the Component about a dependency event.
+     * An event is for example fired when:<p>
+     * <ul>
+     * <li> a dependency service becomes available {@link EventType#ADDED}) 
+     * <li> a dependenc service has changed is changed {@link EventType#CHANGED}) 
+     * <li> a dependency service has been lost {@link EventType#REMOVED}) 
+     * <li> a dependency service has been swapped by another {@link EventType#SWAPPED}) 
+     * </ul> 
      * @param dc the dependency
-     * @param e the availabe dependency service event
+     * @param type the dependency event type
+     * @param e the dependency event
+     * @see EventType
      */
-    public void handleAdded(DependencyContext dc, Event e);
- 
-    /**
-     * Notifies the Component about a dependency change event 
-     * @param dc the dependency
-     * @param e the dependency change event
-     */
-    public void handleChanged(DependencyContext dc, Event e);
- 
-    /**
-     * Notifies the Component that a dependency service instance becomes unavailable.
-     * @param dc the dependency
-     * @param e the dependency service that becomes unavailable
-     */
-    public void handleRemoved(DependencyContext dc, Event e);
- 
-    /**
-     * Notifies the Component that a dependency service instance has been swapped by another one.
-     * @param dc the dependency
-     * @param event the dependency service to replace with the new event
-     * @param newEvent the new dependency service that is replacing the old one
-     */
-    public void handleSwapped(DependencyContext dc, Event event, Event newEvent);
-  
+    public void handleEvent(DependencyContext dc, EventType type, Event ... event);
+   
     /**
      * Returns the list of dependencies that has been registered on this component
      * @return the list of dependencies that has been registered on this component

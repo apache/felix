@@ -35,6 +35,7 @@ import org.apache.felix.dm.context.AbstractDependency;
 import org.apache.felix.dm.context.ComponentContext;
 import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
+import org.apache.felix.dm.context.EventType;
 import org.apache.felix.dm.tracker.ServiceTracker;
 import org.apache.felix.dm.tracker.ServiceTrackerCustomizer;
 import org.osgi.framework.BundleContext;
@@ -251,48 +252,48 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
 		if (debug) {
 			System.out.println(debugKey + " addedService: ref=" + reference + ", service=" + service);
 		}
-		m_component.handleAdded(this, new ServiceEventImpl(m_component.getBundle(), m_component.getBundleContext(), 
-		    reference, service));
+        m_component.handleEvent(this, EventType.ADDED,
+            new ServiceEventImpl(m_component.getBundle(), m_component.getBundleContext(), reference, service));
 	}
 
 	@Override
 	public void modifiedService(ServiceReference reference, Object service) {
-	    m_component.handleChanged(this, new ServiceEventImpl(m_component.getBundle(), m_component.getBundleContext(), 
-	        reference, service));
+        m_component.handleEvent(this, EventType.CHANGED,
+            new ServiceEventImpl(m_component.getBundle(), m_component.getBundleContext(), reference, service));
 	}
 
 	@Override
 	public void removedService(ServiceReference reference, Object service) {
-	    m_component.handleRemoved(this, new ServiceEventImpl(m_component.getBundle(), m_component.getBundleContext(), reference, service));
+        m_component.handleEvent(this, EventType.REMOVED,
+            new ServiceEventImpl(m_component.getBundle(), m_component.getBundleContext(), reference, service));
 	}
 	
     @Override
-    public void invokeAdd(Event e) {
-        if (m_add != null) {
-            invoke (m_add, e, getInstances());
-        }
-    }
-	
-	@Override
-	public void invokeChange(Event e) {
-	    if (m_change != null) {
-	        invoke (m_change, e, getInstances());
-	    }
-	}
-
-	@Override
-	public void invokeRemove(Event e) {
-	    if (m_remove != null) {
-	        invoke (m_remove, e, getInstances());
-	    }
-	}
-	
-    @Override   
-    public void invokeSwap(Event event, Event newEvent) {
-        if (m_swap != null) {
-            ServiceEventImpl oldE = (ServiceEventImpl) event;
-            ServiceEventImpl newE = (ServiceEventImpl) newEvent;
-            invokeSwap(m_swap, oldE.getReference(), oldE.getEvent(), newE.getReference(), newE.getEvent(), getInstances());
+    public void invokeCallback(EventType type, Event ... events) {
+        switch (type) {
+        case ADDED:
+            if (m_add != null) {
+                invoke (m_add, events[0], getInstances());
+            }
+            break;
+        case CHANGED:
+            if (m_change != null) {
+                invoke (m_change, events[0], getInstances());
+            }
+            break;
+        case REMOVED:
+            if (m_remove != null) {
+                invoke (m_remove, events[0], getInstances());
+            }
+            break;
+        case SWAPPED:
+            if (m_swap != null) {
+                ServiceEventImpl oldE = (ServiceEventImpl) events[0];
+                ServiceEventImpl newE = (ServiceEventImpl) events[1];
+                invokeSwap(m_swap, oldE.getReference(), oldE.getEvent(), newE.getReference(), newE.getEvent(),
+                    getInstances());
+            }
+            break;
         }
     }
 
@@ -548,8 +549,9 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
 			// getting out of order.		    		    
 		    // We delegate the swap handling to the ComponentImpl, which is the class responsible for state management.
 		    // The ComponentImpl will first check if the component is in the proper state so the swap method can be invoked.		    
-		    m_component.handleSwapped(this, new ServiceEventImpl(m_component.getBundle(), m_component.getBundleContext(), reference, service), 
-		        new ServiceEventImpl(m_component.getBundle(), m_component.getBundleContext(), newReference, newService));
+            m_component.handleEvent(this, EventType.SWAPPED,
+                new ServiceEventImpl(m_component.getBundle(), m_component.getBundleContext(), reference, service),
+                new ServiceEventImpl(m_component.getBundle(), m_component.getBundleContext(), newReference, newService));
 		} else {
 			addedService(newReference, newService);
 			removedService(reference, service);
