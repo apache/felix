@@ -32,10 +32,12 @@ import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentDeclaration;
 import org.apache.felix.dm.ServiceDependency;
 import org.apache.felix.dm.context.AbstractDependency;
+import org.apache.felix.dm.context.ComponentContext;
 import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
 import org.apache.felix.dm.tracker.ServiceTracker;
 import org.apache.felix.dm.tracker.ServiceTrackerCustomizer;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
@@ -138,8 +140,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
         }
     }
     
-	public ServiceDependencyImpl(BundleContext ctx) {
-		super(true /* autoconfig */, ctx);
+	public ServiceDependencyImpl() {
 	}
 	
 	public ServiceDependencyImpl(ServiceDependencyImpl prototype) {
@@ -202,17 +203,18 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
 	@Override
 	public void start() {
         if (m_trackedServiceName != null) {
+            BundleContext ctx = m_component.getBundleContext();
             if (m_trackedServiceFilter != null) {
                 try {
-                    m_tracker = new ServiceTracker(m_context, m_context.createFilter(m_trackedServiceFilter), this);
+                    m_tracker = new ServiceTracker(ctx, ctx.createFilter(m_trackedServiceFilter), this);
                 } catch (InvalidSyntaxException e) {
                     throw new IllegalStateException("Invalid filter definition for dependency: "
                         + m_trackedServiceFilter);
                 }
             } else if (m_trackedServiceReference != null) {
-                m_tracker = new ServiceTracker(m_context, m_trackedServiceReference, this);
+                m_tracker = new ServiceTracker(ctx, m_trackedServiceReference, this);
             } else {
-                m_tracker = new ServiceTracker(m_context, m_trackedServiceName.getName(), this);
+                m_tracker = new ServiceTracker(ctx, m_trackedServiceName.getName(), this);
             }
         } else {
             throw new IllegalStateException("Could not create tracker for dependency, no service name specified.");
@@ -234,7 +236,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
 	@Override
 	public Object addingService(ServiceReference reference) {
 		try {
-		    return getBundleContext().getService(reference);
+		    return m_component.getBundleContext().getService(reference);
 		} catch (IllegalStateException e) {
 		    // most likely our bundle is being stopped. Only log an exception if our component is enabled.
 		    if (m_component.isActive()) {
@@ -250,17 +252,19 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
 		if (debug) {
 			System.out.println(debugKey + " addedService: ref=" + reference + ", service=" + service);
 		}
-		m_component.handleAdded(this, new ServiceEventImpl(m_bundle, m_context, reference, service));
+		m_component.handleAdded(this, new ServiceEventImpl(m_component.getBundle(), m_component.getBundleContext(), 
+		    reference, service));
 	}
 
 	@Override
 	public void modifiedService(ServiceReference reference, Object service) {
-	    m_component.handleChanged(this, new ServiceEventImpl(m_bundle, m_context, reference, service));
+	    m_component.handleChanged(this, new ServiceEventImpl(m_component.getBundle(), m_component.getBundleContext(), 
+	        reference, service));
 	}
 
 	@Override
 	public void removedService(ServiceReference reference, Object service) {
-	    m_component.handleRemoved(this, new ServiceEventImpl(m_bundle, m_context, reference, service));
+	    m_component.handleRemoved(this, new ServiceEventImpl(m_component.getBundle(), m_component.getBundleContext(), reference, service));
 	}
 	
 	@SuppressWarnings("rawtypes")
@@ -383,11 +387,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
             throw new IllegalStateException("cannot find service reference");
         }
     }	
-
-    private BundleContext getBundleContext() {
-        return m_context;
-    }
-    
+        
     /** Internal method to set the name, service reference and/or filter. */
     private void setService(Class<?> serviceName, ServiceReference serviceReference, String serviceFilter) {
         ensureNotActive();
@@ -554,10 +554,15 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
 			// getting out of order.		    		    
 		    // We delegate the swap handling to the ComponentImpl, which is the class responsible for state management.
 		    // The ComponentImpl will first check if the component is in the proper state so the swap method can be invoked.		    
-		    m_component.handleSwapped(this, new ServiceEventImpl(m_bundle, m_context, reference, service), new ServiceEventImpl(m_bundle, m_context, newReference, newService));
+		    m_component.handleSwapped(this, new ServiceEventImpl(m_component.getBundle(), m_component.getBundleContext(), reference, service), 
+		        new ServiceEventImpl(m_component.getBundle(), m_component.getBundleContext(), newReference, newService));
 		} else {
 			addedService(newReference, newService);
 			removedService(reference, service);
 		}
 	}	
+	
+    public ComponentContext getComponentContext() {
+        return m_component;
+    }
 }

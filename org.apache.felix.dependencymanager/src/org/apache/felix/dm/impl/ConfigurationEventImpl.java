@@ -4,7 +4,7 @@ import java.util.Dictionary;
 
 import org.apache.felix.dm.context.Event;
 
-public class ConfigurationEventImpl extends Event<Dictionary<String, Object>> {
+public class ConfigurationEventImpl extends Event {
     private final String m_pid;
     
     public ConfigurationEventImpl(String pid, Dictionary<String, Object> conf) {
@@ -16,7 +16,6 @@ public class ConfigurationEventImpl extends Event<Dictionary<String, Object>> {
         return m_pid;
     }
         
-    @SuppressWarnings("rawtypes")
     @Override
     public int compareTo(Event other) {
         return m_pid.compareTo(((ConfigurationEventImpl) other).m_pid);

@@ -34,6 +34,7 @@ import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.context.ComponentContext;
 import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
@@ -338,9 +339,8 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
 	}
 	
     @Override
-    public Component setThreadPool(Executor threadPool) {
+    public void setThreadPool(Executor threadPool) {
         m_component.setThreadPool(threadPool);
-        return this;
     }
 
     @Override
@@ -351,5 +351,10 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     @Override
     public void log(int level, String msg, Throwable err) {
         m_component.log(level, msg, err);
+    }
+
+    @Override
+    public Bundle getBundle() {
+        return m_component.getBundle();
     }
 }

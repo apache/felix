@@ -55,12 +55,17 @@ public class ToggleServiceDependency extends AbstractDependency<ToggleServiceDep
     }
 
     @Override
-    public String getName() {
+    public String getSimpleName() {
         return "" + isAvailable();
     }
 
     @Override
     public String getType() {
         return "toggle";
+    }
+
+    @Override
+    public Class<?> getAutoConfigType() {
+        return null; // we don't support auto config mode.
     }
 }

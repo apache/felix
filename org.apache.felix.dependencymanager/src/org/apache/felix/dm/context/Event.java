@@ -25,11 +25,11 @@ import java.util.Hashtable;
  * An event holds all data that belongs to some external event as it comes in via
  * the 'changed' callback of a dependency.
  */
-public class Event<T> implements Comparable<Event<T>> {
+public class Event implements Comparable<Event> {
     protected final static Dictionary<String, Object> EMPTY_PROPERTIES = new Hashtable<>();
-    private final T m_event;    // the actual event object (a Service, a Bundle, a Configuration, etc ...)
+    private final Object m_event;    // the actual event object (a Service, a Bundle, a Configuration, etc ...)
     
-    public Event(T event) {
+    public Event(Object event) {
         m_event = event;
     }
 
@@ -38,19 +38,18 @@ public class Event<T> implements Comparable<Event<T>> {
         return m_event.hashCode();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public boolean equals(Object obj) {
         // an instanceof check here is not "strong" enough with subclasses overriding the
         // equals: we need to be sure that a.equals(b) == b.equals(a) at all times
         if (obj != null && obj.getClass().equals(Event.class)) {
-            return (((Event<T>) obj).m_event).equals(m_event);
+            return (((Event) obj).m_event).equals(m_event);
         }
         return false;
     }
     
     @Override
-    public int compareTo(Event<T> o) {
+    public int compareTo(Event o) {
         return 0;
     }
     
@@ -63,8 +62,9 @@ public class Event<T> implements Comparable<Event<T>> {
     /**
      * Returns the actual event object wrapped by this event (a Service Dependency, a Bundle for Bundle Dependency, etc...).
      */
-    public T getEvent() {
-        return m_event;
+    @SuppressWarnings("unchecked")
+    public <T> T getEvent() {
+        return (T) m_event;
     }
     
     /**

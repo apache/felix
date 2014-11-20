@@ -48,7 +48,7 @@ public interface ComponentDependencyDeclaration {
     public static final int STATE_OPTIONAL = 4;
     /** State constant for a required dependency that has not been started yet. */
     public static final int STATE_REQUIRED = 5;
-    /** Returns the name of this dependency (a generic name with optional info seprated by spaces)*/
+    /** Returns the name of this dependency (a generic name with optional info separated by spaces)*/
     public String getName();
     /** Returns the simple dependency name (service classname for example) */
     public String getSimpleName();

@@ -23,7 +23,7 @@ import org.apache.felix.dm.context.Event;
 /* in real life, this event might contain a service reference and service instance
  * or something similar
  */
-public class EventImpl extends Event<Object> { // the actual event object (a Service, a Bundle, a Configuration, etc ...)
+public class EventImpl extends Event { // the actual event object (a Service, a Bundle, a Configuration, etc ...)
 	private final int m_id;
 
 	public EventImpl() {
@@ -55,7 +55,6 @@ public class EventImpl extends Event<Object> { // the actual event object (a Ser
 		return false;
 	}
 	
-    @SuppressWarnings("rawtypes")
     @Override
     public int compareTo(Event o) {
         EventImpl a = this, b = (EventImpl) o;

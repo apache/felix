@@ -1272,10 +1272,16 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         }
     }
     
+    @Override
     public BundleContext getBundleContext() {
         return m_context;
     }
     
+    @Override
+    public Bundle getBundle() {
+        return m_bundle;
+    }
+
     public long getId() {
         return m_id;
     }
@@ -1336,10 +1342,9 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     }
     
     @Override
-    public Component setThreadPool(Executor threadPool) {
+    public void setThreadPool(Executor threadPool) {
         ensureNotActive();
         m_executor = new DispatchExecutor(threadPool, m_logger);
-        return this;
     }
     
     public Logger getLogger() {

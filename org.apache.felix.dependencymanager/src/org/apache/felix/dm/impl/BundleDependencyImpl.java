@@ -30,9 +30,9 @@ import org.apache.felix.dm.context.Event;
 import org.apache.felix.dm.tracker.BundleTracker;
 import org.apache.felix.dm.tracker.BundleTrackerCustomizer;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.Filter;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.log.LogService;
 
@@ -50,8 +50,7 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
     private Object m_propagateCallbackInstance;
     private String m_propagateCallbackMethod;
 
-    public BundleDependencyImpl(BundleContext context) {
-        super(true /* autoconfig */, context);
+    public BundleDependencyImpl() {
     }
     
     public BundleDependencyImpl(BundleDependencyImpl prototype) {
@@ -73,7 +72,7 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
     
     @Override
     public void start() {
-        m_tracker = new BundleTracker(m_context, m_stateMask, this);
+        m_tracker = new BundleTracker(m_component.getBundleContext(), m_stateMask, this);
         m_tracker.open();
         super.start();
     }
@@ -169,6 +168,7 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
         m_component.handleRemoved(this, new BundleEventImpl(bundle, event));
     }
     
+    @SuppressWarnings("rawtypes")
     @Override
     public void invokeAdd(Event e) {
         if (m_add != null) {
@@ -176,6 +176,7 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
         }
     }
     
+    @SuppressWarnings("rawtypes")
     @Override
     public void invokeChange(Event e) {
         if (m_change != null) {
@@ -183,6 +184,7 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
         }
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public void invokeRemove(Event e) {
         if (m_remove != null) {
@@ -190,6 +192,7 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
         }
     }
         
+    @SuppressWarnings("rawtypes")
     private void invoke(String method, Event e) {
         BundleEventImpl be = (BundleEventImpl) e;
         m_component.invokeCallbackMethod(getInstances(), method,
@@ -205,7 +208,7 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
     public BundleDependency setFilter(String filter) throws IllegalArgumentException {
         if (filter != null) {
             try {
-                m_filter = m_context.createFilter(filter);
+                m_filter = FrameworkUtil.createFilter(filter);
             } 
             catch (InvalidSyntaxException e) {
                 throw new IllegalArgumentException(e.getMessage());
@@ -224,7 +227,7 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
         return Bundle.class;
     }
         
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public Dictionary<String, Object> getProperties() {
         Event event = getService();
@@ -256,7 +259,7 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
         Object service = null;
         if (isAutoConfig()) {
             // TODO does it make sense to add support for custom bundle impls?
-//            service = getDefaultImplementation();
+            // service = getDefaultImplementation();
             if (service == null && nullObject) {
                 service = getNullObject();
             }

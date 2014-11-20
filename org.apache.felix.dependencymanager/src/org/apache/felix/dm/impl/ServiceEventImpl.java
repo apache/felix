@@ -25,7 +25,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
-public class ServiceEventImpl extends Event<Object> {
+public class ServiceEventImpl extends Event {
     /**
      * The service reference on which a service dependency depends on
      */
@@ -94,7 +94,6 @@ public class ServiceEventImpl extends Event<Object> {
 		return getReference().hashCode();
 	}
 
-    @SuppressWarnings("rawtypes")
     @Override
     public int compareTo(Event b) {
     	return getReference().compareTo(((ServiceEventImpl) b).getReference());

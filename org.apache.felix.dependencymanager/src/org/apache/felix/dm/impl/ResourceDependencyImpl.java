@@ -31,7 +31,6 @@ import org.apache.felix.dm.ResourceHandler;
 import org.apache.felix.dm.context.AbstractDependency;
 import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
 
@@ -43,8 +42,7 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
     private volatile String m_resourceFilter;
     private volatile URL m_trackedResource;
 
-    public ResourceDependencyImpl(BundleContext context) {
-        super(true /* autoconfig */, context);
+    public ResourceDependencyImpl() {
     }
     
     public ResourceDependencyImpl(ResourceDependencyImpl prototype) {
@@ -70,7 +68,7 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
                 props.put(ResourceHandler.FILTER, m_resourceFilter);
             }
         }
-        m_registration = m_context.registerService(ResourceHandler.class.getName(), this, props);
+        m_registration = m_component.getBundleContext().registerService(ResourceHandler.class.getName(), this, props);
         super.start();
     }
 

@@ -53,7 +53,6 @@ public class TemporalServiceDependencyImpl extends ServiceDependencyImpl impleme
      * @see DependencyActivatorBase#createTemporalServiceDependency()
      */
     public TemporalServiceDependencyImpl(BundleContext context, long timeout) {
-        super(context);
         super.setRequired(true);
         if (timeout < 0) {
             throw new IllegalArgumentException("Invalid timeout value: " + timeout);
@@ -95,7 +94,7 @@ public class TemporalServiceDependencyImpl extends ServiceDependencyImpl impleme
             }
         }
         if (makeAvailable) {
-            getComponentContext().handleAdded(this, new ServiceEventImpl(m_bundle, m_context, ref, m_serviceInstance));
+            getComponentContext().handleAdded(this, new ServiceEventImpl(m_component.getBundle(), m_component.getBundleContext(), ref, m_serviceInstance));
         } else {
             // This added will possibly unblock our invoke() method (if it's blocked in m_tracker.waitForService method).
         }
@@ -130,11 +129,13 @@ public class TemporalServiceDependencyImpl extends ServiceDependencyImpl impleme
                 }
             }
             if (makeUnavailable) {
-                m_component.handleRemoved(this, new ServiceEventImpl(m_bundle, m_context, ref, m_serviceInstance)); // will unget the service ref
+                // the event.close method will unget the service.
+                m_component.handleRemoved(this, 
+                    new ServiceEventImpl(m_component.getBundle(), m_component.getBundleContext(), ref, m_serviceInstance)); 
             }
         } else {
             // Unget what we got in addingService (see ServiceTracker 701.4.1)
-            m_context.ungetService(ref);
+            m_component.getBundleContext().ungetService(ref);
             // if there is no available services, the next call to invoke() method will block until another service
             // becomes available. Else the next call to invoke() will return that highest ranked available service.
         }

@@ -19,6 +19,7 @@
 package org.apache.felix.dm.impl;
 
 import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
 import java.util.Dictionary;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -42,13 +43,14 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
     private MetaTypeProviderImpl m_metaType;
 	private final AtomicBoolean m_updateInvokedCache = new AtomicBoolean();
 	private final Logger m_logger;
+	private final BundleContext m_context;
 
     public ConfigurationDependencyImpl() {
         this(null, null);
     }
 	
     public ConfigurationDependencyImpl(BundleContext context, Logger logger) {
-    	super(false /* not autoconfig */, context);
+        m_context = context;
     	m_logger = logger;
         setRequired(true);
         setCallback("updated");
@@ -56,11 +58,17 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
     
 	public ConfigurationDependencyImpl(ConfigurationDependencyImpl prototype) {
 	    super(prototype);
+	    m_context = prototype.m_context;
 	    m_pid = prototype.m_pid;
 	    m_logger = prototype.m_logger;
         m_metaType = prototype.m_metaType != null ? new MetaTypeProviderImpl(prototype.m_metaType, this, null) : null;
 	}
 	
+    @Override
+    public Class<?> getAutoConfigType() {
+        return null; // we don't support auto config mode.
+    }
+
 	@Override
 	public DependencyContext createCopy() {
 	    return new ConfigurationDependencyImpl(this);
@@ -83,14 +91,15 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 
     @Override
     public void start() {
-        if (m_context != null) { // If null, we are in a test environment
+        BundleContext context = m_component.getBundleContext();
+        if (context != null) { // If null, we are in a test environment
 	        Properties props = new Properties();
 	        props.put(Constants.SERVICE_PID, m_pid);
 	        ManagedService ms = this;
 	        if (m_metaType != null) {
 	            ms = m_metaType;
 	        }
-	        m_registration = m_context.registerService(ManagedService.class.getName(), ms, props);
+	        m_registration = context.registerService(ManagedService.class.getName(), ms, props);
         }
         super.start();
     }
@@ -117,7 +126,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
     }
     
     @Override
-    public String getName() {
+    public String getSimpleName() {
         return m_pid;
     }
     
@@ -288,7 +297,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
     
     private synchronized void createMetaTypeImpl() {
         if (m_metaType == null) {
-            m_metaType = new MetaTypeProviderImpl(getName(), m_context, m_logger, this, null);
+            m_metaType = new MetaTypeProviderImpl(m_pid, m_context, m_logger, this, null);
         }
     }
     

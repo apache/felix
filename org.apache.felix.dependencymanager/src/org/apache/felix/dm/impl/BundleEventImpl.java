@@ -24,7 +24,7 @@ import org.apache.felix.dm.context.Event;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
 
-public class BundleEventImpl extends Event<Bundle> {
+public class BundleEventImpl extends Event {
     final BundleEvent m_event;
     
     public BundleEventImpl(Bundle bundle, BundleEvent event) {
@@ -59,7 +59,6 @@ public class BundleEventImpl extends Event<Bundle> {
         return getBundle().hashCode();
     }
 
-    @SuppressWarnings("rawtypes")
     @Override
     public int compareTo(Event b) {
         return Long.compare(getBundle().getBundleId(), ((BundleEventImpl) b).getBundle().getBundleId());

@@ -202,7 +202,7 @@ public class DependencyManager {
      * @return the service dependency
      */
     public ServiceDependency createServiceDependency() {
-        return new ServiceDependencyImpl(m_context);
+        return new ServiceDependencyImpl();
     }
 
     /**
@@ -220,7 +220,7 @@ public class DependencyManager {
      * @return a new BundleDependency instance.
      */
     public BundleDependency createBundleDependency() {
-        return new BundleDependencyImpl(m_context);
+        return new BundleDependencyImpl();
     }
 
     /**
@@ -229,7 +229,7 @@ public class DependencyManager {
      * @return the resource dependency
      */
     public ResourceDependency createResourceDependency() {
-        return new ResourceDependencyImpl(m_context);
+        return new ResourceDependencyImpl();
     }
 
     /**

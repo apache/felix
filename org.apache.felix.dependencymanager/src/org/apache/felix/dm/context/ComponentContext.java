@@ -23,24 +23,140 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 
 import org.apache.felix.dm.Component;
-import org.osgi.service.log.LogService;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 
+/**
+ * This interface is the entry point to the Component implementation context.
+ * It is used by all DependencyManager Dependency implementations.
+ * 
+ * @see DependencyContext interface
+ */
 public interface ComponentContext extends Component {
+    /**
+     * Logs a message using the internal component logger
+     * @param level the LogService log level
+     * @param msg the msg to log
+     * @param err an exception, or null
+     */
     public void log(int level, String msg, Throwable err);
-    public Component setThreadPool(Executor threadPool);
+    
+    /**
+     * Returns the Component's bundle context
+     * @return the Component's bundle context
+     */
+    public BundleContext getBundleContext();
+    
+    /**
+     * Returns the Compoent's bundle.
+     * @return the Compoent's bundle.
+     */
+    public Bundle getBundle();
+    
+    /**
+     * Sets a threadpool that the component will use when handling external events
+     * @param threadPool a threadpool used to handle component events and invoke the component's lifecycle callbacks
+     */
+    public void setThreadPool(Executor threadPool);
+    
+    /**
+     * Starts the component. All initial dependencies previously added to the component will be started.
+     */
     public void start();
+    
+    /**
+     * Stops the component.
+     */
     public void stop();
+    
+    /**
+     * Is this component already started ?
+     * @return true if this component has been started
+     */
     public boolean isActive();
+    
+    /**
+     * Is this component available (all required dependencies are available) ?
+     * @return true if this component is available (all dependencies are available), or false
+     */
     public boolean isAvailable();
+    
+    /**
+     * Notifies the Component about a new available dependency service. 
+     * @param dc the dependency
+     * @param e the availabe dependency service event
+     */
     public void handleAdded(DependencyContext dc, Event e);
+ 
+    /**
+     * Notifies the Component about a dependency change event 
+     * @param dc the dependency
+     * @param e the dependency change event
+     */
     public void handleChanged(DependencyContext dc, Event e);
+ 
+    /**
+     * Notifies the Component that a dependency service instance becomes unavailable.
+     * @param dc the dependency
+     * @param e the dependency service that becomes unavailable
+     */
     public void handleRemoved(DependencyContext dc, Event e);
+ 
+    /**
+     * Notifies the Component that a dependency service instance has been swapped by another one.
+     * @param dc the dependency
+     * @param event the dependency service to replace with the new event
+     * @param newEvent the new dependency service that is replacing the old one
+     */
     public void handleSwapped(DependencyContext dc, Event event, Event newEvent);
-    public List<DependencyContext> getDependencies(); // for testing only...
+  
+    /**
+     * Returns the list of dependencies that has been registered on this component
+     * @return the list of dependencies that has been registered on this component
+     */
+    public List<DependencyContext> getDependencies();
+    
+    /**
+     * Invoke a component callback method with a given dependency service instance
+     * @param instances the component instances
+     * @param methodName the method name
+     * @param signatures the method signatures (types)
+     * @param parameters the method parameters
+     */
     public void invokeCallbackMethod(Object[] instances, String methodName, Class<?>[][] signatures, Object[][] parameters);
+    
+    /**
+     * Returns the component instances
+     * @return the component instances
+     */
     public Object[] getInstances();
+    
+    /**
+     * Returns the component instance field that is assignable to a given class type
+     * @param clazz the type of an object that has to be injected in the component instance field
+     * @return the name of the component instance field that can be assigned to an object having the same type as 
+     * the "clazz" parameter
+     */
     public String getAutoConfigInstance(Class<?> clazz);
+    
+    /**
+     * Indicates if an object of the given class can be injected in one field of the component
+     * @param clazz the class of an object that has to be injected in one of the component fields
+     * @return true if the component can be injected with an object having the specified "clazz" type.
+     */
     public boolean getAutoConfig(Class<?> clazz);
+    
+    /**
+     * Returns the highest ranked dependency service instance for a given dependency
+     * @param dc the dependency 
+     * @return the highest ranked dependency service instance for a given dependency
+     */
     public Event getDependencyEvent(DependencyContext dc);
+    
+    /**
+     * Returns all the available dependency services for a given dependency
+     * @param dc the dependency 
+     * @return all the available dependency services for a given dependency
+     */
     public Set<Event> getDependencyEvents(DependencyContext dc);
 }

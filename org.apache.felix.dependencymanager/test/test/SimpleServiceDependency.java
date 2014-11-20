@@ -12,7 +12,7 @@ public class SimpleServiceDependency extends AbstractDependency<Dependency> {
     }
 
     @Override
-    public String getName() {
+    public String getSimpleName() {
         return "SimpleServiceDependency";
     }
 
@@ -61,5 +61,10 @@ public class SimpleServiceDependency extends AbstractDependency<Dependency> {
     
     public void swap(final Event event, final Event newEvent) {
         m_component.handleSwapped(this, event, newEvent);
+    }
+
+    @Override
+    public Class<?> getAutoConfigType() {
+        return null; // we don't support auto config mode.
     }
 }

@@ -23,7 +23,7 @@ import java.util.Dictionary;
 
 import org.apache.felix.dm.context.Event;
 
-public class ResourceEventImpl extends Event<URL> {
+public class ResourceEventImpl extends Event {
     final Dictionary<String, Object> m_resourceProperties;
     
     @SuppressWarnings("unchecked")
@@ -71,7 +71,6 @@ public class ResourceEventImpl extends Event<URL> {
         return result;
     }
 
-    @SuppressWarnings("rawtypes")
     @Override
     public int compareTo(Event that) {
         if (this.equals(that)) {
