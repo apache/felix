@@ -285,7 +285,7 @@ public abstract class AbstractDependency<T extends Dependency> implements
     public abstract Class<?> getAutoConfigType();
 
     /**
-     * TODO move this method elsewhere, to DependencyBase for example.
+     * Get the highest ranked available dependency service, or null.
      */
     @Override
     public Event getService() {

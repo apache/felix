@@ -308,7 +308,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
     }
     
     @Override
-    public synchronized String toString() {
+    public String toString() {
         return "ServiceDependency[" + m_trackedServiceName + " " + m_trackedServiceFilterUnmodified + "]";
     }
 
@@ -434,9 +434,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
     private Object getNullObject() {
         if (m_nullObject == null) {
             Class<?> trackedServiceName;
-            synchronized (this) {
-                trackedServiceName = m_trackedServiceName;
-            }
+            trackedServiceName = m_trackedServiceName;
             try {
                 m_nullObject = Proxy.newProxyInstance(trackedServiceName.getClassLoader(),
                     new Class[] { trackedServiceName }, new DefaultNullObject());

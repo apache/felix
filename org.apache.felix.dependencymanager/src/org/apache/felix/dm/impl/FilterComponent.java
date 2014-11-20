@@ -197,7 +197,7 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     }
 
     @SuppressWarnings("unchecked")
-    public synchronized Component setInterface(String[] serviceInterfaces, Dictionary<String, ?> properties) {
+    public Component setInterface(String[] serviceInterfaces, Dictionary<String, ?> properties) {
         m_component.ensureNotActive();
         if (serviceInterfaces != null) {
             m_serviceInterfaces = new String[serviceInterfaces.length];

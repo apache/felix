@@ -1065,7 +1065,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	    return this;
 	}
 	
-    public synchronized Component setCallbacks(Object instance, String init, String start, String stop, String destroy) {
+    public Component setCallbacks(Object instance, String init, String start, String stop, String destroy) {
 	    ensureNotActive();
         m_callbackInstance = instance;
         m_callbackInit = init;
@@ -1260,7 +1260,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         }
     }
     
-    public synchronized String[] getServices() {
+    public String[] getServices() {
         if (m_serviceName instanceof String[]) {
             return (String[]) m_serviceName;
         } else if (m_serviceName instanceof String) {
