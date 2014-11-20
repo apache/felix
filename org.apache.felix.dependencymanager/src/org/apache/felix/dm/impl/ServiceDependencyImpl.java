@@ -37,7 +37,6 @@ import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
 import org.apache.felix.dm.tracker.ServiceTracker;
 import org.apache.felix.dm.tracker.ServiceTrackerCustomizer;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
@@ -267,7 +266,6 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
 	    m_component.handleRemoved(this, new ServiceEventImpl(m_component.getBundle(), m_component.getBundleContext(), reference, service));
 	}
 	
-	@SuppressWarnings("rawtypes")
     @Override
     public void invokeAdd(Event e) {
         if (m_add != null) {
@@ -275,7 +273,6 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
         }
     }
 	
-    @SuppressWarnings("rawtypes")
 	@Override
 	public void invokeChange(Event e) {
 	    if (m_change != null) {
@@ -283,7 +280,6 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
 	    }
 	}
 
-    @SuppressWarnings("rawtypes")
 	@Override
 	public void invokeRemove(Event e) {
 	    if (m_remove != null) {
@@ -291,7 +287,6 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
 	    }
 	}
 	
-    @SuppressWarnings("rawtypes")
     @Override   
     public void invokeSwap(Event event, Event newEvent) {
         if (m_swap != null) {
@@ -470,7 +465,6 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
         return m_defaultImplementationInstance;
     }
 
-    @SuppressWarnings("rawtypes")
     public void invoke(String method, Event e, Object[] instances) {
         ServiceEventImpl se = (ServiceEventImpl) e;
         ServicePropertiesMap propertiesMap = new ServicePropertiesMap(se.getReference());
