@@ -240,8 +240,8 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
 		} catch (IllegalStateException e) {
 		    // most likely our bundle is being stopped. Only log an exception if our component is enabled.
 		    if (m_component.isActive()) {
-                m_component.log(Logger.LOG_WARNING, "could not handle service dependency for component "
-                    + m_component.getComponentDeclaration().getClassName(), e);
+                m_component.getLogger().warn("could not handle service dependency for component %s", e,
+                    m_component.getComponentDeclaration().getClassName());
 		    }
 		    return null;		    
 		}
@@ -364,9 +364,9 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
                             new Class[][]{{ServiceReference.class, Object.class}, {ServiceReference.class}}, new Object[][]{
                                     {se.getReference(), se.getEvent()}, {se.getReference()}});
                 } catch (InvocationTargetException e) {
-                    m_component.log(LogService.LOG_WARNING, "Exception while invoking callback method", e.getCause());
+                    m_component.getLogger().warn("Exception while invoking callback method", e.getCause());
                 } catch (Throwable e) {
-                    m_component.log(LogService.LOG_WARNING, "Exception while trying to invoke callback method", e);
+                    m_component.getLogger().warn("Exception while trying to invoke callback method", e);
                 }
                 throw new IllegalStateException("Could not invoke callback");
             } else {
@@ -442,7 +442,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
                     new Class[] { trackedServiceName }, new DefaultNullObject());
             }
             catch (Throwable err) {
-                m_component.log(Logger.LOG_ERROR, "Could not create null object for " + trackedServiceName + ".", err);
+                m_component.getLogger().err("Could not create null object for %s.", err, trackedServiceName);
             }
         }
         return m_nullObject;
@@ -455,8 +455,8 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
                     m_defaultImplementationInstance = ((Class<?>) m_defaultImplementation).newInstance();
                 }
                 catch (Throwable e) {
-                    m_component.log(Logger.LOG_ERROR, "Could not create default implementation instance of class "
-                        + m_defaultImplementation + ".", e);
+                    m_component.getLogger().err("Could not create default implementation instance of class %s.", e,
+                        m_defaultImplementation);
                 }
             }
             else {
@@ -537,7 +537,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
                     {m_component, previousReference, previous, currentReference, current}}
 			);
     	} catch (Throwable e) {
-    	    m_component.log(Logger.LOG_ERROR, "Could not invoke swap callback", e);
+    	    m_component.getLogger().err("Could not invoke swap callback", e);
     	}
 	}
 

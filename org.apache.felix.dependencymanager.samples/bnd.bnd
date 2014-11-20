@@ -32,7 +32,9 @@ Bundle-Version: 4.0.0
 -runproperties:  \
 	org.apache.felix.dependencymanager.parallel='!org.apache.felix.dependencymanager.samples.tpool, *',\
 	org.apache.felix.dependencymanager.runtime.log=warn,\
-	org.apache.felix.log.maxSize=100000
+	org.apache.felix.dependencymanager.loglevel=2,\
+	org.apache.felix.log.maxSize=100000,\
+	org.apache.felix.log.storeDebug=true
 -plugin: org.apache.felix.dm.annotation.plugin.bnd.AnnotationPlugin;log=debug;\
 	path:=${workspace}/org.apache.felix.dependencymanager.annotation/generated/org.apache.felix.dependencymanager.annotation.jar
 -sub:  \

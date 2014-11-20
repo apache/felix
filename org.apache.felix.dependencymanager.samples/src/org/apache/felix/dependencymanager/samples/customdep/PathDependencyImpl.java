@@ -70,7 +70,7 @@ public class PathDependencyImpl extends AbstractDependency<PathDependencyImpl> i
     @Override   
     public void invokeCallback(EventType type, Event ...events) {
         switch (type) {
-        case ADDED:        
+        case ADDED:   
             if (m_add != null) {
                 invoke(m_add, events[0], getInstances());
             }
@@ -149,7 +149,7 @@ public class PathDependencyImpl extends AbstractDependency<PathDependencyImpl> i
 				watckKey.reset();
             }
         } catch (Throwable e) {
-            e.printStackTrace();
+            m_component.getLogger().err("path dependency exception", e);
         }
     }
 

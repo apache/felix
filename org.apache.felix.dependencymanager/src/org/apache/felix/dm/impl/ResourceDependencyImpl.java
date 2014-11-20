@@ -198,10 +198,10 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
                     return (Dictionary<String, Object>) InvocationUtil.invokeCallbackMethod(m_propagateCallbackInstance, m_propagateCallbackMethod, new Class[][] {{ URL.class }}, new Object[][] {{ resource }});
                 }
                 catch (InvocationTargetException e) {
-                    m_component.log(LogService.LOG_WARNING, "Exception while invoking callback method", e.getCause());
+                    m_component.getLogger().warn("Exception while invoking callback method", e.getCause());
                 }
                 catch (Throwable e) {
-                    m_component.log(LogService.LOG_WARNING, "Exception while trying to invoke callback method", e);
+                    m_component.getLogger().warn("Exception while trying to invoke callback method", e);
                 }
                 throw new IllegalStateException("Could not invoke callback");
             }
@@ -222,7 +222,9 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
                                 !key.equals(ResourceHandler.PORT)) {
                             props.put(key, resourceProperties.get(key).toString());
                         } else {
-                            m_component.log(LogService.LOG_WARNING, "Custom resource property is overlapping with the default resource property for key: " + key, null);
+                            m_component.getLogger().warn(
+                                "Custom resource property is overlapping with the default resource property for key: %s",
+                                key);
                         }
                     }
                 }

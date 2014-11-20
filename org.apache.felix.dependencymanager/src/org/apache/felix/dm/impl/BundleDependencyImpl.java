@@ -237,10 +237,10 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
                     return (Dictionary<String, Object>) InvocationUtil.invokeCallbackMethod(m_propagateCallbackInstance, m_propagateCallbackMethod, new Class[][] {{ Bundle.class }}, new Object[][] {{ bundle }});
                 }
                 catch (InvocationTargetException e) {
-                    m_component.log(LogService.LOG_WARNING, "Exception while invoking callback method", e.getCause());
+                    m_component.getLogger().warn("Exception while invoking callback method", e.getCause());
                 }
                 catch (Throwable e) {
-                    m_component.log(LogService.LOG_WARNING, "Exception while trying to invoke callback method", e);
+                    m_component.getLogger().warn("Exception while trying to invoke callback method", e);
                 }
                 throw new IllegalStateException("Could not invoke callback");
             }
@@ -272,7 +272,7 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
                 m_nullObject = Proxy.newProxyInstance(getClass().getClassLoader(), new Class[] { Bundle.class }, new DefaultNullObject()); 
             }
             catch (Throwable e) {
-                m_component.log(Logger.LOG_ERROR, "Could not create null object for Bundle.", e);
+                m_component.getLogger().err("Could not create null object for Bundle.", e);
             }
         }
         return (Bundle) m_nullObject;

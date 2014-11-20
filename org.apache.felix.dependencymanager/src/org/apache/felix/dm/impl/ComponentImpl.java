@@ -86,14 +86,11 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     // Holds all the services of a given dependency context. Caution: the last entry in the skiplist is the highest ranked service.
     private final Map<DependencyContext, ConcurrentSkipListSet<Event>> m_dependencyEvents = new HashMap<>();
     private final AtomicBoolean m_active = new AtomicBoolean(false);
-    
-    private boolean debug = false;
-    private String debugKey;
-    
+        
     public Component setDebug(String debugKey) {
-    	System.out.println("*" + debugKey + " set debug");
-    	this.debugKey = debugKey;
-    	this.debug = true;
+    	// Force debug level in our logger
+        m_logger.setEnabledLevel(LogService.LOG_DEBUG);
+        m_logger.setDebugKey(debugKey);
     	return this;
     }
 
@@ -311,9 +308,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         if (! m_isStarted) {
             return;
         }
-        if (debug) {
-              System.out.println("*" + debugKey + " T" + Thread.currentThread().getId() + " handleAdded " + e);
-        }
+        m_logger.debug("handleAdded %s", e);
         
         Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
         dependencyEvents.add(e);        
@@ -458,25 +453,18 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     }
     
 	private void handleChange() {
-		if (debug) {
-			System.out.println("*" + debugKey + " T" + Thread.currentThread().getId() + " handleChange");
-		}
+	    m_logger.debug("handleChanged");
 		try {
 			ComponentState oldState;
 			ComponentState newState;
 			do {
 				oldState = m_state;
 				newState = calculateNewState(oldState);
-				if (debug) {
-					System.out.println("*" + debugKey + " T" + Thread.currentThread().getId() + " " + oldState
-							+ " -> " + newState);
-				}
+				m_logger.debug("%s -> %s", oldState, newState);
 				m_state = newState;
 			} while (performTransition(oldState, newState));
 		} finally {
-			if (debug) {
-				System.out.println("*" + debugKey + " T" + Thread.currentThread().getId() + " end handling change.");
-			}
+		    m_logger.debug("end handling change.");
 		}
 	}
     
@@ -522,9 +510,6 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 			return true;
 		}
 		if (oldState == ComponentState.WAITING_FOR_REQUIRED && newState == ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED) {
-			if (debug) {
-				System.out.println("*" + debugKey + " T" + Thread.currentThread().getId() + " instantiate!");
-			}
 			instantiateComponent();
             invokeAutoConfigDependencies();
 			invokeAddRequiredDependencies();
@@ -625,9 +610,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     
     private void startDependencies(List<DependencyContext> dependencies) {
         // Start first optional dependencies first.
-    	if (debug) {
-    		System.out.println("*" + debugKey + " T" + Thread.currentThread().getId() + " startDependencies.");
-    	}
+        m_logger.debug("startDependencies.");
         List<DependencyContext> requiredDeps = new ArrayList<>();
         for (DependencyContext d : dependencies) {
             if (d.isRequired()) {
@@ -731,6 +714,8 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	}
 
 	private void instantiateComponent() {
+        m_logger.debug("instantiating component.");
+
 		// TODO add more complex factory instantiations of one or more components in a composition here
 	    if (m_componentInstance == null) {
             if (m_componentDefinition instanceof Class) {
@@ -1301,8 +1286,8 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     
     @Override
     public String toString() {
-    	if (debug) {
-    		return debugKey;
+    	if (m_logger.getDebugKey() != null) {
+    		return m_logger.getDebugKey();
     	}
     	return getClassName();
     }
@@ -1313,6 +1298,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         m_executor = new DispatchExecutor(threadPool, m_logger);
     }
     
+    @Override
     public Logger getLogger() {
         return m_logger;
     }
@@ -1325,9 +1311,4 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     private Executor getExecutor() {
         return m_executor;
     }
-
-    @Override
-    public void log(int level, String msg, Throwable err) {
-        m_logger.log(level, msg, err);        
-    }        
 }

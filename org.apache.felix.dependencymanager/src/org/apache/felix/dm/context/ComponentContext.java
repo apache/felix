@@ -34,12 +34,9 @@ import org.osgi.framework.BundleContext;
  */
 public interface ComponentContext extends Component {
     /**
-     * Logs a message using the internal component logger
-     * @param level the LogService log level
-     * @param msg the msg to log
-     * @param err an exception, or null
+     * Returns the logger which can be used by the DependencyManager Dependencies implementations.
      */
-    public void log(int level, String msg, Throwable err);
+    public Log getLogger();
     
     /**
      * Returns the Component's bundle context

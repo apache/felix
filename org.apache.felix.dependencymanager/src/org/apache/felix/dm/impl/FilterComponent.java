@@ -35,6 +35,7 @@ import org.apache.felix.dm.context.ComponentContext;
 import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
 import org.apache.felix.dm.context.EventType;
+import org.apache.felix.dm.context.Log;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -336,12 +337,12 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     }
 
     @Override
-    public void log(int level, String msg, Throwable err) {
-        m_component.log(level, msg, err);
+    public Bundle getBundle() {
+        return m_component.getBundle();
     }
 
     @Override
-    public Bundle getBundle() {
-        return m_component.getBundle();
+    public Log getLogger() {
+        return m_component.getLogger();
     }
 }

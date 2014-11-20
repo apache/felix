@@ -22,6 +22,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.context.Log;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.FrameworkUtil;
@@ -29,6 +30,7 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.log.LogService;
 
 /**
  * This class mimics the standard OSGi <tt>LogService</tt> interface. An
@@ -47,7 +49,7 @@ import org.osgi.framework.ServiceReference;
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class Logger implements ServiceListener {
+public class Logger implements ServiceListener, Log {
 	private static final String LOG_SINGLE_CONTEXT = "org.apache.felix.dependencymanager.singleContextLog";
     public static final int LOG_ERROR = 1;
     public static final int LOG_WARNING = 2;
@@ -58,8 +60,11 @@ public class Logger implements ServiceListener {
 
     private final static int LOGGER_OBJECT_IDX = 0;
     private final static int LOGGER_METHOD_IDX = 1;
+    private static final String ENABLED_LOG_LEVEL = "org.apache.felix.dependencymanager.loglevel";
     private ServiceReference m_logRef = null;
     private Object[] m_logger = null;
+    private int m_enabledLevel = LogService.LOG_WARNING;
+    private String m_debugKey;
 
     public Logger(BundleContext context) {
     	if ("true".equals(System.getProperty(LOG_SINGLE_CONTEXT))) {
@@ -68,10 +73,16 @@ public class Logger implements ServiceListener {
     		m_context = context;
     	}
 		if (m_context != null) {
+		    String enabledLevel = m_context.getProperty(ENABLED_LOG_LEVEL);
+		    if (enabledLevel != null) {
+		        try {
+		            m_enabledLevel = Integer.valueOf(enabledLevel);
+		        } catch (NumberFormatException e) {}
+		    }
 		    startListeningForLogService();
 		}
     }
-
+    
     public final void log(int level, String msg) {
         _log(null, level, msg, null);
     }
@@ -117,16 +128,26 @@ public class Logger implements ServiceListener {
     }
 
     private void _log(ServiceReference sr, int level, String msg, Throwable throwable) {
-        // Save our own copy just in case it changes. We could try to do
-        // more conservative locking here, but let's be optimistic.
-        Object[] logger = m_logger;
-        // Use the log service if available.
-        if (logger != null) {
-            _logReflectively(logger, sr, level, msg, throwable);
-        }
-        // Otherwise, default logging action.
-        else {
-            doLog(sr, level, msg, throwable);
+        if (level <= m_enabledLevel) {
+            StringBuilder sb = new StringBuilder("[");
+            if (m_debugKey != null) {
+                sb.append(m_debugKey).append(" - ");
+            }
+            sb.append(Thread.currentThread().getName());
+            sb.append("] ");
+            sb.append(msg);
+            
+            // Save our own copy just in case it changes. We could try to do
+            // more conservative locking here, but let's be optimistic.
+            Object[] logger = m_logger;
+            // Use the log service if available.
+            if (logger != null) {
+                _logReflectively(logger, sr, level, sb.toString(), throwable);
+            }
+            // Otherwise, default logging action.
+            else {
+                doLog(sr, level, sb.toString(), throwable);
+            }
         }
     }
 
@@ -233,5 +254,69 @@ public class Logger implements ServiceListener {
                 m_logger = null;
             }
         }
+    }
+
+    public void setEnabledLevel(int enabledLevel) {
+        m_enabledLevel = enabledLevel;
+    }
+    
+    public void setDebugKey(String debugKey) {
+        m_debugKey = debugKey;
+    }
+    
+    public String getDebugKey() {
+        return m_debugKey;
+    }
+
+    // --------------- org.apache.felix.dm.context.Log interface --------------------------------------------
+    
+    @Override
+    public void err(String format, Object... params) {
+        log(LogService.LOG_ERROR, String.format(format, params));        
+    }
+
+    @Override
+    public void err(String format, Throwable err, Object... params) {
+        log(LogService.LOG_ERROR, String.format(format, params), err);        
+    }
+
+    @Override
+    public void warn(String format, Object... params) {
+        log(LogService.LOG_WARNING, String.format(format, params));        
+    }
+
+    @Override
+    public void warn(String format, Throwable err, Object... params) {
+        log(LogService.LOG_WARNING, String.format(format, params), err);        
+    }
+
+    @Override
+    public boolean info() {
+        return m_enabledLevel >= LogService.LOG_INFO;
+    }
+
+    @Override
+    public void info(String format, Object... params) {
+        log(LogService.LOG_INFO, String.format(format, params));        
+    }
+
+    @Override
+    public void info(String format, Throwable err, Object... params) {
+        log(LogService.LOG_INFO, String.format(format, params), err);        
+    }
+
+    @Override
+    public boolean debug() {
+        return m_enabledLevel >= LogService.LOG_DEBUG;
+    }
+
+    @Override
+    public void debug(String format, Object... params) {
+        log(LogService.LOG_DEBUG, String.format(format, params));        
+    }
+
+    @Override
+    public void debug(String format, Throwable err, Object... params) {
+        log(LogService.LOG_DEBUG, String.format(format, params), err);        
     }
 }
