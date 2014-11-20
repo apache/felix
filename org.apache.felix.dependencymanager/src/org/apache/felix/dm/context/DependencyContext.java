@@ -38,7 +38,7 @@ public interface DependencyContext extends Dependency {
     public void setComponentContext(ComponentContext component);
     
     /**
-     * The Component implementation ask this dependency to invoke a component callback for the given dependency service event(s).
+     * The Component implementation asks this dependency to invoke a component dependency callback.
      * 
      * @param type the type of the callback to invoke (add/change/remove/swap ...)
      * @param events the dependency service event(s) that has previously been submitted to the component implementation using
