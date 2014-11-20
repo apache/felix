@@ -31,7 +31,7 @@ import org.apache.felix.dm.Dependency;
  */
 public interface DependencyContext extends Dependency {
     /**
-     * Store the Component implementation context in the Dependency Implementation. This object is the entry point to
+     * Stores the Component implementation context in the Dependency Implementation. This object is the entry point to
      * the Component implementation.
      * @param component the Component implementation context
      */
@@ -42,19 +42,20 @@ public interface DependencyContext extends Dependency {
      * 
      * @param type the type of the callback to invoke (add/change/remove/swap ...)
      * @param events the dependency service event(s) that has previously been submitted to the component implementation using
-     * the ComponentContext.handleEvent method.
+     * the ComponentContext.handleEvent method. The number of events depends on the event type: one event for ADDED/CHANGED/REMOVED,
+     * and two events for the SWAPPED event.
      * @see ComponentContext#handleEvent(DependencyContext, EventType, Event...)
      * @see EventType
      */
 	public void invokeCallback(EventType type, Event ... events);
 			
 	/**
-	 *  Invoked by the component when the dependency should start working. 
+	 *  Invoked by the component context when the dependency should start working. 
 	 **/
 	public void start();
 	
 	/** 
-	 * Invoked by the component when the dependency should stop working.
+	 * Invoked by the component context when the dependency should stop working.
 	 **/
 	public void stop();
 	
@@ -90,7 +91,7 @@ public interface DependencyContext extends Dependency {
 	public boolean needsInstance();
 	
 	/**
-	 * Return the type of the field which can be injected with the dependency service.
+	 * Returns the type of the field which can be injected with the dependency service.
 	 * @return the type of the field which can be injected with the dependency service, or null if the dependency does not 
 	 * support auto config mode.
 	 */
@@ -103,13 +104,13 @@ public interface DependencyContext extends Dependency {
     public Event getService();
     
     /**
-     * Copy all the dependency service instances to the given collection.
+     * Copies all the dependency service instances to the given collection.
      * @param coll the collection where the dependency service instances will be copied
      */
     public void copyToCollection(Collection<Object> coll);
     
     /**
-     * Copy all the dependency service instances to the given map (key = dependency service, value = dependency servie properties).
+     * Copies all the dependency service instances to the given map (key = dependency service, value = dependency servie properties).
      * @param map the map where the dependency service instances (with the corresponding service properties)
      */
     public void copyToMap(Map<Object, Dictionary<String, ?>> map);
