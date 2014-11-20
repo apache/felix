@@ -707,10 +707,10 @@ public class BundleWiringImpl implements BundleWiring
             try
             {
                 Constructor ctor = BundleRevisionImpl.getSecureAction()
-                    .getConstructor(clazz, new Class[] { BundleWiringImpl.class, ClassLoader.class });
+                    .getConstructor(clazz, new Class[] { BundleWiringImpl.class, ClassLoader.class, Logger.class });
                 m_classLoader = (BundleClassLoader)
                     BundleRevisionImpl.getSecureAction().invoke(ctor,
-                    new Object[] { this, determineParentClassLoader() });
+                    new Object[] { this, determineParentClassLoader(), m_logger });
             }
             catch (Exception ex)
             {
@@ -1891,9 +1891,9 @@ public class BundleWiringImpl implements BundleWiring
 
         private final BundleWiringImpl m_wiring;
 
-        public BundleClassLoaderJava5(BundleWiringImpl wiring, ClassLoader parent)
+        public BundleClassLoaderJava5(BundleWiringImpl wiring, ClassLoader parent, Logger logger)
         {
-            super(wiring, parent);
+            super(wiring, parent, logger);
             m_wiring = wiring;
         }
 
@@ -1944,8 +1944,9 @@ public class BundleWiringImpl implements BundleWiring
         private static final int LIBPATH_IDX = 1;
         private final Map<String, Thread> m_classLocks = new HashMap<String, Thread>();
         private final BundleWiringImpl m_wiring;
+        private final Logger m_logger;
 
-        public BundleClassLoader(BundleWiringImpl wiring, ClassLoader parent)
+        public BundleClassLoader(BundleWiringImpl wiring, ClassLoader parent, Logger logger)
         {
             super(parent);
             if (m_dexFileClassLoadClass != null)
@@ -1957,6 +1958,7 @@ public class BundleWiringImpl implements BundleWiring
                 m_jarContentToDexFile = null;
             }
             m_wiring = wiring;
+            m_logger = logger;
         }
 
         protected boolean isParallel()
