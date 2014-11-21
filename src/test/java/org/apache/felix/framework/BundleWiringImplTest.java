@@ -22,19 +22,29 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.felix.framework.BundleWiringImpl.BundleClassLoader;
 import org.apache.felix.framework.BundleWiringImpl.BundleClassLoaderJava5;
 import org.apache.felix.framework.cache.Content;
-
 import org.junit.Test;
-
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.hooks.weaving.WeavingException;
+import org.osgi.framework.hooks.weaving.WeavingHook;
+import org.osgi.framework.hooks.weaving.WovenClass;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
 
@@ -49,6 +59,7 @@ public class BundleWiringImplTest
 	
 	private BundleImpl mockBundle;
 	
+	@SuppressWarnings("rawtypes")
 	public void initializeSimpleBundleWiring() throws Exception
 	{
 		
@@ -87,6 +98,7 @@ public class BundleWiringImplTest
 		assertNotNull(bundleClassLoader);
 	}
 	
+	@SuppressWarnings("rawtypes")
 	@Test
 	public void testFindClassNonExistant() throws Exception
 	{
@@ -105,6 +117,7 @@ public class BundleWiringImplTest
 		assertNull("Nonexistant Class Should be null", foundClass);
 	}
 	
+	@SuppressWarnings("rawtypes")
 	@Test
 	public void testFindClassExistant() throws Exception
 	{
@@ -113,17 +126,7 @@ public class BundleWiringImplTest
 		Class testClass = TestClass.class;
 		String testClassName = testClass.getName();
 		String testClassAsPath = testClassName.replace('.', '/') + ".class";
-		InputStream testClassResourceStream = 
-				testClass.getClassLoader().getResourceAsStream(testClassAsPath);
-		
-		
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		int curByte;
-		while((curByte = testClassResourceStream.read()) != -1)
-		{
-			baos.write(curByte);
-		}
-		byte[] testClassBytes = baos.toByteArray();
+		byte[] testClassBytes = createTestClassBytes(testClass, testClassAsPath);
 		
 		List<Content> contentPath = new ArrayList<Content>();
 		contentPath.add(mockContent);
@@ -149,7 +152,114 @@ public class BundleWiringImplTest
 		assertNotNull("Class Should be found in this classloader", foundClass);
 	}
 	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void testFindClassWeave() throws Exception
+	{
+		Felix mockFramework = mock(Felix.class);
+		Content mockContent = mock(Content.class);
+		ServiceReference<WeavingHook> mockServiceReferenceWeavingHook = mock(ServiceReference.class);
+		
+		Set<ServiceReference<WeavingHook>> hooks = new HashSet<ServiceReference<WeavingHook>>();
+		hooks.add(mockServiceReferenceWeavingHook);
+		
+		Class testClass = TestClass.class;
+		String testClassName = testClass.getName();
+		String testClassAsPath = testClassName.replace('.', '/') + ".class";
+		byte[] testClassBytes = createTestClassBytes(testClass, testClassAsPath);
+		
+		List<Content> contentPath = new ArrayList<Content>();
+		contentPath.add(mockContent);
+		initializeSimpleBundleWiring();
+		
+		when(mockBundle.getFramework()).thenReturn(mockFramework);
+		when(mockFramework.getBootPackages()).thenReturn(new String[0]);
+		
+		when(mockRevisionImpl.getContentPath()).thenReturn(contentPath);
+		when(mockContent.getEntryAsBytes(testClassAsPath)).thenReturn(testClassBytes);
+		
+		when(mockFramework.getHooks(WeavingHook.class)).thenReturn(hooks);
+		when(mockFramework.getService(mockFramework, mockServiceReferenceWeavingHook, false)).thenReturn(new GoodDummyWovenHook());
+		
+		BundleClassLoader bundleClassLoader = createBundleClassLoader(BundleClassLoaderJava5.class, bundleWiring);
+		assertNotNull(bundleClassLoader);
+		Class foundClass = null;
+		try {
+			
+			foundClass = bundleClassLoader.findClass(TestClass.class.getName());
+		} 
+		catch (ClassNotFoundException e) 
+		{
+			fail("Class should not throw exception");
+		}
+		assertNotNull("Class Should be found in this classloader", foundClass);
+		assertEquals("Weaving should have added a field", 1, foundClass.getFields().length);
+	}
 	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void testFindClassBadWeave() throws Exception
+	{
+		Felix mockFramework = mock(Felix.class);
+		Content mockContent = mock(Content.class);
+		ServiceReference<WeavingHook> mockServiceReferenceWeavingHook = mock(ServiceReference.class);
+		
+		Set<ServiceReference<WeavingHook>> hooks = new HashSet<ServiceReference<WeavingHook>>();
+		hooks.add(mockServiceReferenceWeavingHook);
+		
+		Class testClass = TestClass.class;
+		String testClassName = testClass.getName();
+		String testClassAsPath = testClassName.replace('.', '/') + ".class";
+		byte[] testClassBytes = createTestClassBytes(testClass, testClassAsPath);
+		
+		List<Content> contentPath = new ArrayList<Content>();
+		contentPath.add(mockContent);
+		initializeSimpleBundleWiring();
+		
+		when(mockBundle.getFramework()).thenReturn(mockFramework);
+		when(mockFramework.getBootPackages()).thenReturn(new String[0]);
+		
+		when(mockRevisionImpl.getContentPath()).thenReturn(contentPath);
+		when(mockContent.getEntryAsBytes(testClassAsPath)).thenReturn(testClassBytes);
+		
+		when(mockFramework.getHooks(WeavingHook.class)).thenReturn(hooks);
+		when(mockFramework.getService(mockFramework, mockServiceReferenceWeavingHook, false)).thenReturn(new BadDummyWovenHook());
+		
+		BundleClassLoader bundleClassLoader = createBundleClassLoader(BundleClassLoaderJava5.class, bundleWiring);
+		assertNotNull(bundleClassLoader);
+		
+		try {
+			
+			bundleClassLoader.findClass(TestClass.class.getName());
+			fail("Class should throw exception");
+		} 
+		catch (Error e) 
+		{
+			//This is expected
+		}
+		
+	}
+
+	@SuppressWarnings("rawtypes")
+	private byte[] createTestClassBytes(Class testClass, String testClassAsPath)
+			throws IOException 
+	{
+		InputStream testClassResourceStream = 
+				testClass.getClassLoader().getResourceAsStream(testClassAsPath);
+		
+		
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		int curByte;
+		while((curByte = testClassResourceStream.read()) != -1)
+		{
+			baos.write(curByte);
+		}
+		byte[] testClassBytes = baos.toByteArray();
+		return testClassBytes;
+	}
+	
+	
+	@SuppressWarnings("rawtypes")
 	private BundleClassLoader createBundleClassLoader(Class bundleClassLoaderClass, BundleWiringImpl bundleWiring) throws Exception
 	{
 		Logger logger = new Logger();
@@ -161,7 +271,35 @@ public class BundleWiringImplTest
         return bundleClassLoader;
 	}
 	
-	class TestClass{
-		
+	
+	class TestClass
+	{
+		//An empty test class to weave.
+	}
+	
+	class GoodDummyWovenHook implements WeavingHook {
+		//Adds the awesomePublicField to a class
+		@SuppressWarnings("unchecked")
+		public void weave(WovenClass wovenClass) 
+		{
+			byte[] wovenClassBytes = wovenClass.getBytes();
+			ClassNode classNode = new ClassNode();
+			ClassReader reader = new ClassReader(wovenClassBytes);
+			reader.accept(classNode, 0);
+			classNode.fields.add(
+					new FieldNode(Opcodes.ACC_PUBLIC, "awesomePublicField", "Ljava/lang/String;", null, null));
+			ClassWriter writer = new ClassWriter(reader, Opcodes.ASM4);
+			classNode.accept(writer);
+			wovenClass.setBytes(writer.toByteArray());
+		}
+	}
+	
+	class BadDummyWovenHook implements WeavingHook 
+	{
+		//Just Blow up
+		public void weave(WovenClass wovenClass) 
+		{
+			throw new WeavingException("Bad Weaver!");
+		}
 	}
 }
