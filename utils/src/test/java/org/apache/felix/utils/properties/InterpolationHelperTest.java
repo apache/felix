@@ -17,10 +17,15 @@
 package org.apache.felix.utils.properties;
 
 import junit.framework.TestCase;
+import org.junit.Test;
 
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
 
 public class InterpolationHelperTest extends TestCase {
 
@@ -36,7 +41,7 @@ public class InterpolationHelperTest extends TestCase {
         System.setProperty("value1", "sub_value1");
         try
         {
-            Hashtable props = new Hashtable();
+            Hashtable<String, String> props = new Hashtable<String, String>();
             props.put("key0", "value0");
             props.put("key1", "${value1}");
             props.put("key2", "${value2}");
@@ -44,7 +49,7 @@ public class InterpolationHelperTest extends TestCase {
             for (Enumeration e = props.keys(); e.hasMoreElements();)
             {
                 String name = (String) e.nextElement();
-                props.put(name, InterpolationHelper.substVars((String) props.get(name), name, null, props, context));
+                props.put(name, InterpolationHelper.substVars(props.get(name), name, null, props, context));
             }
 
             assertEquals("value0", props.get("key0"));
@@ -68,7 +73,7 @@ public class InterpolationHelperTest extends TestCase {
             context.setProperty("value3", "context_value1");
             context.setProperty("value2", "context_value2");
 
-            Hashtable props = new Hashtable();
+            Hashtable<String, String> props = new Hashtable<String, String>();
             props.put("key0", "value0");
             props.put("key1", "${value1}");
             props.put("key2", "${value2}");
@@ -78,7 +83,7 @@ public class InterpolationHelperTest extends TestCase {
             {
                 String name = (String) e.nextElement();
                 props.put(name,
-                        InterpolationHelper.substVars((String) props.get(name), name, null, props, context));
+                        InterpolationHelper.substVars(props.get(name), name, null, props, context));
             }
 
             assertEquals("value0", props.get("key0"));
@@ -96,16 +101,16 @@ public class InterpolationHelperTest extends TestCase {
 
     public void testSubstitutionFailures()
     {
-        assertEquals("a}", InterpolationHelper.substVars("a}", "b", null, new Hashtable(), context));
-        assertEquals("${a", InterpolationHelper.substVars("${a", "b", null, new Hashtable(), context));
+        assertEquals("a}", InterpolationHelper.substVars("a}", "b", null, new Hashtable<String, String>(), context));
+        assertEquals("${a", InterpolationHelper.substVars("${a", "b", null, new Hashtable<String, String>(), context));
     }
 
     public void testEmptyVariable() {
-        assertEquals("", InterpolationHelper.substVars("${}", "b", null, new Hashtable(), context));
+        assertEquals("", InterpolationHelper.substVars("${}", "b", null, new Hashtable<String, String>(), context));
     }
 
     public void testInnerSubst() {
-        Hashtable props = new Hashtable();
+        Hashtable<String, String> props = new Hashtable<String, String>();
         props.put("a", "b");
         props.put("b", "c");
         assertEquals("c", InterpolationHelper.substVars("${${a}}", "z", null, props, context));
@@ -113,7 +118,7 @@ public class InterpolationHelperTest extends TestCase {
 
     public void testSubstLoop() {
         try {
-            InterpolationHelper.substVars("${a}", "a", null, new Hashtable(), context);
+            InterpolationHelper.substVars("${a}", "a", null, new Hashtable<String, String>(), context);
             fail("Should have thrown an exception");
         } catch (IllegalArgumentException e) {
             // expected
@@ -122,9 +127,9 @@ public class InterpolationHelperTest extends TestCase {
 
     public void testSubstitutionEscape()
     {
-        assertEquals("${a}", InterpolationHelper.substVars("$\\{a${#}\\}", "b", null, new Hashtable(), context));
-        assertEquals("${a}", InterpolationHelper.substVars("$\\{a\\}${#}", "b", null, new Hashtable(), context));
-        assertEquals("${a}", InterpolationHelper.substVars("$\\{a\\}", "b", null, new Hashtable(), context));
+        assertEquals("${a}", InterpolationHelper.substVars("$\\{a${#}\\}", "b", null, new Hashtable<String, String>(), context));
+        assertEquals("${a}", InterpolationHelper.substVars("$\\{a\\}${#}", "b", null, new Hashtable<String, String>(), context));
+        assertEquals("${a}", InterpolationHelper.substVars("$\\{a\\}", "b", null, new Hashtable<String, String>(), context));
     }
 
     public void testSubstitutionOrder()
@@ -157,4 +162,18 @@ public class InterpolationHelperTest extends TestCase {
         assertEquals("$\\{var}bc", map1.get("abc"));
     }
 
+    @Test
+    public void testPreserveUnresolved() {
+        Map<String, String> props = new HashMap<String, String>();
+        props.put("a", "${b}");
+        assertEquals("", InterpolationHelper.substVars("${b}", "a", null, props, null, true, false, true));
+        assertEquals("${b}", InterpolationHelper.substVars("${b}", "a", null, props, null, true, false, false));
+
+        props.put("b", "c");
+        assertEquals("c", InterpolationHelper.substVars("${b}", "a", null, props, null, true, false, true));
+        assertEquals("c", InterpolationHelper.substVars("${b}", "a", null, props, null, true, false, false));
+
+        props.put("c", "${d}${d}");
+        assertEquals("${d}${d}", InterpolationHelper.substVars("${d}${d}", "c", null, props, null, false, false, false));
+    }
 }

@@ -37,6 +37,7 @@ public class InterpolationHelper {
     private static final char   ESCAPE_CHAR = '\\';
     private static final String DELIM_START = "${";
     private static final String DELIM_STOP = "}";
+    private static final String MARKER = "$__";
 
 
     /**
@@ -75,11 +76,27 @@ public class InterpolationHelper {
      */
     public static void performSubstitution(Map<String,String> properties, SubstitutionCallback callback)
     {
+        performSubstitution(properties, callback, true, true, true);
+    }
+
+    /**
+     * Perform substitution on a property set
+     *
+     * @param properties the property set to perform substitution on
+     * @param callback the callback to obtain substitution values
+     * @param defaultsToEmptyString sets an empty string if a replacement value is not found, leaves intact otherwise
+     */
+    public static void performSubstitution(Map<String,String> properties,
+                                           SubstitutionCallback callback,
+                                           boolean substituteFromConfig,
+                                           boolean substituteFromSystemProperties,
+                                           boolean defaultsToEmptyString)
+    {
         Map<String, String> org = new HashMap<String, String>(properties);
         for (String name : properties.keySet())
         {
             String value = properties.get(name);
-            properties.put(name, substVars(value, name, null, org, callback));
+            properties.put(name, substVars(value, name, null, org, callback, substituteFromConfig, substituteFromSystemProperties, defaultsToEmptyString));
         }
     }
 
@@ -177,14 +194,54 @@ public class InterpolationHelper {
                                    SubstitutionCallback callback)
             throws IllegalArgumentException
     {
-        return unescape(doSubstVars(val, currentKey, cycleMap, configProps, callback));
+        return substVars(val, currentKey, cycleMap, configProps, callback, true, true, true);
     }
 
-    private static String doSubstVars(String val,
+    /**
+     * <p>
+     * This method performs property variable substitution on the
+     * specified value. If the specified value contains the syntax
+     * <tt>${&lt;prop-name&gt;}</tt>, where <tt>&lt;prop-name&gt;</tt>
+     * refers to either a configuration property or a system property,
+     * then the corresponding property value is substituted for the variable
+     * placeholder. Multiple variable placeholders may exist in the
+     * specified value as well as nested variable placeholders, which
+     * are substituted from inner most to outer most. Configuration
+     * properties override system properties.
+     * </p>
+     *
+     * @param val The string on which to perform property substitution.
+     * @param currentKey The key of the property being evaluated used to
+     *        detect cycles.
+     * @param cycleMap Map of variable references used to detect nested cycles.
+     * @param configProps Set of configuration properties.
+     * @param callback the callback to obtain substitution values
+     * @param defaultsToEmptyString sets an empty string if a replacement value is not found, leaves intact otherwise
+     * @return The value of the specified string after system property substitution.
+     * @throws IllegalArgumentException If there was a syntax error in the
+     *         property placeholder syntax or a recursive variable reference.
+     **/
+    public static String substVars(String val,
                                    String currentKey,
                                    Map<String,String> cycleMap,
                                    Map<String,String> configProps,
-                                   SubstitutionCallback callback)
+                                   SubstitutionCallback callback,
+                                   boolean substituteFromConfig,
+                                   boolean substituteFromSystemProperties,
+                                   boolean defaultsToEmptyString)
+            throws IllegalArgumentException
+    {
+        return unescape(doSubstVars(val, currentKey, cycleMap, configProps, callback, substituteFromConfig, substituteFromSystemProperties, defaultsToEmptyString));
+    }
+
+    private static String doSubstVars(String val,
+                                      String currentKey,
+                                      Map<String,String> cycleMap,
+                                      Map<String,String> configProps,
+                                      SubstitutionCallback callback,
+                                      boolean substituteFromConfig,
+                                      boolean substituteFromSystemProperties,
+                                      boolean defaultsToEmptyString)
             throws IllegalArgumentException
     {
         if (cycleMap == null)
@@ -201,28 +258,34 @@ public class InterpolationHelper {
         // Find the first ending '}' variable delimiter, which
         // will correspond to the first deepest nested variable
         // placeholder.
-        int stopDelim = val.indexOf(DELIM_STOP);
-        while (stopDelim > 0 && val.charAt(stopDelim - 1) == ESCAPE_CHAR)
+        int startDelim;
+        int stopDelim = -1;
+        do
         {
             stopDelim = val.indexOf(DELIM_STOP, stopDelim + 1);
-        }
+            while (stopDelim > 0 && val.charAt(stopDelim - 1) == ESCAPE_CHAR)
+            {
+                stopDelim = val.indexOf(DELIM_STOP, stopDelim + 1);
+            }
 
-        // Find the matching starting "${" variable delimiter
-        // by looping until we find a start delimiter that is
-        // greater than the stop delimiter we have found.
-        int startDelim = val.indexOf(DELIM_START);
-        while (stopDelim >= 0)
-        {
-            int idx = val.indexOf(DELIM_START, startDelim + DELIM_START.length());
-            if ((idx < 0) || (idx > stopDelim))
+            // Find the matching starting "${" variable delimiter
+            // by looping until we find a start delimiter that is
+            // greater than the stop delimiter we have found.
+            startDelim = val.indexOf(DELIM_START);
+            while (stopDelim >= 0)
             {
-                break;
-            }
-            else if (idx < stopDelim)
-            {
-                startDelim = idx;
+                int idx = val.indexOf(DELIM_START, startDelim + DELIM_START.length());
+                if ((idx < 0) || (idx > stopDelim))
+                {
+                    break;
+                }
+                else if (idx < stopDelim)
+                {
+                    startDelim = idx;
+                }
             }
         }
+        while (startDelim >= 0 && stopDelim >= 0 && stopDelim < startDelim + DELIM_START.length());
 
         // If we do not have a start or stop delimiter, then just
         // return the existing value.
@@ -243,9 +306,13 @@ public class InterpolationHelper {
             throw new IllegalArgumentException("recursive variable reference: " + variable);
         }
 
+        String substValue = null;
         // Get the value of the deepest nested variable placeholder.
         // Try to configuration properties first.
-        String substValue = (String) ((configProps != null) ? configProps.get(variable) : null);
+        if (substituteFromConfig && configProps != null)
+        {
+            substValue = configProps.get(variable);
+        }
         if (substValue == null)
         {
             if (variable.length() <= 0)
@@ -258,9 +325,22 @@ public class InterpolationHelper {
                 {
                     substValue = callback.getValue(variable);
                 }
+                if (substValue == null && substituteFromSystemProperties)
+                {
+                    substValue = System.getProperty(variable);
+                }
                 if (substValue == null)
                 {
-                    substValue = System.getProperty(variable, "");
+                    if (defaultsToEmptyString)
+                    {
+                        substValue = "";
+                    }
+                    else
+                    {
+                        // alters the original token to avoid infinite recursion
+                        // altered tokens are reverted in substVarsPreserveUnresolved()
+                        substValue = MARKER + "{" + variable + "}";
+                    }
                 }
             }
         }
@@ -277,7 +357,7 @@ public class InterpolationHelper {
 
         // Now perform substitution again, since there could still
         // be substitutions to make.
-        val = doSubstVars(val, currentKey, cycleMap, configProps, callback);
+        val = doSubstVars(val, currentKey, cycleMap, configProps, callback, substituteFromConfig, substituteFromSystemProperties, defaultsToEmptyString);
 
         // Return the value.
         return val;
@@ -285,6 +365,7 @@ public class InterpolationHelper {
 
     private static String unescape(String val)
     {
+        val = val.replaceAll("\\" + MARKER, "\\$");
         int escape = val.indexOf(ESCAPE_CHAR);
         while (escape >= 0 && escape < val.length() - 1)
         {
