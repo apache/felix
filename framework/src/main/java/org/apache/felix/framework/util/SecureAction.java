@@ -1448,6 +1448,30 @@ public class SecureAction
             rh.end();
         }
     }
+    
+    public void invokeWovenClassListener(
+            org.osgi.framework.hooks.weaving.WovenClassListener wcl,
+            org.osgi.framework.hooks.weaving.WovenClass wc)
+            throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.INVOKE_WOVEN_CLASS_LISTENER, wcl, wc);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            wcl.modified(wc);
+        }
+    }
 
     private static class Actions implements PrivilegedExceptionAction
     {
@@ -1507,6 +1531,7 @@ public class SecureAction
         public static final int INVOKE_BUNDLE_COLLISION_HOOK = 53;
         public static final int OPEN_JARFILE_ACTION = 54;
         public static final int DELETE_FILEONEXIT_ACTION = 55;
+        public static final int INVOKE_WOVEN_CLASS_LISTENER = 56;
 
         private int m_action = -1;
         private Object m_arg1 = null;
