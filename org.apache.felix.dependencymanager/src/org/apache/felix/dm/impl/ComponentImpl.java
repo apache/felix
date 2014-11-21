@@ -76,7 +76,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     private Object m_componentDefinition;
 	private Object m_componentInstance;
     private volatile Object m_serviceName;
-    private volatile Dictionary<String, ?> m_serviceProperties;
+    private volatile Dictionary<Object, Object> m_serviceProperties;
     private volatile ServiceRegistration m_registration;
     private final Map<Class<?>, Boolean> m_autoConfig = new ConcurrentHashMap<>();
     private final Map<Class<?>, String> m_autoConfigInstance = new ConcurrentHashMap<>();
@@ -231,19 +231,21 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	    }
 	}
 
-	@Override
-	public Component setInterface(String serviceName, Dictionary<String, ?> properties) {
+	@SuppressWarnings("unchecked")
+    @Override
+	public Component setInterface(String serviceName, Dictionary<?, ?> properties) {
 		ensureNotActive();
 	    m_serviceName = serviceName;
-	    m_serviceProperties = properties;
+	    m_serviceProperties = (Dictionary<Object, Object>) properties;
 	    return this;
 	}
 
-	@Override
-	public Component setInterface(String[] serviceName, Dictionary<String, ?> properties) {
+	@SuppressWarnings("unchecked")
+    @Override
+	public Component setInterface(String[] serviceName, Dictionary<?, ?> properties) {
 	    ensureNotActive();
 	    m_serviceName = serviceName;
-	    m_serviceProperties = properties;
+	    m_serviceProperties = (Dictionary<Object, Object>) properties;
 	    return this;
 	}
 	
@@ -682,12 +684,12 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         }
     }
     
-    private Dictionary<String, Object> calculateServiceProperties() {
-		Dictionary<String, Object> properties = new Hashtable<>();
+    private Dictionary<Object, Object> calculateServiceProperties() {
+		Dictionary<Object, Object> properties = new Hashtable<>();
 		for (int i = 0; i < m_dependencies.size(); i++) {
 			DependencyContext d = (DependencyContext) m_dependencies.get(i);
 			if (d.isPropagated() && d.isAvailable()) {
-				Dictionary<String, Object> dict = d.getProperties();
+				Dictionary<Object, Object> dict = d.getProperties();
 				addTo(properties, dict);
 			}
 		}
@@ -700,14 +702,14 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		return properties;
 	}
 
-	private void addTo(Dictionary<String, Object> properties, Dictionary<String, ?> additional) {
+	private void addTo(Dictionary<Object, Object> properties, Dictionary<Object, Object> additional) {
 		if (properties == null) {
 			throw new IllegalArgumentException("Dictionary to add to cannot be null.");
 		}
 		if (additional != null) {
-			Enumeration<String> e = additional.keys();
+			Enumeration<Object> e = additional.keys();
 			while (e.hasMoreElements()) {
-				String key = e.nextElement();
+				Object key = e.nextElement();
 				properties.put(key, additional.get(key));
 			}
 		}
@@ -1029,24 +1031,26 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         return m_registration;
 	}
 
-	@Override
-	public Dictionary<String, Object> getServiceProperties() {
+	@SuppressWarnings("unchecked")
+    @Override
+	public <K,V> Dictionary<K, V> getServiceProperties() {
 		if (m_serviceProperties != null) {
 			// Applied patch from FELIX-4304
-			Hashtable<String, Object> serviceProperties = new Hashtable<>();
+			Hashtable<Object, Object> serviceProperties = new Hashtable<>();
 			addTo(serviceProperties, m_serviceProperties);
-			return serviceProperties;
+			return (Dictionary<K, V>) serviceProperties;
 		}
 		return null;
 	}
 
 	@Override
-	public Component setServiceProperties(final Dictionary<String, ?> serviceProperties) {
+    @SuppressWarnings("unchecked")
+	public Component setServiceProperties(final Dictionary<?, ?> serviceProperties) {
 	    getExecutor().execute(new Runnable() {
-			@Override
+            @Override
 			public void run() {
-			    Dictionary<String, Object> properties = null;
-		        m_serviceProperties = serviceProperties;
+			    Dictionary<Object, Object> properties = null;
+		        m_serviceProperties = (Dictionary<Object, Object>) serviceProperties;
 		        if ((m_registration != null) && (m_serviceName != null)) {
 		            properties = calculateServiceProperties();
 			        m_registration.setProperties(properties);
@@ -1192,7 +1196,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     }
     
     private void appendProperties(StringBuffer result) {
-        Dictionary<String, Object> properties = calculateServiceProperties();
+        Dictionary<Object, Object> properties = calculateServiceProperties();
         if (properties != null) {
             result.append("(");
             Enumeration<?> enumeration = properties.keys();

@@ -24,17 +24,18 @@ import java.util.Dictionary;
 import org.apache.felix.dm.context.Event;
 
 public class ResourceEventImpl extends Event {
-    final Dictionary<String, Object> m_resourceProperties;
+    final Dictionary<Object, Object> m_resourceProperties;
     
     @SuppressWarnings("unchecked")
-    public ResourceEventImpl(URL resource, Dictionary<String, ?> resourceProperties) {
+    public ResourceEventImpl(URL resource, Dictionary<?, ?> resourceProperties) {
         super(resource);
-        m_resourceProperties = (Dictionary<String, Object>) resourceProperties;
+        m_resourceProperties = (Dictionary<Object, Object>) resourceProperties;
     }
     
+    @SuppressWarnings("unchecked")
     @Override
-    public Dictionary<String, Object> getProperties() {
-        return m_resourceProperties == null ? EMPTY_PROPERTIES : m_resourceProperties;
+    public <K,V> Dictionary<K,V> getProperties() {
+        return (Dictionary<K, V>) ((Dictionary<K,V>) m_resourceProperties == null ? EMPTY_PROPERTIES : m_resourceProperties);
     }
 
     public URL getResource() {

@@ -163,7 +163,7 @@ public class AspectServiceImpl extends FilterComponent {
          * Modify some specific aspect service properties.
          */
 		@Override
-        public void setServiceProperties(Dictionary<String,?> props) {
+        public void setServiceProperties(Dictionary<?,?> props) {
 		    for (Map.Entry<Object, Component> e : super.getServices().entrySet()) {
 		        ServiceReference originalServiceRef = (ServiceReference) e.getKey();
                 Component c = e.getValue();

@@ -34,7 +34,7 @@ public class ResourceUtil {
 	 * @param url the URL
 	 * @return a set of properties
 	 */
-    public static Dictionary<String, Object> createProperties(URL url) {
+    public static Dictionary<?, ?> createProperties(URL url) {
         Hashtable<String, Object> props = new Hashtable<>();
         props.put(ResourceHandler.PROTOCOL, url.getProtocol());
         props.put(ResourceHandler.HOST, url.getHost());

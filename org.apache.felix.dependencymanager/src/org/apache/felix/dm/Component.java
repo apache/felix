@@ -105,7 +105,7 @@ public interface Component {
      * @param properties the properties for this service
      * @return this component
      */
-	public Component setInterface(String serviceName, Dictionary<String, ?> properties);
+	public Component setInterface(String serviceName, Dictionary<?,?> properties);
 
     /**
      * Sets the public interfaces under which this component should be registered
@@ -115,7 +115,7 @@ public interface Component {
      * @param properties the properties for these services
      * @return this component
      */
-	public Component setInterface(String[] serviceNames, Dictionary<String, ?> properties);
+	public Component setInterface(String[] serviceNames, Dictionary<?, ?> properties);
 
     /**
      * Configures auto configuration of injected classes in the component instance.
@@ -175,7 +175,7 @@ public interface Component {
      * 
      * @return the properties or <code>null</code> if there are none
      */
-	public Dictionary<String, Object> getServiceProperties();
+	public <K,V> Dictionary<K,V> getServiceProperties();
 
     /**
      * Sets the service properties associated with the component. If the service
@@ -183,7 +183,7 @@ public interface Component {
      * 
      * @param serviceProperties the properties
      */
-	public Component setServiceProperties(Dictionary<String, ?> serviceProperties);
+	public Component setServiceProperties(Dictionary<?, ?> serviceProperties);
 
     /**
      * Sets the names of the methods used as callbacks. These methods, when found, are

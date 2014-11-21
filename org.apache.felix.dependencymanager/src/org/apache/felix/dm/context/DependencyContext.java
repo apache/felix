@@ -113,7 +113,7 @@ public interface DependencyContext extends Dependency {
      * Copies all the dependency service instances to the given map (key = dependency service, value = dependency servie properties).
      * @param map the map where the dependency service instances (with the corresponding service properties)
      */
-    public void copyToMap(Map<Object, Dictionary<String, ?>> map);
+    public void copyToMap(Map<Object, Dictionary<?, ?>> map);
     
     /**
      * Creates a clone of this dependency.

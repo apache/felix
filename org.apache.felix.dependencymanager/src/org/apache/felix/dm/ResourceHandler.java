@@ -49,7 +49,7 @@ public interface ResourceHandler {
     /**
      * Invoked whenever a new resource is added.
      */
-    public void added(URL resource, Dictionary<String, ?> resourceProperties);
+    public void added(URL resource, Dictionary<?, ?> resourceProperties);
     
     /**
      * @deprecated Please use {@link #changed(URL, Dictionary)} instead. When both are specified,
@@ -60,7 +60,7 @@ public interface ResourceHandler {
     /**
      * Invoked whenever an existing resource changes.
      */
-    public void changed(URL resource, Dictionary<String, ?> resourceProperties);
+    public void changed(URL resource, Dictionary<?, ?> resourceProperties);
     
     /**
      * @deprecated Please use {@link #removed(URL, Dictionary)} instead. When both are specified,
@@ -71,6 +71,6 @@ public interface ResourceHandler {
     /**
      * Invoked whenever an existing resource is removed.
      */
-    public void removed(URL resource, Dictionary<String, ?> resourceProperties);
+    public void removed(URL resource, Dictionary<?, ?> resourceProperties);
 }
 

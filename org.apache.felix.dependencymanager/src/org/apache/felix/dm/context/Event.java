@@ -26,7 +26,7 @@ import java.util.Hashtable;
  * the 'changed' callback of a dependency.
  */
 public class Event implements Comparable<Event> {
-    protected final static Dictionary<String, Object> EMPTY_PROPERTIES = new Hashtable<>();
+    protected final static Dictionary<Object, Object> EMPTY_PROPERTIES = new Hashtable<>();
     private final Object m_event;    // the actual event object (a Service, a Bundle, a Configuration, etc ...)
     
     public Event(Object event) {
@@ -44,8 +44,9 @@ public class Event implements Comparable<Event> {
     /**
      * Returns the properties of the actual event object wrapped by this event (Service Dependency properties, ...).
      */
-    public Dictionary<String, Object> getProperties() {
-        return EMPTY_PROPERTIES;
+    @SuppressWarnings("unchecked")
+    public <K,V> Dictionary<K,V> getProperties() {
+        return (Dictionary<K,V>) EMPTY_PROPERTIES;
     }
 
     @Override

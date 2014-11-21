@@ -47,7 +47,7 @@ public interface ComponentDeclaration {
     /** Returns the service optionally provided by this component, or null */
     public String[] getServices();
     /** Returns the service properties, or null */
-    public Dictionary<String, Object> getServiceProperties();     
+    public <K,V> Dictionary<K, V> getServiceProperties();     
     /** Returns the state of this component. */
     public int getState();
     /** Returns the instance id of this component. */

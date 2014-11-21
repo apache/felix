@@ -192,12 +192,12 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
         return this;
     }
 
-    public Component setInterface(String serviceName, Dictionary<String, ?> properties) {
+    public Component setInterface(String serviceName, Dictionary<?, ?> properties) {
         return setInterface(new String[] { serviceName }, properties);
     }
 
     @SuppressWarnings("unchecked")
-    public Component setInterface(String[] serviceInterfaces, Dictionary<String, ?> properties) {
+    public Component setInterface(String[] serviceInterfaces, Dictionary<?, ?> properties) {
         m_component.ensureNotActive();
         if (serviceInterfaces != null) {
             m_serviceInterfaces = new String[serviceInterfaces.length];
@@ -208,7 +208,7 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     }
 
     @SuppressWarnings("unchecked")
-    public Component setServiceProperties(Dictionary<String, ?> serviceProperties) {
+    public Component setServiceProperties(Dictionary<?, ?> serviceProperties) {
         m_serviceProperties = (Dictionary<String, Object>) serviceProperties;
         // Set the properties to all already instantiated services.
         if (serviceProperties != null) {

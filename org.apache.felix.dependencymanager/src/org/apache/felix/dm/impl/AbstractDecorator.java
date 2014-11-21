@@ -62,7 +62,7 @@ public abstract class AbstractDecorator  {
     /**
      * Set some service properties to all already instantiated services.
      */
-    public void setServiceProperties(Dictionary<String,?> serviceProperties) {
+    public void setServiceProperties(Dictionary<?,?> serviceProperties) {
         for (Component component : m_services.values()) {
             component.setServiceProperties(serviceProperties);
         }

@@ -33,7 +33,6 @@ import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
 import org.apache.felix.dm.context.EventType;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.log.LogService;
 
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
@@ -86,7 +85,7 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
         }
     }
     
-    public void added(URL resource, Dictionary<String, ?> resourceProperties) {
+    public void added(URL resource, Dictionary<?, ?> resourceProperties) {
         if (m_trackedResource == null || m_trackedResource.equals(resource)) {
             getComponentContext().handleEvent(this, EventType.ADDED, new ResourceEventImpl(resource, resourceProperties));
         }
@@ -98,7 +97,7 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
         }
     }
     
-    public void changed(URL resource, Dictionary<String, ?> resourceProperties) {
+    public void changed(URL resource, Dictionary<?, ?> resourceProperties) {
         if (m_trackedResource == null || m_trackedResource.equals(resource)) {
             m_component.handleEvent(this, EventType.CHANGED, new ResourceEventImpl(resource, resourceProperties));
         }
@@ -110,7 +109,7 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
         }
     }
     
-    public void removed(URL resource, Dictionary<String, ?> resourceProperties) {
+    public void removed(URL resource, Dictionary<?, ?> resourceProperties) {
         if (m_trackedResource == null || m_trackedResource.equals(resource)) {
             m_component.handleEvent(this, EventType.REMOVED, new ResourceEventImpl(resource, resourceProperties));
         }

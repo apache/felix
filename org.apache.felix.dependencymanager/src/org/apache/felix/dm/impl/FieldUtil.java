@@ -3,7 +3,6 @@ package org.apache.felix.dm.impl;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
-import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Map;
@@ -116,7 +115,7 @@ public class FieldUtil {
             public void injectMapField(Field f, Object target) {
                 f.setAccessible(true);
                 try {
-                    Map<Object, Dictionary<String, ?>> map = (Map) f.get(target);
+                    Map<Object, Dictionary<?, ?>> map = (Map) f.get(target);
                     if (map == null) {
                         map = new ConcurrentHashMap<>();
                         f.set(target, map);
@@ -183,7 +182,7 @@ public class FieldUtil {
                 f.setAccessible(true);
 
                 try {
-                    Map<Object, Dictionary<String, ?>> map = (Map) f.get(target);
+                    Map<Object, Dictionary<?, ?>> map = (Map) f.get(target);
                     if (add) {
                         map.put(event.getEvent(), event.getProperties());
                     } else {

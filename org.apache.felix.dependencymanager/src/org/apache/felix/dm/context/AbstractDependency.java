@@ -123,7 +123,7 @@ public abstract class AbstractDependency<T extends Dependency> implements
     /**
      * Default empty dependency properties.
      */
-    protected final static Dictionary<String, Object> EMPTY_PROPERTIES = new Hashtable<>(0);
+    protected final static Dictionary<Object, Object> EMPTY_PROPERTIES = new Hashtable<>(0);
 
     /**
      * Creates a new Dependency. By default, the dependency is optional and autoconfig.
@@ -197,9 +197,10 @@ public abstract class AbstractDependency<T extends Dependency> implements
     /**
      * Returns the dependency service properties (empty by default).
      */
+    @SuppressWarnings("unchecked")
     @Override
-    public Dictionary<String, Object> getProperties() {
-        return EMPTY_PROPERTIES;
+    public <K,V> Dictionary<K, V> getProperties() {
+        return (Dictionary<K, V>) EMPTY_PROPERTIES;
     }
 
     // -------------- DependencyContext interface -----------------------------------------------
@@ -321,7 +322,7 @@ public abstract class AbstractDependency<T extends Dependency> implements
      * Copy all dependency service instances to the given map (key = dependency service, value = dependency service properties.
      */
     @Override
-    public void copyToMap(Map<Object, Dictionary<String, ?>> map) {
+    public void copyToMap(Map<Object, Dictionary<?, ?>> map) {
         Set<Event> events = m_component.getDependencyEvents(this);
         if (events.size() > 0) {
             for (Event e : events) {
