@@ -26,16 +26,17 @@ import org.osgi.util.promise.Promise;
 
 /**
  * The {@code ServiceComponentRuntime} service represents the Declarative
- * Services main controller also known as the Service Component Runtime or SCR
- * for short. It provides access to the components managed by the Service
- * Component Runtime.
+ * Services actor, known as Service Component Runtime (SCR), that manages the
+ * service components and their life cycle. The {@code ServiceComponentRuntime}
+ * service allows introspection of the components managed by Service Component
+ * Runtime.
  * 
  * <p>
  * This service differentiates between a {@link ComponentDescriptionDTO} and a
  * {@link ComponentConfigurationDTO}. A {@link ComponentDescriptionDTO} is a
  * representation of a declared component description. A
- * {@link ComponentConfigurationDTO} is a representation of an actual instance of a
- * declared component description parameterized by component properties.
+ * {@link ComponentConfigurationDTO} is a representation of an actual instance
+ * of a declared component description parameterized by component properties.
  * <p>
  * 
  * Access to this service requires the
@@ -46,7 +47,7 @@ import org.osgi.util.promise.Promise;
  * 
  * @ThreadSafe
  * @since 1.3
- * @author $Id: 2b9c69ef323cb6b4be2601f893bea8505c984980 $
+ * @author $Id: 59760dcd57f2162574cfd0c7f3a393825566e78f $
  */
 @ProviderType
 public interface ServiceComponentRuntime {
