@@ -26,12 +26,12 @@ import org.osgi.service.log.LogService;
 
 /**
  * Allows you to enqueue tasks from multiple threads and then execute
- * them on one thread sequentially. It assumes more than one thread will
+ * them on one thread sequentially. It assumes no more than one thread will
  * try to execute the tasks and it will make an effort to pick the first
  * task that comes along whilst making sure subsequent tasks return
  * without waiting. <p>
  * 
- * This class is lock free and ensures "safe object publication" between scheduling threads and
+ * This class is <b>lock free</b> by design and ensures <b>"safe object publication"</b> between scheduling threads and
  * actual executing thread: if one thread T1 schedules a task, but another thread T2 actually 
  * executes it, then all the objects from the T1 thread will be "safely published" to the executing T2 thread.
  * Safe publication is ensured  because we are using a ConcurrentLinkedQueue.

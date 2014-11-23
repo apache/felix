@@ -1,6 +1,9 @@
 package org.apache.felix.dm.impl;
 
+import java.lang.ref.WeakReference;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -8,20 +11,35 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.osgi.service.log.LogService;
 
 /**   
- * A parallel DispatchExecutor, similar to the SerialExecutor, except that several DispatchExecutor can be executed 
- * in parallel inside a shared thread pool. When one thread schedules tasks in DispatchQueue Q1, Q2, then Q1/Q2 
- * queues are dispatched and executed concurrently in a shared thread pool. However, each queue will execute tasks 
- * scheduled in it serially, in FIFO order.
+ * A DispatchExecutor is a queue that can execute FIFO tasks in a shared threadpool configured for the dispatcher.
+ * Each task scheduled in a given DispatchExecutor will be executed serially in FIFO order; and multiple 
+ * DispatchExecutor instances may each run concurrently with respect to each other.
+ * <p>
+ * 
+ * This class also supports synchronous scheduling, like the @link {@link SerialExecutor} class; and in this case,
+ * only one caller threads will execute the tasks scheduled in the DispatchQueue and in the case the internal 
+ * threadpool won't be used).
+ * 
+ * <p> 
+ * 
+ * This class is <b>lock free</b> by design and ensures <b>"safe object publication"</b> between scheduling threads and
+ * actual executing thread: if one thread T1 schedules a task, but another thread T2 actually 
+ * executes it, then all the objects from the T1 thread will be "safely published" to the executing T2 thread.
+ * Safe publication is ensured  because we are using a ConcurrentLinkedQueue.
+ * (see [1], chapter 3.5.3 (Safe publication idioms). 
+ * 
+ * [1] Java Concurrency In Practice, Addison Wesley
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class DispatchExecutor implements Executor, Runnable {
 	/**
-	 * The threadpool used for the execution of this queue. When the queue run method is executed, all
-	 * scheduled tasks are executed in FIFO order, but in the threadpool.
+	 * The threadpool used for the execution of the tasks that are scheduled in this queue.
 	 */
 	private final Executor m_threadPool;
 
 	/** 
-	 * List of tasks scheduled in our queue. 
+	 * List of tasks scheduled in our queue.
 	 */
 	protected final ConcurrentLinkedQueue<Runnable> m_tasks = new ConcurrentLinkedQueue<>();
 
@@ -39,64 +57,86 @@ public class DispatchExecutor implements Executor, Runnable {
 	 * Logger used to log exceptions thrown by scheduled tasks. 
 	 */
 	private final Logger m_logger;
-
+	
 	/**
 	 * Creates a new DispatchQueue, which can be executed within a fixed thread pool. Multiple queue
 	 * can be executed concurrently, but all runnables scheduled in a given queue will be executed serially, 
 	 * in FIFO order. 
+	 * 
+	 * @param threadPool the executor (typically a threadpool) used to execute this DispatchExecutor.
+	 * @param logger the Logger used when errors are taking place
 	 */
-	public DispatchExecutor(Executor threadPool, Logger logger) {
+    public DispatchExecutor(Executor threadPool, Logger logger) {
 		m_logger = logger;
 		m_threadPool = threadPool;
 	}
 	
     /**
      * Enqueues a task for later execution. You must call {@link #execute()} in order
-     * to trigger the actual task submission.
+     * to trigger the actual execution of all scheduled tasks (in FIFO order).
      */
     public void schedule(Runnable task) {
         m_tasks.add(task);
     }
 
 	/**
-	 * Submits a task in this queue, and schedule this dispatch queue execution in the threadpool. 
-	 * If the queue is already executing, then the tasks is enqueued and will be executed later.
+	 * Submits a task in this queue, and schedule the execution of this DispatchQueue in the threadpool. 	 
 	 * The task is immediately executed (inline execution) if the queue is currently being executed by 
-	 * the current thread (reentrency feature, similar to SerialExecutor behavior).
+	 * the current thread.
 	 */
 	public void execute(Runnable task) {
+	    execute(task, true);
+	}
+	
+	/**
+     * Schedules a task in this queue.
+     * If the queue is currently being executed by the current thread, then the task is executed immediately.
+     * @tasks the task to schedule
+     * @threadpool true if the queue should be executed in the threadpool, false if the queue must be executed by
+     * only one caller thread.
+     */
+    public void execute(Runnable task, boolean threadpool) {
         Thread currThread = Thread.currentThread();
         if (m_executingThread == currThread) {
             runTask(task);
         } else {
             schedule(task);
-            execute();
+            execute(threadpool);
         }
+    }
+	
+    /**
+     * Schedules the execution of this DispatchQueue in the threadpool.
+     */
+	public void execute() {
+	    execute(true);
 	}
 	
     /**
-     * Schedules a task for execution, and then attempts to execute it. This method is thread safe, so 
-     * multiple threads can try to execute a task but only the first will be executed, other threads will 
-     * return immediately, and the first thread will execute the tasks scheduled by the other threads.<p>
-     * <p>
-     * This method is reentrant: if the current thread is currently being executed by this executor, then 
-     * the task passed to this method will be executed immediately, from the current invoking thread
-     * (inline execution).
+     * Schedules the execution of this DispatchQueue in the threadpool.
+     * 
+     * @param threadpool true means the DispatchQueue is executed in the threadpool, false means the queue is executed from the
+     * caller thread.
      */
-	public void execute() {
+    public void execute(boolean threadpool) {
         if (m_scheduled.compareAndSet(false, true)) { // schedules our run method in the tpool.
             try {
-                m_threadPool.execute(this);
+                if (threadpool) {
+                    m_threadPool.execute(this);
+                } else {
+                    run(); // run all queue tasks from the caller thread
+                }
             } catch (RejectedExecutionException e) {
                 // The threadpool seems stopped (maybe the framework is being stopped). Anyway, just execute our tasks
                 // from the current thread.
                 run();
             }
         }
-	}
+    }
 
 	/**
-	 * Executes from the threadpool all currently enqueued tasks
+	 * Run all tasks scheduled in this queue, in FIFO order. This method may be executed either in the threadpool, or from
+	 * the caller thread.
 	 */
 	@Override
 	public void run() {
@@ -117,9 +157,13 @@ public class DispatchExecutor implements Executor, Runnable {
         }
 	}
 
-    private void runTask(Runnable command) {
+	/**
+	 * Runs a given task
+	 * @param task the task to execute
+	 */
+    private void runTask(Runnable task) {
 		try {
-			command.run();
+		    task.run();
 		} catch (Throwable t) {
 			m_logger.log(LogService.LOG_ERROR, "Error processing tasks", t);
 		}

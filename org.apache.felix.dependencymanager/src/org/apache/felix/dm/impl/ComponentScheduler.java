@@ -18,8 +18,8 @@
  */
 package org.apache.felix.dm.impl;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executor;
 
 import org.apache.felix.dm.Component;
@@ -42,7 +42,7 @@ public class ComponentScheduler {
     private final static String PARALLEL = "org.apache.felix.dependencymanager.parallel";
     private volatile ComponentExecutorFactory m_componentExecutorFactory;
     private final Executor m_serial = new SerialExecutor(null);
-    private Set<Component> m_pending = new LinkedHashSet<>();
+    private ConcurrentMap<Component, Component> m_pending = new ConcurrentHashMap<>();
 
     public static ComponentScheduler instance() {
         return m_instance;
@@ -53,7 +53,7 @@ public class ComponentScheduler {
         m_serial.execute(new Runnable() {
             @Override
             public void run() {
-                for (Component c : m_pending) {
+                for (Component c : m_pending.keySet()) {
                     createComponentExecutor(m_componentExecutorFactory, c);
                     ((ComponentContext) c).start();
                 }
@@ -77,7 +77,7 @@ public class ComponentScheduler {
                 public void run() {
                     ComponentExecutorFactory execFactory = m_componentExecutorFactory;
                     if (execFactory == null) {
-                        m_pending.add(c);
+                        m_pending.put(c, c);
                     }
                     else {
                         createComponentExecutor(execFactory, c);
@@ -89,14 +89,8 @@ public class ComponentScheduler {
     }
 
     public void remove(final Component c) {
-        m_serial.execute(new Runnable() {
-            @Override
-            public void run() {
-                if (!m_pending.remove(c)) {
-                    ((ComponentContext) c).stop();
-                }
-            }
-        });
+        m_pending.remove(c);
+        ((ComponentContext) c).stop();
     }
 
     private boolean mayStartNow(Component c) {

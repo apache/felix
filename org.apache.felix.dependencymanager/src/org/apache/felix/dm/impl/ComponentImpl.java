@@ -39,7 +39,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -219,15 +221,60 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	    }
 	}
 	
-	public void stop() {
+	public void stop() {           
 	    if (m_active.compareAndSet(true, false)) {
-            getExecutor().execute(new Runnable() {
+	        Executor executor = getExecutor();
+
+	        // First, declare the task that will stop our component in our executor. We are also using a latch
+	        // because if the component bundle is currently being stopped, then we have to deactivate the component 
+	        // synchronously (if not, the component could be deactivated in another thread after the bundle has been 
+	        // stopped; and in this case, the bundle would then be invalid at the point we deactivate the component.	        	        
+	        // Notice that even if we are not using a threadpool (only a SerialExecutor, not a DispatchExecutor), it is
+	        // possible that the SerialExecutor is being currently run by another thread, so we really have to use a latch,
+	        // even if we are only using a SerialExecutor.
+	        
+	        final CountDownLatch stopLatch = new CountDownLatch(1);
+	        final Runnable stopTask = new Runnable() {
                 @Override
                 public void run() {
-                    m_isStarted = false;
-                    handleChange();
+                    try {
+                        m_isStarted = false;
+                        handleChange();
+                    } finally {
+                        stopLatch.countDown();
+                    }
                 }
-            });
+            };
+            
+            if (m_bundle == null /* only in tests env */ || m_bundle.getState() == Bundle.ACTIVE) {
+                executor.execute(stopTask); // asynchronous if we are using a DispatchExecutor and a threadpool.
+            } else {
+                // If the component bundle is stopping, not active, we want to deactive the component synchronously
+                // because if not, we would end up in a situation with all sort of problems.
+                
+                if (executor instanceof SerialExecutor) {
+                    // Most of the time, the stopTask will be called synchronously. But in rare occasions, if the 
+                    // SerialExecutor is busy and being handling an event in another thread, then in this case
+                    // the stopTask will be executed asynchronously ... but our latch will make sure we wait for the 
+                    // component deactivation.
+                    executor.execute(stopTask);
+                } else if (executor instanceof DispatchExecutor) {
+                    // If using a threadpool (a DispatchExecutor), then we have to invoke turn off
+                    // parallelism to avoid possible deadlocks; so we'll schedule our stopTask in the DispatchExecutor
+                    // with a flag=false in order to try to execute the task from the current thread, not from the threadpool.
+                    ((DispatchExecutor) executor).execute(stopTask, false);
+                } else {
+                    throw new IllegalStateException("no executor found form component " + this);
+                }
+
+                try {
+                    if (!stopLatch.await(15000, TimeUnit.MILLISECONDS)) { // todo make the delay configurable
+                        m_logger.warn("Could not stop component %s timely.", this);
+                    }
+                } catch (InterruptedException e) {
+                    m_logger.info("Thread interrupted while stopping component %s.", this);
+                }
+            }
 	    }
 	}
 
@@ -1259,8 +1306,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         if (instanceFactory != null) {
             return instanceFactory.getClass().getName();
         } else {
-            // Unexpected ...
-            return getClass().getName();
+            throw new IllegalStateException("can't find the component class name");
         }
     }
     
