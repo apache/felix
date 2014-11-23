@@ -86,10 +86,13 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
             bundle.stop();
         }));
         
+        // Register our controller service
+        m_bctx.registerService(ScenarioController.class.getName(), this, null);
+        
         // Start/stop several times the tested bundles. (no processing done in components start/stop methods).
         m_doProcessingInStartStop = false;
         out.println("\n\t[Starting benchmarks with no processing done in components start/stop methods]");
-        startStopScenarioBundles(TESTS, 20);
+        startStopScenarioBundles(TESTS, 50);
        
         // Start/stop several times the tested bundles (processing is done in components start/stop methods).
         m_doProcessingInStartStop = true;
@@ -190,7 +193,7 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
     }
 
     private void componentRemoved() {
-        doProcessing();
+        //doProcessing();
         m_stopLatch.countDown();
     }
 
@@ -220,8 +223,7 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
      * 
      * 1) start a bundle, and register the ScenarioController service (this will trigger all components activation)
      * 2) wait for all expected components to be fully started
-     * 3) unregister our ScenarioController service, and wait for all expected components to be fully stopped
-     * 4) stop the bundle
+     * 3) stop the bundle and wait for all expected components to be fully stopped
      * 
      * @param b the benchmarked scenario bundle
      */
@@ -229,9 +231,6 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
         try {
             initLatches();
 
-            // Register our controller service
-            ServiceRegistration controller = m_bctx.registerService(ScenarioController.class.getName(), this, null);
-            
             debug(() -> "starting bundle " + b.getSymbolicName());
             b.start();
                                     
@@ -239,21 +238,15 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
                 out.println("Could not start components timely: current start latch=" + m_startLatch.getCount() + ", stop latch=" + m_stopLatch.getCount());
                 Unchecked.run(() -> Thread.sleep(Integer.MAX_VALUE));
             }
+                        
+            debug(() -> "stopping bundle " + b.getSymbolicName());
+            b.stop();
             
-            // Unregister our controller service (this will deactivate all components)
-            controller.unregister();
-
             // Wait for all component deactivations
             if (! m_stopLatch.await(60, TimeUnit.SECONDS)) {
                 out.println("Could not stop components timely: current start latch=" + m_startLatch.getCount() + ", stop latch=" + m_stopLatch.getCount());
                 Unchecked.run(() -> Thread.sleep(Integer.MAX_VALUE));
-            }
-
-            debug(() -> "stopping bundle " + b.getSymbolicName());
-            b.stop();            
-            
-            // Make sure all pending tasks in the threadpool have been fully executed, before restarting a new test
-            Helper.getThreadPool().awaitQuiescence(60, TimeUnit.SECONDS);
+            }            
         } catch (Throwable t) {
             t.printStackTrace();
         }
