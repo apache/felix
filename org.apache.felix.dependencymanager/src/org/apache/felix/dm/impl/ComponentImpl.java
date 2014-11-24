@@ -249,12 +249,11 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             if (m_bundle == null /* only in tests env */ || m_bundle.getState() == Bundle.ACTIVE) {
                 executor.execute(stopTask); // asynchronous if we are using a DispatchExecutor and a threadpool.
             } else {
-                // If the component bundle is stopping, not active, we want to deactive the component synchronously
-                // because if not, we would end up in a situation with all sort of problems.
-                
+                // If the component bundle is stopping, not active, we want to ensures that the component is
+                // removed (stopped) before the bundle is invalidated.                
                 if (executor instanceof SerialExecutor) {
                     // Most of the time, the stopTask will be called synchronously. But in rare occasions, if the 
-                    // SerialExecutor is busy and being handling an event in another thread, then in this case
+                    // SerialExecutor is busy and handling an event in another thread, then in this case
                     // the stopTask will be executed asynchronously ... but our latch will make sure we wait for the 
                     // component deactivation.
                     executor.execute(stopTask);
