@@ -167,6 +167,18 @@ public class ServiceLifecycleHandler
                 setField(serviceInstance, stopper, Runnable.class, new ComponentStopper(componentName, toggle, startFlag));
             }
         }
+
+        // Before invoking an optional init method, we have to handle an edge case (FELIX-4050), where
+        // init may add dependencies using the API and also return a map for configuring some
+        // named dependencies. We have to add a hidden toggle dependency in the component, which we'll 
+        // active *after* the init method is called, and possibly *after* named dependencies are configured.
+        
+        ToggleServiceDependency initToggle = null;
+        if (m_init != null) 
+        {
+            initToggle = new ToggleServiceDependency();
+            c.add(initToggle); 
+        }
         
         // Invoke component and all composites init methods, and for each one, check if a dependency
         // customization map is returned by the method. This map will be used to configure 
@@ -226,7 +238,14 @@ public class ServiceLifecycleHandler
             Log.instance().info("ServiceLifecycleHandler.init: adding extra/named dependencies %s",
                 instanceBoundDeps);
             c.add(instanceBoundDeps.toArray(new Dependency[instanceBoundDeps.size()]));
-        }     
+        }    
+
+        // init method fully handled, and all possible named dependencies have been configured. Now, activate the 
+        // hidden toggle, and then remove it from the component, because we don't need it anymore.
+        if (initToggle != null) 
+        {
+            c.remove(initToggle);
+        } 
     }
 
     /**
