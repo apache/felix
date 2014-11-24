@@ -49,368 +49,415 @@ import org.osgi.framework.hooks.weaving.WovenClassListener;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
 
-public class BundleWiringImplTest 
+public class BundleWiringImplTest
 {
 
-	private BundleWiringImpl bundleWiring;
-	
-	private StatefulResolver mockResolver;
-	
-	private BundleRevisionImpl mockRevisionImpl;
-	
-	private BundleImpl mockBundle;
-	
-	@SuppressWarnings("rawtypes")
-	public void initializeSimpleBundleWiring() throws Exception
-	{
-		
-		mockResolver = mock(StatefulResolver.class);
-		mockRevisionImpl = mock(BundleRevisionImpl.class);
-		mockBundle = mock(BundleImpl.class);
-		
-		Logger logger = new Logger();
-		Map configMap = new HashMap();
-		List<BundleRevision> fragments = new ArrayList<BundleRevision>();
-		List<BundleWire> wires = new ArrayList<BundleWire>();
-		Map<String, BundleRevision> importedPkgs = new HashMap<String, BundleRevision>();
-		Map<String, List<BundleRevision>> requiredPkgs =
-				new HashMap<String, List<BundleRevision>>();
-		
-		when(mockRevisionImpl.getBundle()).thenReturn(mockBundle);
-		when(mockBundle.getBundleId()).thenReturn(Long.valueOf(1));
-		
-		bundleWiring = new BundleWiringImpl(logger, configMap, mockResolver, mockRevisionImpl,
-				fragments, wires, importedPkgs, requiredPkgs);
-	}
+    private BundleWiringImpl bundleWiring;
 
-	@Test
-	public void testBundleClassLoader() throws Exception
-	{
-		bundleWiring = mock(BundleWiringImpl.class);
-		BundleClassLoader bundleClassLoader = createBundleClassLoader(BundleClassLoader.class, bundleWiring);
-		assertNotNull(bundleClassLoader);
-	}
-	
-	@Test
-	public void testBundleClassLoaderJava5() throws Exception
-	{
-		bundleWiring = mock(BundleWiringImpl.class);
-		BundleClassLoader bundleClassLoader = createBundleClassLoader(BundleClassLoaderJava5.class, bundleWiring);
-		assertNotNull(bundleClassLoader);
-	}
-	
-	@SuppressWarnings("rawtypes")
-	@Test
-	public void testFindClassNonExistant() throws Exception
-	{
-		initializeSimpleBundleWiring();
-		
-		BundleClassLoader bundleClassLoader = createBundleClassLoader(BundleClassLoaderJava5.class, bundleWiring);
-		assertNotNull(bundleClassLoader);
-		Class foundClass = null;
-		try 
-		{
-			foundClass = bundleClassLoader.findClass("org.apache.felix.test.NonExistant");
-		} 
-		catch (ClassNotFoundException e) 
-		{
-			fail("Class should not throw exception");
-		}
-		assertNull("Nonexistant Class Should be null", foundClass);
-	}
-	
-	@SuppressWarnings("rawtypes")
-	@Test
-	public void testFindClassExistant() throws Exception
-	{
-		Felix mockFramework = mock(Felix.class);
-		Content mockContent = mock(Content.class);
-		Class testClass = TestClass.class;
-		String testClassName = testClass.getName();
-		String testClassAsPath = testClassName.replace('.', '/') + ".class";
-		byte[] testClassBytes = createTestClassBytes(testClass, testClassAsPath);
-		
-		List<Content> contentPath = new ArrayList<Content>();
-		contentPath.add(mockContent);
-		initializeSimpleBundleWiring();
-		
-		when(mockBundle.getFramework()).thenReturn(mockFramework);
-		when(mockFramework.getBootPackages()).thenReturn(new String[0]);
-		
-		when(mockRevisionImpl.getContentPath()).thenReturn(contentPath);
-		when(mockContent.getEntryAsBytes(testClassAsPath)).thenReturn(testClassBytes);
-		
-		BundleClassLoader bundleClassLoader = createBundleClassLoader(BundleClassLoaderJava5.class, bundleWiring);
-		assertNotNull(bundleClassLoader);
-		Class foundClass = null;
-		try 
-		{
-			
-			foundClass = bundleClassLoader.findClass(TestClass.class.getName());
-		} 
-		catch (ClassNotFoundException e) 
-		{
-			fail("Class should not throw exception");
-		}
-		assertNotNull("Class Should be found in this classloader", foundClass);
-	}
-	
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Test
-	public void testFindClassWeave() throws Exception
-	{
-		Felix mockFramework = mock(Felix.class);
-		Content mockContent = mock(Content.class);
-		ServiceReference<WeavingHook> mockServiceReferenceWeavingHook = mock(ServiceReference.class);
-		ServiceReference<WovenClassListener> mockServiceReferenceWovenClassListener = mock(ServiceReference.class);
-		
-		Set<ServiceReference<WeavingHook>> hooks = new HashSet<ServiceReference<WeavingHook>>();
-		hooks.add(mockServiceReferenceWeavingHook);
-		
-		DummyWovenClassListener dummyWovenClassListener = new DummyWovenClassListener();
-		
-		Set<ServiceReference<WovenClassListener>> listeners = new HashSet<ServiceReference<WovenClassListener>>();
-		listeners.add(mockServiceReferenceWovenClassListener);
-		
-		Class testClass = TestClass.class;
-		String testClassName = testClass.getName();
-		String testClassAsPath = testClassName.replace('.', '/') + ".class";
-		byte[] testClassBytes = createTestClassBytes(testClass, testClassAsPath);
-		
-		List<Content> contentPath = new ArrayList<Content>();
-		contentPath.add(mockContent);
-		initializeSimpleBundleWiring();
-		
-		when(mockBundle.getFramework()).thenReturn(mockFramework);
-		when(mockFramework.getBootPackages()).thenReturn(new String[0]);
-		
-		when(mockRevisionImpl.getContentPath()).thenReturn(contentPath);
-		when(mockContent.getEntryAsBytes(testClassAsPath)).thenReturn(testClassBytes);
-		
-		when(mockFramework.getHooks(WeavingHook.class)).thenReturn(hooks);
-		when(mockFramework.getService(mockFramework, mockServiceReferenceWeavingHook, false)).thenReturn(new GoodDummyWovenHook());
-		
-		when(mockFramework.getHooks(WovenClassListener.class)).thenReturn(listeners);
-		when(mockFramework.getService(mockFramework, mockServiceReferenceWovenClassListener, false)).thenReturn(dummyWovenClassListener);
-		
-		BundleClassLoader bundleClassLoader = createBundleClassLoader(BundleClassLoaderJava5.class, bundleWiring);
-		assertNotNull(bundleClassLoader);
-		Class foundClass = null;
-		try 
-		{
-			
-			foundClass = bundleClassLoader.findClass(TestClass.class.getName());
-		} 
-		catch (ClassNotFoundException e) 
-		{
-			fail("Class should not throw exception");
-		}
-		assertNotNull("Class Should be found in this classloader", foundClass);
-		assertEquals("Weaving should have added a field", 1, foundClass.getFields().length);
-		assertEquals("There should be 2 state changes fired by the weaving", 2, dummyWovenClassListener.stateList.size());
-		assertEquals("The first state change should transform the class", WovenClass.TRANSFORMED, dummyWovenClassListener.stateList.get(0));
-		assertEquals("The second state change should define the class", WovenClass.DEFINED, dummyWovenClassListener.stateList.get(1));
-	}
-	
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Test
-	public void testFindClassBadWeave() throws Exception
-	{
-		Felix mockFramework = mock(Felix.class);
-		Content mockContent = mock(Content.class);
-		ServiceReference<WeavingHook> mockServiceReferenceWeavingHook = mock(ServiceReference.class);
-		ServiceReference<WovenClassListener> mockServiceReferenceWovenClassListener = mock(ServiceReference.class);
-		
-		Set<ServiceReference<WeavingHook>> hooks = new HashSet<ServiceReference<WeavingHook>>();
-		hooks.add(mockServiceReferenceWeavingHook);
+    private StatefulResolver mockResolver;
 
-		DummyWovenClassListener dummyWovenClassListener = new DummyWovenClassListener();
-		
-		Set<ServiceReference<WovenClassListener>> listeners = new HashSet<ServiceReference<WovenClassListener>>();
-		listeners.add(mockServiceReferenceWovenClassListener);
-		
-		Class testClass = TestClass.class;
-		String testClassName = testClass.getName();
-		String testClassAsPath = testClassName.replace('.', '/') + ".class";
-		byte[] testClassBytes = createTestClassBytes(testClass, testClassAsPath);
-		
-		List<Content> contentPath = new ArrayList<Content>();
-		contentPath.add(mockContent);
-		initializeSimpleBundleWiring();
-		
-		when(mockBundle.getFramework()).thenReturn(mockFramework);
-		when(mockFramework.getBootPackages()).thenReturn(new String[0]);
-		
-		when(mockRevisionImpl.getContentPath()).thenReturn(contentPath);
-		when(mockContent.getEntryAsBytes(testClassAsPath)).thenReturn(testClassBytes);
-		
-		when(mockFramework.getHooks(WeavingHook.class)).thenReturn(hooks);
-		when(mockFramework.getService(mockFramework, mockServiceReferenceWeavingHook, false)).thenReturn(new BadDummyWovenHook());
-		
-		when(mockFramework.getHooks(WovenClassListener.class)).thenReturn(listeners);
-		when(mockFramework.getService(mockFramework, mockServiceReferenceWovenClassListener, false)).thenReturn(dummyWovenClassListener);
-		
-		BundleClassLoader bundleClassLoader = createBundleClassLoader(BundleClassLoaderJava5.class, bundleWiring);
-		assertNotNull(bundleClassLoader);
-		
-		try {
-			
-			bundleClassLoader.findClass(TestClass.class.getName());
-			fail("Class should throw exception");
-		} 
-		catch (Error e) 
-		{
-			//This is expected
-		}
-		
-		assertEquals("There should be 1 state changes fired by the weaving", 1, dummyWovenClassListener.stateList.size());
-		assertEquals("The only state change should be a failed transform on the class", WovenClass.TRANSFORMING_FAILED, dummyWovenClassListener.stateList.get(0));
-		
-	}
-	
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Test
-	public void testFindClassWeaveDefineError() throws Exception
-	{
-		Felix mockFramework = mock(Felix.class);
-		Content mockContent = mock(Content.class);
-		ServiceReference<WeavingHook> mockServiceReferenceWeavingHook = mock(ServiceReference.class);
-		ServiceReference<WovenClassListener> mockServiceReferenceWovenClassListener = mock(ServiceReference.class);
-		
-		Set<ServiceReference<WeavingHook>> hooks = new HashSet<ServiceReference<WeavingHook>>();
-		hooks.add(mockServiceReferenceWeavingHook);
-		
-		DummyWovenClassListener dummyWovenClassListener = new DummyWovenClassListener();
-		
-		Set<ServiceReference<WovenClassListener>> listeners = new HashSet<ServiceReference<WovenClassListener>>();
-		listeners.add(mockServiceReferenceWovenClassListener);
-		
-		Class testClass = TestClass.class;
-		String testClassName = testClass.getName();
-		String testClassAsPath = testClassName.replace('.', '/') + ".class";
-		byte[] testClassBytes = createTestClassBytes(testClass, testClassAsPath);
-		
-		List<Content> contentPath = new ArrayList<Content>();
-		contentPath.add(mockContent);
-		initializeSimpleBundleWiring();
-		
-		when(mockBundle.getFramework()).thenReturn(mockFramework);
-		when(mockFramework.getBootPackages()).thenReturn(new String[0]);
-		
-		when(mockRevisionImpl.getContentPath()).thenReturn(contentPath);
-		when(mockContent.getEntryAsBytes(testClassAsPath)).thenReturn(testClassBytes);
-		
-		when(mockFramework.getHooks(WeavingHook.class)).thenReturn(hooks);
-		when(mockFramework.getService(mockFramework, mockServiceReferenceWeavingHook, false)).thenReturn(new BadDefineWovenHook());
-		
-		when(mockFramework.getHooks(WovenClassListener.class)).thenReturn(listeners);
-		when(mockFramework.getService(mockFramework, mockServiceReferenceWovenClassListener, false)).thenReturn(dummyWovenClassListener);
-		
-		BundleClassLoader bundleClassLoader = createBundleClassLoader(BundleClassLoaderJava5.class, bundleWiring);
-		assertNotNull(bundleClassLoader);
-		try
-		{
-			
-			bundleClassLoader.findClass(TestClass.class.getName());
-		} 
-		catch (ClassNotFoundException e) 
-		{
-			fail("Class should not throw exception");
-		}
-		assertEquals("There should be 2 state changes fired by the weaving", 2, dummyWovenClassListener.stateList.size());
-		assertEquals("The first state change should transform the class", WovenClass.TRANSFORMED, dummyWovenClassListener.stateList.get(0));
-		assertEquals("The second state change failed the define on the class", WovenClass.DEFINE_FAILED, dummyWovenClassListener.stateList.get(1));
-	}
-	
-	@SuppressWarnings("rawtypes")
-	private byte[] createTestClassBytes(Class testClass, String testClassAsPath)
-			throws IOException 
-	{
-		InputStream testClassResourceStream = 
-				testClass.getClassLoader().getResourceAsStream(testClassAsPath);
-		
-		
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		int curByte;
-		while((curByte = testClassResourceStream.read()) != -1)
-		{
-			baos.write(curByte);
-		}
-		byte[] testClassBytes = baos.toByteArray();
-		return testClassBytes;
-	}
-	
-	
-	@SuppressWarnings("rawtypes")
-	private BundleClassLoader createBundleClassLoader(Class bundleClassLoaderClass, BundleWiringImpl bundleWiring) throws Exception
-	{
-		Logger logger = new Logger();
-		Constructor ctor = BundleRevisionImpl.getSecureAction()
-                .getConstructor(bundleClassLoaderClass, new Class[] { BundleWiringImpl.class, ClassLoader.class, Logger.class });
-		BundleClassLoader bundleClassLoader = (BundleClassLoader)
-                BundleRevisionImpl.getSecureAction().invoke(ctor,
-                new Object[] { bundleWiring, this.getClass().getClassLoader(), logger });
+    private BundleRevisionImpl mockRevisionImpl;
+
+    private BundleImpl mockBundle;
+
+    @SuppressWarnings("rawtypes")
+    public void initializeSimpleBundleWiring() throws Exception
+    {
+
+        mockResolver = mock(StatefulResolver.class);
+        mockRevisionImpl = mock(BundleRevisionImpl.class);
+        mockBundle = mock(BundleImpl.class);
+
+        Logger logger = new Logger();
+        Map configMap = new HashMap();
+        List<BundleRevision> fragments = new ArrayList<BundleRevision>();
+        List<BundleWire> wires = new ArrayList<BundleWire>();
+        Map<String, BundleRevision> importedPkgs = new HashMap<String, BundleRevision>();
+        Map<String, List<BundleRevision>> requiredPkgs = new HashMap<String, List<BundleRevision>>();
+
+        when(mockRevisionImpl.getBundle()).thenReturn(mockBundle);
+        when(mockBundle.getBundleId()).thenReturn(Long.valueOf(1));
+
+        bundleWiring = new BundleWiringImpl(logger, configMap, mockResolver,
+                mockRevisionImpl, fragments, wires, importedPkgs, requiredPkgs);
+    }
+
+    @Test
+    public void testBundleClassLoader() throws Exception
+    {
+        bundleWiring = mock(BundleWiringImpl.class);
+        BundleClassLoader bundleClassLoader = createBundleClassLoader(
+                BundleClassLoader.class, bundleWiring);
+        assertNotNull(bundleClassLoader);
+    }
+
+    @Test
+    public void testBundleClassLoaderJava5() throws Exception
+    {
+        bundleWiring = mock(BundleWiringImpl.class);
+        BundleClassLoader bundleClassLoader = createBundleClassLoader(
+                BundleClassLoaderJava5.class, bundleWiring);
+        assertNotNull(bundleClassLoader);
+    }
+
+    @SuppressWarnings("rawtypes")
+    @Test
+    public void testFindClassNonExistant() throws Exception
+    {
+        initializeSimpleBundleWiring();
+
+        BundleClassLoader bundleClassLoader = createBundleClassLoader(
+                BundleClassLoaderJava5.class, bundleWiring);
+        assertNotNull(bundleClassLoader);
+        Class foundClass = null;
+        try
+        {
+            foundClass = bundleClassLoader
+                    .findClass("org.apache.felix.test.NonExistant");
+        } catch (ClassNotFoundException e)
+        {
+            fail("Class should not throw exception");
+        }
+        assertNull("Nonexistant Class Should be null", foundClass);
+    }
+
+    @SuppressWarnings("rawtypes")
+    @Test
+    public void testFindClassExistant() throws Exception
+    {
+        Felix mockFramework = mock(Felix.class);
+        Content mockContent = mock(Content.class);
+        Class testClass = TestClass.class;
+        String testClassName = testClass.getName();
+        String testClassAsPath = testClassName.replace('.', '/') + ".class";
+        byte[] testClassBytes = createTestClassBytes(testClass, testClassAsPath);
+
+        List<Content> contentPath = new ArrayList<Content>();
+        contentPath.add(mockContent);
+        initializeSimpleBundleWiring();
+
+        when(mockBundle.getFramework()).thenReturn(mockFramework);
+        when(mockFramework.getBootPackages()).thenReturn(new String[0]);
+
+        when(mockRevisionImpl.getContentPath()).thenReturn(contentPath);
+        when(mockContent.getEntryAsBytes(testClassAsPath)).thenReturn(
+                testClassBytes);
+
+        BundleClassLoader bundleClassLoader = createBundleClassLoader(
+                BundleClassLoaderJava5.class, bundleWiring);
+        assertNotNull(bundleClassLoader);
+        Class foundClass = null;
+        try
+        {
+
+            foundClass = bundleClassLoader.findClass(TestClass.class.getName());
+        } catch (ClassNotFoundException e)
+        {
+            fail("Class should not throw exception");
+        }
+        assertNotNull("Class Should be found in this classloader", foundClass);
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Test
+    public void testFindClassWeave() throws Exception
+    {
+        Felix mockFramework = mock(Felix.class);
+        Content mockContent = mock(Content.class);
+        ServiceReference<WeavingHook> mockServiceReferenceWeavingHook = mock(ServiceReference.class);
+        ServiceReference<WovenClassListener> mockServiceReferenceWovenClassListener = mock(ServiceReference.class);
+
+        Set<ServiceReference<WeavingHook>> hooks = new HashSet<ServiceReference<WeavingHook>>();
+        hooks.add(mockServiceReferenceWeavingHook);
+
+        DummyWovenClassListener dummyWovenClassListener = new DummyWovenClassListener();
+
+        Set<ServiceReference<WovenClassListener>> listeners = new HashSet<ServiceReference<WovenClassListener>>();
+        listeners.add(mockServiceReferenceWovenClassListener);
+
+        Class testClass = TestClass.class;
+        String testClassName = testClass.getName();
+        String testClassAsPath = testClassName.replace('.', '/') + ".class";
+        byte[] testClassBytes = createTestClassBytes(testClass, testClassAsPath);
+
+        List<Content> contentPath = new ArrayList<Content>();
+        contentPath.add(mockContent);
+        initializeSimpleBundleWiring();
+
+        when(mockBundle.getFramework()).thenReturn(mockFramework);
+        when(mockFramework.getBootPackages()).thenReturn(new String[0]);
+
+        when(mockRevisionImpl.getContentPath()).thenReturn(contentPath);
+        when(mockContent.getEntryAsBytes(testClassAsPath)).thenReturn(
+                testClassBytes);
+
+        when(mockFramework.getHooks(WeavingHook.class)).thenReturn(hooks);
+        when(
+                mockFramework.getService(mockFramework,
+                        mockServiceReferenceWeavingHook, false)).thenReturn(
+                new GoodDummyWovenHook());
+
+        when(mockFramework.getHooks(WovenClassListener.class)).thenReturn(
+                listeners);
+        when(
+                mockFramework.getService(mockFramework,
+                        mockServiceReferenceWovenClassListener, false))
+                .thenReturn(dummyWovenClassListener);
+
+        BundleClassLoader bundleClassLoader = createBundleClassLoader(
+                BundleClassLoaderJava5.class, bundleWiring);
+        assertNotNull(bundleClassLoader);
+        Class foundClass = null;
+        try
+        {
+
+            foundClass = bundleClassLoader.findClass(TestClass.class.getName());
+        } catch (ClassNotFoundException e)
+        {
+            fail("Class should not throw exception");
+        }
+        assertNotNull("Class Should be found in this classloader", foundClass);
+        assertEquals("Weaving should have added a field", 1,
+                foundClass.getFields().length);
+        assertEquals("There should be 2 state changes fired by the weaving", 2,
+                dummyWovenClassListener.stateList.size());
+        assertEquals("The first state change should transform the class",
+                WovenClass.TRANSFORMED,
+                dummyWovenClassListener.stateList.get(0));
+        assertEquals("The second state change should define the class",
+                WovenClass.DEFINED, dummyWovenClassListener.stateList.get(1));
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Test
+    public void testFindClassBadWeave() throws Exception
+    {
+        Felix mockFramework = mock(Felix.class);
+        Content mockContent = mock(Content.class);
+        ServiceReference<WeavingHook> mockServiceReferenceWeavingHook = mock(ServiceReference.class);
+        ServiceReference<WovenClassListener> mockServiceReferenceWovenClassListener = mock(ServiceReference.class);
+
+        Set<ServiceReference<WeavingHook>> hooks = new HashSet<ServiceReference<WeavingHook>>();
+        hooks.add(mockServiceReferenceWeavingHook);
+
+        DummyWovenClassListener dummyWovenClassListener = new DummyWovenClassListener();
+
+        Set<ServiceReference<WovenClassListener>> listeners = new HashSet<ServiceReference<WovenClassListener>>();
+        listeners.add(mockServiceReferenceWovenClassListener);
+
+        Class testClass = TestClass.class;
+        String testClassName = testClass.getName();
+        String testClassAsPath = testClassName.replace('.', '/') + ".class";
+        byte[] testClassBytes = createTestClassBytes(testClass, testClassAsPath);
+
+        List<Content> contentPath = new ArrayList<Content>();
+        contentPath.add(mockContent);
+        initializeSimpleBundleWiring();
+
+        when(mockBundle.getFramework()).thenReturn(mockFramework);
+        when(mockFramework.getBootPackages()).thenReturn(new String[0]);
+
+        when(mockRevisionImpl.getContentPath()).thenReturn(contentPath);
+        when(mockContent.getEntryAsBytes(testClassAsPath)).thenReturn(
+                testClassBytes);
+
+        when(mockFramework.getHooks(WeavingHook.class)).thenReturn(hooks);
+        when(
+                mockFramework.getService(mockFramework,
+                        mockServiceReferenceWeavingHook, false)).thenReturn(
+                new BadDummyWovenHook());
+
+        when(mockFramework.getHooks(WovenClassListener.class)).thenReturn(
+                listeners);
+        when(
+                mockFramework.getService(mockFramework,
+                        mockServiceReferenceWovenClassListener, false))
+                .thenReturn(dummyWovenClassListener);
+
+        BundleClassLoader bundleClassLoader = createBundleClassLoader(
+                BundleClassLoaderJava5.class, bundleWiring);
+        assertNotNull(bundleClassLoader);
+
+        try
+        {
+
+            bundleClassLoader.findClass(TestClass.class.getName());
+            fail("Class should throw exception");
+        } catch (Error e)
+        {
+            // This is expected
+        }
+
+        assertEquals("There should be 1 state changes fired by the weaving", 1,
+                dummyWovenClassListener.stateList.size());
+        assertEquals(
+                "The only state change should be a failed transform on the class",
+                WovenClass.TRANSFORMING_FAILED,
+                dummyWovenClassListener.stateList.get(0));
+
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Test
+    public void testFindClassWeaveDefineError() throws Exception
+    {
+        Felix mockFramework = mock(Felix.class);
+        Content mockContent = mock(Content.class);
+        ServiceReference<WeavingHook> mockServiceReferenceWeavingHook = mock(ServiceReference.class);
+        ServiceReference<WovenClassListener> mockServiceReferenceWovenClassListener = mock(ServiceReference.class);
+
+        Set<ServiceReference<WeavingHook>> hooks = new HashSet<ServiceReference<WeavingHook>>();
+        hooks.add(mockServiceReferenceWeavingHook);
+
+        DummyWovenClassListener dummyWovenClassListener = new DummyWovenClassListener();
+
+        Set<ServiceReference<WovenClassListener>> listeners = new HashSet<ServiceReference<WovenClassListener>>();
+        listeners.add(mockServiceReferenceWovenClassListener);
+
+        Class testClass = TestClass.class;
+        String testClassName = testClass.getName();
+        String testClassAsPath = testClassName.replace('.', '/') + ".class";
+        byte[] testClassBytes = createTestClassBytes(testClass, testClassAsPath);
+
+        List<Content> contentPath = new ArrayList<Content>();
+        contentPath.add(mockContent);
+        initializeSimpleBundleWiring();
+
+        when(mockBundle.getFramework()).thenReturn(mockFramework);
+        when(mockFramework.getBootPackages()).thenReturn(new String[0]);
+
+        when(mockRevisionImpl.getContentPath()).thenReturn(contentPath);
+        when(mockContent.getEntryAsBytes(testClassAsPath)).thenReturn(
+                testClassBytes);
+
+        when(mockFramework.getHooks(WeavingHook.class)).thenReturn(hooks);
+        when(
+                mockFramework.getService(mockFramework,
+                        mockServiceReferenceWeavingHook, false)).thenReturn(
+                new BadDefineWovenHook());
+
+        when(mockFramework.getHooks(WovenClassListener.class)).thenReturn(
+                listeners);
+        when(
+                mockFramework.getService(mockFramework,
+                        mockServiceReferenceWovenClassListener, false))
+                .thenReturn(dummyWovenClassListener);
+
+        BundleClassLoader bundleClassLoader = createBundleClassLoader(
+                BundleClassLoaderJava5.class, bundleWiring);
+        assertNotNull(bundleClassLoader);
+        try
+        {
+
+            bundleClassLoader.findClass(TestClass.class.getName());
+        } catch (ClassNotFoundException e)
+        {
+            fail("Class should not throw exception");
+        }
+        assertEquals("There should be 2 state changes fired by the weaving", 2,
+                dummyWovenClassListener.stateList.size());
+        assertEquals("The first state change should transform the class",
+                WovenClass.TRANSFORMED,
+                dummyWovenClassListener.stateList.get(0));
+        assertEquals("The second state change failed the define on the class",
+                WovenClass.DEFINE_FAILED,
+                dummyWovenClassListener.stateList.get(1));
+    }
+
+    @SuppressWarnings("rawtypes")
+    private byte[] createTestClassBytes(Class testClass, String testClassAsPath)
+            throws IOException
+    {
+        InputStream testClassResourceStream = testClass.getClassLoader()
+                .getResourceAsStream(testClassAsPath);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        int curByte;
+        while ((curByte = testClassResourceStream.read()) != -1)
+        {
+            baos.write(curByte);
+        }
+        byte[] testClassBytes = baos.toByteArray();
+        return testClassBytes;
+    }
+
+    @SuppressWarnings("rawtypes")
+    private BundleClassLoader createBundleClassLoader(
+            Class bundleClassLoaderClass, BundleWiringImpl bundleWiring)
+            throws Exception
+    {
+        Logger logger = new Logger();
+        Constructor ctor = BundleRevisionImpl.getSecureAction().getConstructor(
+                bundleClassLoaderClass,
+                new Class[] { BundleWiringImpl.class, ClassLoader.class,
+                        Logger.class });
+        BundleClassLoader bundleClassLoader = (BundleClassLoader) BundleRevisionImpl
+                .getSecureAction().invoke(
+                        ctor,
+                        new Object[] { bundleWiring,
+                                this.getClass().getClassLoader(), logger });
         return bundleClassLoader;
-	}
-	
-	
-	class TestClass
-	{
-		//An empty test class to weave.
-	}
-	
-	class GoodDummyWovenHook implements WeavingHook {
-		//Adds the awesomePublicField to a class
-		@SuppressWarnings("unchecked")
-		public void weave(WovenClass wovenClass) 
-		{
-			byte[] wovenClassBytes = wovenClass.getBytes();
-			ClassNode classNode = new ClassNode();
-			ClassReader reader = new ClassReader(wovenClassBytes);
-			reader.accept(classNode, 0);
-			classNode.fields.add(
-					new FieldNode(Opcodes.ACC_PUBLIC, "awesomePublicField", "Ljava/lang/String;", null, null));
-			ClassWriter writer = new ClassWriter(reader, Opcodes.ASM4);
-			classNode.accept(writer);
-			wovenClass.setBytes(writer.toByteArray());
-		}
-	}
-	
-	class BadDefineWovenHook implements WeavingHook {
-		//Adds the awesomePublicField twice to the class.  This is bad java.
-		@SuppressWarnings("unchecked")
-		public void weave(WovenClass wovenClass) 
-		{
-			byte[] wovenClassBytes = wovenClass.getBytes();
-			ClassNode classNode = new ClassNode();
-			ClassReader reader = new ClassReader(wovenClassBytes);
-			reader.accept(classNode, 0);
-			classNode.fields.add(
-					new FieldNode(Opcodes.ACC_PUBLIC, "awesomePublicField", "Ljava/lang/String;", null, null));
-			classNode.fields.add(
-					new FieldNode(Opcodes.ACC_PUBLIC, "awesomePublicField", "Ljava/lang/String;", null, null));
-			ClassWriter writer = new ClassWriter(reader, Opcodes.ASM4);
-			classNode.accept(writer);
-			wovenClass.setBytes(writer.toByteArray());
-		}
-	}
-	
-	class BadDummyWovenHook implements WeavingHook 
-	{
-		//Just Blow up
-		public void weave(WovenClass wovenClass) 
-		{
-			throw new WeavingException("Bad Weaver!");
-		}
-	}
-	
-	class DummyWovenClassListener implements WovenClassListener 
-	{
-		public List<Integer> stateList = new ArrayList<Integer>();
-		
-		public void modified(WovenClass wovenClass) 
-		{
-			stateList.add(wovenClass.getState());
-		}
-	}
+    }
+
+    class TestClass
+    {
+        // An empty test class to weave.
+    }
+
+    class GoodDummyWovenHook implements WeavingHook
+    {
+        // Adds the awesomePublicField to a class
+        @SuppressWarnings("unchecked")
+        public void weave(WovenClass wovenClass)
+        {
+            byte[] wovenClassBytes = wovenClass.getBytes();
+            ClassNode classNode = new ClassNode();
+            ClassReader reader = new ClassReader(wovenClassBytes);
+            reader.accept(classNode, 0);
+            classNode.fields.add(new FieldNode(Opcodes.ACC_PUBLIC,
+                    "awesomePublicField", "Ljava/lang/String;", null, null));
+            ClassWriter writer = new ClassWriter(reader, Opcodes.ASM4);
+            classNode.accept(writer);
+            wovenClass.setBytes(writer.toByteArray());
+        }
+    }
+
+    class BadDefineWovenHook implements WeavingHook
+    {
+        // Adds the awesomePublicField twice to the class. This is bad java.
+        @SuppressWarnings("unchecked")
+        public void weave(WovenClass wovenClass)
+        {
+            byte[] wovenClassBytes = wovenClass.getBytes();
+            ClassNode classNode = new ClassNode();
+            ClassReader reader = new ClassReader(wovenClassBytes);
+            reader.accept(classNode, 0);
+            classNode.fields.add(new FieldNode(Opcodes.ACC_PUBLIC,
+                    "awesomePublicField", "Ljava/lang/String;", null, null));
+            classNode.fields.add(new FieldNode(Opcodes.ACC_PUBLIC,
+                    "awesomePublicField", "Ljava/lang/String;", null, null));
+            ClassWriter writer = new ClassWriter(reader, Opcodes.ASM4);
+            classNode.accept(writer);
+            wovenClass.setBytes(writer.toByteArray());
+        }
+    }
+
+    class BadDummyWovenHook implements WeavingHook
+    {
+        // Just Blow up
+        public void weave(WovenClass wovenClass)
+        {
+            throw new WeavingException("Bad Weaver!");
+        }
+    }
+
+    class DummyWovenClassListener implements WovenClassListener
+    {
+        public List<Integer> stateList = new ArrayList<Integer>();
+
+        public void modified(WovenClass wovenClass)
+        {
+            stateList.add(wovenClass.getState());
+        }
+    }
 }
