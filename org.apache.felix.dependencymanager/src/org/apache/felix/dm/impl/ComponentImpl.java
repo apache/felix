@@ -267,11 +267,14 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
                 }
 
                 try {
-                    if (!stopLatch.await(15000, TimeUnit.MILLISECONDS)) { // todo make the delay configurable
-                        m_logger.warn("Could not stop component %s timely.", this);
+                    if (!stopLatch.await(5000, TimeUnit.MILLISECONDS)) { // todo make the delay configurable
+                        m_logger.warn(
+                            "Could not stop component %s timely. " +
+                            "You should dump jvm stacktraces and check if some component callbacks are blocked somewhere else on another thread.",
+                            this);
                     }
                 } catch (InterruptedException e) {
-                    m_logger.info("Thread interrupted while stopping component %s.", this);
+                    m_logger.warn("Thread interrupted while stopping component %s.", this);
                 }
             }
 	    }
@@ -1305,7 +1308,8 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         if (instanceFactory != null) {
             return instanceFactory.getClass().getName();
         } else {
-            throw new IllegalStateException("can't find the component class name");
+            // unexpected.
+            return ComponentImpl.class.getName();
         }
     }
     
