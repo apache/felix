@@ -89,14 +89,14 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
         // Register our controller service
         m_bctx.registerService(ScenarioController.class.getName(), this, null);
         
-        // Start/stop several times the tested bundles. (no processing done in components start/stop methods).
+        // Start/stop several times the tested bundles. (no processing done in components start methods).
         m_doProcessingInStartStop = false;
-        out.println("\n\t[Starting benchmarks with no processing done in components start/stop methods]");
+        out.println("\n\t[Starting benchmarks with no processing done in components start methods]");
         startStopScenarioBundles(TESTS, 50);
        
-        // Start/stop several times the tested bundles (processing is done in components start/stop methods).
+        // Start/stop several times the tested bundles (processing is done in components start methods).
         m_doProcessingInStartStop = true;
-        out.println("\n\t[Starting benchmarks with processing done in components start/stop methods]");
+        out.println("\n\t[Starting benchmarks with processing done in components start methods]");
         startStopScenarioBundles(TESTS, 5);
     }
 

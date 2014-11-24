@@ -10,9 +10,9 @@ The stress test performs two kind of tests on DM and parallel DM.
 
 1) first kind of tests: starts/stops several times each tested bundle (SCR/DM/Parallel DM). When
 started, the test bundle is expected to register/unregister several services. And no processing is
-done at all in each component activation/deactivation methods (start/stop methods).
+done at all in each component start methods).
 
-2) second kind of tests: same as before, but some processing is done in each component start/stop methods.
+2) second kind of tests: same as before, but some processing is done in each component start methods.
 
 To launch the stress test under BndTools, click on the noindex.bndrun file of the
 "org.apache.felix.dm.benchmark" project, then click on "Run", then in "Run OSGi". 
@@ -22,7 +22,7 @@ You should see something like that in the eclipse console:
 >> --------------------------------------------------------------------------------------------------------------
 g! Starting benchmarks (each tested bundle will add/remove 630 components during bundle activation).
 
-	[Starting benchmarks with no processing done in components start/stop methods]
+	[Starting benchmarks with no processing done in components start methods]
 
 Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager ....................
 -> results in nanos: [189,130,687 | 205,730,144 | 312,092,102 | 357,470,857 | 871,419,487]
@@ -30,7 +30,7 @@ Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymana
 Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel ....................
 -> results in nanos: [85,158,366 | 103,439,337 | 122,633,515 | 157,082,407 | 284,332,202]
 
-	[Starting benchmarks with processing done in components start/stop methods]
+	[Starting benchmarks with processing done in components start methods]
 
 Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager .....
 -> results in nanos: [2,748,431,149 | 2,750,475,610 | 2,756,254,193 | 2,772,447,115 | 2,774,345,245]
@@ -54,7 +54,7 @@ noindex.bndrun (no filter indices used):
 >> --------------------------------------------------------------------------------------------------------------
  g! Starting benchmarks (each tested bundle will add/remove 6300 components during bundle activation).
 
-        [Starting benchmarks with no processing done in components start/stop methods]
+        [Starting benchmarks with no processing done in components start methods]
 
 Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager .....
 -> results in nanos: [17,436,869,644 | 17,525,534,346 | 18,080,624,001 | 18,246,597,908 | 20,715,696,669]
@@ -62,7 +62,7 @@ Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymana
 Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel .....
 -> results in nanos: [9,660,520,501 | 9,810,057,488 | 9,870,295,166 | 10,014,334,906 | 10,628,193,815]
 
-        [Starting benchmarks with processing done in components start/stop methods]
+        [Starting benchmarks with processing done in components start methods]
 
 Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager .....
 -> results in nanos: [42,700,651,438 | 43,207,156,615 | 43,653,372,523 | 43,869,438,994 | 44,715,701,457]
@@ -76,7 +76,7 @@ and with index.bndrun (using DM filter indices):
 >> --------------------------------------------------------------------------------------------------------------
 g! Starting benchmarks (each tested bundle will add/remove 6300 components during bundle activation).
 
-        [Starting benchmarks with no processing done in components start/stop methods]
+        [Starting benchmarks with no processing done in components start methods]
 
 Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager .....
 -> results in nanos: [3,142,869,517 | 3,564,970,695 | 4,023,603,870 | 6,206,640,362 | 6,918,113,818]
@@ -84,7 +84,7 @@ Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymana
 Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel .....
 -> results in nanos: [2,868,554,914 | 2,873,491,201 | 2,897,439,973 | 2,913,317,331 | 3,890,123,728]
 
-        [Starting benchmarks with processing done in components start/stop methods]
+        [Starting benchmarks with processing done in components start methods]
 
 Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager .....
 -> results in nanos: [28,515,623,505 | 28,558,774,886 | 28,661,315,061 | 28,808,682,302 | 28,915,519,208]
