@@ -40,17 +40,18 @@ class WovenClassImpl implements WovenClass, List<String>
     private List<String> m_imports = new ArrayList<String>();
     private Class m_definedClass = null;
     private boolean m_isComplete = false;
+    private int m_state;
 
     /* package */ WovenClassImpl(String className, BundleWiring wiring, byte[] bytes)
     {
         m_className = className;
         m_wiring = wiring;
         m_bytes = bytes;
+        m_state = TRANSFORMING;
     }
 
     synchronized void complete(Class definedClass, byte[] bytes, List<String> imports)
     {
-        m_isComplete = true;
         m_definedClass = definedClass;
         m_bytes = (bytes == null) ? m_bytes : bytes;
         m_imports = (imports == null)
@@ -104,7 +105,7 @@ class WovenClassImpl implements WovenClass, List<String>
 
     public synchronized boolean isWeavingComplete()
     {
-        return m_isComplete;
+    	return m_isComplete;
     }
 
     public String getClassName()
@@ -378,8 +379,21 @@ class WovenClassImpl implements WovenClass, List<String>
     /* (non-Javadoc)
      * @see org.osgi.framework.hooks.weaving.WovenClass#getState()
      */
-    public int getState() {
-        throw new UnsupportedOperationException(); // TODO
+    public synchronized int getState() 
+    {
+        return m_state;
+    }
+    
+    public synchronized void setState(int state)
+    {
+    	//Per 56.6.4.13 Weaving complete if state is DEFINED, DEFINE_FAILED, or TRANSFORMING_FAILED
+    	if(!m_isComplete && (state == DEFINED ||
+    	   state == DEFINE_FAILED ||
+    	   state == TRANSFORMING_FAILED))
+    	{
+    		m_isComplete = true;
+    	}
+    	m_state = state;
     }
 
 }
