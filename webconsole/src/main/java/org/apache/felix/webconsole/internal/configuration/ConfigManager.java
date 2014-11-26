@@ -164,8 +164,9 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
             }
             else
             {
-                response.setContentType("text/plain"); //$NON-NLS-1$
-                response.getWriter().print("true"); //$NON-NLS-1$
+                response.setContentType( "application/json" ); //$NON-NLS-1$
+                response.setCharacterEncoding( "UTF-8" ); //$NON-NLS-1$
+                response.getWriter().print( "{ \"status\": true }" ); //$NON-NLS-1$
             }
 
             return;

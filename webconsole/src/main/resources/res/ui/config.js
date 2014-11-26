@@ -439,7 +439,7 @@ function configConfirm(/* String */ message, /* String */ title, /* String */ lo
 function deleteConfig(/* String */ configId, /* String */ bundleLocation)
 {
     if ( configConfirm(i18n.del_ask, configId, bundleLocation) ) {
-	$.post(pluginRoot + '/' + configId, param.apply + '=1&' + param.dele + '=1', null, function() {
+	$.post(pluginRoot + '/' + configId, param.apply + '=1&' + param.dele + '=1', function() {
 	    document.location.href = pluginRoot;
 	}, 'json');
 	return true;
@@ -450,7 +450,7 @@ function deleteConfig(/* String */ configId, /* String */ bundleLocation)
 function unbindConfig(/* String */ configId, /* String */ bundleLocation)
 {
     if ( configConfirm(i18n.unbind_ask, configId, bundleLocation) ) {
-	$.post(pluginRoot + '/' + configId, param.unbind + '=1', null, function() {
+	$.post(pluginRoot + '/' + configId, param.unbind + '=1', function() {
 	    document.location.href = pluginRoot + '/' + configId;
 	}, 'json');
 	return true;
