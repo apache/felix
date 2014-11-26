@@ -287,18 +287,19 @@ class ConfigAdminSupport
                     }
                 }
             }
-            
+
             // remove the properties that are not specified in the request
+            final Dictionary updateProps = new Hashtable(props.size());
             for ( Enumeration e = props.keys(); e.hasMoreElements(); )
             {
                 final Object key = e.nextElement();
-                if ( !propsToKeep.contains(key) )
+                if ( propsToKeep.contains(key) )
                 {
-                    props.remove(key);
+                    updateProps.put(key, props.get(key));
                 }
             }
 
-            config.update( props );
+            config.update( updateProps );
         }
 
         // redirect to the new configuration (if existing)
