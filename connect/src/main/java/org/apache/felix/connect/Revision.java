@@ -21,11 +21,11 @@ package org.apache.felix.connect;
 import java.net.URL;
 import java.util.Enumeration;
 
-abstract class Revision
+public interface Revision
 {
-    public abstract long getLastModified();
+    public long getLastModified();
 
-    public abstract URL getEntry(String entryName);
+    public URL getEntry(String entryName);
 
-    public abstract Enumeration<String> getEntries();
+    public Enumeration<String> getEntries();
 }

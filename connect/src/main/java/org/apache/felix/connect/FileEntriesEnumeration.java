@@ -22,7 +22,7 @@ import java.io.File;
 import java.util.Enumeration;
 import java.util.NoSuchElementException;
 
-class FileEntriesEnumeration implements Enumeration
+class FileEntriesEnumeration implements Enumeration<String>
 {
     private final File m_dir;
     private final File[] m_children;
@@ -39,7 +39,7 @@ class FileEntriesEnumeration implements Enumeration
         return (m_children != null) && (m_counter < m_children.length);
     }
 
-    public synchronized Object nextElement()
+    public synchronized String nextElement()
     {
         if ((m_children == null) || (m_counter >= m_children.length))
         {
@@ -52,7 +52,7 @@ class FileEntriesEnumeration implements Enumeration
 
         // Remove the leading path of the reference directory, since the
         // entry paths are supposed to be relative to the root.
-        StringBuffer sb = new StringBuffer(abs);
+        StringBuilder sb = new StringBuilder(abs);
         sb.delete(0, m_dir.getAbsolutePath().length() + 1);
         // Add a '/' to the end of directory entries.
         if (m_children[m_counter].isDirectory())
@@ -67,15 +67,14 @@ class FileEntriesEnumeration implements Enumeration
     {
         File[] children = dir.listFiles();
         File[] combined = children;
-        for (int i = 0; i < children.length; i++)
+        for (File aChildren : children)
         {
-            if (children[i].isDirectory())
+            if (aChildren.isDirectory())
             {
-                File[] grandchildren = listFilesRecursive(children[i]);
+                File[] grandchildren = listFilesRecursive(aChildren);
                 if (grandchildren.length > 0)
                 {
-                    File[] tmp = new File[combined.length
-                            + grandchildren.length];
+                    File[] tmp = new File[combined.length + grandchildren.length];
                     System.arraycopy(combined, 0, tmp, 0, combined.length);
                     System.arraycopy(grandchildren, 0, tmp, combined.length,
                             grandchildren.length);

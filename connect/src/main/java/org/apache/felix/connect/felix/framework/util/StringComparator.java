@@ -20,7 +20,7 @@ package org.apache.felix.connect.felix.framework.util;
 
 import java.util.Comparator;
 
-public class StringComparator implements Comparator
+public class StringComparator implements Comparator<String>
 {
     private final boolean m_isCaseSensitive;
 
@@ -29,15 +29,16 @@ public class StringComparator implements Comparator
         m_isCaseSensitive = b;
     }
 
-    public int compare(Object o1, Object o2)
+    @Override
+    public int compare(String o1, String o2)
     {
         if (m_isCaseSensitive)
         {
-            return o1.toString().compareTo(o2.toString());
+            return o1.compareTo(o2);
         }
         else
         {
-            return o1.toString().compareToIgnoreCase(o2.toString());
+            return o1.compareToIgnoreCase(o2);
         }
     }
 

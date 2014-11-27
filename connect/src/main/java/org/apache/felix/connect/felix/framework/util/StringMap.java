@@ -18,7 +18,10 @@
  */
 package org.apache.felix.connect.felix.framework.util;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 /**
  * Simple utility class that creates a map for string-based keys. This map can
@@ -26,10 +29,10 @@ import java.util.*;
  * for the key. Any keys put into this map will be converted to a
  * <tt>String</tt> using the <tt>toString()</tt> method, since it is only
  * intended to compare strings.
- **/
-public class StringMap implements Map
+ */
+public class StringMap<T> implements Map<String, T>
 {
-    private TreeMap m_map;
+    private TreeMap<String, T> m_map;
 
     public StringMap()
     {
@@ -38,10 +41,10 @@ public class StringMap implements Map
 
     public StringMap(boolean caseSensitive)
     {
-        m_map = new TreeMap(new StringComparator(caseSensitive));
+        m_map = new TreeMap<String, T>(new StringComparator(caseSensitive));
     }
 
-    public StringMap(Map map, boolean caseSensitive)
+    public StringMap(Map<? extends String, ? extends T> map, boolean caseSensitive)
     {
         this(caseSensitive);
         putAll(map);
@@ -56,72 +59,83 @@ public class StringMap implements Map
     {
         if (isCaseSensitive() != b)
         {
-            TreeMap map = new TreeMap(new StringComparator(b));
+            TreeMap<String, T> map = new TreeMap<String, T>(new StringComparator(b));
             map.putAll(m_map);
             m_map = map;
         }
     }
 
+    @Override
     public int size()
     {
         return m_map.size();
     }
 
+    @Override
     public boolean isEmpty()
     {
         return m_map.isEmpty();
     }
 
+    @Override
     public boolean containsKey(Object arg0)
     {
         return m_map.containsKey(arg0);
     }
 
+    @Override
     public boolean containsValue(Object arg0)
     {
         return m_map.containsValue(arg0);
     }
 
-    public Object get(Object arg0)
+    @Override
+    public T get(Object arg0)
     {
         return m_map.get(arg0);
     }
 
-    public Object put(Object key, Object value)
+    @Override
+    public T put(String key, T value)
     {
-        return m_map.put(key.toString(), value);
+        return m_map.put(key, value);
     }
 
-    public void putAll(Map map)
+    @Override
+    public void putAll(Map<? extends String, ? extends T> map)
     {
-        for (Iterator it = map.entrySet().iterator(); it.hasNext();)
+        for (Entry<? extends String, ? extends T> entry : map.entrySet())
         {
-            Map.Entry entry = (Map.Entry) it.next();
             put(entry.getKey(), entry.getValue());
         }
     }
 
-    public Object remove(Object arg0)
+    @Override
+    public T remove(Object arg0)
     {
         return m_map.remove(arg0);
     }
 
+    @Override
     public void clear()
     {
         m_map.clear();
     }
 
-    public Set keySet()
+    @Override
+    public Set<String> keySet()
     {
         return m_map.keySet();
     }
 
-    public Collection values()
+    @Override
+    public Collection<T> values()
     {
         return m_map.values();
     }
 
-    public Set entrySet()
+    @Override
+    public Set<Entry<String, T>> entrySet()
     {
         return m_map.entrySet();
     }

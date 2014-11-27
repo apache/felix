@@ -30,7 +30,7 @@ public class VersionRange
             Version.emptyVersion, true, null, true);
 
     public VersionRange(Version low, boolean isLowInclusive, Version high,
-            boolean isHighInclusive)
+                        boolean isHighInclusive)
     {
         m_floor = low;
         m_isFloorInclusive = isLowInclusive;

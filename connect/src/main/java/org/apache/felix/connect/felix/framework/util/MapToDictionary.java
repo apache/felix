@@ -18,20 +18,23 @@
  */
 package org.apache.felix.connect.felix.framework.util;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.Map;
 
 /**
  * This is a simple class that implements a <tt>Dictionary</tt> from a
  * <tt>Map</tt>. The resulting dictionary is immutable.
- **/
-public class MapToDictionary extends Dictionary
+ */
+public class MapToDictionary<K, V> extends Dictionary<K, V>
 {
     /**
      * Map source.
-     **/
-    private Map m_map = null;
+     */
+    private Map<K, V> m_map = null;
 
-    public MapToDictionary(Map map)
+    public MapToDictionary(Map<K, V> map)
     {
         if (map == null)
         {
@@ -40,12 +43,12 @@ public class MapToDictionary extends Dictionary
         m_map = map;
     }
 
-    public Enumeration elements()
+    public Enumeration<V> elements()
     {
         return Collections.enumeration(m_map.values());
     }
 
-    public Object get(Object key)
+    public V get(Object key)
     {
         return m_map.get(key);
     }
@@ -55,17 +58,17 @@ public class MapToDictionary extends Dictionary
         return m_map.isEmpty();
     }
 
-    public Enumeration keys()
+    public Enumeration<K> keys()
     {
         return Collections.enumeration(m_map.keySet());
     }
 
-    public Object put(Object key, Object value)
+    public V put(K key, V value)
     {
         throw new UnsupportedOperationException();
     }
 
-    public Object remove(Object key)
+    public V remove(Object key)
     {
         throw new UnsupportedOperationException();
     }

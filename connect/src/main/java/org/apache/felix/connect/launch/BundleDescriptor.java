@@ -18,21 +18,34 @@
  */
 package org.apache.felix.connect.launch;
 
-import java.net.URL;
 import java.util.Map;
+
+import org.apache.felix.connect.Revision;
 
 public class BundleDescriptor
 {
     private final ClassLoader m_loader;
-    private final URL m_url;
+    private final String m_url;
     private final Map<String, String> m_headers;
+    private final Revision m_revision;
+    private final Map<Class, Object> m_services;
 
-    public BundleDescriptor(ClassLoader loader, URL url,
-            Map<String, String> headers)
+    public BundleDescriptor(ClassLoader loader, String url,
+                            Map<String, String> headers)
+    {
+        this(loader, url, headers, null, null);
+    }
+
+    public BundleDescriptor(ClassLoader loader, String url,
+                            Map<String, String> headers,
+                            Revision revision,
+                            Map<Class, Object> services)
     {
         m_loader = loader;
         m_url = url;
         m_headers = headers;
+        m_revision = revision;
+        m_services = services;
     }
 
     public ClassLoader getClassLoader()
@@ -40,18 +53,28 @@ public class BundleDescriptor
         return m_loader;
     }
 
-    public URL getUrl()
+    public String getUrl()
     {
         return m_url;
     }
 
     public String toString()
     {
-        return m_url.toExternalForm();
+        return m_url;
     }
 
     public Map<String, String> getHeaders()
     {
         return m_headers;
+    }
+
+    public Revision getRevision()
+    {
+        return m_revision;
+    }
+
+    public Map<Class, Object> getServices()
+    {
+        return m_services;
     }
 }

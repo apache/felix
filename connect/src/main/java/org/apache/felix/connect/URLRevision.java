@@ -20,10 +20,10 @@ package org.apache.felix.connect;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.Enumeration;
-import java.util.Properties;
 
-class URLRevision extends Revision
+class URLRevision implements Revision
 {
     private final URL m_url;
     private final long m_lastModified;
@@ -47,9 +47,10 @@ class URLRevision extends Revision
         return m_lastModified;
     }
 
-    public Enumeration getEntries()
+    @Override
+    public Enumeration<String> getEntries()
     {
-        return new Properties().elements();
+        return Collections.emptyEnumeration();
     }
 
     @Override

@@ -18,8 +18,9 @@
  */
 package org.apache.felix.connect.launch;
 
+import java.util.Collection;
 import java.util.Dictionary;
-import java.util.List;
+
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceListener;
@@ -29,28 +30,24 @@ import org.osgi.framework.ServiceRegistration;
 public interface PojoServiceRegistry
 {
     public BundleContext getBundleContext();
-	
-	public void startBundles(List<BundleDescriptor> bundles) throws Exception;
 
-    public void addServiceListener(ServiceListener listener, String filter)
-            throws InvalidSyntaxException;
+    public void startBundles(Collection<BundleDescriptor> bundles) throws Exception;
+
+    public void addServiceListener(ServiceListener listener, String filter) throws InvalidSyntaxException;
 
     public void addServiceListener(ServiceListener listener);
 
     public void removeServiceListener(ServiceListener listener);
 
-    public ServiceRegistration registerService(String[] clazzes,
-            Object service, @SuppressWarnings("rawtypes") Dictionary properties);
+    public ServiceRegistration<?> registerService(String[] clazzes, Object service, Dictionary<String, ?> properties);
 
-    public ServiceRegistration registerService(String clazz, Object service,
-            @SuppressWarnings("rawtypes") Dictionary properties);
+    public ServiceRegistration<?> registerService(String clazz, Object service, Dictionary<String, ?> properties);
 
-    public ServiceReference[] getServiceReferences(String clazz, String filter)
-            throws InvalidSyntaxException;
+    public ServiceReference<?>[] getServiceReferences(String clazz, String filter) throws InvalidSyntaxException;
 
-    public ServiceReference getServiceReference(String clazz);
+    public ServiceReference<?> getServiceReference(String clazz);
 
-    public Object getService(ServiceReference reference);
+    public <S> S getService(ServiceReference<S> reference);
 
-    public boolean ungetService(ServiceReference reference);
+    public boolean ungetService(ServiceReference<?> reference);
 }

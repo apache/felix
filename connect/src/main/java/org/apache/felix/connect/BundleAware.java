@@ -16,29 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.connect.felix.framework.capabilityset;
+package org.apache.felix.connect;
 
-import java.util.List;
+import org.osgi.framework.Bundle;
 
-public interface Capability
+public interface BundleAware
 {
-    static final String MODULE_NAMESPACE = "module";
-    static final String HOST_NAMESPACE = "host";
-    static final String PACKAGE_NAMESPACE = "package";
-    static final String SINGLETON_NAMESPACE = "singleton";
 
-    public static final String PACKAGE_ATTR = "package";
-    public static final String VERSION_ATTR = "version";
+    void setBundle(Bundle bundle);
 
-    String getNamespace();
-
-    Directive getDirective(String name);
-
-    List<Directive> getDirectives();
-
-    Attribute getAttribute(String name);
-
-    List<Attribute> getAttributes();
-
-    List<String> getUses();
 }

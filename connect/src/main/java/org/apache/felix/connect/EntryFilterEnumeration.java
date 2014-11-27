@@ -40,8 +40,12 @@ class EntryFilterEnumeration<T> implements Enumeration<T>
     private final Set<String> m_dirEntries = new HashSet<String>();
     private final List<T> m_nextEntries = new ArrayList<T>(2);
 
-    public EntryFilterEnumeration(Revision rev, boolean includeFragments,
-            String path, String filePattern, boolean recurse,
+    public EntryFilterEnumeration(
+            Revision rev,
+            boolean includeFragments,
+            String path,
+            String filePattern,
+            boolean recurse,
             boolean isURLValues)
     {
         m_revision = rev;
@@ -52,8 +56,7 @@ class EntryFilterEnumeration<T> implements Enumeration<T>
         // Sanity check the parameters.
         if (path == null)
         {
-            throw new IllegalArgumentException(
-                    "The path for findEntries() cannot be null.");
+            throw new IllegalArgumentException("The path for findEntries() cannot be null.");
         }
         // Strip leading '/' if present.
         if ((path.length() > 0) && (path.charAt(0) == '/'))
@@ -170,8 +173,7 @@ class EntryFilterEnumeration<T> implements Enumeration<T>
                                                     : entryURL;
                                             try
                                             {
-                                                m_nextEntries.add((T) new URL(
-                                                        entryURL, "/" + dir));
+                                                m_nextEntries.add((T) new URL(entryURL, "/" + dir));
                                             }
                                             catch (MalformedURLException ex)
                                             {
@@ -199,8 +201,7 @@ class EntryFilterEnumeration<T> implements Enumeration<T>
                     // is a child (not a grandchild) of the initial path, then
                     // we need
                     // to check if it matches the file pattern.
-                    if (m_recurse || (dirSlashIdx < 0)
-                            || (dirSlashIdx == entryName.length() - 1))
+                    if (m_recurse || (dirSlashIdx < 0) || (dirSlashIdx == entryName.length() - 1))
                     {
                         // See if the file pattern matches the last element of
                         // the path.

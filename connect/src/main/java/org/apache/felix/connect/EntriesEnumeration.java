@@ -19,50 +19,62 @@
 package org.apache.felix.connect;
 
 import java.util.Enumeration;
+import java.util.NoSuchElementException;
 import java.util.zip.ZipEntry;
 
-class EntriesEnumeration implements Enumeration
+class EntriesEnumeration implements Enumeration<String>
 {
-    private final Enumeration m_enumeration;
-	private final String m_prefix;
-	private volatile Object current;
+    private final Enumeration<? extends ZipEntry> m_enumeration;
+    private final String m_prefix;
+    private volatile String current;
 
-    public EntriesEnumeration(Enumeration enumeration)
+    public EntriesEnumeration(Enumeration<? extends ZipEntry> enumeration)
     {
         this(enumeration, null);
     }
-	
-	public EntriesEnumeration(Enumeration enumeration, String prefix)
-	{
-	   m_enumeration = enumeration;
-	   m_prefix = prefix;
-	}
 
-    public boolean hasMoreElements() {
-				while ((current == null) && m_enumeration.hasMoreElements()) {
-					String result = (String) ((ZipEntry) m_enumeration.nextElement()).getName();
-					if (m_prefix != null){
-						if (result.startsWith(m_prefix)) {
-							current = result.substring(m_prefix.length());
-						}
-					}
-					else {
-						current = result;
-					}
-				}
-				return (current != null);
-			}
+    public EntriesEnumeration(Enumeration<? extends ZipEntry> enumeration, String prefix)
+    {
+        m_enumeration = enumeration;
+        m_prefix = prefix;
+    }
 
-			public Object nextElement() {
-				try {
-					if (hasMoreElements()) {
-						return current;
-					}
-					else {
-						return m_enumeration.nextElement();
-					}
-				} finally { 
-					current = null;
-				}
-			}
+    public boolean hasMoreElements()
+    {
+        while ((current == null) && m_enumeration.hasMoreElements())
+        {
+            String result = m_enumeration.nextElement().getName();
+            if (m_prefix != null)
+            {
+                if (result.startsWith(m_prefix))
+                {
+                    current = result.substring(m_prefix.length());
+                }
+            }
+            else
+            {
+                current = result;
+            }
+        }
+        return (current != null);
+    }
+
+    public String nextElement()
+    {
+        try
+        {
+            if (hasMoreElements())
+            {
+                return current;
+            }
+            else
+            {
+                throw new NoSuchElementException();
+            }
+        }
+        finally
+        {
+            current = null;
+        }
+    }
 }
