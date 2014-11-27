@@ -23,7 +23,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Enumeration;
 
-class DirRevision extends Revision
+class DirRevision implements Revision
 {
     private final File m_file;
 
@@ -38,7 +38,8 @@ class DirRevision extends Revision
         return m_file.lastModified();
     }
 
-    public Enumeration getEntries()
+    @Override
+    public Enumeration<String> getEntries()
     {
         return new FileEntriesEnumeration(m_file);
     }
@@ -48,18 +49,20 @@ class DirRevision extends Revision
     {
         try
         {
-		    if (entryName != null) {
-            File file = (new File(m_file, (entryName.startsWith("/")) ? entryName.substring(1) : entryName));
-            if (file.exists()) {
-                return file.toURL();
-            } 
-			}
+            if (entryName != null)
+            {
+                File file = (new File(m_file, (entryName.startsWith("/")) ? entryName.substring(1) : entryName));
+                if (file.exists())
+                {
+                    return file.toURI().toURL();
+                }
+            }
         }
         catch (MalformedURLException e)
         {
             e.printStackTrace();
         }
-            return null;
+        return null;
 
     }
 

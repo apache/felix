@@ -31,33 +31,34 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.apache.felix.connect.felix.framework.util.StringComparator;
-import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.resource.Capability;
 
-public class CapabilitySet
+import org.apache.felix.connect.felix.framework.util.StringComparator;
+
+public class CapabilitySet<T extends Capability>
 {
-    private final Map<String, Map<Object, Set<BundleCapability>>> m_indices;
-    private final Set<BundleCapability> m_capSet = new HashSet<BundleCapability>();
+    private final Map<String, Map<Object, Set<T>>> m_indices;
+    private final Set<T> m_capSet = new HashSet<T>();
 
     public CapabilitySet(List<String> indexProps, boolean caseSensitive)
     {
         m_indices = (caseSensitive)
-            ? new TreeMap<String, Map<Object, Set<BundleCapability>>>()
-            : new TreeMap<String, Map<Object, Set<BundleCapability>>>(
-                        new StringComparator(false));
+                ? new TreeMap<String, Map<Object, Set<T>>>()
+                : new TreeMap<String, Map<Object, Set<T>>>(
+                new StringComparator(false));
         for (int i = 0; (indexProps != null) && (i < indexProps.size()); i++)
         {
             m_indices.put(
-                indexProps.get(i), new HashMap<Object, Set<BundleCapability>>());
+                    indexProps.get(i), new HashMap<Object, Set<T>>());
         }
     }
 
-    public void addCapability(BundleCapability cap)
+    public void addCapability(T cap)
     {
         m_capSet.add(cap);
 
         // Index capability.
-        for (Entry<String, Map<Object, Set<BundleCapability>>> entry : m_indices.entrySet())
+        for (Entry<String, Map<Object, Set<T>>> entry : m_indices.entrySet())
         {
             Object value = cap.getAttributes().get(entry.getKey());
             if (value != null)
@@ -67,7 +68,7 @@ public class CapabilitySet
                     value = convertArrayToList(value);
                 }
 
-                Map<Object, Set<BundleCapability>> index = entry.getValue();
+                Map<Object, Set<T>> index = entry.getValue();
 
                 if (value instanceof Collection)
                 {
@@ -86,22 +87,22 @@ public class CapabilitySet
     }
 
     private void indexCapability(
-        Map<Object, Set<BundleCapability>> index, BundleCapability cap, Object capValue)
+            Map<Object, Set<T>> index, T cap, Object capValue)
     {
-        Set<BundleCapability> caps = index.get(capValue);
+        Set<T> caps = index.get(capValue);
         if (caps == null)
         {
-            caps = new HashSet<BundleCapability>();
+            caps = new HashSet<T>();
             index.put(capValue, caps);
         }
         caps.add(cap);
     }
 
-    public void removeCapability(BundleCapability cap)
+    public void removeCapability(T cap)
     {
         if (m_capSet.remove(cap))
         {
-            for (Entry<String, Map<Object, Set<BundleCapability>>> entry : m_indices.entrySet())
+            for (Entry<String, Map<Object, Set<T>>> entry : m_indices.entrySet())
             {
                 Object value = cap.getAttributes().get(entry.getKey());
                 if (value != null)
@@ -111,7 +112,7 @@ public class CapabilitySet
                         value = convertArrayToList(value);
                     }
 
-                    Map<Object, Set<BundleCapability>> index = entry.getValue();
+                    Map<Object, Set<T>> index = entry.getValue();
 
                     if (value instanceof Collection)
                     {
@@ -131,9 +132,9 @@ public class CapabilitySet
     }
 
     private void deindexCapability(
-        Map<Object, Set<BundleCapability>> index, BundleCapability cap, Object value)
+            Map<Object, Set<T>> index, T cap, Object value)
     {
-        Set<BundleCapability> caps = index.get(value);
+        Set<T> caps = index.get(value);
         if (caps != null)
         {
             caps.remove(cap);
@@ -144,18 +145,18 @@ public class CapabilitySet
         }
     }
 
-   public Set<BundleCapability> match(SimpleFilter sf, boolean obeyMandatory)
+    public Set<T> match(SimpleFilter sf, boolean obeyMandatory)
     {
-        Set<BundleCapability> matches = match(m_capSet, sf);
-        return matches;
-       /* return (obeyMandatory)
+        Set<T> matches = match(m_capSet, sf);
+        return /* (obeyMandatory)
             ? matchMandatory(matches, sf)
-            : matches;*/
+            : */ matches;
     }
 
-    private Set<BundleCapability> match(Set<BundleCapability> caps, SimpleFilter sf)
+    @SuppressWarnings("unchecked")
+    private Set<T> match(Set<T> caps, SimpleFilter sf)
     {
-        Set<BundleCapability> matches = new HashSet<BundleCapability>();
+        Set<T> matches = new HashSet<T>();
 
         if (sf.getOperation() == SimpleFilter.MATCH_ALL)
         {
@@ -179,9 +180,9 @@ public class CapabilitySet
             // Evaluate each subfilter against the remaining capabilities.
             // For OR we calculate the union of each subfilter.
             List<SimpleFilter> sfs = (List<SimpleFilter>) sf.getValue();
-            for (int i = 0; i < sfs.size(); i++)
+            for (SimpleFilter sf1 : sfs)
             {
-                matches.addAll(match(caps, sfs.get(i)));
+                matches.addAll(match(caps, sf1));
             }
         }
         else if (sf.getOperation() == SimpleFilter.NOT)
@@ -190,17 +191,17 @@ public class CapabilitySet
             // For OR we calculate the union of each subfilter.
             matches.addAll(caps);
             List<SimpleFilter> sfs = (List<SimpleFilter>) sf.getValue();
-            for (int i = 0; i < sfs.size(); i++)
+            for (SimpleFilter sf1 : sfs)
             {
-                matches.removeAll(match(caps, sfs.get(i)));
+                matches.removeAll(match(caps, sf1));
             }
         }
         else
         {
-            Map<Object, Set<BundleCapability>> index = m_indices.get(sf.getName());
+            Map<Object, Set<T>> index = m_indices.get(sf.getName());
             if ((sf.getOperation() == SimpleFilter.EQ) && (index != null))
             {
-                Set<BundleCapability> existingCaps = index.get(sf.getValue());
+                Set<T> existingCaps = index.get(sf.getValue());
                 if (existingCaps != null)
                 {
                     matches.addAll(existingCaps);
@@ -209,9 +210,8 @@ public class CapabilitySet
             }
             else
             {
-                for (Iterator<BundleCapability> it = caps.iterator(); it.hasNext(); )
+                for (T cap : caps)
                 {
-                    BundleCapability cap = it.next();
                     Object lhs = cap.getAttributes().get(sf.getName());
                     if (lhs != null)
                     {
@@ -227,12 +227,13 @@ public class CapabilitySet
         return matches;
     }
 
-  /*  public static boolean matches(BundleCapability cap, SimpleFilter sf)
-    {
-        return matchesInternal(cap, sf) && matchMandatory(cap, sf);
-    }
-*/
-    private static boolean matchesInternal(BundleCapability cap, SimpleFilter sf)
+    /*  public static boolean matches(BundleCapability cap, SimpleFilter sf)
+      {
+          return matchesInternal(cap, sf) && matchMandatory(cap, sf);
+      }
+  */
+    @SuppressWarnings("unchecked")
+    private boolean matchesInternal(T cap, SimpleFilter sf)
     {
         boolean matched = true;
 
@@ -268,9 +269,9 @@ public class CapabilitySet
             // Evaluate each subfilter against the remaining capabilities.
             // For OR we calculate the union of each subfilter.
             List<SimpleFilter> sfs = (List<SimpleFilter>) sf.getValue();
-            for (int i = 0; i < sfs.size(); i++)
+            for (SimpleFilter sf1 : sfs)
             {
-                matched = !(matchesInternal(cap, sfs.get(i)));
+                matched = !(matchesInternal(cap, sf1));
             }
         }
         else
@@ -286,12 +287,13 @@ public class CapabilitySet
         return matched;
     }
 
-   /* private static Set<BundleCapability> matchMandatory(
-        Set<BundleCapability> caps, SimpleFilter sf)
+    /*
+    private Set<T> matchMandatory(
+        Set<T> caps, SimpleFilter sf)
     {
-        for (Iterator<BundleCapability> it = caps.iterator(); it.hasNext(); )
+        for (Iterator<T> it = caps.iterator(); it.hasNext(); )
         {
-            BundleCapability cap = it.next();
+            T cap = it.next();
             if (!matchMandatory(cap, sf))
             {
                 it.remove();
@@ -300,12 +302,12 @@ public class CapabilitySet
         return caps;
     }
 
-    private static boolean matchMandatory(BundleCapability cap, SimpleFilter sf)
+    private boolean matchMandatory(T cap, SimpleFilter sf)
     {
         Map<String, Object> attrs = cap.getAttributes();
         for (Entry<String, Object> entry : attrs.entrySet())
         {
-            if (((BundleCapability) cap).isAttributeMandatory(entry.getKey())
+            if (((T) cap).isAttributeMandatory(entry.getKey())
                 && !matchMandatoryAttrbute(entry.getKey(), sf))
             {
                 return false;
@@ -314,7 +316,7 @@ public class CapabilitySet
         return true;
     }
 
-    private static boolean matchMandatoryAttrbute(String attrName, SimpleFilter sf)
+    private boolean matchMandatoryAttrbute(String attrName, SimpleFilter sf)
     {
         if ((sf.getName() != null) && sf.getName().equals(attrName))
         {
@@ -336,8 +338,9 @@ public class CapabilitySet
         return false;
     }*/
 
-    private static final Class<?>[] STRING_CLASS = new Class[] { String.class };
+    private static final Class<?>[] STRING_CLASS = new Class[]{String.class};
 
+    @SuppressWarnings("unchecked")
     private static boolean compare(Object lhs, Object rhsUnknown, int op)
     {
         if (lhs == null)
@@ -382,66 +385,42 @@ public class CapabilitySet
             switch (op)
             {
             case SimpleFilter.EQ:
-                    try
-                    {
-                return (((Comparable) lhs).compareTo(rhs) == 0);
-                    }
-                    catch (Exception ex)
-                    {
-                        return false;
-                    }
+                try
+                {
+                    return (((Comparable) lhs).compareTo(rhs) == 0);
+                }
+                catch (Exception ex)
+                {
+                    return false;
+                }
             case SimpleFilter.GTE:
-                    try
-                    {
-                return (((Comparable) lhs).compareTo(rhs) >= 0);
-                    }
-                    catch (Exception ex)
-                    {
-                        return false;
-                    }
+                try
+                {
+                    return (((Comparable) lhs).compareTo(rhs) >= 0);
+                }
+                catch (Exception ex)
+                {
+                    return false;
+                }
             case SimpleFilter.LTE:
-                    try
-                    {
-                return (((Comparable) lhs).compareTo(rhs) <= 0);
-                    }
-                    catch (Exception ex)
-                    {
-                        return false;
-                    }
+                try
+                {
+                    return (((Comparable) lhs).compareTo(rhs) <= 0);
+                }
+                catch (Exception ex)
+                {
+                    return false;
+                }
             case SimpleFilter.APPROX:
-                return compareApproximate(((Comparable) lhs), rhs);
+                return compareApproximate(lhs, rhs);
             case SimpleFilter.SUBSTRING:
-                    return SimpleFilter.compareSubstring((List<String>) rhs, (String) lhs);
+                return SimpleFilter.compareSubstring((List<String>) rhs, (String) lhs);
             default:
-                    throw new RuntimeException(
+                throw new RuntimeException(
                         "Unknown comparison operator: " + op);
             }
         }
-        // Booleans do not implement comparable, so special case them.
-        else if (lhs instanceof Boolean)
-        {
-            Object rhs;
-            try
-            {
-                rhs = coerceType(lhs, (String) rhsUnknown);
-            }
-            catch (Exception ex)
-            {
-                return false;
-            }
 
-            switch (op)
-            {
-            case SimpleFilter.EQ:
-            case SimpleFilter.GTE:
-            case SimpleFilter.LTE:
-            case SimpleFilter.APPROX:
-                return (lhs.equals(rhs));
-            default:
-                    throw new RuntimeException(
-                        "Unknown comparison operator: " + op);
-            }
-        }
 
         // If the LHS is not a comparable or boolean, check if it is an
         // array. If so, convert it to a list so we can treat it as a
@@ -455,9 +434,9 @@ public class CapabilitySet
         // of the collection until a match is found.
         if (lhs instanceof Collection)
         {
-            for (Iterator iter = ((Collection) lhs).iterator(); iter.hasNext();)
+            for (Object o : ((Collection) lhs))
             {
-                if (compare(iter.next(), rhsUnknown, op))
+                if (compare(o, rhsUnknown, op))
                 {
                     return true;
                 }
@@ -467,7 +446,7 @@ public class CapabilitySet
         }
 
         // Spec says SUBSTRING is false for all types other than string.
-        if ((op == SimpleFilter.SUBSTRING) && !(lhs instanceof String))
+        if (op == SimpleFilter.SUBSTRING)
         {
             return false;
         }
@@ -489,19 +468,19 @@ public class CapabilitySet
         if (rhs instanceof String)
         {
             return removeWhitespace((String) lhs)
-                .equalsIgnoreCase(removeWhitespace((String) rhs));
+                    .equalsIgnoreCase(removeWhitespace((String) rhs));
         }
         else if (rhs instanceof Character)
         {
             return Character.toLowerCase(((Character) lhs))
-                == Character.toLowerCase(((Character) rhs));
+                    == Character.toLowerCase(((Character) rhs));
         }
         return lhs.equals(rhs);
     }
 
     private static String removeWhitespace(String s)
     {
-        StringBuffer sb = new StringBuffer(s.length());
+        StringBuilder sb = new StringBuilder(s.length());
         for (int i = 0; i < s.length(); i++)
         {
             if (!Character.isWhitespace(s.charAt(i)))
@@ -523,14 +502,14 @@ public class CapabilitySet
 
         // Try to convert the RHS type to the LHS type by using
         // the string constructor of the LHS class, if it has one.
-        Object rhs = null;
+        Object rhs;
         try
         {
             // The Character class is a special case, since its constructor
             // does not take a string, so handle it separately.
             if (lhs instanceof Character)
             {
-                rhs = new Character(rhsString.charAt(0));
+                rhs = rhsString.charAt(0);
             }
             else
             {
@@ -541,16 +520,16 @@ public class CapabilitySet
                 }
                 Constructor ctor = lhs.getClass().getConstructor(STRING_CLASS);
                 ctor.setAccessible(true);
-                rhs = ctor.newInstance(new Object[] { rhsString });
+                rhs = ctor.newInstance(rhsString);
             }
         }
         catch (Exception ex)
         {
             throw new Exception(
-                "Could not instantiate class "
-                    + lhs.getClass().getName()
-                    + " from string constructor with argument '"
-                    + rhsString + "' because " + ex);
+                    "Could not instantiate class "
+                            + lhs.getClass().getName()
+                            + " from string constructor with argument '"
+                            + rhsString + "' because " + ex);
         }
 
         return rhs;
@@ -561,14 +540,13 @@ public class CapabilitySet
      * array of primitive wrapper objects. This method simplifies processing
      * LDAP filters since the special case of primitive arrays can be ignored.
      *
-     * @param array
-     *            An array of primitive types.
+     * @param array An array of primitive types.
      * @return An corresponding array using pritive wrapper objects.
-     **/
-    private static List convertArrayToList(Object array)
+     */
+    private static List<Object> convertArrayToList(Object array)
     {
         int len = Array.getLength(array);
-        List list = new ArrayList(len);
+        List<Object> list = new ArrayList<Object>(len);
         for (int i = 0; i < len; i++)
         {
             list.add(Array.get(array, i));

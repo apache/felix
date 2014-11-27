@@ -18,13 +18,14 @@
  */
 package org.apache.felix.connect.felix.framework.util;
 
+import java.util.AbstractCollection;
 import java.util.Collection;
 import java.util.Iterator;
 
 /**
  * A collection wrapper that only permits clients to shrink the collection.
-**/
-public class ShrinkableCollection<T> implements Collection<T>
+ */
+public class ShrinkableCollection<T> extends AbstractCollection<T>
 {
     private final Collection<T> m_delegate;
 
@@ -33,80 +34,16 @@ public class ShrinkableCollection<T> implements Collection<T>
         m_delegate = delegate;
     }
 
-    public boolean add(T o)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    public boolean addAll(Collection<? extends T> c)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    public void clear()
-    {
-        m_delegate.clear();
-    }
-
-    public boolean contains(Object o)
-    {
-        return m_delegate.contains(o);
-    }
-
-    public boolean containsAll(Collection<?> c)
-    {
-        return m_delegate.containsAll(c);
-    }
-
     @Override
-    public boolean equals(Object o)
-    {
-        return m_delegate.equals(o);
-    }
-
-    @Override
-    public int hashCode()
-    {
-        return m_delegate.hashCode();
-    }
-
-    public boolean isEmpty()
-    {
-        return m_delegate.isEmpty();
-    }
-
-    public Iterator iterator()
+    public Iterator<T> iterator()
     {
         return m_delegate.iterator();
     }
 
-    public boolean remove(Object o)
-    {
-        return m_delegate.remove(o);
-    }
-
-    public boolean removeAll(Collection<?> c)
-    {
-        return m_delegate.removeAll(c);
-    }
-
-    public boolean retainAll(Collection<?> c)
-    {
-        return m_delegate.retainAll(c);
-    }
-
+    @Override
     public int size()
     {
         return m_delegate.size();
     }
 
-    public Object[] toArray()
-    {
-        return m_delegate.toArray();
-    }
-
-    public <A> A[] toArray(A[] a)
-    {
-        return m_delegate.toArray(a);
-    }
 }

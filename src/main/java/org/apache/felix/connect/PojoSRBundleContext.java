@@ -25,8 +25,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Dictionary;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -39,10 +40,13 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.hooks.service.FindHook;
 
 import org.apache.felix.connect.felix.framework.ServiceRegistry;
 import org.apache.felix.connect.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.connect.felix.framework.util.EventDispatcher;
+import org.apache.felix.connect.felix.framework.util.ShrinkableCollection;
+import org.apache.felix.connect.felix.framework.util.Util;
 
 class PojoSRBundleContext implements BundleContext
 {
@@ -50,10 +54,10 @@ class PojoSRBundleContext implements BundleContext
     private final ServiceRegistry m_reg;
     private final EventDispatcher m_dispatcher;
     private final Map<Long, Bundle> m_bundles;
-    private final Map m_config;
+    private final Map<String, Object> m_config;
 
     public PojoSRBundleContext(Bundle bundle, ServiceRegistry reg,
-            EventDispatcher dispatcher, Map<Long, Bundle> bundles, Map config)
+                               EventDispatcher dispatcher, Map<Long, Bundle> bundles, Map<String, Object> config)
     {
         m_bundle = bundle;
         m_reg = reg;
@@ -70,7 +74,7 @@ class PojoSRBundleContext implements BundleContext
     public void removeServiceListener(ServiceListener listener)
     {
         m_dispatcher.removeListener(this, ServiceListener.class,
-                    listener);
+                listener);
     }
 
     public void removeFrameworkListener(FrameworkListener listener)
@@ -85,14 +89,14 @@ class PojoSRBundleContext implements BundleContext
     }
 
     public ServiceRegistration registerService(String clazz, Object service,
-            Dictionary properties)
+                                               Dictionary properties)
     {
-        return m_reg.registerService(m_bundle, new String[] { clazz }, service,
+        return m_reg.registerService(m_bundle, new String[]{clazz}, service,
                 properties);
     }
 
     public ServiceRegistration registerService(String[] clazzes,
-            Object service, Dictionary properties)
+                                               Object service, Dictionary properties)
     {
         return m_reg.registerService(m_bundle, clazzes, service, properties);
     }
@@ -109,17 +113,17 @@ class PojoSRBundleContext implements BundleContext
         throw new BundleException("pojosr can't do that");
     }
 
-    public ServiceReference[] getServiceReferences(String clazz, String filter)
+    public ServiceReference<?>[] getServiceReferences(String clazz, String filter)
             throws InvalidSyntaxException
     {
-        return getAllServiceReferences(clazz, filter);
+        return getServiceReferences(clazz, filter, true);
     }
 
-    public ServiceReference getServiceReference(String clazz)
+    public ServiceReference<?> getServiceReference(String clazz)
     {
         try
         {
-            return getBestServiceReference(getAllServiceReferences(clazz, null));
+            return getBestServiceReference(getServiceReferences(clazz, null));
         }
         catch (InvalidSyntaxException e)
         {
@@ -127,7 +131,7 @@ class PojoSRBundleContext implements BundleContext
         }
     }
 
-    private ServiceReference getBestServiceReference(ServiceReference[] refs)
+    private ServiceReference<?> getBestServiceReference(ServiceReference<?>[] refs)
     {
         if (refs == null)
         {
@@ -153,7 +157,7 @@ class PojoSRBundleContext implements BundleContext
         return bestRef;
     }
 
-    public Object getService(ServiceReference reference)
+    public <S> S getService(ServiceReference<S> reference)
     {
         return m_reg.getService(m_bundle, reference);
     }
@@ -202,24 +206,90 @@ class PojoSRBundleContext implements BundleContext
     }
 
     public ServiceReference[] getAllServiceReferences(String clazz,
-            String filter) throws InvalidSyntaxException
+                                                      String filter) throws InvalidSyntaxException
     {
-        SimpleFilter simple = null;
-        if (filter != null)
+        return getServiceReferences(clazz, filter, false);
+    }
+
+    /**
+     * Retrieves an array of {@link ServiceReference} objects based on calling bundle,
+     * service class name, and filter expression.  Optionally checks for isAssignable to
+     * make sure that the service can be cast to the
+     * @param className Service Classname or <code>null</code> for all
+     * @param expr Filter Criteria or <code>null</code>
+     * @return Array of ServiceReference objects that meet the criteria
+     * @throws InvalidSyntaxException
+     */
+    ServiceReference[] getServiceReferences(
+            final String className,
+            final String expr, final boolean checkAssignable)
+            throws InvalidSyntaxException
+    {
+        // Define filter if expression is not null.
+        SimpleFilter filter = null;
+        if (expr != null)
         {
             try
             {
-                simple = SimpleFilter.parse(filter);
+                filter = SimpleFilter.parse(expr);
             }
             catch (Exception ex)
             {
-                throw new InvalidSyntaxException(ex.getMessage(), filter);
+                throw new InvalidSyntaxException(ex.getMessage(), expr);
             }
         }
-        List<ServiceReference> result = m_reg.getServiceReferences(clazz,
-                simple);
-        return result.isEmpty() ? null : result
-                .toArray(new ServiceReference[result.size()]);
+
+        // Ask the service registry for all matching service references.
+        final Collection<ServiceReference<?>> refList = m_reg.getServiceReferences(className, filter);
+
+        // Filter on assignable references
+        if (checkAssignable)
+        {
+            for (Iterator<ServiceReference<?>> it = refList.iterator(); it.hasNext();)
+            {
+                // Get the current service reference.
+                ServiceReference ref = it.next();
+                // Now check for castability.
+                if (!Util.isServiceAssignable(m_bundle, ref))
+                {
+                    it.remove();
+                }
+            }
+        }
+
+        // activate findhooks
+        Set<ServiceReference<FindHook>> findHooks = m_reg.getHooks(org.osgi.framework.hooks.service.FindHook.class);
+        for (ServiceReference<org.osgi.framework.hooks.service.FindHook> sr : findHooks)
+        {
+            org.osgi.framework.hooks.service.FindHook fh = m_reg.getService(getBundle(0), sr);
+            if (fh != null)
+            {
+                try
+                {
+                    fh.find(this,
+                            className,
+                            expr,
+                            !checkAssignable,
+                            new ShrinkableCollection<ServiceReference<?>>(refList));
+                }
+                catch (Throwable th)
+                {
+                    System.err.println("Problem invoking service registry hook");
+                    th.printStackTrace();
+                }
+                finally
+                {
+                    m_reg.ungetService(getBundle(0), sr);
+                }
+            }
+        }
+
+        if (refList.size() > 0)
+        {
+            return refList.toArray(new ServiceReference[refList.size()]);
+        }
+
+        return null;
     }
 
     public Filter createFilter(String filter) throws InvalidSyntaxException
@@ -240,10 +310,10 @@ class PojoSRBundleContext implements BundleContext
         }
     }
 
-     public void addServiceListener(final ServiceListener listener, String filter)
+    public void addServiceListener(final ServiceListener listener, String filter)
             throws InvalidSyntaxException
     {
-		 m_dispatcher.addListener(this, ServiceListener.class, listener,
+        m_dispatcher.addListener(this, ServiceListener.class, listener,
                 filter == null ? null : FrameworkUtil.createFilter(filter));
     }
 
@@ -259,18 +329,21 @@ class PojoSRBundleContext implements BundleContext
                 .addListener(this, BundleListener.class, listener, null);
     }
 
+    @SuppressWarnings("unchecked")
     public <S> ServiceRegistration<S> registerService(Class<S> clazz, S service, Dictionary<String, ?> properties)
     {
         return (ServiceRegistration<S>) registerService(clazz.getName(), service, properties);
     }
 
+    @SuppressWarnings("unchecked")
     public <S> ServiceReference<S> getServiceReference(Class<S> clazz)
     {
         return (ServiceReference<S>) getServiceReference(clazz.getName());
     }
 
+    @SuppressWarnings("unchecked")
     public <S> Collection<ServiceReference<S>> getServiceReferences(Class<S> clazz, String filter)
-                    throws InvalidSyntaxException
+            throws InvalidSyntaxException
     {
         ServiceReference<S>[] refs = (ServiceReference<S>[]) getServiceReferences(clazz.getName(), filter);
         if (refs == null)

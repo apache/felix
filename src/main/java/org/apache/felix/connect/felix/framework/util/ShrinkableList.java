@@ -16,19 +16,39 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.connect.felix.framework.capabilityset;
+package org.apache.felix.connect.felix.framework.util;
 
+import java.util.AbstractList;
 import java.util.List;
 
-public interface Requirement
+/**
+ * A collection wrapper that only permits clients to shrink the collection.
+ */
+public class ShrinkableList<T> extends AbstractList<T>
 {
-    String getNamespace();
+    private final List<T> m_delegate;
 
-    SimpleFilter getFilter();
+    public ShrinkableList(List<T> delegate)
+    {
+        m_delegate = delegate;
+    }
 
-    boolean isOptional();
+    @Override
+    public T get(int index)
+    {
+        return m_delegate.get(index);
+    }
 
-    Directive getDirective(String name);
+    @Override
+    public int size()
+    {
+        return m_delegate.size();
+    }
 
-    List<Directive> getDirectives();
+    @Override
+    public T remove(int index)
+    {
+        return m_delegate.remove(index);
+    }
+
 }

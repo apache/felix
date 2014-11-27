@@ -60,6 +60,7 @@ public class SimpleFilter
         return m_op;
     }
 
+    @SuppressWarnings("unchecked")
     public String toString()
     {
         String s = null;
@@ -84,8 +85,7 @@ public class SimpleFilter
             s = "(" + m_name + ">=" + toEncodedString(m_value) + ")";
             break;
         case SUBSTRING:
-            s = "(" + m_name + "=" + unparseSubstring((List<String>) m_value)
-                    + ")";
+            s = "(" + m_name + "=" + unparseSubstring((List<String>) m_value) + ")";
             break;
         case PRESENT:
             s = "(" + m_name + "=*)";
@@ -97,19 +97,19 @@ public class SimpleFilter
         return s;
     }
 
-    private static String toString(List list)
+    private static String toString(List<?> list)
     {
-        StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < list.size(); i++)
+        StringBuilder sb = new StringBuilder();
+        for (Object aList : list)
         {
-            sb.append(list.get(i).toString());
+            sb.append(aList.toString());
         }
         return sb.toString();
     }
 
     private static String toDecodedString(String s, int startIdx, int endIdx)
     {
-        StringBuffer sb = new StringBuffer(endIdx - startIdx);
+        StringBuilder sb = new StringBuilder(endIdx - startIdx);
         boolean escaped = false;
         for (int i = 0; i < (endIdx - startIdx); i++)
         {
@@ -133,7 +133,7 @@ public class SimpleFilter
         if (o instanceof String)
         {
             String s = (String) o;
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             for (int i = 0; i < s.length(); i++)
             {
                 char c = s.charAt(i);
@@ -150,6 +150,7 @@ public class SimpleFilter
         return o.toString();
     }
 
+    @SuppressWarnings("unchecked")
     public static SimpleFilter parse(String filter)
     {
         int idx = skipWhitespace(filter, 0);
@@ -166,7 +167,7 @@ public class SimpleFilter
         }
 
         SimpleFilter sf = null;
-        List stack = new ArrayList();
+        List<Object> stack = new ArrayList<Object>();
         boolean isEscaped = false;
         while (idx < filter.length())
         {
@@ -192,7 +193,7 @@ public class SimpleFilter
                     }
                     else
                     {
-                        stack.add(0, new Integer(idx));
+                        stack.add(0, idx);
                     }
                 }
                 else if (filter.charAt(idx) == '|')
@@ -206,7 +207,7 @@ public class SimpleFilter
                     }
                     else
                     {
-                        stack.add(0, new Integer(idx));
+                        stack.add(0, idx);
                     }
                 }
                 else if (filter.charAt(idx) == '!')
@@ -220,12 +221,12 @@ public class SimpleFilter
                     }
                     else
                     {
-                        stack.add(0, new Integer(idx));
+                        stack.add(0, idx);
                     }
                 }
                 else
                 {
-                    stack.add(0, new Integer(idx));
+                    stack.add(0, idx);
                 }
             }
             else if (!isEscaped && (filter.charAt(idx) == ')'))
@@ -233,36 +234,28 @@ public class SimpleFilter
                 Object top = stack.remove(0);
                 if (top instanceof SimpleFilter)
                 {
-                    if (!stack.isEmpty()
-                            && (stack.get(0) instanceof SimpleFilter))
+                    if (!stack.isEmpty() && (stack.get(0) instanceof SimpleFilter))
                     {
-                        ((List) ((SimpleFilter) stack.get(0)).m_value).add(top);
+                        ((List<Object>) ((SimpleFilter) stack.get(0)).m_value).add(top);
                     }
                     else
                     {
                         sf = (SimpleFilter) top;
                     }
                 }
-                else if (!stack.isEmpty()
-                        && (stack.get(0) instanceof SimpleFilter))
+                else if (!stack.isEmpty() && (stack.get(0) instanceof SimpleFilter))
                 {
-                    ((List) ((SimpleFilter) stack.get(0)).m_value)
-                            .add(SimpleFilter.subfilter(filter,
-                                    ((Integer) top).intValue(), idx));
+                    ((List<Object>) ((SimpleFilter) stack.get(0)).m_value)
+                            .add(SimpleFilter.subfilter(filter, (Integer) top, idx));
                 }
                 else
                 {
-                    sf = SimpleFilter.subfilter(filter,
-                            ((Integer) top).intValue(), idx);
+                    sf = SimpleFilter.subfilter(filter, (Integer) top, idx);
                 }
-            }
-            else if (!isEscaped && (filter.charAt(idx) == '\\'))
-            {
-                isEscaped = true;
             }
             else
             {
-                isEscaped = false;
+                isEscaped = !isEscaped && (filter.charAt(idx) == '\\');
             }
 
             idx = skipWhitespace(filter, idx + 1);
@@ -270,15 +263,14 @@ public class SimpleFilter
 
         if (sf == null)
         {
-            throw new IllegalArgumentException("Missing closing parenthesis: "
-                    + filter);
+            throw new IllegalArgumentException("Missing closing parenthesis: " + filter);
         }
 
         return sf;
     }
 
     private static SimpleFilter subfilter(String filter, int startIdx,
-            int endIdx)
+                                          int endIdx)
     {
         final String opChars = "=<>~";
 
@@ -307,7 +299,7 @@ public class SimpleFilter
         startIdx = skipWhitespace(filter, attrEndIdx);
 
         // Determine the operator type.
-        int op = -1;
+        int op;
         switch (filter.charAt(startIdx))
         {
         case '=':
@@ -372,8 +364,8 @@ public class SimpleFilter
 
     public static List<String> parseSubstring(String value)
     {
-        List<String> pieces = new ArrayList();
-        StringBuffer ss = new StringBuffer();
+        List<String> pieces = new ArrayList<String>();
+        StringBuilder ss = new StringBuilder();
         // int kind = SIMPLE; // assume until proven otherwise
         boolean wasStar = false; // indicates last piece was a star
         boolean leftstar = false; // track if the initial piece is a star
@@ -383,7 +375,7 @@ public class SimpleFilter
 
         // We assume (sub)strings can contain leading and trailing blanks
         boolean escaped = false;
-        loop: for (;;)
+        for (; ; )
         {
             if (idx >= value.length())
             {
@@ -401,7 +393,7 @@ public class SimpleFilter
                     // the string "" (!=null)
                 }
                 ss.setLength(0);
-                break loop;
+                break;
             }
 
             // Read the next character and account for escapes.
@@ -460,7 +452,7 @@ public class SimpleFilter
 
     public static String unparseSubstring(List<String> pieces)
     {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < pieces.size(); i++)
         {
             if (i > 0)
@@ -495,7 +487,7 @@ public class SimpleFilter
 
         int index = 0;
 
-        loop: for (int i = 0; i < len; i++)
+        for (int i = 0; i < len; i++)
         {
             String piece = pieces.get(i);
 
@@ -506,7 +498,7 @@ public class SimpleFilter
                 if (!s.startsWith(piece))
                 {
                     result = false;
-                    break loop;
+                    break;
                 }
             }
 
@@ -514,15 +506,8 @@ public class SimpleFilter
             // string ends with it.
             if (i == len - 1)
             {
-                if (s.endsWith(piece))
-                {
-                    result = true;
-                }
-                else
-                {
-                    result = false;
-                }
-                break loop;
+                result = s.endsWith(piece);
+                break;
             }
 
             // If this is neither the first or last piece, then
@@ -533,7 +518,7 @@ public class SimpleFilter
                 if (index < 0)
                 {
                     result = false;
-                    break loop;
+                    break;
                 }
             }
 

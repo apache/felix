@@ -18,17 +18,27 @@
  */
 package org.apache.felix.connect.felix.framework;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.Map;
+import java.util.Set;
 
-import org.osgi.framework.*;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceException;
+import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleRevision;
 
 import org.apache.felix.connect.felix.framework.util.MapToDictionary;
 import org.apache.felix.connect.felix.framework.util.StringMap;
 import org.apache.felix.connect.felix.framework.util.Util;
-import org.osgi.framework.wiring.BundleCapability;
-import org.osgi.framework.wiring.BundleRevision;
 
-class ServiceRegistrationImpl implements ServiceRegistration
+class ServiceRegistrationImpl<T> implements ServiceRegistration<T>
 {
     // Service registry.
     private final ServiceRegistry m_registry;
@@ -41,16 +51,16 @@ class ServiceRegistrationImpl implements ServiceRegistration
     // Service object.
     private volatile Object m_svcObj;
     // Service factory interface.
-    private volatile ServiceFactory m_factory;
+    private volatile ServiceFactory<T> m_factory;
     // Associated property dictionary.
     private volatile Map m_propMap = new StringMap(false);
     // Re-usable service reference.
-    private final ServiceReferenceImpl m_ref;
+    private final ServiceReferenceImpl<T> m_ref;
     // Flag indicating that we are unregistering.
     private volatile boolean m_isUnregistering = false;
 
     public ServiceRegistrationImpl(ServiceRegistry registry, Bundle bundle,
-            String[] classes, Long serviceId, Object svcObj, Dictionary dict)
+                                   String[] classes, Long serviceId, Object svcObj, Dictionary dict)
     {
         m_registry = registry;
         m_bundle = bundle;
@@ -77,7 +87,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
         m_svcObj = null;
     }
 
-    public synchronized ServiceReference getReference()
+    public synchronized ServiceReferenceImpl<T> getReference()
     {
         // Make sure registration is valid.
         if (!isValid())
@@ -152,7 +162,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
      * itself.
      *
      * @return The service object associated with the registration.
-     **/
+     */
     Object getService()
     {
         return m_svcObj;
@@ -175,7 +185,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
         }
     }
 
-    void ungetService(Bundle relBundle, Object svcObj)
+    void ungetService(Bundle relBundle, T svcObj)
     {
         // If the service object is a service factory, then
         // let it release the service object.
@@ -238,19 +248,24 @@ class ServiceRegistrationImpl implements ServiceRegistration
         }
         if (svcObj != null)
         {
-            for (int i = 0; i < m_classes.length; i++)
+            for (String className : m_classes)
             {
-                try {
-                if (!Class.forName(m_classes[i]).isAssignableFrom(svcObj.getClass()))
+                Class<?> clazz = Util.loadClassUsingClass(svcObj.getClass(), className);
+                if ((clazz == null) || !clazz.isAssignableFrom(svcObj.getClass()))
                 {
-                    throw new ServiceException(
-                            "Service cannot be cast: " + m_classes[i],
-                            ServiceException.FACTORY_ERROR);
+                    if (clazz == null)
+                    {
+                        throw new ServiceException(
+                                "Service cannot be cast due to missing class: " + className,
+                                ServiceException.FACTORY_ERROR);
+                    }
+                    else
+                    {
+                        throw new ServiceException(
+                                "Service cannot be cast: " + className,
+                                ServiceException.FACTORY_ERROR);
+                    }
                 }
-				} catch (ClassNotFoundException ex) {
-				   throw new ServiceException("Service is missing class: " + m_classes[i], ServiceException.FACTORY_ERROR);
-				}
-
             }
         }
         else
@@ -261,18 +276,17 @@ class ServiceRegistrationImpl implements ServiceRegistration
         return svcObj;
     }
 
-    private void ungetFactoryUnchecked(Bundle bundle, Object svcObj)
+    private void ungetFactoryUnchecked(Bundle bundle, T svcObj)
     {
         m_factory.ungetService(bundle, this, svcObj);
     }
-
 
 
     //
     // ServiceReference implementation
     //
 
-    class ServiceReferenceImpl implements ServiceReference, BundleCapability
+    class ServiceReferenceImpl<T> implements ServiceReference<T>, BundleCapability
     {
         private final ServiceReferenceMap m_map;
 
@@ -290,6 +304,13 @@ class ServiceRegistrationImpl implements ServiceRegistration
         // Capability methods.
         //
 
+
+        @Override
+        public BundleRevision getResource()
+        {
+            return getRevision();
+        }
+
         @Override
         public BundleRevision getRevision()
         {
@@ -305,30 +326,28 @@ class ServiceRegistrationImpl implements ServiceRegistration
         @Override
         public Map<String, String> getDirectives()
         {
-            return Collections.EMPTY_MAP;
+            return Collections.emptyMap();
         }
 
         @Override
-        public Map<String,Object> getAttributes()
+        public Map<String, Object> getAttributes()
         {
             return m_map;
         }
 
-        public List<String> getUses()
-        {
-            return Collections.EMPTY_LIST;
-        }
-
+        @Override
         public Object getProperty(String s)
         {
             return ServiceRegistrationImpl.this.getProperty(s);
         }
 
+        @Override
         public String[] getPropertyKeys()
         {
             return ServiceRegistrationImpl.this.getPropertyKeys();
         }
 
+        @Override
         public Bundle getBundle()
         {
             // The spec says that this should return null if
@@ -336,6 +355,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
             return (isValid()) ? m_bundle : null;
         }
 
+        @Override
         public Bundle[] getUsingBundles()
         {
             return ServiceRegistrationImpl.this.getUsingBundles();
@@ -349,12 +369,15 @@ class ServiceRegistrationImpl implements ServiceRegistration
             {
                 oc = oc + ocs[i];
                 if (i < ocs.length - 1)
+                {
                     oc = oc + ", ";
+                }
             }
             oc = oc + "]";
             return oc;
         }
 
+        @Override
         public boolean isAssignableTo(Bundle requester, String className)
         {
             // Always return true if the requester is the same as the provider.
@@ -365,9 +388,8 @@ class ServiceRegistrationImpl implements ServiceRegistration
 
             // Boolean flag.
             boolean allow = true;
-            // Get the package.
-            String pkgName = Util.getClassPackage(className);
-            /*
+            /* // Get the package.
+             * String pkgName = Util.getClassPackage(className);
              * Module requesterModule = ((BundleImpl)
              * requester).getCurrentModule(); // Get package wiring from service
              * requester. Wire requesterWire = Util.getWire(requesterModule,
@@ -444,6 +466,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
             return allow;
         }
 
+        @Override
         public int compareTo(Object reference)
         {
             ServiceReference other = (ServiceReference) reference;
@@ -485,66 +508,78 @@ class ServiceRegistrationImpl implements ServiceRegistration
         }
     }
 
-     private class ServiceReferenceMap implements Map
+    private class ServiceReferenceMap implements Map<String, Object>
     {
+        @Override
         public int size()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
+        @Override
         public boolean isEmpty()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
+        @Override
         public boolean containsKey(Object o)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
+        @Override
         public boolean containsValue(Object o)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
+        @Override
         public Object get(Object o)
         {
             return ServiceRegistrationImpl.this.getProperty((String) o);
         }
 
-        public Object put(Object k, Object v)
+        @Override
+        public Object put(String k, Object v)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
+        @Override
         public Object remove(Object o)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public void putAll(Map map)
+        @Override
+        public void putAll(Map<? extends String, ? extends Object> map)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
+        @Override
         public void clear()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public Set<Object> keySet()
+        @Override
+        public Set<String> keySet()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
+        @Override
         public Collection<Object> values()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public Set<Entry<Object, Object>> entrySet()
+        @Override
+        public Set<Entry<String, Object>> entrySet()
         {
-            return Collections.EMPTY_SET;
+            return Collections.emptySet();
         }
     }
 }

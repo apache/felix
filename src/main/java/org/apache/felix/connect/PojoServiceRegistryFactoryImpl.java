@@ -22,9 +22,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.security.cert.X509Certificate;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.osgi.framework.Bundle;
@@ -42,183 +44,227 @@ import org.apache.felix.connect.launch.ClasspathScanner;
 import org.apache.felix.connect.launch.PojoServiceRegistry;
 import org.apache.felix.connect.launch.PojoServiceRegistryFactory;
 
-public class PojoServiceRegistryFactoryImpl implements
-		PojoServiceRegistryFactory, FrameworkFactory {
+public class PojoServiceRegistryFactoryImpl implements PojoServiceRegistryFactory, FrameworkFactory
+{
 
-	public PojoServiceRegistry newPojoServiceRegistry(Map configuration)
-			throws Exception {
-		return new PojoSR(configuration);
-	}
+    public PojoServiceRegistry newPojoServiceRegistry(Map<String, Object> configuration) throws Exception
+    {
+        return new PojoSR(configuration);
+    }
 
-	public Framework newFramework(Map configuration) {
-		return new FrameworkImpl((String) configuration.get("pojosr.filter"));
-	}
+    public Framework newFramework(Map<String, String> configuration)
+    {
+        return new FrameworkImpl(configuration.get("pojosr.filter"));
+    }
 
-	private static final class FrameworkImpl implements Framework {
-		private final String m_filter;
-		private volatile Bundle m_bundle = null;
-		private volatile PojoServiceRegistry m_reg = null;
+    private static final class FrameworkImpl implements Framework
+    {
+        private final String m_filter;
+        private volatile Bundle m_bundle = null;
+        private volatile PojoServiceRegistry m_reg = null;
 
-		public FrameworkImpl(String filter) {
-			m_filter = filter;
-		}
+        public FrameworkImpl(String filter)
+        {
+            m_filter = filter;
+        }
 
-		public void init() throws BundleException {
-			try {
-				m_reg = new PojoServiceRegistryFactoryImpl()
-				.newPojoServiceRegistry(new HashMap());
-				m_bundle = m_reg.getBundleContext()
-						.getBundle();
-			} catch (Exception ex) {
-				throw new BundleException("Unable to scan classpath", ex);
-			}
-		}
+        public void init() throws BundleException
+        {
+            try
+            {
+                m_reg = new PojoServiceRegistryFactoryImpl()
+                        .newPojoServiceRegistry(new HashMap<String, Object>());
+                m_bundle = m_reg.getBundleContext().getBundle();
+            }
+            catch (Exception ex)
+            {
+                throw new BundleException("Unable to scan classpath", ex);
+            }
+        }
 
-		public int getState() {
-			return (m_bundle == null) ? Bundle.INSTALLED : m_bundle.getState();
-		}
+        public int getState()
+        {
+            return (m_bundle == null) ? Bundle.INSTALLED : m_bundle.getState();
+        }
 
-		public void start(int options) throws BundleException {
-			start();
-		}
+        public void start(int options) throws BundleException
+        {
+            start();
+        }
 
-		public void start() throws BundleException {
-			try {
-				m_reg.startBundles((m_filter != null) ? new ClasspathScanner()
-					.scanForBundles(m_filter)
-					: new ClasspathScanner().scanForBundles());
-			} catch (Exception e) {
-				throw new BundleException("Error starting framework", e);
-			}
-		}
+        public void start() throws BundleException
+        {
+            try
+            {
+                m_reg.startBundles((m_filter != null) ? new ClasspathScanner()
+                        .scanForBundles(m_filter)
+                        : new ClasspathScanner().scanForBundles());
+            }
+            catch (Exception e)
+            {
+                throw new BundleException("Error starting framework", e);
+            }
+        }
 
-		public void stop(int options) throws BundleException {
-			m_bundle.stop(options);
-		}
+        public void stop(int options) throws BundleException
+        {
+            m_bundle.stop(options);
+        }
 
-		public void stop() throws BundleException {
-			m_bundle.stop();
-		}
+        public void stop() throws BundleException
+        {
+            m_bundle.stop();
+        }
 
-		public void update(InputStream input) throws BundleException {
-			m_bundle.update(input);
-		}
+        public void update(InputStream input) throws BundleException
+        {
+            m_bundle.update(input);
+        }
 
-		public void update() throws BundleException {
-			m_bundle.update();
-		}
+        public void update() throws BundleException
+        {
+            m_bundle.update();
+        }
 
-		public void uninstall() throws BundleException {
-			m_bundle.uninstall();
-		}
+        public void uninstall() throws BundleException
+        {
+            m_bundle.uninstall();
+        }
 
-		public Dictionary getHeaders() {
-			return m_bundle.getHeaders();
-		}
+        public Dictionary<String, String> getHeaders()
+        {
+            return m_bundle.getHeaders();
+        }
 
-		public long getBundleId() {
-			return m_bundle.getBundleId();
-		}
+        public long getBundleId()
+        {
+            return m_bundle.getBundleId();
+        }
 
-		public String getLocation() {
-			return m_bundle.getLocation();
-		}
+        public String getLocation()
+        {
+            return m_bundle.getLocation();
+        }
 
-		public ServiceReference[] getRegisteredServices() {
-			return m_bundle.getRegisteredServices();
-		}
+        public ServiceReference[] getRegisteredServices()
+        {
+            return m_bundle.getRegisteredServices();
+        }
 
-		public ServiceReference[] getServicesInUse() {
-			return m_bundle.getServicesInUse();
-		}
+        public ServiceReference[] getServicesInUse()
+        {
+            return m_bundle.getServicesInUse();
+        }
 
-		public boolean hasPermission(Object permission) {
-			return m_bundle.hasPermission(permission);
-		}
+        public boolean hasPermission(Object permission)
+        {
+            return m_bundle.hasPermission(permission);
+        }
 
-		public URL getResource(String name) {
-			return m_bundle.getResource(name);
-		}
+        public URL getResource(String name)
+        {
+            return m_bundle.getResource(name);
+        }
 
-		public Dictionary getHeaders(String locale) {
-			return m_bundle.getHeaders(locale);
-		}
+        public Dictionary<String, String> getHeaders(String locale)
+        {
+            return m_bundle.getHeaders(locale);
+        }
 
-		public String getSymbolicName() {
-			return m_bundle.getSymbolicName();
-		}
+        public String getSymbolicName()
+        {
+            return m_bundle.getSymbolicName();
+        }
 
-		public Class loadClass(String name) throws ClassNotFoundException {
-			return m_bundle.loadClass(name);
-		}
+        public Class loadClass(String name) throws ClassNotFoundException
+        {
+            return m_bundle.loadClass(name);
+        }
 
-		public Enumeration getResources(String name) throws IOException {
-			return m_bundle.getResources(name);
-		}
+        public Enumeration<URL> getResources(String name) throws IOException
+        {
+            return m_bundle.getResources(name);
+        }
 
-		public Enumeration getEntryPaths(String path) {
-			return m_bundle.getEntryPaths(path);
-		}
+        public Enumeration<String> getEntryPaths(String path)
+        {
+            return m_bundle.getEntryPaths(path);
+        }
 
-		public URL getEntry(String path) {
-			return m_bundle.getEntry(path);
-		}
+        public URL getEntry(String path)
+        {
+            return m_bundle.getEntry(path);
+        }
 
-		public long getLastModified() {
-			return m_bundle.getLastModified();
-		}
+        public long getLastModified()
+        {
+            return m_bundle.getLastModified();
+        }
 
-		public Enumeration findEntries(String path, String filePattern,
-				boolean recurse) {
-			return m_bundle.findEntries(path, filePattern, recurse);
-		}
+        public Enumeration<URL> findEntries(String path, String filePattern, boolean recurse)
+        {
+            return m_bundle.findEntries(path, filePattern, recurse);
+        }
 
-		public BundleContext getBundleContext() {
-			return m_bundle.getBundleContext();
-		}
+        public BundleContext getBundleContext()
+        {
+            return m_bundle.getBundleContext();
+        }
 
-		public Map getSignerCertificates(int signersType) {
-			return m_bundle.getSignerCertificates(signersType);
-		}
+        public Map<X509Certificate, List<X509Certificate>> getSignerCertificates(int signersType)
+        {
+            return m_bundle.getSignerCertificates(signersType);
+        }
 
-		public Version getVersion() {
-			return m_bundle.getVersion();
-		}
+        public Version getVersion()
+        {
+            return m_bundle.getVersion();
+        }
 
-		public FrameworkEvent waitForStop(long timeout)
-				throws InterruptedException {
-			final Object lock = new Object();
-			
-			m_bundle.getBundleContext().addBundleListener(new SynchronousBundleListener() {
-				
-				public void bundleChanged(BundleEvent event) {
-					if ((event.getBundle() == m_bundle) && (event.getType() == BundleEvent.STOPPED)) {
-						synchronized (lock) {
-							lock.notifyAll();
-						}
-					}
-				}
-			});
-			synchronized (lock) {
-				while (m_bundle.getState() != Bundle.RESOLVED) {
-					if (m_bundle.getState() == Bundle.STOPPING ) {
-						lock.wait(100);
-					}
-					else {
-						lock.wait();
-					}
-				}
-			}
-			return new FrameworkEvent(FrameworkEvent.STOPPED, m_bundle, null);
-		}
-		
-		public File getDataFile(String filename) {
-		    return m_bundle.getDataFile(filename);
-		}
+        public FrameworkEvent waitForStop(long timeout)
+                throws InterruptedException
+        {
+            final Object lock = new Object();
+
+            m_bundle.getBundleContext().addBundleListener(new SynchronousBundleListener()
+            {
+
+                public void bundleChanged(BundleEvent event)
+                {
+                    if ((event.getBundle() == m_bundle) && (event.getType() == BundleEvent.STOPPED))
+                    {
+                        synchronized (lock)
+                        {
+                            lock.notifyAll();
+                        }
+                    }
+                }
+            });
+            synchronized (lock)
+            {
+                while (m_bundle.getState() != Bundle.RESOLVED)
+                {
+                    if (m_bundle.getState() == Bundle.STOPPING)
+                    {
+                        lock.wait(100);
+                    }
+                    else
+                    {
+                        lock.wait();
+                    }
+                }
+            }
+            return new FrameworkEvent(FrameworkEvent.STOPPED, m_bundle, null);
+        }
+
+        public File getDataFile(String filename)
+        {
+            return m_bundle.getDataFile(filename);
+        }
 
         public int compareTo(Bundle o)
         {
-            if (o == this) 
+            if (o == this)
             {
                 return 0;
             }
@@ -230,5 +276,5 @@ public class PojoServiceRegistryFactoryImpl implements
             return m_bundle.adapt(type);
         }
 
-	}
+    }
 }

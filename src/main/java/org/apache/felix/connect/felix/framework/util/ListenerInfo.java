@@ -19,6 +19,7 @@
 package org.apache.felix.connect.felix.framework.util;
 
 import java.util.EventListener;
+
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
@@ -36,8 +37,8 @@ public class ListenerInfo implements ListenerHook.ListenerInfo
     private final boolean m_removed;
 
     public ListenerInfo(
-        Bundle bundle, BundleContext context, Class listenerClass, EventListener listener,
-        Filter filter, Object acc, boolean removed)
+            Bundle bundle, BundleContext context, Class listenerClass, EventListener listener,
+            Filter filter, Object acc, boolean removed)
     {
         // Technically, we could get the bundle from the bundle context, but
         // there are some corner cases where the bundle context might become
@@ -121,10 +122,10 @@ public class ListenerInfo implements ListenerHook.ListenerInfo
 
         ListenerInfo other = (ListenerInfo) obj;
         return (other.m_bundle == m_bundle)
-            && (other.m_context == m_context)
-            && (other.m_listenerClass == m_listenerClass)
-            && (other.m_listener == m_listener)
-            && (m_filter == null ? other.m_filter == null : m_filter.equals(other.m_filter));
+                && (other.m_context == m_context)
+                && (other.m_listenerClass == m_listenerClass)
+                && (other.m_listener == m_listener)
+                && (m_filter == null ? other.m_filter == null : m_filter.equals(other.m_filter));
     }
 
     @Override
