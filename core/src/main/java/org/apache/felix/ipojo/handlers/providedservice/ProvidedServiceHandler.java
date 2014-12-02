@@ -289,12 +289,14 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
      * @throws ConfigurationException : the checked provided service is not correct.
      */
     private boolean checkProvidedService(ProvidedService svc) throws ConfigurationException {
+        Set<ClassLoader> classloaders = new LinkedHashSet<ClassLoader>();
         for (int i = 0; i < svc.getServiceSpecifications().length; i++) {
             String specName = svc.getServiceSpecifications()[i];
 
             // Check service level dependencies
             try {
-                Class spec = getInstanceManager().getFactory().loadClass(specName);
+                Class spec = load(specName, classloaders);
+                classloaders.add(spec.getClassLoader());
                 Field specField = spec.getField("specification");
                 Object specif = specField.get(null);
                 if (specif instanceof String) {
@@ -325,6 +327,22 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
         }
 
         return true;
+    }
+
+    private Class load(String specName, Set<ClassLoader> classloaders) throws ClassNotFoundException {
+        try {
+            return getInstanceManager().getFactory().loadClass(specName);
+        } catch (ClassNotFoundException e) {
+            // Try collected classloaders.
+        }
+        for (ClassLoader cl : classloaders) {
+            try {
+                return cl.loadClass(specName);
+            } catch (ClassNotFoundException e) {
+                // Try next one.
+            }
+        }
+        throw new ClassNotFoundException(specName);
     }
 
     /**
