@@ -60,7 +60,7 @@ public class ComponentVisitor extends AnnotationVisitor {
         if (name.equals("public_factory")  || name.equals("publicFactory")) {
             // public_factory is deprecated, but must sill be supported
             String factory = value.toString();
-            if (factory != null && factory.equalsIgnoreCase("false")) {
+            if (factory.equalsIgnoreCase("false")) {
                 component.addAttribute(new Attribute("public", "false"));
             } else {
                 component.addAttribute(new Attribute("public", "true"));

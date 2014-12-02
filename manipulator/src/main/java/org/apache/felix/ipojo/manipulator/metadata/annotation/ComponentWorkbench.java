@@ -63,6 +63,11 @@ public class ComponentWorkbench {
 
     private ClassNode classNode;
 
+    /**
+     * A flag indicating if the class needs to be ignored.
+     */
+    private boolean toIgnore;
+
     public ComponentWorkbench(BindingRegistry bindingRegistry, ClassNode node) {
         this.bindingRegistry = bindingRegistry;
         this.classNode = node;
@@ -83,6 +88,7 @@ public class ComponentWorkbench {
 
     /**
      * The identified root Element. May be null if at the visit time, the root as not been identified.
+     *
      * @return the root Element. or {@literal null} if not defined at the execution time.
      */
     public Element getRoot() {
@@ -148,5 +154,23 @@ public class ComponentWorkbench {
 
         return root;
 
+    }
+
+    /**
+     * Checks whether this class must be ignored.
+     *
+     * @return {@code true} if the class is ignored.
+     */
+    public boolean ignore() {
+        return toIgnore;
+    }
+
+    /**
+     * Sets the 'ignore' aspect of the current class.
+     *
+     * @param ignore whether or not the class must be ignored.
+     */
+    public void ignore(boolean ignore) {
+        this.toIgnore = ignore;
     }
 }
