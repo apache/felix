@@ -98,6 +98,12 @@ public class ClassMetadataCollector extends ClassVisitor {
      * @see org.objectweb.asm.ClassVisitor#visitAnnotation(java.lang.String, boolean)
      */
     public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
+        //TODO we should find a better way to do this.
+        // Cannot retrieve the class object as @Configuration is in iPOJO runtime.
+        if (Type.getType(desc).getClassName().equals("org.apache.felix.ipojo.configuration.Configuration")) {
+            workbench.ignore(true);
+            return null;
+        }
 
         // Return the visitor to be executed (may be null)
         return registry.selection(workbench)
@@ -151,6 +157,11 @@ public class ClassMetadataCollector extends ClassVisitor {
         if (!(is(Opcodes.ACC_ANNOTATION) || is(Opcodes.ACC_INTERFACE) || is(Opcodes.ACC_ABSTRACT))) {
             if (workbench.getRoot() == null) {
                 // No 'top-level' element has been contributed
+
+                if (workbench.ignore()) {
+                    // Ignore this class.
+                    return;
+                }
 
                 if (!workbench.getElements().isEmpty()) {
                     // There are other annotation's contribution on this type (additional handler declaration/configuration)
