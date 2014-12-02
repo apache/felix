@@ -1541,6 +1541,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * @return the set of registered fields.
      */
     public Set getRegistredFields() {
+        // IMPORTANT - method used by the manipulator
         if (m_fieldRegistration == null) {
             return null;
         }
@@ -1555,6 +1556,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * @return the set of registered methods.
      */
     public Set getRegistredMethods() {
+        // IMPORTANT - method used by the manipulator
         if (m_methodRegistration == null) {
             return null;
         } else {

@@ -26,6 +26,7 @@ import org.osgi.framework.BundleContext;
 import java.util.Properties;
 
 import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertNotSame;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -114,6 +115,15 @@ public class TestContextInjectionFromAnnotations extends Common {
         BundleContext context = (BundleContext) check.map().get("context");
         assertNotNull(context);
         assertEquals(bc, context);
+    }
+
+    @Test
+    public void testInstanceCreatedFromConfiguration() {
+        CheckService check = ipojoHelper.getServiceObjectByName(CheckService.class, "from.configuration");
+        assertNotNull(check);
+        BundleContext context = (BundleContext) check.map().get("context");
+        assertNotNull(context);
+        assertNotSame(bc, context);
     }
 
 }
