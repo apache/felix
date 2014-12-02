@@ -312,7 +312,7 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
                     throw new ConfigurationException("Service Providing: The specification field of the service specification " + svc.getServiceSpecifications()[i] + " needs to be a String");
                 }
             } catch (NoSuchFieldException e) {
-                return true; // No specification field
+                // Ignore it, keep and going.
             } catch (ClassNotFoundException e) {
                 throw new ConfigurationException("Service Providing: The service specification " + svc.getServiceSpecifications()[i] + " cannot be loaded", e);
             } catch (IllegalArgumentException e) {
