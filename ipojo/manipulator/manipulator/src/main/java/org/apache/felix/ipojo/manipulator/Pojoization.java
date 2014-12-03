@@ -154,6 +154,7 @@ public class Pojoization {
         try {
             JarFile origin = new JarFile(in);
             JarFileResourceStore jfrs = new JarFileResourceStore(origin, out);
+            jfrs.setClassLoader(loader);
             if (in.getName().endsWith(".war")) {
                 // this is a war file, use the right mapper
                 jfrs.setResourceMapper(new WABResourceMapper());
@@ -222,6 +223,7 @@ public class Pojoization {
         try {
             JarFile origin = new JarFile(in);
             JarFileResourceStore jfrs = new JarFileResourceStore(origin, out);
+            jfrs.setClassLoader(loader);
             if (in.getName().endsWith(".war")) {
                 // this is a war file, use the right mapper
                 jfrs.setResourceMapper(new WABResourceMapper());
@@ -336,7 +338,8 @@ public class Pojoization {
 
     public void pojoization(final ResourceStore store,
                             final MetadataProvider metadata,
-                            final ManipulationVisitor visitor, ClassLoader loader) {
+                            final ManipulationVisitor visitor,
+                            final ClassLoader loader) {
 
         ManipulationEngine engine = new ManipulationEngine(loader);
         engine.setResourceStore(store);
