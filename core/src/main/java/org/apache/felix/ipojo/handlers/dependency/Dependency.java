@@ -475,7 +475,11 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
 
         if (m_isProxy) {
             if (isAggregate()) {
-                m_proxyObject = new ServiceCollection(this);
+                if (m_type == AggregateDependencyInjectionType.SET) {
+                    m_proxyObject = new ServiceSet(this);
+                } else {
+                    m_proxyObject = new ServiceList(this);
+                }
             } else {
                 // Can we really proxy ? We can proxy only interfaces.
                 if (getSpecification().isInterface()) {
