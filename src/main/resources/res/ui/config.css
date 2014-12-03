@@ -36,3 +36,4 @@ tr.fpid   td   { font-style:italic }
 span.default_value {
 	float: left; margin-right: .3em;
 }
+td.col_Exists_body div.ui-icon { margin-left:auto; margin-right: auto }

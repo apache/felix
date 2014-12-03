@@ -460,9 +460,13 @@ function unbindConfig(/* String */ configId, /* String */ bundleLocation)
 
 function addConfig(conf) {
 	var tr = configRow.clone().appendTo(configBody);
+	
+	if (!conf.has_config) {
+		tr.find('td:eq(0)').empty();
+	}
 
 	// rendering name - indented if factory pid is set
-	var nms = tr.find('td:eq(0) div');
+	var nms = tr.find('td:eq(1) div');
 	if (conf.fpid) { 
 		nms.after(conf.id); 
 		tr.attr('fpid', conf.name);
@@ -470,10 +474,10 @@ function addConfig(conf) {
 		nms.addClass('ui-helper-hidden').parent().text(conf.name);
 	}
 
-	tr.find('td:eq(0)').click(function() { // name & edit
+	tr.find('td:eq(1)').click(function() { // name & edit
 		configure(conf.id);
 	});
-	tr.find('td:eq(1)').html(conf.bundle ? '<a href="' + pluginRoot + '/../bundles/' + conf.bundle + '">' + conf.bundle_name + '</a>' : '-'); // binding
+	tr.find('td:eq(2)').html(conf.bundle ? '<a href="' + pluginRoot + '/../bundles/' + conf.bundle + '">' + conf.bundle_name + '</a>' : '-'); // binding
 	
 	// buttons
 	tr.find('li:eq(0)').click(function() { // edit
@@ -492,11 +496,11 @@ function addConfig(conf) {
 function addFactoryConfig(conf) {
 	var tr = factoryRow.clone().appendTo(configTable).attr('fpid', conf.name);
 	//tr.find('td:eq(1)').text(conf.id); // fpid
-	tr.find('td:eq(0)').text(conf.name).click(function() { // name & edit
+	tr.find('td:eq(1)').text(conf.name).click(function() { // name & edit
 		configure(conf.id, true);
 	});
 	// buttons
-	tr.find('li:eq(0)').click(function() { // edit
+	tr.find('li:eq(1)').click(function() { // edit
 		configure(conf.id, true);
 	});
 }
@@ -513,7 +517,7 @@ function treetableExtraction(node) {
 	var fpid = row.attr('fpid');
 	
 	// factory row
-	if ( row.hasClass('fpid') && fpid) return fpid + (desc==0?1:0) + text;
+	if ( row.hasClass('fpid') && fpid) return fpid + (desc==1?1:0) + text;
 
 	// bundle or name row
 	if ( fpid ) return fpid + desc + text;
@@ -615,12 +619,15 @@ $(document).ready(function() {
 
 		// init tablesorte
 		configTable.tablesorter({
-			headers: { 2: { sorter: false }  },
-			sortList: [[0,1]],
+			headers: {
+				0: { sorter: false },
+				3: { sorter: false }
+			},
+			sortList: [[1,1]],
 			textExtraction: treetableExtraction
-		}).bind('sortStart', function() { // clear cache, otherwse extraction will not work
+		}).bind('sortStart', function() { // clear cache, otherwise extraction will not work
 			var table = $(this).trigger('update'); 
-		}).find('th:eq(0)').click();
+		}).find('th:eq(1)').click();
 	} else {
 		configContent.addClass('ui-helper-hidden');
 	}

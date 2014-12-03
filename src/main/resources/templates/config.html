@@ -50,6 +50,7 @@ var param = { // param
 	<table id="configTable" class="tablesorter nicetable noauto">
 		<thead>
 			<tr>
+				<th class="col_Exists">${config.title.exists}</th>
 				<th class="col_Name">${config.title.name}</th>
 				<th class="col_Binding">${config.title.bundle}</th>
 				<th class="col_Actions">${config.title.actions}</th>
@@ -57,6 +58,7 @@ var param = { // param
 		</thead>
 		<tbody>
 			<tr>
+				<td class="col_Exists_body" title="${config.title.exists.tip}"><div class="ui-icon ui-icon-check">&nbsp;</div></td>
 				<td class="pointer"><div class="ui-icon ui-icon-triangle-1-e subpid">&nbsp;</div></td>
 				<td>&nbsp;</td>
 				<td>
@@ -68,6 +70,7 @@ var param = { // param
 				</td>
 			</tr>
 			<tr class="fpid">
+				<td>&nbsp;</td>
 				<td class="pointer">&nbsp;</td>
 				<td>-</td>
 				<td>
