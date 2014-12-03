@@ -559,6 +559,9 @@ class ConfigAdminSupport
                     .put( "name", name ); //$NON-NLS-1$
                 if ( null != config )
                 {
+                    // FELIX-3848
+                    data.put ( "has_config", true ); //$NON-NLS-1$
+
                     final String fpid = config.getFactoryPid();
                     if ( null != fpid )
                     {
