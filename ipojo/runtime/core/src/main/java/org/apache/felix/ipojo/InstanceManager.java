@@ -793,8 +793,10 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
                 stop();
                 throw new RuntimeException("Cannot create a POJO instance, the POJO constructor has thrown an exception", e.getTargetException());
             } catch (NoSuchMethodException e) {
+                // Improve the log message because of FELIX-4455, we will see if we get better feedback.
                 m_logger.log(Logger.ERROR,
-                        "[" + m_name + "] createInstance -> Cannot invoke the constructor (method not found) : " + e.getMessage(), e);
+                        "[" + m_name + "] iPOJO did not find a suitable constructor to create the " +
+                                "object: " + e.getMessage(), e);
                 stop();
                 throw new RuntimeException("Cannot create a POJO instance, the POJO constructor cannot be found", e);
             } catch (Throwable e) {
