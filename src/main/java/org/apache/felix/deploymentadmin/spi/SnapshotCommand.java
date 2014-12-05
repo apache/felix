@@ -81,48 +81,114 @@ public class SnapshotCommand extends Command {
         }
     }
 
-    private void store(File source, File target) throws IOException {
+    protected static void delete(File root, boolean deleteRoot) {
+        if (root.isDirectory()) {
+            File[] childs = root.listFiles();
+            for (int i = 0; i < childs.length; i++) {
+                delete(childs[i], true);
+            }
+        }
+        if (deleteRoot) {
+            root.delete();
+        }
+    }
+
+    protected static void restore(File archiveFile, File targetDir) throws IOException {
+        ZipInputStream input = null;
+        try {
+            input = new ZipInputStream(new FileInputStream(archiveFile));
+
+            ZipEntry entry;
+            while ((entry = input.getNextEntry()) != null) {
+                File targetEntry = new File(targetDir, entry.getName());
+
+                if (entry.isDirectory()) {
+                    if (!targetEntry.mkdirs()) {
+                        throw new IOException("Failed to create one or more sub-directories!");
+                    }
+                }
+                else {
+                    OutputStream output = null;
+                    try {
+                        output = new FileOutputStream(targetEntry);
+                        copy(input, output);
+                    }
+                    finally {
+                        closeSilently(output);
+                    }
+                }
+
+                input.closeEntry();
+            }
+        }
+        finally {
+            closeSilently(input);
+        }
+    }
+
+    protected static void store(File sourceDir, File archiveFile) throws IOException {
         ZipOutputStream output = null;
         try {
-            File[] children = source.listFiles();
-            output = new ZipOutputStream(new FileOutputStream(target));
-            for (int i = 0; i < children.length; i++) {
-                storeRecursive(source, new File(children[i].getName()), output);
-            }
+            output = new ZipOutputStream(new FileOutputStream(archiveFile));
+            // Traverse source directory recursively, and store all entries...
+            store(output, sourceDir, "");
         }
         finally {
             closeSilently(output);
         }
     }
 
-    private void storeRecursive(File current, File path, ZipOutputStream output) throws IOException {
-        output.putNextEntry(new ZipEntry(path.getPath()));
-        if (current.isDirectory()) {
-            output.closeEntry();
-            File[] childs = current.listFiles();
-            for (int i = 0; i < childs.length; i++) {
-                storeRecursive(childs[i], new File(path, childs[i].getName()), output);
+    protected static void copy(InputStream is, OutputStream os) throws IOException {
+        byte[] buffer = new byte[8192];
+        int read;
+        try {
+            while ((read = is.read(buffer)) != -1) {
+                os.write(buffer, 0, read);
             }
         }
-        else {
+        finally {
+            os.flush();
+        }
+    }
+
+    private static void store(ZipOutputStream output, File sourceDir, String entryName) throws IOException {
+        File entry = new File(sourceDir, entryName);
+
+        if (entry.isFile()) {
+            ZipEntry zipEntry = new ZipEntry(entryName);
+            zipEntry.setSize(entry.length());
+            zipEntry.setTime(entry.lastModified());
+
+            output.putNextEntry(zipEntry);
+
             InputStream input = null;
             try {
-                input = new FileInputStream(current);
-                byte[] buffer = new byte[4096];
-                for (int i = input.read(buffer); i != -1; i = input.read(buffer)) {
-                    output.write(buffer, 0, i);
-                }
-                output.closeEntry();
+                input = new FileInputStream(entry);
+                copy(input, output);
             }
             finally {
                 closeSilently(input);
+                output.closeEntry();
+            }
+        }
+        else if (entry.isDirectory()) {
+            String baseDir = "";
+            if (!"".equals(entryName)) {
+                baseDir = entryName.concat(File.separator);
+
+                output.putNextEntry(new ZipEntry(baseDir));
+                output.closeEntry();
+            }
+
+            String[] entries = entry.list();
+            for (int i = 0; i < entries.length; i++) {
+                store(output, sourceDir, baseDir.concat(entries[i]));
             }
         }
     }
 
     private static class DeleteSnapshotRunnable extends AbstractAction {
         private final DeploymentSessionImpl m_session;
-
         private final File m_snapshot;
 
         private DeleteSnapshotRunnable(DeploymentSessionImpl session, File snapshot) {
@@ -139,9 +205,7 @@ public class SnapshotCommand extends Command {
 
     private static class RestoreSnapshotRunnable extends AbstractAction {
         private final DeploymentSessionImpl m_session;
-
         private final File m_snapshot;
-
         private final File m_root;
 
         private RestoreSnapshotRunnable(DeploymentSessionImpl session, File snapshot, File root) {
@@ -152,8 +216,8 @@ public class SnapshotCommand extends Command {
 
         protected void doRun() throws Exception {
             try {
-                delete(m_root, false);
-                unpack(m_snapshot, m_root);
+                delete(m_root, false /* deleteRoot */);
+                restore(m_snapshot, m_root);
             }
             finally {
                 m_snapshot.delete();
@@ -162,47 +226,6 @@ public class SnapshotCommand extends Command {
 
         protected void onFailure(Exception e) {
             m_session.getLog().log(LogService.LOG_WARNING, "Failed to restore snapshot!", e);
-        }
-
-        private void delete(File root, boolean deleteRoot) {
-            if (root.isDirectory()) {
-                File[] childs = root.listFiles();
-                for (int i = 0; i < childs.length; i++) {
-                    delete(childs[i], true);
-                }
-            }
-            if (deleteRoot) {
-                root.delete();
-            }
-        }
-
-        private void unpack(File source, File target) throws IOException {
-            ZipInputStream input = null;
-            try {
-                input = new ZipInputStream(new FileInputStream(source));
-                for (ZipEntry entry = input.getNextEntry(); entry != null; entry = input.getNextEntry()) {
-                    if (entry.isDirectory()) {
-                        (new File(target, entry.getName())).mkdirs();
-                    }
-                    else {
-                        OutputStream output = null;
-                        try {
-                            output = new FileOutputStream(target);
-                            byte[] buffer = new byte[4096];
-                            for (int i = input.read(buffer); i > -1; i = input.read(buffer)) {
-                                output.write(buffer, 0, i);
-                            }
-                        }
-                        finally {
-                            closeSilently(output);
-                        }
-                    }
-                    input.closeEntry();
-                }
-            }
-            finally {
-                closeSilently(input);
-            }
         }
     }
 }

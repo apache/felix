@@ -61,17 +61,20 @@ public class DropAllResourcesCommand extends Command {
         ResourceInfoImpl[] orderedTargetResources = target.getOrderedResourceInfos();
         for (int i = orderedTargetResources.length - 1; i >= 0; i--) {
             ResourceInfoImpl resourceInfo = orderedTargetResources[i];
+            // FELIX-4491: only resources that need to be processed should be handled...
+            if (!resourceInfo.isProcessedResource()) {
+                session.getLog().log(LogService.LOG_INFO, "Ignoring non-processed resource: " + resourceInfo.getPath());
+                continue;
+            }
 
             String rpName = resourceInfo.getResourceProcessor();
             String path = resourceInfo.getPath();
 
-            if (resourceProcessors.contains(rpName)) {
+            // Keep track of which resource processors we've seen already...
+            if (!resourceProcessors.add(rpName)) {
                 // Already seen this RP; continue on the next one...
                 continue;
             }
-
-            // Keep track of which resource processors we've seen already...
-            resourceProcessors.add(rpName);
 
             ServiceReference ref = target.getResourceProcessor(path);
             if (ref == null) {

@@ -30,6 +30,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.deploymentadmin.DeploymentException;
 import org.osgi.service.deploymentadmin.spi.ResourceProcessor;
 import org.osgi.service.deploymentadmin.spi.ResourceProcessorException;
+import org.osgi.service.log.LogService;
 
 /**
  * Command that processes all the processed resources in the source deployment
@@ -49,7 +50,7 @@ public class ProcessResourceCommand extends Command {
      * committed at a later stage in the deployment session.
      * 
      * @param commitCommand The <code>CommitCommand</code> that will commit all
-     *        resource processors used in this command.
+     *            resource processors used in this command.
      */
     public ProcessResourceCommand(CommitResourceCommand commitCommand) {
         m_commitCommand = commitCommand;
@@ -83,6 +84,11 @@ public class ProcessResourceCommand extends Command {
                 ResourceInfoImpl resourceInfo = (ResourceInfoImpl) expectedResources.remove(name);
                 if (resourceInfo == null) {
                     throw new DeploymentException(CODE_OTHER_ERROR, "Resource '" + name + "' is not described in the manifest.");
+                }
+                // FELIX-4491: only resources that need to be processed should be handled...
+                if (!resourceInfo.isProcessedResource()) {
+                    session.getLog().log(LogService.LOG_INFO, "Ignoring non-processed resource: " + resourceInfo.getPath());
+                    continue;
                 }
 
                 ServiceReference ref = source.getResourceProcessor(name);
