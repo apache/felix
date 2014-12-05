@@ -51,8 +51,8 @@ public class DeploymentAdminEventTest extends BaseIntegrationTest
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         // incluse two different versions of the same bundle (with the same BSN), this is *not* allowed per the DA spec...
         dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi1", "bundleapi1", "1.0.0")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi2", "bundleapi2", "2.0.0")));
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundleapi1", "bundleapi1", "1.0.0")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundleapi2", "bundleapi2", "2.0.0")));
 
         final AtomicReference<Event> completionEventRef = new AtomicReference<Event>();
         final AtomicReference<Event> installEventRef = new AtomicReference<Event>();
@@ -114,8 +114,8 @@ public class DeploymentAdminEventTest extends BaseIntegrationTest
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi1", "bundleapi1", "1.0.0")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl1", "bundleimpl1", "1.0.0")));
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundleapi1", "bundleapi1", "1.0.0")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundleimpl1", "bundleimpl1", "1.0.0")));
 
         final AtomicReference<Event> completionEventRef = new AtomicReference<Event>();
         final AtomicReference<Event> installEventRef = new AtomicReference<Event>();
@@ -173,8 +173,8 @@ public class DeploymentAdminEventTest extends BaseIntegrationTest
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi1", "bundleapi1", "1.0.0")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl1", "bundleimpl1", "1.0.0")));
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundleapi1", "bundleapi1", "1.0.0")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundleimpl1", "bundleimpl1", "1.0.0")));
 
         final AtomicReference<Event> completionEventRef = new AtomicReference<Event>();
         final AtomicReference<Event> uninstallEventRef = new AtomicReference<Event>();
@@ -237,8 +237,8 @@ public class DeploymentAdminEventTest extends BaseIntegrationTest
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
-            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")))
+            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")))
             .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")));
 
         final AtomicReference<Event> completionEventRef = new AtomicReference<Event>();

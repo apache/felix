@@ -29,7 +29,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.felix</groupId>
-			<artifactId>org.apache.felix.deploymentadmin.test.bundleapi</artifactId>
+			<artifactId>org.apache.felix.deploymentadmin.test.bundleapi1</artifactId>
 			<version>1.0.0</version>
 		</dependency>
 	</dependencies>

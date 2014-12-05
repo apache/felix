@@ -39,6 +39,37 @@ import org.osgi.service.deploymentadmin.DeploymentPackage;
 public class CustomizerTest extends BaseIntegrationTest {
 
     /**
+     * FELIX-4491 - Only resources with a resource processor defined should be processed. 
+     */
+    @Test
+    public void testInstallBundleWithNonProcessedResourcesOk() throws Exception {
+        DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
+        dpBuilder
+            .add(dpBuilder.createResource().setNeedResourceProcessor(false).setUrl(getTestResource("LICENSE")))
+            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")))
+            .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")));
+
+        DeploymentPackage dp = installDeploymentPackage(dpBuilder);
+        assertNotNull("No deployment package returned?!", dp);
+
+        assertEquals("Expected a single deployment package?!", 1, countDeploymentPackages());
+
+        awaitRefreshPackagesEvent();
+
+        assertBundleExists(getSymbolicName("bundle1"), "1.0.0");
+        
+        // Check that only the processed resources are dropped...
+        dp.uninstall();
+
+        assertEquals("Expected no deployment package?!", 0, countDeploymentPackages());
+
+        awaitRefreshPackagesEvent();
+        
+        assertBundleNotExists(getSymbolicName("bundle1"), "1.0.0");
+    }
+    
+    /**
      * Tests that if an exception is thrown during the commit-phase, the installation proceeds and succeeds.
      */
     @Test
@@ -47,9 +78,9 @@ public class CustomizerTest extends BaseIntegrationTest {
 
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
-            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1")))
+            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")))
             .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3")));
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle3")));
 
         DeploymentPackage dp = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp);
@@ -72,7 +103,7 @@ public class CustomizerTest extends BaseIntegrationTest {
 
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
-            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1")))
+            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")))
             .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")));
 
         try {
@@ -98,7 +129,7 @@ public class CustomizerTest extends BaseIntegrationTest {
 
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
-            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1")))
+            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")))
             .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")));
 
         try {
@@ -124,7 +155,7 @@ public class CustomizerTest extends BaseIntegrationTest {
 
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
-            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1")))
+            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")))
             .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")));
 
         DeploymentPackage dp = installDeploymentPackage(dpBuilder);
@@ -146,9 +177,9 @@ public class CustomizerTest extends BaseIntegrationTest {
 
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
-            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1")))
+            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")))
             .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3")));
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle3")));
 
         try {
             installDeploymentPackage(dpBuilder);
@@ -170,7 +201,7 @@ public class CustomizerTest extends BaseIntegrationTest {
     public void testInstallResourceWithForeignCustomizerFail() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
-            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1")));
+            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")));
 
         installDeploymentPackage(dpBuilder);
 

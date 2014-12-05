@@ -69,16 +69,16 @@ public class DeploymentPackageBuilder {
 
             return new ByteArrayInputStream(baos.toByteArray());
         }
-        
+
         protected abstract Manifest filterManifest(Manifest manifest);
     }
-    
+
     /**
      * Simple manifest JAR manipulator implementation.
      */
     public static class JarManifestManipulatingFilter extends JarManifestFilter {
         private final String[] m_replacementEntries;
-        
+
         public JarManifestManipulatingFilter(String... replacementEntries) {
             if (replacementEntries == null || ((replacementEntries.length) % 2 != 0)) {
                 throw new IllegalArgumentException("Entries must be a multiple of two!");
@@ -90,13 +90,13 @@ public class DeploymentPackageBuilder {
         protected Manifest filterManifest(Manifest manifest) {
             for (int i = 0; i < m_replacementEntries.length; i += 2) {
                 String key = m_replacementEntries[i];
-                String value = m_replacementEntries[i+1];
+                String value = m_replacementEntries[i + 1];
                 manifest.getMainAttributes().putValue(key, value);
             }
             return manifest;
         }
     }
-    
+
     private static final int BUFFER_SIZE = 32 * 1024;
 
     private final String m_symbolicName;
@@ -112,7 +112,7 @@ public class DeploymentPackageBuilder {
     private DeploymentPackageBuilder(String symbolicName, String version) {
         m_symbolicName = symbolicName;
         m_version = version;
-        
+
         m_verification = true;
     }
 
@@ -172,8 +172,9 @@ public class DeploymentPackageBuilder {
     }
 
     /**
-     * Disables the verification of the generated deployment package, potentially causing an erroneous result to be generated.
-     *  
+     * Disables the verification of the generated deployment package, potentially causing an erroneous result to be
+     * generated.
+     * 
      * @return this builder.
      */
     public DeploymentPackageBuilder disableVerification() {
@@ -209,12 +210,12 @@ public class DeploymentPackageBuilder {
         artifacts.addAll(m_bundles);
         artifacts.addAll(m_processors);
         artifacts.addAll(m_artifacts);
-        
+
         if (m_verification) {
             validateProcessedArtifacts();
             validateMissingArtifacts(artifacts);
         }
-        
+
         Manifest m = createManifest(artifacts);
         writeStream(artifacts, m, output);
     }
@@ -284,7 +285,7 @@ public class DeploymentPackageBuilder {
                     a.putValue("Deployment-ProvidesResourceProcessor", file.getProcessorPid());
                 }
             }
-            else {
+            else if (file.isResourceProcessorNeeded()) {
                 a.putValue("Resource-Processor", file.getProcessorPid());
             }
 
@@ -297,19 +298,19 @@ public class DeploymentPackageBuilder {
 
         return manifest;
     }
-    
+
     private void validateMissingArtifacts(List<ArtifactData> files) throws Exception {
         boolean missing = false;
-        
+
         Iterator<ArtifactData> artifactIter = files.iterator();
         while (artifactIter.hasNext() && !missing) {
             ArtifactData data = artifactIter.next();
-            
+
             if (data.isMissing()) {
                 missing = true;
             }
         }
-        
+
         if (missing && (m_fixPackageVersion == null || "".equals(m_fixPackageVersion))) {
             throw new Exception("Artifact cannot be missing without a fix package version!");
         }
@@ -320,20 +321,18 @@ public class DeploymentPackageBuilder {
         while (artifactIter.hasNext()) {
             ArtifactData data = artifactIter.next();
             String pid = data.getProcessorPid();
-            boolean found = false;
+            boolean found = pid == null;
 
             Iterator<ArtifactData> processorIter = m_processors.iterator();
-            while (processorIter.hasNext()) {
+            while (!found && processorIter.hasNext()) {
                 ArtifactData processor = processorIter.next();
                 if (pid.equals(processor.getProcessorPid())) {
                     found = true;
-                    break;
                 }
             }
 
-            if (!found) {
-                throw new Exception("No resource processor found for artifact " + data.getURL()
-                    + " with processor PID " + pid);
+            if (!found && data.isResourceProcessorNeeded()) {
+                throw new Exception("No resource processor found for artifact " + data.getURL() + " with processor PID " + pid);
             }
         }
     }

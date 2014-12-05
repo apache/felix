@@ -56,6 +56,12 @@ public class DropResourceCommand extends Command {
         ResourceInfoImpl[] orderedTargetResources = target.getOrderedResourceInfos();
         for (int i = orderedTargetResources.length - 1; i >= 0; i--) {
             ResourceInfoImpl resourceInfo = orderedTargetResources[i];
+            // FELIX-4491: only resources that need to be processed should be handled...
+            if (!resourceInfo.isProcessedResource()) {
+                session.getLog().log(LogService.LOG_INFO, "Ignoring non-processed resource: " + resourceInfo.getPath());
+                continue;
+            }
+
             String path = resourceInfo.getPath();
             if (source.getResourceInfoByPath(path) == null) {
                 ServiceReference ref = target.getResourceProcessor(path);

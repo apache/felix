@@ -169,7 +169,10 @@ public abstract class BaseIntegrationTest extends TestCase {
     }
     
     protected final DeploymentPackage installDeploymentPackage(DeploymentPackageBuilder dpBuilder) throws Exception {
-        InputStream is = dpBuilder.generate();
+        return installDeploymentPackage(dpBuilder.generate());
+    }
+    
+    protected final DeploymentPackage installDeploymentPackage(InputStream is) throws Exception {
         try {
             return m_deploymentAdmin.installDeploymentPackage(is);
         } finally {
@@ -227,17 +230,24 @@ public abstract class BaseIntegrationTest extends TestCase {
         return resource;
     }
 
-    protected URL getTestBundle(String baseName) throws MalformedURLException {
-    	return getTestBundle(baseName, "1.0.0");
-    }
-    protected URL getTestBundle(String baseName, String version) throws MalformedURLException {
-    	return getTestBundle(baseName, baseName, version);
+    protected Bundle getBundle(String bsn) {
+        for (Bundle b : m_context.getBundles()) {
+            if (bsn.equals(b.getSymbolicName())) {
+                return b;
+            }
+        }
+        return null;
     }
 
-    protected URL getTestBundle(String artifactName, String baseName, String version) throws MalformedURLException {
-    	if (version == null) {
-    		version = "0.0.0";
-    	}
+    protected URL getTestBundleURL(String baseName) throws MalformedURLException {
+    	return getTestBundleURL(baseName, "1.0.0");
+    }
+    protected URL getTestBundleURL(String baseName, String version) throws MalformedURLException {
+    	return getTestBundleURL(baseName, baseName, version);
+    }
+
+    protected URL getTestBundleURL(String artifactName, String baseName, String version) throws MalformedURLException {
+        assertNotNull("Version cannot be null!", version);
         File f = new File(m_testBundleBasePath, String.format("%1$s/target/org.apache.felix.deploymentadmin.test.%2$s-%3$s.jar", artifactName, baseName, version));
         assertTrue("No such bundle: " + f, f.exists() && f.isFile());
         return f.toURI().toURL();

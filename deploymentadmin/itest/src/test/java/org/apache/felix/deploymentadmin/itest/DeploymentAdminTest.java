@@ -38,8 +38,8 @@ import org.osgi.service.deploymentadmin.DeploymentPackage;
  * Generic tests for {@link DeploymentAdmin}.
  */
 @RunWith(PaxExam.class)
-public class DeploymentAdminTest extends BaseIntegrationTest {
-
+public class DeploymentAdminTest extends BaseIntegrationTest
+{
     /**
      * Tests that we can update the configuration of {@link DeploymentAdmin} at runtime. Based on the test case for FELIX-4184, see 
      * {@link org.apache.felix.deploymentadmin.itest.InstallFixPackageTest#testInstallAndUpdateImplementationBundleWithSeparateAPIBundle_FELIX4184()}
@@ -57,21 +57,22 @@ public class DeploymentAdminTest extends BaseIntegrationTest {
         Thread.sleep(100);
 
         // This test case will only work if stopUnaffectedBundle is set to 'false'...
-        try {
+        try
+        {
             // first, install a deployment package with implementation and api bundles in version 1.0.0
             DeploymentPackageBuilder dpBuilder = createDeploymentPackageBuilder("a", "1.0.0");
-            dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl1", "bundleimpl1", "1.0.0")));
-            dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi1", "bundleapi1", "1.0.0")));
-    
+            dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundleimpl1", "bundleimpl1", "1.0.0")));
+            dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundleapi1", "bundleapi1", "1.0.0")));
+
             DeploymentPackage dp1 = installDeploymentPackage(dpBuilder);
             assertNotNull("No deployment package returned?!", dp1);
-    
+
             assertEquals("Expected a single deployment package?!", 1, countDeploymentPackages());
-    
+
             // then, install a fix package with implementation and api bundles in version 2.0.0
             dpBuilder = createDeploymentPackageBuilder("a", "2.0.0").setFixPackage("[1.0.0,2.0.0]");
-            dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl2", "bundleimpl2", "2.0.0")));
-            dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi2", "bundleapi2", "2.0.0")));
+            dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundleimpl2", "bundleimpl2", "2.0.0")));
+            dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundleapi2", "bundleapi2", "2.0.0")));
 
             DeploymentPackage dp2 = installDeploymentPackage(dpBuilder);
             assertNotNull("No deployment package returned?!", dp2);
@@ -82,94 +83,82 @@ public class DeploymentAdminTest extends BaseIntegrationTest {
             assertBundleExists(getSymbolicName("bundleapi"), "2.0.0");
             assertBundleNotExists(getSymbolicName("bundleimpl"), "1.0.0");
             assertBundleNotExists(getSymbolicName("bundleapi"), "1.0.0");
-        } finally {
+        }
+        finally
+        {
             config.delete();
         }
     }
 
     @Test
-    public void testBundleSymbolicNameMustMatchManifestEntry() throws Exception {
+    public void testBundleSymbolicNameMustMatchManifestEntry() throws Exception
+    {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder
-            .add(dpBuilder.createBundleResource()
-                .setUrl(getTestBundle("bundle1"))
-            )
-            .add(dpBuilder.createBundleResource()
-                .setUrl(getTestBundle("bundle2"))
-                .setFilter(new JarManifestManipulatingFilter("Bundle-SymbolicName", "foo"))
-            );
-        
-        try {
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1"))).add(
+            dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")).setFilter(new JarManifestManipulatingFilter("Bundle-SymbolicName", "foo")));
+
+        try
+        {
             installDeploymentPackage(dpBuilder);
             fail("Succeeded into installing a bundle with a fake symbolic name?!");
         }
-        catch (DeploymentException exception) {
+        catch (DeploymentException exception)
+        {
             // Ok; expected...
             assertDeploymentException(CODE_BUNDLE_NAME_ERROR, exception);
         }
     }
 
     @Test
-    public void testBundleVersionMustMatchManifestEntry() throws Exception {
+    public void testBundleVersionMustMatchManifestEntry() throws Exception
+    {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder
-            .add(dpBuilder.createBundleResource()
-                .setUrl(getTestBundle("bundle1"))
-            )
-            .add(dpBuilder.createBundleResource()
-                .setUrl(getTestBundle("bundle2"))
-                .setFilter(new JarManifestManipulatingFilter("Bundle-Version", "1.1.0"))
-            );
-        
-        try {
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1"))).add(
+            dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")).setFilter(new JarManifestManipulatingFilter("Bundle-Version", "1.1.0")));
+
+        try
+        {
             installDeploymentPackage(dpBuilder);
             fail("Succeeded into installing a bundle with a fake version?!");
         }
-        catch (DeploymentException exception) {
+        catch (DeploymentException exception)
+        {
             // Ok; expected...
             assertDeploymentException(CODE_OTHER_ERROR, exception);
         }
     }
 
     @Test
-    public void testManifestEntryMustMatchBundleSymbolicName() throws Exception {
+    public void testManifestEntryMustMatchBundleSymbolicName() throws Exception
+    {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder
-            .add(dpBuilder.createBundleResource()
-                .setUrl(getTestBundle("bundle1"))
-            )
-            .add(dpBuilder.createBundleResource()
-                .setSymbolicName("foo")
-                .setUrl(getTestBundle("bundle2"))
-            );
-        
-        try {
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1"))).add(dpBuilder.createBundleResource().setSymbolicName("foo").setUrl(getTestBundleURL("bundle2")));
+
+        try
+        {
             installDeploymentPackage(dpBuilder);
             fail("Succeeded into installing a bundle with a fake symbolic name?!");
         }
-        catch (DeploymentException exception) {
+        catch (DeploymentException exception)
+        {
             // Ok; expected...
             assertDeploymentException(CODE_BUNDLE_NAME_ERROR, exception);
         }
     }
 
     @Test
-    public void testManifestEntryMustMatchBundleVersion() throws Exception {
+    public void testManifestEntryMustMatchBundleVersion() throws Exception
+    {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder
-            .add(dpBuilder.createBundleResource()
-                .setUrl(getTestBundle("bundle1"))
-            )
-            .add(dpBuilder.createBundleResource()
-                .setVersion("1.1.0")
-                .setUrl(getTestBundle("bundle2"))
-            );
-        
-        try {
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1"))).add(dpBuilder.createBundleResource().setVersion("1.1.0").setUrl(getTestBundleURL("bundle2")));
+
+        try
+        {
             installDeploymentPackage(dpBuilder);
             fail("Succeeded into installing a bundle with a fake version?!");
         }
-        catch (DeploymentException exception) {
+        catch (DeploymentException exception)
+        {
             // Ok; expected...
             assertDeploymentException(CODE_OTHER_ERROR, exception);
         }

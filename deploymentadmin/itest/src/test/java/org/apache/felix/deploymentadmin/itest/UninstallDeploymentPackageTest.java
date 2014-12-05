@@ -43,8 +43,8 @@ public class UninstallDeploymentPackageTest extends BaseIntegrationTest {
     public void testForcedUninstallDeploymentPackageWithMissingResourceProcessorSucceeds() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
-            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")))
+            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")))
             .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")));
 
         DeploymentPackage dp = installDeploymentPackage(dpBuilder);
@@ -78,8 +78,8 @@ public class UninstallDeploymentPackageTest extends BaseIntegrationTest {
     public void testUninstallBundleWithFragmentOk() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("fragment1")));
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("fragment1")));
 
         DeploymentPackage dp = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp);
@@ -109,11 +109,11 @@ public class UninstallDeploymentPackageTest extends BaseIntegrationTest {
     public void testUninstallBundleWithOtherArtifactsOk() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
-            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1")))
+            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")))
             .add(
                 dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1)
                     .setUrl(getTestResource("test-config1.xml")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3")));
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle3")));
 
         DeploymentPackage dp = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp);
@@ -142,8 +142,8 @@ public class UninstallDeploymentPackageTest extends BaseIntegrationTest {
     public void testUninstallDeploymentPackageWithExceptionThrowingInCommitCausesNoRollbackOk() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
-            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")))
+            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")))
             .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")));
 
         DeploymentPackage dp = installDeploymentPackage(dpBuilder);
@@ -171,8 +171,8 @@ public class UninstallDeploymentPackageTest extends BaseIntegrationTest {
     public void testUninstallDeploymentPackageWithExceptionThrowingInDropAllResourcesCausesRollbackOk() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
-            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")))
+            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")))
             .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")));
 
         DeploymentPackage dp = installDeploymentPackage(dpBuilder);
@@ -210,8 +210,8 @@ public class UninstallDeploymentPackageTest extends BaseIntegrationTest {
     public void testUninstallDeploymentPackageWithExceptionThrowingInPrepareCausesRollbackOk() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
-            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")))
+            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")))
             .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")));
 
         DeploymentPackage dp = installDeploymentPackage(dpBuilder);
@@ -246,8 +246,8 @@ public class UninstallDeploymentPackageTest extends BaseIntegrationTest {
     public void testUninstallDeploymentPackageWithExceptionThrownInStopCauseNoRollbackOk() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3")));
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle3")));
 
         DeploymentPackage dp = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp);
@@ -277,8 +277,8 @@ public class UninstallDeploymentPackageTest extends BaseIntegrationTest {
     public void testUninstallDeploymentPackageWithMissingResourceProcessorCausesRollback() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
-            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")))
+            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")))
             .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")));
 
         DeploymentPackage dp = installDeploymentPackage(dpBuilder);

@@ -18,7 +18,10 @@
  */
 package org.apache.felix.deploymentadmin.itest;
 
+import java.io.File;
+
 import org.apache.felix.deploymentadmin.itest.util.DeploymentPackageBuilder;
+import org.apache.felix.deploymentadmin.itest.util.DeploymentPackageBuilder.JarManifestManipulatingFilter;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
@@ -42,8 +45,8 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         // incluse two different versions of the same bundle (with the same BSN), this is *not* allowed per the DA spec...
         dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi1", "bundleapi1", "1.0.0")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi2", "bundleapi2", "2.0.0")));
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundleapi1", "bundleapi1", "1.0.0")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundleapi2", "bundleapi2", "2.0.0")));
 
         try
         {
@@ -69,8 +72,8 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         // incluse two different versions of the same bundle (with the same BSN), this is *not* allowed per the DA spec...
         dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi1", "bundleapi1", "1.0.0")).setFilename("bundles/bundleapi1.jar"))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl1", "bundleimpl1", "1.0.0")).setFilename("bundles/bundleimpl1.jar"));
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundleapi1", "bundleapi1", "1.0.0")).setFilename("bundles/bundleapi1.jar"))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundleimpl1", "bundleimpl1", "1.0.0")).setFilename("bundles/bundleimpl1.jar"));
 
         DeploymentPackage dp = installDeploymentPackage(dpBuilder);
         assertNotNull(dp);
@@ -91,7 +94,7 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         // missing bundle1 as dependency...
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")));
 
         DeploymentPackage dp1 = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp1);
@@ -105,8 +108,8 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
 
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
         dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")));
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")));
 
         DeploymentPackage dp2 = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp2);
@@ -124,7 +127,7 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
     public void testInstallBundleWithDependencyInSeparatePackageOk() throws Exception
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")));
 
         DeploymentPackage dp1 = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp1);
@@ -140,7 +143,7 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
 
         dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         // as missing bundle1...
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")));
 
         DeploymentPackage dp2 = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp2);
@@ -167,8 +170,8 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
 
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3")));
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle3")));
 
         DeploymentPackage dp = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp);
@@ -193,8 +196,8 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("fragment1")));
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("fragment1")));
 
         DeploymentPackage dp = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp);
@@ -217,7 +220,7 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
     public void testInstallBundleWithMissingDependencyOk() throws Exception
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")));
 
         DeploymentPackage dp = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp);
@@ -240,9 +243,9 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
-            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1")))
+            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")))
             .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3")));
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle3")));
 
         DeploymentPackage dp = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp);
@@ -263,7 +266,7 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
     public void testInstallSingleValidBundleOk() throws Exception
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")));
 
         DeploymentPackage dp = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp);
@@ -284,8 +287,8 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")));
 
         DeploymentPackage dp = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp);
@@ -309,8 +312,8 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3")));
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle3")));
 
         DeploymentPackage dp = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp);
@@ -323,8 +326,8 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
 
         dpBuilder = dpBuilder.create("1.0.1");
         dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")));
 
         dp = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp);
@@ -347,8 +350,8 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3")));
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle3")));
 
         DeploymentPackage dp = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp);
@@ -361,9 +364,9 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
 
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
         dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3")));
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle3")));
 
         dp = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp);
@@ -377,5 +380,208 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
         assertTrue(isBundleActive(dp.getBundle(getSymbolicName("bundle3"))));
 
         assertEquals("Expected a single deployment package?!", 1, countDeploymentPackages());
+    }
+
+    /**
+     * Tests that we can correctly rollback the installation of a deployment package for bundles that have their data area populated. 
+     */
+    @Test
+    public void testRollbackWithPopulatedDataAreaOk() throws Exception {
+        // Install a first version, in which we're going to change the data area of a bundle...
+        DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
+        dpBuilder
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")))
+            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")));
+
+        DeploymentPackage dp = installDeploymentPackage(dpBuilder);
+        assertNotNull("No deployment package returned?!", dp);
+
+        awaitRefreshPackagesEvent();
+
+        Bundle bundle1 = getBundle("testbundles.bundle1");
+        assertNotNull("Unable to get installed test bundle?!", bundle1);
+
+        File dataArea = bundle1.getDataFile("");
+        assertNotNull("No data area obtained for test bundle?!", dataArea);
+
+        // Populate the data area...
+        assertTrue("No file created?!", new File(dataArea, "file1").createNewFile());
+        assertTrue("No file created?!", new File(dataArea, "file2").createNewFile());
+        assertTrue("No file created?!", new File(dataArea, "file3").createNewFile());
+
+        // This will cause the new bundle to fail in its stop method...
+        System.setProperty("rp1", "process");
+
+        // Simulate an upgrade for our bundle, which should cause its data area to be retained...
+        dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
+        dpBuilder
+        .add(dpBuilder.createBundleResource().setVersion("1.1.0").setUrl(getTestBundleURL("bundle1")).setFilter(new JarManifestManipulatingFilter("Bundle-Version", "1.1.0")))
+            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")))
+            .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")));
+
+        try {
+            dp = installDeploymentPackage(dpBuilder); // should fail!
+            fail("Deployment of upgrade package should have failed?!");
+        }
+        catch (DeploymentException e) {
+            // Ok; expected...
+        }
+
+        // We should still have this bundle..
+        bundle1 = getBundle("testbundles.bundle1");
+        assertNotNull("Unable to get installed test bundle?!", bundle1);
+        
+        dataArea = bundle1.getDataFile("");
+        assertNotNull("No data area obtained for test bundle?!", dataArea);
+
+        // Data area should be restored exactly as-is...
+        assertTrue("File not restored?!", new File(dataArea, "file1").exists());
+        assertTrue("File not restored?!", new File(dataArea, "file2").exists());
+        assertTrue("File not restored?!", new File(dataArea, "file3").exists());
+    }
+
+    /**
+     * Tests that we can correctly install a deployment package with bundles that have their data area populated. 
+     */
+    @Test
+    public void testUpgradeWithPopulatedDataAreaOk() throws Exception {
+        // Install a first version, in which we're going to change the data area of a bundle...
+        DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
+        dpBuilder
+            .add(dpBuilder.createBundleResource().setVersion("1.0.0").setUrl(getTestBundleURL("bundle1")))
+            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")));
+
+        DeploymentPackage dp = installDeploymentPackage(dpBuilder);
+        assertNotNull("No deployment package returned?!", dp);
+
+        awaitRefreshPackagesEvent();
+
+        Bundle bundle1 = getBundle("testbundles.bundle1");
+        assertNotNull("Unable to get installed test bundle?!", bundle1);
+
+        File dataArea = bundle1.getDataFile("");
+        assertNotNull("No data area obtained for test bundle?!", dataArea);
+
+        // Populate the data area...
+        assertTrue("No file created?!", new File(dataArea, "file1").createNewFile());
+        assertTrue("No file created?!", new File(dataArea, "file2").createNewFile());
+        assertTrue("No file created?!", new File(dataArea, "file3").createNewFile());
+
+        dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
+        dpBuilder
+            .add(dpBuilder.createBundleResource().setVersion("1.1.0").setUrl(getTestBundleURL("bundle1")).setFilter(new JarManifestManipulatingFilter("Bundle-Version", "1.1.0")))
+            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")))
+            .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")));
+
+        dp = installDeploymentPackage(dpBuilder); // should succeed!
+
+        // We should still have this bundle..
+        bundle1 = getBundle("testbundles.bundle1");
+        assertNotNull("Unable to get installed test bundle?!", bundle1);
+        
+        dataArea = bundle1.getDataFile("");
+        assertNotNull("No data area obtained for test bundle?!", dataArea);
+
+        // Data area should be restored exactly as-is...
+        assertTrue("File not restored?!", new File(dataArea, "file1").exists());
+        assertTrue("File not restored?!", new File(dataArea, "file2").exists());
+        assertTrue("File not restored?!", new File(dataArea, "file3").exists());
+    }
+
+    /**
+     * Tests that we can correctly install a deployment package with bundles that have their data area populated. 
+     */
+    @Test
+    public void testUninstallBundleWithPopulatedDataAreaOk() throws Exception {
+        // Install a first version, in which we're going to change the data area of a bundle...
+        DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
+        dpBuilder
+            .add(dpBuilder.createBundleResource().setVersion("1.0.0").setUrl(getTestBundleURL("bundle1")))
+            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")));
+
+        DeploymentPackage dp = installDeploymentPackage(dpBuilder);
+        assertNotNull("No deployment package returned?!", dp);
+
+        awaitRefreshPackagesEvent();
+
+        Bundle bundle1 = getBundle("testbundles.bundle1");
+        assertNotNull("Unable to get installed test bundle?!", bundle1);
+
+        File dataArea = bundle1.getDataFile("");
+        assertNotNull("No data area obtained for test bundle?!", dataArea);
+
+        // Populate the data area...
+        assertTrue("No file created?!", new File(dataArea, "file1").createNewFile());
+        assertTrue("No file created?!", new File(dataArea, "file2").createNewFile());
+        assertTrue("No file created?!", new File(dataArea, "file3").createNewFile());
+
+        dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
+        dpBuilder
+            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")))
+            .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")));
+
+        dp = installDeploymentPackage(dpBuilder); // should succeed!
+
+        // We should no longer have this bundle..
+        bundle1 = getBundle("testbundles.bundle1");
+        assertNull("Unable to get installed test bundle?!", bundle1);
+
+        // Data area should be restored exactly as-is...
+        assertFalse("Data area not purged?!", dataArea.exists());
+    }
+    /**
+     * Tests that we can correctly install a deployment package with bundles that have their data area populated. 
+     */
+    @Test
+    public void testRollbackUninstallBundleWithPopulatedDataAreaOk() throws Exception {
+        // Install a first version, in which we're going to change the data area of a bundle...
+        DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
+        dpBuilder
+            .add(dpBuilder.createBundleResource().setVersion("1.0.0").setUrl(getTestBundleURL("bundle1")))
+            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")));
+
+        DeploymentPackage dp = installDeploymentPackage(dpBuilder);
+        assertNotNull("No deployment package returned?!", dp);
+
+        awaitRefreshPackagesEvent();
+
+        Bundle bundle1 = getBundle("testbundles.bundle1");
+        assertNotNull("Unable to get installed test bundle?!", bundle1);
+
+        File dataArea = bundle1.getDataFile("");
+        assertNotNull("No data area obtained for test bundle?!", dataArea);
+
+        // Populate the data area...
+        assertTrue("No file created?!", new File(dataArea, "file1").createNewFile());
+        assertTrue("No file created?!", new File(dataArea, "file2").createNewFile());
+        assertTrue("No file created?!", new File(dataArea, "file3").createNewFile());
+
+        // This will cause the new bundle to fail in its stop method...
+        System.setProperty("rp1", "process");
+
+        dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
+        dpBuilder
+            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")))
+            .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")));
+
+        try {
+            dp = installDeploymentPackage(dpBuilder); // should fail!
+            fail("Deployment of upgrade package should have failed?!");
+        }
+        catch (DeploymentException e) {
+            // Ok; expected...
+        }
+
+        // We should still have this bundle..
+        bundle1 = getBundle("testbundles.bundle1");
+        assertNotNull("Unable to get installed test bundle?!", bundle1);
+        
+        dataArea = bundle1.getDataFile("");
+        assertNotNull("No data area obtained for test bundle?!", dataArea);
+
+        // Data area should be restored exactly as-is...
+        assertTrue("File not restored?!", new File(dataArea, "file1").exists());
+        assertTrue("File not restored?!", new File(dataArea, "file2").exists());
+        assertTrue("File not restored?!", new File(dataArea, "file3").exists());
     }
 }

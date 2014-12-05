@@ -39,16 +39,16 @@ public class ResourceSharingTest extends BaseIntegrationTest {
         DeploymentPackageBuilder dpBuilder1 = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder1
             .add(dpBuilder1.createBundleResource()
-                .setUrl(getTestBundle("bundle1"))
+                .setUrl(getTestBundleURL("bundle1"))
             )
             .add(dpBuilder1.createBundleResource()
-                .setUrl(getTestBundle("bundle2"))
+                .setUrl(getTestBundleURL("bundle2"))
             );
 
         DeploymentPackageBuilder dpBuilder2 = createNewDeploymentPackageBuilder("0.8.0");
         dpBuilder2
             .add(dpBuilder2.createBundleResource()
-                .setUrl(getTestBundle("bundle1"))
+                .setUrl(getTestBundleURL("bundle1"))
             );
 
         DeploymentPackage dp1 = installDeploymentPackage(dpBuilder1);
@@ -70,7 +70,7 @@ public class ResourceSharingTest extends BaseIntegrationTest {
     @Test
     public void testBundleCannotBeSharedWithNonDeploymentPackagedBundle() throws Exception {
         // Manually install a bundle...
-        Bundle result = m_context.installBundle(getTestBundle("bundle1").toExternalForm());
+        Bundle result = m_context.installBundle(getTestBundleURL("bundle1").toExternalForm());
         assertNotNull(result);
         
         assertBundleExists(getSymbolicName("bundle1"), "1.0.0");
@@ -78,10 +78,10 @@ public class ResourceSharingTest extends BaseIntegrationTest {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
             .add(dpBuilder.createBundleResource()
-                .setUrl(getTestBundle("bundle1"))
+                .setUrl(getTestBundleURL("bundle1"))
             )
             .add(dpBuilder.createBundleResource()
-                .setUrl(getTestBundle("bundle2"))
+                .setUrl(getTestBundleURL("bundle2"))
             );
 
         try {
@@ -98,7 +98,7 @@ public class ResourceSharingTest extends BaseIntegrationTest {
     @Test
     public void testForeignBundleCanCoexistWithPackagedBundleIfVersionsDiffer() throws Exception {
         // Manually install a bundle...
-        Bundle result = m_context.installBundle(getTestBundle("bundle1").toExternalForm());
+        Bundle result = m_context.installBundle(getTestBundleURL("bundle1").toExternalForm());
         assertNotNull(result);
 
         long bundleId = result.getBundleId();
@@ -110,11 +110,11 @@ public class ResourceSharingTest extends BaseIntegrationTest {
         dpBuilder
             .add(dpBuilder.createBundleResource()
                 .setVersion("1.1.0")
-                .setUrl(getTestBundle("bundle1"))
+                .setUrl(getTestBundleURL("bundle1"))
                 .setFilter(new JarManifestManipulatingFilter("Bundle-Version", "1.1.0"))
             )
             .add(dpBuilder.createBundleResource()
-                .setUrl(getTestBundle("bundle2"))
+                .setUrl(getTestBundleURL("bundle2"))
             );
         
         // should succeed: valid-bundle1 is installed, but has a different version than the one in our DP...

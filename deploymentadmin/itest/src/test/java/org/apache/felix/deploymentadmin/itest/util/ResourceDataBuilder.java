@@ -24,11 +24,16 @@ import java.io.File;
  * Provides a resource data builder.
  */
 public class ResourceDataBuilder extends ArtifactDataBuilder<ResourceDataBuilder> {
-    
+    private boolean m_needRP;
     private String m_resourceProcessorPID;
 
     public ResourceDataBuilder() {
-        super();
+        m_needRP = true;
+    }
+    
+    public ResourceDataBuilder setNeedResourceProcessor(boolean needRP) {
+        m_needRP = needRP;
+        return this;
     }
     
     public ResourceDataBuilder setResourceProcessorPID(String resourceProcessorPID) {
@@ -39,6 +44,7 @@ public class ResourceDataBuilder extends ArtifactDataBuilder<ResourceDataBuilder
     @Override ArtifactData build() {
         ArtifactData result = super.build();
         result.setArtifactResourceProcessor(m_resourceProcessorPID);
+        result.setNeedResourceProcessor(m_needRP);
         return result;
     }
 
@@ -49,7 +55,7 @@ public class ResourceDataBuilder extends ArtifactDataBuilder<ResourceDataBuilder
 
     @Override
     void validate() throws RuntimeException {
-        if (m_resourceProcessorPID == null || "".equals(m_resourceProcessorPID.trim())) {
+        if (m_needRP && ((m_resourceProcessorPID == null || "".equals(m_resourceProcessorPID.trim())))) {
             throw new RuntimeException("Artifact resource processor PID is missing!");
         }
 

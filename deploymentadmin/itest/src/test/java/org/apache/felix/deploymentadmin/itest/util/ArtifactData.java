@@ -28,6 +28,7 @@ public class ArtifactData {
     private String m_bundleSymbolicName;
     private String m_bundleVersion;
     private boolean m_isCustomizer;
+    private boolean m_needRP;
     private String m_processorPID;
     private boolean m_missing;
     private ResourceFilter m_filter;
@@ -72,6 +73,10 @@ public class ArtifactData {
     public boolean isMissing() {
         return m_missing;
     }
+    
+    public boolean isResourceProcessorNeeded() {
+        return m_needRP;
+    }
 
     void setArtifactResourceProcessor(String processorPID) {
         m_processorPID = processorPID;
@@ -89,6 +94,10 @@ public class ArtifactData {
 
     void setMissing(boolean missing) {
         m_missing = missing;
+    }
+
+    void setNeedResourceProcessor(boolean needRP) {
+        m_needRP = needRP;
     }
 
     void setResourceProcessor(String processorPID) {

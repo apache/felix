@@ -46,7 +46,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
     public void testInstallBundleWithDependencyInFixPackageUpdateOk() throws Exception
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")));
 
         DeploymentPackage dp1 = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp1);
@@ -59,7 +59,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
         assertEquals(Bundle.INSTALLED, bundle.getState());
 
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
-        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1"))).add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")).setMissing());
+        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1"))).add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")).setMissing());
 
         DeploymentPackage dp2 = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp2);
@@ -82,7 +82,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
     public void testInstallFixPackageOutsideLowerTargetRangeFail() throws Exception
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")));
 
         DeploymentPackage dp1 = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp1);
@@ -96,7 +96,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
 
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
         dpBuilder.setFixPackage("(1.0,2.0)") // should not include version 1.0.0!
-        .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1"))).add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")).setMissing());
+        .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1"))).add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")).setMissing());
 
         try
         {
@@ -117,7 +117,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
     public void testInstallFixPackageOutsideUpperTargetRangeFail() throws Exception
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")));
 
         DeploymentPackage dp1 = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp1);
@@ -131,7 +131,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
 
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
         dpBuilder.setFixPackage("[0.9,1.0)") // should not include version 1.0.0!
-        .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1"))).add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")).setMissing());
+        .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1"))).add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")).setMissing());
 
         try
         {
@@ -152,7 +152,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
     public void testInstallFixPackageWithoutTargetFail() throws Exception
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1"))).add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1"))).add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")));
 
         try
         {
@@ -173,7 +173,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
     public void testInstallFixPackageReplacesOriginalTargetPackageOk() throws Exception
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")));
 
         DeploymentPackage dp1 = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp1);
@@ -183,7 +183,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
         awaitRefreshPackagesEvent();
 
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
-        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1"))).add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")).setMissing());
+        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1"))).add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")).setMissing());
 
         DeploymentPackage dp2 = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp2);
@@ -201,7 +201,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         // missed valid-bundle1 as dependency...
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")));
 
         DeploymentPackage dp1 = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp1);
@@ -211,7 +211,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
         awaitRefreshPackagesEvent();
 
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
-        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3"))).add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")).setMissing());
+        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle3"))).add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")).setMissing());
 
         try
         {
@@ -231,7 +231,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
     public void testInstallFixPackageWithMissingTargetResourceFail() throws Exception
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")));
 
         DeploymentPackage dp1 = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp1);
@@ -241,7 +241,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
         awaitRefreshPackagesEvent();
 
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
-        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1"))).add(
+        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1"))).add(
             dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")).setMissing());
 
         try
@@ -262,7 +262,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
     public void testInstallFixPackageWithMissingTargetResourceProcessorFail() throws Exception
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")));
 
         DeploymentPackage dp1 = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp1);
@@ -272,7 +272,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
         awaitRefreshPackagesEvent();
 
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
-        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1")).setMissing()).add(
+        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")).setMissing()).add(
             dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")));
 
         try
@@ -293,7 +293,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
     public void testInstallFixPackageWithMissingTargetBundleFromOtherPackageFail() throws Exception
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")));
 
         DeploymentPackage dp1 = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp1);
@@ -303,7 +303,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
         assertEquals("Expected only a single deployment package?!", 1, countDeploymentPackages());
 
         dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")));
 
         DeploymentPackage dp2 = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp2);
@@ -313,7 +313,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
         assertEquals("Expected only a single deployment package?!", 2, countDeploymentPackages());
 
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
-        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")).setMissing()).add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3")));
+        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")).setMissing()).add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle3")));
 
         try
         {
@@ -333,7 +333,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
     public void testMissingBundlesOnlyInFixPackageFail() throws Exception
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")));
 
         DeploymentPackage dp1 = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp1);
@@ -346,7 +346,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
         assertEquals(Bundle.INSTALLED, bundle.getState());
 
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
-        dpBuilder.disableVerification().add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1"))).add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")).setMissing());
+        dpBuilder.disableVerification().add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1"))).add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")).setMissing());
 
         try
         {
@@ -367,7 +367,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
     public void testRemoveBundleInFixPackageUpdateOk() throws Exception
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1"))).add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1"))).add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")));
 
         DeploymentPackage dp1 = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp1);
@@ -381,7 +381,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
 
         // valid-bundle2 is to be removed by this fix package...
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
-        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")).setMissing());
+        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")).setMissing());
 
         DeploymentPackage dp2 = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp2);
@@ -399,7 +399,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
     public void testUninstallBundleAddedInFixPackageOk() throws Exception
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")));
 
         DeploymentPackage dp1 = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp1);
@@ -408,7 +408,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
 
         // Add valid-bundle1 through fix-package...
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
-        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1"))).add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")).setMissing());
+        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1"))).add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")).setMissing());
 
         DeploymentPackage dp2 = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp2);
@@ -439,7 +439,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
     public void testUninstallBundleRemovedInFixPackageOk() throws Exception
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1"))).add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1"))).add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")));
 
         DeploymentPackage dp1 = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp1);
@@ -448,7 +448,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
 
         // remove valid-bundle1 through fix package...
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
-        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")));
+        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")));
 
         DeploymentPackage dp2 = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp2);
@@ -479,7 +479,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
     public void testUninstallFixPackageOnlyRemovesOwnArtifactsOk() throws Exception
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")));
 
         DeploymentPackage dp1 = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp1);
@@ -487,7 +487,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
         assertEquals("Expected a single deployment package?!", 1, countDeploymentPackages());
 
         dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")));
 
         DeploymentPackage dp2 = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp2);
@@ -498,7 +498,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest
 
         // add bundle2 through fix package...
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
-        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3"))).add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")).setMissing());
+        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle3"))).add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")).setMissing());
 
         DeploymentPackage dp3 = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp3);
@@ -533,8 +533,8 @@ public class InstallFixPackageTest extends BaseIntegrationTest
         // first, install a deployment package with implementation and api bundles in version 1.0.0
 
         DeploymentPackageBuilder dpBuilder = createDeploymentPackageBuilder("a", "1.0.0");
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl1", "bundleimpl1", "1.0.0")));
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi1", "bundleapi1", "1.0.0")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundleimpl1", "bundleimpl1", "1.0.0")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundleapi1", "bundleapi1", "1.0.0")));
 
         DeploymentPackage dp1 = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp1);
@@ -543,8 +543,8 @@ public class InstallFixPackageTest extends BaseIntegrationTest
 
         // then, install a fix package with implementation and api bundles in version 2.0.0
         dpBuilder = createDeploymentPackageBuilder("a", "2.0.0").setFixPackage("[1.0.0,2.0.0]");
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl2", "bundleimpl2", "2.0.0")));
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi2", "bundleapi2", "2.0.0")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundleimpl2", "bundleimpl2", "2.0.0")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundleapi2", "bundleapi2", "2.0.0")));
 
         DeploymentPackage dp2 = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp2);
@@ -569,8 +569,8 @@ public class InstallFixPackageTest extends BaseIntegrationTest
     public void testUpdateWithDuplicateBundleFail() throws Exception
     {
         DeploymentPackageBuilder dpBuilder = createDeploymentPackageBuilder("c", "1.0.0");
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl1", "bundleimpl1", "1.0.0")));
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi1", "bundleapi1", "1.0.0")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundleimpl1", "bundleimpl1", "1.0.0")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundleapi1", "bundleapi1", "1.0.0")));
 
         // Should succeed, as the DP is correct... 
         DeploymentPackage dp1 = installDeploymentPackage(dpBuilder);
@@ -579,9 +579,9 @@ public class InstallFixPackageTest extends BaseIntegrationTest
         // then, install a fix package with implementation and api bundles in version 2.0.0, but *also* containing the original implementation 
         // bundle, which is incorrect (no bundles with the same BSN may exist in a DP)...
         dpBuilder = createDeploymentPackageBuilder("c", "2.0.0").setFixPackage("[1.0.0,2.0.0]");
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi1", "bundleapi1", "1.0.0")));
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl2", "bundleimpl2", "2.0.0")));
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl1", "bundleimpl1", "1.0.0")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundleapi1", "bundleapi1", "1.0.0")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundleimpl2", "bundleimpl2", "2.0.0")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundleimpl1", "bundleimpl1", "1.0.0")));
 
         try
         {
