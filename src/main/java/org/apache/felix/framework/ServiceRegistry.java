@@ -73,6 +73,7 @@ public class ServiceRegistry
         org.osgi.framework.hooks.service.FindHook.class,
         org.osgi.framework.hooks.service.ListenerHook.class,
         org.osgi.framework.hooks.weaving.WeavingHook.class,
+        org.osgi.framework.hooks.weaving.WovenClassListener.class,
         org.osgi.framework.hooks.resolver.ResolverHookFactory.class,
         org.osgi.service.url.URLStreamHandlerService.class,
         java.net.ContentHandler.class
