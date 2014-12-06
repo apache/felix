@@ -54,10 +54,20 @@ class WovenClassImpl implements WovenClass, List<String>
     synchronized void complete(Class definedClass, byte[] bytes,
             List<String> imports)
     {
-        m_definedClass = definedClass;
+        completeDefine(definedClass);
         m_bytes = (bytes == null) ? m_bytes : bytes;
+        completeImports(imports);
+    }
+    
+    synchronized void completeImports(List<String> imports)
+    {
         m_imports = (imports == null) ? ImmutableList.newInstance(m_imports)
                 : ImmutableList.newInstance(imports);
+    }
+    
+    synchronized void completeDefine(Class definedClass)
+    {
+        m_definedClass = definedClass;
     }
 
     public synchronized byte[] getBytes()
@@ -85,7 +95,7 @@ class WovenClassImpl implements WovenClass, List<String>
             sm.checkPermission(new AdminPermission(m_wiring.getBundle(),
                     AdminPermission.WEAVE));
         }
-        if (m_isComplete)
+        if (m_state >= TRANSFORMED)
         {
             throw new IllegalStateException(
                     "Cannot change bytes after class weaving is completed.");
@@ -402,6 +412,10 @@ class WovenClassImpl implements WovenClass, List<String>
                 && (state == DEFINED || state == DEFINE_FAILED || state == TRANSFORMING_FAILED))
         {
             m_isComplete = true;
+        }
+        if(state == TRANSFORMED)
+        {
+            completeImports(null);
         }
         m_state = state;
     }

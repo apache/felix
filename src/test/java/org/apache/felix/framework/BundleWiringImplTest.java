@@ -350,9 +350,10 @@ public class BundleWiringImplTest
         {
 
             bundleClassLoader.findClass(TestClass.class.getName());
-        } catch (ClassNotFoundException e)
+            fail("Class should throw exception");
+        } catch (Throwable e)
         {
-            fail("Class should not throw exception");
+            
         }
         assertEquals("There should be 2 state changes fired by the weaving", 2,
                 dummyWovenClassListener.stateList.size());
