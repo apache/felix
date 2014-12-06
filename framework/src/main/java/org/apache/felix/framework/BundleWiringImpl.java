@@ -2094,9 +2094,11 @@ public class BundleWiringImpl implements BundleWiring
                         } 
                         catch (Error e)
                         {
-                          wci.setState(WovenClass.TRANSFORMING_FAILED);
-                          callWovenClassListeners(felix, wovenClassListeners, wci);
-                          throw e;
+                            // Mark the woven class as incomplete.
+                            wci.complete(null, null, null);
+                            wci.setState(WovenClass.TRANSFORMING_FAILED);
+                            callWovenClassListeners(felix, wovenClassListeners, wci);
+                            throw e;
                         }
                     }
                     // Before we actually attempt to define the class, grab
@@ -2139,6 +2141,7 @@ public class BundleWiringImpl implements BundleWiring
                             wci.setState(WovenClass.DEFINE_FAILED);
                             callWovenClassListeners(felix, wovenClassListeners, wci);
                         }
+                        throw e;
                     }
 
                     // Perform deferred activation without holding the class loader lock,
@@ -2353,6 +2356,7 @@ public class BundleWiringImpl implements BundleWiring
                         }
                         if(wci != null)
                         {
+                            wci.completeDefine(clazz);
                             wci.setState(WovenClass.DEFINED);
                             callWovenClassListeners(felix, wovenClassListeners, wci);
                         }
@@ -2368,15 +2372,6 @@ public class BundleWiringImpl implements BundleWiring
             }
             finally
             {
-                // If we have a woven class, mark it as complete.
-                // Not exactly clear how we should deal with the
-                // case where the weaving didn't happen because
-                // someone else beat us in defining the class.
-                if (wci != null)
-                {
-                    wci.complete(clazz, bytes, wci.getDynamicImportsInternal());
-                }
-
                 synchronized (lock)
                 {
                     m_classLocks.remove(name);
@@ -2420,8 +2415,6 @@ public class BundleWiringImpl implements BundleWiring
                                     sr.getBundle(),
                                     th);
 
-                            // Mark the woven class as incomplete.
-                            wci.complete(null, null, null);
                             // Throw class format exception per spec.
                             Error error = new ClassFormatError("Weaving hook failed.");
                             error.initCause(th);
