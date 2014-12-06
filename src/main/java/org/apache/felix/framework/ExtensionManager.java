@@ -35,6 +35,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
@@ -245,35 +247,41 @@ class ExtensionManager extends URLStreamHandler implements Content
         }
     }
 
-	protected BundleCapability buildNativeCapabilites() {
-		String osArchitecture = (String)m_configMap.get(FelixConstants.FRAMEWORK_PROCESSOR);
-		String osName = (String)m_configMap.get(FelixConstants.FRAMEWORK_OS_NAME);
-		String osVersion = (String)m_configMap.get(FelixConstants.FRAMEWORK_OS_VERSION);
-		String userLang = (String)m_configMap.get(FelixConstants.FRAMEWORK_LANGUAGE);
-		Map<String, Object> attributes = new HashMap<String, Object>();
+    protected BundleCapability buildNativeCapabilites() {
+        String osArchitecture = (String)m_configMap.get(FelixConstants.FRAMEWORK_PROCESSOR);
+        String osName = (String)m_configMap.get(FelixConstants.FRAMEWORK_OS_NAME);
+        String osVersion = (String)m_configMap.get(FelixConstants.FRAMEWORK_OS_VERSION);
+        String userLang = (String)m_configMap.get(FelixConstants.FRAMEWORK_LANGUAGE);
+        Map<String, Object> attributes = new HashMap<String, Object>();
 
-		if( osArchitecture != null )
-		{
-			attributes.put(NativeNamespace.CAPABILITY_PROCESSOR_ATTRIBUTE, osArchitecture);
-		}
+        if( osArchitecture != null )
+        {
+            attributes.put(NativeNamespace.CAPABILITY_PROCESSOR_ATTRIBUTE, osArchitecture);
+        }
 
-		if( osName != null)
-		{
-			attributes.put(NativeNamespace.CAPABILITY_OSNAME_ATTRIBUTE, osName);
-		}
+        if( osName != null)
+        {
+            attributes.put(NativeNamespace.CAPABILITY_OSNAME_ATTRIBUTE, osName);
+        }
 
-		if( osVersion != null)
-		{
-			attributes.put(NativeNamespace.CAPABILITY_OSVERSION_ATTRIBUTE, new Version(osVersion));
-		}
+        if( osVersion != null)
+        {
+            Pattern versionPattern = Pattern.compile("\\d+\\.?\\d*\\.?\\d*");
+            Matcher matcher = versionPattern.matcher(osVersion);
+            if(matcher.find())
+            {
+                osVersion = matcher.group();
+            }
+            attributes.put(NativeNamespace.CAPABILITY_OSVERSION_ATTRIBUTE, new Version(osVersion));
+        }
 
-		if( userLang != null)
-		{
-			attributes.put(NativeNamespace.CAPABILITY_LANGUAGE_ATTRIBUTE, userLang);
-		}
+        if( userLang != null)
+        {
+            attributes.put(NativeNamespace.CAPABILITY_LANGUAGE_ATTRIBUTE, userLang);
+        }
 
-		return new BundleCapabilityImpl(getRevision(), NativeNamespace.NATIVE_NAMESPACE, Collections.<String, String> emptyMap(), attributes);
-	}
+        return new BundleCapabilityImpl(getRevision(), NativeNamespace.NATIVE_NAMESPACE, Collections.<String, String> emptyMap(), attributes);
+    }
 
     private static List<BundleCapability> aliasSymbolicName(List<BundleCapability> caps)
     {
