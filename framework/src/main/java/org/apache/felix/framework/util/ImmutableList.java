@@ -76,6 +76,18 @@ public class ImmutableList<E> extends AbstractList<E> implements RandomAccess
     {
         throw new UnsupportedOperationException();
     }
+    
+    @Override
+    public void clear()
+    {
+        throw new UnsupportedOperationException();
+    }
+    
+    @Override
+    public boolean retainAll(java.util.Collection<?> c) 
+    {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public Iterator<E> iterator()
