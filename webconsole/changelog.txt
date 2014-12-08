@@ -1,3 +1,22 @@
+Changes from 4.2.0 to 4.2.4
+---------------------------
+** Bug
+    * [FELIX-3614] - In latest webconsole no property descriptors are available
+    * [FELIX-3760] - Clean webconsole startup and disposal
+    * [FELIX-3817] - Form parameters might clash with configuration parameters
+    * [FELIX-4558] - Web Console Service plugin doesn&#39;t list properties with value 0
+    * [FELIX-4562] - Web Console License plugin fails to load files
+    * [FELIX-4572] - Web Console may cause NPE on refresh packages
+    * [FELIX-4610] - WebConsole doesn&#39;t start with Java Security enabled
+    * [FELIX-4652] - Security problem with AbstractWebConsolePlugin.spoolResource
+    * [FELIX-4660] - Security problem in WebConsoleUtil.getParameter() method
+    * [FELIX-4662] - WebConsole Xdialog javascript function is not working correctly
+                
+** New Feature
+    * [FELIX-3800] - Support Category Translation
+    * [FELIX-3848] - Differentiate between unbound and new configuration
+    * [FELIX-4711] - Web Console: False AJAX error displayed on deleting or unbinding config
+
 Changes from 4.0.0 to 4.2.0
 ---------------------------
 
