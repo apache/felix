@@ -127,9 +127,9 @@ public class InnerClassAdapter extends ClassVisitor implements Opcodes {
             }
 
             // The new name is the method name prefixed by the PREFIX.
-            MethodVisitor mv = super.visitMethod(access, ClassManipulator.PREFIX + name, desc, signature,
+            MethodVisitor mv = super.visitMethod(ACC_PRIVATE, ClassManipulator.PREFIX + name, desc, signature,
                     exceptions);
-            return new MethodCodeAdapter(mv, m_outer, access,  ClassManipulator.PREFIX + name, desc, m_fields);
+            return new MethodCodeAdapter(mv, m_outer, ACC_PRIVATE,  ClassManipulator.PREFIX + name, desc, m_fields);
         } else {
             return super.visitMethod(access, name, desc, signature, exceptions);
         }
