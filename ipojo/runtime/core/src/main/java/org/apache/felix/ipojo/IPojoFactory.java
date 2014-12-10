@@ -791,21 +791,31 @@ public abstract class IPojoFactory implements Factory {
      */
     protected void computeDescription() {
         for (RequiredHandler req : m_requiredHandlers) {
-            if (getHandler(req, null) == null) {
+            HandlerManager handlerManager = null;
+            try {
+                handlerManager = getHandler(req, null);
+            } catch (Exception e) {
                 m_logger.log(Logger.ERROR, "Cannot extract handler object from " + m_factoryName + " " + req
                         .getFullName());
-            } else {
-                Handler handler = getHandler(req, null).getHandler();
-                try {
-                    handler.setFactory(this);
-                    handler.initializeComponentFactory(m_componentDesc, m_componentMetadata);
-                    ((Pojo) handler).getComponentInstance().dispose();
-                } catch (ConfigurationException e) {
-                    ((Pojo) handler).getComponentInstance().dispose();
-                    m_logger.log(Logger.ERROR, e.getMessage());
-                    stop();
-                    throw new IllegalStateException(e);
-                }
+                return;
+            }
+
+            if (handlerManager == null) {
+                m_logger.log(Logger.ERROR, "Cannot extract handler object from " + m_factoryName + " " + req
+                        .getFullName());
+                return;
+            }
+
+            Handler handler = handlerManager.getHandler();
+            try {
+                handler.setFactory(this);
+                handler.initializeComponentFactory(m_componentDesc, m_componentMetadata);
+                ((Pojo) handler).getComponentInstance().dispose();
+            } catch (ConfigurationException e) {
+                ((Pojo) handler).getComponentInstance().dispose();
+                m_logger.log(Logger.ERROR, e.getMessage());
+                stop();
+                throw new IllegalStateException(e);
             }
         }
     }
@@ -906,27 +916,28 @@ public abstract class IPojoFactory implements Factory {
      * @param context the service context in which the handler is created (same as the instance context).
      * @return the handler object.
      */
-    protected HandlerManager getHandler(RequiredHandler req, ServiceContext context) {
+    protected HandlerManager getHandler(RequiredHandler req, ServiceContext context) throws MissingHandlerException,
+            UnacceptableConfiguration, ConfigurationException {
         try {
             return (HandlerManager) req.getFactory().createComponentInstance(null, context);
         } catch (MissingHandlerException e) {
             m_logger.log(Logger.ERROR, "The creation of the handler " + req.getFullName() + " has failed: " + e.getMessage());
             stop();
-            return null;
+            throw e;
         } catch (UnacceptableConfiguration e) {
             m_logger.log(Logger.ERROR, "The creation of the handler "
                     + req.getFullName()
                     + " has failed (UnacceptableConfiguration): "
                     + e.getMessage());
             stop();
-            return null;
+            throw e;
         } catch (org.apache.felix.ipojo.ConfigurationException e) {
             m_logger.log(Logger.ERROR, "The configuration of the handler "
                     + req.getFullName()
                     + " has failed (ConfigurationException): "
                     + e.getMessage());
             stop();
-            return null;
+            throw e;
         }
     }
 
