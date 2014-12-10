@@ -137,73 +137,156 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <version>2.3.7</version>
                 <extensions>true</extensions>
-                <configuration>
-                    <instructions>
-                        <Bundle-Name>Apache Felix iPOJO</Bundle-Name>
-                        <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
-                        <Bundle-SymbolicName>org.apache.felix.ipojo;singleton:=true</Bundle-SymbolicName>
-                        <Bundle-Description>iPOJO Core Framework</Bundle-Description>
-                        <Bundle-Activator>org.apache.felix.ipojo.extender.internal.Extender</Bundle-Activator>
-                        <Bundle-DocURL>
-                            http://felix.apache.org/documentation/subprojects/apache-felix-ipojo.html
-                        </Bundle-DocURL>
-                        <IPOJO-Extension>
-                            component:org.apache.felix.ipojo.ComponentFactory,
-                            handler:org.apache.felix.ipojo.HandlerManagerFactory
-                        </IPOJO-Extension>
-                        <Import-Package>
-                            org.osgi.framework;version="[1.3,2)", <!-- To support KF 2 -->
-                            org.osgi.framework.wiring;version="[1.0,2.0)";resolution:=optional,
-                            org.osgi.service.cm;version="[1.3,2)",
-                            org.osgi.service.log;version="[1.3,2)",
-                            org.osgi.util.tracker;version="[1.4,2)", <!-- BundleTracker is in R4.2 -->
-                            !sun.io,
-                            !net.sourceforge.cobertura.*, <!--  To support code coverage -->
-                            !org.objectweb.asm.signature,
-                            !org.objectweb.asm.tree
-                        </Import-Package>
-                        <Private-Package>
-                            org.apache.felix.ipojo.handlers.architecture,
-                            org.apache.felix.ipojo.handlers.lifecycle.callback,
-                            org.apache.felix.ipojo.handlers.lifecycle.controller,
-                            org.apache.felix.ipojo.handlers.context,
-                            org.apache.felix.ipojo.extender.internal*,
-                            org.objectweb.asm;-split-package:=merge-last,
-                            org.objectweb.asm.commons;-split-package:=merge-last,
-                            org.apache.felix.ipojo.metadata,
-                            org.apache.felix.ipojo.dependency.impl
-                        </Private-Package>
-                        <Export-Package>
-                            org.apache.felix.ipojo; version="${ipojo.package.version}",
-                            org.apache.felix.ipojo.configuration; version="${ipojo.package.version}",
-                            org.apache.felix.ipojo.metadata; version="${ipojo.package.version}",
-                            org.apache.felix.ipojo.architecture; version="${ipojo.package.version}",
-                            org.apache.felix.ipojo.extender;
-                            version="${ipojo.package.version}";-split-package:=merge-first,
-                            org.apache.felix.ipojo.extender.builder; version="${ipojo.package.version}",
-                            org.apache.felix.ipojo.extender.queue; version="${ipojo.package.version}",
-                            org.apache.felix.ipojo.extender.queue.debug; version="${ipojo.package.version}",
-                            org.apache.felix.ipojo.parser; version="${ipojo.package.version}",
-                            org.apache.felix.ipojo.util; version="${ipojo.package.version}",
-                            org.apache.felix.ipojo.handlers.dependency; version="${ipojo.package.version}",
-                            org.apache.felix.ipojo.handlers.providedservice.*; version="${ipojo.package.version}",
-                            org.apache.felix.ipojo.handlers.configuration; version="${ipojo.package.version}",
-                            org.apache.felix.ipojo.context; version="${ipojo.package.version}",
-                            org.apache.felix.ipojo.dependency.interceptors; version="${ipojo.package.version}",
-                            org.apache.felix.ipojo.annotations; version="${ipojo.package.version}",
-                            <!-- Compendium packages -->
-                            org.osgi.service.cm; version=1.3,
-                            org.osgi.service.log; version=1.3
-                        </Export-Package>
+                <executions>
+                    <execution>
+                        <id>package-main-artifact</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>bundle</goal>
+                        </goals>
+                        <configuration>
+                            <instructions>
+                                <Bundle-Name>Apache Felix iPOJO</Bundle-Name>
+                                <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
+                                <Bundle-SymbolicName>org.apache.felix.ipojo;singleton:=true</Bundle-SymbolicName>
+                                <Bundle-Description>iPOJO Core Framework</Bundle-Description>
+                                <Bundle-Activator>org.apache.felix.ipojo.extender.internal.Extender</Bundle-Activator>
+                                <Bundle-DocURL>
+                                    http://felix.apache.org/documentation/subprojects/apache-felix-ipojo.html
+                                </Bundle-DocURL>
+                                <IPOJO-Extension>
+                                    component:org.apache.felix.ipojo.ComponentFactory,
+                                    handler:org.apache.felix.ipojo.HandlerManagerFactory
+                                </IPOJO-Extension>
+                                <Import-Package>
+                                    org.osgi.framework;version="[1.3,2)", <!-- To support KF 2 -->
+                                    org.osgi.framework.wiring;version="[1.0,2.0)";resolution:=optional,
+                                    org.osgi.service.cm;version="[1.3,2)",
+                                    org.osgi.service.log;version="[1.3,2)",
+                                    org.osgi.util.tracker;version="[1.4,2)", <!-- BundleTracker is in R4.2 -->
+                                    !sun.io,
+                                    !net.sourceforge.cobertura.*, <!--  To support code coverage -->
+                                    !org.objectweb.asm.signature,
+                                    !org.objectweb.asm.tree
+                                </Import-Package>
+                                <Private-Package>
+                                    org.apache.felix.ipojo.handlers.architecture,
+                                    org.apache.felix.ipojo.handlers.lifecycle.callback,
+                                    org.apache.felix.ipojo.handlers.lifecycle.controller,
+                                    org.apache.felix.ipojo.handlers.context,
+                                    org.apache.felix.ipojo.extender.internal*,
+                                    org.objectweb.asm;-split-package:=merge-last,
+                                    org.objectweb.asm.commons;-split-package:=merge-last,
+                                    org.apache.felix.ipojo.metadata,
+                                    org.apache.felix.ipojo.dependency.impl
+                                </Private-Package>
+                                <Export-Package>
+                                    org.apache.felix.ipojo; version="${ipojo.package.version}",
+                                    org.apache.felix.ipojo.configuration; version="${ipojo.package.version}",
+                                    org.apache.felix.ipojo.metadata; version="${ipojo.package.version}",
+                                    org.apache.felix.ipojo.architecture; version="${ipojo.package.version}",
+                                    org.apache.felix.ipojo.extender;
+                                    version="${ipojo.package.version}";-split-package:=merge-first,
+                                    org.apache.felix.ipojo.extender.builder; version="${ipojo.package.version}",
+                                    org.apache.felix.ipojo.extender.queue; version="${ipojo.package.version}",
+                                    org.apache.felix.ipojo.extender.queue.debug; version="${ipojo.package.version}",
+                                    org.apache.felix.ipojo.parser; version="${ipojo.package.version}",
+                                    org.apache.felix.ipojo.util; version="${ipojo.package.version}",
+                                    org.apache.felix.ipojo.handlers.dependency; version="${ipojo.package.version}",
+                                    org.apache.felix.ipojo.handlers.providedservice.*; version="${ipojo.package.version}",
+                                    org.apache.felix.ipojo.handlers.configuration; version="${ipojo.package.version}",
+                                    org.apache.felix.ipojo.context; version="${ipojo.package.version}",
+                                    org.apache.felix.ipojo.dependency.interceptors; version="${ipojo.package.version}",
+                                    org.apache.felix.ipojo.annotations; version="${ipojo.package.version}",
+                                    <!-- Compendium packages -->
+                                    org.osgi.service.cm; version=1.3,
+                                    org.osgi.service.log; version=1.3
+                                </Export-Package>
 
-                        <!-- OSGi Extender Namespace -->
-                        <Provide-Capability>osgi.extender;
-                            osgi.extender="org.apache.felix.ipojo";
-                            version:Version="${ipojo.extender.version}"
-                        </Provide-Capability>
-                        <_donotcopy>(CVS|.svn|.+.bak|~.+|metadata.xml)</_donotcopy>
-                    </instructions>
-                </configuration>
+                                <!-- OSGi Extender Namespace -->
+                                <Provide-Capability>osgi.extender;
+                                    osgi.extender="org.apache.felix.ipojo";
+                                    version:Version="${ipojo.extender.version}"
+                                </Provide-Capability>
+                                <_donotcopy>(CVS|.svn|.+.bak|~.+|metadata.xml)</_donotcopy>
+                            </instructions>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>package-bare-artifact</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>bundle</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>bare</classifier>
+                            <instructions>
+                                <Bundle-Name>Apache Felix iPOJO</Bundle-Name>
+                                <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
+                                <Bundle-SymbolicName>org.apache.felix.ipojo;singleton:=true</Bundle-SymbolicName>
+                                <Bundle-Description>iPOJO Core Framework</Bundle-Description>
+                                <Bundle-Activator>org.apache.felix.ipojo.extender.internal.Extender</Bundle-Activator>
+                                <Bundle-DocURL>
+                                    http://felix.apache.org/documentation/subprojects/apache-felix-ipojo.html
+                                </Bundle-DocURL>
+                                <IPOJO-Extension>
+                                    component:org.apache.felix.ipojo.ComponentFactory,
+                                    handler:org.apache.felix.ipojo.HandlerManagerFactory
+                                </IPOJO-Extension>
+                                <Import-Package>
+                                    org.osgi.framework;version="[1.3,2)", <!-- To support KF 2 -->
+                                    org.osgi.framework.wiring;version="[1.0,2.0)";resolution:=optional,
+                                    org.osgi.service.cm;version="[1.3,2)",
+                                    org.osgi.service.log;version="[1.3,2)",
+                                    org.osgi.util.tracker;version="[1.4,2)", <!-- BundleTracker is in R4.2 -->
+                                    !sun.io,
+                                    !net.sourceforge.cobertura.*, <!--  To support code coverage -->
+                                    !org.objectweb.asm.signature,
+                                    !org.objectweb.asm.tree
+                                </Import-Package>
+                                <Private-Package>
+                                    org.apache.felix.ipojo.handlers.architecture,
+                                    org.apache.felix.ipojo.handlers.lifecycle.callback,
+                                    org.apache.felix.ipojo.handlers.lifecycle.controller,
+                                    org.apache.felix.ipojo.handlers.context,
+                                    org.apache.felix.ipojo.extender.internal*,
+                                    org.objectweb.asm;-split-package:=merge-last,
+                                    org.objectweb.asm.commons;-split-package:=merge-last,
+                                    org.apache.felix.ipojo.metadata,
+                                    org.apache.felix.ipojo.dependency.impl
+                                </Private-Package>
+                                <Export-Package>
+                                    org.apache.felix.ipojo; version="${ipojo.package.version}",
+                                    org.apache.felix.ipojo.configuration; version="${ipojo.package.version}",
+                                    org.apache.felix.ipojo.metadata; version="${ipojo.package.version}",
+                                    org.apache.felix.ipojo.architecture; version="${ipojo.package.version}",
+                                    org.apache.felix.ipojo.extender;
+                                    version="${ipojo.package.version}";-split-package:=merge-first,
+                                    org.apache.felix.ipojo.extender.builder; version="${ipojo.package.version}",
+                                    org.apache.felix.ipojo.extender.queue; version="${ipojo.package.version}",
+                                    org.apache.felix.ipojo.extender.queue.debug; version="${ipojo.package.version}",
+                                    org.apache.felix.ipojo.parser; version="${ipojo.package.version}",
+                                    org.apache.felix.ipojo.util; version="${ipojo.package.version}",
+                                    org.apache.felix.ipojo.handlers.dependency; version="${ipojo.package.version}",
+                                    org.apache.felix.ipojo.handlers.providedservice.*; version="${ipojo.package.version}",
+                                    org.apache.felix.ipojo.handlers.configuration; version="${ipojo.package.version}",
+                                    org.apache.felix.ipojo.context; version="${ipojo.package.version}",
+                                    org.apache.felix.ipojo.dependency.interceptors; version="${ipojo.package.version}",
+                                    org.apache.felix.ipojo.annotations; version="${ipojo.package.version}"
+                                    <!-- the bare bundle does not includes any packages form the compendium -->
+                                </Export-Package>
+
+                                <!-- OSGi Extender Namespace -->
+                                <Provide-Capability>osgi.extender;
+                                    osgi.extender="org.apache.felix.ipojo";
+                                    version:Version="${ipojo.extender.version}"
+                                </Provide-Capability>
+                                <_donotcopy>(CVS|.svn|.+.bak|~.+|metadata.xml)</_donotcopy>
+                            </instructions>
+                        </configuration>
+                    </execution>
+                </executions>
+
             </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
@@ -211,10 +294,22 @@
                 <version>1.12.0</version>
                 <executions>
                     <execution>
+                        <id>main-artifact-manipulation</id>
                         <goals>
                             <goal>ipojo-bundle</goal>
                         </goals>
                         <configuration>
+                            <ignoreAnnotations>true</ignoreAnnotations>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>bare-artifact-manipulation</id>
+                        <goals>
+                            <goal>ipojo-bundle</goal>
+                        </goals>
+                        <configuration>
+                            <!--<classifier>bare</classifier>-->
+                            <input-classifier>bare</input-classifier>
                             <ignoreAnnotations>true</ignoreAnnotations>
                         </configuration>
                     </execution>
