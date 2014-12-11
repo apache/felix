@@ -3530,6 +3530,9 @@ public class Felix extends BundleImpl implements Framework
             }
         }
 
+        // If the requesting bundle is the system bundle, ignore the effects of the findhooks
+        List resRefList = (bundle == this ? new ArrayList(refList) : refList);
+
         // activate findhooks
         Set<ServiceReference<org.osgi.framework.hooks.service.FindHook>> findHooks =
             m_registry.getHooks(org.osgi.framework.hooks.service.FindHook.class);
@@ -3560,9 +3563,12 @@ public class Felix extends BundleImpl implements Framework
             }
         }
 
-        if (refList.size() > 0)
+        // We return resRefList which is normally the same as refList and therefore any modifications
+        // to refList are also visible to resRefList. However in the case of the system bundle being
+        // the requestor, resRefList is a copy of the original list before the hooks were invoked.
+        if (resRefList.size() > 0)
         {
-            return (ServiceReference[]) refList.toArray(new ServiceReference[refList.size()]);
+            return (ServiceReference[]) resRefList.toArray(new ServiceReference[resRefList.size()]);
         }
 
         return null;
