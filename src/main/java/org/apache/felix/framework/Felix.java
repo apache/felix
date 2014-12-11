@@ -3090,11 +3090,19 @@ public class Felix extends BundleImpl implements Framework
                         }
                     }
                 }
-                if (bundles.isEmpty())
+
+                if (origin != this)
                 {
-                    throw new BundleException(
-                        "Bundle installation rejected by hook.",
-                        BundleException.REJECTED_BY_HOOK);
+                    // If the origin was something else than the system bundle, reject this action if
+                    // the bundle has been removed by the hooks. However, if it is the system bundle,
+                    // the install action should always succeed, regardless of whether the hooks are
+                    // trying to prevent it.
+                    if (bundles.isEmpty())
+                    {
+                        throw new BundleException(
+                            "Bundle installation rejected by hook.",
+                            BundleException.REJECTED_BY_HOOK);
+                    }
                 }
             }
         }
@@ -3175,7 +3183,12 @@ public class Felix extends BundleImpl implements Framework
                     }
                 }
             }
-            bundle = (bundles.isEmpty()) ? null : bundle;
+
+            if (bc.getBundle() != this)
+            {
+                // If the requesting bundle is not the system bundle, return the filtered result
+                bundle = (bundles.isEmpty()) ? null : bundle;
+            }
         }
         return bundle;
     }
@@ -3222,7 +3235,7 @@ public class Felix extends BundleImpl implements Framework
             getHooks(org.osgi.framework.hooks.bundle.FindHook.class);
         if (!hooks.isEmpty())
         {
-            bundles = new ShrinkableCollection<Bundle>(new ArrayList(bundles));
+            Collection<Bundle> shrunkBundles = new ShrinkableCollection<Bundle>(new ArrayList(bundles));
             for (ServiceReference<org.osgi.framework.hooks.bundle.FindHook> hook : hooks)
             {
                 org.osgi.framework.hooks.bundle.FindHook fh = getService(this, hook, false);
@@ -3230,7 +3243,7 @@ public class Felix extends BundleImpl implements Framework
                 {
                     try
                     {
-                        m_secureAction.invokeBundleFindHook(fh, bc, bundles);
+                        m_secureAction.invokeBundleFindHook(fh, bc, shrunkBundles);
                     }
                     catch (Throwable th)
                     {
@@ -3243,7 +3256,15 @@ public class Felix extends BundleImpl implements Framework
                     }
                 }
             }
+
+            if (bc.getBundle() != this)
+            {
+                // If the requesting bundle is something other than the system bundle, return the shrunk
+                // collection of bundles. If it *is* the system bundle, it should receive the unfiltered bundles.
+                bundles = shrunkBundles;
+            }
         }
+
         return bundles.toArray(new Bundle[bundles.size()]);
     }
 
