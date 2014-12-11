@@ -576,16 +576,32 @@ public class EventDispatcher
             m_registry.getHooks(org.osgi.framework.hooks.service.EventListenerHook.class);
         if ((elhs != null) && !elhs.isEmpty())
         {
-            // Create shrinkable map with shrinkable collections.
+            List<ListenerInfo> systemBundleListeners = null;
+
+            // The mutable map is used to keep the lists that underpin the shrinkable collections.
+            Map<BundleContext, List<ListenerInfo>> mutableMap =
+                    new HashMap<BundleContext, List<ListenerInfo>>();
+            // Create map with shrinkable collections.
             Map<BundleContext, Collection<ListenerHook.ListenerInfo>> shrinkableMap =
                 new HashMap<BundleContext, Collection<ListenerHook.ListenerInfo>>();
             for (Entry<BundleContext, List<ListenerInfo>> entry : listeners.entrySet())
             {
-                Collection shrinkableCollection =
-                    new ShrinkableCollection(new ArrayList(entry.getValue()));
-                shrinkableMap.put(
-                    entry.getKey(),
-                    shrinkableCollection);
+                BundleContext bc = entry.getKey();
+                ArrayList<ListenerInfo> mutableList = new ArrayList<ListenerInfo>(entry.getValue());
+                mutableMap.put(bc, mutableList);
+
+                // We want to pass the list as a generic collection to Shrinkable Collection.
+                // Need to convert to raw type before we can do this...
+                ArrayList ml = mutableList;
+
+                Collection<ListenerHook.ListenerInfo> shrinkableCollection =
+                        new ShrinkableCollection<ListenerHook.ListenerInfo>(ml);
+                shrinkableMap.put(bc, shrinkableCollection);
+
+                // Keep a copy of the System Bundle Listeners, as they might be removed by the hooks, but we
+                // actually need to keep them in the end.
+                if (bc == felix.getBundleContext())
+                    systemBundleListeners = new ArrayList<ListenerInfo>(entry.getValue());
             }
             shrinkableMap =
                 new ShrinkableMap<BundleContext, Collection<ListenerHook.ListenerInfo>>
@@ -623,18 +639,28 @@ public class EventDispatcher
                     }
                 }
             }
+
 // TODO: OSGi R4.3 - Should check and only do this if there was a change.
-//       Also, it is inefficient to have to create new lists for the values.
+
+            // the listeners map should only contain List values, and not Shrinkable
+            // Collections. Therefore we create a new map from the lists that are
+            // the delegates for the Shrinkable Collections. Any changes made by the
+            // hooks will have propagated to these maps.
             Map<BundleContext, List<ListenerInfo>> newMap =
                 new HashMap<BundleContext, List<ListenerInfo>>();
-            for (Entry entry : shrinkableMap.entrySet())
+            for (Map.Entry<BundleContext, Collection<ListenerHook.ListenerInfo>> entry : shrinkableMap.entrySet())
             {
-                if (!((Collection) entry.getValue()).isEmpty())
+                if (!entry.getValue().isEmpty())
                 {
-                    newMap.put((BundleContext) entry.getKey(),
-                        new ArrayList<ListenerInfo>((Collection) entry.getValue()));
+                    newMap.put(entry.getKey(), mutableMap.get(entry.getKey()));
                 }
             }
+
+            // Put the system bundle listeners back, because they really need to be called
+            // regardless whether they were removed by the hooks or not.
+            if (systemBundleListeners != null)
+                newMap.put(felix.getBundleContext(), systemBundleListeners);
+
             listeners = newMap;
         }
 
@@ -652,16 +678,23 @@ public class EventDispatcher
         Set<ServiceReference<T>> hooks = m_registry.getHooks(hookClass);
         if ((hooks != null) && !hooks.isEmpty())
         {
+            boolean systemBundleListener = false;
+            BundleContext systemBundleContext = felix.getBundleContext();
+
             whitelist = new HashSet<BundleContext>();
             for (Entry<BundleContext, List<ListenerInfo>> entry : listeners1.entrySet())
             {
                 whitelist.add(entry.getKey());
+                if (entry.getKey() == systemBundleContext)
+                    systemBundleListener = true;
             }
             if (listeners2 != null)
             {
                 for (Entry<BundleContext, List<ListenerInfo>> entry : listeners2.entrySet())
                 {
                     whitelist.add(entry.getKey());
+                    if (entry.getKey() == systemBundleContext)
+                        systemBundleListener = true;
                 }
             }
 
@@ -710,6 +743,16 @@ public class EventDispatcher
                     }
                 }
             }
+
+            if (systemBundleListener && !whitelist.contains(systemBundleContext))
+            {
+                // The system bundle cannot be removed from the listeners, so if it was
+                // removed, add it back in. Note that this cannot be prevented by the shrinkable
+                // since the effect of removing the system bundle from the listeners must be
+                // visible between the event hooks.
+                whitelist.add(systemBundleContext);
+            }
+
             // If the whitelist hasn't changed, then null it to avoid having
             // to do whitelist lookups during event delivery.
             if (originalSize == whitelist.size())
