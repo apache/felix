@@ -51,7 +51,7 @@ public final class ServletHandler extends AbstractHandler implements Comparable<
 {
     private class RequestDispatcherImpl implements RequestDispatcher
     {
-        final String servletPath;
+        final String servletPath = "/".equals(getAlias()) ? "" : getAlias(); // XXX handle wildcard aliases!
         final String requestURI;
         final String pathInfo;
         final String query;
@@ -60,8 +60,6 @@ public final class ServletHandler extends AbstractHandler implements Comparable<
         public RequestDispatcherImpl()
         {
             this.requestURI = null;
-            // PathMap.pathMatch(servlet_path_spec,target);
-            this.servletPath = getAlias(); // XXX handle wildcard aliases!
             this.pathInfo = null;
             this.query = null;
             this.named = true;
@@ -70,7 +68,6 @@ public final class ServletHandler extends AbstractHandler implements Comparable<
         public RequestDispatcherImpl(String uri, String pathInContext, String query)
         {
             this.requestURI = uri;
-            this.servletPath = getAlias(); // XXX handle wildcard aliases!
             this.pathInfo = this.servletPath.equals(pathInContext) ? null : pathInContext;
             this.query = query;
             this.named = false;
@@ -84,15 +81,15 @@ public final class ServletHandler extends AbstractHandler implements Comparable<
             }
             else
             {
-                // See section 9.4 of Servlet 3.0 spec 
+                // See section 9.4 of Servlet 3.0 spec
                 res.resetBuffer();
             }
 
-            // Since we're already created this RequestDispatcher for *this* servlet handler, we do not need to 
+            // Since we're already created this RequestDispatcher for *this* servlet handler, we do not need to
             // recheck whether its patch matches, but instead can directly handle the forward-request...
             doHandle(new ServletRequestWrapper((HttpServletRequest) req, this, DispatcherType.FORWARD), (HttpServletResponse) res);
 
-            // After a forward has taken place, the results should be committed, 
+            // After a forward has taken place, the results should be committed,
             // see section 9.4 of Servlet 3.0 spec...
             if (!req.isAsyncStarted())
             {
@@ -103,7 +100,7 @@ public final class ServletHandler extends AbstractHandler implements Comparable<
 
         public void include(ServletRequest req, ServletResponse res) throws ServletException, IOException
         {
-            // Since we're already created this RequestDispatcher for *this* servlet handler, we do not need to 
+            // Since we're already created this RequestDispatcher for *this* servlet handler, we do not need to
             // recheck whether its patch matches, but instead can directly handle the include-request...
             doHandle(new ServletRequestWrapper((HttpServletRequest) req, this, DispatcherType.INCLUDE), (HttpServletResponse) res);
         }
@@ -327,8 +324,8 @@ public final class ServletHandler extends AbstractHandler implements Comparable<
 
     final void doHandle(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException
     {
-        // Only wrap the original ServletRequest in case we're handling plain requests, 
-        // not inclusions or forwards from servlets. Should solve FELIX-2774 and FELIX-3054... 
+        // Only wrap the original ServletRequest in case we're handling plain requests,
+        // not inclusions or forwards from servlets. Should solve FELIX-2774 and FELIX-3054...
         if (DispatcherType.REQUEST == req.getDispatcherType())
         {
             req = new ServletHandlerRequest(req, getContext(), this.alias);
@@ -340,7 +337,7 @@ public final class ServletHandler extends AbstractHandler implements Comparable<
         }
         else
         {
-            // FELIX-3988: If the response is not yet committed and still has the default 
+            // FELIX-3988: If the response is not yet committed and still has the default
             // status, we're going to override this and send an error instead.
             if (!res.isCommitted() && res.getStatus() == SC_OK)
             {
