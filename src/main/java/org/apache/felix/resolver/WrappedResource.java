@@ -58,7 +58,7 @@ class WrappedResource implements Resource
             List<Capability> caps = new ArrayList<Capability>();
 
             // Wrap host capabilities.
-            for (Capability cap : m_host.getCapabilities(null))
+            for (Capability cap : m_host.getCapabilities(namespace))
             {
                 caps.add(new WrappedCapability(this, cap));
             }
@@ -68,7 +68,7 @@ class WrappedResource implements Resource
             {
                 for (Resource fragment : m_fragments)
                 {
-                    for (Capability cap : fragment.getCapabilities(null))
+                    for (Capability cap : fragment.getCapabilities(namespace))
                     {
                         // Filter out identity capabilities, since they
                         // are not part of the fragment payload.
