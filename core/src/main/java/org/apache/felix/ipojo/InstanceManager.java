@@ -147,7 +147,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * The Map storing the Method objects by ids.
      * [id=>{@link Method}].
      */
-    private Map m_methods = new HashMap();
+    private Map m_methods =  Collections.synchronizedMap(new HashMap());
 
     /**
      * The instance's bundle context.
@@ -663,7 +663,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
     /**
      * Loads the manipulated class.
      */
-    private void load() {
+    protected void load() {
         try {
             m_clazz = m_factory.loadClass(m_className);
         } catch (ClassNotFoundException e) {
