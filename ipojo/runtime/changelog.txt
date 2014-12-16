@@ -1,3 +1,16 @@
+Changes from 1.12.0 to 1.12.1
+-----------------------------
+
+** Bug
+    * [FELIX-3836] - NPE when calling InstanceDescription.getDescription()
+    * [FELIX-4565] - Occasional ArrayIndexOutOfBoundException in iPOJO's ProvidedServiceHandler
+    * [FELIX-4646] - @Context(Context.Source.INSTANCE) does not inject bundle context
+    * [FELIX-4713] - Error in ProvidedServiceHandler.checkProvidedService : only the first service is checked
+    * [FELIX-4715] - instance bundle context injection does not works
+    * [FELIX-4716] - Bundle org.apache.felix.ipojo physically contains OSGi API classes
+    * [FELIX-4717] - Cannot use the stream API on injected collections
+    * [FELIX-4728] - InstanceManager concurrency issue
+
 Changes from 1.11.2 to 1.12.0
 -----------------------------
 

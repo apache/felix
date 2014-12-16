@@ -46,6 +46,7 @@ public class InstanceManagerTest {
     public void testConcurrencyOfMethodId() throws InterruptedException, ConfigurationException, ClassNotFoundException {
         ExecutorService executor = Executors.newFixedThreadPool(CALLERS);
         final AtomicInteger counter = new AtomicInteger();
+        final AtomicInteger error = new AtomicInteger();
 
         ComponentFactory factory = mock(ComponentFactory.class);
         when(factory.loadClass(anyString())).thenReturn(MyComponent.class);
@@ -77,6 +78,7 @@ public class InstanceManagerTest {
                     counter.getAndIncrement();
                 } else {
                     System.out.println("No method object for " + args[0]);
+                    error.incrementAndGet();
                 }
             }
 
@@ -85,6 +87,7 @@ public class InstanceManagerTest {
                     counter.getAndDecrement();
                 } else {
                     System.out.println("No method object");
+                    error.incrementAndGet();
                 }
             }
 
@@ -119,7 +122,7 @@ public class InstanceManagerTest {
 
         startSignal.countDown();      // let all threads proceed
         assertThat(doneSignal.await(1, TimeUnit.MINUTES)).isTrue();
-        assertThat(counter.get()).isEqualTo(0);
+        assertThat(error.get()).isEqualTo(0);
     }
 
     private class Caller implements Runnable {
