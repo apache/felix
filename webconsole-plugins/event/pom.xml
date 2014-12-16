@@ -48,15 +48,6 @@
 			<resource>
 				<directory>${basedir}/src/main/resources</directory>
 			</resource>
-			<!-- 
-			<resource>
-				<directory>target/classes</directory>
-				<includes>
-					<include>OSGI-INF/**</include>
-				</includes>
-				<filtering>false</filtering>
-			</resource>
-			 -->
 		</resources>
 
         <plugins>
@@ -97,6 +88,7 @@
                             org.osgi.service.event,org.osgi.service.cm,
                             javax.servlet,javax.servlet.http
                         </DynamicImport-Package>
+                        <Include-Resource>{maven-resources},OSGI-INF=target/classes/OSGI-INF</Include-Resource>
                     </instructions>
                 </configuration>
             </plugin>
@@ -133,7 +125,7 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
-            <version>5.0.0</version>
+            <version>4.0.0</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
