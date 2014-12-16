@@ -83,7 +83,7 @@ public class PropertiesEditorSupport
         }
         else if ("char".equals(type)) //$NON-NLS-1$
         {
-            return Character.valueOf(value.toString().charAt(0));
+            return new Character(value.toString().charAt(0));
         }
         else
         {
