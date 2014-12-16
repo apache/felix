@@ -9,6 +9,7 @@ Changes from 1.0.2 to 1.0.4
     * [FELIX-4013] - Incorrect usage of ServiceTracker.size() in UPnP Plugin
     * [FELIX-4032] - UPnP Plugin small refactoring
     * [FELIX-4560] - Unsynchonized access to map can cause infinite loop in UPnP web console plugin
+    * [FELIX-4733] - UPnP plugin native2ascii plugin conflicts with Eclipse m2e
 
 ** Improvement
     * [FELIX-3861] - Set felix.webconsole.category on Web Console plugins
