@@ -41,13 +41,6 @@
 			<resource>
 				<directory>${basedir}/src/main/resources</directory>
 			</resource>
-			<resource>
-				<directory>target/classes</directory>
-				<includes>
-					<include>OSGI-INF/**</include>
-				</includes>
-				<filtering>false</filtering>
-			</resource>
 		</resources>
 
 		<plugins>
@@ -84,6 +77,7 @@
 						<Bundle-Activator>
 							org.apache.felix.webconsole.plugins.upnp.internal.Activator
                         </Bundle-Activator>
+                        <Include-Resource>{maven-resources},OSGI-INF=target/classes/OSGI-INF</Include-Resource>
 					</instructions>
 				</configuration>
 			</plugin>
