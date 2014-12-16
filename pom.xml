@@ -48,6 +48,7 @@
 			<resource>
 				<directory>${basedir}/src/main/resources</directory>
 			</resource>
+			<!-- 
 			<resource>
 				<directory>target/classes</directory>
 				<includes>
@@ -55,6 +56,7 @@
 				</includes>
 				<filtering>false</filtering>
 			</resource>
+			 -->
 		</resources>
 
         <plugins>
@@ -131,7 +133,7 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
-            <version>4.0.0</version>
+            <version>5.0.0</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

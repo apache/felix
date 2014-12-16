@@ -1,3 +1,13 @@
+Changes from 1.1.0 to 1.1.2
+---------------------------
+
+** Bug
+    * [FELIX-4573] - Web Console Event plugin might cease operation if Event property is null
+
+** New Feature
+    * [FELIX-4499] - BundleEventConverter reports UNINSTALLED for UNRESOLVED events
+    * [FELIX-4500] - EventListener should implement SynchronousBundleListener
+
 Changes from 1.0.2 to 1.1.0
 ---------------------------
 
