@@ -3,6 +3,8 @@ Changes from 1.1.0 to 1.1.2
 
 ** Bug
     * [FELIX-4573] - Web Console Event plugin might cease operation if Event property is null
+    * [FELIX-4731] - Event plugin native2ascii plugin conflicts with Eclipse
+    * [FELIX-4732] - Web Console event plugin is not compatible with OSGi/Minimum EE
 
 ** New Feature
     * [FELIX-4499] - BundleEventConverter reports UNINSTALLED for UNRESOLVED events
