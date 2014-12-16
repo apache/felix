@@ -38,7 +38,7 @@
     <description>This project builds the 10 minutes tutorial package</description>
 
     <properties>
-        <ipojo.manipulator.version>1.12.1-SNAPSHOT</ipojo.manipulator.version>
+        <ipojo.manipulator.version>1.12.1</ipojo.manipulator.version>
         <bnd.version>1.50.0</bnd.version>
     </properties>
 
