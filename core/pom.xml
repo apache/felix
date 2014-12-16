@@ -53,9 +53,12 @@
            1.12.0:
            * change in the manipulator (frame / java 8 support). Despite it's not really an API change, it breaks
            the compatibility.
+
+           1.12.1:
+           * small changes in the API
         -->
-        <ipojo.package.version>1.12.0</ipojo.package.version>
-        <ipojo.extender.version>1.12.0</ipojo.extender.version>
+        <ipojo.package.version>1.12.1</ipojo.package.version>
+        <ipojo.extender.version>1.12.1</ipojo.extender.version>
     </properties>
 
     <description>
@@ -93,7 +96,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.annotations</artifactId>
-            <version>1.12.0</version>
+            <version>1.12.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.ow2.asm</groupId>
