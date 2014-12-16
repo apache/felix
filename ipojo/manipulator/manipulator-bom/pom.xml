@@ -28,7 +28,7 @@
   </parent>
 
   <artifactId>ipojo-manipulator-bom</artifactId>
-    <version>1.12.1</version>
+    <version>1.12.2-SNAPSHOT</version>
   <name>Apache Felix iPOJO Manipulator BOM</name>
   <packaging>pom</packaging>
 
@@ -67,10 +67,4 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-
-  <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.manipulator-project-1.12.1/ipojo-manipulator-bom</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.manipulator-project-1.12.1/ipojo-manipulator-bom</developerConnection>
-    <url>http://svn.apache.org/viewvc/felix/releases/?root=Apache-SVN/org.apache.felix.ipojo.manipulator-project-1.12.1/ipojo-manipulator-bom</url>
-  </scm>
 </project>
