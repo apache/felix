@@ -35,8 +35,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
@@ -47,6 +45,7 @@ import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
 import org.apache.felix.framework.util.manifestparser.R4Library;
+import org.apache.felix.framework.util.manifestparser.R4LibraryClause;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleWireImpl;
 import org.osgi.framework.AdminPermission;
@@ -253,26 +252,24 @@ class ExtensionManager extends URLStreamHandler implements Content
         String osVersion = (String)m_configMap.get(FelixConstants.FRAMEWORK_OS_VERSION);
         String userLang = (String)m_configMap.get(FelixConstants.FRAMEWORK_LANGUAGE);
         Map<String, Object> attributes = new HashMap<String, Object>();
+        
+        //Add all startup properties so we can match selection-filters
+        attributes.putAll(m_configMap);
 
         if( osArchitecture != null )
         {
-            attributes.put(NativeNamespace.CAPABILITY_PROCESSOR_ATTRIBUTE, osArchitecture);
+            attributes.put(NativeNamespace.CAPABILITY_PROCESSOR_ATTRIBUTE, R4LibraryClause.getProcessorWithAliases(osArchitecture));
         }
 
         if( osName != null)
         {
-            attributes.put(NativeNamespace.CAPABILITY_OSNAME_ATTRIBUTE, osName);
+            attributes.put(NativeNamespace.CAPABILITY_OSNAME_ATTRIBUTE, R4LibraryClause.getOsNameWithAliases(osName));
         }
 
         if( osVersion != null)
         {
-            Pattern versionPattern = Pattern.compile("\\d+\\.?\\d*\\.?\\d*");
-            Matcher matcher = versionPattern.matcher(osVersion);
-            if(matcher.find())
-            {
-                osVersion = matcher.group();
-            }
-            attributes.put(NativeNamespace.CAPABILITY_OSVERSION_ATTRIBUTE, new Version(osVersion));
+            osVersion = R4LibraryClause.formatOSVersion(osVersion);
+            attributes.put(NativeNamespace.CAPABILITY_OSVERSION_ATTRIBUTE, Version.parseVersion(osVersion));
         }
 
         if( userLang != null)

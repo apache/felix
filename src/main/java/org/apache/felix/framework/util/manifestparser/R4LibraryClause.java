@@ -19,14 +19,19 @@
 package org.apache.felix.framework.util.manifestparser;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.util.FelixConstants;
@@ -41,10 +46,12 @@ public class R4LibraryClause
 {
     private static final String OS_AIX = "aix";
     private static final String OS_DIGITALUNIX = "digitalunix";
+    private static final String OS_EPOC = "epoc32";
     private static final String OS_HPUX = "hpux";
     private static final String OS_IRIX = "irix";
     private static final String OS_LINUX = "linux";
     private static final String OS_MACOS = "macos";
+    private static final String OS_MACOSX = "macosx";
     private static final String OS_NETBSD = "netbsd";
     private static final String OS_NETWARE = "netware";
     private static final String OS_OPENBSD = "openbsd";
@@ -67,6 +74,19 @@ public class R4LibraryClause
     private static final String OS_WINDOWS_VISTA = "windowsvista";
     private static final String OS_WINDOWS_XP = "windowsxp";
     private static final String OS_WIN_32 = "win32";
+    
+    private static final String PROC_X86_64 = "x86-64";
+    private static final String PROC_X86 = "x86";
+    private static final String PROC_68K = "68k";
+    private static final String PROC_ARM_LE = "arm_le";
+    private static final String PROC_ARM_BE = "arm_be";
+    private static final String PROC_ARM = "arm";
+    private static final String PROC_ALPHA = "alpha";
+    private static final String PROC_IGNITE = "ignite";
+    private static final String PROC_MIPS = "mips";
+    private static final String PROC_PARISC = "parisc";
+    private static final String PROC_POWER_PC = "powerpc";
+    private static final String PROC_SPARC = "sparc";
 
     /* Storing the OS names in a map as this is quicker to look up than a list.
      */
@@ -127,12 +147,9 @@ public class R4LibraryClause
 
     public R4LibraryClause(R4LibraryClause library)
     {
-        m_libraryEntries = library.m_libraryEntries;
-        m_osnames = library.m_osnames;
-        m_osversions = library.m_osversions;
-        m_processors = library.m_processors;
-        m_languages = library.m_languages;
-        m_selectionFilter = library.m_selectionFilter;
+        this(library.m_libraryEntries, library.m_osnames, library.m_osversions,
+            library.m_processors, library.m_languages,
+            library.m_selectionFilter);
     }
 
     public String[] getLibraryEntries()
@@ -167,19 +184,19 @@ public class R4LibraryClause
 
     public boolean match(Map configMap) throws BundleException
     {
-        String normal_osname = normalizeOSName((String) configMap.get(Constants.FRAMEWORK_OS_NAME));
-        String normal_processor = normalizeProcessor((String) configMap.get(Constants.FRAMEWORK_PROCESSOR));
-        String normal_osversion = normalizeOSVersion((String) configMap.get(Constants.FRAMEWORK_OS_VERSION));
-        String normal_language = (String) configMap.get(Constants.FRAMEWORK_LANGUAGE);
+        String osName = (String) configMap.get(FelixConstants.FRAMEWORK_OS_NAME);
+        String processorName = (String) configMap.get(FelixConstants.FRAMEWORK_PROCESSOR);
+        String osVersion = (String) configMap.get(FelixConstants.FRAMEWORK_OS_VERSION);
+        String language = (String) configMap.get(FelixConstants.FRAMEWORK_LANGUAGE);
 
         // Check library's osname.
-        if (!checkOSNames(normal_osname, getOSNames()))
+        if (!checkOSNames(osName, getOSNames()))
         {
             return false;
         }
 
         // Check library's processor.
-        if (!checkProcessors(normal_processor, getProcessors()))
+        if (!checkProcessors(processorName, getProcessors()))
         {
             return false;
         }
@@ -187,7 +204,7 @@ public class R4LibraryClause
         // Check library's osversion if specified.
         if ((getOSVersions() != null) &&
             (getOSVersions().length > 0) &&
-            !checkOSVersions(normal_osversion, getOSVersions()))
+            !checkOSVersions(osVersion, getOSVersions()))
         {
             return false;
         }
@@ -195,7 +212,7 @@ public class R4LibraryClause
         // Check library's language if specified.
         if ((getLanguages() != null) &&
             (getLanguages().length > 0) &&
-            !checkLanguages(normal_language, getLanguages()))
+            !checkLanguages(language, getLanguages()))
         {
             return false;
         }
@@ -211,42 +228,49 @@ public class R4LibraryClause
         return true;
     }
 
-    private boolean checkOSNames(String currentOSName, String[] osnames)
+    private boolean checkOSNames(String osName, String[] osnames)
     {
-        boolean win32 = currentOSName.startsWith("win") && !currentOSName.equals(OS_WINDOWS_CE);
-
-        for (int i = 0; (osnames != null) && (i < osnames.length); i++)
+        List<String> capabilityOsNames = getOsNameWithAliases(osName);
+        if (capabilityOsNames != null && osnames != null)
         {
-            if (osnames[i].equals(currentOSName) ||
-                (OS_WIN_32.equals(osnames[i]) && win32))
+            for (String curOsName : osnames)
             {
-                return true;
+                if (capabilityOsNames.contains(curOsName))
+                {
+                    return true;
+                }
+
             }
         }
         return false;
     }
 
-    private boolean checkProcessors(String currentProcessor, String[] processors)
+    private boolean checkProcessors(String processorName, String[] processors)
     {
-        for (int i = 0; (processors != null) && (i < processors.length); i++)
+        List<String> capabilitiesProcessors = getProcessorWithAliases(processorName);
+        if (capabilitiesProcessors != null && processors != null)
         {
-            if (processors[i].equals(currentProcessor))
+            for (String currentProcessor : processors)
             {
-                return true;
+                if (capabilitiesProcessors.contains(currentProcessor))
+                {
+                    return true;
+                }
             }
         }
         return false;
     }
 
-    private boolean checkOSVersions(String currentOSVersion, String[] osversions)
+    private boolean checkOSVersions(String osVersion, String[] osversions) 
         throws BundleException
     {
+        Version currentOSVersion = Version.parseVersion(formatOSVersion(osVersion));
         for (int i = 0; (osversions != null) && (i < osversions.length); i++)
         {
             try
             {
                 VersionRange range = VersionRange.parse(osversions[i]);
-                if (range.isInRange(new Version(currentOSVersion)))
+                if (range.isInRange(currentOSVersion))
                 {
                     return true;
                 }
@@ -304,6 +328,7 @@ public class R4LibraryClause
                 return null;
             }
 
+            s = s.trim();
             if (s.equals(FelixConstants.BUNDLE_NATIVECODE_OPTIONAL))
             {
                 return new R4LibraryClause(null, null, null, null, null, null);
@@ -368,10 +393,16 @@ public class R4LibraryClause
                             value = value.substring(1);
                         }
                     }
+
+                    if (value != null)
+                    {
+                        value = value.toLowerCase();
+                    }
+
                     // Add the value to its corresponding property list.
                     if (property.equals(Constants.BUNDLE_NATIVECODE_OSNAME))
                     {
-                        osNameList.add(normalizeOSName(value));
+                        osNameList.add(value);
                     }
                     else if (property.equals(Constants.BUNDLE_NATIVECODE_OSVERSION))
                     {
@@ -379,7 +410,7 @@ public class R4LibraryClause
                     }
                     else if (property.equals(Constants.BUNDLE_NATIVECODE_PROCESSOR))
                     {
-                        processorList.add(normalizeProcessor(value));
+                        processorList.add(value);
                     }
                     else if (property.equals(Constants.BUNDLE_NATIVECODE_LANGUAGE))
                     {
@@ -387,7 +418,7 @@ public class R4LibraryClause
                     }
                     else if (property.equals(Constants.SELECTION_FILTER_ATTRIBUTE))
                     {
-// TODO: NATIVE - I believe we can have multiple selection filters too.
+                        // TODO: NATIVE - I believe we can have multiple selection filters too.
                         selectionFilter = value;
                     }
                 }
@@ -417,6 +448,250 @@ public class R4LibraryClause
         }
     }
 
+    public static String formatOSVersion(String value)
+    {
+        // Header: 'Bundle-NativeCode', Parameter: 'osversion'
+        // Standardized 'osversion': major.minor.micro, only digits
+        try
+        {
+            Pattern versionPattern = Pattern.compile("\\d+\\.?\\d*\\.?\\d*");
+            Matcher matcher = versionPattern.matcher(value);
+            if (matcher.find())
+            {
+                value = matcher.group();
+            }
+            return Version.parseVersion(value).toString();
+        }
+        catch (Exception ex)
+        {
+            return Version.emptyVersion.toString();
+        }
+    }
+
+    public static List<String> getOsNameWithAliases(String osName)
+    {
+        //Can't assume this has been normalized
+        osName = normalizeOSName(osName);
+
+        List<String> result = null;
+        // 
+        if (osName.startsWith("win"))
+        {
+            // Per spec windows ce does not include win32 alias
+            if (osName.equals(OS_WINDOWS_CE))
+            {
+                result = Arrays.asList("windowsce", "wince", "windows ce");
+            }
+            else
+            {
+                //Accumulate windows aliases.  win32 may match many versions of windows.
+                Set<String> windowsOsList = new HashSet<String>();
+
+                if (osName.equals(OS_WINDOWS_95)|| osName.equals(OS_WIN_32))
+                {
+                    windowsOsList.addAll(Arrays.asList("windows95", "win95",
+                        "windows 95", OS_WIN_32));
+                }
+
+                if (osName.equals(OS_WINDOWS_98) || osName.equals(OS_WIN_32))
+                {
+                    windowsOsList.addAll(Arrays.asList("windows98",
+                        "windows 98", OS_WIN_32));
+                }
+
+                if (osName.equals(OS_WINDOWS_NT) || osName.equals(OS_WIN_32))
+                {
+                    windowsOsList.addAll(Arrays.asList("windowsnt", "winnt",
+                        "windows nt", OS_WIN_32));
+                }
+
+                if (osName.equals(OS_WINDOWS_2000) || osName.equals(OS_WIN_32))
+                {
+                    windowsOsList.addAll(Arrays.asList("windows2000",
+                        "win2000", "windows 2000", OS_WIN_32));
+                }
+
+                if (osName.equals(OS_WINDOWS_2003) || osName.equals(OS_WIN_32))
+                {
+                    windowsOsList.addAll(Arrays.asList("windows2003",
+                        "win2003", "windows 2003", OS_WIN_32,
+                        "windows server 2003", "windowsserver2003"));
+                }
+
+                if (osName.equals(OS_WINDOWS_SERVER_2008) || osName.equals(OS_WIN_32))
+                {
+                    windowsOsList.addAll(Arrays.asList("windows2008",
+                        "win2008", "windows 2008", OS_WIN_32,
+                        "windows server 2008", "windowsserver2008"));
+                }
+
+                if (osName.equals(OS_WINDOWS_SERVER_2012) || osName.equals(OS_WIN_32))
+                {
+                    windowsOsList.addAll(Arrays.asList("windows2012",
+                        "win2012", "windows 2012", OS_WIN_32,
+                        "windows server 2012", "windowsserver2012"));
+                }
+
+                if (osName.equals(OS_WINDOWS_XP) || osName.equals(OS_WIN_32))
+                {
+                    windowsOsList.addAll(Arrays.asList("windowsxp", "winxp",
+                        "windows xp", OS_WIN_32));
+                }
+
+                if (osName.equals(OS_WINDOWS_VISTA) || osName.equals(OS_WIN_32))
+                {
+                    windowsOsList.addAll(Arrays.asList("windowsvista",
+                        "windows vista", OS_WIN_32));
+                }
+
+                if (osName.equals(OS_WINDOWS_7) || osName.equals(OS_WIN_32))
+                {
+                    windowsOsList.addAll(Arrays.asList("windows7", "windows 7",
+                        OS_WIN_32));
+                }
+
+                if (osName.equals(OS_WINDOWS_8) || osName.equals(OS_WIN_32))
+                {
+                    windowsOsList.addAll(Arrays.asList("windows8", "windows 8",
+                        OS_WIN_32));
+                }
+
+                if (osName.equals(OS_WINDOWS_9) || osName.equals(OS_WIN_32))
+                {
+                    windowsOsList.addAll(Arrays.asList("windows9", "windows 9",
+                        OS_WIN_32));
+                }
+
+                if (windowsOsList.isEmpty())
+                {
+                    windowsOsList.add(osName);
+                }
+                result = new ArrayList<String>(windowsOsList);
+            }
+
+        }
+        else if (osName.equals(OS_LINUX))
+        {
+            result = Collections.singletonList(OS_LINUX);
+        }
+        else if (osName.equals(OS_AIX))
+        {
+            result = Collections.singletonList(OS_AIX);
+        }
+        else if (osName.equals(OS_DIGITALUNIX))
+        {
+            result = Collections.singletonList(OS_DIGITALUNIX);
+        }
+        else if (osName.equals(OS_EPOC))
+        {
+            result = Arrays.asList(OS_EPOC, "symbianos");
+        }
+        else if (osName.equals(OS_HPUX))
+        {
+            result = Arrays.asList(OS_HPUX, "hp-ux");
+        }
+        else if (osName.equals(OS_IRIX))
+        {
+            result = Collections.singletonList(OS_IRIX);
+        }
+        else if (osName.equals(OS_MACOSX))
+        {
+            result = Arrays.asList(OS_MACOSX, "mac os x");
+        }
+        else if (osName.equals(OS_MACOS))
+        {
+            result = Arrays.asList(OS_MACOS, "mac os");
+        }
+        else if (osName.equals(OS_NETWARE))
+        {
+            result = Collections.singletonList(OS_NETWARE);
+        }
+        else if (osName.equals(OS_OPENBSD))
+        {
+            result = Collections.singletonList(OS_OPENBSD);
+        }
+        else if (osName.equals(OS_NETBSD))
+        {
+            result = Collections.singletonList(OS_NETBSD);
+        }
+        else if (osName.equals(OS_OS2))
+        {
+            result = Arrays.asList(OS_OS2, "os/2");
+        }
+        else if (osName.equals(OS_QNX))
+        {
+            result = Arrays.asList(OS_QNX, "procnto");
+        }
+        else if (osName.equals(OS_SOLARIS))
+        {
+            result = Collections.singletonList(OS_SOLARIS);
+        }
+        else if (osName.equals(OS_SUNOS))
+        {
+            result = Collections.singletonList(OS_SUNOS);
+        }
+        else if (osName.equals(OS_VXWORKS))
+        {
+            result = Collections.singletonList(OS_VXWORKS);
+        }
+        else
+        {
+            result = Collections.singletonList(osName);
+        }
+
+        return Collections.unmodifiableList(result);
+    }
+
+    public static List<String> getProcessorWithAliases(String processor)
+    {
+        //Can't assume this has been normalized
+        processor = normalizeProcessor(processor);
+
+        List<String> result = null;
+        if (processor.equals(PROC_X86_64))
+        {
+            result = Arrays.asList(PROC_X86_64, "amd64", "em64t", "x86_64");
+        }
+        else if (processor.equals(PROC_X86))
+        {
+            result = Arrays.asList(PROC_X86, "pentium", "i386", "i486", "i586",
+                "i686");
+        }
+        else if (processor.equals(PROC_68K))
+        {
+            result = Arrays.asList(PROC_68K);
+        }
+        else if (processor.equals(PROC_ALPHA))
+        {
+            result = Arrays.asList(PROC_ALPHA);
+        }
+        else if (processor.equals(PROC_IGNITE))
+        {
+            result = Arrays.asList(PROC_IGNITE, "psc1k");
+        }
+        else if (processor.equals(PROC_MIPS))
+        {
+            result = Arrays.asList(PROC_MIPS);
+        }
+        else if (processor.equals(PROC_PARISC))
+        {
+            result = Arrays.asList(PROC_PARISC);
+        }
+        else if (processor.equals(PROC_POWER_PC))
+        {
+            result = Arrays.asList(PROC_POWER_PC, "power", "ppc");
+        }
+        else if (processor.equals(PROC_SPARC))
+        {
+            result = Arrays.asList(PROC_SPARC);
+        }
+        else
+        {
+            result = Collections.singletonList(processor);
+        }
+        return Collections.unmodifiableList(result);
+    }
+    
     public static String normalizeOSName(String value)
     {
         if (NORMALIZED_OS_NAMES.containsKey(value))
@@ -508,6 +783,10 @@ public class R4LibraryClause
         {
             return OS_IRIX;
         }
+        else if (value.startsWith(OS_MACOSX) || value.startsWith("mac os x"))
+        {
+            return OS_MACOSX;
+        }
         else if (value.startsWith(OS_MACOS) || value.startsWith("mac os"))
         {
             return OS_MACOS;
@@ -551,49 +830,57 @@ public class R4LibraryClause
     {
         value = value.toLowerCase();
 
-        if (value.startsWith("x86-64") || value.startsWith("amd64") ||
+        if (value.startsWith(PROC_X86_64) || value.startsWith("amd64") ||
             value.startsWith("em64") || value.startsWith("x86_64"))
         {
-            return "x86-64";
+            return PROC_X86_64;
         }
-        else if (value.startsWith("x86") || value.startsWith("pentium")
+        else if (value.startsWith(PROC_X86) || value.startsWith("pentium")
             || value.startsWith("i386") || value.startsWith("i486")
             || value.startsWith("i586") || value.startsWith("i686"))
         {
-            return "x86";
+            return PROC_X86;
         }
-        else if (value.startsWith("68k"))
+        else if (value.startsWith(PROC_68K))
         {
-            return "68k";
+            return PROC_68K;
         }
-        else if (value.startsWith("arm"))
+        else if (value.startsWith(PROC_ARM_LE))
         {
-            return "arm";
+            return PROC_ARM_LE;
         }
-        else if (value.startsWith("alpha"))
+        else if (value.startsWith(PROC_ARM_BE))
         {
-            return "alpha";
+            return PROC_ARM_BE;
         }
-        else if (value.startsWith("ignite") || value.startsWith("psc1k"))
+        else if (value.startsWith(PROC_ARM))
         {
-            return "ignite";
+            return PROC_ARM;
         }
-        else if (value.startsWith("mips"))
+        else if (value.startsWith(PROC_ALPHA))
         {
-            return "mips";
+            return PROC_ALPHA;
         }
-        else if (value.startsWith("parisc"))
+        else if (value.startsWith(PROC_IGNITE) || value.startsWith("psc1k"))
         {
-            return "parisc";
+            return PROC_IGNITE;
         }
-        else if (value.startsWith("powerpc") || value.startsWith("power")
+        else if (value.startsWith(PROC_MIPS))
+        {
+            return PROC_MIPS;
+        }
+        else if (value.startsWith(PROC_PARISC))
+        {
+            return PROC_PARISC;
+        }
+        else if (value.startsWith(PROC_POWER_PC) || value.startsWith("power")
             || value.startsWith("ppc"))
         {
-            return "powerpc";
+            return PROC_POWER_PC;
         }
-        else if (value.startsWith("sparc"))
+        else if (value.startsWith(PROC_SPARC))
         {
-            return "sparc";
+            return PROC_SPARC;
         }
         return value;
     }

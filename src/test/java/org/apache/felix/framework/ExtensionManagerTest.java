@@ -25,6 +25,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.jar.JarOutputStream;
@@ -88,12 +90,12 @@ public class ExtensionManagerTest {
                         NativeNamespace.CAPABILITY_LANGUAGE_ATTRIBUTE));
         assertEquals(
                 "Native Processor should be same as framework Processor",
-                "x86_64",
+                Arrays.asList("x86-64", "amd64", "em64t", "x86_64"),
                 nativeBundleCapability.getAttributes().get(
                         NativeNamespace.CAPABILITY_PROCESSOR_ATTRIBUTE));
         assertEquals(
                 "Native OS Name should be the same as the framework os name",
-                "windows8",
+                Arrays.asList("windows8", "windows 8", "win32"),
                 nativeBundleCapability.getAttributes().get(
                         NativeNamespace.CAPABILITY_OSNAME_ATTRIBUTE));
         assertEquals(

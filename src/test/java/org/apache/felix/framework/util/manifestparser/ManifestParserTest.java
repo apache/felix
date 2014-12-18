@@ -18,19 +18,27 @@
  */
 package org.apache.felix.framework.util.manifestparser;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.mockito.Mockito.*;
 import junit.framework.TestCase;
 
+import org.apache.felix.framework.util.FelixConstants;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
+import org.osgi.framework.Filter;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.Version;
 import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.framework.namespace.NativeNamespace;
 import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleRequirement;
+import org.osgi.framework.wiring.BundleRevision;
 
 public class ManifestParserTest extends TestCase
 {
@@ -80,14 +88,16 @@ public class ManifestParserTest extends TestCase
 	public void testNativeCapability() throws BundleException {
         Map<String, String> headers = new HashMap<String, String>();
         headers.put(Constants.BUNDLE_MANIFESTVERSION,  "2");
-        headers.put(Constants.BUNDLE_SYMBOLICNAME, "foo.bar");
+        headers.put(Constants.BUNDLE_SYMBOLICNAME, FelixConstants.SYSTEM_BUNDLE_SYMBOLICNAME);
         headers.put(Constants.PROVIDE_CAPABILITY, " osgi.native;" +
         		"osgi.native.osname:List<String>=\"Windows7,Windows 7,Win7,Win32\";"+
         		"osgi.native.osversion:Version=\"7.0\";"+
         		"osgi.native.processor:List<String>=\"x86-64,amd64,em64t,x86_64\";"+
         		"osgi.native.language=\"en\"");
+        BundleRevision mockBundleRevision = mock(BundleRevision.class);
+        when(mockBundleRevision.getSymbolicName()).thenReturn(FelixConstants.SYSTEM_BUNDLE_SYMBOLICNAME);
     	
-        ManifestParser mp = new ManifestParser(null, null, null, headers);
+        ManifestParser mp = new ManifestParser(null, null, mockBundleRevision, headers);
 
         BundleCapability ic = findCapability(mp.getCapabilities(), NativeNamespace.NATIVE_NAMESPACE);
     	
@@ -99,6 +109,39 @@ public class ManifestParserTest extends TestCase
         assertEquals(4, nativeProcesserList.size());
     
     }
+    
+    public void testConvertNativeCode() throws InvalidSyntaxException
+    {
+        List<R4LibraryClause> nativeLibraryClauses = new ArrayList<R4LibraryClause>();
+        String[] libraryFiles = {"lib/http.dll", "lib/zlib.dll"};
+        String[] osNames = {"Windows95", "Windows98", "WindowsNT"};
+        String[] processors = {"x86"};
+        String[] osVersions = null;
+        String[] languages = {"en", "se"};
+        String selectionFilter = "(com.acme.windowing=win32)";
+        R4LibraryClause clause = new R4LibraryClause(libraryFiles, osNames, processors, osVersions, languages, selectionFilter);
+        BundleRevision owner = mock(BundleRevision.class);
+        nativeLibraryClauses.add(clause);
+        
+        List<BundleRequirement> nativeBundleReq = ManifestParser.convertNativeCode(owner, nativeLibraryClauses, false);
+        
+        BundleRequirement ir = findRequirement(nativeBundleReq, NativeNamespace.NATIVE_NAMESPACE);
+        
+        String filterStr = (String)ir.getDirectives().get(NativeNamespace.REQUIREMENT_FILTER_DIRECTIVE);
+        
+        Filter actualFilter = FrameworkUtil.createFilter(filterStr);
+        
+        Filter expectedFilter = FrameworkUtil.createFilter("(&(|" + 
+                "(osgi.native.osname~=windows95)(osgi.native.osname~=windows98)(osgi.native.osname~=windowsnt)" +
+                ")" + 
+                "(osgi.native.processor~=x86)" + 
+                "(|(osgi.native.language~=en)" + 
+                "(osgi.native.language~=se)" + 
+                ")"+
+                "(com.acme.windowing=win32))");
+        assertEquals("Filter Should contain native requirements", expectedFilter, actualFilter);
+        
+    }
 
     private BundleCapability findCapability(Collection<BundleCapability> capabilities, String namespace)
     {
@@ -107,6 +150,18 @@ public class ManifestParserTest extends TestCase
             if (namespace.equals(capability.getNamespace()))
             {
                 return capability;
+            }
+        }
+        return null;
+    }
+    
+    private BundleRequirement findRequirement(Collection<BundleRequirement> requirements, String namespace)
+    {
+        for(BundleRequirement requirement: requirements)
+        {
+            if(namespace.equals(requirement.getNamespace()))
+            {
+                return requirement;
             }
         }
         return null;

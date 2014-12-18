@@ -41,7 +41,7 @@ public class R4LibraryClauseTest extends TestCase {
         assertEquals("digitalunix", R4LibraryClause.normalizeOSName("digitalunix_blah"));
         assertEquals("hpux", R4LibraryClause.normalizeOSName("HPUX-999"));
         assertEquals("irix", R4LibraryClause.normalizeOSName("Irixxxx"));
-        assertEquals("macos", R4LibraryClause.normalizeOSName("mac OS X"));
+        assertEquals("macosx", R4LibraryClause.normalizeOSName("mac OS X"));
         assertEquals("netware", R4LibraryClause.normalizeOSName("Netware"));
         assertEquals("openbsd", R4LibraryClause.normalizeOSName("OpenBSD-0000"));
         assertEquals("netbsd", R4LibraryClause.normalizeOSName("netbsd "));
@@ -80,5 +80,66 @@ public class R4LibraryClauseTest extends TestCase {
         assertEquals("windowsvista", R4LibraryClause.normalizeOSName("windowsvista"));
         assertEquals("windowsxp", R4LibraryClause.normalizeOSName("windowsxp"));
         assertEquals("win32", R4LibraryClause.normalizeOSName("win32"));
+    }
+    
+    public void testgetOsNameWithAliases() {
+        assertTrue(R4LibraryClause.getOsNameWithAliases("win 32").contains("win32"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("Win*").contains("win32"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("Windows 95").contains("windows95"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("Windows 98").contains("windows98"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("WinNT").contains("windowsnt"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("Win2000").contains("windows2000"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("Win2003").contains("windows2003"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("Windows Server 2008").contains("windowsserver2008"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("Windows Server 2012").contains("windowsserver2012"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("WinXP").contains("windowsxp"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("WinCE").contains("windowsce"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("WinVista").contains("windowsvista"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("Windows 7").contains("windows7"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("Win8").contains("windows8"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("Linux1.2.3").contains("linux"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("AIX-4.5.6").contains("aix"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("digitalunix_blah").contains("digitalunix"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("HPUX-999").contains("hpux"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("Irixxxx").contains("irix"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("mac OS X").contains("mac os x"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("Netware").contains("netware"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("OpenBSD-0000").contains("openbsd"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("netbsd ").contains("netbsd"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("os/2").contains("os2"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("procnto").contains("qnx"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("Solaris 9").contains("solaris"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("SunOS8").contains("sunos"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("VxWorks").contains("vxworks"));
+
+        // Try all the already normalized names
+        assertTrue(R4LibraryClause.getOsNameWithAliases("aix").contains("aix"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("digitalunix").contains("digitalunix"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("hpux").contains("hpux"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("irix").contains("irix"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("linux").contains("linux"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("mac os").contains("mac os"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("netbsd").contains("netbsd"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("netware").contains("netware"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("openbsd").contains("openbsd"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("os2").contains("os2"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("qnx").contains("qnx"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("solaris").contains("solaris"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("sunos").contains("sunos"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("vxworks").contains("vxworks"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("windows2000").contains("windows2000"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("windows2003").contains("windows2003"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("windows7").contains("windows7"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("windows8").contains("windows8"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("windows9").contains("windows9"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("windows95").contains("windows95"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("windows98").contains("windows98"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("windowsce").contains("windowsce"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("windowsnt").contains("windowsnt"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("windowsserver2008").contains("windowsserver2008"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("windowsserver2012").contains("windowsserver2012"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("windowsvista").contains("windowsvista"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("windowsxp").contains("windowsxp"));
+        assertTrue(R4LibraryClause.getOsNameWithAliases("win32").contains("win32"));
     }
 }

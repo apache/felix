@@ -19,6 +19,7 @@
 package org.apache.felix.framework.util.manifestparser;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,6 +42,7 @@ import org.osgi.framework.Version;
 import org.osgi.framework.namespace.BundleNamespace;
 import org.osgi.framework.namespace.ExecutionEnvironmentNamespace;
 import org.osgi.framework.namespace.IdentityNamespace;
+import org.osgi.framework.namespace.NativeNamespace;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
@@ -243,24 +245,6 @@ public class ManifestParser
             exportCaps = calculateImplicitUses(exportCaps, allImportClauses);
         }
 
-        // Combine all capabilities.
-        m_capabilities = new ArrayList(
-             capList.size() + exportCaps.size() + provideCaps.size());
-        m_capabilities.addAll(capList);
-        m_capabilities.addAll(exportCaps);
-        m_capabilities.addAll(provideCaps);
-
-        // Combine all requirements.
-        m_requirements = new ArrayList(
-            hostReqs.size() + importReqs.size() + rbReqs.size()
-            + requireReqs.size() + dynamicReqs.size() + breeReqs.size());
-        m_requirements.addAll(hostReqs);
-        m_requirements.addAll(importReqs);
-        m_requirements.addAll(rbReqs);
-        m_requirements.addAll(requireReqs);
-        m_requirements.addAll(dynamicReqs);
-        m_requirements.addAll(breeReqs);
-
         //
         // Parse Bundle-NativeCode.
         //
@@ -279,6 +263,27 @@ public class ManifestParser
             m_libraryHeadersOptional = true;
             m_libraryClauses.remove(m_libraryClauses.size() - 1);
         }
+        
+        List<BundleRequirement> nativeCodeReqs = convertNativeCode(owner, m_libraryClauses, m_libraryHeadersOptional);
+        
+        // Combine all requirements.
+        m_requirements = new ArrayList(
+            hostReqs.size() + importReqs.size() + rbReqs.size()
+            + requireReqs.size() + dynamicReqs.size() + breeReqs.size());
+        m_requirements.addAll(hostReqs);
+        m_requirements.addAll(importReqs);
+        m_requirements.addAll(rbReqs);
+        m_requirements.addAll(requireReqs);
+        m_requirements.addAll(dynamicReqs);
+        m_requirements.addAll(breeReqs);
+        m_requirements.addAll(nativeCodeReqs);
+        
+        // Combine all capabilities.
+        m_capabilities = new ArrayList(
+             capList.size() + exportCaps.size() + provideCaps.size());
+        m_capabilities.addAll(capList);
+        m_capabilities.addAll(exportCaps);
+        m_capabilities.addAll(provideCaps);
 
         //
         // Parse activation policy.
@@ -601,6 +606,123 @@ public class ManifestParser
 
         return reqList;
     }
+    
+    static List<BundleRequirement> convertNativeCode(BundleRevision owner, List<R4LibraryClause> nativeLibraryClauses, boolean hasOptionalLibraryDirective)
+    {
+        List<BundleRequirement> result = new ArrayList<BundleRequirement>();
+        
+        List<SimpleFilter> nativeFilterClauseList = new ArrayList<SimpleFilter>();
+        
+        if(nativeLibraryClauses != null)
+        {
+            for(R4LibraryClause clause: nativeLibraryClauses)
+            {
+                String[] osNameArray = clause.getOSNames();
+                String[] osVersionArray = clause.getOSVersions();
+                String[] processorArray = clause.getProcessors();
+                String[] languageArray = clause.getLanguages();
+                
+                String currentSelectionFilter = clause.getSelectionFilter();
+                
+                List<SimpleFilter> nativeFilterList = new ArrayList<SimpleFilter>();
+                if(osNameArray != null && osNameArray.length > 0)
+                {
+                    nativeFilterList.add(buildFilterFromArray(NativeNamespace.CAPABILITY_OSNAME_ATTRIBUTE, osNameArray, SimpleFilter.APPROX));
+                }
+                
+                if(osVersionArray != null && osVersionArray.length > 0)
+                {
+                    nativeFilterList.add(buildFilterFromArray(NativeNamespace.CAPABILITY_OSVERSION_ATTRIBUTE, osVersionArray, SimpleFilter.EQ));
+                }
+                
+                if(processorArray != null && processorArray.length > 0)
+                {
+                    nativeFilterList.add(buildFilterFromArray(NativeNamespace.CAPABILITY_PROCESSOR_ATTRIBUTE, processorArray, SimpleFilter.APPROX));
+                }
+
+                if(languageArray != null && languageArray.length > 0)
+                {
+                    nativeFilterList.add(buildFilterFromArray(NativeNamespace.CAPABILITY_LANGUAGE_ATTRIBUTE, languageArray, SimpleFilter.APPROX));
+                }
+                
+                if(currentSelectionFilter != null)
+                {
+                    nativeFilterList.add(SimpleFilter.parse(currentSelectionFilter));
+                }
+                
+                if(!nativeFilterList.isEmpty())
+                {
+                    SimpleFilter nativeClauseFilter = new SimpleFilter(null, nativeFilterList, SimpleFilter.AND);
+                    nativeFilterClauseList.add(nativeClauseFilter);
+                }
+            }
+            
+            Map<String, String> requirementDirectives = new HashMap<String, String>();
+            
+            SimpleFilter consolidatedNativeFilter = null;
+            
+            if(hasOptionalLibraryDirective)
+            {
+                requirementDirectives.put(NativeNamespace.REQUIREMENT_RESOLUTION_DIRECTIVE, NativeNamespace.RESOLUTION_OPTIONAL);
+            }
+            
+            if(nativeFilterClauseList.size() > 1)
+            {
+                consolidatedNativeFilter = new SimpleFilter(null, nativeFilterClauseList, SimpleFilter.OR);
+                
+                requirementDirectives.put(NativeNamespace.REQUIREMENT_FILTER_DIRECTIVE, consolidatedNativeFilter.toString());
+            }
+            else if(nativeFilterClauseList.size() == 1)
+            {
+                consolidatedNativeFilter = nativeFilterClauseList.get(0);
+                
+                requirementDirectives.put(NativeNamespace.REQUIREMENT_FILTER_DIRECTIVE, consolidatedNativeFilter.toString());
+            }
+            
+            if(requirementDirectives.size() > 0)
+            {
+                result.add(new BundleRequirementImpl(owner, NativeNamespace.NATIVE_NAMESPACE, requirementDirectives,
+                        Collections.<String, Object>emptyMap(),
+                        consolidatedNativeFilter));
+            }
+            
+        }
+        
+        return result;
+    }
+    
+    private static SimpleFilter buildFilterFromArray(String attributeName, String[] stringArray, int operation)
+    {
+        SimpleFilter result = null;
+        List<SimpleFilter> filterSet = new ArrayList<SimpleFilter>();
+        
+        if(stringArray != null)
+        {
+            for(String currentValue : stringArray)
+            {
+                filterSet.add(new SimpleFilter(attributeName, currentValue.toLowerCase(), operation));
+            }
+            
+            if(filterSet.size() == 1)
+            {
+                result = filterSet.get(0);
+            }
+            else
+            {
+                result = new SimpleFilter(null, filterSet, SimpleFilter.OR);
+            }
+        }
+        
+        return result;
+    }
+    
+    private static void addStringArrayToSet(String[] array, Set<String> set)
+    {
+        if(array != null)
+        {
+            set.addAll(Arrays.asList(array));
+        }
+    }
 
     private static List<ParsedHeaderClause> normalizeProvideCapabilityClauses(
         Logger logger, List<ParsedHeaderClause> clauses, String mv)
@@ -721,6 +843,14 @@ public class ManifestParser
                     throw new BundleException("Manifest cannot use Provide-Capability for '"
                         + path
                         + "' namespace.");
+                }
+                
+                if(path.startsWith(NativeNamespace.NATIVE_NAMESPACE) && (owner == null ||
+                        !FelixConstants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(owner.getSymbolicName())))
+                {
+                    throw new BundleException("Only System Bundle can use Provide-Capability for '"
+                            + path
+                            + "' namespace.", BundleException.MANIFEST_ERROR);
                 }
 
                 // Create package capability and add to capability list.
