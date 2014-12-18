@@ -32,9 +32,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
+
 import org.apache.felix.framework.util.SecureAction;
 import org.apache.felix.framework.util.StringComparator;
+import org.apache.felix.framework.util.VersionRange;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
+import org.osgi.framework.Version;
 import org.osgi.framework.wiring.BundleCapability;
 
 public class CapabilitySet
@@ -385,6 +388,26 @@ public class CapabilitySet
             return true;
         }
 
+        //Need a special case here when lhs is a Version and rhs is a VersionRange
+        //Version is comparable so we need to check this first
+        if(lhs instanceof Version && op == SimpleFilter.EQ)
+        {
+            Object rhs = null;
+            try
+            {
+                rhs = coerceType(lhs, (String) rhsUnknown);
+            }
+            catch (Exception ex)
+            {
+                //Do nothing will check later if rhs is null
+            }
+            
+            if(rhs != null && rhs instanceof VersionRange)
+            {
+                return ((VersionRange)rhs).isInRange((Version)lhs);
+            }
+        }
+        
         // If the type is comparable, then we can just return the
         // result immediately.
         if (lhs instanceof Comparable)
@@ -564,6 +587,10 @@ public class CapabilitySet
             if (lhs instanceof Character)
             {
                 rhs = new Character(rhsString.charAt(0));
+            }
+            else if(lhs instanceof Version && rhsString.indexOf(',') >= 0)
+            {
+                rhs = VersionRange.parse(rhsString);
             }
             else
             {
