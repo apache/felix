@@ -500,7 +500,7 @@ function addFactoryConfig(conf) {
 		configure(conf.id, true);
 	});
 	// buttons
-	tr.find('li:eq(1)').click(function() { // edit
+	tr.find('li:eq(0)').click(function() { // edit
 		configure(conf.id, true);
 	});
 }
