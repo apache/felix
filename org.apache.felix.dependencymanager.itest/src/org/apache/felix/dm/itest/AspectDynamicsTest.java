@@ -59,6 +59,7 @@ public class AspectDynamicsTest extends TestBase {
         m.remove(provider);
         m.remove(consumer);
         e.waitForStep(16, 15000);
+        m.clear();
     }
     
     static interface ServiceInterface {

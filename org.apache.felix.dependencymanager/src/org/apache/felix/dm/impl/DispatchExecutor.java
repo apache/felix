@@ -1,9 +1,6 @@
 package org.apache.felix.dm.impl;
 
-import java.lang.ref.WeakReference;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -113,7 +110,7 @@ public class DispatchExecutor implements Executor, Runnable {
 	}
 	
     /**
-     * Schedules the execution of this DispatchQueue in the threadpool.
+     * Schedules the execution of this DispatchQueue in the threadpool, or from a single caller thread.
      * 
      * @param threadpool true means the DispatchQueue is executed in the threadpool, false means the queue is executed from the
      * caller thread.

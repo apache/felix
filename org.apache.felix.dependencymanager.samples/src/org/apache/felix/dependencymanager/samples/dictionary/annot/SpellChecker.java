@@ -39,7 +39,7 @@ import org.osgi.service.log.LogService;
  */
 @Component(provides = { SpellChecker.class }, properties = {
         @Property(name = CommandProcessor.COMMAND_SCOPE, value = "dictionary.annotation"),
-        @Property(name = CommandProcessor.COMMAND_FUNCTION, values = { "spellcheck" }) })
+        @Property(name = CommandProcessor.COMMAND_FUNCTION, value = "spellcheck" ) })
 public class SpellChecker {
     /**
      * We'll use the OSGi log service for logging. If no log service is available, then we'll use a NullObject.

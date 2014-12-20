@@ -27,6 +27,7 @@ public class FELIX4158_DependencyDeclarationTest extends TestBase {
         Assert.assertEquals(cdds[0].getSimpleName(), "org.osgi.service.log.LogService");
         Assert.assertNotNull(cdds[0].getFilter());
         Assert.assertEquals(cdds[0].getFilter(), "(foo=bar)");
+        m.clear();
     }
     
     public void testConfigurationDependencyDeclaration() {
@@ -42,6 +43,7 @@ public class FELIX4158_DependencyDeclarationTest extends TestBase {
         Assert.assertEquals(cdds[0].getName(), "foo");
         Assert.assertEquals(cdds[0].getSimpleName(), "foo");
         Assert.assertNull(cdds[0].getFilter());
+        m.clear();
     }
     
     public void testResourceDependencyDeclaration() throws MalformedURLException {
@@ -59,6 +61,7 @@ public class FELIX4158_DependencyDeclarationTest extends TestBase {
         Assert.assertNotNull(cdds[0].getSimpleName());
         Assert.assertEquals(cdds[0].getSimpleName(), "file://localhost/path/to/file1.txt");
         Assert.assertNull(cdds[0].getFilter());
+        m.clear();
     }
     
     public void testResourceDependencyDeclarationWithFilter() {
@@ -76,6 +79,7 @@ public class FELIX4158_DependencyDeclarationTest extends TestBase {
         Assert.assertNull(cdds[0].getSimpleName());
         Assert.assertNotNull(cdds[0].getFilter());
         Assert.assertEquals(cdds[0].getFilter(), "(&(path=/path/to/*.txt)(host=localhost))");
+        m.clear();
     }
     
     public void testBundleDependencyDeclaration() throws MalformedURLException {
@@ -92,6 +96,7 @@ public class FELIX4158_DependencyDeclarationTest extends TestBase {
         Assert.assertNotNull(cdds[0].getSimpleName());
         Assert.assertEquals(cdds[0].getSimpleName(), "active installed resolved");
         Assert.assertNull(cdds[0].getFilter());
+        m.clear();
     }
 
     public void testBundleDependencyDeclarationWithMask() throws MalformedURLException {
@@ -109,6 +114,7 @@ public class FELIX4158_DependencyDeclarationTest extends TestBase {
         Assert.assertNotNull(cdds[0].getSimpleName());
         Assert.assertEquals(cdds[0].getSimpleName(), "active resolved");
         Assert.assertNull(cdds[0].getFilter());
+        m.clear();
     }
     
     public void testBundleDependencyDeclarationWithFilter() throws MalformedURLException {
@@ -128,5 +134,6 @@ public class FELIX4158_DependencyDeclarationTest extends TestBase {
         Assert.assertEquals(cdds[0].getSimpleName(), "active");
         Assert.assertNotNull(cdds[0].getFilter());
         Assert.assertEquals(cdds[0].getFilter(), "(DependencyManager-Component=*)");
+        m.clear();
     }
 }

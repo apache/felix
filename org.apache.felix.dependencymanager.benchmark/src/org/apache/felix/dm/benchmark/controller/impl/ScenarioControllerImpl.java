@@ -81,7 +81,7 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
            + " components during bundle activation).");
        
         // Stop all tested bundles.
-        forEachScenarioBundle(TESTS, Unchecked.consumer((bundle) -> {
+        forEachScenarioBundle(TESTS, Unchecked.consumer(bundle -> {
             debug(() -> "Stopping bundle " + bundle.getSymbolicName());
             bundle.stop();
         }));

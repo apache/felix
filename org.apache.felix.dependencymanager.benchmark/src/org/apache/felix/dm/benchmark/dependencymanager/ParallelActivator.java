@@ -16,7 +16,7 @@ public class ParallelActivator extends Activator {
         context.registerService(ComponentExecutorFactory.class.getName(), new ComponentExecutorFactory() {
             @Override
             public Executor getExecutorFor(Component component) {
-                return Helper.getThreadPool();
+                return Helper.getThreadPool(); // Return our thread pool shared for all components
             }
         }, null);
         super.init(context, mgr);

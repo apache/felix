@@ -27,11 +27,11 @@ public class Activator extends DependencyActivatorBase {
         Hashtable<String, Object> props = new Hashtable<>();
         props.put("device.id", id);
         dm.add(createComponent()
-            .setImplementation(new DeviceImpl(id)).setInterface(Device.class.getName(), props));
+          .setImplementation(new DeviceImpl(id)).setInterface(Device.class.getName(), props));
            
         props = new Hashtable<>();
         props.put("device.id", id);
         dm.add(createComponent()
-            .setImplementation(new DeviceParameterImpl(id)).setInterface(DeviceParameter.class.getName(), props));        
+          .setImplementation(new DeviceParameterImpl(id)).setInterface(DeviceParameter.class.getName(), props));        
     }
 }

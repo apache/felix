@@ -52,7 +52,7 @@ public class ResourceAdapterDependencyAddAndRemoveTest extends TestBase {
             .setRequired(true);
         CallbackInstance callbackInstance = new CallbackInstance(e, d);
         Component component = m.createResourceAdapterService("(&(path=/path/to/*.txt)(host=localhost))", false, callbackInstance, "changed")
-            .setImplementation(new ResourceAdapter(e, d))
+            .setImplementation(new ResourceAdapter(e))
             .setCallbacks(callbackInstance, "init", "start", "stop", "destroy");
         
         // add the resource adapter
@@ -80,16 +80,10 @@ public class ResourceAdapterDependencyAddAndRemoveTest extends TestBase {
     static class ResourceAdapter {
         protected URL m_resource; // injected by reflection.
         private Ensure m_ensure;
-        private final Dependency m_dependency;
         
-        ResourceAdapter(Ensure e, Dependency d) {
+        ResourceAdapter(Ensure e) {
             m_ensure = e;
-            m_dependency = d;
         }
-        
-        void init(Component c) {
-            c.add(m_dependency);
-        }        
     }
     
     class ResourceProvider {
@@ -196,8 +190,9 @@ public class ResourceAdapterDependencyAddAndRemoveTest extends TestBase {
             m_dependency = d;
         }
         
-        void init() {
+        void init(Component c) {
             debug("CallbackInstance.init");
+            c.add(m_dependency);
         }
         
         void start() {

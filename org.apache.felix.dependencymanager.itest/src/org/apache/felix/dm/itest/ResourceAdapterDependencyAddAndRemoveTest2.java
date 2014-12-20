@@ -84,10 +84,6 @@ public class ResourceAdapterDependencyAddAndRemoveTest2 extends TestBase {
             m_ensure = e;
             m_dependency = d;
         }
-        
-        void init(Component c) {
-            c.add(m_dependency);
-        }
     }
     
     static class ResourceProvider {
@@ -188,7 +184,8 @@ public class ResourceAdapterDependencyAddAndRemoveTest2 extends TestBase {
             m_dependency = d;
         }
         
-        void init() {
+        void init(Component c) {
+            c.add(m_dependency);
             System.out.println("init");
             m_ensure.step(1);
         }

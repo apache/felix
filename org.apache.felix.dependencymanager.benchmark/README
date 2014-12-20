@@ -8,7 +8,7 @@ How to launch the stress test under bndtools:
 
 The stress test performs two kind of tests on DM and parallel DM.
 
-1) first kind of tests: starts/stops several times each tested bundle (SCR/DM/Parallel DM). When
+1) first kind of tests: starts/stops several times each tested bundle (DM/Parallel DM). When
 started, the test bundle is expected to register/unregister several services. And no processing is
 done at all in each component start methods).
 
@@ -127,9 +127,6 @@ on several Track services.
 
 "Track" service: A piece of music.
 
-By default, a scenario consists in registering 5 artists, each artist having 10 albums, and each
-album having 5 music tracks (~ 300 services).
-
 The scenario is implemented in the following bundles
 
 - org.apache.felix.dm.benchmark.scenario: defines the interfaces.
@@ -137,8 +134,7 @@ The scenario is implemented in the following bundles
 
 The Scenario Controller (see
 org.apache.felix.dm.benchmark.scenario/org.apache.felix.dm.benchmark.scenario.impl) is in charge of
-starting/stopping many times some DI specific bundles (DM4, SCR), which are expected to create all
-expected Artist/Album/Track services. 
+starting/stopping many times some specific bundles (DM, Parallel DM).
 
 By default, when a tested bundle is started, it will create several Artists (see Artists.ARTISTS
 constant). each Artist depends on several Albums (see Artists.ALBUMS constant), and each Album
@@ -152,18 +148,15 @@ It contains a simple activator, which creates the various services using depende
 
 - org.apache.felix.dm.benchmark.dependencymanager.parallel: 
 same as above, but using parallel dependency manager where components dependency management and
-components activation/deactivation processing is performed concurrently, using a fixed thread pool.
+components activation processing is performed concurrently, using a fixed thread pool.
 
-The org.apache.felix.dm.benchmark.controller bundle, when starting, first stops all tested bundles.
+The org.apache.felix.dm.benchmark.controller bundle, when started, first stops all tested bundles.
 Then for each one, it performs the following test (multiple times):
 
-- register the ScenarioController service (using the OSGi BundleContext API)
 - start the tested bundle
-- wait for all expected services to be registered
-- unregister the ScenarioController service (this will trigger a full deactivation of services,
-because all services are expected to depend on it). 
-- wait for all expected services to be unregistered
+- wait for all expected services to be registered (Artists/Albums/Tracks)
 - stop the tested bundle.
+- wait for all expected services to be unregistered
 
 All the elapsed time (nanoseconds) used to execute each iteration is then recorded in a list.
 When enough iterations are done, the list is sorted (that is : the first entry in the list

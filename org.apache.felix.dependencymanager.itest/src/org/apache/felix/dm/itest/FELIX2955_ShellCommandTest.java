@@ -34,6 +34,7 @@ public class FELIX2955_ShellCommandTest extends TestBase {
     private Bundle m_testBundle;
 
     public void testShellCommands() throws Throwable {
+    	try {
         m_myBundleId = context.getBundle().getBundleId();
         for (Bundle b : context.getBundles()) {
             if (b.getSymbolicName().equals("org.apache.felix.dependencymanager.itest.bundle")) {
@@ -76,6 +77,11 @@ public class FELIX2955_ShellCommandTest extends TestBase {
         e.ensure();
         m.remove(shellClient);
         m.clear();
+    	} 
+    	
+    	catch (Throwable t) {
+    		error("test failed", t);
+    	}
     }
     
     public class ShellClient {
@@ -90,7 +96,7 @@ public class FELIX2955_ShellCommandTest extends TestBase {
             m_missingId = missingId;
         }
 
-        public void start() {
+        public void start() throws InterruptedException {
             Thread t = new Thread("Shell Client") {
                 public void run() {
                     String bsn = context.getBundle().getSymbolicName();
