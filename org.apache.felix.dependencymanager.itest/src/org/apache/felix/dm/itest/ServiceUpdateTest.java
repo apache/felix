@@ -28,7 +28,7 @@ public class ServiceUpdateTest extends TestBase {
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // create a resource provider
-        ResourceProvider provider = new ResourceProvider(e);
+        ResourceProvider provider = new ResourceProvider(context, new URL("file://localhost/path/to/file1.txt"));
         // activate it
         m.add(m.createComponent()
             .setImplementation(new ServiceProvider(e))
@@ -83,80 +83,7 @@ public class ServiceUpdateTest extends TestBase {
             
         }
     }
-    
-    static class ResourceProvider {
-        private volatile BundleContext m_context;
-        private final Map m_handlers = new HashMap();
-        private URL[] m_resources;
-
-        public ResourceProvider(Ensure ensure) throws MalformedURLException {
-            m_resources = new URL[] {
-                new URL("file://localhost/path/to/file1.txt")
-            };
-        }
         
-        public void change() {
-            ResourceHandler[] handlers;
-            synchronized (m_handlers) {
-                handlers = (ResourceHandler[]) m_handlers.keySet().toArray(new ResourceHandler[m_handlers.size()]);
-            }
-            for (int i = 0; i < m_resources.length; i++) {
-                for (int j = 0; j < handlers.length; j++) {
-                    ResourceHandler handler = handlers[j];
-                    handler.changed(m_resources[i]);
-                }
-            }
-        }
-
-        public void add(ServiceReference ref, ResourceHandler handler) {
-            String filterString = (String) ref.getProperty("filter");
-            Filter filter = null;
-            if (filterString != null) {
-                try {
-                    filter = m_context.createFilter(filterString);
-                }
-                catch (InvalidSyntaxException e) {
-                    Assert.fail("Could not create filter for resource handler: " + e);
-                    return;
-                }
-            }
-            synchronized (m_handlers) {
-                m_handlers.put(handler, filter);
-            }
-            for (int i = 0; i < m_resources.length; i++) {
-                if (filter == null || filter.match(ResourceUtil.createProperties(m_resources[i]))) {
-                    handler.added(m_resources[i]);
-                }
-            }
-        }
-
-        public void remove(ServiceReference ref, ResourceHandler handler) {
-            Filter filter;
-            synchronized (m_handlers) {
-                filter = (Filter) m_handlers.remove(handler);
-            }
-            removeResources(handler, filter);
-        }
-
-        private void removeResources(ResourceHandler handler, Filter filter) {
-                for (int i = 0; i < m_resources.length; i++) {
-                    if (filter == null || filter.match(ResourceUtil.createProperties(m_resources[i]))) {
-                        handler.removed(m_resources[i]);
-                    }
-                }
-            }
-
-        public void destroy() {
-            Entry[] handlers;
-            synchronized (m_handlers) {
-                handlers = (Entry[]) m_handlers.entrySet().toArray(new Entry[m_handlers.size()]);
-            }
-            for (int i = 0; i < handlers.length; i++) {
-                removeResources((ResourceHandler) handlers[i].getKey(), (Filter) handlers[i].getValue());
-            }
-        }
-    }
-    
     static interface ServiceInterface {
         public void invoke();
     }

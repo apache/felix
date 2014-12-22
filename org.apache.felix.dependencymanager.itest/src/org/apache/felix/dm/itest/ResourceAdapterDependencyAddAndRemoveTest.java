@@ -4,7 +4,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import junit.framework.Assert;
 
@@ -20,7 +19,7 @@ import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 
-@SuppressWarnings({"deprecation", "unchecked", "rawtypes", "unused"})
+@SuppressWarnings({"deprecation", "unused"})
 public class ResourceAdapterDependencyAddAndRemoveTest extends TestBase {
     public void testBasicResourceAdapter() throws Exception {
         DependencyManager m = getDM();
@@ -33,7 +32,7 @@ public class ResourceAdapterDependencyAddAndRemoveTest extends TestBase {
                 .setImplementation(new ServiceProvider(e)));
         
         // create and add a resource provider
-        ResourceProvider provider = new ResourceProvider(e);
+        ResourceProvider provider = new ResourceProvider(context, new URL("file://localhost/path/to/file1.txt"));
         m.add(m.createComponent()
                 .setImplementation(provider)
                 .add(m.createServiceDependency()
@@ -85,88 +84,7 @@ public class ResourceAdapterDependencyAddAndRemoveTest extends TestBase {
             m_ensure = e;
         }
     }
-    
-    class ResourceProvider {
-        private volatile BundleContext m_context;
-        private final Ensure m_ensure;
-        private final Map m_handlers = new HashMap();
-        private URL[] m_resources;
-
-        public ResourceProvider(Ensure ensure) throws MalformedURLException {
-            m_ensure = ensure;
-            m_resources = new URL[] {
-                new URL("file://localhost/path/to/file1.txt")
-            };
-        }
         
-        public void change() {
-            ResourceHandler[] handlers;
-            synchronized (m_handlers) {
-                handlers = (ResourceHandler[]) m_handlers.keySet().toArray(new ResourceHandler[m_handlers.size()]);
-            }
-            for (int i = 0; i < m_resources.length; i++) {
-                for (int j = 0; j < handlers.length; j++) {
-                    ResourceHandler handler = handlers[j];
-                    handler.changed(m_resources[i]);
-                }
-            }
-        }
-
-        public void add(ServiceReference ref, ResourceHandler handler) {
-            debug("ResourceProvider.add(ref=%s, handler=%s", ref, handler);
-            String filterString = (String) ref.getProperty("filter");
-            Filter filter = null;
-            if (filterString != null) {
-                try {
-                    filter = m_context.createFilter(filterString);
-                }
-                catch (InvalidSyntaxException e) {
-                    Assert.fail("Could not create filter for resource handler: " + e);
-                    return;
-                }
-            }
-            synchronized (m_handlers) {
-                m_handlers.put(handler, filter);
-            }
-            for (int i = 0; i < m_resources.length; i++) {
-                if (filter == null || filter.match(ResourceUtil.createProperties(m_resources[i]))) {
-                    handler.added(m_resources[i]);
-                }
-            }
-        }
-
-        public void remove(ServiceReference ref, ResourceHandler handler) {
-            Filter filter;
-            synchronized (m_handlers) {
-                debug("ResourceProvider.remove: ref=%s, handler=%s, handlers=%s", ref, handler, m_handlers);
-                filter = (Filter) m_handlers.remove(handler);
-            }
-            removeResources(handler, filter);
-        }
-
-        private void removeResources(ResourceHandler handler, Filter filter) {
-                for (int i = 0; i < m_resources.length; i++) {
-                    if (filter == null || filter.match(ResourceUtil.createProperties(m_resources[i]))) {
-                        handler.removed(m_resources[i]);
-                    }
-                }
-            }
-
-        public void destroy() {
-            debug("ResourceProvider:%s", m_handlers);
-            Entry[] handlers;
-            synchronized (m_handlers) {
-                debug("ResourceProvider.destroy: handlers=%s", m_handlers);
-                handlers = (Entry[]) m_handlers.entrySet().toArray(new Entry[m_handlers.size()]);
-            }
-            for (int i = 0; i < handlers.length; i++) {
-                removeResources((ResourceHandler) handlers[i].getKey(), (Filter) handlers[i].getValue());
-            }
-            
-            debug("DESTROY...%d", m_handlers.size());
-        }
-    }
-    
     static interface ServiceInterface {
         public void invoke();
     }

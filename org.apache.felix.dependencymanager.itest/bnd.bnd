@@ -4,7 +4,8 @@
 	org.apache.felix.dependencymanager;version=latest,\
 	org.apache.felix.dependencymanager.shell;version=latest,\
 	org.apache.felix.log;version=1.0.1,\
-	org.apache.felix.configadmin;version=1.8.1
+	org.apache.felix.configadmin;version=1.8.1,\
+	org.apache.felix.dependencymanager.runtime;version=latest
 -runee: JavaSE-1.7
 -runvm: -ea
 -runfw: org.apache.felix.framework
@@ -17,5 +18,7 @@
 	${junit}
 -runsystempackages: \
 	sun.reflect
--sub: \
-	*.bnd
+Test-Cases:  \
+	${classes;CONCRETE;EXTENDS;junit.framework.TestCase}
+Export-Package: \
+	org.apache.felix.dm.itest

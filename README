@@ -6,27 +6,55 @@ Dependency Manager 4.0.0 general README
 - org.apache.felix.dependencymanager.benchmark/README
 - doc/A_Glance_At_DependencyManager.odp gives a quick overview of Dependency Manager, including new features.
 
-* to compile:
+* to compile under eclipse/bndtools
 
 - Install either Eclipse Kepler SR2 (+ Java8 support which is needed by benchmark sub project) or Eclipse Luna.
 - Install java7/Java8 JREs in Eclipse (Window -> Preferences -> Java -> Installed JREs). 
-  (Use JRE 1.7 as the default JRE)
+  (Use JRE 1.7 as the default JRE; the Jdk1.8 is only required for the org.apache.felix.dependencymanager.benchmark project)
 - Open BndTools perpective.
 - Import Dependency Manager into Eclipse.
 
-* To run tests:
+* To run tests (under eclipse/bndtools)
 
 - Click on org.apache.felix.dependencymanager project and run it as "JUnit test".
+- Click on org.apache.felix.dependencymanager.shell and run it as "JUnit test"
 - Click on org.apache.felix.dependencymanager.itest and run it as "Bnd OSGi Test Launcer (Junit)".
 - Click on org.apache.felix.dependencymanager.runtime.itest and run it as ""Bnd OSGi Test Launcer (Junit)".
-- Click on org.apache.felix.dependencymanager.shell and run it as "JUnit test"
 
-* To execute samples:
+* To execute samples (under eclipse/bndtools)
 
 - Click on org.apache.felix.dependencymanager.samples and run it as "Bnd OSGi Run Launcher"
 
-* To execute the benchmark (requires Jdk1.8)
+* To execute the benchmark (under eclipse/bndtools; requires Jdk1.8)
 
 - Click on org.apache.felix.dependencymanager.benchmark and run it as ""Bnd OSGi Run Launcher"
 More informations on the benchmark can be found from org.apache.felix.dependencymanager.benchmark/README file.
 
+* to compile with gradle:
+
+- Install Jdk1.7
+- Install gradle (at least 2.1)
+- compile Dependendency Manager bundles (core,shell,runtime,annotations):
+  
+  gradle org.apache.felix.dependencymanager:jar org.apache.felix.dependencymanager.shell:jar org.apache.felix.dependencymanager.runtime:jar org.apache.felix.dependencymanager.annotation:jar
+
+- Then compile the samples (optional)
+ 
+  gradle gradle org.apache.felix.dependencymanager.samples:jar
+
+- Then compile the benchmark (optional):
+
+  install jdk1.8
+  gradle org.apache.felix.dependencymanager.benchmark:jar
+
+* to run tests (junit + integration tests) with gradle:
+
+- run junit tests:
+
+  gradle org.apache.felix.dependencymanager:test org.apache.felix.dependencymanager.shell:test
+
+- run integration tests (the following will run the core + runtime itests):
+
+  gradle org.apache.felix.dependencymanager.runtime.itest:check
+
+ 

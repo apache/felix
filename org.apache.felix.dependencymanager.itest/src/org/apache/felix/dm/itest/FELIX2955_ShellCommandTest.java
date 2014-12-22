@@ -35,48 +35,49 @@ public class FELIX2955_ShellCommandTest extends TestBase {
 
     public void testShellCommands() throws Throwable {
     	try {
-        m_myBundleId = context.getBundle().getBundleId();
-        for (Bundle b : context.getBundles()) {
-            if (b.getSymbolicName().equals("org.apache.felix.dependencymanager.itest.bundle")) {
-                m_testBundle = b;
-                b.stop();
-                break;
-            }
-        }
-        DependencyManager m = getDM();
-        // helper class that ensures certain steps get executed in sequence
-        Ensure e = new Ensure();
+    		m_myBundleId = context.getBundle().getBundleId();
+    		for (Bundle b : context.getBundles()) {
+    			if (b.getSymbolicName().equals("org.apache.felix.dependencymanager.runtime")) {
+    				m_testBundle = b;
+    				b.stop();
+    				break;
+    			}
+    		}
+    		DependencyManager m = getDM();
+    		// helper class that ensures certain steps get executed in sequence
+    		Ensure e = new Ensure();
         
-        Component shellClient = m.createComponent();
-        Component missing = m.createComponent();
+    		Component shellClient = m.createComponent();
+    		Component missing = m.createComponent();
         
-        long shellClientId = shellClient.getComponentDeclaration().getId();
-        long missingId = missing.getComponentDeclaration().getId();
-        shellClient.setImplementation(new ShellClient(e, shellClientId, missingId))
-            .add(m.createServiceDependency()
-                .setService(CommandProcessor.class)
-                .setRequired(true)
-            );
-        m.add(shellClient);
-        e.waitForStep(3, 5000);
-        // now create a component with a missing dependency
-        missing.setImplementation(new Object() { public String toString() { return "Object"; }})
-            .add(m.createServiceDependency()
-                .setService(Missing.class) // Warning: don't use Object, or Runnable, which are already registered by bndtools ?
-                .setRequired(true)
-            );
-        m.add(missing);
-        e.step(4);
-        e.waitForStep(5, 5000);
-        m.remove(missing);
-        // now start/stop our test bundle, which publishes a service that uses the dependency manager
-        m_testBundle.start();
-        m_testBundle.stop();
-        e.step(6);
-        e.waitForStep(7, 5000);
-        e.ensure();
-        m.remove(shellClient);
-        m.clear();
+    		long shellClientId = shellClient.getComponentDeclaration().getId();
+    		long missingId = missing.getComponentDeclaration().getId();
+    		shellClient.setImplementation(new ShellClient(e, shellClientId, missingId))
+    				   .add(m.createServiceDependency()
+    						   .setService(CommandProcessor.class)
+    						   .setRequired(true));
+            
+    		m.add(shellClient);
+    		e.waitForStep(3, 5000);
+    		// now create a component with a missing dependency
+    		missing.setImplementation(new Object() { public String toString() { return "Object"; }})
+    			   .add(m.createServiceDependency()
+    					 .setService(Missing.class) // Warning: don't use Object, or Runnable, which are already registered by bndtools ?
+    					 .setRequired(true));
+            
+    		m.add(missing);
+    		e.step(4);
+    		e.waitForStep(5, 5000);
+    		m.remove(missing);
+    		// now start/stop our test bundle, which publishes a service that uses the dependency manager
+    		m_testBundle.start();
+    		m_testBundle.stop();
+    		e.step(6);
+    		e.waitForStep(7, 5000);
+    		e.ensure();
+    		m.remove(shellClient);
+    		m_testBundle.start(); // restart the runtime bundle
+    		m.clear();
     	} 
     	
     	catch (Throwable t) {

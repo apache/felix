@@ -22,7 +22,7 @@ import org.osgi.framework.ServiceReference;
 
 @SuppressWarnings({"deprecation", "rawtypes", "unused"})
 public class ResourceDependencyTest extends TestBase {
-    public void testResourceDependency() {
+    public void testResourceDependency() throws MalformedURLException {
         DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
@@ -38,7 +38,10 @@ public class ResourceDependencyTest extends TestBase {
             .add(m.createResourceDependency()
                     .setFilter("(path=*.doc)")
                     .setCallbacks("add", null)); 
-        ResourceProvider provider = new ResourceProvider(e);
+        ResourceProvider provider = new ResourceProvider(context, 
+        		new URL("file://localhost/path/to/file1.txt"),
+                new URL("file://localhost/path/to/file2.txt"),
+                new URL("file://localhost/path/to/file3.doc"));
         Component resourceProvider = m.createComponent()
             .setImplementation(provider)
             .add(m.createServiceDependency()
@@ -61,7 +64,7 @@ public class ResourceDependencyTest extends TestBase {
         e.waitForStep(4, 5000);
         
         // now change a resource and see if it gets propagated to the consumer
-        provider.changeResource();
+        provider.change(0);
         
         // wait for change callback
         e.waitForStep(5, 5000);
@@ -102,87 +105,6 @@ public class ResourceDependencyTest extends TestBase {
         }
     }
     
-    class ResourceProvider {
-        private volatile BundleContext m_context;
-        private final Ensure m_ensure;
-        private final Map<ResourceHandler, Filter> m_handlers = new HashMap<ResourceHandler, Filter>();
-        private URL[] m_resources;
-        
-        public ResourceProvider(Ensure ensure) {
-            m_ensure = ensure;
-            try {
-                m_resources = new URL[] {
-                    new URL("file://localhost/path/to/file1.txt"),
-                    new URL("file://localhost/path/to/file2.txt"),
-                    new URL("file://localhost/path/to/file3.doc")
-                };
-            }
-            catch (MalformedURLException e) {
-                throw new IllegalStateException(e);
-            }
-        }
-        
-        public void add(ServiceReference ref, ResourceHandler handler) {
-            String filterString = (String) ref.getProperty("filter");
-            Filter filter;
-            try {
-                filter = m_context.createFilter(filterString);
-            }
-            catch (InvalidSyntaxException e) {
-                Assert.fail("Could not create filter for resource handler: " + e);
-                return;
-            }
-            synchronized (m_handlers) {
-                m_handlers.put(handler, filter);
-            }
-            for (int i = 0; i < m_resources.length; i++) {
-                if (filter.match(ResourceUtil.createProperties(m_resources[i]))) {
-                    handler.added(m_resources[i]);
-                }
-            }
-        }
-
-        public void changeResource() {
-            Filter filter;
-            for (Entry<ResourceHandler, Filter> entry : m_handlers.entrySet()) {
-                for (int i = 0; i < m_resources.length; i++) {
-                    if (i == 0) {
-                        if (entry.getValue().match(ResourceUtil.createProperties(m_resources[i]))) {
-                            entry.getKey().changed(m_resources[i]); 
-                        }
-                    }
-                }
-            }
-        }
-        
-        public void remove(ServiceReference ref, ResourceHandler handler) {
-            debug("ResourceProvider.remove(ref=%s, handler=%s, handlers=%s", ref, handler, m_handlers);
-            Filter filter;
-            synchronized (m_handlers) {
-                filter = (Filter) m_handlers.remove(handler);
-            }
-            removeResources(handler, filter);
-        }
-
-        private void removeResources(ResourceHandler handler, Filter filter) {
-            for (int i = 0; i < m_resources.length; i++) {
-                if (filter.match(ResourceUtil.createProperties(m_resources[i]))) {
-                    handler.removed(m_resources[i]);
-                }
-            }
-        }
-
-        public void destroy() {
-            debug("ResourceProvider.destroy: handlers=%s", m_handlers);
-            Entry[] handlers;
-            synchronized (m_handlers) {
-                handlers = (Entry[]) m_handlers.entrySet().toArray(new Entry[m_handlers.size()]);
-            }
-            for (int i = 0; i < handlers.length; i++) {
-                removeResources((ResourceHandler) handlers[i].getKey(), (Filter) handlers[i].getValue());
-            }
-        }
-    }
     
     class ResourceConsumerFactory {
         private final Ensure m_ensure;

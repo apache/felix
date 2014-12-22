@@ -1,26 +1,29 @@
 -buildpath:  \
 	osgi.core;version='[4.2,5)',\
 	org.apache.felix.dependencymanager;version=latest,\
-	org.apache.felix.dependencymanager.itest.api;version=latest,\
 	org.apache.felix.dependencymanager.annotation;version=latest,\
 	osgi.cmpn;version=4.2,\
 	${junit},\
-	org.apache.felix.dependencymanager.runtime;version=latest
+	org.apache.felix.dependencymanager.runtime;version=latest,\
+	org.apache.felix.dependencymanager.itest;version=latest
 -runbundles:  \
-	org.apache.felix.configadmin;version=1.8.0,\
+	org.apache.felix.configadmin;version=1.8.1,\
 	org.apache.felix.dependencymanager;version=latest,\
-	org.apache.felix.dependencymanager.itest.api;version=latest,\
 	org.apache.felix.dependencymanager.runtime;version=latest,\
 	org.apache.felix.metatype;version=1.0.4,\
 	org.apache.felix.gogo.runtime;version=0.10.0,\
-	org.apache.felix.log;version=1.0.1
+	org.apache.felix.log;version=1.0.1,\
+	org.apache.felix.dependencymanager.shell;version=latest,\
+	org.apache.felix.dependencymanager.itest;version=latest
 -runee: JavaSE-1.7
 -runfw: org.apache.felix.framework;version='[4.4.0,4.4.0]'
 -runsystempackages: \
 	sun.reflect
 -runvm:-ea
+Private-Package:  \
+	org.apache.felix.dm.runtime.itest.tests,\
+	org.apache.felix.dm.runtime.itest.components
+-plugin: org.apache.felix.dm.annotation.plugin.bnd.AnnotationPlugin;log=debug;\
+		 path:=${workspace}/org.apache.felix.dependencymanager.annotation/generated/org.apache.felix.dependencymanager.annotation.jar
 Test-Cases:  \
 	${classes;CONCRETE;EXTENDS;junit.framework.TestCase}
-
--sub:  \
-	*.bnd
