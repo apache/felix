@@ -62,7 +62,7 @@ public class ManifestParser
     private volatile Version m_bundleVersion;
     private volatile List<BundleCapability> m_capabilities;
     private volatile List<BundleRequirement> m_requirements;
-    private volatile List<R4LibraryClause> m_libraryClauses;
+    private volatile List<NativeLibraryClause> m_libraryClauses;
     private volatile boolean m_libraryHeadersOptional = false;
 
     public ManifestParser(Logger logger, Map configMap, BundleRevision owner, Map headerMap)
@@ -607,7 +607,7 @@ public class ManifestParser
         return reqList;
     }
     
-    static List<BundleRequirement> convertNativeCode(BundleRevision owner, List<R4LibraryClause> nativeLibraryClauses, boolean hasOptionalLibraryDirective)
+    static List<BundleRequirement> convertNativeCode(BundleRevision owner, List<NativeLibraryClause> nativeLibraryClauses, boolean hasOptionalLibraryDirective)
     {
         List<BundleRequirement> result = new ArrayList<BundleRequirement>();
         
@@ -615,7 +615,7 @@ public class ManifestParser
         
         if(nativeLibraryClauses != null)
         {
-            for(R4LibraryClause clause: nativeLibraryClauses)
+            for(NativeLibraryClause clause: nativeLibraryClauses)
             {
                 String[] osNameArray = clause.getOSNames();
                 String[] osVersionArray = clause.getOSVersions();
@@ -1071,7 +1071,7 @@ public class ManifestParser
         return m_requirements;
     }
 
-    public List<R4LibraryClause> getLibraryClauses()
+    public List<NativeLibraryClause> getLibraryClauses()
     {
         return m_libraryClauses;
     }
@@ -1093,25 +1093,25 @@ public class ManifestParser
      * <li><tt>null</tt> - if the are no native libraries for this module;
      *     this may also indicate the native libraries are optional and
      *     did not match the current platform.</li>
-     * <li>Zero-length <tt>R4Library</tt> array - if no matching native library
+     * <li>Zero-length <tt>NativeLibrary</tt> array - if no matching native library
      *     clause was found; this bundle should not resolve.</li>
-     * <li>Nonzero-length <tt>R4Library</tt> array - the native libraries
+     * <li>Nonzero-length <tt>NativeLibrary</tt> array - the native libraries
      *     associated with the matching native library clause.</li>
      * </ul>
      *
      * @return <tt>null</tt> if there are no native libraries, a zero-length
      *         array if no libraries matched, or an array of selected libraries.
     **/
-    public List<R4Library> getLibraries()
+    public List<NativeLibrary> getLibraries()
     {
-        ArrayList<R4Library> libs = null;
+        ArrayList<NativeLibrary> libs = null;
         try
         {
-            R4LibraryClause clause = getSelectedLibraryClause();
+            NativeLibraryClause clause = getSelectedLibraryClause();
             if (clause != null)
             {
                 String[] entries = clause.getLibraryEntries();
-                libs = new ArrayList<R4Library>(entries.length);
+                libs = new ArrayList<NativeLibrary>(entries.length);
                 int current = 0;
                 for (int i = 0; i < entries.length; i++)
                 {
@@ -1123,7 +1123,7 @@ public class ManifestParser
                     }
                     if (!found)
                     {
-                        libs.add(new R4Library(
+                        libs.add(new NativeLibrary(
                             clause.getLibraryEntries()[i],
                             clause.getOSNames(), clause.getProcessors(), clause.getOSVersions(),
                             clause.getLanguages(), clause.getSelectionFilter()));
@@ -1134,7 +1134,7 @@ public class ManifestParser
         }
         catch (Exception ex)
         {
-            libs = new ArrayList<R4Library>(0);
+            libs = new ArrayList<NativeLibrary>(0);
         }
         return libs;
     }
@@ -1149,14 +1149,14 @@ public class ManifestParser
         return path;
     }
 
-    private R4LibraryClause getSelectedLibraryClause() throws BundleException
+    private NativeLibraryClause getSelectedLibraryClause() throws BundleException
     {
         if ((m_libraryClauses != null) && (m_libraryClauses.size() > 0))
         {
             List clauseList = new ArrayList();
 
             // Search for matching native clauses.
-            for (R4LibraryClause libraryClause : m_libraryClauses)
+            for (NativeLibraryClause libraryClause : m_libraryClauses)
             {
                 if (libraryClause.match(m_configMap))
                 {
@@ -1186,13 +1186,13 @@ public class ManifestParser
             {
                 selected = firstSortedClause(clauseList);
             }
-            return ((R4LibraryClause) clauseList.get(selected));
+            return ((NativeLibraryClause) clauseList.get(selected));
         }
 
         return null;
     }
 
-    private int firstSortedClause(List<R4LibraryClause> clauseList)
+    private int firstSortedClause(List<NativeLibraryClause> clauseList)
     {
         ArrayList indexList = new ArrayList();
         ArrayList selection = new ArrayList();
@@ -1209,7 +1209,7 @@ public class ManifestParser
         for (int i = 0; i < indexList.size(); i++)
         {
             int index = Integer.parseInt(indexList.get(i).toString());
-            String[] osversions = ((R4LibraryClause) clauseList.get(index)).getOSVersions();
+            String[] osversions = ((NativeLibraryClause) clauseList.get(index)).getOSVersions();
             if (osversions != null)
             {
                 selection.add("" + indexList.get(i));
@@ -1237,7 +1237,7 @@ public class ManifestParser
             for (int i = 0; i < indexList.size(); i++)
             {
                 int index = Integer.parseInt(indexList.get(i).toString());
-                String[] osversions = ((R4LibraryClause) clauseList.get(index)).getOSVersions();
+                String[] osversions = ((NativeLibraryClause) clauseList.get(index)).getOSVersions();
                 for (int k = 0; k < osversions.length; k++)
                 {
                     VersionRange range = VersionRange.parse(osversions[k]);
@@ -1273,7 +1273,7 @@ public class ManifestParser
         for (int i = 0; i < indexList.size(); i++)
         {
             int index = Integer.parseInt(indexList.get(i).toString());
-            if (((R4LibraryClause) clauseList.get(index)).getLanguages() != null)
+            if (((NativeLibraryClause) clauseList.get(index)).getLanguages() != null)
             {
                 selection.add("" + indexList.get(i));
             }
@@ -2164,20 +2164,20 @@ public class ManifestParser
      * @return an array of <tt>LibraryInfo</tt> objects for the
      *         passed in strings.
     **/
-    private static List<R4LibraryClause> parseLibraryStrings(
+    private static List<NativeLibraryClause> parseLibraryStrings(
         Logger logger, List<String> libStrs)
         throws IllegalArgumentException
     {
         if (libStrs == null)
         {
-            return new ArrayList<R4LibraryClause>(0);
+            return new ArrayList<NativeLibraryClause>(0);
         }
 
-        List<R4LibraryClause> libList = new ArrayList(libStrs.size());
+        List<NativeLibraryClause> libList = new ArrayList(libStrs.size());
 
         for (int i = 0; i < libStrs.size(); i++)
         {
-            R4LibraryClause clause = R4LibraryClause.parse(logger, libStrs.get(i));
+            NativeLibraryClause clause = NativeLibraryClause.parse(logger, libStrs.get(i));
             libList.add(clause);
         }
 

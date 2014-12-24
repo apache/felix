@@ -112,14 +112,14 @@ public class ManifestParserTest extends TestCase
     
     public void testConvertNativeCode() throws InvalidSyntaxException
     {
-        List<R4LibraryClause> nativeLibraryClauses = new ArrayList<R4LibraryClause>();
+        List<NativeLibraryClause> nativeLibraryClauses = new ArrayList<NativeLibraryClause>();
         String[] libraryFiles = {"lib/http.dll", "lib/zlib.dll"};
         String[] osNames = {"Windows95", "Windows98", "WindowsNT"};
         String[] processors = {"x86"};
         String[] osVersions = null;
         String[] languages = {"en", "se"};
         String selectionFilter = "(com.acme.windowing=win32)";
-        R4LibraryClause clause = new R4LibraryClause(libraryFiles, osNames, processors, osVersions, languages, selectionFilter);
+        NativeLibraryClause clause = new NativeLibraryClause(libraryFiles, osNames, processors, osVersions, languages, selectionFilter);
         BundleRevision owner = mock(BundleRevision.class);
         nativeLibraryClauses.add(clause);
         
