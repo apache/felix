@@ -52,7 +52,7 @@ import org.apache.felix.framework.util.ImmutableList;
 import org.apache.felix.framework.util.SecurityManagerEx;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
-import org.apache.felix.framework.util.manifestparser.R4Library;
+import org.apache.felix.framework.util.manifestparser.NativeLibrary;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
@@ -99,7 +99,7 @@ public class BundleWiringImpl implements BundleWiring
     private final Map<String, List<List<String>>> m_includedPkgFilters;
     private final Map<String, List<List<String>>> m_excludedPkgFilters;
     private final List<BundleRequirement> m_resolvedReqs;
-    private final List<R4Library> m_resolvedNativeLibs;
+    private final List<NativeLibrary> m_resolvedNativeLibs;
     private final List<Content> m_fragmentContents;
 
     private volatile List<BundleRequirement> m_wovenReqs = null;
@@ -401,14 +401,14 @@ public class BundleWiringImpl implements BundleWiring
         m_excludedPkgFilters = (excludedPkgFilters.isEmpty())
             ? Collections.EMPTY_MAP : excludedPkgFilters;
 
-        List<R4Library> libList = (m_revision.getDeclaredNativeLibraries() == null)
-            ? new ArrayList<R4Library>()
-            : new ArrayList<R4Library>(m_revision.getDeclaredNativeLibraries());
+        List<NativeLibrary> libList = (m_revision.getDeclaredNativeLibraries() == null)
+            ? new ArrayList<NativeLibrary>()
+            : new ArrayList<NativeLibrary>(m_revision.getDeclaredNativeLibraries());
         for (int fragIdx = 0;
             (m_fragments != null) && (fragIdx < m_fragments.size());
             fragIdx++)
         {
-            List<R4Library> libs =
+            List<NativeLibrary> libs =
                 ((BundleRevisionImpl) m_fragments.get(fragIdx))
                     .getDeclaredNativeLibraries();
             for (int reqIdx = 0;
@@ -586,7 +586,7 @@ public class BundleWiringImpl implements BundleWiring
         return null;
     }
 
-    public List<R4Library> getNativeLibraries()
+    public List<NativeLibrary> getNativeLibraries()
     {
         return m_resolvedNativeLibs;
     }
@@ -2581,7 +2581,7 @@ public class BundleWiringImpl implements BundleWiring
                 // native library.
                 if (result == null)
                 {
-                    List<R4Library> libs = m_wiring.getNativeLibraries();
+                    List<NativeLibrary> libs = m_wiring.getNativeLibraries();
                     for (int libIdx = 0; (libs != null) && (libIdx < libs.size()); libIdx++)
                     {
                         if (libs.get(libIdx).match(m_wiring.m_configMap, name))

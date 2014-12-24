@@ -41,7 +41,7 @@ import org.apache.felix.framework.resolver.ResolverImpl;
 import org.apache.felix.framework.resolver.ResolverWire;
 import org.apache.felix.framework.util.ShrinkableCollection;
 import org.apache.felix.framework.util.Util;
-import org.apache.felix.framework.util.manifestparser.R4Library;
+import org.apache.felix.framework.util.manifestparser.NativeLibrary;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.apache.felix.framework.wiring.BundleWireImpl;
 import org.osgi.framework.Bundle;
@@ -1482,7 +1482,7 @@ class StatefulResolver
     {
         // Next, try to resolve any native code, since the revision is
         // not resolvable if its native code cannot be loaded.
-        List<R4Library> libs = ((BundleRevisionImpl) revision).getDeclaredNativeLibraries();
+        List<NativeLibrary> libs = ((BundleRevisionImpl) revision).getDeclaredNativeLibraries();
         if (libs != null)
         {
             String msg = null;

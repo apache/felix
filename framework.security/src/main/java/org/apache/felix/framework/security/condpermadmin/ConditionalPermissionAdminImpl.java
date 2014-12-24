@@ -56,7 +56,7 @@ import org.apache.felix.framework.security.util.Conditions;
 import org.apache.felix.framework.security.util.LocalPermissions;
 import org.apache.felix.framework.security.util.Permissions;
 import org.apache.felix.framework.security.util.PropertiesCache;
-import org.apache.felix.framework.util.manifestparser.R4Library;
+import org.apache.felix.framework.util.manifestparser.NativeLibrary;
 
 /*
 import org.apache.felix.moduleloader.ICapability;

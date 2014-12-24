@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import org.osgi.framework.Constants;
 
-public class R4Library
+public class NativeLibrary
 {
     private String m_libraryFile;
     private String[] m_osnames;
@@ -32,7 +32,7 @@ public class R4Library
     private String[] m_languages;
     private String m_selectionFilter;
 
-    public R4Library(
+    public NativeLibrary(
         String libraryFile, String[] osnames, String[] processors, String[] osversions,
         String[] languages, String selectionFilter) throws Exception
     {
