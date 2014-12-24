@@ -42,7 +42,7 @@ import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.Version;
 
-public class R4LibraryClause
+public class NativeLibraryClause
 {
     private static final String OS_AIX = "aix";
     private static final String OS_DIGITALUNIX = "digitalunix";
@@ -133,7 +133,7 @@ public class R4LibraryClause
     private final String[] m_languages;
     private final String m_selectionFilter;
 
-    public R4LibraryClause(String[] libraryEntries, String[] osnames,
+    public NativeLibraryClause(String[] libraryEntries, String[] osnames,
         String[] processors, String[] osversions, String[] languages,
         String selectionFilter)
     {
@@ -145,7 +145,7 @@ public class R4LibraryClause
         m_selectionFilter = selectionFilter;
     }
 
-    public R4LibraryClause(R4LibraryClause library)
+    public NativeLibraryClause(NativeLibraryClause library)
     {
         this(library.m_libraryEntries, library.m_osnames, library.m_osversions,
             library.m_processors, library.m_languages,
@@ -319,7 +319,7 @@ public class R4LibraryClause
         }
     }
 
-    public static R4LibraryClause parse(Logger logger, String s)
+    public static NativeLibraryClause parse(Logger logger, String s)
     {
         try
         {
@@ -331,7 +331,7 @@ public class R4LibraryClause
             s = s.trim();
             if (s.equals(FelixConstants.BUNDLE_NATIVECODE_OPTIONAL))
             {
-                return new R4LibraryClause(null, null, null, null, null, null);
+                return new NativeLibraryClause(null, null, null, null, null, null);
             }
 
             // The tokens are separated by semicolons and may include
@@ -432,7 +432,7 @@ public class R4LibraryClause
             // Shrink lib file array.
             String[] actualLibEntries = new String[libCount];
             System.arraycopy(libEntries, 0, actualLibEntries, 0, libCount);
-            return new R4LibraryClause(
+            return new NativeLibraryClause(
                 actualLibEntries,
                 (String[]) osNameList.toArray(new String[osNameList.size()]),
                 (String[]) processorList.toArray(new String[processorList.size()]),

@@ -44,8 +44,8 @@ import org.apache.felix.framework.util.ImmutableList;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
-import org.apache.felix.framework.util.manifestparser.R4Library;
-import org.apache.felix.framework.util.manifestparser.R4LibraryClause;
+import org.apache.felix.framework.util.manifestparser.NativeLibrary;
+import org.apache.felix.framework.util.manifestparser.NativeLibraryClause;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleWireImpl;
 import org.osgi.framework.AdminPermission;
@@ -258,17 +258,17 @@ class ExtensionManager extends URLStreamHandler implements Content
 
         if( osArchitecture != null )
         {
-            attributes.put(NativeNamespace.CAPABILITY_PROCESSOR_ATTRIBUTE, R4LibraryClause.getProcessorWithAliases(osArchitecture));
+            attributes.put(NativeNamespace.CAPABILITY_PROCESSOR_ATTRIBUTE, NativeLibraryClause.getProcessorWithAliases(osArchitecture));
         }
 
         if( osName != null)
         {
-            attributes.put(NativeNamespace.CAPABILITY_OSNAME_ATTRIBUTE, R4LibraryClause.getOsNameWithAliases(osName));
+            attributes.put(NativeNamespace.CAPABILITY_OSNAME_ATTRIBUTE, NativeLibraryClause.getOsNameWithAliases(osName));
         }
 
         if( osVersion != null)
         {
-            osVersion = R4LibraryClause.formatOSVersion(osVersion);
+            osVersion = NativeLibraryClause.formatOSVersion(osVersion);
             attributes.put(NativeNamespace.CAPABILITY_OSVERSION_ATTRIBUTE, Version.parseVersion(osVersion));
         }
 
@@ -877,7 +877,7 @@ class ExtensionManager extends URLStreamHandler implements Content
         }
 
         @Override
-        public List<R4Library> getNativeLibraries()
+        public List<NativeLibrary> getNativeLibraries()
         {
             return Collections.EMPTY_LIST;
         }

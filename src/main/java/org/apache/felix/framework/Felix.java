@@ -67,7 +67,7 @@ import org.apache.felix.framework.util.ShrinkableCollection;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.ThreadGate;
 import org.apache.felix.framework.util.Util;
-import org.apache.felix.framework.util.manifestparser.R4LibraryClause;
+import org.apache.felix.framework.util.manifestparser.NativeLibraryClause;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
@@ -4553,9 +4553,9 @@ public class Felix extends BundleImpl implements Framework
             "false");
 
         String s = null;
-        s = R4LibraryClause.normalizeOSName(System.getProperty("os.name"));
+        s = NativeLibraryClause.normalizeOSName(System.getProperty("os.name"));
         m_configMutableMap.put(FelixConstants.FRAMEWORK_OS_NAME, s);
-        s = R4LibraryClause.normalizeProcessor(System.getProperty("os.arch"));
+        s = NativeLibraryClause.normalizeProcessor(System.getProperty("os.arch"));
         m_configMutableMap.put(FelixConstants.FRAMEWORK_PROCESSOR, s);
         m_configMutableMap.put(
             FelixConstants.FELIX_VERSION_PROPERTY, getFrameworkVersion());

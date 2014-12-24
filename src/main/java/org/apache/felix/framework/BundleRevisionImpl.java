@@ -34,7 +34,7 @@ import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.SecureAction;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
-import org.apache.felix.framework.util.manifestparser.R4Library;
+import org.apache.felix.framework.util.manifestparser.NativeLibrary;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
@@ -63,7 +63,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
 
     private final List<BundleCapability> m_declaredCaps;
     private final List<BundleRequirement> m_declaredReqs;
-    private final List<R4Library> m_declaredNativeLibs;
+    private final List<NativeLibrary> m_declaredNativeLibs;
     private final int m_declaredActivationPolicy;
     private final List<String> m_activationIncludes;
     private final List<String> m_activationExcludes;
@@ -283,7 +283,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         return m_manifestVersion;
     }
 
-    public List<R4Library> getDeclaredNativeLibraries()
+    public List<NativeLibrary> getDeclaredNativeLibraries()
     {
         return m_declaredNativeLibs;
     }
