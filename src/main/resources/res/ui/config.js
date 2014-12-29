@@ -132,6 +132,9 @@ function displayConfigForm(obj) {
 		.attr('__location', obj.bundleLocation?obj.bundleLocation:'')
 		.dialog('option', 'title', obj.title)
 		.dialog('open'));
+
+	// autosize
+	$('textarea').trigger('autosize.resize');
 }
 
 /* Element */ function addDefaultValue( /* Element */ element ) {
@@ -357,15 +360,21 @@ var spanCounter = 0;
         
     	return selectEl;
         
-    } else { // Simple 
-	// Metatype 1.2: Attr type 12 is PASSWORD
-	var elType = (type == 12) ? "password" : "text";
+    } else if (type == 12) { // Metatype 1.2: Attr type 12 is PASSWORD
         return createElement( "input", null, {
-                type: elType,
-                name: prop,
-                value: value,
-                style: { width: width }
-            });
+            type: "password",
+            name: prop,
+            value: value,
+            style: { width: width }
+        });
+    } else { // Simple
+        var textareaEl = createElement( "textarea", null, {
+            name: prop,
+            style: { width: width }
+        });
+        addText(textareaEl, value.toString());
+        $(textareaEl).autosize();
+        return textareaEl;
     }
 }
 
