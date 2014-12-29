@@ -474,7 +474,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             final long bundleId = Long.parseLong( pathInfo );
             if ( bundleId >= 0 )
             {
-                return getBundleContext().getBundle( bundleId );
+                return BundleContextUtil.getWorkingBundleContext(this.getBundleContext()).getBundle( bundleId );
             }
         }
         catch ( NumberFormatException nfe )
@@ -492,7 +492,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             }
 
             // search
-            final Bundle[] bundles = getBundleContext().getBundles();
+            final Bundle[] bundles = BundleContextUtil.getWorkingBundleContext(this.getBundleContext()).getBundles();
             for(int i=0; i<bundles.length; i++)
             {
                 final Bundle bundle = bundles[i];
@@ -751,7 +751,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
 
     private final Bundle[] getBundles()
     {
-        return getBundleContext().getBundles();
+        return BundleContextUtil.getWorkingBundleContext(this.getBundleContext()).getBundles();
     }
 
 
@@ -1672,7 +1672,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             }
             else
             {
-                Bundle[] bundles = getBundleContext().getBundles();
+                Bundle[] bundles = BundleContextUtil.getWorkingBundleContext(this.getBundleContext()).getBundles();
                 for ( int i = 0; i < bundles.length; i++ )
                 {
                     if ( ( bundles[i].getLocation() != null && bundles[i].getLocation().equals( location ) )
