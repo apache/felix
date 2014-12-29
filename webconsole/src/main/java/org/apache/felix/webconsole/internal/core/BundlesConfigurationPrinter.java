@@ -19,10 +19,14 @@ package org.apache.felix.webconsole.internal.core;
 
 import java.io.PrintWriter;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.apache.felix.webconsole.internal.AbstractConfigurationPrinter;
-import org.osgi.framework.*;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -101,7 +105,7 @@ public class BundlesConfigurationPrinter
      */
     public void printConfiguration( final PrintWriter pw )
     {
-        final Bundle[] bundles = this.getBundleContext().getBundles();
+        final Bundle[] bundles = BundleContextUtil.getWorkingBundleContext(this.getBundleContext()).getBundles();
         // create a map for sorting first
         final TreeMap bundlesMap = new TreeMap();
         int active = 0, installed = 0, resolved = 0, fragments = 0;

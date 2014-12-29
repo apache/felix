@@ -152,7 +152,7 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
         String filterStr = filter.toString();
         try
         {
-            ServiceReference[] refs = getBundleContext().getAllServiceReferences( null, filterStr );
+            ServiceReference[] refs = BundleContextUtil.getWorkingBundleContext(this.getBundleContext()).getAllServiceReferences( null, filterStr );
             if ( refs == null || refs.length != 1 )
             {
                 return null;
@@ -176,7 +176,7 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
         }
         try
         {
-            final ServiceReference[] refs = getBundleContext().getAllServiceReferences( null, filter );
+            final ServiceReference[] refs = BundleContextUtil.getWorkingBundleContext(this.getBundleContext()).getAllServiceReferences( null, filter );
             if ( refs != null )
             {
                 return refs;
@@ -420,5 +420,4 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
 
         response.getWriter().print( TEMPLATE );
     }
-
 }
