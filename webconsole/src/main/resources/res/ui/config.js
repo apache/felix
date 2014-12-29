@@ -468,7 +468,11 @@ function addConfig(conf) {
 	// rendering name - indented if factory pid is set
 	var nms = tr.find('td:eq(1) div');
 	if (conf.fpid) { 
-		nms.after(conf.id); 
+        if (conf.nameHint) {
+		    nms.after("<span title='" + conf.id + "'>" + conf.nameHint + "</span>");
+		} else {
+			nms.after(conf.id);
+        }
 		tr.attr('fpid', conf.name);
 	} else {
 		nms.addClass('ui-helper-hidden').parent().text(conf.name);

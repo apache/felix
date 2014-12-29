@@ -25,11 +25,13 @@ import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
@@ -59,6 +61,12 @@ import org.osgi.service.metatype.ObjectClassDefinition;
 
 class ConfigAdminSupport
 {
+    
+    private static final String PROPERTY_FACTORYCONFIG_NAMEHINT = "webconsole.configurationFactory.nameHint";
+    private static final Set CONFIG_PROPERTIES_HIDE = new HashSet();
+    static {
+        CONFIG_PROPERTIES_HIDE.add(PROPERTY_FACTORYCONFIG_NAMEHINT);
+    }
 
     private final BundleContext bundleContext;
     private final ConfigurationAdmin service;
@@ -368,7 +376,7 @@ class ConfigAdminSupport
             }
             if ( ocd != null )
             {
-                mtss.mergeWithMetaType( props, ocd, json );
+                mtss.mergeWithMetaType( props, ocd, json, CONFIG_PROPERTIES_HIDE );
                 doSimpleMerge = false;
             }
         }
@@ -566,6 +574,7 @@ class ConfigAdminSupport
                     if ( null != fpid )
                     {
                         data.put( "fpid", fpid ); //$NON-NLS-1$
+                        data.putOpt( "nameHint", getConfigurationFactoryNameHint(config, mtss) ); //$NON-NLS-1$
                     }
 
                     final Bundle bundle = getBoundBundle( config );
@@ -584,7 +593,93 @@ class ConfigAdminSupport
             configManager.log("listConfigurations: Unexpected problem encountered", e);
         }
     }
+    
+    /**
+     * Builds a "name hint" for factory configuration based on other property
+     * values of the config and a "name hint template" defined as hidden
+     * property in the service.
+     * @param props Service properties.
+     * @return Name hint or null if none is defined.
+     */
+    private static final String getConfigurationFactoryNameHint(Configuration config, MetaTypeServiceSupport mtss)
+    {
+        // check for configured name hint template
+        Dictionary props = config.getProperties();
+        Object nameHintTemplateObject = props.get(PROPERTY_FACTORYCONFIG_NAMEHINT);
+        if (nameHintTemplateObject == null || !(nameHintTemplateObject instanceof String))
+        {
+            // check for metatype default value for name hint template
+            if (mtss != null)
+            {
+                Map adMap = mtss.getAttributeDefinitionMap(config, null);
+                PropertyDescriptor ad = (PropertyDescriptor)adMap.get(PROPERTY_FACTORYCONFIG_NAMEHINT);
+                if (ad != null && ad.getDefaultValue() != null && ad.getDefaultValue().length == 1)
+                {
+                    nameHintTemplateObject = ad.getDefaultValue()[0];
+                }
+            }
+            if (nameHintTemplateObject == null)
+            {
+                return null;
+            }
+        }
+        String nameHint = (String) nameHintTemplateObject;
+        Enumeration keys = props.keys();
+        while (keys.hasMoreElements())
+        {
+            String key = (String) keys.nextElement();
+            Object value = props.get(key);
+            if (value != null)
+            {
+                StringBuffer valueString = new StringBuffer();
+                if (value instanceof String[]) {
+                    String[] valueArray = (String[])value;
+                    for (int i = 0; i < valueArray.length; i++) {
+                        if (i > 0) {
+                            valueString.append(",");
+                        }
+                        valueString.append(valueArray[i]);
+                    }
+                }
+                else {
+                    valueString.append(value.toString());
+                }
+                nameHint = nameHint.replaceAll(regexQuote("{" + key + "}"), valueString.toString());
+            }
+        }
+        return nameHint;
+    }
 
+    /**
+     * Replacement for Pattern.quote(), which only available in JDK 1.5 and up.
+     * @param str Unquoted string
+     * @return Quoted string
+     */
+    private static final String regexQuote(String str)
+    {
+        int eInd = str.indexOf("\\E");
+        if (eInd < 0)
+        {
+            // No need to handle backslashes.
+            return "\\Q" + str + "\\E";
+        }
+
+        StringBuffer sb = new StringBuffer(str.length() + 16);
+        sb.append("\\Q"); // start quote
+
+        int pos = 0;
+        do
+        {
+            // A backslash is quoted by another backslash;
+            // 'E' is not needed to be quoted.
+            sb.append(str.substring(pos, eInd)).append("\\E" + "\\\\" + "E" + "\\Q");
+            pos = eInd + 2;
+        }
+        while ((eInd = str.indexOf("\\E", pos)) >= 0);
+
+        sb.append(str.substring(pos, str.length())).append("\\E"); // end quote
+        return sb.toString();
+    }
 
     final void listFactoryConfigurations(JSONObject json, String pidFilter,
         String locale)
