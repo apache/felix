@@ -23,6 +23,7 @@ import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.json.JSONException;
 import org.json.JSONWriter;
@@ -261,7 +262,7 @@ class MetaTypeServiceSupport extends MetaTypeSupport
     }
 
 
-    void mergeWithMetaType( Dictionary props, ObjectClassDefinition ocd, JSONWriter json ) throws JSONException
+    void mergeWithMetaType( Dictionary props, ObjectClassDefinition ocd, JSONWriter json, Set ignoreAttrIds ) throws JSONException
     {
         json.key( "title" ).value( ocd.getName() ); //$NON-NLS-1$
 
@@ -280,9 +281,11 @@ class MetaTypeServiceSupport extends MetaTypeSupport
             {
                 final AttributeDefinition adi = ad[i];
                 final String attrId = adi.getID();
-                json.key( attrId );
-                boolean isOptional = optional.contains( adi );
-                attributeToJson( json, new MetatypePropertyDescriptor( adi, isOptional ), props.get( attrId ) );
+                if (!ignoreAttrIds.contains(attrId)) {
+                    json.key( attrId );
+                    boolean isOptional = optional.contains( adi );
+                    attributeToJson( json, new MetatypePropertyDescriptor( adi, isOptional ), props.get( attrId ) );
+                }
             }
             json.endObject();
         }
