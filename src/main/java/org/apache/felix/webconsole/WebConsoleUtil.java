@@ -328,6 +328,8 @@ public final class WebConsoleUtil
      * @param key the key value, stored under 'key'
      * @param value the value stored under 'value'
      * @throws JSONException if the value cannot be serialized.
+     *
+     * @deprecated Plugins should use their own json code/library
      */
     public static final void keyVal(JSONWriter jw, String key, Object value)
         throws JSONException
