@@ -456,7 +456,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             super.doPost( req, resp );
         }
     }
-    
+
     private String getServicesRoot(HttpServletRequest request)
     {
         return ( ( String ) request.getAttribute( WebConsoleConstants.ATTR_APP_ROOT ) ) +
@@ -800,24 +800,24 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
 
         jw.key( "props" );
         jw.array();
-        WebConsoleUtil.keyVal( jw, "Symbolic Name", bundle.getSymbolicName() );
-        WebConsoleUtil.keyVal( jw, "Version", headers.get( Constants.BUNDLE_VERSION ) );
-        WebConsoleUtil.keyVal( jw, "Bundle Location", bundle.getLocation() );
-        WebConsoleUtil.keyVal( jw, "Last Modification", new Date( bundle.getLastModified() ) );
+        Util.keyVal( jw, "Symbolic Name", bundle.getSymbolicName() );
+        Util.keyVal( jw, "Version", headers.get( Constants.BUNDLE_VERSION ) );
+        Util.keyVal( jw, "Bundle Location", bundle.getLocation() );
+        Util.keyVal( jw, "Last Modification", new Date( bundle.getLastModified() ) );
 
         String docUrl = ( String ) headers.get( Constants.BUNDLE_DOCURL );
         if ( docUrl != null )
         {
-            WebConsoleUtil.keyVal( jw, "Bundle Documentation", docUrl );
+            Util.keyVal( jw, "Bundle Documentation", docUrl );
         }
 
-        WebConsoleUtil.keyVal( jw, "Vendor", headers.get( Constants.BUNDLE_VENDOR ) );
-        WebConsoleUtil.keyVal( jw, "Copyright", headers.get( Constants.BUNDLE_COPYRIGHT ) );
-        WebConsoleUtil.keyVal( jw, "Description", headers.get( Constants.BUNDLE_DESCRIPTION ) );
+        Util.keyVal( jw, "Vendor", headers.get( Constants.BUNDLE_VENDOR ) );
+        Util.keyVal( jw, "Copyright", headers.get( Constants.BUNDLE_COPYRIGHT ) );
+        Util.keyVal( jw, "Description", headers.get( Constants.BUNDLE_DESCRIPTION ) );
 
-        WebConsoleUtil.keyVal( jw, "Start Level", getStartLevel( bundle ) );
+        Util.keyVal( jw, "Start Level", getStartLevel( bundle ) );
 
-        WebConsoleUtil.keyVal( jw, "Bundle Classpath", headers.get( Constants.BUNDLE_CLASSPATH ) );
+        Util.keyVal( jw, "Bundle Classpath", headers.get( Constants.BUNDLE_CLASSPATH ) );
 
         listFragmentInfo( jw, bundle, pluginRoot );
 
@@ -948,11 +948,11 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                     }
                 }
             }
-            WebConsoleUtil.keyVal( jw, "Exported Packages", val );
+            Util.keyVal( jw, "Exported Packages", val );
         }
         else
         {
-            WebConsoleUtil.keyVal( jw, "Exported Packages", "---" );
+            Util.keyVal( jw, "Exported Packages", "---" );
         }
 
         exports = packageAdmin.getExportedPackages( ( Bundle ) null );
@@ -1006,7 +1006,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                 val.put( "None" );
             }
 
-            WebConsoleUtil.keyVal( jw, "Imported Packages", val );
+            Util.keyVal( jw, "Imported Packages", val );
         }
 
         if ( !usingBundles.isEmpty() )
@@ -1017,7 +1017,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                 Bundle usingBundle = ( Bundle ) ui.next();
                 val.put( getBundleDescriptor( usingBundle, pluginRoot ) );
             }
-            WebConsoleUtil.keyVal( jw, "Importing Bundles", val );
+            Util.keyVal( jw, "Importing Bundles", val );
         }
     }
 
@@ -1053,11 +1053,11 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                     Clause export = new Clause( pkgs[i].getName(), pkgs[i].getDirectives(), pkgs[i].getAttributes() );
                     collectExport( val, export.getName(), export.getAttribute( Constants.VERSION_ATTRIBUTE ) );
                 }
-                WebConsoleUtil.keyVal( jw, "Exported Packages", val );
+                Util.keyVal( jw, "Exported Packages", val );
             }
             else
             {
-                WebConsoleUtil.keyVal( jw, "Exported Packages", "---" );
+                Util.keyVal( jw, "Exported Packages", "---" );
             }
         }
 
@@ -1127,7 +1127,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                     val.put( "---" );
                 }
 
-                WebConsoleUtil.keyVal( jw, "Imported Packages", val );
+                Util.keyVal( jw, "Imported Packages", val );
             }
         }
     }
@@ -1175,7 +1175,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             appendProperty( val, refs[i], Constants.SERVICE_DESCRIPTION, "Description" );
             appendProperty( val, refs[i], Constants.SERVICE_VENDOR, "Vendor" );
 
-            WebConsoleUtil.keyVal( jw, key, val);
+            Util.keyVal( jw, key, val);
         }
     }
 
@@ -1196,7 +1196,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             val.put( header + ": " + value );
         }
 
-        WebConsoleUtil.keyVal( jw, "Manifest Headers", val );
+        Util.keyVal( jw, "Manifest Headers", val );
     }
 
     private static final String enableLineWrapping(final String value)
@@ -1231,7 +1231,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                 {
                     val.put( getBundleDescriptor( hostBundles[i], pluginRoot ) );
                 }
-                WebConsoleUtil.keyVal( jw, "Host Bundles", val );
+                Util.keyVal( jw, "Host Bundles", val );
             }
         }
         else
@@ -1244,7 +1244,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                 {
                     val.put( getBundleDescriptor( fragmentBundles[i], pluginRoot ) );
                 }
-                WebConsoleUtil.keyVal( jw, "Fragments Attached", val );
+                Util.keyVal( jw, "Fragments Attached", val );
             }
         }
 
