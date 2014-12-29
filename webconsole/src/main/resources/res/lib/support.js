@@ -241,6 +241,10 @@ function Xdialog(text) {
 
 	sb.push(">");
 
+    if (name == "textarea") {
+        sb.push("</textarea>");
+    }
+
 	var el = $(sb.join(""));
 
 	if (cssClass) {
