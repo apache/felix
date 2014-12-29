@@ -331,7 +331,7 @@ public final class WebConsoleUtil
      *
      * @deprecated Plugins should use their own json code/library
      */
-    public static final void keyVals(JSONWriter jw, String key, Object value)
+    public static final void keyVal(JSONWriter jw, String key, Object value)
         throws JSONException
     {
         if (key != null && value != null)
