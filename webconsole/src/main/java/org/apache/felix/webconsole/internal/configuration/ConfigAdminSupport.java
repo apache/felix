@@ -31,12 +31,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.Vector;
-import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -61,7 +61,7 @@ import org.osgi.service.metatype.ObjectClassDefinition;
 
 class ConfigAdminSupport
 {
-    
+
     private static final String PROPERTY_FACTORYCONFIG_NAMEHINT = "webconsole.configurationFactory.nameHint";
     private static final Set CONFIG_PROPERTIES_HIDE = new HashSet();
     static {
@@ -200,10 +200,10 @@ class ConfigAdminSupport
                 String paramName = "action".equals(propName) //$NON-NLS-1$
                     || ConfigManager.ACTION_DELETE.equals(propName)
                     || ConfigManager.ACTION_APPLY.equals(propName)
-                    || ConfigManager.PROPERTY_LIST.equals(propName) 
+                    || ConfigManager.PROPERTY_LIST.equals(propName)
                     ? '$' + propName : propName;
                 propsToKeep.add(propName);
-                
+
                 PropertyDescriptor ad = (PropertyDescriptor) adMap.get( propName );
 
                 // try to derive from current value
@@ -593,7 +593,7 @@ class ConfigAdminSupport
             configManager.log("listConfigurations: Unexpected problem encountered", e);
         }
     }
-    
+
     /**
      * Builds a "name hint" for factory configuration based on other property
      * values of the config and a "name hint template" defined as hidden
@@ -844,5 +844,10 @@ class ConfigAdminSupport
             // dummy configuration cannot be deleted
         }
 
+    }
+
+    public Configuration[] listConfigurations(String filter) throws IOException, InvalidSyntaxException
+    {
+        return this.service.listConfigurations(filter);
     }
 }
