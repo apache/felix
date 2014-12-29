@@ -287,7 +287,16 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
         jw.value( propertyAsString( service, Constants.OBJECTCLASS ) );
         jw.key( "pid" );
         jw.value( propertyAsString( service, Constants.SERVICE_PID ) );
-
+        jw.key( "ranking" );
+        final Object ranking = service.getProperty(Constants.SERVICE_RANKING);
+        if ( ranking != null )
+        {
+            jw.value( ranking.toString() );
+        }
+        else
+        {
+            jw.value("");
+        }
         bundleInfo( jw, service.getBundle(), locale );
 
         if ( details )
