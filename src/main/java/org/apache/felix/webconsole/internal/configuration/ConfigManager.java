@@ -19,9 +19,7 @@ package org.apache.felix.webconsole.internal.configuration;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Iterator;
 import java.util.Locale;
-import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -33,6 +31,7 @@ import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
 
@@ -273,28 +272,58 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
             final ConfigAdminSupport ca = this.getConfigurationAdminSupport();
             if ( ca != null )
             {
+                // create filter
+                final StringBuffer sb = new StringBuffer();
+                if ( pid != null && pidFilter != null)
+                {
+                    sb.append("(&");
+                }
+                if ( pid != null )
+                {
+                    sb.append('(');
+                    sb.append(Constants.SERVICE_PID);
+                    sb.append('=');
+                    sb.append(pid);
+                    sb.append(')');
+                }
+                if ( pidFilter != null )
+                {
+                    sb.append(pidFilter);
+                }
+                if ( pid != null && pidFilter != null)
+                {
+                    sb.append(')');
+                }
+                final String filter = sb.toString();
                 try
                 {
-                    final Map services = ca.getServices( pid, pidFilter, locale, false );
+                    // we use listConfigurations to not create configuration
+                    // objects persistently without the user providing actual
+                    // configuration
+                    final Configuration[] configs = ca.listConfigurations( filter );
                     boolean printComma = false;
-                    for ( Iterator spi = services.keySet().iterator(); spi.hasNext(); )
+                    for(int i=0; i<configs.length; i++)
                     {
-                        final String servicePid = ( String ) spi.next();
-                        final Configuration config = ca.getConfiguration( servicePid );
+                        final Configuration config = configs[i];
                         if ( config != null )
                         {
                             if ( printComma )
                             {
                                 pw.print( ',' );
                             }
-                            ca.printConfigurationJson( pw, servicePid, config, pidFilter, locale );
+                            ca.printConfigurationJson( pw, config.getPid(), config, null, locale );
                             printComma = true;
                         }
                     }
                 }
-                catch ( InvalidSyntaxException e )
+                catch ( final InvalidSyntaxException ise )
                 {
-                    // this should not happened as we checked the filter before
+                    // should print message
+                    // however this should not happen as we checked the filter before
+                }
+                catch ( final IOException ioe )
+                {
+                    // should print message
                 }
             }
             pw.write( "]" ); //$NON-NLS-1$
