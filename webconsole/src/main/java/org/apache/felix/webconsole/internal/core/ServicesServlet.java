@@ -235,19 +235,19 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
             String key = keys[i];
             if ( Constants.SERVICE_PID.equals( key ) )
             {
-                WebConsoleUtil.keyVal( jw, "Service PID", service.getProperty( key ) );
+                Util.keyVal( jw, "Service PID", service.getProperty( key ) );
             }
             else if ( Constants.SERVICE_DESCRIPTION.equals( key ) )
             {
-                WebConsoleUtil.keyVal( jw, "Service Description", service.getProperty( key ) );
+                Util.keyVal( jw, "Service Description", service.getProperty( key ) );
             }
             else if ( Constants.SERVICE_VENDOR.equals( key ) )
             {
-                WebConsoleUtil.keyVal( jw, "Service Vendor", service.getProperty( key ) );
+                Util.keyVal( jw, "Service Vendor", service.getProperty( key ) );
             }
             else if ( !Constants.OBJECTCLASS.equals( key ) && !Constants.SERVICE_ID.equals( key ) )
             {
-                WebConsoleUtil.keyVal( jw, key, service.getProperty( key ) );
+                Util.keyVal( jw, key, service.getProperty( key ) );
             }
 
         }
