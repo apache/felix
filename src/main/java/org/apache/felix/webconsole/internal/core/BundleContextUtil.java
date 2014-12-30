@@ -26,10 +26,19 @@ import org.osgi.framework.BundleContext;
 public class BundleContextUtil
 {
     /**
-     * If this property is specified (regardless of it's value), the system bundle is used
-     * as a working bundle context. Otherwise the web console bundle context is used.
+     * This property defines which bundle context the web console plugins use to
+     * get the list of bundles and services. It defaults to {@link #WORK_CTX_OWN}.
+     * If {@link #WORK_CTX_SYSTEM} is specified, the web console plugins use the
+     * system bundle context. If an invalid value is specified, the default is used.
+     * This setting effects only the built-in plugins.
      */
-    public static final String FWK_PROP_USE_SYSTEM_BUNDLE = "webconsole.use.systembundle";
+    public static final String FWK_PROP_WORK_CONTEXT = "felix.webconsole.work.context";
+
+    /** The web console uses the own bundle context. (default) */
+    public static final String WORK_CTX_OWN = "own";
+
+    /** The web console uses the system bundle context. */
+    public static final String WORK_CTX_SYSTEM = "system";
 
     /**
      * Get the working bundle context: the bundle context to lookup bundles and
@@ -37,7 +46,7 @@ public class BundleContextUtil
      */
     public static BundleContext getWorkingBundleContext( final BundleContext bc)
     {
-        if ( bc.getProperty(FWK_PROP_USE_SYSTEM_BUNDLE) != null )
+        if ( WORK_CTX_SYSTEM.equalsIgnoreCase(bc.getProperty(FWK_PROP_WORK_CONTEXT)) )
         {
             return bc.getBundle(0).getBundleContext();
         }
