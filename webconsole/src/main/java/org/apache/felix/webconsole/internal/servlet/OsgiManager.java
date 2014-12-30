@@ -122,7 +122,7 @@ public class OsgiManager extends GenericServlet
      */
     private static final String COOKIE_LOCALE = "felix-webconsole-locale"; //$NON-NLS-1$
 
-    private final String FRAMEWORK_PROP_MANAGER_ROOT = "felix.webconsole.manager.root"; //$NON-NLS-1$
+    private static final String FRAMEWORK_PROP_MANAGER_ROOT = "felix.webconsole.manager.root"; //$NON-NLS-1$
 
     private static final String FRAMEWORK_PROP_REALM = "felix.webconsole.realm"; //$NON-NLS-1$
 
