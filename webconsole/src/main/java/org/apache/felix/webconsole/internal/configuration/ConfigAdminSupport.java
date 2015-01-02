@@ -307,6 +307,29 @@ class ConfigAdminSupport
                 }
             }
 
+            final String location = request.getParameter(ConfigManager.LOCATION);
+            if ( location == null || location.trim().length() == 0 )
+            {
+                if ( config.getBundleLocation() != null )
+                {
+                    config.setBundleLocation(null);
+                    // workaround for Felix Config Admin 1.2.8 not clearing dynamic
+                    // bundle location when clearing static bundle location. In
+                    // this case we first set the static bundle location to the
+                    // dynamic bundle location and then try to set both to null
+                    if ( config.getBundleLocation() != null )
+                    {
+                        config.setBundleLocation( "??invalid:bundle/location" ); //$NON-NLS-1$
+                        config.setBundleLocation( null );
+                    }
+                }
+            } else
+            {
+                if ( config.getBundleLocation() == null || !config.getBundleLocation().equals(location) )
+                {
+                    config.setBundleLocation(location);
+                }
+            }
             config.update( updateProps );
         }
 

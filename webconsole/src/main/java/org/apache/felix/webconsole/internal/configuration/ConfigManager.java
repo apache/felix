@@ -59,6 +59,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
     static final String ACTION_APPLY = "apply"; //$NON-NLS-1$
     static final String ACTION_UNBIND = "unbind"; //$NON-NLS-1$
     static final String PROPERTY_LIST = "propertylist"; //$NON-NLS-1$
+    static final String LOCATION = "$location"; //$NON-NLS-1$
 
     static final String CONFIGURATION_ADMIN_NAME = "org.osgi.service.cm.ConfigurationAdmin"; //$NON-NLS-1$
     static final String META_TYPE_NAME = "org.osgi.service.metatype.MetaTypeService"; //$NON-NLS-1$

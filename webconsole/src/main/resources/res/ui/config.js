@@ -95,6 +95,13 @@ function displayConfigForm(obj) {
         });
     formEl.appendChild( inputEl );
     
+    inputEl = createElement( "input", null, {
+        type: "hidden",
+        name: "$location",
+        id: "lochidden"
+    });
+    formEl.appendChild( inputEl );
+    
     var tableEl = createElement( "table", null, {
             border: 0,
             width: "100%"
@@ -264,10 +271,12 @@ function printConfigurationInfo( /* Element */ parent, obj )
         );
     }
     
-    var binding = obj.bundleLocation;
+    var binding = obj.bundle_location;
     if (!binding)
     {
         binding = i18n.unbound;
+    } else {
+    	$("#lochidden").val(binding);
     }
     
     parent.appendChild( tr( null, null, [
@@ -275,11 +284,47 @@ function printConfigurationInfo( /* Element */ parent, obj )
                 text( i18n.binding )
             ]),
             td( null, null, [
-                text( binding )
+                createElement( "input", null, {
+                    type: "text",
+                    name: "$location",
+                    style: { width: '99%' },
+                    value: binding,
+                    id: "locinput"
+                })                             
             ])
         ])
     );
-
+    if ( binding === i18n.unbound ) {
+    	$("#locinput").addClass("placeholder-active");
+    }
+	$("#locinput").on("focus", function() {
+	    if ($("#locinput").val() === i18n.unbound) {
+	        $("#locinput").removeClass("placeholder-active");
+	        $("#locinput").val("");
+	    }
+	});
+	$("#locinput").on("blur", function() {
+	    if($("#locinput").val() === "") {
+	        $("#locinput").val(i18n.unbound);
+	        $("#locinput").addClass("placeholder-active");
+	    }
+	});
+	$("#locinput").on("keydown", function(event) {
+	    if (event.keyCode == 27){
+	        $("#locinput").val("");
+	    }
+	});
+	if ( obj.bundleLocation && obj.bundleLocation != "" ) {
+	    parent.appendChild( tr( null, null, [
+	                                         td( null, null, [
+	                                             text( "" )
+	                                         ]),
+	                                         td( null, null, [
+	                                             text( obj.bundleLocation )
+	                                         ])
+	                                     ])
+	                                 );		
+	}
 }
 
 
@@ -545,7 +590,7 @@ $(document).ready(function() {
 	configBody    = configTable.find('tbody');
 	configRow     = configBody.find('tr:eq(0)').clone();
 	factoryRow    = configBody.find('tr:eq(1)').clone();
-
+	
 	// setup button - cannot inline in dialog option because of i18n
 	var _buttons = {};
 	_buttons[i18n.abort] = function() {
@@ -564,6 +609,12 @@ $(document).ready(function() {
 	    	unbindConfig($(this).attr('__pid'), $(this).attr('__location'));
 	}
 	_buttons[i18n.save] = function() {
+		if ( $("#locinput").val() === i18n.unbound ) {
+			$("#lochidden").val("");			
+		} else {
+			$("#lochidden").val($("#locinput").val());			
+		}
+		
 		// get all the configuration properties names
 		var propListElement = $(this).find('form').find('[name=propertylist]');
 		var propListArray = propListElement.val().split(',');
