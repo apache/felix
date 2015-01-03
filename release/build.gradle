@@ -44,10 +44,10 @@ task makeStaging << {
     }
 
     // Package source distribution
-    ant.zip(destfile: "staging/apache-felix-dependencymanager-" + dmVersion + "-src.zip", excludes: "../release/**, staging/**") {
+    ant.zip(destfile: "staging/apache-felix-dependencymanager-" + dmVersion + "-src.zip", excludes: "release/**, staging/**") {
 	zipfileset(dir: "../", 
 		   prefix: "apache-felix-dependencymanager-" + dmVersion + "-src",
-		   includes: "*/.project, */.classpath, */.settings/**, */src/**, */test/**, */.bnd, */.bndrun, cnf/**")
+		   includes: "build.gradle, gradle.properties, settings.gradle, */*.gradle, */.project, */.classpath, */.settings/**, */src/**, */test/**, */*.bnd, */.bndrun, cnf/**")
     }
 }
 
