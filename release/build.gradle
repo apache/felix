@@ -1,0 +1,106 @@
+/**
+ * Gradle script used to perform DM releases (really similar to Apache ACE build.xml)
+ */
+import aQute.bnd.build.Workspace
+
+// Misc properties (you must update the ext.dmVersion property before each release)
+ext.svnStagingPath = "https://dist.apache.org/repos/dist/dev/felix"
+ext.svnReleasePath = "https://dist.apache.org/repos/dist/release/felix"
+ext.dmVersion = "4.0.0"
+
+apply plugin: 'java'
+
+// Add bnd as a build dependency
+buildscript {
+    dependencies {
+        classpath files('cnf/gradle/biz.aQute.bnd.gradle.jar')
+    }
+}
+
+// Setup the workspace
+Workspace workspace
+workspace = Workspace.getWorkspace(".")
+
+// Package the source and binary distributions into the staging directory.
+task makeStaging << {
+    // Collect bundles into the staging dir
+    new File('.').eachFile { 
+        if(new File(it, 'bnd.bnd').exists()) {
+    	    def bndProject = workspace.getProject(it.name)
+	    if (! bndProject.getProperty("Test-Cases") && ! bndProject.isNoBundles()) {
+		logger.lifecycle("    Packaging release for ${bndProject.name}")
+
+		// Copy binary project artifacts to the staging directory
+		copy { 
+		    from "../${bndProject.name}/generated"
+		    into "staging"
+		    include "*.jar"
+		    rename { 
+		    	String fileName -> fileName.replace(".jar", "-" + bndProject.getVersion("${bndProject.name}") + ".jar")
+		    }
+		}
+	    }
+        }
+    }
+
+    // Package source distribution
+    ant.zip(destfile: "staging/apache-felix-dependencymanager-" + dmVersion + ".zip", excludes: "../release/**, staging/**") {
+	zipfileset(dir: "../", 
+		   prefix: "apache-felix-dependencymanager-" + dmVersion + "-src",
+		   includes: "*/.project, */.classpath, */.settings/**, */src/**, */test/**, */.bnd, */.bndrun, cnf/**")
+    }
+}
+
+// Sign staging directory 
+task signStaging << { 
+    fileTree("staging").visit { FileVisitDetails details -> 
+	logger.lifecycle("    Signing " + details.file.path)
+	getProject().exec {
+	    commandLine 'gpg', '--armor', '--output', details.file.path + ".asc", '--detach-sig', details.file.path
+	}
+	getProject().exec {
+	    standardOutput = new FileOutputStream(new File(details.file.path+".md5"))
+	    commandLine 'gpg', '--print-md', 'MD5', details.file.path
+	}
+	getProject().exec { 
+	    standardOutput = new FileOutputStream(new File(details.file.path+".sha"))
+	    commandLine 'gpg', '--print-md', 'SHA512', details.file.path
+	}
+    }
+}
+
+
+// Moves the source and binary distributions to staging.
+// (you must provide svn user/password using gradle "-PsvnUser=xxx -PsvnPassword=xxx" options)
+task commitToStaging << {
+    getProject().exec { 
+    	commandLine 'svn', '--username', svnUser, '--password', svnPassword, 
+	'import', 'staging', svnStagingPath + "/apache-felix-dependencymanager-" + dmVersion + "/", 
+	'-m', "Staging Apache Felix Dependency Manager version " + dmVersion + "."
+    }
+}
+
+// Promotes the staged distributions to release
+// (you must provide svn user/password using gradle "-PsvnUser=xxx -PsvnPassword=xxx" options)
+task promoteToRelease << { 
+    getProject().exec { 
+    	commandLine 'svn', '--username', svnUser, '--password', svnPassword, 
+	'move', svnStagingPath+"/apache-felix-dependencymanager-" + dmVersion , svnReleasePath, 
+	'-m', "Releasing Apache Felix Dependency Manager version " + dmVersion + "."
+    }
+}
+
+// Removes the staged distributions from staging
+// (you must provide svn user/password using gradle "-PsvnUser=xxx -PsvnPassword=xxx" options)
+task deleteFromStaging << { 
+    getProject().exec { 
+    	commandLine 'svn', '--username', svnUser, '--password', svnPassword, 
+	'delete', svnStagingPath+"/apache-felix-dependencymanager-" + dmVersion + "/",
+	"-m", "Removing Apache Felix Dependency Manager version " + dmVersion + " from staging."
+    }
+}
+
+// Clean staging directory
+task clean(overwrite: true) << { 
+    new File("staging").deleteDir()
+}

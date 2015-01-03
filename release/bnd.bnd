@@ -1,0 +1,7 @@
+-nobundles
+-dependson \
+	org.apache.felix.dependencymanager,\
+	org.apache.felix.dependencymanager.shell,\
+	org.apache.felix.dependencymanager.annotation,\
+	org.apache.felix.dependencymanager.runtime
+	
