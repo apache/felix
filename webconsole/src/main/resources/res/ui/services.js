@@ -37,9 +37,9 @@ function entry( /* Object */dataEntry) {
 		showDetails(id);
 	}).after(drawDetails ? name : ('<a href="' + window.location.pathname + '/' + id + '">' + name + '</a>'));
 	  
-	_.find('td:eq(1)').text(dataEntry.ranking);
-	_.find('td:eq(2)').text(dataEntry.types);
-	_.find('td:eq(3)').html('<a href="' + bundlePath + dataEntry.bundleId + '">' + dataEntry.bundleSymbolicName + ' (' + dataEntry.bundleId + ')</a>' );
+	_.find('td:eq(1)').text(dataEntry.types);
+	_.find('td:eq(2)').html('<a href="' + bundlePath + dataEntry.bundleId + '">' + dataEntry.bundleSymbolicName + ' (' + dataEntry.bundleId + ')</a>' );
+	_.find('td:eq(3)').text(dataEntry.ranking);
 }
 
 function showDetails(id) {
@@ -61,7 +61,7 @@ function hideDetails(id) {
 
 function renderDetails(data) {
 	data = data.data[0];
-	$('#entry' + data.id + ' > td').eq(2).append('<div id="pluginInlineDetails' + data.id + '"/>');
+	$('#entry' + data.id + ' > td').eq(1).append('<div id="pluginInlineDetails' + data.id + '"/>');
 	$('#img' + data.id).each(function() {
 		if (drawDetails) {
 			var ref = window.location.pathname;
@@ -158,7 +158,7 @@ $(document).ready(function() {
 	$('#plugin_table').tablesorter( {
 		headers : {
 			0 : { sorter : 'digit' },
-			1 : { sorter : 'digit' }
+			3 : { sorter : 'digit' }
 		},
 		sortList : [ [ 1, 0 ] ],
 		textExtraction : mixedLinksExtraction
