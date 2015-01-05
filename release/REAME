@@ -37,11 +37,11 @@ svn co https://svn.apache.org/repos/asf/felix/releases/dependencymanager.X.Y.Z d
 The next step is to build/test the software and create the release/staging/ directory (where the source/jars will be packages)
 
 $ cd dependencymanager-X.Y.Z/
+$ gradle rat (check if some files don't contain a valid license)
 $ gradle org.apache.felix.dependencymanager.annotation:jar
 $ gradle jar
 $ gradle test
 $ gradle check
-$ gradle rat (check if some files don't contain a valid license)
 $ gradle makeStaging (this will create ./release/staging/ directory)
 
 Then you sign archives by invoking the following task:
