@@ -49,14 +49,14 @@ Then you sign archives by invoking the following task:
 $ gradle signStaging
 
 you can upload the archives and the signatures to our development area, which we use to stage this release candidate. This development area can be found at 
-https://dist.apache.org/repos/dist/dev/ace and adding files to it can be done using "svnpubsub" which is taken care of by the following target:
+https://dist.apache.org/repos/dist/dev/felix and adding files to it can be done using "svnpubsub" which is taken care of by the following target:
 
 $ gradle commitToStaging
 
 Voting on the release
 =====================
 
-Start a vote on the dev@ace.apache.org list, for example (be sure to replace X.Y.Z with the correct version!):
+Start a vote on the dev@felix.apache.org list, for example (be sure to replace X.Y.Z with the correct version!):
 
 The staging version can be checked using the following script:
 
@@ -66,11 +66,14 @@ Usage:
 
 $ sh check_staged_dependencymanager.sh X.Y.Z
 
+This script, unlike the original Felix check_stage_release.sh, will download staging from https://dist.apache.org/repos/dist/dev/felix instead of 
+http://repository.apache.org/content/repositories.
+
 Promoting the release:
 =====================
 
 Move the artifacts from the development area to the final release location at 
-https://dist.apache.org/repos/dist/release/ace by invoking the following target:
+https://dist.apache.org/repos/dist/release/felix by invoking the following target:
 
 $ gradle promoteToRelease
 
