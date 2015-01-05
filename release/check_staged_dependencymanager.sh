@@ -69,8 +69,7 @@ checkSum() {
 }
 
 KEYS_URL="http://www.apache.org/dist/felix/KEYS"
-#REL_URL="https://dist.apache.org/repos/dist/dev/felix/apache-felix-dependencymanager-${version}/"
-REL_URL="http://nx0012/svnrepos/dist/dev/felix/apache-felix-dependencymanager-${version}/"
+REL_URL="https://dist.apache.org/repos/dist/dev/felix/apache-felix-dependencymanager-${version}/"
 PWD=`pwd`
 
 echo "################################################################################"
@@ -111,7 +110,7 @@ for f in `find . -type f | grep -v '\.\(asc\|sha1\?\|md5\)$'`; do
     echo -e "    MD5: \c"
     checkSum $f "$f.md5" MD5
     echo -e "    SHA: \c"
-    checkSum $f "$f.sha" SHA512
+    checkSum $f "$f.sha1" SHA1
     echo ""
 done
 
