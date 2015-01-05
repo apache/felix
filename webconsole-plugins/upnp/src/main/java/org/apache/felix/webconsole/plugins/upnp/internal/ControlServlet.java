@@ -171,9 +171,18 @@ public final class ControlServlet extends HttpServlet
                 UPnPService service = requireService(request);
                 UPnPAction action = service.getAction(require("actionID", request)); //$NON-NLS-1$
 
-                json = invoke(action, //
-                    request.getParameterValues("names"), //$NON-NLS-1$
-                    request.getParameterValues("vals")); //$NON-NLS-1$
+                String[] names = request.getParameterValues("names"); //$NON-NLS-1$
+                if (null == names)
+                {
+                  names = request.getParameterValues("names[]"); //$NON-NLS-1$
+                }
+                String[] vals = request.getParameterValues("vals"); //$NON-NLS-1$
+                if (null == vals)
+                {
+                  vals = request.getParameterValues("vals[]"); //$NON-NLS-1$
+                }
+
+                json = invoke(action, names, vals);
             }
             else
             {
