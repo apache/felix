@@ -416,7 +416,7 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
         vars.put( "bundlePath", appRoot +  "/" + BundlesServlet.NAME + "/" );
         vars.put( "drawDetails", String.valueOf(reqInfo.serviceRequested));
         vars.put( "__data__", w.toString() );
-        vars.put( "filter", filter == null ? "" : filter);
+        vars.put( "filter", filter == null ? "" : WebConsoleUtil.escapeHtml(filter));
 
         response.getWriter().print( TEMPLATE );
     }
