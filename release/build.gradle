@@ -149,4 +149,10 @@ task deleteFromStaging << {
 // Clean staging directory
 task clean(overwrite: true) << { 
     new File("release/staging").deleteDir()
+    new File("rat-report.xml").delete()
+}
+
+//Generate a Gradle wrapper
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.1'
 }
