@@ -3,7 +3,8 @@ Dependency Manager 4.0.0 general README
 * misc documentations:
 
 - org.apache.felix.dependencymanager/design.txt
-- doc/A_Glance_At_DependencyManager.odp gives a quick overview of Dependency Manager, including new features.
+- doc/A_Glance_At_DependencyManager.odp gives a quick overview of Dependency Manager, including new features
+- release/REAME: Release Guide
 
 * to compile and run tests under eclipse/bndtools
 

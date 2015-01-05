@@ -28,10 +28,8 @@ class RatTask extends DefaultTask {
   @Input
   List<String> excludes
 
-  def reportPath = 'build/rat'
-  def stylesheet = 'gradle/resources/rat-output-to-html.xsl'
+  def reportPath = '.'
   def xmlReport = reportPath + '/rat-report.xml'
-  def htmlReport = reportPath + '/rat-report.html'
 
   def generateXmlReport(File reportDir) {
     def antBuilder = services.get(IsolatedAntBuilder)
@@ -59,19 +57,6 @@ class RatTask extends DefaultTask {
     }
   }
 
-  def generateHtmlReport() {
-    def antBuilder = services.get(IsolatedAntBuilder)
-    def ratClasspath = project.configurations.rat
-    antBuilder.withClasspath(ratClasspath).execute {
-      ant.xslt(
-          in: xmlReport,
-          style: stylesheet,
-          out: htmlReport,
-          classpath: ratClasspath)
-    }
-    println('Rat report: ' + htmlReport)
-  }
-
   @TaskAction
   def rat() {
     File reportDir = new File(reportPath)
@@ -80,7 +65,6 @@ class RatTask extends DefaultTask {
     }
     generateXmlReport(reportDir)
     printUnknownFiles()
-    generateHtmlReport()
   }
 }
 

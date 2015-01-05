@@ -39,6 +39,7 @@ buildscript {
 
 rat {
   excludes = [
+    'rat-report.xml',
     '**/.git/**',
     '**/.gradle/**',
     '**/.project',
@@ -108,8 +109,8 @@ task signStaging << {
 	    commandLine 'gpg', '--print-md', 'MD5', details.file.path
 	}
 	getProject().exec { 
-	    standardOutput = new FileOutputStream(new File(details.file.path+".sha"))
-	    commandLine 'gpg', '--print-md', 'SHA512', details.file.path
+	    standardOutput = new FileOutputStream(new File(details.file.path+".sha1"))
+	    commandLine 'gpg', '--print-md', 'SHA1', details.file.path
 	}
     }
 }
