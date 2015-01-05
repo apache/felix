@@ -1,0 +1,82 @@
+Apache Felix Dependency Manager  Release Guide 
+
+(similar to Apache Ace release process, see https://ace.apache.org/dev-doc/release-guide.html)
+
+Apache Felix Dependency Manager is an open source project, and as such its only official releases are source releases. 
+For convenience we also provide binaries. 
+This document describes how to do a source release. It is based on the Release FAQ [1]
+
+Prerequisites
+=============
+
+To create a release you must:
+
+* Be a committer in the Apache Felix project;
+* Have Gradle (at least 2.1) installed on your system;
+* Have Subversion installed on your system;
+* Have gpg installed on your system;
+* Have a public key added to the keys file.
+
+Before you can start staging a release candidate, you must:
+
+* make sure there are no dependencies on snapshots/unreleased versions;
+* double check that the "dmVersion" property you want to create is correctly filled in in release/build.gradle
+* create a tagged version of the sources in preparation of the release candidate.
+
+Creating a tagged version of the sources can be done directly through svn:
+
+svn copy https://svn.apache.org/repos/asf/felix/trunk/dependencymanager https://svn.apache.org/repos/asf/felix/releases/dependencymanager-X.Y.Z -m "Release of Apache Felix Dependency Manager X.Y.Z"
+
+Staging a release candidate
+===========================
+
+Staging a release starts by checking out a tagged version of the sources:
+
+svn co https://svn.apache.org/repos/asf/felix/releases/dependencymanager.X.Y.Z dependencymanager-X.Y.Z
+
+The next step is to build/test the software and create the release/staging/ directory (where the source/jars will be packages)
+
+$ cd dependencymanager-X.Y.Z/
+$ gradle org.apache.felix.dependencymanager.annotation:jar
+$ gradle jar
+$ gradle test
+$ gradle check
+$ gradle rat (check if some files don't contain a valid license)
+$ gradle makeStaging (this will create ./release/staging/ directory)
+
+Then you sign archives by invoking the following task:
+
+$ gradle signStaging
+
+you can upload the archives and the signatures to our development area, which we use to stage this release candidate. This development area can be found at 
+https://dist.apache.org/repos/dist/dev/ace and adding files to it can be done using "svnpubsub" which is taken care of by the following target:
+
+$ gradle commitToStaging
+
+Voting on the release
+=====================
+
+Start a vote on the dev@ace.apache.org list, for example (be sure to replace X.Y.Z with the correct version!):
+
+The staging version can be checked using the following script:
+
+  http://svn.apache.org/viewvc/felix/trunk/dependencymanager/release/check_staged_dependencymanager.sh
+
+Usage:
+
+$ sh check_staged_dependencymanager.sh X.Y.Z
+
+Promoting the release:
+=====================
+
+Move the artifacts from the development area to the final release location at 
+https://dist.apache.org/repos/dist/release/ace by invoking the following target:
+
+$ gradle promoteToRelease
+
+Cancelling the release
+======================
+
+$ gradle deleteFromStaging
+
+[1] http://www.apache.org/dev/release.html
