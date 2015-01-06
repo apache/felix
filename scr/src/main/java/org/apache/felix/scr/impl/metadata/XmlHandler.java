@@ -407,59 +407,16 @@ public class XmlHandler implements KXml2SAXHandler
                         m_currentComponent.addProperty( prop );
 
                     }
+
+                    // method reference
                     ref.setBind( attributes.getAttribute( "bind" ) );
                     ref.setUpdated( attributes.getAttribute( "updated" ) );
                     ref.setUnbind( attributes.getAttribute( "unbind" ) );
 
-                    m_currentComponent.addDependency( ref );
-                }
-                // 112.x.x Field Reference element
-                else if ( localName.equals( "field-reference" ) )
-                {
-                    ReferenceMetadata ref = new ReferenceMetadata(true);
-
-                    // name attribute is optional 
-                    if ( attributes.getAttribute( "name" ) != null )
-                    {
-                        ref.setName( attributes.getAttribute( "name" ) );
-                    }
-
-                    ref.setInterface( attributes.getAttribute( "interface" ) );
-
-                    // Cardinality
-                    if ( attributes.getAttribute( "cardinality" ) != null )
-                    {
-                        ref.setCardinality( attributes.getAttribute( "cardinality" ) );
-                    }
-
-                    if ( attributes.getAttribute( "policy" ) != null )
-                    {
-                        ref.setPolicy( attributes.getAttribute( "policy" ) );
-                    }
-
-                    if ( attributes.getAttribute( "policy-option" ) != null )
-                    {
-                        ref.setPolicyOption( attributes.getAttribute( "policy-option" ) );
-                    }
-
-                    if ( attributes.getAttribute( "scope" ) != null )
-                    {
-                        ref.setScope( attributes.getAttribute( "scope" ) );
-                    }
-
-                    if ( attributes.getAttribute( "target" ) != null)
-                    {
-                        ref.setTarget( attributes.getAttribute( "target" ) );
-                        PropertyMetadata prop = new PropertyMetadata();
-                        prop.setName( (ref.getName() == null? ref.getInterface(): ref.getName()) + ".target");
-                        prop.setValue( attributes.getAttribute( "target" ) );
-                        m_currentComponent.addProperty( prop );
-
-                    }
-
+                    // field reference
                     ref.setField( attributes.getAttribute( "field" ) );
-                    ref.setFieldStrategy( attributes.getAttribute( "strategy" ) );
-                    ref.setFieldValueType( attributes.getAttribute( "valuetype" ) );
+                    ref.setFieldOption( attributes.getAttribute( "field-option" ) );
+                    ref.setFieldCollectionType( attributes.getAttribute( "field-collection-type" ) );
 
                     m_currentComponent.addDependency( ref );
                 }
