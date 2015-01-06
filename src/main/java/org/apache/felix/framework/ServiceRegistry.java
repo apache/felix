@@ -19,6 +19,7 @@
 package org.apache.felix.framework;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -239,12 +240,12 @@ public class ServiceRegistry
         }
     }
 
-    public synchronized List getServiceReferences(String className, SimpleFilter filter)
+    public synchronized Collection getServiceReferences(String className, SimpleFilter filter)
     {
         if ((className == null) && (filter == null))
         {
             // Return all services.
-            filter = new SimpleFilter(Constants.OBJECTCLASS, "*", SimpleFilter.PRESENT);
+            filter = new SimpleFilter(null, null, SimpleFilter.MATCH_ALL);
         }
         else if ((className != null) && (filter == null))
         {
@@ -261,9 +262,7 @@ public class ServiceRegistry
         }
         // else just use the specified filter.
 
-        Set<BundleCapability> matches = m_regCapSet.match(filter, false);
-
-        return new ArrayList<BundleCapability>(matches);
+        return m_regCapSet.match(filter, false);
     }
 
     public synchronized ServiceReference<?>[] getServicesInUse(Bundle bundle)
