@@ -18,13 +18,9 @@
  */
 package org.apache.felix.deploymentadmin;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
-
 import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.cm.ManagedService;
 import org.osgi.service.deploymentadmin.DeploymentAdmin;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.log.LogService;
@@ -38,13 +34,8 @@ import org.osgi.service.packageadmin.PackageAdmin;
 public class Activator extends DependencyActivatorBase {
 
     public void init(BundleContext context, DependencyManager manager) throws Exception {
-        String[] ifaces = { DeploymentAdmin.class.getName(), ManagedService.class.getName() };
-
-        Dictionary props = new Hashtable();
-        props.put(Constants.SERVICE_PID, DeploymentAdminImpl.PID);
-
         manager.add(createComponent()
-            .setInterface(ifaces, props)
+            .setInterface(DeploymentAdmin.class.getName(), null)
             .setImplementation(DeploymentAdminImpl.class)
             .add(createServiceDependency()
                 .setService(PackageAdmin.class)
