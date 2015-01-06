@@ -127,11 +127,16 @@ public class ScrConfiguration
         props.put(Constants.SERVICE_PID, PID);
         props.put(Constants.SERVICE_DESCRIPTION, "SCR Configurator");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+
+
+        // Process configure from bundle context properties so they can be predictably
+        // overriden by configuration admin later.
+        // Note that if the managed service is registered first then it is random which will win since
+        // configuration may be delivered asynchronously
+        configure( null, false );            
+
         managedService = ( ServiceRegistration<ManagedService> ) bundleContext.registerService("org.osgi.service.cm.ManagedService", new ScrManagedServiceServiceFactory(this),
             props);
-        
-        // configure from bundle context properties
-        configure( null, false );            
     }
 
     public void stop() {
