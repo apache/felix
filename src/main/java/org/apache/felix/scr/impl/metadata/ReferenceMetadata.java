@@ -116,10 +116,10 @@ public class ReferenceMetadata
     private String m_field;
 
     // Name of the strategy for the field (optional, since DS 1.3)
-    private String m_field_strategy;
+    private String m_field_option;
 
     // Name of the value type for the field (optional, since DS 1.3)
-    private String m_field_value_type;
+    private String m_field_collection_type;
 
     // Policy attribute (optional, default = static)
     private String m_policy = null;
@@ -139,9 +139,6 @@ public class ReferenceMetadata
 
     // Flag that is set once the component is verified (its properties cannot be changed)
     private boolean m_validated = false;
-
-    // flag indicating this is a field reference
-    private final boolean m_fieldReference;
 
     static
     {
@@ -169,14 +166,6 @@ public class ReferenceMetadata
         FIELD_VALUE_TYPE_VALID.add ( FIELD_VALUE_TYPE_SERVICE );
         FIELD_VALUE_TYPE_VALID.add ( FIELD_VALUE_TYPE_SERVICEOBJECTS );
         FIELD_VALUE_TYPE_VALID.add ( FIELD_VALUE_TYPE_TUPLE );
-    }
-
-    public ReferenceMetadata() {
-        this(false);
-    }
-
-    public ReferenceMetadata(final boolean flag) {
-        this.m_fieldReference = flag;
     }
 
     /////////////////////////////////////////////// setters ///////////////////////////////////
@@ -356,14 +345,14 @@ public class ReferenceMetadata
      *
      * @param strategy the field strategy
      */
-    public void setFieldStrategy( final String strategy )
+    public void setFieldOption( final String strategy )
     {
         if ( m_validated )
         {
             return;
         }
 
-        m_field_strategy = strategy;
+        m_field_option = strategy;
 
         m_isReplace = FIELD_STRATEGY_REPLACE.equals(strategy);
     }
@@ -373,14 +362,14 @@ public class ReferenceMetadata
      *
      * @param valuetype the field value type
      */
-    public void setFieldValueType( final String valuetype )
+    public void setFieldCollectionType( final String valuetype )
     {
         if ( m_validated )
         {
             return;
         }
 
-        m_field_value_type = valuetype;
+        m_field_collection_type = valuetype;
     }
 
     public void setScope(String scopeName) {
@@ -514,9 +503,9 @@ public class ReferenceMetadata
      *
      * @return a String with the strategy name for the field
      */
-    public String getFieldStrategy()
+    public String getFieldOption()
     {
-        return m_field_strategy;
+        return m_field_option;
     }
 
     /**
@@ -525,9 +514,9 @@ public class ReferenceMetadata
      *
      * @return a String with the value type for the field
      */
-    public String getFieldValueType()
+    public String getFieldCollectionType()
     {
-        return m_field_value_type;
+        return m_field_collection_type;
     }
 
     // Getters for boolean values that determine both policy and cardinality
@@ -678,7 +667,7 @@ public class ReferenceMetadata
         }
 
         // checks for event based injection
-        if ( !m_fieldReference )
+        if ( m_field == null )
         {
             // updated method is only supported in namespace xxx and later
             if ( m_updated != null && !(dsVersion.isDS12() || dsVersion == DSVersion.DS11Felix) )
@@ -689,7 +678,7 @@ public class ReferenceMetadata
         }
 
         // checks for field injection
-        if ( m_fieldReference )
+        if ( m_field != null )
         {
             // field reference requires DS 1.3
             if ( !dsVersion.isDS13() )
@@ -697,19 +686,25 @@ public class ReferenceMetadata
                 throw componentMetadata.validationFailure( "Field reference requires DS >= 1.3" );
             }
 
-            // field strategy
-            if ( m_field_strategy == null )
+            // check for bind/unbind/updated
+            if ( m_bind != null || m_unbind != null || m_updated != null )
             {
-                setFieldStrategy( FIELD_STRATEGY_REPLACE );
+                throw componentMetadata.validationFailure( "Bind/unbind/updated should not be specified with a field reference" );
             }
-            else if ( !FIELD_STRATEGY_VALID.contains( m_field_strategy ) )
+
+            // field strategy
+            if ( m_field_option == null )
+            {
+                setFieldOption( FIELD_STRATEGY_REPLACE );
+            }
+            else if ( !FIELD_STRATEGY_VALID.contains( m_field_option ) )
             {
                 throw componentMetadata.validationFailure( "Field strategy must be one of " + FIELD_STRATEGY_VALID );
             }
             if ( !m_isMultiple )
             {
                 // update is not allowed for unary references
-                if ( m_field_strategy.equals(FIELD_STRATEGY_UPDATE) )
+                if ( m_field_option.equals(FIELD_STRATEGY_UPDATE) )
                 {
                     throw componentMetadata.validationFailure( "Field strategy update not allowed for unary field references." );
                 }
@@ -719,18 +714,18 @@ public class ReferenceMetadata
             if ( !m_isMultiple )
             {
                 // value type must not be specified for unary references
-                if ( m_field_value_type != null )
+                if ( m_field_collection_type != null )
                 {
                     throw componentMetadata.validationFailure( "Field value type must not be set for unary field references." );
                 }
             }
             else
             {
-                if ( m_field_value_type == null )
+                if ( m_field_collection_type == null )
                 {
-                    setFieldValueType( FIELD_VALUE_TYPE_SERVICE );
+                    setFieldCollectionType( FIELD_VALUE_TYPE_SERVICE );
                 }
-                else if ( !FIELD_VALUE_TYPE_VALID.contains( m_field_value_type ) )
+                else if ( !FIELD_VALUE_TYPE_VALID.contains( m_field_collection_type ) )
                 {
                     throw componentMetadata.validationFailure( "Field value type must be one of " + FIELD_VALUE_TYPE_VALID );
                 }
@@ -739,34 +734,28 @@ public class ReferenceMetadata
             // static references only allow replace strateg
             if ( m_isStatic )
             {
-                if ( ! m_field_strategy.equals(FIELD_STRATEGY_REPLACE) )
+                if ( ! m_field_option.equals(FIELD_STRATEGY_REPLACE) )
                 {
                     throw componentMetadata.validationFailure( "Field strategy update not allowed for static field references." );
                 }
             }
         }
 
-
         m_validated = true;
     }
 
     public String getDebugInfo()
     {
-        if ( this.m_fieldReference )
-        {
-            return getField() +
-                    "interface=" + this.getInterface() +
-                    ", filter=" + this.getTarget() +
-                    ", strategy=" + this.getFieldStrategy() +
-                    ", policy=" + this.getPolicy() +
-                    ", cardinality=" + this.getCardinality();
-        }
         return getName() +
                 "interface=" + this.getInterface() +
                 ", filter=" + this.getTarget() +
                 ", policy=" + this.getPolicy() +
                 ", cardinality=" + this.getCardinality() +
                 ", bind=" + this.getBind() +
-                ", unbind=" + this.getUnbind();
+                ", unbind=" + this.getUnbind() +
+                ", updated=" + this.getUpdated() +
+                ", field=" + this.getField() +
+                ", field-option=" + this.getFieldOption() +
+                ", field-collection-type=" + this.getFieldCollectionType();
     }
 }
