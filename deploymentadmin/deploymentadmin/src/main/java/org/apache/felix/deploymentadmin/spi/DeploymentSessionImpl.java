@@ -50,12 +50,12 @@ public class DeploymentSessionImpl implements DeploymentSession, Constants {
     private volatile Command m_currentCommand = null;
     private volatile boolean m_cancelled;
 
-    public DeploymentSessionImpl(AbstractDeploymentPackage source, AbstractDeploymentPackage target, List commands, DeploymentAdminImpl admin) {
+    public DeploymentSessionImpl(AbstractDeploymentPackage source, AbstractDeploymentPackage target, List commands, DeploymentAdminImpl admin, DeploymentAdminConfig config) {
         m_source = source;
         m_target = target;
         m_commands = commands;
         m_admin = admin;
-        m_config = new DeploymentAdminConfig(m_admin.getConfiguration());
+        m_config = config;
     }
 
     /**
@@ -64,8 +64,8 @@ public class DeploymentSessionImpl implements DeploymentSession, Constants {
      * or if an exception is caused by one of the commands.
      * 
      * @throws DeploymentException If the session was canceled (
-     *         <code>DeploymentException.CODE_CANCELLED</code>) or if one of the
-     *         commands caused an exception (<code>DeploymentException.*</code>)
+     *             <code>DeploymentException.CODE_CANCELLED</code>) or if one of the
+     *             commands caused an exception (<code>DeploymentException.*</code>)
      */
     public void call(boolean ignoreExceptions) throws DeploymentException {
         List executedCommands = new ArrayList();
@@ -86,6 +86,8 @@ public class DeploymentSessionImpl implements DeploymentSession, Constants {
                     // have exceptions during a rollback
                     rollback(executedCommands);
                     throw de;
+                } else {
+                    m_admin.getLog().log(LogService.LOG_DEBUG, "Ignoring exception as requested!", de);
                 }
             }
         }
@@ -123,7 +125,8 @@ public class DeploymentSessionImpl implements DeploymentSession, Constants {
     }
 
     /**
-     * @return the configuration for this session, is guaranteed to remain stable during this session, never <code>null</code>.
+     * @return the configuration for this session, is guaranteed to remain stable during this session, never
+     *         <code>null</code>.
      */
     public DeploymentAdminConfig getConfiguration() {
         return m_config;

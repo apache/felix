@@ -30,6 +30,7 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.felix.deploymentadmin.AbstractDeploymentPackage;
+import org.apache.felix.deploymentadmin.Utils;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.deploymentadmin.BundleInfo;
@@ -37,7 +38,6 @@ import org.osgi.service.deploymentadmin.DeploymentException;
 import org.osgi.service.log.LogService;
 
 public class SnapshotCommand extends Command {
-
     private final GetStorageAreaCommand m_getStorageAreaCommand;
 
     public SnapshotCommand(GetStorageAreaCommand getStorageAreaCommand) {
@@ -78,18 +78,6 @@ public class SnapshotCommand extends Command {
                     session.getLog().log(LogService.LOG_WARNING, "Could not retrieve storage area of bundle '" + symbolicName + "', skipping it.");
                 }
             }
-        }
-    }
-
-    protected static void delete(File root, boolean deleteRoot) {
-        if (root.isDirectory()) {
-            File[] childs = root.listFiles();
-            for (int i = 0; i < childs.length; i++) {
-                delete(childs[i], true);
-            }
-        }
-        if (deleteRoot) {
-            root.delete();
         }
     }
 
@@ -216,7 +204,7 @@ public class SnapshotCommand extends Command {
 
         protected void doRun() throws Exception {
             try {
-                delete(m_root, false /* deleteRoot */);
+                Utils.delete(m_root, false /* deleteRoot */);
                 restore(m_snapshot, m_root);
             }
             finally {

@@ -48,8 +48,6 @@ import org.apache.felix.deploymentadmin.spi.UpdateCommand;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Version;
-import org.osgi.service.cm.ConfigurationException;
-import org.osgi.service.cm.ManagedService;
 import org.osgi.service.deploymentadmin.DeploymentAdmin;
 import org.osgi.service.deploymentadmin.DeploymentException;
 import org.osgi.service.deploymentadmin.DeploymentPackage;
@@ -58,10 +56,7 @@ import org.osgi.service.event.EventAdmin;
 import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.PackageAdmin;
 
-public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService, Constants {
-    /** Configuration PID used to dynamically configure DA at runtime. */
-    public static final String PID = "org.apache.felix.deploymentadmin";
-
+public class DeploymentAdminImpl implements DeploymentAdmin, Constants {
     public static final String PACKAGE_DIR = "packages";
     public static final String TEMP_DIR = "temp";
     public static final String PACKAGECONTENTS_DIR = "contents";
@@ -76,7 +71,6 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService, Con
     private volatile EventAdmin m_eventAdmin; /* will be injected by dependencymanager */
     private volatile LogService m_log; /* will be injected by dependencymanager */
     private volatile DeploymentSessionImpl m_session;
-    private volatile DeploymentAdminConfig m_config;
 
     private final Map /* BSN -> DeploymentPackage */m_packages = new HashMap();
     private final Semaphore m_semaphore = new Semaphore();
@@ -111,13 +105,6 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService, Con
      */
     public BundleContext getBundleContext() {
         return m_context;
-    }
-
-    /**
-     * @return the configuration for this {@link DeploymentAdmin} instance, never <code>null</code>.
-     */
-    public DeploymentAdminConfig getConfiguration() {
-        return m_config;
     }
 
     public DeploymentPackage getDeploymentPackage(Bundle bundle) {
@@ -228,7 +215,7 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService, Con
             }
 
             try {
-                m_session = new DeploymentSessionImpl(source, target, createInstallCommandChain(), this);
+                m_session = new DeploymentSessionImpl(source, target, createInstallCommandChain(), this, new DeploymentAdminConfig(m_context));
                 m_session.call(false /* ignoreExceptions */);
             }
             catch (DeploymentException de) {
@@ -294,9 +281,6 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService, Con
      * Called by dependency manager upon start of this component.
      */
     public void start() throws DeploymentException {
-        // Create a default configuration...
-        m_config = new DeploymentAdminConfig(m_context);
-
         File packageDir = m_context.getDataFile(PACKAGE_DIR);
         if (packageDir == null) {
             throw new DeploymentException(CODE_OTHER_ERROR, "Could not create directories needed for deployment package persistence");
@@ -327,15 +311,14 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService, Con
      */
     public void stop() {
         cancel();
-
-        m_config = null;
     }
 
     /**
      * Uninstalls the given deployment package from the system.
      * 
      * @param dp the deployment package to uninstall, cannot be <code>null</code>;
-     * @param forced <code>true</code> to force the uninstall, meaning that any exceptions are ignored during the uninstallation.
+     * @param forced <code>true</code> to force the uninstall, meaning that any exceptions are ignored during the
+     *            uninstallation.
      * @throws DeploymentException in case the uninstall failed.
      */
     public void uninstallDeploymentPackage(DeploymentPackage dp, boolean forced) throws DeploymentException {
@@ -357,7 +340,7 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService, Con
 
         try {
             try {
-                m_session = new DeploymentSessionImpl(source, target, createUninstallCommandChain(), this);
+                m_session = new DeploymentSessionImpl(source, target, createUninstallCommandChain(), this, new DeploymentAdminConfig(m_context));
                 m_session.call(forced /* ignoreExceptions */);
             }
             catch (DeploymentException de) {
@@ -378,10 +361,6 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService, Con
             sendCompleteEvent(source, target, succeeded);
             m_semaphore.release();
         }
-    }
-
-    public void updated(Dictionary properties) throws ConfigurationException {
-        m_config = new DeploymentAdminConfig(m_context, properties);
     }
 
     /**
@@ -449,8 +428,10 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService, Con
     /**
      * Searches for a deployment package that contains a bundle with the given symbolic name.
      * 
-     * @param symbolicName the symbolic name of the <em>bundle</em> to return the containing deployment package for, cannot be <code>null</code>.
-     * @return the deployment package containing the given bundle, or <code>null</code> if no deployment package contained such bundle.
+     * @param symbolicName the symbolic name of the <em>bundle</em> to return the containing deployment package for,
+     *            cannot be <code>null</code>.
+     * @return the deployment package containing the given bundle, or <code>null</code> if no deployment package
+     *         contained such bundle.
      */
     private AbstractDeploymentPackage getDeploymentPackageContainingBundleWithSymbolicName(String symbolicName) {
         for (Iterator i = m_packages.values().iterator(); i.hasNext();) {
@@ -621,7 +602,9 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService, Con
 
     private void verifySourcePackage(AbstractDeploymentPackage source) throws DeploymentException {
         // TODO this method should do a X-ref check between DP-manifest and JAR-entries...
-// m_log.log(LogService.LOG_ERROR, "Missing bundle '" + symbolicName + "/" + bundleInfos[i].getVersion() + " does not exist in target package!");
-// throw new DeploymentException(CODE_OTHER_ERROR, "Missing bundle '" + symbolicName + "/" + bundleInfos[i].getVersion() + " is not part of target package!");
+// m_log.log(LogService.LOG_ERROR, "Missing bundle '" + symbolicName + "/" + bundleInfos[i].getVersion() +
+// " does not exist in target package!");
+// throw new DeploymentException(CODE_OTHER_ERROR, "Missing bundle '" + symbolicName + "/" + bundleInfos[i].getVersion()
+// + " is not part of target package!");
     }
 }
