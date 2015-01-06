@@ -32,6 +32,8 @@ import java.util.zip.ZipInputStream;
 
 import junit.framework.TestCase;
 
+import org.apache.felix.deploymentadmin.Utils;
+
 /**
  * Test cases for {@link SnapshotCommand}.
  * 
@@ -89,7 +91,7 @@ public class SnapshotCommandTest extends TestCase {
                 file.delete();
             }
             else if (file.isDirectory()) {
-                SnapshotCommand.delete(file, true /* deleteRoot */);
+                Utils.delete(file, true /* deleteRoot */);
             }
             iter.remove();
         }
