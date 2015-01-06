@@ -3532,27 +3532,26 @@ public class Felix extends BundleImpl implements Framework
         }
 
         // Ask the service registry for all matching service references.
-        final List refList = m_registry.getServiceReferences(className, filter);
+        final Collection refList = m_registry.getServiceReferences(className, filter);
 
         // Filter on assignable references
         if (checkAssignable)
         {
-            for (int refIdx = 0; (refList != null) && (refIdx < refList.size()); refIdx++)
+            for (Iterator refIter = refList.iterator(); refIter.hasNext();)
             {
                 // Get the current service reference.
-                ServiceReference ref = (ServiceReference) refList.get(refIdx);
+                ServiceReference ref = (ServiceReference) refIter.next();
 
                 // Now check for castability.
                 if (!Util.isServiceAssignable(bundle, ref))
                 {
-                    refList.remove(refIdx);
-                    refIdx--;
+                    refIter.remove();
                 }
             }
         }
 
         // If the requesting bundle is the system bundle, ignore the effects of the findhooks
-        List resRefList = (bundle == this ? new ArrayList(refList) : refList);
+        Collection resRefList = (bundle == this ? new ArrayList(refList) : refList);
 
         // activate findhooks
         Set<ServiceReference<org.osgi.framework.hooks.service.FindHook>> findHooks =
