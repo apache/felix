@@ -239,7 +239,10 @@ public class CapabilitySet
                 if (existingCaps != null)
                 {
                     matches.addAll(existingCaps);
-                    matches.retainAll(caps);
+                    if (caps != m_capSet)
+                    {
+                        matches.retainAll(caps);
+                    }
                 }
             }
             else
