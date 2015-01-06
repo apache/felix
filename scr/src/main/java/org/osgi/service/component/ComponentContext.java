@@ -28,29 +28,11 @@ import org.osgi.framework.ServiceReference;
  * component instance has a unique Component Context.
  * 
  * <p>
- * A component instance may have an activate method. If a component instance has
- * a suitable and accessible activate method, this method will be called when a
- * component configuration is activated. If the activate method takes a
- * {@code ComponentContext} argument, it will be passed the component instance's
- * Component Context object. If the activate method takes a
- * {@code BundleContext} argument, it will be passed the component instance's
- * Bundle Context object. If the activate method takes a {@code Map} argument,
- * it will be passed an unmodifiable Map containing the component properties.
- * 
- * <p>
- * A component instance may have a deactivate method. If a component instance
- * has a suitable and accessible deactivate method, this method will be called
- * when the component configuration is deactivated. If the deactivate method
- * takes a {@code ComponentContext} argument, it will be passed the component
- * instance's Component Context object. If the deactivate method takes a
- * {@code BundleContext} argument, it will be passed the component instance's
- * Bundle Context object. If the deactivate method takes a {@code Map} argument,
- * it will be passed an unmodifiable Map containing the component properties. If
- * the deactivate method takes an {@code int} or {@code Integer} argument, it
- * will be passed the reason code for the component instance's deactivation.
+ * A component instance may obtain its Component Context object through its
+ * activate, modified, and deactivate methods.
  * 
  * @ThreadSafe
- * @author $Id: 8d2c1ae7d15b9ae109ce4e3e1b0dfae987d137e0 $
+ * @author $Id: 5499691841bcfbb0d35222564785af1a5a530c7f $
  */
 @ProviderType
 public interface ComponentContext {
