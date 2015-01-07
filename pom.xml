@@ -130,12 +130,11 @@
        <version>6.0.0</version>
        <scope>provided</scope>
     </dependency>
-	<dependency>
-	    <groupId>org.ow2.asm</groupId>
-	    <artifactId>asm-all</artifactId>
-	    <version>4.2</version>
-	    <scope>test</scope>
-	</dependency>
-    
+    <dependency>
+        <groupId>org.ow2.asm</groupId>
+        <artifactId>asm-all</artifactId>
+        <version>4.2</version>
+        <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>
