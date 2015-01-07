@@ -51,6 +51,8 @@ public interface FelixConstants extends org.osgi.framework.Constants
     String IMPLICIT_BOOT_DELEGATION_PROP = "felix.bootdelegation.implicit";
     String BOOT_CLASSLOADERS_PROP = "felix.bootdelegation.classloaders";
     String USE_LOCALURLS_PROP = "felix.jarurls";
+    String NATIVE_OS_NAME_ALIASES = "felix.native.osname.aliases";
+    String NATIVE_PROC_NAME_ALIASES = "felix.native.processor.aliases";
 
     // Missing OSGi constant for resolution directive.
     String RESOLUTION_DYNAMIC = "dynamic";

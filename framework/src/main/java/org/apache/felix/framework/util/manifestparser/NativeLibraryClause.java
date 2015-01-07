@@ -23,12 +23,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -88,6 +86,11 @@ public class NativeLibraryClause
     private static final String PROC_POWER_PC = "powerpc";
     private static final String PROC_SPARC = "sparc";
 
+
+    private static final Map<String, List<String>> OS_ALIASES = new HashMap<String, List<String>>();
+
+    private static final Map<String, List<String>> PROC_ALIASES = new HashMap<String, List<String>>();
+
     /* Storing the OS names in a map as this is quicker to look up than a list.
      */
     private static final Map<String, String> NORMALIZED_OS_NAMES;
@@ -96,6 +99,7 @@ public class NativeLibraryClause
         Map<String, String> m = new HashMap<String, String>();
         m.put(OS_AIX, "");
         m.put(OS_DIGITALUNIX, "");
+        m.put(OS_EPOC, "");
         m.put(OS_HPUX, "");
         m.put(OS_IRIX, "");
         m.put(OS_LINUX, "");
@@ -150,6 +154,49 @@ public class NativeLibraryClause
         this(library.m_libraryEntries, library.m_osnames, library.m_osversions,
             library.m_processors, library.m_languages,
             library.m_selectionFilter);
+    }
+
+    /**
+     * Initialize the processor and os name aliases from Felix Config.
+     * 
+     * @param config
+     */
+    public static synchronized void initializeNativeAliases(Map config)
+    {
+        String osNameAlias = (String) config.get(FelixConstants.NATIVE_OS_NAME_ALIASES);
+        String processorAlias = (String) config.get(FelixConstants.NATIVE_PROC_NAME_ALIASES);
+        
+        parseNativeAliases(osNameAlias, OS_ALIASES);
+        parseNativeAliases(processorAlias, PROC_ALIASES);
+    }
+
+    private static void parseNativeAliases(String aliasString, Map<String, List<String>> aliasMap)
+    {
+        StringTokenizer tokenizer = new StringTokenizer(aliasString, ",");
+        
+        while(tokenizer.hasMoreTokens())
+        {
+            String currentItem = tokenizer.nextToken();
+            String[] aliases = currentItem.split("\\|");
+            for(String currentAlias: aliases)
+            {
+                List<String> aliasList = aliasMap.get(currentAlias);
+                if(aliasList == null)
+                {
+                    aliasMap.put(currentAlias, new ArrayList<String>(Arrays.asList(aliases)));
+                }
+                else
+                {
+                    for(String newAliases: aliases)
+                    {
+                        if(!aliasList.contains(newAliases))
+                        {
+                            aliasList.add(newAliases);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public String[] getLibraryEntries()
@@ -473,168 +520,9 @@ public class NativeLibraryClause
         //Can't assume this has been normalized
         osName = normalizeOSName(osName);
 
-        List<String> result = null;
-        // 
-        if (osName.startsWith("win"))
-        {
-            // Per spec windows ce does not include win32 alias
-            if (osName.equals(OS_WINDOWS_CE))
-            {
-                result = Arrays.asList("windowsce", "wince", "windows ce");
-            }
-            else
-            {
-                //Accumulate windows aliases.  win32 may match many versions of windows.
-                Set<String> windowsOsList = new HashSet<String>();
+        List<String> result = OS_ALIASES.get(osName);
 
-                if (osName.equals(OS_WINDOWS_95)|| osName.equals(OS_WIN_32))
-                {
-                    windowsOsList.addAll(Arrays.asList("windows95", "win95",
-                        "windows 95", OS_WIN_32));
-                }
-
-                if (osName.equals(OS_WINDOWS_98) || osName.equals(OS_WIN_32))
-                {
-                    windowsOsList.addAll(Arrays.asList("windows98",
-                        "windows 98", OS_WIN_32));
-                }
-
-                if (osName.equals(OS_WINDOWS_NT) || osName.equals(OS_WIN_32))
-                {
-                    windowsOsList.addAll(Arrays.asList("windowsnt", "winnt",
-                        "windows nt", OS_WIN_32));
-                }
-
-                if (osName.equals(OS_WINDOWS_2000) || osName.equals(OS_WIN_32))
-                {
-                    windowsOsList.addAll(Arrays.asList("windows2000",
-                        "win2000", "windows 2000", OS_WIN_32));
-                }
-
-                if (osName.equals(OS_WINDOWS_2003) || osName.equals(OS_WIN_32))
-                {
-                    windowsOsList.addAll(Arrays.asList("windows2003",
-                        "win2003", "windows 2003", OS_WIN_32,
-                        "windows server 2003", "windowsserver2003"));
-                }
-
-                if (osName.equals(OS_WINDOWS_SERVER_2008) || osName.equals(OS_WIN_32))
-                {
-                    windowsOsList.addAll(Arrays.asList("windows2008",
-                        "win2008", "windows 2008", OS_WIN_32,
-                        "windows server 2008", "windowsserver2008"));
-                }
-
-                if (osName.equals(OS_WINDOWS_SERVER_2012) || osName.equals(OS_WIN_32))
-                {
-                    windowsOsList.addAll(Arrays.asList("windows2012",
-                        "win2012", "windows 2012", OS_WIN_32,
-                        "windows server 2012", "windowsserver2012"));
-                }
-
-                if (osName.equals(OS_WINDOWS_XP) || osName.equals(OS_WIN_32))
-                {
-                    windowsOsList.addAll(Arrays.asList("windowsxp", "winxp",
-                        "windows xp", OS_WIN_32));
-                }
-
-                if (osName.equals(OS_WINDOWS_VISTA) || osName.equals(OS_WIN_32))
-                {
-                    windowsOsList.addAll(Arrays.asList("windowsvista",
-                        "windows vista", OS_WIN_32));
-                }
-
-                if (osName.equals(OS_WINDOWS_7) || osName.equals(OS_WIN_32))
-                {
-                    windowsOsList.addAll(Arrays.asList("windows7", "windows 7",
-                        OS_WIN_32));
-                }
-
-                if (osName.equals(OS_WINDOWS_8) || osName.equals(OS_WIN_32))
-                {
-                    windowsOsList.addAll(Arrays.asList("windows8", "windows 8",
-                        OS_WIN_32));
-                }
-
-                if (osName.equals(OS_WINDOWS_9) || osName.equals(OS_WIN_32))
-                {
-                    windowsOsList.addAll(Arrays.asList("windows9", "windows 9",
-                        OS_WIN_32));
-                }
-
-                if (windowsOsList.isEmpty())
-                {
-                    windowsOsList.add(osName);
-                }
-                result = new ArrayList<String>(windowsOsList);
-            }
-
-        }
-        else if (osName.equals(OS_LINUX))
-        {
-            result = Collections.singletonList(OS_LINUX);
-        }
-        else if (osName.equals(OS_AIX))
-        {
-            result = Collections.singletonList(OS_AIX);
-        }
-        else if (osName.equals(OS_DIGITALUNIX))
-        {
-            result = Collections.singletonList(OS_DIGITALUNIX);
-        }
-        else if (osName.equals(OS_EPOC))
-        {
-            result = Arrays.asList(OS_EPOC, "symbianos");
-        }
-        else if (osName.equals(OS_HPUX))
-        {
-            result = Arrays.asList(OS_HPUX, "hp-ux");
-        }
-        else if (osName.equals(OS_IRIX))
-        {
-            result = Collections.singletonList(OS_IRIX);
-        }
-        else if (osName.equals(OS_MACOSX))
-        {
-            result = Arrays.asList(OS_MACOSX, "mac os x");
-        }
-        else if (osName.equals(OS_MACOS))
-        {
-            result = Arrays.asList(OS_MACOS, "mac os");
-        }
-        else if (osName.equals(OS_NETWARE))
-        {
-            result = Collections.singletonList(OS_NETWARE);
-        }
-        else if (osName.equals(OS_OPENBSD))
-        {
-            result = Collections.singletonList(OS_OPENBSD);
-        }
-        else if (osName.equals(OS_NETBSD))
-        {
-            result = Collections.singletonList(OS_NETBSD);
-        }
-        else if (osName.equals(OS_OS2))
-        {
-            result = Arrays.asList(OS_OS2, "os/2");
-        }
-        else if (osName.equals(OS_QNX))
-        {
-            result = Arrays.asList(OS_QNX, "procnto");
-        }
-        else if (osName.equals(OS_SOLARIS))
-        {
-            result = Collections.singletonList(OS_SOLARIS);
-        }
-        else if (osName.equals(OS_SUNOS))
-        {
-            result = Collections.singletonList(OS_SUNOS);
-        }
-        else if (osName.equals(OS_VXWORKS))
-        {
-            result = Collections.singletonList(OS_VXWORKS);
-        }
-        else
+        if(result == null)
         {
             result = Collections.singletonList(osName);
         }
@@ -647,45 +535,9 @@ public class NativeLibraryClause
         //Can't assume this has been normalized
         processor = normalizeProcessor(processor);
 
-        List<String> result = null;
-        if (processor.equals(PROC_X86_64))
-        {
-            result = Arrays.asList(PROC_X86_64, "amd64", "em64t", "x86_64");
-        }
-        else if (processor.equals(PROC_X86))
-        {
-            result = Arrays.asList(PROC_X86, "pentium", "i386", "i486", "i586",
-                "i686");
-        }
-        else if (processor.equals(PROC_68K))
-        {
-            result = Arrays.asList(PROC_68K);
-        }
-        else if (processor.equals(PROC_ALPHA))
-        {
-            result = Arrays.asList(PROC_ALPHA);
-        }
-        else if (processor.equals(PROC_IGNITE))
-        {
-            result = Arrays.asList(PROC_IGNITE, "psc1k");
-        }
-        else if (processor.equals(PROC_MIPS))
-        {
-            result = Arrays.asList(PROC_MIPS);
-        }
-        else if (processor.equals(PROC_PARISC))
-        {
-            result = Arrays.asList(PROC_PARISC);
-        }
-        else if (processor.equals(PROC_POWER_PC))
-        {
-            result = Arrays.asList(PROC_POWER_PC, "power", "ppc");
-        }
-        else if (processor.equals(PROC_SPARC))
-        {
-            result = Arrays.asList(PROC_SPARC);
-        }
-        else
+        List<String> result = PROC_ALIASES.get(processor);
+
+        if(result == null)
         {
             result = Collections.singletonList(processor);
         }

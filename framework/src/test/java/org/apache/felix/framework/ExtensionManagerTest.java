@@ -19,6 +19,7 @@
 package org.apache.felix.framework;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -28,12 +29,14 @@ import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 
 import org.apache.felix.framework.util.FelixConstants;
+import org.apache.felix.framework.util.manifestparser.NativeLibraryClause;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.BundleActivator;
@@ -79,6 +82,9 @@ public class ExtensionManagerTest {
         configMap.put(FelixConstants.FRAMEWORK_PROCESSOR, "x86_64");
         configMap.put(FelixConstants.FRAMEWORK_OS_NAME, "windows8");
         configMap.put(FelixConstants.FRAMEWORK_OS_VERSION, "6.3");
+        configMap.put(FelixConstants.NATIVE_OS_NAME_ALIASES, "windows8|windows 8|win32");
+        configMap.put(FelixConstants.NATIVE_PROC_NAME_ALIASES, "x86-64|amd64|em64t|x86_64");
+        NativeLibraryClause.initializeNativeAliases(configMap);
         ExtensionManager extensionManager = new ExtensionManager(logger,
                 configMap, null);
         BundleCapability nativeBundleCapability = extensionManager
@@ -88,16 +94,16 @@ public class ExtensionManagerTest {
                 "en",
                 nativeBundleCapability.getAttributes().get(
                         NativeNamespace.CAPABILITY_LANGUAGE_ATTRIBUTE));
-        assertEquals(
+        assertTrue(
                 "Native Processor should be same as framework Processor",
-                Arrays.asList("x86-64", "amd64", "em64t", "x86_64"),
+                Arrays.asList("x86-64", "amd64", "em64t", "x86_64").containsAll((List)
                 nativeBundleCapability.getAttributes().get(
-                        NativeNamespace.CAPABILITY_PROCESSOR_ATTRIBUTE));
-        assertEquals(
+                        NativeNamespace.CAPABILITY_PROCESSOR_ATTRIBUTE)));
+        assertTrue(
                 "Native OS Name should be the same as the framework os name",
-                Arrays.asList("windows8", "windows 8", "win32"),
+                Arrays.asList("windows8", "windows 8", "win32").containsAll((List)
                 nativeBundleCapability.getAttributes().get(
-                        NativeNamespace.CAPABILITY_OSNAME_ATTRIBUTE));
+                        NativeNamespace.CAPABILITY_OSNAME_ATTRIBUTE)));
         assertEquals(
                 "Native OS Version should be the same as the framework OS Version",
                 new Version("6.3"),
