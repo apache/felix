@@ -402,6 +402,9 @@ public class Felix extends BundleImpl implements Framework
             m_bootPkgs[i] = s;
         }
 
+        //Initialize Native Library Aliases
+        NativeLibraryClause.initializeNativeAliases(m_configMap);
+
         // Read the security default policy property
         m_securityDefaultPolicy = "true".equals(getProperty(FelixConstants.SECURITY_DEFAULT_POLICY));
 
@@ -4561,14 +4564,23 @@ public class Felix extends BundleImpl implements Framework
 
         // Set supported execution environments to default value,
         // if not explicitly configured.
-        if (!getConfig().containsKey(Constants.FRAMEWORK_EXECUTIONENVIRONMENT))
+        loadFromDefaultIfNotDefined(Constants.FRAMEWORK_EXECUTIONENVIRONMENT);
+
+        // Set supported native capabilities to default value,
+        // if not explicitly configured.
+        loadFromDefaultIfNotDefined(FelixConstants.NATIVE_OS_NAME_ALIASES);
+        loadFromDefaultIfNotDefined(FelixConstants.NATIVE_PROC_NAME_ALIASES);
+    }
+
+    private void loadFromDefaultIfNotDefined(String propertyName)
+    {
+        String s;
+        if (!getConfig().containsKey(propertyName))
         {
-            s = Util.getDefaultProperty(
-                m_logger, Constants.FRAMEWORK_EXECUTIONENVIRONMENT);
+            s = Util.getDefaultProperty(m_logger, propertyName);
             if (s != null)
             {
-                m_configMutableMap.put(
-                    Constants.FRAMEWORK_EXECUTIONENVIRONMENT, s);
+                m_configMutableMap.put(propertyName, s);
             }
         }
     }
