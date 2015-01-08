@@ -28,8 +28,10 @@ import java.util.ListIterator;
 import org.apache.felix.framework.util.ImmutableList;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
 import org.osgi.framework.AdminPermission;
+import org.osgi.framework.PackagePermission;
 import org.osgi.framework.hooks.weaving.WovenClass;
 import org.osgi.framework.wiring.BundleRequirement;
+import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWiring;
 
 class WovenClassImpl implements WovenClass, List<String>
@@ -58,13 +60,13 @@ class WovenClassImpl implements WovenClass, List<String>
         m_bytes = (bytes == null) ? m_bytes : bytes;
         completeImports(imports);
     }
-    
+
     synchronized void completeImports(List<String> imports)
     {
         m_imports = (imports == null) ? ImmutableList.newInstance(m_imports)
                 : ImmutableList.newInstance(imports);
     }
-    
+
     synchronized void completeDefine(Class definedClass)
     {
         m_definedClass = definedClass;
@@ -199,9 +201,20 @@ class WovenClassImpl implements WovenClass, List<String>
                 re.initCause(ex);
                 throw re;
             }
+            checkImport(s);
             return m_imports.add(s);
         }
         return false;
+    }
+
+    private void checkImport(String s)
+    {
+        SecurityManager sm = System.getSecurityManager();
+
+        if (sm != null)
+        {
+            sm.checkPermission(new PackagePermission(s, PackagePermission.IMPORT));
+        }
     }
 
     public synchronized boolean remove(Object o)
@@ -241,6 +254,7 @@ class WovenClassImpl implements WovenClass, List<String>
                 re.initCause(ex);
                 throw re;
             }
+            checkImport(s);
         }
         return m_imports.addAll(collection);
     }
@@ -267,6 +281,7 @@ class WovenClassImpl implements WovenClass, List<String>
                 re.initCause(ex);
                 throw re;
             }
+            checkImport(s);
         }
         return m_imports.addAll(i, collection);
     }
@@ -295,6 +310,12 @@ class WovenClassImpl implements WovenClass, List<String>
 
     public synchronized void clear()
     {
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null)
+        {
+            sm.checkPermission(new AdminPermission(m_wiring.getBundle(),
+                    AdminPermission.WEAVE));
+        }
         m_imports.clear();
     }
 
@@ -322,6 +343,7 @@ class WovenClassImpl implements WovenClass, List<String>
             re.initCause(ex);
             throw re;
         }
+        checkImport(s);
         return m_imports.set(i, s);
     }
 
@@ -344,6 +366,7 @@ class WovenClassImpl implements WovenClass, List<String>
             re.initCause(ex);
             throw re;
         }
+        checkImport(s);
         m_imports.add(i, s);
     }
 
@@ -396,7 +419,7 @@ class WovenClassImpl implements WovenClass, List<String>
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.osgi.framework.hooks.weaving.WovenClass#getState()
      */
     public synchronized int getState()
@@ -412,6 +435,15 @@ class WovenClassImpl implements WovenClass, List<String>
                 && (state == DEFINED || state == DEFINE_FAILED || state == TRANSFORMING_FAILED))
         {
             m_isComplete = true;
+            if (state == DEFINED || state == DEFINE_FAILED)
+            {
+                BundleProtectionDomain pd = (BundleProtectionDomain)
+                    ((BundleRevisionImpl) m_wiring.getRevision()).getProtectionDomain();
+                for (String s : m_imports)
+                {
+                    pd.addWoven(s);
+                }
+            }
         }
         if(state == TRANSFORMED)
         {

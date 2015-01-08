@@ -54,6 +54,7 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
+import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.Version;
 import org.osgi.framework.namespace.NativeNamespace;
 import org.osgi.framework.wiring.BundleCapability;
@@ -141,6 +142,22 @@ class ExtensionManager extends URLStreamHandler implements Content
     private volatile Bundle[] m_extensionsCache;
     private final Set m_names;
     private final Map m_sourceToExtensions;
+    private final List<ExtensionTuple> m_extensionTuples = Collections.synchronizedList(new ArrayList<ExtensionTuple>());
+
+    private static class ExtensionTuple
+    {
+        private final BundleActivator m_activator;
+        private final Bundle m_bundle;
+        private volatile boolean m_failed;
+        private volatile boolean m_started;
+
+        public ExtensionTuple(BundleActivator activator, Bundle bundle)
+        {
+            m_activator = activator;
+            m_bundle = bundle;
+        }
+
+    }
 
     // This constructor is only used for the private instance added to the parent
     // classloader.
@@ -406,7 +423,7 @@ class ExtensionManager extends URLStreamHandler implements Content
             {
                 exports = ManifestParser.parseExportHeader(
                     m_logger, m_systemBundleRevision,
-                    (String) ((BundleRevisionImpl) bundle.adapt(BundleRevision.class))
+                    (String) ((BundleRevisionImpl) bundle.adapt(BundleRevisionImpl.class))
                         .getHeaders().get(Constants.EXPORT_PACKAGE),
                     m_systemBundleRevision.getSymbolicName(), m_systemBundleRevision.getVersion());
                 exports = aliasSymbolicName(exports);
@@ -417,7 +434,7 @@ class ExtensionManager extends URLStreamHandler implements Content
                     bundle,
                     Logger.LOG_ERROR,
                     "Error parsing extension bundle export statement: "
-                    + ((BundleRevisionImpl) bundle.adapt(BundleRevision.class))
+                    + ((BundleRevisionImpl) bundle.adapt(BundleRevisionImpl.class))
                         .getHeaders().get(Constants.EXPORT_PACKAGE), ex);
                 return;
             }
@@ -443,7 +460,7 @@ class ExtensionManager extends URLStreamHandler implements Content
             throw ex;
         }
 
-        BundleRevisionImpl bri = (BundleRevisionImpl) bundle.adapt(BundleRevision.class);
+        BundleRevisionImpl bri = (BundleRevisionImpl) bundle.adapt(BundleRevisionImpl.class);
         List<BundleRequirement> reqs = bri.getDeclaredRequirements(BundleRevision.HOST_NAMESPACE);
         List<BundleCapability> caps = getCapabilities(BundleRevision.HOST_NAMESPACE);
         BundleWire bw = new BundleWireImpl(bri, reqs.get(0), m_systemBundleRevision, caps.get(0));
@@ -470,13 +487,18 @@ class ExtensionManager extends URLStreamHandler implements Content
      */
     void startExtensionBundle(Felix felix, BundleImpl bundle)
     {
-        Dictionary<?,?> headers = bundle.getHeaders();
+        Map<?,?> headers = bundle.adapt(BundleRevisionImpl.class).getHeaders();
         String activatorClass = (String) headers.get(Constants.EXTENSION_BUNDLE_ACTIVATOR);
+        boolean felixExtension = false;
         if (activatorClass == null)
+        {
+            felixExtension = true;
             activatorClass = (String) headers.get(FelixConstants.FELIX_EXTENSION_ACTIVATOR);
+        }
 
         if (activatorClass != null)
         {
+            ExtensionTuple tuple = null;
             try
             {
 // TODO: SECURITY - Should this consider security?
@@ -484,24 +506,91 @@ class ExtensionManager extends URLStreamHandler implements Content
                     felix.getClass().getClassLoader().loadClass(
                         activatorClass.trim()).newInstance();
 
-// TODO: EXTENSIONMANAGER - This is kind of hacky, can we improve it?
-                felix.m_activatorList.add(activator);
-
                 BundleContext context = felix._getBundleContext();
 
                 bundle.setBundleContext(context);
 
+// TODO: EXTENSIONMANAGER - This is kind of hacky, can we improve it?
+                if (!felixExtension)
+                {
+                    tuple = new ExtensionTuple(activator, bundle);
+                    m_extensionTuples.add(tuple);
+                }
+                else
+                {
+                    felix.m_activatorList.add(activator);
+                }
+
                 if ((felix.getState() == Bundle.ACTIVE) || (felix.getState() == Bundle.STARTING))
                 {
+                    if (tuple != null)
+                    {
+                        tuple.m_started = true;
+                    }
                     Felix.m_secureAction.startActivator(activator, context);
                 }
             }
             catch (Throwable ex)
             {
+                if (tuple != null)
+                {
+                    tuple.m_failed = true;
+                }
+                felix.fireFrameworkEvent(FrameworkEvent.ERROR, bundle,
+                            new BundleException("Unable to start Bundle", ex));
+
                 m_logger.log(bundle, Logger.LOG_WARNING,
                     "Unable to start Extension Activator", ex);
             }
         }
+    }
+
+    void startPendingExtensionBundles(Felix felix)
+    {
+        for (int i = 0;i < m_extensionTuples.size();i++)
+        {
+            if (!m_extensionTuples.get(i).m_started)
+            {
+                m_extensionTuples.get(i).m_started = true;
+                try
+                {
+                    Felix.m_secureAction.startActivator(m_extensionTuples.get(i).m_activator, felix._getBundleContext());
+                }
+                catch (Throwable ex)
+                {
+                    m_extensionTuples.get(i).m_failed = true;
+
+                    felix.fireFrameworkEvent(FrameworkEvent.ERROR, m_extensionTuples.get(i).m_bundle,
+                                new BundleException("Unable to start Bundle", BundleException.ACTIVATOR_ERROR, ex));
+
+                    m_logger.log(m_extensionTuples.get(i).m_bundle, Logger.LOG_WARNING,
+                        "Unable to start Extension Activator", ex);
+                }
+            }
+        }
+    }
+
+    void stopExtensionBundles(Felix felix)
+    {
+        for (int i = m_extensionTuples.size() - 1; i >= 0;i--)
+        {
+            if (m_extensionTuples.get(i).m_started && !m_extensionTuples.get(i).m_failed)
+            {
+                try
+                {
+                    Felix.m_secureAction.stopActivator(m_extensionTuples.get(i).m_activator, felix._getBundleContext());
+                }
+                catch (Throwable ex)
+                {
+                    felix.fireFrameworkEvent(FrameworkEvent.ERROR, m_extensionTuples.get(i).m_bundle,
+                                new BundleException("Unable to stop Bundle", BundleException.ACTIVATOR_ERROR, ex));
+
+                    m_logger.log(m_extensionTuples.get(i).m_bundle, Logger.LOG_WARNING,
+                        "Unable to stop Extension Activator", ex);
+                }
+            }
+        }
+        m_extensionTuples.clear();
     }
 
     /**

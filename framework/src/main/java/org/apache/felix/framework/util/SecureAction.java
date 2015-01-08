@@ -1448,7 +1448,7 @@ public class SecureAction
             rh.end();
         }
     }
-    
+
     public void invokeWovenClassListener(
             org.osgi.framework.hooks.weaving.WovenClassListener wcl,
             org.osgi.framework.hooks.weaving.WovenClass wc)
@@ -1785,6 +1785,10 @@ public class SecureAction
                     return new JarFile((File) arg1);
                 case DELETE_FILEONEXIT_ACTION:
                     ((File) arg1).deleteOnExit();
+                    return null;
+                case INVOKE_WOVEN_CLASS_LISTENER:
+                    ((org.osgi.framework.hooks.weaving.WovenClassListener) arg1).modified(
+                        (org.osgi.framework.hooks.weaving.WovenClass) arg2);
                     return null;
             }
 

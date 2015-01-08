@@ -197,6 +197,7 @@ public class EventDispatcher
             catch (IllegalStateException ex)
             {
                 // Bundle context is no longer valid, so just return.
+                return null;
             }
 
             Map<BundleContext, List<ListenerInfo>> listeners = null;
