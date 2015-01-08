@@ -38,6 +38,7 @@ public class InterpolationHelper {
     private static final String DELIM_START = "${";
     private static final String DELIM_STOP = "}";
     private static final String MARKER = "$__";
+    private static final String ENV_PREFIX = "env:";
 
 
     /**
@@ -299,6 +300,18 @@ public class InterpolationHelper {
         // Using the start and stop delimiter indices, extract
         // the first, deepest nested variable placeholder.
         String variable = val.substring(startDelim + DELIM_START.length(), stopDelim);
+        String org = variable;
+
+        // Strip expansion modifiers
+        int idx1 = variable.lastIndexOf(":-");
+        int idx2 = variable.lastIndexOf(":+");
+        int idx = idx1 >= 0 && idx2 >= 0 ? Math.min(idx1, idx2) : idx1 >= 0 ? idx1 : idx2;
+        String op = null;
+        if (idx >= 0 && idx < variable.length())
+        {
+            op = variable.substring(idx);
+            variable = variable.substring(0, idx);
+        }
 
         // Verify that this is not a recursive variable reference.
         if (cycleMap.get(variable) != null)
@@ -315,11 +328,7 @@ public class InterpolationHelper {
         }
         if (substValue == null)
         {
-            if (variable.length() <= 0)
-            {
-                substValue = "";
-            }
-            else
+            if (variable.length() > 0)
             {
                 if (callback != null)
                 {
@@ -329,19 +338,42 @@ public class InterpolationHelper {
                 {
                     substValue = System.getProperty(variable);
                 }
-                if (substValue == null)
+            }
+        }
+
+        if (op != null)
+        {
+            if (op.startsWith(":-"))
+            {
+                if (substValue == null || substValue.isEmpty())
                 {
-                    if (defaultsToEmptyString)
-                    {
-                        substValue = "";
-                    }
-                    else
-                    {
-                        // alters the original token to avoid infinite recursion
-                        // altered tokens are reverted in substVarsPreserveUnresolved()
-                        substValue = MARKER + "{" + variable + "}";
-                    }
+                    substValue = op.substring(":-".length());
                 }
+            }
+            else if (op.startsWith(":+"))
+            {
+                if (substValue != null && !substValue.isEmpty())
+                {
+                    substValue = op.substring(":+".length());
+                }
+            }
+            else
+            {
+                throw new IllegalArgumentException("Bad substitution: ${" + org + "}");
+            }
+        }
+
+        if (substValue == null)
+        {
+            if (defaultsToEmptyString)
+            {
+                substValue = "";
+            }
+            else
+            {
+                // alters the original token to avoid infinite recursion
+                // altered tokens are reverted in substVarsPreserveUnresolved()
+                substValue = MARKER + "{" + variable + "}";
             }
         }
 
@@ -391,13 +423,20 @@ public class InterpolationHelper {
         public String getValue(String key)
         {
             String value = null;
-            if (context != null)
+            if (key.startsWith(ENV_PREFIX))
             {
-                value = context.getProperty(key);
+                value = System.getenv(key.substring(ENV_PREFIX.length()));
             }
-            if (value == null)
+            else
             {
-                value = System.getProperty(key, "");
+                if (context != null)
+                {
+                    value = context.getProperty(key);
+                }
+                if (value == null)
+                {
+                    value = System.getProperty(key);
+                }
             }
             return value;
         }
