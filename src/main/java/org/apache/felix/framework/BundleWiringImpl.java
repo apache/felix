@@ -2075,23 +2075,23 @@ public class BundleWiringImpl implements BundleWiring
                     // as a race condition, doing any necessary clean up in
                     // the error handling.
                     Felix felix = ((BundleImpl) m_wiring.m_revision.getBundle()).getFramework();
-                    
+
                     Set<ServiceReference<WeavingHook>> hooks =
                         felix.getHooks(WeavingHook.class);
-                    
-                    Set<ServiceReference<WovenClassListener>> wovenClassListeners = 
+
+                    Set<ServiceReference<WovenClassListener>> wovenClassListeners =
                         felix.getHooks(WovenClassListener.class);
-                    
+
                     WovenClassImpl wci = null;
                     if (!hooks.isEmpty())
                     {
                         // Create woven class to be used for hooks.
                         wci = new WovenClassImpl(name, m_wiring, bytes);
-                        try 
+                        try
                         {
                             transformClass(felix, wci, hooks, wovenClassListeners,
                                     name, bytes);
-                        } 
+                        }
                         catch (Error e)
                         {
                             // Mark the woven class as incomplete.
@@ -2129,12 +2129,12 @@ public class BundleWiringImpl implements BundleWiring
                         }
                     }
 
-                    try 
+                    try
                     {
                         clazz = defineClass(felix, wovenClassListeners, wci, name,
                                 clazz, bytes, content, pkgName, lock);
-                    } 
-                    catch (ClassFormatError e) 
+                    }
+                    catch (ClassFormatError e)
                     {
                         if(wci != null)
                         {
@@ -2182,7 +2182,7 @@ public class BundleWiringImpl implements BundleWiring
                 Set<ServiceReference<WovenClassListener>> wovenClassListeners,
                 WovenClassImpl wci, String name, Class clazz, byte[] bytes,
                 Content content, String pkgName, Object lock)
-                        throws ClassFormatError 
+                        throws ClassFormatError
         {
 
             try
@@ -2385,7 +2385,7 @@ public class BundleWiringImpl implements BundleWiring
                 Set<ServiceReference<WeavingHook>> hooks,
                 Set<ServiceReference<WovenClassListener>> wovenClassListeners,
                 String name, byte[] bytes) throws Error {
-      
+
             // Loop through hooks in service ranking order.
             for (ServiceReference<WeavingHook> sr : hooks)
             {
@@ -2430,7 +2430,7 @@ public class BundleWiringImpl implements BundleWiring
             wci.setState(WovenClass.TRANSFORMED);
             callWovenClassListeners(felix, wovenClassListeners, wci);
         }
-        
+
         protected void callWovenClassListeners(Felix felix, Set<ServiceReference<WovenClassListener>> wovenClassListeners, WovenClass wovenClass)
         {
             if(wovenClassListeners != null)
@@ -2438,15 +2438,15 @@ public class BundleWiringImpl implements BundleWiring
                 for(ServiceReference<WovenClassListener> currentWovenClassListenerRef : wovenClassListeners)
                 {
                     WovenClassListener currentWovenClassListner = felix.getService(felix, currentWovenClassListenerRef, false);
-                    try 
+                    try
                     {
                         BundleRevisionImpl.getSecureAction().invokeWovenClassListener(currentWovenClassListner, wovenClass);
-                    } 
-                    catch (Exception e) 
+                    }
+                    catch (Exception e)
                     {
                         m_logger.log(Logger.LOG_ERROR, "Woven Class Listner failed.", e);
-                    } 
-                    finally 
+                    }
+                    finally
                     {
                         felix.ungetService(felix, currentWovenClassListenerRef, null);
                     }

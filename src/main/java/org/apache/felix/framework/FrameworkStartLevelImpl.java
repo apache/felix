@@ -126,8 +126,10 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
 
         synchronized (m_requests)
         {
-            // Start thread if necessary.
-            startThread();
+            if (m_thread == null)
+            {
+                throw new IllegalStateException("No inital startlevel yet");
+            }
             // Queue request.
             m_requestListeners.add(listeners);
             m_requests.add(new Integer(startlevel));

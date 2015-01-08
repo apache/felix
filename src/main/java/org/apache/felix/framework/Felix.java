@@ -83,6 +83,7 @@ import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.PackagePermission;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceException;
 import org.osgi.framework.ServiceFactory;
@@ -617,18 +618,15 @@ public class Felix extends BundleImpl implements Framework
         return true;
     }
 
-    /**
-     * This method initializes the framework, which is comprised of resolving
-     * the system bundle, reloading any cached bundles, and activating the system
-     * bundle. The framework is left in the <tt>Bundle.STARTING</tt> state and
-     * reloaded bundles are in the <tt>Bundle.INSTALLED</tt> state. After
-     * successfully invoking this method, <tt>getBundleContext()</tt> will
-     * return a valid <tt>BundleContext</tt> for the system bundle. To finish
-     * starting the framework, invoke the <tt>start()</tt> method.
-     *
-     * @throws org.osgi.framework.BundleException if any error occurs.
-    **/
+
     public void init() throws BundleException
+    {
+        init((FrameworkListener[]) null);
+    }
+    /**
+     * @see org.osgi.framework.launch.Framework#init(org.osgi.framework.FrameworkListener[])
+     */
+    public void init(final FrameworkListener... listeners) throws BundleException
     {
         // The system bundle can only be initialized if it currently isn't started.
         acquireBundleLock(this,
@@ -825,6 +823,15 @@ public class Felix extends BundleImpl implements Framework
                 // so create a gate for that purpose.
                 m_shutdownGate = new ThreadGate();
 
+                // add framework listeners
+                if ( listeners != null )
+                {
+                    for(final FrameworkListener fl : listeners)
+                    {
+                        addFrameworkListener(this, fl);
+                    }
+                }
+
                 // Start services
                 m_fwkWiring.start();
                 m_fwkStartLevel.start();
@@ -892,6 +899,9 @@ public class Felix extends BundleImpl implements Framework
                     }
                 }
 
+                m_extensionManager.startPendingExtensionBundles(Felix.this);
+                m_fwkWiring.refreshBundles(null);
+
                 // Clear the cache of classes coming from the system bundle.
                 // This is only used for Felix.getBundle(Class clazz) to speed
                 // up class lookup for the system bundle.
@@ -904,6 +914,14 @@ public class Felix extends BundleImpl implements Framework
         finally
         {
             releaseBundleLock(this);
+
+            if ( listeners != null )
+            {
+                for(final FrameworkListener fl : listeners)
+                {
+                    removeFrameworkListener(this, fl);
+                }
+            }
         }
     }
 
@@ -4398,6 +4416,13 @@ public class Felix extends BundleImpl implements Framework
 
     boolean impliesBundlePermission(BundleProtectionDomain bundleProtectionDomain, Permission permission, boolean direct)
     {
+        if (direct && permission instanceof PackagePermission)
+        {
+            if (bundleProtectionDomain.impliesWoven(permission))
+            {
+                return true;
+            }
+        }
         if (m_securityProvider != null)
         {
             return m_securityProvider.hasBundlePermission(bundleProtectionDomain, permission, direct);
@@ -4782,10 +4807,23 @@ public class Felix extends BundleImpl implements Framework
             m_activatorList.add(0, new URLHandlersActivator(m_configMap, Felix.this));
 
             // Start all activators.
-            for (int i = 0; i < m_activatorList.size(); i++)
+            for (Iterator<BundleActivator> iter = m_activatorList.iterator(); iter.hasNext(); )
             {
-                Felix.m_secureAction.startActivator(
-                    (BundleActivator) m_activatorList.get(i), context);
+                try
+                {
+                    Felix.m_secureAction.startActivator(
+                        iter.next(), context);
+                }
+                catch (Throwable throwable)
+                {
+                    iter.remove();
+                    fireFrameworkEvent(FrameworkEvent.ERROR, context.getBundle(),
+                            new BundleException("Unable to start Bundle", throwable));
+                    m_logger.log(
+                        Logger.LOG_WARNING,
+                        "Exception starting a system bundle activator.",
+                        throwable);
+                }
             }
         }
 
@@ -4860,6 +4898,7 @@ public class Felix extends BundleImpl implements Framework
                 ((BundleImpl) bundles[i]).close();
             }
 
+            m_extensionManager.stopExtensionBundles(Felix.this);
             // Stop all system bundle activators.
             for (int i = 0; i < m_activatorList.size(); i++)
             {
@@ -4870,13 +4909,14 @@ public class Felix extends BundleImpl implements Framework
                 }
                 catch (Throwable throwable)
                 {
+                    fireFrameworkEvent(FrameworkEvent.ERROR, context.getBundle(),
+                        new BundleException("Unable to stop Bundle", throwable));
                     m_logger.log(
                         Logger.LOG_WARNING,
                         "Exception stopping a system bundle activator.",
                         throwable);
                 }
             }
-
             if (m_securityManager != null)
             {
                 System.setSecurityManager(null);
@@ -5334,39 +5374,6 @@ public class Felix extends BundleImpl implements Framework
     Object getContentHandlerService(String mimeType)
     {
         return m_urlHandlersActivator.getContentHandlerService(mimeType);
-    }
-
-    /**
-     * @see org.osgi.framework.launch.Framework#init(org.osgi.framework.FrameworkListener[])
-     */
-    public void init(final FrameworkListener... listeners) throws BundleException
-    {
-        // add framework listeners
-        if ( listeners != null )
-        {
-            for(final FrameworkListener fl : listeners)
-            {
-                addFrameworkListener(this, fl);
-            }
-        }
-
-        // call init
-        try
-        {
-            this.init();
-        }
-
-        // remove framework listeners
-        finally
-        {
-            if ( listeners != null )
-            {
-                for(final FrameworkListener fl : listeners)
-                {
-                    removeFrameworkListener(this, fl);
-                }
-            }
-        }
     }
 
     Collection<BundleCapability> findProviders(final Requirement requirement)
