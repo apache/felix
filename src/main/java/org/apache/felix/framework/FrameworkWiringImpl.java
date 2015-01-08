@@ -125,6 +125,11 @@ class FrameworkWiringImpl implements FrameworkWiring, Runnable
                 new AdminPermission(m_felix, AdminPermission.RESOLVE));
         }
 
+        if (m_thread == null)
+        {
+            return false;
+        }
+
         return m_felix.resolveBundles(bundles);
     }
 

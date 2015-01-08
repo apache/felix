@@ -33,6 +33,8 @@ import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.security.CodeSource;
 import java.security.Permission;
+import java.security.PermissionCollection;
+import java.security.Permissions;
 import java.security.ProtectionDomain;
 import java.security.cert.Certificate;
 import java.util.ArrayList;
@@ -44,6 +46,7 @@ import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.cache.JarContent;
+import org.osgi.framework.PackagePermission;
 
 import org.osgi.framework.wiring.BundleRevision;
 
@@ -372,6 +375,7 @@ public class BundleProtectionDomain extends ProtectionDomain
     private final int m_hashCode;
     private final String m_toString;
     private final WeakReference m_revision;
+    private volatile PermissionCollection m_woven;
 
     BundleProtectionDomain(Felix felix, BundleImpl bundle, Object certificates)
         throws MalformedURLException
@@ -410,6 +414,20 @@ public class BundleProtectionDomain extends ProtectionDomain
         Felix felix = (Felix) m_felix.get();
         return (felix != null) ?
             felix.impliesBundlePermission(this, permission, true) : false;
+    }
+
+    boolean impliesWoven(Permission permission)
+    {
+        return m_woven != null && m_woven.implies(permission);
+    }
+
+    synchronized void addWoven(String s)
+    {
+        if (m_woven == null)
+        {
+            m_woven = new Permissions();
+        }
+        m_woven.add(new PackagePermission(s, PackagePermission.IMPORT));
     }
 
     BundleImpl getBundle()

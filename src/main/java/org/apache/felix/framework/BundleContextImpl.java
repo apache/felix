@@ -529,6 +529,14 @@ class BundleContextImpl implements FelixBundleContext
     public <S> ServiceObjects<S> getServiceObjects(final ServiceReference<S> ref)
     {
     	checkValidity();
+
+        Object sm = System.getSecurityManager();
+
+        if (sm != null)
+        {
+           ((SecurityManager) sm).checkPermission(new ServicePermission(ref, ServicePermission.GET));
+        }
+
         ServiceRegistrationImpl reg =
                 ((ServiceRegistrationImpl.ServiceReferenceImpl) ref).getRegistration();
         if ( reg.isValid() )
@@ -546,7 +554,7 @@ class BundleContextImpl implements FelixBundleContext
         private final ServiceReference<S> m_ref;
 
         private final List<S> srvObjects = new ArrayList<S>();
-        
+
         public ServiceObjectsImpl(final ServiceReference<S> ref)
         {
             this.m_ref = ref;
@@ -572,21 +580,21 @@ class BundleContextImpl implements FelixBundleContext
                 }
 
                 srvObj = m_felix.getService(m_bundle, m_ref, true);
-            } 
-            else 
+            }
+            else
             {
             	// getService handles singleton and bundle scope
             	srvObj = BundleContextImpl.this.getService(m_ref);
             }
-            
+
             if ( srvObj != null )
             {
             	synchronized ( srvObjects )
             	{
             		srvObjects.add(srvObj);
             	}
-            } 
-            
+            }
+
             return srvObj;
         }
 
@@ -595,22 +603,22 @@ class BundleContextImpl implements FelixBundleContext
         	if ( srvObj != null )
         	{
                 // check if this object was returned by this service objects
-                synchronized ( srvObjects ) 
+                synchronized ( srvObjects )
                 {
 	                boolean found = false;
 	                int i = 0;
-	                while ( !found && i < srvObjects.size() ) 
+	                while ( !found && i < srvObjects.size() )
 	                {
 	                	found = srvObjects.get(i) == srvObj;
 	                	i++;
 	                }
-	                if ( !found ) 
+	                if ( !found )
 	                {
-	                	throw new IllegalArgumentException();	                	
+	                	throw new IllegalArgumentException();
 	                }
 	                srvObjects.remove(i-1);
                 }
-        		
+
         	}
             // special handling for prototype scope
             if ( m_ref.getProperty(Constants.SERVICE_SCOPE) == Constants.SCOPE_PROTOTYPE )
@@ -618,7 +626,7 @@ class BundleContextImpl implements FelixBundleContext
                 checkValidity();
 
                 // Unget the specified service.
-                if ( !m_felix.ungetService(m_bundle, m_ref, srvObj) ) 
+                if ( !m_felix.ungetService(m_bundle, m_ref, srvObj) )
                 {
                 	throw new IllegalArgumentException();
                 }
