@@ -162,7 +162,6 @@ public class InterpolationHelperTest extends TestCase {
         assertEquals("$\\{var}bc", map1.get("abc"));
     }
 
-    @Test
     public void testPreserveUnresolved() {
         Map<String, String> props = new HashMap<String, String>();
         props.put("a", "${b}");
@@ -175,5 +174,29 @@ public class InterpolationHelperTest extends TestCase {
 
         props.put("c", "${d}${d}");
         assertEquals("${d}${d}", InterpolationHelper.substVars("${d}${d}", "c", null, props, null, false, false, false));
+    }
+    
+    public void testExpansion() {
+        Map<String, String> props = new LinkedHashMap<String, String>();
+        props.put("a", "foo");
+        props.put("b", "");
+
+        props.put("a_cm", "${a:-bar}");
+        props.put("b_cm", "${b:-bar}");
+        props.put("c_cm", "${c:-bar}");
+
+        props.put("a_cp", "${a:+bar}");
+        props.put("b_cp", "${b:+bar}");
+        props.put("c_cp", "${c:+bar}");
+
+        InterpolationHelper.performSubstitution(props);
+
+        assertEquals("foo", props.get("a_cm"));
+        assertEquals("bar", props.get("b_cm"));
+        assertEquals("bar", props.get("c_cm"));
+
+        assertEquals("bar", props.get("a_cp"));
+        assertEquals("", props.get("b_cp"));
+        assertEquals("", props.get("c_cp"));
     }
 }
