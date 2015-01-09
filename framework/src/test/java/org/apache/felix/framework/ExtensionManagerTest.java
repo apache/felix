@@ -82,8 +82,8 @@ public class ExtensionManagerTest {
         configMap.put(FelixConstants.FRAMEWORK_PROCESSOR, "x86_64");
         configMap.put(FelixConstants.FRAMEWORK_OS_NAME, "windows8");
         configMap.put(FelixConstants.FRAMEWORK_OS_VERSION, "6.3");
-        configMap.put(FelixConstants.NATIVE_OS_NAME_ALIASES, "windows8|windows 8|win32");
-        configMap.put(FelixConstants.NATIVE_PROC_NAME_ALIASES, "x86-64|amd64|em64t|x86_64");
+        configMap.put(FelixConstants.NATIVE_OS_NAME_ALIAS_PREFIX + ".windows8", "windows 8,win32");
+        configMap.put(FelixConstants.NATIVE_PROC_NAME_ALIAS_PREFIX + ".x86-64", "amd64,em64t,x86_64");
         NativeLibraryClause.initializeNativeAliases(configMap);
         ExtensionManager extensionManager = new ExtensionManager(logger,
                 configMap, null);
