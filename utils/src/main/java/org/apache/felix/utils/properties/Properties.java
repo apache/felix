@@ -209,12 +209,11 @@ public class Properties extends AbstractMap<String, String> {
             public Iterator<Entry<String, String>> iterator() {
                 return new Iterator<Entry<String, String>>() {
                     final Iterator<Entry<String, String>> keyIterator = storage.entrySet().iterator();
-                    Entry<String, String> entry;
                     public boolean hasNext() {
                         return keyIterator.hasNext();
                     }
                     public Entry<String, String> next() {
-                        entry = keyIterator.next();
+                        final Entry<String, String> entry = keyIterator.next();
                         return new Entry<String, String>() {
                             public String getKey() {
                                 return entry.getKey();
