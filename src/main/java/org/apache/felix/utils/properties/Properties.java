@@ -32,9 +32,11 @@ import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.AbstractMap;
+import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -202,7 +204,47 @@ public class Properties extends AbstractMap<String, String> {
 
     @Override
     public Set<Entry<String, String>> entrySet() {
-        return storage.entrySet();
+        return new AbstractSet<Entry<String, String>>() {
+            @Override
+            public Iterator<Entry<String, String>> iterator() {
+                return new Iterator<Entry<String, String>>() {
+                    final Iterator<Entry<String, String>> keyIterator = storage.entrySet().iterator();
+                    Entry<String, String> entry;
+                    public boolean hasNext() {
+                        return keyIterator.hasNext();
+                    }
+                    public Entry<String, String> next() {
+                        entry = keyIterator.next();
+                        return new Entry<String, String>() {
+                            public String getKey() {
+                                return entry.getKey();
+                            }
+                            public String getValue() {
+                                return entry.getValue();
+                            }
+                            public String setValue(String value) {
+                                String old = entry.setValue(value);
+                                if (old == null || !old.equals(value)) {
+                                    Layout l = layout.get(entry.getKey());
+                                    if (l != null) {
+                                        l.clearValue();
+                                    }
+                                }
+                                return old;
+                            }
+                        };
+                    }
+                    public void remove() {
+                        keyIterator.remove();
+                    }
+                };
+            }
+
+            @Override
+            public int size() {
+                return storage.size();
+            }
+        };
     }
 
     /**
@@ -281,6 +323,15 @@ public class Properties extends AbstractMap<String, String> {
             result.add(storage.get(key));
         }
         return result;
+    }
+
+    public List<String> getComments(String key) {
+        if (layout.containsKey(key)) {
+            if (layout.get(key).getCommentLines() != null) {
+                return new ArrayList<String>(layout.get(key).getCommentLines());
+            }
+        }
+        return new ArrayList<String>();
     }
 
     @Override
