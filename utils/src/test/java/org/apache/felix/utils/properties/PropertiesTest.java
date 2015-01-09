@@ -16,6 +16,8 @@
  */
 package org.apache.felix.utils.properties;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
@@ -238,4 +240,27 @@ public class PropertiesTest extends TestCase {
         assertEquals(KEY1A + " = " + VALUE1 + "\\", rawValue.get(0));
         assertEquals(VALUE1, rawValue.get(1));
     }
+
+    public void testEntrySetValue() throws Exception {
+        properties.put(KEY1, VALUE1);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        properties.save(baos);
+
+        properties = new Properties();
+        properties.load(new ByteArrayInputStream(baos.toByteArray()));
+        assertEquals(VALUE1, properties.get(KEY1));
+        for (Map.Entry<String, String> entry : properties.entrySet()) {
+            entry.setValue(entry.getValue() + "x");
+        }
+        assertEquals(VALUE1 + "x", properties.get(KEY1));
+
+        baos = new ByteArrayOutputStream();
+        properties.save(baos);
+
+        properties = new Properties();
+        properties.load(new ByteArrayInputStream(baos.toByteArray()));
+        assertEquals(VALUE1 + "x", properties.get(KEY1));
+    }
+
 }
