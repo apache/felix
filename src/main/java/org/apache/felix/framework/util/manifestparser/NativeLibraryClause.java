@@ -91,45 +91,6 @@ public class NativeLibraryClause
 
     private static final Map<String, List<String>> PROC_ALIASES = new HashMap<String, List<String>>();
 
-    /* Storing the OS names in a map as this is quicker to look up than a list.
-     */
-    private static final Map<String, String> NORMALIZED_OS_NAMES;
-    static
-    {
-        Map<String, String> m = new HashMap<String, String>();
-        m.put(OS_AIX, "");
-        m.put(OS_DIGITALUNIX, "");
-        m.put(OS_EPOC, "");
-        m.put(OS_HPUX, "");
-        m.put(OS_IRIX, "");
-        m.put(OS_LINUX, "");
-        m.put(OS_MACOS, "");
-        m.put(OS_NETBSD, "");
-        m.put(OS_NETWARE, "");
-        m.put(OS_OPENBSD, "");
-        m.put(OS_OS2, "");
-        m.put(OS_QNX, "");
-        m.put(OS_SOLARIS, "");
-        m.put(OS_SUNOS, "");
-        m.put(OS_VXWORKS, "");
-        m.put(OS_WINDOWS_2000, "");
-        m.put(OS_WINDOWS_2003, "");
-        m.put(OS_WINDOWS_7, "");
-        m.put(OS_WINDOWS_8, "");
-        m.put(OS_WINDOWS_9, "");
-        m.put(OS_WINDOWS_95, "");
-        m.put(OS_WINDOWS_98, "");
-        m.put(OS_WINDOWS_CE, "");
-        m.put(OS_WINDOWS_NT, "");
-        m.put(OS_WINDOWS_SERVER_2008, "");
-        m.put(OS_WINDOWS_SERVER_2012, "");
-        m.put(OS_WINDOWS_VISTA, "");
-        m.put(OS_WINDOWS_XP, "");
-        m.put(OS_WIN_32, "");
-
-        NORMALIZED_OS_NAMES = Collections.unmodifiableMap(m);
-    }
-
     private final String[] m_libraryEntries;
     private final String[] m_osnames;
     private final String[] m_processors;
@@ -161,42 +122,80 @@ public class NativeLibraryClause
      * 
      * @param config
      */
-    public static synchronized void initializeNativeAliases(Map config)
+    public static synchronized void initializeNativeAliases(Map configMap)
     {
-        String osNameAlias = (String) config.get(FelixConstants.NATIVE_OS_NAME_ALIASES);
-        String processorAlias = (String) config.get(FelixConstants.NATIVE_PROC_NAME_ALIASES);
-        
-        parseNativeAliases(osNameAlias, OS_ALIASES);
-        parseNativeAliases(processorAlias, PROC_ALIASES);
+        Map<String, String> osNameKeyMap = getAllKeysWithPrefix(FelixConstants.NATIVE_OS_NAME_ALIAS_PREFIX, configMap);
+
+        Map<String, String> processorKeyMap = getAllKeysWithPrefix(FelixConstants.NATIVE_PROC_NAME_ALIAS_PREFIX, configMap);
+
+        parseNativeAliases(osNameKeyMap, OS_ALIASES);
+        parseNativeAliases(processorKeyMap, PROC_ALIASES);
     }
 
-    private static void parseNativeAliases(String aliasString, Map<String, List<String>> aliasMap)
+    private static void parseNativeAliases(Map<String, String> aliasStringMap, Map<String, List<String>> aliasMap)
     {
-        StringTokenizer tokenizer = new StringTokenizer(aliasString, ",");
-        
-        while(tokenizer.hasMoreTokens())
+        for(Map.Entry<String, String> aliasEntryString: aliasStringMap.entrySet())
         {
-            String currentItem = tokenizer.nextToken();
-            String[] aliases = currentItem.split("\\|");
-            for(String currentAlias: aliases)
+            String currentAliasKey = aliasEntryString.getKey();
+
+            String currentNormalizedName = currentAliasKey.substring(currentAliasKey.lastIndexOf(".")+1);
+
+            String currentAliasesString = aliasEntryString.getValue();
+
+            if(currentAliasesString != null)
             {
-                List<String> aliasList = aliasMap.get(currentAlias);
-                if(aliasList == null)
+                String[] aliases = currentAliasesString.split(",");
+                List<String> fullAliasList = new ArrayList<String>();
+                //normalized name is always first.
+                fullAliasList.add(currentNormalizedName);
+                fullAliasList.addAll(Arrays.asList(aliases));
+                aliasMap.put(currentNormalizedName, fullAliasList);
+                for(String currentAlias: aliases)
                 {
-                    aliasMap.put(currentAlias, new ArrayList<String>(Arrays.asList(aliases)));
-                }
-                else
-                {
-                    for(String newAliases: aliases)
+                    List<String> aliasList = aliasMap.get(currentAlias);
+                    if(aliasList == null)
                     {
-                        if(!aliasList.contains(newAliases))
+                        aliasMap.put(currentAlias, fullAliasList);
+                    }
+                    else
+                    {
+                        for(String newAliases: aliases)
                         {
-                            aliasList.add(newAliases);
+                            if(!aliasList.contains(newAliases))
+                            {
+                                aliasList.add(newAliases);
+                            }
                         }
                     }
                 }
             }
+            else
+            {
+                List<String> aliasList = aliasMap.get(currentNormalizedName);
+                if(aliasList == null)
+                {
+                    aliasMap.put(currentNormalizedName, new ArrayList<String>(Collections.singletonList(currentNormalizedName)));
+                }
+                else
+                {
+                    //if the alias is also a normalized name make sure it's first
+                    aliasList.add(0, currentNormalizedName);
+                }
+            }
         }
+    }
+
+    private static Map<String, String> getAllKeysWithPrefix(String prefix, Map<String, String> configMap)
+    {
+        Map<String, String> keysWithPrefix = new HashMap<String, String>();
+        for(Map.Entry<String, String> currentEntry: configMap.entrySet())
+        {
+            if(currentEntry.getKey().startsWith(prefix))
+            {
+                keysWithPrefix.put(currentEntry.getKey(), currentEntry.getValue());
+            }
+        }
+        return keysWithPrefix;
     }
 
     public String[] getLibraryEntries()
@@ -543,17 +542,18 @@ public class NativeLibraryClause
         }
         return Collections.unmodifiableList(result);
     }
-    
+
     public static String normalizeOSName(String value)
     {
-        if (NORMALIZED_OS_NAMES.containsKey(value))
-        {
-            // Already normalized
-            return value;
-        }
-
         value = value.toLowerCase();
 
+        if (OS_ALIASES.containsKey(value))
+        {
+            // we found an alias match return the first value which is the normalized name
+            return OS_ALIASES.get(value).get(0);
+        }
+
+        //If we don't find a match do it the old way for compatibility
         if (value.startsWith("win"))
         {
             String os = "win";
@@ -681,6 +681,11 @@ public class NativeLibraryClause
     public static String normalizeProcessor(String value)
     {
         value = value.toLowerCase();
+
+        if(PROC_ALIASES.containsKey(value))
+        {
+            return PROC_ALIASES.get(value).get(0);
+        }
 
         if (value.startsWith(PROC_X86_64) || value.startsWith("amd64") ||
             value.startsWith("em64") || value.startsWith("x86_64"))
