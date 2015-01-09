@@ -96,6 +96,7 @@ public class NativeLibraryClauseTest extends TestCase {
         assertTrue(NativeLibraryClause.getOsNameWithAliases("WinCE").contains("windowsce"));
         assertTrue(NativeLibraryClause.getOsNameWithAliases("WinVista").contains("windowsvista"));
         assertTrue(NativeLibraryClause.getOsNameWithAliases("Windows 7").contains("windows7"));
+        assertTrue(NativeLibraryClause.getOsNameWithAliases("Windows7").contains("windows7"));
         assertTrue(NativeLibraryClause.getOsNameWithAliases("Win8").contains("windows8"));
         assertTrue(NativeLibraryClause.getOsNameWithAliases("Linux1.2.3").contains("linux"));
         assertTrue(NativeLibraryClause.getOsNameWithAliases("AIX-4.5.6").contains("aix"));
