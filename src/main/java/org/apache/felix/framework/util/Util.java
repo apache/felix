@@ -20,7 +20,6 @@ package org.apache.felix.framework.util;
 
 import java.io.*;
 import java.net.URL;
-
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,11 +28,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Set;
+
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
-
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -50,10 +50,9 @@ public class Util
     **/
     private static final String DEFAULT_PROPERTIES_FILE = "default.properties";
 
-    public static String getDefaultProperty(Logger logger, String name)
+    public static Properties loadDefaultProperties(Logger logger)
     {
-        String value = null;
-
+        Properties defaultProperties = new Properties();
         URL propURL = Util.class.getClassLoader().getResource(DEFAULT_PROPERTIES_FILE);
         if (propURL != null)
         {
@@ -62,14 +61,8 @@ public class Util
             {
                 // Load properties from URL.
                 is = propURL.openConnection().getInputStream();
-                Properties props = new Properties();
-                props.load(is);
+                defaultProperties.load(is);
                 is.close();
-                // Perform variable substitution for property.
-                value = props.getProperty(name);
-                value = (value != null)
-                    ? Util.substVars(value, name, null, props)
-                    : null;
             }
             catch (Exception ex)
             {
@@ -87,7 +80,49 @@ public class Util
                     Logger.LOG_ERROR, "Unable to load any configuration properties.", ex);
             }
         }
+        return defaultProperties;
+    }
+
+    public static String getDefaultProperty(Logger logger, String name)
+    {
+        Properties props = loadDefaultProperties(logger);
+        // Perform variable substitution for property.
+        return getPropertyWithSubs(props, name);
+    }
+
+    public static String getPropertyWithSubs(Properties props, String name)
+    {
+        // Perform variable substitution for property.
+        String value = props.getProperty(name);
+        value = (value != null)
+            ? Util.substVars(value, name, null, props): null;
         return value;
+    }
+
+    public static Map<String, String> getDefaultPropertiesWithPrefix(Logger logger, String prefix)
+    {
+        Properties props = loadDefaultProperties(logger);
+        return getDefaultPropertiesWithPrefix(props, prefix);
+    }
+
+    public static Map<String, String> getDefaultPropertiesWithPrefix(Properties props, String prefix)
+    {
+        Map<String, String> result = new HashMap<String, String>();
+
+        Set<String> propertySet = props.stringPropertyNames();
+
+        for(String currentPropertyKey: propertySet)
+        {
+            if(currentPropertyKey.startsWith(prefix))
+            {
+                String value = props.getProperty(currentPropertyKey);
+                // Perform variable substitution for property.
+                value = (value != null)
+                    ? Util.substVars(value, currentPropertyKey, null, props): null;
+                result.put(currentPropertyKey, value);
+            }
+        }
+        return result;
     }
 
     /**

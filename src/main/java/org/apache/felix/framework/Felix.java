@@ -4587,17 +4587,18 @@ public class Felix extends BundleImpl implements Framework
         m_configMutableMap.put(
             FelixConstants.FELIX_VERSION_PROPERTY, getFrameworkVersion());
 
+        Properties defaultProperties = Util.loadDefaultProperties(m_logger);
         // Set supported execution environments to default value,
         // if not explicitly configured.
-        loadFromDefaultIfNotDefined(Constants.FRAMEWORK_EXECUTIONENVIRONMENT);
+        loadFromDefaultIfNotDefined(defaultProperties, Constants.FRAMEWORK_EXECUTIONENVIRONMENT);
 
         // Set supported native capabilities to default value,
         // if not explicitly configured.
-        loadFromDefaultIfNotDefined(FelixConstants.NATIVE_OS_NAME_ALIASES);
-        loadFromDefaultIfNotDefined(FelixConstants.NATIVE_PROC_NAME_ALIASES);
+        loadPrefixFromDefaultIfNotDefined(m_configMutableMap, defaultProperties, FelixConstants.NATIVE_OS_NAME_ALIAS_PREFIX);
+        loadPrefixFromDefaultIfNotDefined(m_configMutableMap, defaultProperties, FelixConstants.NATIVE_PROC_NAME_ALIAS_PREFIX);
     }
 
-    private void loadFromDefaultIfNotDefined(String propertyName)
+    private void loadFromDefaultIfNotDefined(Properties defaultProperties, String propertyName)
     {
         String s;
         if (!getConfig().containsKey(propertyName))
@@ -4606,6 +4607,19 @@ public class Felix extends BundleImpl implements Framework
             if (s != null)
             {
                 m_configMutableMap.put(propertyName, s);
+            }
+        }
+    }
+    
+    private void loadPrefixFromDefaultIfNotDefined(Map configMap, Properties defaultProperties, String prefix)
+    {
+        Map<String, String> defaultPropsWithPrefix = Util.getDefaultPropertiesWithPrefix(defaultProperties, prefix);
+
+        for(String currentDefaultProperty: defaultPropsWithPrefix.keySet())
+        {
+            if(!configMap.containsKey(currentDefaultProperty))
+            {
+                configMap.put(currentDefaultProperty, defaultPropsWithPrefix.get(currentDefaultProperty));
             }
         }
     }
