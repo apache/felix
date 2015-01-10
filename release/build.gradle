@@ -37,6 +37,7 @@ buildscript {
     }
 }
 
+// Configure RAT plugin to ignore some files
 rat {
   excludes = [
     'rat-report.xml',
@@ -67,33 +68,33 @@ rat {
 Workspace workspace
 workspace = Workspace.getWorkspace(".")
 
-// Package the source and binary distributions into the staging directory.
 task makeStaging << {
-    // Collect bundles into the staging dir
-    new File('.').eachFile { 
-        if(new File(it, 'bnd.bnd').exists()) {
-    	    def bndProject = workspace.getProject(it.name)
-	    if (! bndProject.getProperty("Test-Cases") && ! bndProject.isNoBundles()) {
-		logger.lifecycle("    Packaging release for ${bndProject.name}")
+    description = 'Package the source and binary distributions.'
 
-		// Copy binary project artifacts to the staging directory
-		copy { 
-		    from "../${bndProject.name}/generated"
-		    into "staging"
-		    include "*.jar"
-		    rename { 
-		    	String fileName -> fileName.replace(".jar", "-" + bndProject.getVersion("${bndProject.name}") + ".jar")
-		    }
+    // Package source and binary distributions.
+    new File('.').eachFile { 
+	if(new File(it, 'bnd.bnd').exists()) {
+	    def bndProject = workspace.getProject(it.name)
+	    if (! bndProject.getProperty("Test-Cases") && ! bndProject.isNoBundles()) {
+		logger.lifecycle("    Packaging source for project ${bndProject.name}")
+
+		// Package source distribution
+		ant.zip(destfile: "staging/${bndProject.name}-" + bndProject.getVersion("${bndProject.name}") + "-src.zip") {
+		    zipfileset(dir: '../cnf', prefix: "dependencymanager/cnf", includes: '.project,.classpath,src/**,*.bnd,ext/**')
+		    zipfileset(dir: '..', prefix: "dependencymanager", includes: '*.gradle,*.properties')
+		    zipfileset(dir: "../${bndProject.name}", 
+			       prefix: "dependencymanager/" + "${bndProject.name}",
+			       includes: "*.gradle,.project,.classpath,.settings/**,src/**,test/**,resources/**,*.bnd,*.bndrun,run-*/conf/**")
+		}
+
+		// Package binary distribution
+		logger.lifecycle("    Packaging binary distributions.")
+		ant.zip(destfile: "staging/${bndProject.name}-" + bndProject.getVersion("${bndProject.name}") + "-bin.zip") {
+		    ant.zipfileset(dir: '../cnf', prefix: 'dependencymanager/cnf', 
+				   includes: 'buildrepo/**,localrepo/**,releaserepo/**,plugins/**,gradle/**')
 		}
 	    }
-        }
-    }
-
-    // Package source distribution
-    ant.zip(destfile: "staging/apache-felix-dependencymanager-" + dmVersion + "-src.zip", excludes: "release/**, staging/**") {
-	zipfileset(dir: "../", 
-		   prefix: "apache-felix-dependencymanager-" + dmVersion + "-src",
-		   includes: "build.gradle, gradle.properties, settings.gradle, */*.gradle, */.project, */.classpath, */.settings/**, */src/**, */test/**, */*.bnd, */.bndrun, cnf/**")
+	}
     }
 }
 
@@ -101,16 +102,24 @@ task makeStaging << {
 task signStaging << { 
     fileTree("staging").visit { FileVisitDetails details -> 
 	logger.lifecycle("    Signing " + details.file.path)
-	getProject().exec {
-	    commandLine 'gpg', '--armor', '--output', details.file.path + ".asc", '--detach-sig', details.file.path
+	ant.exec(executable: 'gpg', dir: 'staging') { 
+	    ant.arg(line: '--armor')
+	    ant.arg(line: '--output')
+	    ant.arg(line: details.file.name + ".asc")
+	    ant.arg(line: "--detach-sig")
+	    ant.arg(line: details.file.name)
 	}
-	getProject().exec {
-	    standardOutput = new FileOutputStream(new File(details.file.path+".md5"))
-	    commandLine 'gpg', '--print-md', 'MD5', details.file.path
+
+	ant.exec(executable: 'gpg', dir: 'staging', output: "staging/" + details.file.name + ".md5") { 
+	    ant.arg(line: '--print-md')
+	    ant.arg(line: 'MD5')
+	    ant.arg(line: details.file.name)
 	}
-	getProject().exec { 
-	    standardOutput = new FileOutputStream(new File(details.file.path+".sha1"))
-	    commandLine 'gpg', '--print-md', 'SHA1', details.file.path
+
+	ant.exec(executable: 'gpg', dir: 'staging', output: "staging/" + details.file.name + ".sha") {
+	    ant.arg(line: '--print-md')
+	    ant.arg(line: 'SHA512')
+	    ant.arg(line: details.file.name)
 	}
     }
 }
@@ -150,6 +159,11 @@ task deleteFromStaging << {
 task clean(overwrite: true) << { 
     new File("release/staging").deleteDir()
     new File("rat-report.xml").delete()
+}
+
+// Only clean the staging directory
+task cleanStaging << { 
+    new File("release/staging").deleteDir()
 }
 
 //Generate a Gradle wrapper
