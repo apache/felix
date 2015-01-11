@@ -1,3 +1,8 @@
+Changes from 4.4.1 to 4.6.0
+---------------------------
+** Improvement
+    * Update to latest framework version 4.6.0
+
 Changes from 4.4.0 to 4.4.1
 ---------------------------
 ** Improvement
