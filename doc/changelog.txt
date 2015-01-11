@@ -1,3 +1,31 @@
+Changes from 4.4.1 to 4.6.0
+---------------------------
+** Sub-task
+    * [FELIX-4503] - [Core R6] Support osgi.native capability
+    * [FELIX-4504] - [Core R6] Support Framework DTOs
+    * [FELIX-4505] - [Core R6] Support Prototype Service Factory
+    * [FELIX-4578] - [Core R6] Support new Framework.init(FrameworkListener ... listeners) override
+    * [FELIX-4579] - [Core R6] Support Framework Extension Bundle Activators
+    * [FELIX-4580] - [Core R6] Support service.bundleid Service Registration property
+    * [FELIX-4581] - [Core R6] Support FrameworkWiring.findProviders(Requirement)
+    * [FELIX-4582] - [Core R6] Support WovenClassListener
+    * [FELIX-4583] - [Core R6] Ensure that all OSGi Core R6 CT tests pass
+    * [FELIX-4590] - [Core R6] Update to R6 API
+    * [FELIX-4593] - Support the JavaSE/compact profiles for Java 8
+    * [FELIX-4726] - [Core R6] Update bundle and service hooks for the system bundle
+
+** Bug
+    * [FELIX-3883] - [Framework] Move OS and processor aliases to configuration properties
+    * [FELIX-4690] - Some bundles containing native code can fail to start on Windows 7+
+    * [FELIX-4701] - Properties with surprising spelling in AutoProcessor
+    * [FELIX-4729] - [Core R6] Support for osgi.native namespace with Loading native code libraries
+
+** Improvement
+    * [FELIX-4502] - [Core R6] Provide an OSGi R6 compliant framework implementation
+    * [FELIX-4658] - URL of the CodeSource of a ProtectionDomain should resolve to the right JAR
+    * [FELIX-4692] - Improve Service access time
+    * [FELIX-4757] - Native Capabilities should allow OS and Processor alias to load from default and config properties
+
 Changes form 4.4.0 to 4.4.1
 ---------------------------
 ** Bug
