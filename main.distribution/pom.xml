@@ -27,7 +27,7 @@
   <packaging>pom</packaging>
   <name>Apache Felix Main Distribution</name>
   <artifactId>org.apache.felix.main.distribution</artifactId>
-  <version>4.7.0-SNAPSHOT</version>
+  <version>4.5.0-SNAPSHOT</version>
   <properties>
     <dollar>$</dollar>
     <framework.version>4.5.0-SNAPSHOT</framework.version>
