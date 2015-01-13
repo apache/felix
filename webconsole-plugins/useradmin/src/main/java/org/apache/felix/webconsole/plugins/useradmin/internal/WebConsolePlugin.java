@@ -111,6 +111,21 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                 xgroup.removeMember(xrole);
                 toJSON(jw, xgroup, false);
             }
+            else if ("toggleMembership".equals(action)) { //$NON-NLS-1$
+                final Role xrole = userAdmin.getRole(role);
+                final Group xgroup = (Group) userAdmin.getRole(group);
+                if (contains(xgroup.getRequiredMembers(), xrole)) // if required
+                { 
+                    xgroup.removeMember(xrole);
+                    xgroup.addMember(xrole); // add as basic
+                }
+                else
+                {
+                    xgroup.removeMember(xrole);
+                    xgroup.addRequiredMember(xrole); // add as required
+                }
+                toJSON(jw, xgroup, false);
+            }
             else if ("getDigestAlgorithms".equals(action)) { //$NON-NLS-1$
                 getMessageDigestAlgorithms(jw);
             }
@@ -304,4 +319,18 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         }
         jw.endArray();
     }
+
+    private static boolean contains(final Role[] roles, final Role role)
+    {
+        for (int i = 0; roles != null && role != null && i < roles.length; i++)
+        {
+            if (roles[i].getName().equals(role.getName()))
+            {
+                return true;
+            }
+        }
+        return false;
+
+    }
+
 }

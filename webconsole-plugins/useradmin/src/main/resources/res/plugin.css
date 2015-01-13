@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@import url("jstree-3.0.9/themes/default/style.min.css");
 #userTree { width: 20% }
 #userTree li a { padding-left: 12px ! important}
 .header ul { float: right }
@@ -22,4 +23,4 @@ input.k, input.v { width: 100% }
 #roleDetails .property-type {width: 5em}
 .actions ul { float : right }
 #newDialogRole select { width : 100% }
-.required { font-style:italic }
+li.required > a { font-style:italic }

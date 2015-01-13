@@ -86,8 +86,7 @@
 				<configuration>
 					<excludes>
 						<exclude>src/main/appended-resources/**</exclude>
-						<exclude>src/main/resources/res/jsTree.v.0.9.9a/**</exclude>
-						<exclude>src/main/resources/res/*.html</exclude>
+						<exclude>src/main/resources/res/**</exclude>
 					</excludes>
 				</configuration>
 			</plugin>
