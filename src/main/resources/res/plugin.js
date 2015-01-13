@@ -19,6 +19,7 @@ jQuery.curCSS = jQuery.css;
 
 var userTree = false;
 var selectedRole = false;
+var selectedParent = false;
 var newDialogRole = false;
 var roleDetails = false;
 var roleDetailsHelp = false;
@@ -34,80 +35,106 @@ function roleObj(node) {
 }
 
 var treeSettings = {
-	data : {
-		type : 'json',
-		opts : { 'static' : [] }
+	core    : {
+		data           : [], // will be set on load
+		multiple       : false,
+		themes         : { stripes : true },
+		check_callback : function (operation, node, node_parent, node_position, more) {
+			// disable copy to root node
+			if ('#' === node_parent.id) return false;
+			if (operation === 'copy_node' && 'root' === node_parent.id) return false;
+
+			if (operation === 'move_node' || operation === 'copy_node') {
+				// don't copy/move things around the same/root level
+				if (node.parent === node_parent.id) return false;
+
+				// don't copy/move if target alreay contains the same member
+				var target = node_parent.original.role;
+				if (target && isMember(node.original.role, target)) return false;
+			}
+			return true;
+		}
 	},
-	ui       : { theme_name : 'themeroller' },
-	rules    : { multiple : false, valid_children: ['root'] },
-	types    : {
-		root : { valid_children: ['t0', 't1', 't2'] },
-		t2   : { valid_children: ['t0', 't1', 't2'] },
-		t1   : { valid_children: 'none' },
-		t0   : { valid_children: 'none' }
-	},
-	callback : {
-		onselect : function(node) {
-			var _role = $(node).attr('role');
-			if (_role) {
-				var role = JSON.parse( _role );
-				onSelectNode(role.name);
-				$(node).children('a').addClass('ui-priority-primary');
+	plugins : [ 'dnd', 'types', 'sort' ],
+	types   : {
+		root : { valid_children: ['t0', 't1', 't2'], icon : pluginRoot + '/res/book-2.png' },
+		t2   : { valid_children: ['t0', 't1', 't2'], icon : pluginRoot + '/res/group.png' },
+		t1   : { valid_children: [], icon : pluginRoot + '/res/user.png'  },
+		t0   : { valid_children: [], icon : pluginRoot + '/res/role.png' }
+	}
+}
+
+function initTree(data) {
+	// show help message
+	roleDetailsHelp.removeClass('ui-helper-hidden');
+	roleDetailsTable.addClass('ui-helper-hidden');
+
+	var openNodes = [];
+
+	// recreate tree, because reload doesn't work
+	var userTreeRef = $.jstree.reference('#userTree');
+	if (userTreeRef) {
+		userTreeRef.destroy();
+
+		// save state
+		$.each(userTreeRef.get_node('root').children_d, function(idx, child) {
+			var node = userTreeRef.get_node(child);
+			if ( node.state.opened ) openNodes.push(node.text);
+		});
+	}
+
+	// prepare data
+	var sortedGroups = sortGroups(data);
+	treeSettings.core['data'] = buildTree(sortedGroups);
+
+	// build tree
+	userTree = $('#userTree')
+		.on('select_node.jstree', function(e, data) {
+			var role = data.node.original.role;
+			if (role) {
+				var parent = data.node.parent;
+				var parent_name = parent === '#' || parent === 'root' ? false : data.instance.get_node(parent).text;
+				onSelectNode(role.name, parent_name);
 			} else {
 				roleDetailsHelp.removeClass('ui-helper-hidden');
 				roleDetailsTable.addClass('ui-helper-hidden');
 			}
-		},
-		onparse : function (s, t) {
-			return $(s)
-					.find('li[rel=t2] > a > ins').addClass('ui-icon ui-icon-contact').end()
-					.find('li[rel=t1] > a > ins').addClass('ui-icon ui-icon-person').end()
-					.find('li[rel=t0] > a > ins').addClass('ui-icon ui-icon-bullet').end();
-		},
-		ondeselect : function(node) { $(node).children('a').removeClass('ui-priority-primary') },
-		ondblclk   : function(node, tree_obj) {
-			var n = $(node);
-			var pp = tree_obj.parent(node);
-			var r = roleObj(n);
-			var g = roleObj(pp);
-			console.log(r, g);
-			if (r && g) {
-				if( isInMemberArray(r, g.members, 1) ) {
-					$.post(pluginRoot, { action: 'removeMember', role: r.name, group: g.name });
-					$.post(pluginRoot, { action: 'addRequiredMember', role: r.name, group: g.name }, function(data) {
-						pp.attr('role', JSON.stringify(data));
-					}, 'json');
-					n.addClass('required');
-				} else if( isInMemberArray(r, g.rmembers, 1) ) {
-					$.post(pluginRoot, { action: 'removeMember', role: r.name, group: g.name });
-					$.post(pluginRoot, { action: 'addMember', role: r.name, group: g.name }, function(data) {
-						pp.attr('role', JSON.stringify(data));
-					}, 'json');
-					n.removeClass('required');
-				}
+		})
+		.on('move_node.jstree', function(e, data) {
+			var role = data.node.original.role;
+			var parent = data.parent;
+			var parent_name = parent === '#' || parent === 'root' ? false : data.instance.get_node(parent).text;
+			var old_parent = data.old_parent;
+			var old_parent_name = old_parent === '#' || old_parent === 'root' ? false : data.instance.get_node(old_parent).text;
+
+			if (parent_name) {
+				//console.log('move: adding role', role, 'to group', parent);
+				$.post(pluginRoot, {'action': 'addMember', 'role' : role.name, 'group' : parent_name});
 			}
-		},
-		beforemove : function(node, ref_node, type, tree_obj, is_copy) {
-			var _ = dragObj(node, ref_node, type, tree_obj);
-			// --- check if the move is valid:
-			// don't move things around the same/root level
-			if (_.to == false && _.from == false) return false;
-			// no copy to the root folder
-			if (is_copy && _.to == false) return false;
-			// no rearrange withing the folder
-			if (_.to != false && _.from != false && _.to.name == _.from.name) return false;
-			// already contains such a member
-			if (_.to != false && isMember(_.node, _.to)) return false;
+			if (old_parent_name) {
+				//console.log('move: removed role', role, 'to group', old_parent);
+				$.post(pluginRoot, {'action': 'removeMember', 'role' : role.name, 'group' : old_parent_name});
+			}
+			$('#reload').click();
+		})
+		.on('copy_node.jstree', function(e, data) {
+			var role = data.original.original.role;
+			var parent_name = data.instance.get_node(data.parent).text;
 
-			// do copy-move
-			// unassign from the old group, if it is move
-			if (!is_copy && _.from) $.post(pluginRoot, {'action': 'removeMember', 'role' : _.node.name, 'group' : _.from.name} , function(data) {}, 'json');
-			// assign to the new group
-			if (_.to) $.post(pluginRoot, {'action': 'addMember', 'role' : _.node.name, 'group' : _.to.name} , function(data) {}, 'json');
+			if (parent_name) {
+				//console.log('copy: copying role', role, 'to group', parent);
+				$.post(pluginRoot, {'action': 'addMember', 'role' : role.name, 'group' : parent_name});
+			}
+			$('#reload').click();
+		})
+		.on('ready.jstree', function(e, data) { // restore state
+			var _ = data.instance;
+			if (openNodes.length) $.each(_.get_node('root').children_d, function(idx, child) {
+				var node = _.get_node(child);
+				if ($.inArray(node.text, openNodes) > -1) _.open_node(node, false, false);
+			});
 
-			return true;
-		}
-	}
+		}).jstree(treeSettings);
 }
 
 $(function() {
@@ -126,7 +153,6 @@ $(function() {
 		}
 	});
 
-	userTree = $('#userTree');
 	roleDetails = $('#roleDetails');
 	roleDetailsTable = roleDetails.find('table');
 	roleDetailsHelp = roleDetails.find('#roleDetailsHelp');
@@ -174,6 +200,12 @@ $(function() {
 		});
 	});
 	$('#savRole').click( doSaveRole );
+	$('#toggleRequiredRole').click( function() {
+		if (selectedRole && selectedParent)
+		$.post(pluginRoot, { action: 'toggleMembership', role: selectedRole, group: selectedParent }, function() {
+			$('#reload').click()
+		});
+	});
 
 	// top-frame buttons
 	$('#newRole').click( function() {
@@ -181,16 +213,7 @@ $(function() {
 		return false;
 	});
 	$('#reload').click( function() {
-		$.post(pluginRoot, {'action': 'list'} , function(data) {
-			roleDetailsHelp.removeClass('ui-helper-hidden');
-			roleDetailsTable.addClass('ui-helper-hidden');
-
-			var sortedGroups = sortGroups(data);
-			var treeRoot = buildTree(sortedGroups);
-
-			treeSettings.data.opts['static'] = treeRoot;
-			userTree.empty().tree(treeSettings);
-		}, 'json');
+		$.post(pluginRoot, {'action': 'list'} , initTree, 'json');
 		return false;
 	}).click();
 });
@@ -202,8 +225,8 @@ function digest(val, alg) {
 		url     : pluginRoot,
 		async   : false,
 		data    : {
-			'action': 'digest', 
-			'data' : val, 
+			'action': 'digest',
+			'data' : val,
 			'algorithm' : alg
 		},
 		dataType: 'json',
@@ -255,16 +278,14 @@ function doSaveRole() {
 			var k = _.find('.k').val();
 			var v = _.find('.v').val();
 			var t = _.find('select').val();
-			
+
 			if (t.indexOf('password-') == 0) {
 				var hash = digest(v, t.substring(9));
-				//CryptoJS[t.substring(9)](v).toString(CryptoJS.enc.Hex);
-				//v = hashToArray(hash);
 				v = hash;
 			} else if (t == 'byte[]') {
 				v = strToArray(v);
 			}
-			
+
 			if (doProps) data.properties[k] = v;
 			else data.credentials[k] = v;
 		}
@@ -286,31 +307,30 @@ function isMember(role, group) {
 
 function buildTree(sortedGroups) {
 	var treeRoot = {
-		data : i18n.root,
-		state: 'open',
-		attributes : { 'rel' : 'root' },
+		text : i18n.root,
+		id   : 'root',
+		type : 'root',
+		state: { opened : true },
 		children: []
 	};
 	var treeNode = function(name, role, parent, req) {
 		if (!role) return;
 		if (!parent) parent = treeRoot.children;
 		var node = {
-			data  : role.name,
-			attributes : {
-				'rel'   : 't' + role.type,
-				'role'  : JSON.stringify(role)
-			}
+			'text' : role.name,
+			'type' : 't' + role.type,
+			'role' : role,
 		}
-		if (req) node.attributes['class'] = 'required';
+		if (req) node.li_attr = { 'class' : 'required' };
 		parent.push(node);
 		if (role.type == 2) {
 			node['children'] = [];
 			node = node['children'];
-			if (role.members) $.each(role.members, function(idx, role) {
-				treeNode(role.name, role, node, 0);
+			if (role.members) $.each(role.members, function(idx, xrole) {
+				treeNode(xrole.name, xrole, node, 0);
 			});
-			if (role.rmembers) $.each(role.rmembers, function(idx, role) {
-				treeNode(role.name, role, node, 1);
+			if (role.rmembers) $.each(role.rmembers, function(idx, xrole) {
+				treeNode(xrole.name, xrole, node, 1);
 			});
 		}
 	}
@@ -364,9 +384,16 @@ function sortGroups(data) {
 	return $.extend(rootGroups, unassigned);
 }
 
-function onSelectNode(role) {
+function onSelectNode(role, parent) {
+	if (parent) {
+		$('#toggleRequiredRole').removeClass('ui-state-disabled');
+	} else {
+		$('#toggleRequiredRole').addClass('ui-state-disabled')
+	}
+
 	$.post(pluginRoot, {'action': 'get', 'role' : role} , function(data) {
 		selectedRole = role;
+		selectedParent = parent;
 		roleDetailsHelp.addClass('ui-helper-hidden');
 		roleDetailsTable.removeClass('ui-helper-hidden');
 		roleDetailsBody.find('tr').not('.header').remove();
@@ -399,26 +426,3 @@ function onSelectNode(role) {
 	return false;
 }
 
-function dragObj(node, ref_node, type, tree_obj) {
-    // determine the destination folder
-	var _role = false;
-	if ('inside' == type) {
-		_role = $(ref_node).attr('role');
-	} else {
-		_role = tree_obj.parent(ref_node)
-		_role = _role.attr ? _role.attr('role') : false;
-	}
-	var to = _role ? JSON.parse(_role) : false;
-	// determine object to move
-	_role = $(node).attr('role');
-	var source =  JSON.parse(_role);
-	// determine the previous location (in case it is move, not copy)
-	_role = tree_obj.parent(node);
-	var from = _role.attr && _role.attr('role') ? JSON.parse(_role.attr('role')) : false;
-
-	return {
-		'to' : to,
-		'from' : from,
-		'node' : source
-	}
-}
