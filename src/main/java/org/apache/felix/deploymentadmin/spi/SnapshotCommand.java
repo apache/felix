@@ -38,6 +38,9 @@ import org.osgi.service.deploymentadmin.DeploymentException;
 import org.osgi.service.log.LogService;
 
 public class SnapshotCommand extends Command {
+    /** The ZIP specification mandates that directory-entries end with a forward slash (on all platforms). */
+    static final String FORWARD_SLASH = "/";
+
     private final GetStorageAreaCommand m_getStorageAreaCommand;
 
     public SnapshotCommand(GetStorageAreaCommand getStorageAreaCommand) {
@@ -162,7 +165,11 @@ public class SnapshotCommand extends Command {
         else if (entry.isDirectory()) {
             String baseDir = "";
             if (!"".equals(entryName)) {
-                baseDir = entryName.concat(File.separator);
+                baseDir = entryName;
+                // Directories *must* use forward slashes...
+                if (!baseDir.endsWith(FORWARD_SLASH)) {
+                    baseDir = baseDir.concat(FORWARD_SLASH);
+                }
 
                 output.putNextEntry(new ZipEntry(baseDir));
                 output.closeEntry();
