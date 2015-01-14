@@ -70,7 +70,7 @@ class ContentCopyingJarInputStream extends JarInputStream {
     public void close() throws IOException {
         closeCopy();
         closeIndex();
-        super.close();
+        // Do NOT close our parent, as it is the original input stream which is not under our control...
     }
 
     public void closeEntry() throws IOException {
