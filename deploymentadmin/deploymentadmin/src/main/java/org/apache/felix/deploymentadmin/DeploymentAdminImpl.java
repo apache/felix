@@ -221,6 +221,11 @@ public class DeploymentAdminImpl implements DeploymentAdmin, Constants {
             catch (DeploymentException de) {
                 throw de;
             }
+            finally {
+                // We're done at this point with the JAR input stream, close it here as to avoid keeping
+                // files open unnecessary (otherwise it fails on Windows)...
+                Utils.closeSilently(jarInput);
+            }
 
             String dpInstallBaseDirectory = PACKAGE_DIR + File.separator + dpSymbolicName;
 
