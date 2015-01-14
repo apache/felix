@@ -27,12 +27,17 @@ public class DeploymentAdminConfig {
     /** Prefix used for the configuration properties of DA. */
     private static final String PREFIX = "org.apache.felix.deploymentadmin.";
 
-    /** Configuration key used to stop only bundles mentioned in a DP instead of all bundles. */
+    /** 
+     * Configuration key used to stop only bundles mentioned in a DP instead of all bundles.
+     * @deprecated incorrect name append the 's'
+     */
     static final String KEY_STOP_UNAFFECTED_BUNDLE = PREFIX.concat("stopUnaffectedBundle");
+    /** Configuration key used to stop only bundles mentioned in a DP instead of all bundles. */
+    static final String KEY_STOP_UNAFFECTED_BUNDLES = PREFIX.concat("stopUnaffectedBundles");
     /** Configuration key used to allow usage of customizers outside a DP. */
     static final String KEY_ALLOW_FOREIGN_CUSTOMIZERS = PREFIX.concat("allowForeignCustomizers");
 
-    static final boolean DEFAULT_STOP_UNAFFECTED_BUNDLE = true;
+    static final boolean DEFAULT_STOP_UNAFFECTED_BUNDLES = true;
     static final boolean DEFAULT_ALLOW_FOREIGN_CUSTOMIZERS = false;
 
     private final boolean m_stopUnaffectedBundles;
@@ -42,8 +47,15 @@ public class DeploymentAdminConfig {
      * Creates a new {@link DeploymentAdminConfig} instance with the default settings.
      */
     public DeploymentAdminConfig(BundleContext context) {
-        m_stopUnaffectedBundles = parseBoolean(getFrameworkProperty(context, KEY_STOP_UNAFFECTED_BUNDLE), DEFAULT_STOP_UNAFFECTED_BUNDLE);
-        m_allowForeignCustomizers = parseBoolean(getFrameworkProperty(context, KEY_ALLOW_FOREIGN_CUSTOMIZERS), DEFAULT_ALLOW_FOREIGN_CUSTOMIZERS);
+        // Allow the constant to be used in singular or plural form...
+        String value = getFrameworkProperty(context, KEY_STOP_UNAFFECTED_BUNDLE);
+        if (value == null) {
+            value = getFrameworkProperty(context, KEY_STOP_UNAFFECTED_BUNDLES);
+        }
+        m_stopUnaffectedBundles = parseBoolean(value, DEFAULT_STOP_UNAFFECTED_BUNDLES);
+
+        value = getFrameworkProperty(context, KEY_ALLOW_FOREIGN_CUSTOMIZERS);
+        m_allowForeignCustomizers = parseBoolean(value, DEFAULT_ALLOW_FOREIGN_CUSTOMIZERS);
     }
 
     /**
