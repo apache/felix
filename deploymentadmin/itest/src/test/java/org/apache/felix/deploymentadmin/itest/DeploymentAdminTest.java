@@ -21,15 +21,12 @@ package org.apache.felix.deploymentadmin.itest;
 import static org.osgi.service.deploymentadmin.DeploymentException.CODE_BUNDLE_NAME_ERROR;
 import static org.osgi.service.deploymentadmin.DeploymentException.CODE_OTHER_ERROR;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
 
 import org.apache.felix.deploymentadmin.itest.util.DeploymentPackageBuilder;
 import org.apache.felix.deploymentadmin.itest.util.DeploymentPackageBuilder.JarManifestManipulatingFilter;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
-import org.osgi.service.cm.Configuration;
 import org.osgi.service.deploymentadmin.DeploymentAdmin;
 import org.osgi.service.deploymentadmin.DeploymentException;
 import org.osgi.service.deploymentadmin.DeploymentPackage;
@@ -47,14 +44,8 @@ public class DeploymentAdminTest extends BaseIntegrationTest
     @Test
     public void testUpdateConfigurationOk() throws Exception
     {
-        Dictionary props = new Hashtable();
-        props.put("stopUnaffectedBundle", Boolean.FALSE);
-        props.put("allowForeignCustomizers", Boolean.FALSE);
-
-        Configuration config = m_configAdmin.getConfiguration("org.apache.felix.deploymentadmin", null);
-        config.update(props);
-
-        Thread.sleep(100);
+        System.setProperty("org.apache.felix.deploymentadmin.stopUnaffectedBundles", "false");
+        System.setProperty("org.apache.felix.deploymentadmin.allowForeignCustomizers", "false");
 
         // This test case will only work if stopUnaffectedBundle is set to 'false'...
         try
@@ -86,7 +77,8 @@ public class DeploymentAdminTest extends BaseIntegrationTest
         }
         finally
         {
-            config.delete();
+            System.clearProperty("org.apache.felix.deploymentadmin.stopUnaffectedBundles");
+            System.clearProperty("org.apache.felix.deploymentadmin.allowForeignCustomizers");
         }
     }
 
