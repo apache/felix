@@ -55,6 +55,7 @@
                             javax.servlet.http;
                                 version=3.1
                         </Export-Package>
+						<Embed-Dependency>tomcat-servlet-api;inline=true</Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>
