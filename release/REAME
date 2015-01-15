@@ -37,6 +37,9 @@ $ ./gradlew org.apache.felix.dependencymanager.annotation:jar
 $ ./gradlew jar
 $ ./gradlew test
 $ ./gradlew check
+
+Then Edit the ./build.gradle script, and modify the "dmVersion", and create the staging:
+
 $ ./gradlew makeStaging (this will create ./release/staging/ directory)
 
 Then you sign archives by invoking the following task:
