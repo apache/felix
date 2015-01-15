@@ -140,6 +140,10 @@ public class ServletContextImpl implements ExtServletContext
         this.context.declareRoles(roleNames);
     }
 
+    public String getVirtualServerName() {
+        return context.getVirtualServerName();
+    }
+
     public Object getAttribute(String name)
     {
         return (this.attributes != null) ? this.attributes.get(name) : this.context.getAttribute(name);
