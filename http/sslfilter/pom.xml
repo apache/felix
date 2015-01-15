@@ -36,10 +36,6 @@
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/http/sslfilter</developerConnection>
         <url>http://svn.apache.org/viewvc/felix/trunk/http/sslfilter/</url>
     </scm>
-    
-    <properties>
-    	<felix.http.api.version>2.3.2-SNAPSHOT</felix.http.api.version>
-    </properties>
 
     <build>
         <plugins>

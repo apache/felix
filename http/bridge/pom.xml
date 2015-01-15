@@ -48,7 +48,7 @@
                             org.apache.felix.http.bridge.internal.BridgeActivator
                         </Bundle-Activator>
                         <Export-Package>
-                            org.apache.felix.http.api;version=${http.api.version},
+                            org.apache.felix.http.api,
                             org.osgi.service.http;version=${http.service.version}
                         </Export-Package>
                         <Private-Package>
