@@ -27,28 +27,25 @@ Building and testing Apache Felix Dependency Manager
 ** Compilation Using gradle:
 
 - Install Jdk1.7
-- Install gradle (at least 2.1)
-- If you need to configure an http(s)proxy, then you can either edit gradle.properties and set the necessary "systemProp.http*" properties.
-
-- Alternatively, you can also specify the http/https settings using the GRADLE_OPTS environment variable. For example:
+- If necessary, configure your https proxy settings:
 
   export GRADLE_OPTS="-Dhttps.proxyHost=www.somehost.org -Dhttps.proxyPort=8080"
 
 - First, compile Dependendency Manager annotations bndtools plugin:
   
-$ gradle org.apache.felix.dependencymanager.annotation:jar
+$ ./gradlew org.apache.felix.dependencymanager.annotation:jar
 
 - Then compile all other bundles:
  
-$ gradle jar
+$ ./gradlew jar
 
 - run junit tests:
 
-$ gradle test
+$ ./gradlew test
 
 - run integration tests:
 
-$ gradle check
+$ ./gradlew check
 
 ** Compilation Using Eclipse:
 

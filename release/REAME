@@ -6,10 +6,12 @@ Prerequisites
 
 To create a release you must:
 
-* Have Gradle (at least 2.1) installed on your system;
 * Have Subversion installed on your system;
 * Have gpg installed on your system;
 * Have a public key added to the keys file, and committed to [2] 
+* If necessary, configure your https proxy settings:
+
+  export GRADLE_OPTS="-Dhttps.proxyHost=www.somehost.org -Dhttps.proxyPort=8080"
 
 Before you can start staging a release candidate, you must:
 
@@ -30,21 +32,21 @@ svn co https://svn.apache.org/repos/asf/felix/releases/dependencymanager.X.Y.Z d
 The next step is to build/test the software and create the release/staging/ directory (where the source/jars will be packaged):
 
 $ cd dependencymanager-X.Y.Z/
-$ gradle rat 
-$ gradle org.apache.felix.dependencymanager.annotation:jar (you must
-$ gradle jar
-$ gradle test
-$ gradle check
-$ gradle makeStaging (this will create ./release/staging/ directory)
+$ ./gradlew rat 
+$ ./gradlew org.apache.felix.dependencymanager.annotation:jar (you must
+$ ./gradlew jar
+$ ./gradlew test
+$ ./gradlew check
+$ ./gradlew makeStaging (this will create ./release/staging/ directory)
 
 Then you sign archives by invoking the following task:
 
-$ gradle signStaging
+$ ./gradlew signStaging
 
 you can upload the archives and the signatures to our development area, which we use to stage this release candidate. This development area can be found at 
 https://dist.apache.org/repos/dist/dev/felix and adding files to it can be done using "svnpubsub" which is taken care of by the following target:
 
-$ gradle commitToStaging
+$ ./gradlew commitToStaging
 
 Voting on the release
 =====================
@@ -68,11 +70,11 @@ Promoting the release:
 Move the artifacts from the development area to the final release location at 
 https://dist.apache.org/repos/dist/release/felix by invoking the following target:
 
-$ gradle promoteToRelease
+$ ./gradlew promoteToRelease
 
 Cancelling the release
 ======================
 
-$ gradle deleteFromStaging
+$ ./gradlew deleteFromStaging
 
 [1] http://www.apache.org/dev/release.html
