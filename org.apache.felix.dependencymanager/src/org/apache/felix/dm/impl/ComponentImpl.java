@@ -225,57 +225,26 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	    if (m_active.compareAndSet(true, false)) {
 	        Executor executor = getExecutor();
 
-	        // First, declare the task that will stop our component in our executor. We are also using a latch
-	        // because if the component bundle is currently being stopped, then we have to deactivate the component 
-	        // synchronously (if not, the component could be deactivated in another thread after the bundle has been 
-	        // stopped; and in this case, the bundle would then be invalid at the point we deactivate the component.	        	        
-	        // Notice that even if we are not using a threadpool (only a SerialExecutor, not a DispatchExecutor), it is
-	        // possible that the SerialExecutor is being currently run by another thread, so we really have to use a latch,
-	        // even if we are only using a SerialExecutor.
-	        
-	        final CountDownLatch stopLatch = new CountDownLatch(1);
+	        // First, declare the task that will stop our component in our executor.
 	        final Runnable stopTask = new Runnable() {
                 @Override
                 public void run() {
-                    try {
-                        m_isStarted = false;
-                        handleChange();
-                    } finally {
-                        stopLatch.countDown();
-                    }
+                	m_isStarted = false;
+                	handleChange();
                 }
             };
             
-            if (m_bundle == null /* only in tests env */ || m_bundle.getState() == Bundle.ACTIVE) {
-                executor.execute(stopTask); // asynchronous if we are using a DispatchExecutor and a threadpool.
+            // Now, we have to schedule our stopTask in our component executor. But we have to handle a special case:
+            // if the component bundle is stopping *AND* if the executor is a parallel dispatcher, then we want 
+            // to invoke our stopTask synchronously, in order to make sure that the bundle context is valid while our 
+            // component is being deactivated (if we stop the component asynchronously, the bundle context may be invalidated
+            // before our component is stopped, and we don't want to be in this situation).
+            
+            boolean stopping = m_bundle != null /* null only in tests env */ && m_bundle.getState() == Bundle.STOPPING;
+            if (stopping && executor instanceof DispatchExecutor) {
+            	((DispatchExecutor) executor).execute(stopTask, false /* try to  execute synchronously, not using threadpool */);
             } else {
-                // If the component bundle is stopping, not active, we want to ensures that the component is
-                // removed (stopped) before the bundle is invalidated.                
-                if (executor instanceof SerialExecutor) {
-                    // Most of the time, the stopTask will be called synchronously. But in rare occasions, if the 
-                    // SerialExecutor is busy and handling an event in another thread, then in this case
-                    // the stopTask will be executed asynchronously ... but our latch will make sure we wait for the 
-                    // component deactivation.
-                    executor.execute(stopTask);
-                } else if (executor instanceof DispatchExecutor) {
-                    // If using a threadpool (a DispatchExecutor), then we have to invoke turn off
-                    // parallelism to avoid possible deadlocks; so we'll schedule our stopTask in the DispatchExecutor
-                    // with a flag=false in order to try to execute the task from the current thread, not from the threadpool.
-                    ((DispatchExecutor) executor).execute(stopTask, false);
-                } else {
-                    throw new IllegalStateException("no executor found form component " + this);
-                }
-
-                try {
-                    if (!stopLatch.await(5000, TimeUnit.MILLISECONDS)) { // todo make the delay configurable
-                        m_logger.warn(
-                            "Could not stop component %s timely. " +
-                            "You should dump jvm stacktraces and check if some component callbacks are blocked somewhere else on another thread.",
-                            this);
-                    }
-                } catch (InterruptedException e) {
-                    m_logger.warn("Thread interrupted while stopping component %s.", this);
-                }
+            	executor.execute(stopTask);
             }
 	    }
 	}
