@@ -49,7 +49,7 @@ $ ./gradlew signStaging
 you can upload the archives and the signatures to our development area, which we use to stage this release candidate. This development area can be found at 
 https://dist.apache.org/repos/dist/dev/felix and adding files to it can be done using "svnpubsub" which is taken care of by the following target:
 
-$ ./gradlew commitToStaging
+$ ./gradlew commitToStaging -PsvnUser=youSvnUser -PsvnPassword=yourSvnPassword
 
 Voting on the release
 =====================
@@ -73,11 +73,11 @@ Promoting the release:
 Move the artifacts from the development area to the final release location at 
 https://dist.apache.org/repos/dist/release/felix by invoking the following target:
 
-$ ./gradlew promoteToRelease
+$ ./gradlew promoteToRelease -PsvnUser=youSvnUser -PsvnPassword=yourSvnPassword
 
 Cancelling the release
 ======================
 
-$ ./gradlew deleteFromStaging
+$ ./gradlew deleteFromStaging -PsvnUser=youSvnUser -PsvnPassword=yourSvnPassword
 
 [1] http://www.apache.org/dev/release.html
