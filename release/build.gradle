@@ -54,11 +54,11 @@ rat {
     'release/**',
     'gradlew',
     'README',
+    '**/DEPENDENCIES',
     '**/README',
     '**/.gitignore',
     '**/generated/**',
     'doc/**',
-    '**/*.bnd',
     '**/packageinfo',
     '**/*.txt'
   ]
@@ -71,30 +71,29 @@ workspace = Workspace.getWorkspace(".")
 task makeStaging << {
     description = 'Package the source and binary distributions.'
 
-    // Package source and binary distributions.
-    new File('.').eachFile { 
-	if(new File(it, 'bnd.bnd').exists()) {
-	    def bndProject = workspace.getProject(it.name)
-	    if (! bndProject.getProperty("Test-Cases") && ! bndProject.isNoBundles()) {
-		logger.lifecycle("    Packaging source for project ${bndProject.name}")
+    // Package source and source bin dependencies distributions.
+    logger.lifecycle("    Packaging source distributions.")
 
-		// Package source distribution
-		ant.zip(destfile: "staging/${bndProject.name}-" + bndProject.getVersion("${bndProject.name}") + "-src.zip") {
-		    zipfileset(dir: '../cnf', prefix: "dependencymanager/cnf", includes: '.project,.classpath,src/**,*.bnd,ext/**')
-		    zipfileset(dir: '..', prefix: "dependencymanager", includes: '*.gradle,*.properties')
-		    zipfileset(dir: "../${bndProject.name}", 
-			       prefix: "dependencymanager/" + "${bndProject.name}",
-			       includes: "*.gradle,.project,.classpath,.settings/**,src/**,test/**,resources/**,*.bnd,*.bndrun,run-*/conf/**")
-		}
-
-		// Package binary distribution
-		logger.lifecycle("    Packaging binary distributions.")
-		ant.zip(destfile: "staging/${bndProject.name}-" + bndProject.getVersion("${bndProject.name}") + "-bin.zip") {
-		    ant.zipfileset(dir: '../cnf', prefix: 'dependencymanager/cnf', 
-				   includes: 'buildrepo/**,localrepo/**,releaserepo/**,plugins/**,gradle/**')
+    def topdir="apache-felix-dependencymanager-" + dmVersion
+    ant.zip(destfile: "staging/"+topdir+'-src.zip') {
+	zipfileset(dir: '../cnf', prefix: topdir+"-src/cnf", includes: ".project,.classpath,src/**,*.bnd,ext/**")
+	zipfileset(dir: '..', prefix: topdir+"-src", includes: '*.gradle,*.properties,README,NOTICE,LICENSE')
+	new File('.').eachFile { 
+	    if(new File(it, 'bnd.bnd').exists()) {
+		def bndProject = workspace.getProject(it.name)
+		if (! bndProject.isNoBundles()) {
+		    zipfileset(dir: "../${bndProject.name}", prefix: topdir+"-src/${bndProject.name}",
+			       includes: "*.gradle,.project,.classpath,.settings/**,src/**,test/**,*.bnd,*.bndrun,run-*/conf/**,resources/**")
 		}
 	    }
 	}
+    }
+
+    // Package binary dependencies, needed to build the source distributions.
+    ant.zip(destfile: "staging/"+topdir+"-deps.zip") {
+	ant.zipfileset(dir: 'resources/deps', prefix: topdir+"-deps", includes: '*')
+	ant.zipfileset(dir: '../cnf', prefix: topdir+"-deps/cnf",
+		       includes: 'buildrepo/**,localrepo/**,releaserepo/**,plugins/**,gradle/**')
     }
 }
 
@@ -126,7 +125,7 @@ task signStaging << {
 
 
 // Moves the source and binary distributions to staging.
-// (you must provide svn user/password using gradle "-PsvnUser=xxx -PsvnPassword=xxx" options)
+// (you can provide svn user/password using gradle "-PsvnUser=xxx -PsvnPassword=xxx" options)
 task commitToStaging << {
     getProject().exec { 
     	commandLine 'svn', '--username', svnUser, '--password', svnPassword, 
@@ -136,7 +135,7 @@ task commitToStaging << {
 }
 
 // Promotes the staged distributions to release
-// (you must provide svn user/password using gradle "-PsvnUser=xxx -PsvnPassword=xxx" options)
+// (you can provide svn user/password using gradle "-PsvnUser=xxx -PsvnPassword=xxx" options)
 task promoteToRelease << { 
     getProject().exec { 
     	commandLine 'svn', '--username', svnUser, '--password', svnPassword, 
@@ -146,7 +145,7 @@ task promoteToRelease << {
 }
 
 // Removes the staged distributions from staging
-// (you must provide svn user/password using gradle "-PsvnUser=xxx -PsvnPassword=xxx" options)
+// (you can provide svn user/password using gradle "-PsvnUser=xxx -PsvnPassword=xxx" options)
 task deleteFromStaging << { 
     getProject().exec { 
     	commandLine 'svn', '--username', svnUser, '--password', svnPassword, 
@@ -164,9 +163,4 @@ task clean(overwrite: true) << {
 // Only clean the staging directory
 task cleanStaging << { 
     new File("release/staging").deleteDir()
-}
-
-//Generate a Gradle wrapper
-task wrapper(type: Wrapper) {
-    gradleVersion = '2.1'
 }

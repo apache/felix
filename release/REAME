@@ -1,9 +1,4 @@
 Apache Felix Dependency Manager Release Guide 
-
-(similar to Apache Ace release process, see https://ace.apache.org/dev-doc/release-guide.html)
-
-Apache Felix Dependency Manager is an open source project, and as such its only official releases are source releases. 
-For convenience we also provide binaries. 
 This document describes how to do a source release. It is based on the Release FAQ [1]
 
 Prerequisites
@@ -11,16 +6,14 @@ Prerequisites
 
 To create a release you must:
 
-* Be a committer in the Apache Felix project;
 * Have Gradle (at least 2.1) installed on your system;
 * Have Subversion installed on your system;
 * Have gpg installed on your system;
-* Have a public key added to the keys file.
+* Have a public key added to the keys file, and committed to [2] 
 
 Before you can start staging a release candidate, you must:
 
 * make sure there are no dependencies on snapshots/unreleased versions;
-* double check that the "dmVersion" property you want to create is correctly filled in in release/build.gradle
 * create a tagged version of the sources in preparation of the release candidate.
 
 Creating a tagged version of the sources can be done directly through svn:
@@ -34,11 +27,11 @@ Staging a release starts by checking out a tagged version of the sources:
 
 svn co https://svn.apache.org/repos/asf/felix/releases/dependencymanager.X.Y.Z dependencymanager-X.Y.Z
 
-The next step is to build/test the software and create the release/staging/ directory (where the source/jars will be packages)
+The next step is to build/test the software and create the release/staging/ directory (where the source/jars will be packaged):
 
 $ cd dependencymanager-X.Y.Z/
-$ gradle rat (check if some files don't contain a valid license)
-$ gradle org.apache.felix.dependencymanager.annotation:jar
+$ gradle rat 
+$ gradle org.apache.felix.dependencymanager.annotation:jar (you must
 $ gradle jar
 $ gradle test
 $ gradle check
@@ -60,11 +53,11 @@ Start a vote on the dev@felix.apache.org list, for example (be sure to replace X
 
 The staging version can be checked using the following script:
 
-  http://svn.apache.org/viewvc/felix/trunk/dependencymanager/release/check_staged_dependencymanager.sh
+  http://svn.apache.org/viewvc/felix/trunk/dependencymanager/release/check_staged_release.sh
 
 Usage:
 
-$ sh check_staged_dependencymanager.sh X.Y.Z
+$ sh check_staged_release.sh X.Y.Z
 
 This script, unlike the original Felix check_stage_release.sh, will download staging from https://dist.apache.org/repos/dist/dev/felix instead of 
 http://repository.apache.org/content/repositories.
