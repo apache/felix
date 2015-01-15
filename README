@@ -24,42 +24,42 @@ register, acquire, and manage dynamic OSGi services.
 Building and testing Apache Felix Dependency Manager
 ====================================================
 
-* Using gradle:
+** Compilation Using gradle:
 
-Install Jdk1.7
-Install gradle (at least 2.1)
-If you need to configure an http proxy, edit gradle.properties and set the following properties:
+- Install Jdk1.7
+- Install gradle (at least 2.1)
+- If you need to configure an http(s)proxy, then you can either edit gradle.properties and set the necessary "systemProp.http*" properties.
 
-  systemProp.http.proxyHost
-  systemProp.http.proxyPort
-  systemProp.https.proxyHost
-  systemProp.https.proxyPort
+- Alternatively, you can also specify the http/https settings using the GRADLE_OPTS environment variable. For example:
 
-Compile Dependendency Manager annotations bndtools plugin:
+  export GRADLE_OPTS="-Dhttps.proxyHost=www.somehost.org -Dhttps.proxyPort=8080"
+
+- First, compile Dependendency Manager annotations bndtools plugin:
   
 $ gradle org.apache.felix.dependencymanager.annotation:jar
 
-Then compile everything:
+- Then compile all other bundles:
  
 $ gradle jar
 
-run junit tests:
+- run junit tests:
 
 $ gradle test
 
-run integration tests:
+- run integration tests:
 
 $ gradle check
 
-* Using Eclipse:
+** Compilation Using Eclipse:
 
-Install either Eclipse Kepler SR2 or Eclipse Luna.
-Open BndTools perpective.
-Import Dependency Manager into Eclipse, and compile everything
-Click on org.apache.felix.dependencymanager project and run it as "JUnit test".
-Click on org.apache.felix.dependencymanager.shell and run it as "JUnit test"
-Click on org.apache.felix.dependencymanager.itest and run it as "Bnd OSGi Test Launcer (Junit)".
-Click on org.apache.felix.dependencymanager.runtime.itest and run it as ""Bnd OSGi Test Launcer (Junit)".
+- Install either Eclipse Kepler SR2 or Eclipse Luna
+- Install BndTools 2.4.0
+- Open BndTools perpective
+- Import Dependency Manager into Eclipse, and compile everything
+- Click on org.apache.felix.dependencymanager project and run it as "JUnit test".
+- Click on org.apache.felix.dependencymanager.shell and run it as "JUnit test"
+- Click on org.apache.felix.dependencymanager.itest and run it as "Bnd OSGi Test Launcer (Junit)".
+- Click on org.apache.felix.dependencymanager.runtime.itest and run it as ""Bnd OSGi Test Launcer (Junit)".
 
 Getting Started
 ===============
@@ -67,7 +67,11 @@ Getting Started
 To start using Apache Felix Dependency Manager, please go to our website and read the
 getting started guide for users:
 
-http://felix.apache.org/documentation/subprojects/apache-felix-dependency-manager.html
+  http://felix.apache.org/documentation/subprojects/apache-felix-dependency-manager.html
+
+Many examples are also available from the dependency manager examples:
+
+  http://svn.apache.org/viewvc/felix/trunk/examples/dependencymanager-samples
 
 Many thanks for using Apache Felix Dependency Manager.
 
