@@ -25,6 +25,6 @@ This archive contains all the binary dependencies that are needed to build
 Apache Felix Dependency Manager. 
 To build the source, you have to copy the ./cnf directory into the apache-felix-dependencymanager-X.Y.Z/ directory:
 
-$ cp -r ./cnf ../apache-felix-dependencymanager-X.Y.Z/
+$ cp -r ./cnf ../apache-felix-dependencymanager-X.Y.Z-src/
 
 
