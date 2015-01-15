@@ -732,7 +732,7 @@ public class ResolverImpl implements Resolver
 
             mergeCandidatePackages(
                 session.getContext(), resource, req, cap, resourcePkgMap, allCandidates,
-                new HashMap<Resource, List<Capability>>());
+                new HashMap<Resource, List<Capability>>(), new HashMap<Resource, List<Resource>>());
         }
 
         // Third, have all candidates to calculate their package spaces.
@@ -829,7 +829,7 @@ public class ResolverImpl implements Resolver
     private void mergeCandidatePackages(
         ResolveContext rc, Resource current, Requirement currentReq,
         Capability candCap, Map<Resource, Packages> resourcePkgMap,
-        Candidates allCandidates, Map<Resource, List<Capability>> cycles)
+        Candidates allCandidates, Map<Resource, List<Capability>> cycles, HashMap<Resource, List<Resource>> visitedRequiredBundlesMap)
     {
         List<Capability> cycleCaps = cycles.get(current);
         if (cycleCaps == null)
@@ -858,16 +858,27 @@ public class ResolverImpl implements Resolver
             // will be visible to the current resource.
             Packages candPkgs = resourcePkgMap.get(candCap.getResource());
 
-            // We have to merge all exported packages from the candidate,
-            // since the current resource requires it.
-            for (Entry<String, Blame> entry : candPkgs.m_exportedPkgs.entrySet())
+            List<Resource> visitedRequiredBundles = visitedRequiredBundlesMap.get(current);
+            if (visitedRequiredBundles == null)
             {
-                mergeCandidatePackage(
-                    current,
-                    true,
-                    currentReq,
-                    entry.getValue().m_cap,
-                    resourcePkgMap);
+                visitedRequiredBundles = new ArrayList<Resource>();
+                visitedRequiredBundlesMap.put(current, visitedRequiredBundles);
+            }
+            if (!visitedRequiredBundles.contains(candCap.getResource()))
+            {
+                visitedRequiredBundles.add(candCap.getResource());
+
+                // We have to merge all exported packages from the candidate,
+                // since the current resource requires it.
+                for (Entry<String, Blame> entry : candPkgs.m_exportedPkgs.entrySet())
+                {
+                    mergeCandidatePackage(
+                        current,
+                        true,
+                        currentReq,
+                        entry.getValue().m_cap,
+                        resourcePkgMap);
+                }
             }
 
             // If the candidate requires any other bundles with reexport visibility,
@@ -893,7 +904,7 @@ public class ResolverImpl implements Resolver
                                 w.getCapability(),
                                 resourcePkgMap,
                                 allCandidates,
-                                cycles);
+                                cycles, visitedRequiredBundlesMap);
                         }
                     }
                 }
@@ -918,7 +929,7 @@ public class ResolverImpl implements Resolver
                                 allCandidates.getCandidates(req).iterator().next(),
                                 resourcePkgMap,
                                 allCandidates,
-                                cycles);
+                                cycles, visitedRequiredBundlesMap);
                         }
                     }
                 }
