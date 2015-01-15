@@ -80,11 +80,11 @@ task makeStaging << {
 	zipfileset(dir: '..', prefix: topdir+"-src", includes: '*.gradle,*.properties,README,NOTICE,LICENSE')
 	new File('.').eachFile { 
 	    if(new File(it, 'bnd.bnd').exists()) {
-		def bndProject = workspace.getProject(it.name)
-		if (! bndProject.isNoBundles()) {
-		    zipfileset(dir: "../${bndProject.name}", prefix: topdir+"-src/${bndProject.name}",
-			       includes: "*.gradle,.project,.classpath,.settings/**,src/**,test/**,*.bnd,*.bndrun,run-*/conf/**,resources/**")
-		}
+    		def bndProject = workspace.getProject(it.name)
+    		if (! bndProject.isNoBundles()) {
+    		    zipfileset(dir: "../${bndProject.name}", prefix: topdir+"-src/${bndProject.name}",
+    			       includes: "*.gradle,.project,.classpath,.settings/**,src/**,test/**,*.bnd,*.bndrun,run-*/conf/**,resources/**")
+    		}
 	    }
 	}
     }
@@ -94,6 +94,17 @@ task makeStaging << {
 	ant.zipfileset(dir: 'resources/deps', prefix: topdir+"-deps", includes: '*')
 	ant.zipfileset(dir: '../cnf', prefix: topdir+"-deps/cnf",
 		       includes: 'buildrepo/**,localrepo/**,releaserepo/**,plugins/**,gradle/**')
+    }
+
+    // Package binaries as a simple collection of bundles.
+    ant.zip(destfile: "staging/"+topdir+"-bin.zip") {
+        ant.mappedresources() {
+            ant.fileset(dir: '..', includes: '*/generated/*.jar')
+            ant.chainedmapper() {
+                ant.flattenmapper()
+                ant.globmapper(from: '*', to: topdir+'-bin/*')
+            }
+        }
     }
 }
 
