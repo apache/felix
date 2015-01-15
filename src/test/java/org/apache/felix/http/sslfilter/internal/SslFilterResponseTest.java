@@ -42,7 +42,7 @@ public class SslFilterResponseTest
 {
     private static final String BACKEND_SERVER = "backend.server";
     private static final String OTHER_SERVER = "other.server";
-    
+
     private static final String PATH = "http://localhost:8080/";
 
     private static final String DEFAULT_HTTP_PORT = "80";
@@ -209,6 +209,11 @@ public class SslFilterResponseTest
         }
 
         public void setContentLength(int len)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public void setContentLengthLong(long len)
         {
             throw new UnsupportedOperationException();
         }
