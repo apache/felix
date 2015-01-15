@@ -33,7 +33,7 @@ The next step is to build/test the software and create the release/staging/ dire
 
 $ cd dependencymanager-X.Y.Z/
 $ ./gradlew rat 
-$ ./gradlew org.apache.felix.dependencymanager.annotation:jar (you must
+$ ./gradlew org.apache.felix.dependencymanager.annotation:jar
 $ ./gradlew jar
 $ ./gradlew test
 $ ./gradlew check
