@@ -185,6 +185,10 @@ public class ServletContextImplTest
         {
         }
 
+        public String getVirtualServerName() {
+            return null;
+        }
+
         public Object getAttribute(String name)
         {
             return attributes.get(name);

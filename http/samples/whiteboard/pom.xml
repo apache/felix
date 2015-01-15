@@ -73,8 +73,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org.apache.felix.http.servlet-api</artifactId>
+            <version>[1.0,1.2)</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

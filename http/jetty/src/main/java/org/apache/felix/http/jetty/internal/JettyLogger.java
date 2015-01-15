@@ -70,6 +70,12 @@ public final class JettyLogger implements Logger
         }
     }
 
+    @Override
+    public void debug(String msg, long value)
+    {
+        debug(msg, value);
+    }
+
     public void debug(String msg, Throwable throwable)
     {
         if (this.debugEnabled)

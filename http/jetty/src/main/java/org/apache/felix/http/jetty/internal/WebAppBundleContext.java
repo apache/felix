@@ -106,7 +106,7 @@ class WebAppBundleContext extends WebAppContext
         }
 
         @Override
-        public synchronized void release()
+        public synchronized void close()
         {
             if (this._in != null)
             {
@@ -116,7 +116,7 @@ class WebAppBundleContext extends WebAppContext
                 // "Inflater has been closed"
                 this._in = null;
             }
-            super.release();
+            super.close();
         }
 
         @Override

@@ -21,7 +21,7 @@
     <name>Apache Felix Servlet API</name>
     <description>Provides the Servlet API for use by applications</description>
     <artifactId>org.apache.felix.http.servlet-api</artifactId>
-    <version>1.0.2-SNAPSHOT</version>
+    <version>1.1.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
@@ -48,7 +48,12 @@
                             javax.servlet.annotation;
                             javax.servlet.descriptor;
                             javax.servlet.http;
-                                version=3.0
+                                version=3.0,
+                            javax.servlet;
+                            javax.servlet.annotation;
+                            javax.servlet.descriptor;
+                            javax.servlet.http;
+                                version=3.1
                         </Export-Package>
                     </instructions>
                 </configuration>
@@ -60,7 +65,7 @@
         <dependency>
             <groupId>org.apache.tomcat</groupId>
             <artifactId>tomcat-servlet-api</artifactId>
-            <version>7.0.8</version>
+            <version>8.0.9</version>
         </dependency>
     </dependencies>
 

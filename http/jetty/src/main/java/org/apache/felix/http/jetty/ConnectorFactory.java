@@ -21,6 +21,7 @@ package org.apache.felix.http.jetty;
 import org.eclipse.jetty.server.Connector;
 
 import aQute.bnd.annotation.ConsumerType;
+import org.eclipse.jetty.server.Server;
 
 /**
  * The <code>ConnectorFactory</code> is a service interface which allows
@@ -54,5 +55,5 @@ public interface ConnectorFactory
      *
      * @return A configured Jetty {@code Connector} instance.
      */
-    Connector createConnector();
+    Connector createConnector(Server server);
 }

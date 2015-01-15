@@ -111,7 +111,7 @@ public final class FilterHandler extends AbstractHandler implements Comparable<F
         {
             // FELIX-3988: If the response is not yet committed and still has the default 
             // status, we're going to override this and send an error instead.
-            if (!res.isCommitted() && res.getStatus() == SC_OK)
+            if (!res.isCommitted() && (res.getStatus() == SC_OK || res.getStatus() == 0))
             {
                 res.sendError(SC_FORBIDDEN);
             }

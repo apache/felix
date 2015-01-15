@@ -107,22 +107,22 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>org.apache.felix.http.bridge</artifactId>
-            <version>${project.version}</version>
+            <version>[2.4.0-SNAPSHOT,2.5)</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>org.apache.felix.http.cometd</artifactId>
-            <version>${project.version}</version>
+            <version>[2.4.0-SNAPSHOT,2.5)</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>org.apache.felix.http.jetty</artifactId>
-            <version>${project.version}</version>
+            <version>[3.0.0-SNAPSHOT,3.1)</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>org.apache.felix.http.whiteboard</artifactId>
-            <version>${project.version}</version>
+            <version>[2.4.0-SNAPSHOT,2.5)</version>
         </dependency>
     </dependencies>
 </project>

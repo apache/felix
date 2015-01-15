@@ -20,13 +20,13 @@ package org.apache.felix.http.itest;
 
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.http.jetty.ConnectorFactory;
-import org.eclipse.jetty.server.AbstractConnector;
 import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.LocalConnector;
+import org.eclipse.jetty.server.Server;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
@@ -47,39 +47,24 @@ public class HttpJettyConnectorTest extends BaseIntegrationTest
         ConnectorFactory factory = new ConnectorFactory()
         {
             @Override
-            public Connector createConnector()
+            public Connector createConnector(Server server)
             {
-                return new AbstractConnector()
+                return new LocalConnector(server)
                 {
                     @Override
-                    public void open() throws IOException
+                    public void doStart() throws Exception
                     {
                         openLatch.countDown();
+                        super.doStart();
                     }
 
                     @Override
-                    public int getLocalPort()
-                    {
-                        return 8070;
-                    }
-
-                    @Override
-                    public Object getConnection()
-                    {
-                        return null;
-                    }
-
-                    @Override
-                    public void close() throws IOException
+                    public void doStop() throws Exception
                     {
                         closeLatch.countDown();
+                        super.doStop();
                     }
 
-                    @Override
-                    protected void accept(int acceptorID) throws IOException, InterruptedException
-                    {
-                        // nop
-                    }
                 };
             }
         };

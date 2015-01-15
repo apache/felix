@@ -94,7 +94,7 @@ public class RequestDispatchTest extends BaseIntegrationTest
                     assertEquals("quu=qux", req.getQueryString());
                 }
 
-                resp.getWriter().println("FORWARD");
+                resp.getWriter().print("FORWARD\n");
             }
         };
 
@@ -111,9 +111,9 @@ public class RequestDispatchTest extends BaseIntegrationTest
                 assertEquals("/test/foo", req.getRequestURI());
                 assertEquals("bar=qux&quu", req.getQueryString());
 
-                resp.getWriter().println("NOT_SEND");
+                resp.getWriter().print("NOT_SEND\n");
                 req.getRequestDispatcher("/forward").forward(req, resp);
-                resp.getWriter().println("NOT_SEND");
+                resp.getWriter().print("NOT_SEND\n");
             }
         };
 
@@ -162,7 +162,7 @@ public class RequestDispatchTest extends BaseIntegrationTest
                     assertEquals("/test/foo", req.getAttribute(FORWARD_REQUEST_URI));
                     assertEquals("bar=qux&quu", req.getAttribute(FORWARD_QUERY_STRING));
 
-                    resp.getWriter().println("FORWARD");
+                    resp.getWriter().print("FORWARD\n");
                 }
                 else
                 {
@@ -172,7 +172,7 @@ public class RequestDispatchTest extends BaseIntegrationTest
                     assertEquals("/test/foo", req.getRequestURI());
                     assertEquals("bar=qux&quu", req.getQueryString());
 
-                    resp.getWriter().println("NOT_SEND");
+                    resp.getWriter().print("NOT_SEND\n");
 
                     // ServletContext#getRequestDispatcher only takes absolute paths...
                     RequestDispatcher disp = req.getServletContext().getRequestDispatcher("forward");
@@ -182,7 +182,7 @@ public class RequestDispatchTest extends BaseIntegrationTest
                     assertNotNull("ServletRequest returned NO RequestDispatcher for relative path?!", disp);
 
                     disp.forward(req, resp);
-                    resp.getWriter().println("NOT_SEND");
+                    resp.getWriter().print("NOT_SEND\n");
                 }
             }
         };
@@ -238,7 +238,7 @@ public class RequestDispatchTest extends BaseIntegrationTest
                     assertEquals("quu=qux", req.getQueryString());
                 }
 
-                resp.getWriter().println("INCLUDE");
+                resp.getWriter().print("INCLUDE\n");
             }
         };
 
@@ -255,9 +255,9 @@ public class RequestDispatchTest extends BaseIntegrationTest
                 assertEquals("/test/foo", req.getRequestURI());
                 assertEquals("bar=qux&quu", req.getQueryString());
 
-                resp.getWriter().println("BEFORE");
+                resp.getWriter().print("BEFORE\n");
                 req.getRequestDispatcher("/include").include(req, resp);
-                resp.getWriter().println("AFTER");
+                resp.getWriter().print("AFTER\n");
             }
         };
 
@@ -306,7 +306,7 @@ public class RequestDispatchTest extends BaseIntegrationTest
                     //                    assertEquals("/test/include", req.getAttribute(INCLUDE_REQUEST_URI));
                     assertEquals(null, req.getAttribute(INCLUDE_QUERY_STRING));
 
-                    resp.getWriter().println("INCLUDE");
+                    resp.getWriter().print("INCLUDE\n");
                 }
                 else
                 {
@@ -316,7 +316,7 @@ public class RequestDispatchTest extends BaseIntegrationTest
                     //                    assertEquals("/test/foo", req.getRequestURI());
                     assertEquals("bar=qux&quu", req.getQueryString());
 
-                    resp.getWriter().println("BEFORE");
+                    resp.getWriter().print("BEFORE\n");
 
                     // ServletContext#getRequestDispatcher only takes absolute paths...
                     RequestDispatcher disp = req.getServletContext().getRequestDispatcher("include");
@@ -326,7 +326,7 @@ public class RequestDispatchTest extends BaseIntegrationTest
                     assertNotNull("ServletRequest returned NO RequestDispatcher for relative path?!", disp);
 
                     disp.include(req, resp);
-                    resp.getWriter().println("AFTER");
+                    resp.getWriter().print("AFTER\n");
                 }
             }
         };
@@ -399,7 +399,7 @@ public class RequestDispatchTest extends BaseIntegrationTest
                     assertEquals("quu=qux", req.getQueryString());
                 }
 
-                resp.getWriter().println("FORWARD");
+                resp.getWriter().print("FORWARD\n");
             }
         };
 
@@ -416,9 +416,9 @@ public class RequestDispatchTest extends BaseIntegrationTest
                 assertEquals("/context/test/foo", req.getRequestURI());
                 assertEquals("bar=qux&quu", req.getQueryString());
 
-                resp.getWriter().println("NOT_SEND");
+                resp.getWriter().print("NOT_SEND\n");
                 req.getRequestDispatcher("/forward").forward(req, resp);
-                resp.getWriter().println("NOT_SEND");
+                resp.getWriter().print("NOT_SEND\n");
             }
         };
 
@@ -475,7 +475,7 @@ public class RequestDispatchTest extends BaseIntegrationTest
                     assertEquals("quu=qux", req.getQueryString());
                 }
 
-                resp.getWriter().println("INCLUDE");
+                resp.getWriter().print("INCLUDE\n");
             }
         };
 
@@ -492,9 +492,9 @@ public class RequestDispatchTest extends BaseIntegrationTest
                 assertEquals("/context/test/foo", req.getRequestURI());
                 assertEquals("bar=qux&quu", req.getQueryString());
 
-                resp.getWriter().println("BEFORE");
+                resp.getWriter().print("BEFORE\n");
                 req.getRequestDispatcher("/include").include(req, resp);
-                resp.getWriter().println("AFTER");
+                resp.getWriter().print("AFTER\n");
             }
         };
 
