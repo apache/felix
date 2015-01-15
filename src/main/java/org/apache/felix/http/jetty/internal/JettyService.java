@@ -44,21 +44,24 @@ import org.apache.felix.http.base.internal.DispatcherServlet;
 import org.apache.felix.http.base.internal.EventDispatcher;
 import org.apache.felix.http.base.internal.HttpServiceController;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
+import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.security.HashLoginService;
 import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.ConnectorStatistics;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SessionManager;
-import org.eclipse.jetty.server.bio.SocketConnector;
+import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.StatisticsHandler;
-import org.eclipse.jetty.server.nio.SelectChannelConnector;
-import org.eclipse.jetty.server.ssl.SslConnector;
-import org.eclipse.jetty.server.ssl.SslSelectChannelConnector;
-import org.eclipse.jetty.server.ssl.SslSocketConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.component.AbstractLifeCycle;
 import org.eclipse.jetty.util.component.LifeCycle;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -237,10 +240,6 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             this.server = new Server();
             this.server.addLifeCycleListener(this);
 
-            // HTTP/1.1 requires Date header if possible (it is)
-            this.server.setSendDateHeader(true);
-            this.server.setSendServerVersion(this.config.isSendServerHeader());
-
             this.server.addBean(new HashLoginService("OSGi HTTP Service Realm"));
 
             this.parent = new ContextHandlerCollection();
@@ -314,55 +313,62 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 
     private boolean initializeHttp()
     {
-        Connector connector = this.config.isUseHttpNio() ? new SelectChannelConnector() : new SocketConnector();
+        HttpConnectionFactory connFactory = new HttpConnectionFactory();
+        configureHttpConnectionFactory(connFactory);
+        ServerConnector connector = new ServerConnector(server, connFactory);
         configureConnector(connector, this.config.getHttpPort());
         return startConnector(connector);
     }
 
     private boolean initializeHttps()
     {
-        SslConnector connector = this.config.isUseHttpsNio() ? new SslSelectChannelConnector() : new SslSocketConnector();
+        HttpConnectionFactory connFactory = new HttpConnectionFactory();
+        configureHttpConnectionFactory(connFactory);
+
+        SslContextFactory sslContextFactory = new SslContextFactory();
+        configureSslContextFactory(sslContextFactory);
+
+        ServerConnector connector = new ServerConnector(server, new SslConnectionFactory(sslContextFactory, HttpVersion.HTTP_1_1.toString()), connFactory);
+        connFactory.getHttpConfiguration().addCustomizer(new SecureRequestCustomizer());
         configureConnector(connector, this.config.getHttpsPort());
-        configureSslConnector(connector);
         return startConnector(connector);
     }
 
-    @SuppressWarnings("deprecation")
-    private void configureSslConnector(final SslConnector connector)
+    private void configureSslContextFactory(final SslContextFactory connector)
     {
         if (this.config.getKeystoreType() != null)
         {
-            connector.setKeystoreType(this.config.getKeystoreType());
+            connector.setKeyStoreType(this.config.getKeystoreType());
         }
 
         if (this.config.getKeystore() != null)
         {
-            connector.setKeystore(this.config.getKeystore());
+            connector.setKeyStorePath(this.config.getKeystore());
         }
 
         if (this.config.getPassword() != null)
         {
-            connector.setPassword(this.config.getPassword());
+            connector.setKeyStorePassword(this.config.getPassword());
         }
 
         if (this.config.getKeyPassword() != null)
         {
-            connector.setKeyPassword(this.config.getKeyPassword());
+            connector.setKeyManagerPassword(this.config.getKeyPassword());
         }
 
         if (this.config.getTruststoreType() != null)
         {
-            connector.setTruststoreType(this.config.getTruststoreType());
+            connector.setTrustStoreType(this.config.getTruststoreType());
         }
 
         if (this.config.getTruststore() != null)
         {
-            connector.setTruststore(this.config.getTruststore());
+            connector.setTrustStorePath(this.config.getTruststore());
         }
 
         if (this.config.getTrustPassword() != null)
         {
-            connector.setTrustPassword(this.config.getTrustPassword());
+            connector.setTrustStorePassword(this.config.getTrustPassword());
         }
 
         if ("wants".equalsIgnoreCase(this.config.getClientcert()))
@@ -386,25 +392,45 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 
         if (this.config.getIncludedProtocols() != null)
         {
-            connector.getSslContextFactory().setIncludeProtocols(this.config.getIncludedProtocols());
+            connector.setIncludeProtocols(this.config.getIncludedProtocols());
         }
 
         if (this.config.getExcludedProtocols() != null)
         {
-            connector.getSslContextFactory().setExcludeProtocols(this.config.getExcludedProtocols());
+            connector.setExcludeProtocols(this.config.getExcludedProtocols());
         }
     }
 
-    private void configureConnector(final Connector connector, int port)
+    private void configureConnector(final ServerConnector connector, int port)
     {
-        connector.setMaxIdleTime(this.config.getHttpTimeout());
-        connector.setRequestHeaderSize(this.config.getHeaderSize());
-        connector.setRequestBufferSize(this.config.getRequestBufferSize());
-        connector.setResponseHeaderSize(this.config.getHeaderSize());
-        connector.setResponseBufferSize(this.config.getResponseBufferSize());
         connector.setPort(port);
         connector.setHost(this.config.getHost());
-        connector.setStatsOn(this.config.isRegisterMBeans());
+        connector.setIdleTimeout(this.config.getHttpTimeout());
+
+        if (this.config.isRegisterMBeans())
+        {
+            connector.addBean(new ConnectorStatistics());
+        }
+    }
+
+    private void configureHttpConnectionFactory(HttpConnectionFactory connFactory)
+    {
+        HttpConfiguration config = connFactory.getHttpConfiguration();
+        config.setRequestHeaderSize(this.config.getHeaderSize());
+        config.setResponseHeaderSize(this.config.getHeaderSize());
+        config.setOutputBufferSize(this.config.getResponseBufferSize());
+
+        // HTTP/1.1 requires Date header if possible (it is)
+        config.setSendDateHeader(true);
+        config.setSendServerVersion(this.config.isSendServerHeader());
+        config.setSendXPoweredBy(this.config.isSendServerHeader());
+
+        connFactory.setInputBufferSize(this.config.getRequestBufferSize());
+
+        //Changed from 8.x to 9.x
+        //maxIdleTime -> ServerConnector.setIdleTimeout
+        //requestBufferSize -> HttpConnectionFactory.setInputBufferSize
+        //statsOn -> ServerConnector.addBean(new ConnectorStatistics());
     }
 
     private void configureSessionManager(final ServletContextHandler context)
@@ -414,7 +440,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         manager.setMaxInactiveInterval(this.config.getSessionTimeout() * 60);
         manager.setSessionIdPathParameterName(this.config.getProperty(SessionManager.__SessionIdPathParameterNameProperty, SessionManager.__DefaultSessionIdPathParameterName));
         manager.setCheckingRemoteSessionIdEncoding(this.config.getBooleanProperty(SessionManager.__CheckRemoteSessionEncoding, true));
-        manager.setSessionTrackingModes(Collections.singleton(SessionTrackingMode.COOKIE)); // XXX
+        manager.setSessionTrackingModes(Collections.singleton(SessionTrackingMode.COOKIE));
 
         SessionCookieConfig cookieConfig = manager.getSessionCookieConfig();
         cookieConfig.setName(this.config.getProperty(SessionManager.__SessionCookieProperty, SessionManager.__DefaultSessionCookie));
@@ -465,22 +491,32 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         return getEndpoint(listener, address);
     }
 
+    private ServerConnector getServerConnector(Connector connector)
+    {
+        if (connector instanceof ServerConnector)
+        {
+            return (ServerConnector) connector;
+        }
+        throw new IllegalArgumentException("Connection instance not of type ServerConnector " + connector);
+    }
+
     private String getEndpoint(final Connector listener, final String hostname)
     {
         final StringBuilder sb = new StringBuilder();
         sb.append("http");
         int defaultPort = 80;
-        if (listener instanceof SslConnector)
+        //SslConnectionFactory protocol is SSL-HTTP1.0
+        if (getServerConnector(listener).getDefaultProtocol().startsWith("SSL"))
         {
             sb.append('s');
             defaultPort = 443;
         }
         sb.append("://");
         sb.append(hostname);
-        if (listener.getPort() != defaultPort)
+        if (getServerConnector(listener).getPort() != defaultPort)
         {
             sb.append(':');
-            sb.append(String.valueOf(listener.getPort()));
+            sb.append(String.valueOf(getServerConnector(listener).getPort()));
         }
         sb.append(config.getContextPath());
 
@@ -517,7 +553,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             {
                 final Connector connector = connectors[i];
 
-                if (connector.getHost() == null)
+                if (getServerConnector(connector).getHost() == null)
                 {
                     try
                     {
@@ -554,7 +590,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
                 }
                 else
                 {
-                    final String endpoint = this.getEndpoint(connector, connector.getHost());
+                    final String endpoint = this.getEndpoint(connector, getServerConnector(connector).getHost());
                     if (endpoint != null)
                     {
                         endpoints.add(endpoint);
@@ -623,7 +659,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 
                 try
                 {
-                	context.getServletContext().setAttribute(OSGI_BUNDLE_CONTEXT, webAppBundle.getBundleContext());
+                    context.getServletContext().setAttribute(OSGI_BUNDLE_CONTEXT, webAppBundle.getBundleContext());
 
                     JettyService.this.parent.addHandler(context);
                     context.start();

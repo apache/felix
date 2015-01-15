@@ -42,7 +42,7 @@ public class MBeanServerTracker extends ServiceTracker
     {
         MBeanServer server = (MBeanServer) super.addingService(reference);
         MBeanContainer mBeanContainer = new MBeanContainer(server);
-        this.server.getContainer().addEventListener(mBeanContainer);
+        this.server.addEventListener(mBeanContainer);
         return mBeanContainer;
     }
 
@@ -50,7 +50,7 @@ public class MBeanServerTracker extends ServiceTracker
     public void removedService(ServiceReference reference, Object service)
     {
         MBeanContainer mBeanContainer = (MBeanContainer) service;
-        this.server.getContainer().removeEventListener(mBeanContainer);
+        this.server.removeEventListener(mBeanContainer);
         super.removedService(reference, mBeanContainer.getMBeanServer());
     }
 }

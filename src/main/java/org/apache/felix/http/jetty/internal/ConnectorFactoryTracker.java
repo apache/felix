@@ -51,7 +51,7 @@ public class ConnectorFactoryTracker extends ServiceTracker
     public Object addingService(ServiceReference reference)
     {
         ConnectorFactory factory = (ConnectorFactory) super.addingService(reference);
-        Connector connector = factory.createConnector();
+        Connector connector = factory.createConnector(server);
         try
         {
             this.server.addConnector(connector);

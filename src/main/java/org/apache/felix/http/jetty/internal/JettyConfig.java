@@ -82,12 +82,6 @@ public final class JettyConfig
     /** Felix specific property to control whether to want or require HTTPS client certificates. Valid values are "none", "wants", "needs". Default is "none". */
     private static final String FELIX_HTTPS_CLIENT_CERT = "org.apache.felix.https.clientcertificate";
 
-    /** Felix specific property to control whether Jetty uses NIO or not for HTTP. Valid values are "true", "false". Default is true */
-    public static final String FELIX_HTTP_NIO = "org.apache.felix.http.nio";
-
-    /** Felix specific property to control whether Jetty uses NIO or not for HTTPS. Valid values are "true", "false". Default is the value of org.apache.felix.http.nio */
-    public static final String FELIX_HTTPS_NIO = "org.apache.felix.https.nio";
-
     /** Felix specific property to configure the session timeout in minutes (same session-timout in web.xml). Default is servlet container specific */
     public static final String FELIX_SESSION_TIMEOUT = "org.apache.felix.http.session.timeout";
 
@@ -350,11 +344,6 @@ public final class JettyConfig
         return useHttp && getHttpPort() > 0;
     }
 
-    public boolean isUseHttpNio()
-    {
-        return getBooleanProperty(FELIX_HTTP_NIO, true);
-    }
-
     public boolean isSendServerHeader()
     {
         return getBooleanProperty(FELIX_JETTY_SEND_SERVER_HEADER, true);
@@ -369,11 +358,6 @@ public final class JettyConfig
     {
         boolean useHttps = getBooleanProperty(FELIX_HTTPS_ENABLE, getBooleanProperty(OSCAR_HTTPS_ENABLE, false));
         return useHttps && getHttpsPort() > 0;
-    }
-
-    public boolean isUseHttpsNio()
-    {
-        return getBooleanProperty(FELIX_HTTPS_NIO, isUseHttpNio());
     }
 
     public void reset()
@@ -507,8 +491,9 @@ public final class JettyConfig
             }
         }
     }
-    
-    private int getSocketPort(int i) {
+
+    private int getSocketPort(int i)
+    {
         int port = -1;
         ServerSocket ss = null;
         try
@@ -549,7 +534,7 @@ public final class JettyConfig
         if (value instanceof String)
         {
             final String stringVal = ((String) value).trim();
-            if ( stringVal.length() > 0 )
+            if (stringVal.length() > 0)
             {
                 return new String[] { stringVal };
             }
@@ -558,14 +543,14 @@ public final class JettyConfig
         {
             final String[] stringArr = (String[]) value;
             final List<String> list = new ArrayList<String>();
-            for(final String stringVal : stringArr)
+            for (final String stringVal : stringArr)
             {
-                if ( stringVal.trim().length() > 0 )
+                if (stringVal.trim().length() > 0)
                 {
                     list.add(stringVal.trim());
                 }
             }
-            if ( list.size() > 0 )
+            if (list.size() > 0)
             {
                 return list.toArray(new String[list.size()]);
             }
@@ -581,7 +566,7 @@ public final class JettyConfig
                     conv.add(String.valueOf(object));
                 }
             }
-            if ( conv.size() > 0 )
+            if (conv.size() > 0)
             {
                 return conv.toArray(new String[conv.size()]);
             }

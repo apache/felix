@@ -86,6 +86,11 @@ public class JettyServiceTest extends TestCase
         jettyService.start();
     }
 
+    @Override
+    protected void tearDown() throws Exception {
+        jettyService.stop();
+    }
+
     /**
      * 
      * Tests to ensure the osgi-bundlecontext is available for init methods.

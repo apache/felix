@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-@Version("1.0")
+@Version("2.0")
 package org.apache.felix.http.jetty;
 
 import aQute.bnd.annotation.Version;
