@@ -46,7 +46,7 @@
                     <instructions>
                         <Export-Package>
                             org.osgi.service.http;version=${http.service.version},
-                            org.apache.felix.http.api;version=${project.version}
+                            org.apache.felix.http.api
                         </Export-Package>
                         <Import-Package>
                             org.osgi.service.http,
