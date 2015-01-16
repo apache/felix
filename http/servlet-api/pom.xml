@@ -57,6 +57,8 @@
                         </Export-Package>
 						<Embed-Dependency>tomcat-servlet-api;inline=true</Embed-Dependency>
                     </instructions>
+                    <!-- Skip baselining -->
+                    <skip>true</skip>
                 </configuration>
             </plugin>
         </plugins>

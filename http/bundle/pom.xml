@@ -83,6 +83,8 @@
                             *
                         </Import-Package>
                     </instructions>
+                    <!-- Skip baselining -->
+                    <skip>true</skip>
                 </configuration>
             </plugin>
         </plugins>
