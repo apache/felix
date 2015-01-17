@@ -32,7 +32,7 @@ import org.osgi.service.log.LogService;
  * <p>
  * 
  * This class also supports synchronous scheduling, like the @link {@link SerialExecutor} class; and in this case,
- * only one caller threads will execute the tasks scheduled in the DispatchQueue and in the case the internal 
+ * only one caller threads will execute the tasks scheduled in the DispatchQueue, and in this case the internal 
  * threadpool won't be used).
  * 
  * <p> 
@@ -40,7 +40,7 @@ import org.osgi.service.log.LogService;
  * This class is <b>lock free</b> by design and ensures <b>"safe object publication"</b> between scheduling threads and
  * actual executing thread: if one thread T1 schedules a task, but another thread T2 actually 
  * executes it, then all the objects from the T1 thread will be "safely published" to the executing T2 thread.
- * Safe publication is ensured  because we are using a ConcurrentLinkedQueue.
+ * Safe publication is ensured  because we are using a ConcurrentLinkedQueue, and volatile attributes.
  * (see [1], chapter 3.5.3 (Safe publication idioms). 
  * 
  * [1] Java Concurrency In Practice, Addison Wesley

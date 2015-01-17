@@ -27,5 +27,6 @@ Bundle-Activator:org.apache.felix.dm.shell.Activator
 Bundle-Version: 4.0.0
 Include-Resource: META-INF/=resources/LICENSE,\
 	META-INF/=resources/NOTICE,\
-	META-INF/=resources/DEPENDENCIES
+	META-INF/=resources/DEPENDENCIES,\
+	META-INF/=resources/changelog.txt
 
