@@ -21,7 +21,7 @@ package org.apache.felix.dm.runtime.itest.tests;
 import java.io.IOException;
 import java.util.Hashtable;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;

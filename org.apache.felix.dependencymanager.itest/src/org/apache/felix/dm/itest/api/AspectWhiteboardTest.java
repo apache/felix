@@ -20,7 +20,7 @@ package org.apache.felix.dm.itest.api;
 import java.util.ArrayList;
 import java.util.List;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;

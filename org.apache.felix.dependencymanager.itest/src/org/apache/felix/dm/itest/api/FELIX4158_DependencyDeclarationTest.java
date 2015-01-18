@@ -21,7 +21,7 @@ package org.apache.felix.dm.itest.api;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentDeclaration;

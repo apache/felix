@@ -18,7 +18,6 @@
  */
 package org.apache.felix.dm;
 
-import org.apache.felix.dm.impl.AdapterServiceImpl;
 import org.apache.felix.dm.impl.Logger;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -265,7 +264,7 @@ public abstract class DependencyActivatorBase implements BundleActivator {
     /**
      * Creates a new adapter service.
      * @return the adapter service
-     * @see DependencyManager#createAdapterService(Class, String, String, Object, String, String, String, String)
+     * @see DependencyManager#createAdapterService(Class, String, String, Object, String, String, String, String, boolean)
      */
     public Component createAdapterService(Class<?> serviceInterface, String serviceFilter, 
         String autoConfig, Object callbackInstance, String add, String change, String remove, String swap) {

@@ -20,7 +20,7 @@ package org.apache.felix.dm.itest.util;
 
 import java.io.PrintStream;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 /**
  * Helper class to make sure that steps in a test happen in the correct order. Instantiate

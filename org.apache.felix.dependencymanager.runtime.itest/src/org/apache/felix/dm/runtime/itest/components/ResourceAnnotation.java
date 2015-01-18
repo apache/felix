@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ResourceHandler;

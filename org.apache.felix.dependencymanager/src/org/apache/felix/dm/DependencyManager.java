@@ -45,7 +45,6 @@ import org.apache.felix.dm.impl.index.AspectFilterIndex;
 import org.apache.felix.dm.impl.index.ServiceRegistryCache;
 import org.apache.felix.dm.impl.index.multiproperty.MultiPropertyFilterIndex;
 import org.apache.felix.dm.impl.metatype.PropertyMetaDataImpl;
-import org.apache.felix.dm.impl.metatype.Resource;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -524,7 +523,6 @@ public class DependencyManager {
      * @param callbackInstance instance to invoke the callback on
      * @param callbackChanged the name of the callback method
      * @return a service that acts as a factory for generating resource adapters
-     * @see Resource
      */
     public Component createResourceAdapterService(String resourceFilter, boolean propagate, Object callbackInstance,
         String callbackChanged)

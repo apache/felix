@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;

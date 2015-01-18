@@ -19,8 +19,8 @@
 package org.apache.felix.dm.runtime.itest.components;
 
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.Destroy;
@@ -32,7 +32,6 @@ import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.annotation.api.Stop;
 import org.apache.felix.dm.itest.util.Ensure;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
 
 public class Felix4050 {
     public final static String ENSURE = "Felix4050";
@@ -69,11 +68,9 @@ public class Felix4050 {
                     } catch (InterruptedException e) {
                     }
                     System.out.println("Registering B2");
-                    ServiceRegistration sr = _ctx.registerService(B.class.getName(), B2.this, new Hashtable() {
-                        {
-                            put("type", "b2");
-                        }
-                    });
+                    Properties props = new Properties();
+                    props.put("type", "b2");
+                    _ctx.registerService(B.class.getName(), B2.this, props);
 
                     try {
                         Thread.sleep(1000);
@@ -112,17 +109,15 @@ public class Felix4050 {
         }
 
         @Init
-        Map init() {
+        Map<?,?> init() {
             m_sequencer.step(1);
             _component.add(_component.getDependencyManager().createServiceDependency()
                 .setService(A.class).setRequired(true)
                 .setCallbacks("bind", null));
-            return new HashMap() {
-                {
-                    put("B.required", "true");
-                    put("B.filter", "(type=b2)");
-                }
-            };
+            Map<String, String> props = new HashMap<>();
+            props.put("B.required", "true");
+            props.put("B.filter", "(type=b2)");
+            return props;
         }
 
         @Start

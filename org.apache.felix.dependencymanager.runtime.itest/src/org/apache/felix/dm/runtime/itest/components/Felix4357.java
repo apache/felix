@@ -18,7 +18,7 @@
  */
 package org.apache.felix.dm.runtime.itest.components;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.Property;

@@ -22,7 +22,7 @@ import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.Init;

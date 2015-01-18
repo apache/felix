@@ -41,11 +41,12 @@ import java.util.concurrent.Executor;
  * Instead of that, a job that will handle the event is inserted in an internal lock-free 
  * <b><code>Serial Queue</code></b> which is internally maintained in each Component.
  * 
- * <li> all jobs scheduled in the <code>Serial Queue</code> are then executed in FIFO order. This avoid 
- * to use complex synchronization tricky code in DM internals, and also it dramatically simplifies the 
- * development of DM components, because all lifecycle callbacks (init/start/stop/destroy) and dependency 
- * injections are scheduled through the <code>Serial Queue</code>. This means that your component is not 
- * concurrently called in lifecycle callbacks and in dependency injection methods.
+ * <li> all jobs scheduled in the <code>Serial Queue</code> are then executed in FIFO order, by the first
+ * thread which has triggered the first event. This avoid to use some blocking locks in DM internals, and 
+ * also it simplifies the development of DM components, because all lifecycle callbacks 
+ * (init/start/stop/destroy) and dependency injections are scheduled through the <code>Serial Queue</code>: 
+ * This means that your component is not concurrently called in lifecycle callbacks and in dependency injection 
+ * methods.
  * 
  * <li> Now let's describe which thread is executing the jobs scheduled in a Component <code>Serial Queue</code>: 
  * When a job (J1) is scheduled in the queue while it is empty, then the current thread becomes the "master"
@@ -79,7 +80,7 @@ import java.util.concurrent.Executor;
  * registered in the OSGI registry, you can use the "org.apache.felix.dependencymanager.parallel" OSGi 
  * system property which specifies the list of components which must wait for the ComponentExecutorFactory 
  * service. This property value can be set to a wildcard ("*"), or a list of components implementation class 
- * prefixes (comma separated). So, all components class names starting with the specified prefixes will be cached 
+ * prefixes (comma separated). So, all components whose class name starts with the specified prefixes will be cached 
  * until the ComponentExecutorFactory service is registered (In this way, it is not necessary to use
  * the StartLevel service if you want to ensure that all components are started concurrently).
  * <p>

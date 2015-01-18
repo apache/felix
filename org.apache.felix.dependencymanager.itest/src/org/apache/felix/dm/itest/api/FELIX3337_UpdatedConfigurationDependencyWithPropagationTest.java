@@ -23,7 +23,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Properties;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;

@@ -20,7 +20,7 @@ package org.apache.felix.dm.itest.api;
 
 import java.util.Hashtable;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.itest.util.ServiceUtil;

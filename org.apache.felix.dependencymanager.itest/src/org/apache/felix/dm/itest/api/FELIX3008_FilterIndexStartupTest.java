@@ -20,7 +20,7 @@ package org.apache.felix.dm.itest.api;
 //import static org.ops4j.pax.exam.CoreOptions.waitForFrameworkStartupFor;
 //import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.vmOption;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;

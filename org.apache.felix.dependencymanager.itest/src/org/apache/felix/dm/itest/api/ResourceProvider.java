@@ -22,7 +22,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import org.apache.felix.dm.ResourceHandler;
 import org.apache.felix.dm.ResourceUtil;

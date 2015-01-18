@@ -21,13 +21,12 @@ package org.apache.felix.dm.itest.util;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 import junit.framework.TestCase;
 
 import org.apache.felix.dm.Component;

@@ -21,7 +21,7 @@ package org.apache.felix.dm.runtime.itest.tests;
 import java.util.Hashtable;
 import java.util.Set;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.annotation.api.Component;

@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.itest.util.TestBase;
