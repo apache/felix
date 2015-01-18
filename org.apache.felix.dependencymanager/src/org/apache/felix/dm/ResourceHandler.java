@@ -55,7 +55,6 @@ public interface ResourceHandler {
      * @deprecated Please use {@link #changed(URL, Dictionary)} instead. When both are specified,
      *     the new method takes precedence and the deprecated one is not invoked.
      */
-    @Deprecated
     public void changed(URL resource);
     
     /**
@@ -67,7 +66,6 @@ public interface ResourceHandler {
      * @deprecated Please use {@link #removed(URL, Dictionary)} instead. When both are specified,
      *     the new method takes precedence and the deprecated one is not invoked.
      */
-    @Deprecated
     public void removed(URL resource);
     
     /**
