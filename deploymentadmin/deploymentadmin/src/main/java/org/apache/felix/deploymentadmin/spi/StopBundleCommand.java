@@ -88,17 +88,19 @@ public class StopBundleCommand extends Command {
      *         deployment package. Returns <code>false</code> otherwise.
      */
     private boolean omitBundleStop(DeploymentSessionImpl session, String symbolicName) {
-        boolean stopUnaffectedBundle = session.getConfiguration().isStopUnaffectedBundles();
+        boolean stopUnaffectedBundles = session.getConfiguration().isStopUnaffectedBundles();
+        if (stopUnaffectedBundles) {
+            // Default behavior: stop all bundles (see spec)... 
+            return false;
+        }
 
-        boolean result = stopUnaffectedBundle;
         BundleInfoImpl sourceBundleInfo = session.getSourceAbstractDeploymentPackage().getBundleInfoByName(symbolicName);
         BundleInfoImpl targetBundleInfo = session.getTargetAbstractDeploymentPackage().getBundleInfoByName(symbolicName);
+        
         boolean fixPackageMissing = sourceBundleInfo != null && sourceBundleInfo.isMissing();
         boolean sameVersion = (targetBundleInfo != null && sourceBundleInfo != null && targetBundleInfo.getVersion().equals(sourceBundleInfo.getVersion()));
-        if (fixPackageMissing || sameVersion) {
-            result = true;
-        }
-        return result;
+
+        return (fixPackageMissing || sameVersion);
     }
 
     private static class StartBundleRunnable extends AbstractAction {
