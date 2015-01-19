@@ -68,9 +68,4 @@ public class Context extends CommandProcessorImpl
         session.put(name, value);
     }
 
-    public Object get(String name)
-    {
-        return session.get(name);
-    }
-
 }

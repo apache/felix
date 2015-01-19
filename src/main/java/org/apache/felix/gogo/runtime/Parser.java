@@ -97,7 +97,6 @@ public class Parser
                 case EXECUTION:
                 case ARRAY:
                 case ASSIGN:
-                case EXPR:
                     break;
                     
                 default:

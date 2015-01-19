@@ -21,16 +21,11 @@ package org.apache.felix.gogo.runtime;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
-import java.math.BigDecimal;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.SortedMap;
 import java.util.TreeSet;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -63,12 +58,24 @@ public class CommandProcessorImpl implements CommandProcessor
     {
         synchronized (sessions)
         {
-            if (stopped) {
+            if (stopped)
+            {
                 throw new IllegalStateException("CommandProcessor has been stopped");
             }
             CommandSessionImpl session = new CommandSessionImpl(this, in, out, err);
             sessions.put(session, null);
             return session;
+        }
+    }
+
+    void closeSession(CommandSessionImpl session)
+    {
+        synchronized (sessions)
+        {
+            if (sessions.remove(session) != null)
+            {
+                System.out.println("CLOSED: " + session);
+            }
         }
     }
 
@@ -173,8 +180,7 @@ public class CommandProcessorImpl implements CommandProcessor
 
     public void addCommand(String scope, Object target)
     {
-        Class<?> tc = (target instanceof Class<?>) ? (Class<?>) target
-            : target.getClass();
+        Class<?> tc = (target instanceof Class<?>) ? (Class<?>) target : target.getClass();
         addCommand(scope, target, tc);
     }
 
@@ -326,8 +332,7 @@ public class CommandProcessorImpl implements CommandProcessor
         }
     }
 
-    void afterExecute(CommandSession session, CharSequence commandline,
-        Exception exception)
+    void afterExecute(CommandSession session, CharSequence commandline, Exception exception)
     {
         for (CommandSessionListener l : listeners)
         {
@@ -355,9 +360,5 @@ public class CommandProcessorImpl implements CommandProcessor
                 // Ignore
             }
         }
-    }
-
-    public Object expr(CommandSessionImpl session, CharSequence expr) {
-        return new Expression(expr.toString()).eval(session.variables);
     }
 }
