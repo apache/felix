@@ -14,26 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
--runbundles:  \
-	org.apache.felix.metatype;version=1.0.4,\
-	org.apache.felix.gogo.runtime;version=0.10.0,\
-	org.apache.felix.log;version=1.0.1,\
-	org.apache.felix.configadmin;version=1.8.1.SNAPSHOT,\
-	org.apache.felix.dependencymanager;version=latest,\
-	org.apache.felix.dependencymanager.shell;version=latest
--runee: JavaSE-1.7
--runvm: -ea
--runfw: org.apache.felix.framework
--buildpath:  \
-	osgi.core;version=4.2,\
-	osgi.cmpn;version=4.2,\
-	org.apache.felix.gogo.runtime;version=0.10,\
-	org.apache.felix.dependencymanager;version=latest,\
-	org.apache.felix.dependencymanager.shell;version=latest,\
-	${junit}
--runsystempackages: \
-	sun.reflect
--sub:  \
-	*.bnd
-Test-Cases:  \
-	${classes;CONCRETE;EXTENDS;junit.framework.TestCase}
+Export-Package:  \
+	org.apache.felix.dm.itest.bundle
+Bundle-Activator: org.apache.felix.dm.itest.bundle.Activator

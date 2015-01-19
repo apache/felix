@@ -39,7 +39,7 @@ public class FELIX2955_ShellCommandTest extends TestBase {
     	try {
     		m_myBundleId = context.getBundle().getBundleId();
     		for (Bundle b : context.getBundles()) {
-    			if (b.getSymbolicName().equals("org.apache.felix.dependencymanager.runtime")) {
+    			if (b.getSymbolicName().equals("org.apache.felix.dependencymanager.itest.bundle")) {
     				m_testBundle = b;
     				b.stop();
     				break;
@@ -72,7 +72,7 @@ public class FELIX2955_ShellCommandTest extends TestBase {
     		e.waitForStep(5, 5000);
     		m.remove(missing);
     		// now start/stop our test bundle, which publishes a service that uses the dependency manager
-    		m_testBundle.start();
+    		m_testBundle.start();    		
     		m_testBundle.stop();
     		e.step(6);
     		e.waitForStep(7, 5000);
