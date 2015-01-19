@@ -38,7 +38,3 @@ subprojects {
   }
 }
 
-//Generate a Gradle wrapper
-task wrapper(type: Wrapper) {
-    gradleVersion = '2.1'
-}
