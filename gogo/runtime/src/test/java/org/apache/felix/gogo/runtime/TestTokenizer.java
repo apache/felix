@@ -18,19 +18,23 @@
  */
 package org.apache.felix.gogo.runtime;
 
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.felix.gogo.runtime.Evaluate;
-import org.apache.felix.gogo.runtime.Parser;
-import org.apache.felix.gogo.runtime.SyntaxError;
-import org.apache.felix.gogo.runtime.Token;
-import org.apache.felix.gogo.runtime.Tokenizer;
-import org.apache.felix.gogo.runtime.Tokenizer.Type;
-
 import junit.framework.TestCase;
+
+import org.apache.felix.gogo.runtime.Tokenizer.Type;
+import org.apache.felix.gogo.runtime.threadio.ThreadIOImpl;
+import org.junit.Test;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 
 public class TestTokenizer extends TestCase
 {
@@ -58,6 +62,7 @@ public class TestTokenizer extends TestCase
         };
     }
 
+    @Test
     public void testHello() throws Exception
     {
         testHello("hello world\n");
@@ -98,7 +103,8 @@ public class TestTokenizer extends TestCase
         assertEquals(Type.NEWLINE, t.next());
         assertEquals(Type.EOT, t.next());
     }
-
+    
+    @Test
     public void testString() throws Exception
     {
         testString("'single $quote' \"double $quote\"\n");
@@ -116,6 +122,7 @@ public class TestTokenizer extends TestCase
         assertEquals(Type.EOT, t.next());
     }
 
+    @Test
     public void testClosure() throws Exception
     {
         testClosure2("x = { echo '}' $args //comment's\n}\n");
@@ -127,6 +134,7 @@ public class TestTokenizer extends TestCase
     /*
      * x = {echo $args};
      */
+    @Test
     private void testClosure2(CharSequence text) throws Exception
     {
         Tokenizer t = new Tokenizer(text);
@@ -147,6 +155,7 @@ public class TestTokenizer extends TestCase
         return type;
     }
 
+    @Test
     public void testExpand() throws Exception
     {
         final URI home = new URI("/home/derek");
@@ -269,6 +278,7 @@ public class TestTokenizer extends TestCase
         return Tokenizer.expand(word, evaluate);
     }
 
+    @Test
     public void testParser() throws Exception
     {
         new Parser("// comment\n" + "a=\"who's there?\"; ps -ef;\n" + "ls | \n grep y\n").program();
@@ -277,4 +287,43 @@ public class TestTokenizer extends TestCase
         new Parser(new Token(Type.ARRAY, p1, (short) 0, (short) 0)).program();
     }
 
+    /**
+     * FELIX-4679 / FELIX-4671. 
+     */
+    @Test
+    public void testScriptFelix4679() throws Exception
+    {
+        String script = "addcommand system (((${.context} bundles) 0) loadclass java.lang.System)";
+
+        ThreadIOImpl tio = new ThreadIOImpl();
+        tio.start();
+
+        try
+        {
+            BundleContext bc = createMockContext();
+
+            CommandProcessorImpl processor = new CommandProcessorImpl(tio);
+            processor.addCommand("gogo", processor, "addcommand");
+            processor.addConstant(".context", bc);
+
+            CommandSessionImpl session = new CommandSessionImpl(processor, new ByteArrayInputStream(script.getBytes()), System.out, System.err);
+
+            Closure c = new Closure(session, null, script);
+            assertNull(c.execute(session, null));
+        }
+        finally
+        {
+            tio.stop();
+        }
+    }
+
+    private BundleContext createMockContext() throws ClassNotFoundException
+    {
+        Bundle systemBundle = mock(Bundle.class);
+        when(systemBundle.loadClass(eq("java.lang.System"))).thenReturn(System.class);
+
+        BundleContext bc = mock(BundleContext.class);
+        when(bc.getBundles()).thenReturn(new Bundle[] { systemBundle });
+        return bc;
+    }
 }

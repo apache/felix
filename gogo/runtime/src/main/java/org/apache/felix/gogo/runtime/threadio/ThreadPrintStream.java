@@ -20,7 +20,6 @@ package org.apache.felix.gogo.runtime.threadio;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.io.InputStream;
 import java.util.Locale;
 
 public class ThreadPrintStream extends PrintStream

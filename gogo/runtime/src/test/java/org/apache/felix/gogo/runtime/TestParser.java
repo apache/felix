@@ -46,7 +46,7 @@ public class TestParser extends TestCase
 
         assertEquals("a", c.execute("echo a | capture"));
         assertEquals("a", c.execute("(echo a) | capture"));
-        assertEquals("a", c.execute("( (echo a) ) | capture"));
+        assertEquals("a", c.execute("((echo a)) | capture"));
     }
 
     public void testUnknownCommand() throws Exception
