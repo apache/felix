@@ -25,10 +25,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.felix.gogo.api.CommandSessionListener;
 import org.apache.felix.gogo.runtime.CommandProcessorImpl;
 import org.apache.felix.gogo.runtime.CommandProxy;
-import org.apache.felix.gogo.api.CommandSessionListener;
 import org.apache.felix.gogo.runtime.threadio.ThreadIOImpl;
+import org.apache.felix.service.command.CommandProcessor;
+import org.apache.felix.service.command.Converter;
+import org.apache.felix.service.threadio.ThreadIO;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -36,10 +39,6 @@ import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.apache.felix.service.command.CommandProcessor;
-import org.apache.felix.service.command.Converter;
-import org.apache.felix.service.command.Function;
-import org.apache.felix.service.threadio.ThreadIO;
 import org.osgi.util.tracker.ServiceTracker;
 
 public class Activator implements BundleActivator

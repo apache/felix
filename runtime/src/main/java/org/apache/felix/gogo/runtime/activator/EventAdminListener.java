@@ -29,13 +29,10 @@ import org.osgi.util.tracker.ServiceTracker;
 
 public class EventAdminListener implements CommandSessionListener
 {
-
-    private BundleContext bundleContext;
     private ServiceTracker tracker;
 
     public EventAdminListener(BundleContext bundleContext)
     {
-        this.bundleContext = bundleContext;
         tracker = new ServiceTracker(bundleContext, EventAdmin.class.getName(), null);
         tracker.open();
     }

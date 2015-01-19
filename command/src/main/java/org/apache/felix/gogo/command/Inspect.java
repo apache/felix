@@ -21,8 +21,8 @@ package org.apache.felix.gogo.command;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
 import java.util.Map;
+
 import org.apache.felix.service.command.Descriptor;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -32,9 +32,6 @@ import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
-import org.osgi.service.packageadmin.ExportedPackage;
-import org.osgi.service.packageadmin.PackageAdmin;
-import org.osgi.service.packageadmin.RequiredBundle;
 
 public class Inspect
 {

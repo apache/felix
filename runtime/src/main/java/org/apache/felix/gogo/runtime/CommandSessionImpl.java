@@ -32,9 +32,7 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Formatter;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Converter;
@@ -47,14 +45,14 @@ public class CommandSessionImpl implements CommandSession, Converter
     public static final String VARIABLES = ".variables";
     public static final String COMMANDS = ".commands";
     private static final String COLUMN = "%-20s %s\n";
-    
+
     protected InputStream in;
     protected PrintStream out;
     PrintStream err;
-    
+
     private final CommandProcessorImpl processor;
     protected final Map<String, Object> variables = new HashMap<String, Object>();
-    private boolean closed;
+    private volatile boolean closed;
 
     protected CommandSessionImpl(CommandProcessorImpl shell, InputStream in, PrintStream out, PrintStream err)
     {
@@ -63,7 +61,7 @@ public class CommandSessionImpl implements CommandSession, Converter
         this.out = out;
         this.err = err;
     }
-    
+
     ThreadIO threadIO()
     {
         return processor.threadIO;
@@ -71,7 +69,12 @@ public class CommandSessionImpl implements CommandSession, Converter
 
     public void close()
     {
-        this.closed = true;
+        if (!this.closed)
+        {
+            System.out.println("CLOSING SESSION!");
+            this.processor.closeSession(this);
+            this.closed = true;
+        }
     }
 
     public Object execute(CharSequence commandline) throws Exception
@@ -119,7 +122,7 @@ public class CommandSessionImpl implements CommandSession, Converter
         }
 
         Object val = processor.constants.get(name);
-        if( val != null )
+        if (val != null)
         {
             return val;
         }
@@ -137,13 +140,13 @@ public class CommandSessionImpl implements CommandSession, Converter
             }
             return val;
         }
-        else if( val != null )
+        else if (val != null)
         {
             return val;
         }
 
         val = variables.get(name);
-        if( val != null )
+        if (val != null)
         {
             return val;
         }
@@ -165,8 +168,7 @@ public class CommandSessionImpl implements CommandSession, Converter
     }
 
     @SuppressWarnings("unchecked")
-    public CharSequence format(Object target, int level, Converter escape)
-        throws Exception
+    public CharSequence format(Object target, int level, Converter escape) throws Exception
     {
         if (target == null)
         {
@@ -349,9 +351,7 @@ public class CommandSessionImpl implements CommandSession, Converter
             try
             {
                 String name = m.getName();
-                if (m.getName().startsWith("get") && !m.getName().equals("getClass")
-                    && m.getParameterTypes().length == 0
-                    && Modifier.isPublic(m.getModifiers()))
+                if (m.getName().startsWith("get") && !m.getName().equals("getClass") && m.getParameterTypes().length == 0 && Modifier.isPublic(m.getModifiers()))
                 {
                     found = true;
                     name = name.substring(3);
@@ -394,11 +394,6 @@ public class CommandSessionImpl implements CommandSession, Converter
         {
             return "<can not format " + result + ":" + e;
         }
-    }
-
-    public Object expr(CharSequence expr)
-    {
-        return processor.expr(this, expr);
     }
 
 }

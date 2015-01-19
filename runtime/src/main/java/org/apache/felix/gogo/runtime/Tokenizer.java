@@ -46,7 +46,7 @@ public class Tokenizer
 {
     public enum Type
     {
-        ASSIGN('='), PIPE('|'), SEMICOLON(';'), NEWLINE, ARRAY, CLOSURE, EXPR, EXECUTION, WORD, EOT;
+        ASSIGN('='), PIPE('|'), SEMICOLON(';'), NEWLINE, ARRAY, CLOSURE, EXECUTION, WORD, EOT;
 
         private char c;
 
@@ -265,43 +265,25 @@ public class Tokenizer
     private CharSequence group()
     {
         final char push = ch;
-        final char push2;
         final char pop;
-        final char pop2;
 
         switch (ch)
         {
             case '{':
                 type = Type.CLOSURE;
-                push2 = 0;
                 pop = '}';
-                pop2 = 0;
                 break;
             case '(':
-                if (peek() == '(') {
-                    getch();
-                    push2 = '(';
-                    type = Type.EXPR;
-                    pop = ')';
-                    pop2 = ')';
-                } else {
-                    type = Type.EXECUTION;
-                    push2 = 0;
-                    pop = ')';
-                    pop2 = 0;
-                }
+                type = Type.EXECUTION;
+                pop = ')';
                 break;
             case '[':
                 type = Type.ARRAY;
-                push2 = 0;
                 pop = ']';
-                pop2 = 0;
                 break;
             default:
                 assert false;
-                push2 = 0;
                 pop = 0;
-                pop2 = 0;
         }
 
         short sLine = line;
@@ -345,17 +327,10 @@ public class Tokenizer
                     break;
 
                 default:
-                    if (push == ch) {
+                    if (push == ch)
                         depth++;
-                    }
-                    else if (pop == ch && --depth == 0) {
-                        if (pop2 == 0)
-                            return text.subSequence(start, index - 1);
-                        else if (pop2 == peek()) {
-                            getch();
-                            return text.subSequence(start, index - 2);
-                        }
-                    }
+                    else if (pop == ch && --depth == 0)
+                        return text.subSequence(start, index - 1);
             }
         }
 
@@ -614,20 +589,11 @@ public class Tokenizer
         if (getch() != '{')
         {
             if ('(' == ch)
-            {
+            { // support $(...) FELIX-2433
                 short sLine = line;
                 short sCol = column;
-                if ('(' == peek())
-                {
-                    val = evaluate.eval(new Token(Type.EXPR, group(), sLine, sCol));
-                    getch();
-                }
-                else
-                {
-                    // support $(...) FELIX-2433
-                    val = evaluate.eval(new Token(Type.EXECUTION, group(), sLine, sCol));
-                    getch();
-                }
+                val = evaluate.eval(new Token(Type.EXECUTION, group(), sLine, sCol));
+                getch();
             }
             else
             {
