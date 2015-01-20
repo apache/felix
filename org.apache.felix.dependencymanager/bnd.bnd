@@ -35,3 +35,9 @@ Include-Resource: META-INF/=resources/LICENSE,\
 Import-Package: !org.junit,!org.mockito.*,*
 Bundle-Activator: org.apache.felix.dm.impl.Activator
 Bundle-Version: 4.0.0
+Bundle-Name: Apache Felix Dependency Manager
+Bundle-Description: Provides dynamic service and component dependency management
+Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.txt
+Bundle-DocURL: http://felix.apache.org/documentation/subprojects/apache-felix-dependency-manager.html
+Bundle-Vendor: The Apache Software Foundation
+Bundle-Category: osgi

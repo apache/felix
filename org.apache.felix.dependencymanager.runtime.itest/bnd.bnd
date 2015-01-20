@@ -43,3 +43,8 @@ Private-Package:  \
 		 path:=${workspace}/org.apache.felix.dependencymanager.annotation/generated/org.apache.felix.dependencymanager.annotation.jar
 Test-Cases:  \
 	${classes;CONCRETE;EXTENDS;junit.framework.TestCase}
+Bundle-Name: Apache Felix Dependency Manager Runtime integration tests
+Bundle-Description: Integration tests for Apache Felix Dependency Manager Runtime
+Bundle-Category: test
+Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.txt
+Bundle-Vendor: The Apache Software Foundation

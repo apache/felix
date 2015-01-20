@@ -18,3 +18,8 @@ Private-Package:  \
 	org.apache.felix.dm.itest.api
 Export-Package:  \
 	org.apache.felix.dm.itest.util
+Bundle-Name: Apache Felix Dependency Manager integration tests
+Bundle-Description: Integration tests for Apache Felix Dependency Manager
+Bundle-Category: test
+Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.txt
+Bundle-Vendor: The Apache Software Foundation
