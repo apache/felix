@@ -50,7 +50,7 @@ $ ./gradlew check
 ** Compilation Using Eclipse:
 
 - Install either Eclipse Kepler SR2 or Eclipse Luna
-- Install BndTools 2.4.0
+- Install BndTools 2.4.1
 - Open BndTools perpective
 - Import Dependency Manager into Eclipse, and compile everything
 - Click on org.apache.felix.dependencymanager project and run it as "JUnit test".
