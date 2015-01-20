@@ -667,14 +667,11 @@ public class ReferenceMetadata
         }
 
         // checks for event based injection
-        if ( m_field == null )
+        // updated method is only supported in namespace xxx and later
+        if ( m_updated != null && !(dsVersion.isDS12() || dsVersion == DSVersion.DS11Felix) )
         {
-            // updated method is only supported in namespace xxx and later
-            if ( m_updated != null && !(dsVersion.isDS12() || dsVersion == DSVersion.DS11Felix) )
-            {
-                // FELIX-3648 validation must fail (instead of just ignore)
-                throw componentMetadata.validationFailure( "updated method declaration requires DS 1.2 or later namespace " );
-            }
+            // FELIX-3648 validation must fail (instead of just ignore)
+            throw componentMetadata.validationFailure( "updated method declaration requires DS 1.2 or later namespace " );
         }
 
         // checks for field injection
@@ -684,12 +681,6 @@ public class ReferenceMetadata
             if ( !dsVersion.isDS13() )
             {
                 throw componentMetadata.validationFailure( "Field reference requires DS >= 1.3" );
-            }
-
-            // check for bind/unbind/updated
-            if ( m_bind != null || m_unbind != null || m_updated != null )
-            {
-                throw componentMetadata.validationFailure( "Bind/unbind/updated should not be specified with a field reference" );
             }
 
             // field strategy
@@ -731,7 +722,7 @@ public class ReferenceMetadata
                 }
             }
 
-            // static references only allow replace strateg
+            // static references only allow replace strategy
             if ( m_isStatic )
             {
                 if ( ! m_field_option.equals(FIELD_STRATEGY_REPLACE) )
