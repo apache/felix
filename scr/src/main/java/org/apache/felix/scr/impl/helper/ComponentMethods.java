@@ -58,7 +58,13 @@ public class ComponentMethods
         {
             final String refName = referenceMetadata.getName();
             final ReferenceMethods methods;
-            if ( referenceMetadata.getField() != null )
+            if ( referenceMetadata.getField() != null && referenceMetadata.getBind() != null)
+            {
+                methods = new DuplexReferenceMethods(
+                        new FieldMethods( referenceMetadata, implementationObjectClass, dsVersion, configurableServiceProperties),
+                        new BindMethods( referenceMetadata, implementationObjectClass, dsVersion, configurableServiceProperties));
+            }
+            else if ( referenceMetadata.getField() != null )
             {
                 methods = new FieldMethods( referenceMetadata, implementationObjectClass, dsVersion, configurableServiceProperties);
             }
