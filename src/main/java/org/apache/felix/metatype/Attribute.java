@@ -18,7 +18,6 @@
  */
 package org.apache.felix.metatype;
 
-
 /**
  * The <code>Attribute</code> TODO
  *
@@ -30,58 +29,53 @@ public class Attribute extends OptionalAttributes
     private String adRef;
     private String[] content;
 
-
     public String getAdRef()
     {
         return adRef;
     }
 
-
-    public void setAdRef( String adRef )
+    public void setAdRef(String adRef)
     {
         this.adRef = adRef;
     }
 
-
     public String[] getContent()
     {
-        return ( String[] ) content.clone();
+        // FELIX-4771 - removed the clone as we're already working on a local 
+        // copy and this pattern isn't used in other parts of the API...
+        return this.content;
     }
 
-
-    public void addContent( String[] added )
+    public void addContent(String[] added)
     {
-        if ( added != null && added.length > 0 )
+        if (added != null && added.length > 0)
         {
-            if ( content == null )
+            if (content == null)
             {
-                content = ( String[] ) added.clone();
+                content = (String[]) added.clone();
             }
             else
             {
                 String[] newContent = new String[content.length + added.length];
-                System.arraycopy( content, 0, newContent, 0, content.length );
-                System.arraycopy( added, 0, newContent, content.length, added.length );
+                System.arraycopy(content, 0, newContent, 0, content.length);
+                System.arraycopy(added, 0, newContent, content.length, added.length);
                 content = newContent;
             }
         }
     }
 
-
-    public void addContent( String content, boolean split )
+    public void addContent(String content, boolean split)
     {
-        if ( content != null )
+        if (content != null)
         {
-            if ( split )
+            if (split)
             {
-                addContent( AD.splitList( content ) );
+                addContent(AD.splitList(content));
             }
             else
             {
-                addContent( new String[]
-                    { content } );
+                addContent(new String[] { content });
             }
         }
     }
-
 }

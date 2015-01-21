@@ -157,6 +157,7 @@ public class ADTest extends TestCase
         assertEquals(AttributeDefinition.INTEGER, AD.toType("Integer"));
         assertEquals(AttributeDefinition.BYTE, AD.toType("Byte"));
         assertEquals(AttributeDefinition.CHARACTER, AD.toType("Char"));
+        assertEquals(AttributeDefinition.CHARACTER, AD.toType("Character"));
         assertEquals(AttributeDefinition.BOOLEAN, AD.toType("Boolean"));
         assertEquals(AttributeDefinition.SHORT, AD.toType("Short"));
         assertEquals(AttributeDefinition.PASSWORD, AD.toType("Password"));
