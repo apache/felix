@@ -18,12 +18,10 @@
  */
 package org.apache.felix.metatype;
 
-
 import java.net.URL;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 
 /**
  * The <code>MetaData</code> class represents the <code>MetaData</code>
@@ -33,81 +31,83 @@ import java.util.Map;
  */
 public class MetaData extends OptionalAttributes
 {
-
+    private String namespace;
     private String localePrefix;
     private Map objectClassDefinitions;
     private Map designates;
     private URL source;
-
 
     public String getLocalePrefix()
     {
         return localePrefix;
     }
 
-
-    public void setLocalePrefix( String localePrefix )
+    public void setLocalePrefix(String localePrefix)
     {
         this.localePrefix = localePrefix;
     }
-
 
     public Map getObjectClassDefinitions()
     {
         return objectClassDefinitions;
     }
 
-
-    public void addObjectClassDefinition( OCD objectClassDefinition )
+    public void addObjectClassDefinition(OCD objectClassDefinition)
     {
-        if ( objectClassDefinition != null )
+        if (objectClassDefinition != null)
         {
-            if ( objectClassDefinitions == null )
+            if (objectClassDefinitions == null)
             {
                 objectClassDefinitions = new LinkedHashMap();
             }
 
-            objectClassDefinitions.put( objectClassDefinition.getID(), objectClassDefinition );
-            objectClassDefinition.setMetadata( this );
+            objectClassDefinitions.put(objectClassDefinition.getID(), objectClassDefinition);
+            objectClassDefinition.setMetadata(this);
         }
     }
-
 
     public Map getDesignates()
     {
         return designates;
     }
 
-
-    public void addDesignate( Designate designate )
+    public void addDesignate(Designate designate)
     {
-        if ( designate != null )
+        if (designate != null)
         {
-            if ( designates == null )
+            if (designates == null)
             {
                 designates = new HashMap();
             }
 
-            if ( designate.getFactoryPid() != null )
+            if (designate.getFactoryPid() != null)
             {
-                designates.put( designate.getFactoryPid(), designate );
+                designates.put(designate.getFactoryPid(), designate);
             }
             else
             {
-                designates.put( designate.getPid(), designate );
+                designates.put(designate.getPid(), designate);
             }
         }
     }
-
 
     public URL getSource()
     {
         return source;
     }
 
-
-    public void setSource( URL source )
+    public void setSource(URL source)
     {
         this.source = source;
+    }
+
+    public String getNamespace()
+    {
+        return namespace;
+    }
+
+    public void setNamespace(String namespace)
+    {
+        this.namespace = namespace;
     }
 }
