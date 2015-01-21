@@ -400,8 +400,8 @@ public class MetaDataReader
         ad.setCardinality(getOptionalAttribute("cardinality", 0));
         ad.setMin(getOptionalAttribute("min"));
         ad.setMax(getOptionalAttribute("max"));
-        ad.setDefaultValue(getOptionalAttribute("default"));
         ad.setRequired(getOptionalAttribute("required", true));
+        String dfltValue = getOptionalAttribute("default");
 
         readOptionalAttributes(ad, AD_ATTRIBUTES);
 
@@ -439,11 +439,12 @@ public class MetaDataReader
 
         ad.setOptions(options);
 
-        // reset value to force an options check (FELIX-3884)
-        if (ad.getDefaultValue() != null)
+        // set value as late as possible to force an options check (FELIX-3884, FELIX-4665)... 
+        if (dfltValue != null)
         {
-            ad.setDefaultValue(ad.getDefaultValue());
+            ad.setDefaultValue(dfltValue);
         }
+
         return ad;
     }
 

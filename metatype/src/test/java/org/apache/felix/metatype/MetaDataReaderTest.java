@@ -21,6 +21,7 @@ package org.apache.felix.metatype;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Map;
 
 import junit.framework.TestCase;
@@ -180,6 +181,43 @@ public class MetaDataReaderTest extends TestCase
         assertEquals(ocdDescription, ocd.getDescription());
 
         assertNotNull(ocd.getAttributeDefinitions());
+    }
+
+    /**
+     * FELIX-4665 - Default values can be empty. 
+     */
+    public void testAttributeWithDefaultValueOk() throws IOException, XmlPullParserException
+    {
+        String xml;
+
+        xml = "<MetaData><OCD id=\"ocd\" name=\"ocd\"><AD id=\"attr\" type=\"String\" required=\"false\" default=\"\" /></OCD></MetaData>";
+        MetaData mti = read(xml);
+        OCD ocd = (OCD) mti.getObjectClassDefinitions().get("ocd");
+        AD ad = (AD) ocd.getAttributeDefinitions().get("attr");
+        // Cardinality = 0, so *always* return a array with length 1...
+        assertTrue(Arrays.deepEquals(new String[] { "" }, ad.getDefaultValue()));
+
+        xml = "<MetaData><OCD id=\"ocd\" name=\"ocd\"><AD id=\"attr\" cardinality=\"1\" type=\"String\" required=\"false\" /></OCD></MetaData>";
+        mti = read(xml);
+        ocd = (OCD) mti.getObjectClassDefinitions().get("ocd");
+        ad = (AD) ocd.getAttributeDefinitions().get("attr");
+        // Cardinality = 1, return an array with *up to* 1 elements...
+        assertNull(ad.getDefaultValue());
+
+        xml = "<MetaData><OCD id=\"ocd\" name=\"ocd\"><AD id=\"attr\" cardinality=\"1\" type=\"String\" required=\"false\" default=\"\" /></OCD></MetaData>";
+        mti = read(xml);
+        ocd = (OCD) mti.getObjectClassDefinitions().get("ocd");
+        ad = (AD) ocd.getAttributeDefinitions().get("attr");
+        // Cardinality = 1, return an array with *up to* 1 elements...
+        assertTrue(Arrays.deepEquals(new String[] { "" }, ad.getDefaultValue()));
+
+        // The metatype spec defines that getDefaultValue should never have more entries than defined in its (non-zero) cardinality...
+        xml = "<MetaData><OCD id=\"ocd\" name=\"ocd\"><AD id=\"attr\" cardinality=\"1\" type=\"String\" required=\"false\" default=\",\" /></OCD></MetaData>";
+        mti = read(xml);
+        ocd = (OCD) mti.getObjectClassDefinitions().get("ocd");
+        ad = (AD) ocd.getAttributeDefinitions().get("attr");
+        // Cardinality = 1, return an array with *up to* 1 elements...
+        assertTrue(Arrays.deepEquals(new String[] { "" }, ad.getDefaultValue()));
     }
 
     /**
