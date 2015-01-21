@@ -123,7 +123,7 @@ public class ADTest extends TestCase
     public void testSpaces()
     {
         String value = "Hello World";
-        String listString = BLANK + value + BLANK + "," + BLANK + value + BLANK + "," +value;
+        String listString = BLANK + value + BLANK + "," + BLANK + value + BLANK + "," + value;
         String[] list = AD.splitList(listString);
         assertNotNull(list);
         assertEquals(3, list.length);
@@ -206,35 +206,95 @@ public class ADTest extends TestCase
     }
 
     /**
-     * FELIX-3884 : if an AD has options, default values must be in the option
-     * values.
+     * FELIX-3884 : if an AD has options, default values must be in the option values.
      */
     public void testOptionsAndDefaultValues()
     {
-        final AD ad = new AD();
+        AD ad = new AD();
+        ad.setCardinality(2);
         ad.setType("String");
-        final Map options = new HashMap();
+        ad.setRequired(false);
+
+        Map options = new HashMap();
         options.put("A", "L-A");
         options.put("B", "L-B");
         ad.setOptions(options);
 
-        ad.setDefaultValue(new String[] {"A", "B"});
-        equalsArray(new String[] {"A", "B"}, ad.getDefaultValue());
+        ad.setDefaultValue("A,B");
+        assertArrayEquals(new String[] { "A", "B" }, ad.getDefaultValue());
 
-        ad.setDefaultValue(new String[] {"A", "B", "C"});
-        equalsArray(new String[] {"A", "B"}, ad.getDefaultValue());
+        ad.setDefaultValue("A,B,C");
+        assertArrayEquals(new String[] { "A", "B" }, ad.getDefaultValue());
 
-        ad.setDefaultValue(new String[] {"X", "Y", "B"});
-        equalsArray(new String[] {"B"}, ad.getDefaultValue());
+        ad.setDefaultValue("X,Y,B");
+        assertArrayEquals(new String[] { "B" }, ad.getDefaultValue());
 
-        ad.setDefaultValue(new String[] {"X", "Y", "Z"});
+        ad.setDefaultValue("X,Y,Z");
+        assertArrayEquals(new String[0], ad.getDefaultValue());
+
+        ad.setDefaultValue(null);
         assertNull(ad.getDefaultValue());
     }
 
-    private void equalsArray(String[] a, String[] b)
+    /**
+     * FELIX-3884/FELIX-4665 - Default values.
+     */
+    public void testDefaultValuesForSingleValuedAttributes()
+    {
+        AD ad = new AD();
+        ad.setCardinality(0);
+        ad.setType("String");
+        ad.setRequired(false);
+
+        ad.setDefaultValue(null);
+        assertNull(ad.getDefaultValue());
+
+        ad.setDefaultValue("A,B");
+        assertArrayEquals(new String[] { "A" }, ad.getDefaultValue());
+
+        ad.setDefaultValue("");
+        assertArrayEquals(new String[] { "" }, ad.getDefaultValue());
+
+        // corner case: in case of required values, an empty default makes no sense
+        // for single values, hence that the empty default is coerced into null...
+        ad.setRequired(true);
+        ad.setDefaultValue("");
+        assertNull(ad.getDefaultValue());
+    }
+
+    /**
+     * FELIX-3884/FELIX-4665 - Default values.
+     */
+    public void testDefaultValuesForMultiValuedAttributes()
+    {
+        AD ad = new AD();
+        ad.setCardinality(-2); // sign doesn't matter in this case
+        ad.setType("String");
+        ad.setRequired(false);
+
+        ad.setDefaultValue(null);
+        assertNull(ad.getDefaultValue());
+
+        ad.setDefaultValue("A,B");
+        assertArrayEquals(new String[] { "A", "B" }, ad.getDefaultValue());
+
+        ad.setDefaultValue(",,");
+        assertArrayEquals(new String[] { "", "" }, ad.getDefaultValue());
+
+        ad.setDefaultValue("");
+        assertArrayEquals(new String[] { "" }, ad.getDefaultValue());
+
+        // corner case: in case of required values, an empty default is coerced
+        // into a empty array...
+        ad.setRequired(true);
+        ad.setDefaultValue("");
+        assertArrayEquals(new String[0], ad.getDefaultValue());
+    }
+
+    private static void assertArrayEquals(String[] a, String[] b)
     {
         assertEquals(a.length, b.length);
-        for(int i=0; i<a.length;i++)
+        for (int i = 0; i < a.length; i++)
         {
             assertEquals(a[i], b[i]);
         }

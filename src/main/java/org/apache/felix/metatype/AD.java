@@ -219,11 +219,17 @@ public class AD extends OptionalAttributes
     }
 
     /**
-     * @param defaultValue the defaultValue to set
+     * Sets the default value(s) for this AD.
+     * <p>
+     * NOTE: this method is depending on the value of {@link #getCardinality()}! Make sure that the
+     * cardinality is properly set <b>before</b> calling this method.
+     * </p>
+     * 
+     * @param defaultValue the default value to set, as encoded string-value (using comma's as separator), can be <code>null</code>.
      */
     public void setDefaultValue(String defaultValue)
     {
-        this.setDefaultValue( splitList(defaultValue) );
+        setDefaultValue(splitList(defaultValue), Math.abs(this.cardinality));
     }
 
     /**
@@ -240,47 +246,6 @@ public class AD extends OptionalAttributes
     public void setMax(String max)
     {
         this.max = max;
-    }
-
-    /**
-     * @param values the defaultValue to set
-     */
-    public void setDefaultValue(String[] values)
-    {
-        if ( values != null )
-        {
-            int count = 0;
-            for(int i=0; i<values.length; i++)
-            {
-                if ( "".equals(ADValidator.validate(this, values[i])) )
-                {
-                    count++;
-                }
-                else
-                {
-                    values[i] = null;
-                }
-            }
-            if ( count == 0 )
-            {
-                values = null;
-            }
-            else if ( count != values.length )
-            {
-                String[] filterValues = new String[count];
-                int index = 0;
-                for(int i=0; i<values.length; i++)
-                {
-                    if ( values[i] != null )
-                    {
-                        filterValues[index] = values[i];
-                        index++;
-                    }
-                }
-                values = filterValues;
-            }
-        }
-        this.defaultValue = values;
     }
 
     /**
@@ -360,9 +325,9 @@ public class AD extends OptionalAttributes
         {
             char ch = listString.charAt(i);
             final boolean isWhitespace = Character.isWhitespace(ch);
-            if ( start )
+            if (start)
             {
-                if ( isWhitespace )
+                if (isWhitespace)
                 {
                     continue;
                 }
@@ -387,24 +352,25 @@ public class AD extends OptionalAttributes
                     spaceCount = 0;
                     continue;
                 }
-            } else if ( ch == ' ')
+            }
+            else if (ch == ' ')
             {
                 // space is only ignored at beginning and end but not if escaped
-                if (!escaped )
+                if (!escaped)
                 {
                     spaceCount++;
                     continue;
                 }
             }
-            else if (isWhitespace )
+            else if (isWhitespace)
             {
                 // Other whitespaces are ignored...
                 continue;
             }
 
-            if ( spaceCount > 0)
+            if (spaceCount > 0)
             {
-                for(int m = 0; m<spaceCount; m++)
+                for (int m = 0; m < spaceCount; m++)
                 {
                     sb.append(" ");
                 }
@@ -458,6 +424,48 @@ public class AD extends OptionalAttributes
         }
 
         return null;
+    }
+
+    /**
+     * @param values the defaultValue to set
+     */
+    protected void setDefaultValue(String[] values, int cardinality)
+    {
+        if (values != null)
+        {
+            int count = 0;
+            int max = Math.min(values.length, Math.max(1, cardinality));
+            for (int i = 0; count < max && i < values.length; i++)
+            {
+                if ("".equals(ADValidator.validate(this, values[i])))
+                {
+                    count++;
+                }
+                else
+                {
+                    values[i] = null;
+                }
+            }
+            if (count == 0)
+            {
+                values = cardinality == 0 ? null : new String[0];
+            }
+            else if (count != values.length)
+            {
+                String[] filterValues = new String[count];
+                int index = 0;
+                for (int i = 0; index < count && i < values.length; i++)
+                {
+                    if (values[i] != null)
+                    {
+                        filterValues[index] = values[i];
+                        index++;
+                    }
+                }
+                values = filterValues;
+            }
+        }
+        this.defaultValue = values;
     }
 
     private static class ComparableBoolean implements Comparable
