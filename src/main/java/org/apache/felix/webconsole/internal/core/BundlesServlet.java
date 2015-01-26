@@ -327,7 +327,8 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         final String action = WebConsoleUtil.getParameter( req, "action" );
         if ( "refreshPackages".equals( action ) )
         {
-            getPackageAdmin().refreshPackages( null );
+            // refresh packages and give it most 15 seconds to finish
+            BaseUpdateInstallHelper.refreshPackages( getPackageAdmin(), getBundleContext(), 15000L, null );
             success = true;
         }
         else if ( "install".equals( action ) )
@@ -384,8 +385,8 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                 }
                 else if ( "refresh".equals( action ) )
                 {
-                    // refresh bundle wiring
-                    refresh( bundle );
+                    // refresh bundle wiring and give at most 5 seconds to finish
+                    BaseUpdateInstallHelper.refreshPackages( getPackageAdmin(), getBundleContext(), 5000L, bundle );
                 }
                 else if ( "update".equals( action ) )
                 {
@@ -404,14 +405,6 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                         bundleException = be;
                         log( "Cannot uninstall", be );
                     }
-                }
-
-                // let's wait a little bit to give the framework time
-                // to process our request
-                try {
-                    Thread.sleep(800);
-                } catch (InterruptedException e) {
-                    // we ignore this
                 }
 
                 // write the state only
@@ -433,13 +426,6 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
 
         if ( success && null != getBundleContext() )
         {
-            // let's wait a little bit to give the framework time
-            // to process our request
-            try {
-                Thread.sleep(800);
-            } catch (InterruptedException e) {
-                // we ignore this
-            }
             final String pluginRoot = ( String ) req.getAttribute( WebConsoleConstants.ATTR_PLUGIN_ROOT );
             final String servicesRoot = getServicesRoot( req );
             try
@@ -1455,14 +1441,6 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         }
         return val.toString();
     }
-
-
-    private void refresh( final Bundle bundle )
-    {
-        getPackageAdmin().refreshPackages( new Bundle[]
-            { bundle } );
-    }
-
 
     private void update( final Bundle bundle )
     {
