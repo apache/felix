@@ -37,6 +37,8 @@ import java.util.SortedMap;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -67,7 +69,8 @@ class ConfigAdminSupport
     static {
         CONFIG_PROPERTIES_HIDE.add(PROPERTY_FACTORYCONFIG_NAMEHINT);
     }
-
+    private static final Pattern NAMEHINT_PLACEHOLER_REGEXP = Pattern.compile("\\{([^\\{\\}]*)}");
+    
     private final BundleContext bundleContext;
     private final ConfigurationAdmin service;
 
@@ -626,84 +629,100 @@ class ConfigAdminSupport
      */
     private static final String getConfigurationFactoryNameHint(Configuration config, MetaTypeServiceSupport mtss)
     {
-        // check for configured name hint template
         Dictionary props = config.getProperties();
-        Object nameHintTemplateObject = props.get(PROPERTY_FACTORYCONFIG_NAMEHINT);
-        if (nameHintTemplateObject == null || !(nameHintTemplateObject instanceof String))
-        {
-            // check for metatype default value for name hint template
-            if (mtss != null)
-            {
-                Map adMap = mtss.getAttributeDefinitionMap(config, null);
-                PropertyDescriptor ad = (PropertyDescriptor)adMap.get(PROPERTY_FACTORYCONFIG_NAMEHINT);
-                if (ad != null && ad.getDefaultValue() != null && ad.getDefaultValue().length == 1)
-                {
-                    nameHintTemplateObject = ad.getDefaultValue()[0];
-                }
-            }
-            if (nameHintTemplateObject == null)
-            {
-                return null;
-            }
-        }
-        String nameHint = (String) nameHintTemplateObject;
-        Enumeration keys = props.keys();
-        while (keys.hasMoreElements())
-        {
-            String key = (String) keys.nextElement();
-            Object value = props.get(key);
-            if (value != null)
-            {
-                StringBuffer valueString = new StringBuffer();
-                if (value instanceof String[]) {
-                    String[] valueArray = (String[])value;
-                    for (int i = 0; i < valueArray.length; i++) {
-                        if (i > 0) {
-                            valueString.append(",");
-                        }
-                        valueString.append(valueArray[i]);
-                    }
-                }
-                else {
-                    valueString.append(value.toString());
-                }
-                nameHint = nameHint.replaceAll(regexQuote("{" + key + "}"), valueString.toString());
-            }
-        }
-        return nameHint;
-    }
+        Map adMap = (mtss != null) ? mtss.getAttributeDefinitionMap(config, null) : null;
 
+        // check for configured name hint template
+        String nameHint = getConfigurationPropertyValueOrDefault(PROPERTY_FACTORYCONFIG_NAMEHINT, props, adMap);
+        if (nameHint == null)
+        {
+            return null;
+        }
+        
+        // search for all variable patterns in name hint and replace them with configured/default values
+        Matcher matcher = NAMEHINT_PLACEHOLER_REGEXP.matcher(nameHint);
+        StringBuffer sb = new StringBuffer();
+        while (matcher.find())
+        {
+            String propertyName = matcher.group(1);
+            String value = getConfigurationPropertyValueOrDefault(propertyName, props, adMap);
+            if (value == null) {
+                value = "";
+            }
+            matcher.appendReplacement(sb, matcherQuoteReplacement(value));
+        }
+        matcher.appendTail(sb);
+        
+        // make sure name hint does not only contain whitespaces
+        nameHint = sb.toString().trim();
+        if (nameHint.length() == 0) {
+            return null;
+        }
+        else {
+            return nameHint;
+        }
+    }
+    
     /**
-     * Replacement for Pattern.quote(), which only available in JDK 1.5 and up.
+     * Gets configured service property value, or default value if no value is configured.
+     * @param propertyName Property name
+     * @param props Service configuration properties map
+     * @param adMap Attribute definitions map
+     * @return Value or null if none found
+     */
+    private static String getConfigurationPropertyValueOrDefault(String propertyName, Dictionary props, Map adMap) {
+        // get configured property value
+        Object value = props.get(propertyName);
+        
+        if (value != null)
+        {
+            // if set convert to string
+            if (value instanceof String[]) {
+                String[] valueArray = (String[])value;
+                StringBuffer valueString = new StringBuffer();
+                for (int i = 0; i < valueArray.length; i++) {
+                    if (i > 0) {
+                        valueString.append(",");
+                    }
+                    valueString.append(valueArray[i]);
+                }
+                return valueString.toString();
+            }
+            else {
+                return value.toString();
+            }
+        }
+        else
+        {
+            // if not set try to get default value
+            PropertyDescriptor ad = (PropertyDescriptor)adMap.get(propertyName);
+            if (ad != null && ad.getDefaultValue() != null && ad.getDefaultValue().length == 1)
+            {
+                return ad.getDefaultValue()[0];
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Replacement for Matcher.quoteReplacement which is only available in JDK 1.5 and up.
      * @param str Unquoted string
      * @return Quoted string
      */
-    private static final String regexQuote(String str)
+    private static String matcherQuoteReplacement(String str)
     {
-        int eInd = str.indexOf("\\E");
-        if (eInd < 0)
-        {
-            // No need to handle backslashes.
-            return "\\Q" + str + "\\E";
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < str.length(); i++) {
+            char c = str.charAt(i);
+            if (c == '$' || c == '\\') {
+                sb.append('\\');
+            }
+            sb.append(c);
         }
-
-        StringBuffer sb = new StringBuffer(str.length() + 16);
-        sb.append("\\Q"); // start quote
-
-        int pos = 0;
-        do
-        {
-            // A backslash is quoted by another backslash;
-            // 'E' is not needed to be quoted.
-            sb.append(str.substring(pos, eInd)).append("\\E" + "\\\\" + "E" + "\\Q");
-            pos = eInd + 2;
-        }
-        while ((eInd = str.indexOf("\\E", pos)) >= 0);
-
-        sb.append(str.substring(pos, str.length())).append("\\E"); // end quote
         return sb.toString();
     }
-
+    
     final void listFactoryConfigurations(JSONObject json, String pidFilter,
         String locale)
     {
