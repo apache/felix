@@ -21,12 +21,16 @@ package org.apache.felix.webconsole.internal.core;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.FrameworkEvent;
+import org.osgi.framework.FrameworkListener;
 import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.PackageAdmin;
 
@@ -106,9 +110,6 @@ abstract class BaseUpdateInstallHelper implements Runnable
 
     public final void run()
     {
-        // wait some time for the request to settle
-        sleepSilently( 500L );
-
         // now deploy the resolved bundles
         try
         {
@@ -118,15 +119,13 @@ abstract class BaseUpdateInstallHelper implements Runnable
             // invalid by the time we want to call the update
             PackageAdmin pa = ( refreshPackages ) ? ( PackageAdmin ) getService( PackageAdmin.class.getName() ) : null;
 
+            // perform the action!
             Bundle bundle = doRun();
 
             if ( pa != null && bundle != null )
             {
-                // wait for asynchronous bundle start tasks to finish
-                sleepSilently( 2000L );
-
-                pa.refreshPackages( new Bundle[]
-                    { bundle } );
+                // refresh packages and give it at most 5 seconds to finish
+                refreshPackages( pa, plugin.getBundle().getBundleContext(), 5000L, bundle );
             }
         }
         catch ( Exception e )
@@ -158,15 +157,97 @@ abstract class BaseUpdateInstallHelper implements Runnable
     }
 
 
-    protected void sleepSilently( long msecs )
+    /**
+     * This is an utility method that issues refresh package instruction to the framework.
+     *
+     * @param packageAdmin is the package admin service obtained using the bundle context of the caller.
+     *   If this is <code>null</code> no refresh packages is performed
+     * @param bundleContext of the caller. This is needed to add a framework listener.
+     * @param maxWait the maximum time to wait for the packages to be refreshed
+     * @param bundle the bundle, which packages to refresh or <code>null</code> to refresh all packages.
+     * @return true if refresh is succesfull within the given time frame
+     */
+    static boolean refreshPackages(final PackageAdmin packageAdmin,
+        final BundleContext bundleContext,
+        final long maxWait,
+        final Bundle bundle)
     {
-        try
+        return new RefreshPackageTask().refreshPackages( packageAdmin, bundleContext, maxWait, bundle );
+    }
+
+    static class RefreshPackageTask implements FrameworkListener
+    {
+
+        private volatile boolean refreshed = false;
+        private final Object lock = new Object();
+
+        boolean refreshPackages( final PackageAdmin packageAdmin,
+            final BundleContext bundleContext,
+            final long maxWait,
+            final Bundle bundle )
         {
-            Thread.sleep( msecs );
+            if (null == packageAdmin)
+            {
+                return false;
+            }
+
+            if (null == bundleContext)
+            {
+                return false;
+            }
+
+            bundleContext.addFrameworkListener(this);
+
+            if (null == bundle)
+            {
+                packageAdmin.refreshPackages(null);
+            }
+            else
+            {
+                packageAdmin.refreshPackages(new Bundle[] { bundle });
+            }
+
+            try
+            {
+                // check for spurious wait
+                long start = System.currentTimeMillis();
+                long delay = maxWait;
+                while (!refreshed && delay > 0)
+                {
+                    synchronized (lock)
+                    {
+                        if ( !refreshed )
+                        {
+                            lock.wait(delay);
+                            // remove the time we already waited for
+                            delay = maxWait - (System.currentTimeMillis() - start);
+                        }
+                    }
+                }
+            }
+            catch (final InterruptedException e)
+            {
+                // just return if the thread is interrupted
+                Thread.currentThread().interrupt();
+            }
+            finally
+            {
+                bundleContext.removeFrameworkListener(this);
+            }
+            return refreshed;
         }
-        catch ( InterruptedException ie )
+
+        public void frameworkEvent(final FrameworkEvent e)
         {
-            // don't care
+            if (e.getType() == FrameworkEvent.PACKAGES_REFRESHED)
+            {
+                synchronized (lock)
+                {
+                    refreshed = true;
+                    lock.notifyAll();
+                }
+            }
+
         }
     }
 }
