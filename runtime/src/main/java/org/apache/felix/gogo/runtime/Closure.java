@@ -292,6 +292,10 @@ public class Closure implements Function, Evaluate
                 v = t.type;
                 break;
 
+            case EXPR:
+                v = expr(t.value);
+                break;
+
             default:
                 throw new SyntaxError(t.line, t.column, "unexpected token: " + t.type);
         }
@@ -390,7 +394,7 @@ public class Closure implements Function, Evaluate
 
                 trace2(xtrace, cmd, values);
 
-                value = bareword(statement.get(2)) ? executeCmd(cmd.toString(), values)
+                value = bareword(statement.get(2), cmd) ? executeCmd(cmd.toString(), values)
                     : executeMethod(cmd, values);
             }
 
@@ -399,7 +403,7 @@ public class Closure implements Function, Evaluate
 
         trace2(xtrace, cmd, values);
 
-        return bareword(statement.get(0)) ? executeCmd(cmd.toString(), values)
+        return bareword(statement.get(0), cmd) ? executeCmd(cmd.toString(), values)
             : executeMethod(cmd, values);
     }
 
@@ -425,9 +429,9 @@ public class Closure implements Function, Evaluate
         }
     }
 
-    private boolean bareword(Token t) throws Exception
+    private boolean bareword(Token t, Object v) throws Exception
     {
-        return ((t.type == Type.WORD) && (t == Tokenizer.expand(t, this)) && (eval((Object) t) instanceof String));
+        return ((t.type == Type.WORD) && t.value.equals(v));
     }
 
     private Object executeCmd(String scmd, List<Object> values) throws Exception
@@ -531,6 +535,11 @@ public class Closure implements Function, Evaluate
     {
         session.variables.put(name, value);
         return value;
+    }
+
+    private Object expr(CharSequence expr) throws Exception
+    {
+        return session.expr(expr);
     }
 
     private Object array(Token array) throws Exception

@@ -46,7 +46,7 @@ public class Tokenizer
 {
     public enum Type
     {
-        ASSIGN('='), PIPE('|'), SEMICOLON(';'), NEWLINE, ARRAY, CLOSURE, EXECUTION, WORD, EOT;
+        ASSIGN('='), PIPE('|'), SEMICOLON(';'), NEWLINE, ARRAY, CLOSURE, EXPR, EXECUTION, WORD, EOT;
 
         private char c;
 
@@ -243,6 +243,7 @@ public class Tokenizer
                 case ';':
                     return text.subSequence(start, index - 1 - skipCR);
 
+                case '(':
                 case '{':
                     group();
                     break;
@@ -477,7 +478,7 @@ public class Tokenizer
 
     private static Object expand(CharSequence word, Evaluate eval, boolean inQuote) throws Exception
     {
-        final String special = "$\\\"'";
+        final String special = "%$\\\"'";
         int i = word.length();
 
         while ((--i >= 0) && (special.indexOf(word.charAt(i)) == -1))
@@ -511,6 +512,21 @@ public class Tokenizer
 
             switch (ch)
             {
+                case '%':
+                    Object exp = expandExp();
+
+                    if (EOT == ch && buf.length() == 0)
+                    {
+                        return exp;
+                    }
+
+                    if (null != exp)
+                    {
+                        buf.append(exp);
+                    }
+
+                    continue; // expandVar() has already read next char
+
                 case '$':
                     Object val = expandVar();
 
@@ -579,6 +595,25 @@ public class Tokenizer
         }
 
         return buf.toString();
+    }
+
+    private Object expandExp() throws Exception
+    {
+        assert '%' == ch;
+        Object val;
+
+        if (getch() == '(')
+        {
+            short sLine = line;
+            short sCol = column;
+            val = evaluate.eval(new Token(Type.EXPR, group(), sLine, sCol));
+            getch();
+            return val;
+        }
+        else
+        {
+            throw new SyntaxError(line, column, "bad expression: " + text);
+        }
     }
 
     private Object expandVar() throws Exception

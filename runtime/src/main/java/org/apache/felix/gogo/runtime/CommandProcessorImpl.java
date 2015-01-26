@@ -361,4 +361,8 @@ public class CommandProcessorImpl implements CommandProcessor
             }
         }
     }
+
+    public Object expr(CommandSessionImpl session, CharSequence expr) {
+        return new Expression(expr.toString()).eval(session.variables);
+    }
 }
