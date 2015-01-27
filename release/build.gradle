@@ -22,10 +22,11 @@
  */
 import aQute.bnd.build.Workspace
 
-// Misc properties (you must update the ext.dmVersion property before each release)
+// Misc properties (you must update the ext.dmRelease property before each release)
 ext.svnStagingPath = "https://dist.apache.org/repos/dist/dev/felix"
 ext.svnReleasePath = "https://dist.apache.org/repos/dist/release/felix"
-ext.dmVersion = "4.0.0"
+
+ext.dmRelease = "r4"
 
 apply plugin: 'java'
 apply from: file("rat.gradle")
@@ -74,7 +75,7 @@ task makeStaging << {
     // Package source and source bin dependencies distributions.
     logger.lifecycle("    Packaging source distributions.")
 
-    def topdir="apache-felix-dependencymanager-" + dmVersion
+    def topdir="apache-felix-dependencymanager-" + dmRelease
     ant.zip(destfile: "staging/"+topdir+'-src.zip') {
 		zipfileset(dir: '../cnf', prefix: topdir+"-src/cnf", includes: ".project,.classpath,src/**,*.bnd,ext/**")
 		zipfileset(dir: '..', prefix: topdir+"-src", includes: '*.gradle,*.properties,README,NOTICE,LICENSE')
@@ -140,8 +141,8 @@ task signStaging << {
 task commitToStaging << {
     getProject().exec { 
     	commandLine 'svn', '--username', svnUser, '--password', svnPassword, 
-		'import', 'staging', svnStagingPath + "/apache-felix-dependencymanager-" + dmVersion + "/", 
-		'-m', "Staging Apache Felix Dependency Manager version " + dmVersion + "."
+		'import', 'staging', svnStagingPath + "/apache-felix-dependencymanager-" + dmRelease + "/", 
+		'-m', "Staging Apache Felix Dependency Manager version " + dmRelease + "."
     }
 }
 
@@ -150,8 +151,8 @@ task commitToStaging << {
 task promoteToRelease << { 
     getProject().exec { 
     	commandLine 'svn', '--username', svnUser, '--password', svnPassword, 
-		'move', svnStagingPath+"/apache-felix-dependencymanager-" + dmVersion , svnReleasePath, 
-		'-m', "Releasing Apache Felix Dependency Manager version " + dmVersion + "."
+		'move', svnStagingPath+"/apache-felix-dependencymanager-" + dmRelease , svnReleasePath, 
+		'-m', "Releasing Apache Felix Dependency Manager version " + dmRelease + "."
     }
 }
 
@@ -160,8 +161,8 @@ task promoteToRelease << {
 task deleteFromStaging << { 
     getProject().exec { 
     	commandLine 'svn', '--username', svnUser, '--password', svnPassword, 
-		'delete', svnStagingPath+"/apache-felix-dependencymanager-" + dmVersion + "/",
-		"-m", "Removing Apache Felix Dependency Manager version " + dmVersion + " from staging."
+		'delete', svnStagingPath+"/apache-felix-dependencymanager-" + dmRelease + "/",
+		"-m", "Removing Apache Felix Dependency Manager version " + dmRelease + " from staging."
     }
 }
 
