@@ -22,11 +22,14 @@
  */
 import aQute.bnd.build.Workspace
 
-// Misc properties (you must update the ext.dmRelease property before each release)
-ext.svnStagingPath = "https://dist.apache.org/repos/dist/dev/felix"
-ext.svnReleasePath = "https://dist.apache.org/repos/dist/release/felix"
+// Our release number, which have to be monotonically incremented each time we make a new release.
+ext.dmRelease = "r1"
 
-ext.dmRelease = "r4"
+// Our Apache svn Staging repo
+ext.svnStagingPath = "https://dist.apache.org/repos/dist/dev/felix"
+
+// Our Apache svn Release repo
+ext.svnReleasePath = "https://dist.apache.org/repos/dist/release/felix"
 
 apply plugin: 'java'
 apply from: file("rat.gradle")
