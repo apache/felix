@@ -71,7 +71,6 @@ public class CommandSessionImpl implements CommandSession, Converter
     {
         if (!this.closed)
         {
-            System.out.println("CLOSING SESSION!");
             this.processor.closeSession(this);
             this.closed = true;
         }
