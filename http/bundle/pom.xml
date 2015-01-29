@@ -56,7 +56,7 @@
                         </Bundle-Activator>
                         <Export-Package>
                             javax.servlet.*;version=${servlet.version};-split-package:=merge-first,
-                            org.osgi.service.http;version=${http.service.version};-split-package:=merge-first,
+                            org.osgi.service.http;-split-package:=merge-first,
                             org.cometd.bayeux;version=${cometd.version};-split-package:=merge-first,
                             org.cometd.bayeux.client;version=${cometd.version};-split-package:=merge-first,
                             org.cometd.bayeux.server;version=${cometd.version};-split-package:=merge-first,

@@ -41,7 +41,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     	<jetty.version>9.2.6.v20141205</jetty.version>
     	<cometd.version>2.8.0</cometd.version>
-    	<http.service.version>1.2.1</http.service.version>
     	<servlet.version>3.1.0</servlet.version>
         <!--
             Java API and class file compliance. This property supports
