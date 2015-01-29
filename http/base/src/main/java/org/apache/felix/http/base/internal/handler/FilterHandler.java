@@ -34,35 +34,28 @@ import org.apache.felix.http.base.internal.runtime.FilterInfo;
 public final class FilterHandler extends AbstractHandler implements Comparable<FilterHandler>
 {
     private final Filter filter;
-    private final Pattern regex;
-    private final int ranking;
-
-    public FilterHandler(ExtServletContext context, Filter filter, String pattern, int ranking, String name)
-    {
-        super(context, name);
-        this.filter = filter;
-        this.ranking = ranking;
-        this.regex = Pattern.compile(pattern);
-    }
+    private final FilterInfo filterInfo;
 
     public FilterHandler(ExtServletContext context, Filter filter, FilterInfo filterInfo)
     {
-        // TODO
         super(context, filterInfo.name);
         this.filter = filter;
-        this.ranking = filterInfo.ranking;
-        this.regex = Pattern.compile(filterInfo.regexs[0]);
+        this.filterInfo = filterInfo;
     }
 
     @Override
     public int compareTo(FilterHandler other)
     {
-        if (other.ranking == this.ranking)
+        if (other.filterInfo.ranking == this.filterInfo.ranking)
         {
-            return 0;
+            if (other.filterInfo.serviceId == this.filterInfo.serviceId)
+            {
+                return 0;
+            }
+            return other.filterInfo.serviceId > this.filterInfo.serviceId ? -1 : 1;
         }
 
-        return (other.ranking > this.ranking) ? 1 : -1;
+        return (other.filterInfo.ranking > this.filterInfo.ranking) ? 1 : -1;
     }
 
     @Override
@@ -78,12 +71,44 @@ public final class FilterHandler extends AbstractHandler implements Comparable<F
 
     public String getPattern()
     {
-        return regex.toString();
+        final StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        if ( this.filterInfo.regexs != null )
+        {
+            for(final String p : this.filterInfo.regexs)
+            {
+                if ( first )
+                {
+                    first = false;
+                }
+                else
+                {
+                    sb.append(", ");
+                }
+                sb.append(p);
+            }
+        }
+        if ( this.filterInfo.patterns != null )
+        {
+            for(final String p : this.filterInfo.patterns)
+            {
+                if ( first )
+                {
+                    first = false;
+                }
+                else
+                {
+                    sb.append(", ");
+                }
+                sb.append(p);
+            }
+        }
+        return sb.toString();
     }
 
     public int getRanking()
     {
-        return ranking;
+        return filterInfo.ranking;
     }
 
     public void handle(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws ServletException, IOException
@@ -113,7 +138,30 @@ public final class FilterHandler extends AbstractHandler implements Comparable<F
             uri = "/";
         }
 
-        return this.regex.matcher(uri).matches();
+        if ( this.filterInfo.patterns != null )
+        {
+            for(final String p : this.filterInfo.patterns)
+            {
+                if ( Pattern.compile(p.replace(".", "\\.").replace("*", ".*")).matcher(uri).matches() )
+                {
+                    return true;
+                }
+            }
+        }
+        if ( this.filterInfo.regexs != null )
+        {
+            for(final String p : this.filterInfo.regexs)
+            {
+                if ( Pattern.compile(p).matcher(uri).matches() )
+                {
+                    return true;
+                }
+            }
+        }
+
+        // TODO implement servlet name matching
+
+        return false;
     }
 
     final void doHandle(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws ServletException, IOException

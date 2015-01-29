@@ -34,6 +34,7 @@ import javax.servlet.FilterConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -41,6 +42,7 @@ public class FilterHandlerTest extends AbstractHandlerTest
 {
     private Filter filter;
 
+    @Override
     @Before
     public void setUp()
     {
@@ -237,6 +239,7 @@ public class FilterHandlerTest extends AbstractHandlerTest
         assertTrue(h4.matches("/a/b/"));
     }
 
+    @Override
     protected AbstractHandler createHandler()
     {
         return createHandler("dummy", 0);
@@ -244,6 +247,9 @@ public class FilterHandlerTest extends AbstractHandlerTest
 
     private FilterHandler createHandler(String pattern, int ranking)
     {
-        return new FilterHandler(this.context, this.filter, pattern, ranking, null /* name */);
+        final FilterInfo info = new FilterInfo();
+        info.regexs = new String[] {pattern};
+        info.ranking = ranking;
+        return new FilterHandler(this.context, this.filter, info);
     }
 }

@@ -35,7 +35,6 @@ import aQute.bnd.annotation.ConsumerType;
  * This class only provides information used at registration time, and as such differs slightly from {@link DTO}s like, {@link FilterDTO}.
  * </p>
  *
- * TODO - we should move this to the same place as {@link ExtHttpServiceRuntime}.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @ConsumerType
@@ -81,6 +80,7 @@ public final class FilterInfo
      * Specifies the ranking order in which this filter should be called. Higher rankings are called first.
      */
     public int ranking = 0;
+    public long serviceId;
 
     /**
      * The dispatcher associations for the servlet filter.

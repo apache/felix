@@ -67,6 +67,6 @@ public final class FilterTracker extends AbstractTracker<Filter>
     @Override
     protected void removed(Filter service, ServiceReference ref)
     {
-        this.manager.removeFilter(ref);
+        this.manager.removeFilter(service, ref);
     }
 }

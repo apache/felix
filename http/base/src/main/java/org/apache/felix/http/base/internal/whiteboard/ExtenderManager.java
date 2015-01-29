@@ -29,6 +29,7 @@ import javax.servlet.Servlet;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.service.HttpServiceImpl;
 import org.apache.felix.http.base.internal.whiteboard.HttpContextManager.HttpContextHolder;
 import org.apache.felix.http.base.internal.whiteboard.tracker.FilterTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextHelperTracker;
@@ -37,7 +38,6 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
 import org.osgi.service.http.context.ServletContextHelper;
 import org.osgi.service.http.runtime.dto.ResourceDTO;
@@ -47,8 +47,6 @@ import org.osgi.util.tracker.ServiceTracker;
 @SuppressWarnings({ "deprecation" })
 public final class ExtenderManager
 {
-    static final String TYPE_FILTER = "f";
-    static final String TYPE_SERVLET = "s";
     static final String TYPE_RESOURCE = "r";
 
     /**
@@ -173,32 +171,30 @@ public final class ExtenderManager
         }
     }
 
-    private void addInitParams(ServiceReference ref, AbstractMapping mapping)
+    /**
+     * Get the init parameters.
+     */
+    private Map<String, String> getInitParams(final ServiceReference<?> ref, final String prefix)
     {
-        for (String key : ref.getPropertyKeys())
+        Map<String, String> result = null;
+        for (final String key : ref.getPropertyKeys())
         {
-            String prefixKey = null;
-
-            if (mapping instanceof FilterMapping && key.startsWith(FILTER_INIT_PREFIX))
+            if ( key.startsWith(prefix))
             {
-                prefixKey = FILTER_INIT_PREFIX;
-            }
-            else if (mapping instanceof ServletMapping && key.startsWith(SERVLET_INIT_PREFIX))
-            {
-                prefixKey = SERVLET_INIT_PREFIX;
-            }
-
-            if (prefixKey != null)
-            {
-                String paramKey = key.substring(prefixKey.length());
-                String paramValue = getStringProperty(ref, key);
+                final String paramKey = key.substring(prefix.length());
+                final String paramValue = getStringProperty(ref, key);
 
                 if (paramValue != null)
                 {
-                    mapping.getInitParams().put(paramKey, paramValue);
+                    if ( result == null )
+                    {
+                        result = new HashMap<String, String>();
+                    }
+                    result.put(paramKey, paramValue);
                 }
             }
         }
+        return result;
     }
 
     public void add(ServletContextHelper service, ServiceReference ref)
@@ -268,17 +264,6 @@ public final class ExtenderManager
         }
     }
 
-    private HttpContext getHttpContext(AbstractMapping mapping, ServiceReference ref)
-    {
-        Bundle bundle = ref.getBundle();
-        String contextName = getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT);
-        if (!isEmpty(contextName))
-        {
-            return this.contextManager.getHttpContext(bundle, contextName, mapping, true);
-        }
-        return this.contextManager.getHttpContext(bundle, null, mapping);
-    }
-
     private void ungetHttpContext(AbstractMapping mapping, ServiceReference ref)
     {
         Bundle bundle = ref.getBundle();
@@ -293,18 +278,24 @@ public final class ExtenderManager
 
     public void add(final Filter service, final ServiceReference ref)
     {
-        FilterInfo filterInfo = new FilterInfo();
-        filterInfo.name = getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_NAME);
-        if ( filterInfo.name == null || filterInfo.name.isEmpty() )
+        final FilterInfo filterInfo = createFilterInfo(ref, true);
+        if ( filterInfo != null )
         {
-            filterInfo.name = service.getClass().getName();
+            ((HttpServiceImpl)this.httpService).registerFilter(service, filterInfo);
         }
-        filterInfo.asyncSupported = getBooleanProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_ASYNC_SUPPORTED);
-        filterInfo.servletNames = getStringArrayProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_SERVLET);
-        filterInfo.patterns = getStringArrayProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN);
-        filterInfo.ranking = getIntProperty(ref, Constants.SERVICE_RANKING, 0);
+    }
 
-        String[] dispatcherNames = getStringArrayProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_DISPATCHER);
+    private FilterInfo createFilterInfo(final ServiceReference<?> filterRef, final boolean log)
+    {
+        final FilterInfo filterInfo = new FilterInfo();
+        filterInfo.name = getStringProperty(filterRef, HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_NAME);
+        filterInfo.asyncSupported = getBooleanProperty(filterRef, HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_ASYNC_SUPPORTED);
+        filterInfo.servletNames = getStringArrayProperty(filterRef, HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_SERVLET);
+        filterInfo.patterns = getStringArrayProperty(filterRef, HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN);
+        filterInfo.ranking = getIntProperty(filterRef, Constants.SERVICE_RANKING, 0);
+        filterInfo.serviceId = (Long)filterRef.getProperty(Constants.SERVICE_ID);
+        filterInfo.initParams = getInitParams(filterRef, FILTER_INIT_PREFIX);
+        String[] dispatcherNames = getStringArrayProperty(filterRef, HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_DISPATCHER);
         if (dispatcherNames != null && dispatcherNames.length > 0)
         {
             DispatcherType[] dispatchers = new DispatcherType[dispatcherNames.length];
@@ -317,50 +308,64 @@ public final class ExtenderManager
 
         if (isEmpty(filterInfo.patterns))
         {
-            SystemLogger.debug("Ignoring Filter Service " + ref + ", " + HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN +
-                    " is missing or empty");
-            return;
+            if ( log )
+            {
+                SystemLogger.debug("Ignoring Filter Service " + filterRef + ", " + HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN +
+                        " is missing or empty");
+            }
+            return null;
         }
 
-        FilterMapping mapping = new FilterMapping(ref.getBundle(), service, filterInfo);
-        filterInfo.context = getHttpContext(mapping, ref); // XXX
-        addInitParams(ref, mapping);
-        addMapping(TYPE_FILTER, ref, mapping);
+        return filterInfo;
     }
 
-    public void add(Servlet service, ServiceReference ref)
+    private ServletInfo createServletInfo(final ServiceReference<?> servletRef, final boolean log)
     {
-        ServletInfo servletInfo = new ServletInfo();
-        servletInfo.name = getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_NAME);
-        if ( servletInfo.name == null || servletInfo.name.isEmpty() )
-        {
-            servletInfo.name = service.getClass().getName();
-        }
-        servletInfo.errorPage = getStringArrayProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_ERROR_PAGE);
-        servletInfo.patterns = getStringArrayProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN);
-        servletInfo.asyncSupported = getBooleanProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_ASYNC_SUPPORTED);
+        final ServletInfo servletInfo = new ServletInfo();
+        servletInfo.name = getStringProperty(servletRef, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_NAME);
+        servletInfo.errorPage = getStringArrayProperty(servletRef, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_ERROR_PAGE);
+        servletInfo.patterns = getStringArrayProperty(servletRef, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN);
+        servletInfo.asyncSupported = getBooleanProperty(servletRef, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_ASYNC_SUPPORTED);
+        servletInfo.initParams = getInitParams(servletRef, SERVLET_INIT_PREFIX);
+        servletInfo.ranking = getIntProperty(servletRef, Constants.SERVICE_RANKING, 0);
+        servletInfo.serviceId = (Long)servletRef.getProperty(Constants.SERVICE_ID);
 
         if (isEmpty(servletInfo.patterns))
         {
-            SystemLogger.debug("Ignoring Servlet Service " + ref + ", " + HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN +
-                    "is missing or empty");
-            return;
+            if ( log ) {
+                SystemLogger.debug("Ignoring Servlet Service " + servletRef + ", " + HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN +
+                        "is missing or empty");
+            }
+            return null;
         }
-
-        final ServletMapping mapping = new ServletMapping(ref.getBundle(), service, servletInfo);
-        servletInfo.context = getHttpContext(mapping, ref); // XXX
-        addInitParams(ref, mapping);
-        addMapping(TYPE_SERVLET, ref, mapping);
+        return servletInfo;
     }
 
-    public void removeFilter(ServiceReference ref)
+    public void add(Servlet service, ServiceReference<?> ref)
     {
-        removeMapping(TYPE_FILTER, ref);
+        final ServletInfo servletInfo = createServletInfo(ref, true);
+        if ( servletInfo != null )
+        {
+            ((HttpServiceImpl)this.httpService).registerServlet(service, servletInfo);
+        }
     }
 
-    public void removeServlet(ServiceReference ref)
+    public void removeFilter(final Filter service, ServiceReference ref)
     {
-        removeMapping(TYPE_SERVLET, ref);
+        final FilterInfo filterInfo = createFilterInfo(ref, false);
+        if ( filterInfo != null )
+        {
+            ((HttpServiceImpl)this.httpService).unregisterFilter(service, filterInfo);
+        }
+    }
+
+    public void removeServlet(Servlet service, ServiceReference ref)
+    {
+        final ServletInfo servletInfo = createServletInfo(ref, false);
+        if ( servletInfo != null )
+        {
+            ((HttpServiceImpl)this.httpService).unregisterServlet(service, servletInfo);
+        }
     }
 
     private synchronized void unregisterAll()

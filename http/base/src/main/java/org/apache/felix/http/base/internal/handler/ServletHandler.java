@@ -31,6 +31,7 @@ import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static org.apache.felix.http.base.internal.util.UriUtils.concat;
 
 import java.io.IOException;
+import java.util.regex.Pattern;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.RequestDispatcher;
@@ -236,6 +237,7 @@ public final class ServletHandler extends AbstractHandler implements Comparable<
 
     private final String alias;
     private final Servlet servlet;
+    private final Pattern pattern;
 
     public ServletHandler(final ExtServletContext context,
             final Servlet servlet,
@@ -245,6 +247,7 @@ public final class ServletHandler extends AbstractHandler implements Comparable<
         super(context, servletInfo.name);
         this.servlet = servlet;
         this.alias = alias;
+        this.pattern = Pattern.compile(alias.replace(".", "\\.").replace("*", ".*"));
     }
 
     @Override
@@ -330,10 +333,11 @@ public final class ServletHandler extends AbstractHandler implements Comparable<
         {
             return uri.startsWith(this.alias);
         }
-        else
+        else if ( uri.equals(this.alias) || uri.startsWith(this.alias + "/") )
         {
-            return uri.equals(this.alias) || uri.startsWith(this.alias + "/");
+            return true;
         }
+        return this.pattern.matcher(uri).matches();
     }
 
     final void doHandle(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException
