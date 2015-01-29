@@ -17,7 +17,10 @@
 package org.apache.felix.http.base.internal.service;
 
 import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 import javax.servlet.Filter;
 import javax.servlet.Servlet;
@@ -32,6 +35,8 @@ import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.HandlerRegistry;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
+import org.apache.felix.http.base.internal.runtime.FilterInfo;
+import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.NamespaceException;
@@ -53,16 +58,85 @@ public final class HttpServiceImpl implements ExtHttpService
         this.contextManager = new ServletContextManager(this.bundle, context, servletAttributeListener, sharedContextAttributes);
     }
 
-    private ExtServletContext getServletContext(HttpContext context)
+    static Map<String, String> convertToMap(Dictionary dict)
     {
-        if (context == null)
+        Map<String, String> result = new HashMap<String, String>();
+        if (dict != null)
         {
-            context = createDefaultHttpContext();
+            Enumeration keyEnum = dict.keys();
+            while (keyEnum.hasMoreElements())
+            {
+                String key = String.valueOf(keyEnum.nextElement());
+                Object value = dict.get(key);
+                result.put(key, value == null ? null : String.valueOf(value));
+            }
         }
-
-        return this.contextManager.getServletContext(context);
+        return result;
     }
 
+    static <T> boolean isEmpty(T[] array)
+    {
+        return array == null || array.length < 1;
+    }
+
+    static boolean isEmpty(String str)
+    {
+        return str == null || "".equals(str.trim());
+    }
+
+    @Override
+    public HttpContext createDefaultHttpContext()
+    {
+        return new DefaultHttpContext(this.bundle);
+    }
+
+    public void registerFilter(Filter filter, FilterInfo filterInfo) throws ServletException
+    {
+        if (filter == null)
+        {
+            throw new IllegalArgumentException("Filter cannot be null!");
+        }
+        if (filterInfo == null)
+        {
+            throw new IllegalArgumentException("FilterInfo cannot be null!");
+        }
+        if (isEmpty(filterInfo.patterns) && isEmpty(filterInfo.regexs) && isEmpty(filterInfo.servletNames))
+        {
+            throw new IllegalArgumentException("FilterInfo must have at least one pattern or regex, or provide at least one servlet name!");
+        }
+        if (isEmpty(filterInfo.name))
+        {
+            filterInfo.name = filter.getClass().getName();
+        }
+
+        ExtServletContext servletContext = getServletContext(filterInfo.context);
+
+        try
+        {
+            FilterHandler handler = new FilterHandler(servletContext, filter, filterInfo);
+
+            synchronized (this)
+            {
+                if (this.localFilters.add(filter))
+                {
+                    this.handlerRegistry.addFilter(handler);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            if (e instanceof ServletException)
+            {
+                throw (ServletException) e;
+            }
+            else
+            {
+                throw new ServletException("Failed to register filter " + filterInfo.name, e);
+            }
+        }
+    }
+
+    @Override
     public void registerFilter(Filter filter, String pattern, Dictionary initParams, int ranking, HttpContext context) throws ServletException
     {
         if (filter == null)
@@ -76,14 +150,80 @@ public final class HttpServiceImpl implements ExtHttpService
         this.localFilters.add(filter);
     }
 
-    public void unregisterFilter(Filter filter)
+    @Override
+    public void registerResources(String alias, String name, HttpContext context) throws NamespaceException
     {
-        unregisterFilter(filter, true);
+        if (!isNameValid(name))
+        {
+            throw new IllegalArgumentException("Malformed resource name [" + name + "]");
+        }
+
+        try
+        {
+            Servlet servlet = new ResourceServlet(name);
+            registerServlet(alias, servlet, null, context);
+        }
+        catch (ServletException e)
+        {
+            SystemLogger.error("Failed to register resources", e);
+        }
     }
 
-    public void unregisterServlet(Servlet servlet)
+    public void registerServlet(Servlet servlet, ServletInfo servletInfo) throws ServletException, NamespaceException
     {
-        unregisterServlet(servlet, true);
+        if (servlet == null)
+        {
+            throw new IllegalArgumentException("Servlet cannot be null!");
+        }
+        if (servletInfo == null)
+        {
+            throw new IllegalArgumentException("ServletInfo cannot be null!");
+        }
+        if (isEmpty(servletInfo.patterns) && isEmpty(servletInfo.errorPage))
+        {
+            throw new IllegalArgumentException("ServletInfo must at least have one pattern or error page!");
+        }
+        if (isEmpty(servletInfo.name))
+        {
+            servletInfo.name = servlet.getClass().getName();
+        }
+
+        ExtServletContext servletContext = getServletContext(servletInfo.context);
+
+        try
+        {
+            ServletHandler handler = new ServletHandler(servletContext, servlet, servletInfo);
+
+            synchronized (this)
+            {
+                if (this.localServlets.add(servlet))
+                {
+                    this.handlerRegistry.addServlet(handler);
+                    if (servletInfo.errorPage != null && servletInfo.errorPage.length != 0)
+                    {
+                        for (String errorPage : servletInfo.errorPage)
+                        {
+                            this.handlerRegistry.addErrorServlet(errorPage, handler);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            if (e instanceof ServletException)
+            {
+                throw (ServletException) e;
+            }
+            else if (e instanceof NamespaceException)
+            {
+                throw (NamespaceException) e;
+            }
+            else
+            {
+                throw new ServletException("Failed to register servlet " + servletInfo.name, e);
+            }
+        }
     }
 
     public void registerServlet(String alias, Servlet servlet, Dictionary initParams, HttpContext context) throws ServletException, NamespaceException
@@ -101,24 +241,6 @@ public final class HttpServiceImpl implements ExtHttpService
         handler.setInitParams(initParams);
         this.handlerRegistry.addServlet(handler);
         this.localServlets.add(servlet);
-    }
-
-    public void registerResources(String alias, String name, HttpContext context) throws NamespaceException
-    {
-        if (!isNameValid(name))
-        {
-            throw new IllegalArgumentException("Malformed resource name [" + name + "]");
-        }
-
-        try
-        {
-            Servlet servlet = new ResourceServlet(name);
-            registerServlet(alias, servlet, null, context);
-        }
-        catch (ServletException e)
-        {
-            SystemLogger.error("Failed to register resources", e);
-        }
     }
 
     public void unregister(String alias)
@@ -139,11 +261,6 @@ public final class HttpServiceImpl implements ExtHttpService
         unregisterServlet(servlet);
     }
 
-    public HttpContext createDefaultHttpContext()
-    {
-        return new DefaultHttpContext(this.bundle);
-    }
-
     public void unregisterAll()
     {
         HashSet<Servlet> servlets = new HashSet<Servlet>(this.localServlets);
@@ -157,6 +274,43 @@ public final class HttpServiceImpl implements ExtHttpService
         {
             unregisterFilter(fiter, false);
         }
+    }
+
+    @Override
+    public void unregisterFilter(Filter filter)
+    {
+        unregisterFilter(filter, true);
+    }
+
+    @Override
+    public void unregisterServlet(Servlet servlet)
+    {
+        unregisterServlet(servlet, true);
+    }
+
+    private ExtServletContext getServletContext(HttpContext context)
+    {
+        if (context == null)
+        {
+            context = createDefaultHttpContext();
+        }
+
+        return this.contextManager.getServletContext(context);
+    }
+
+    private boolean isNameValid(String name)
+    {
+        if (name == null)
+        {
+            return false;
+        }
+
+        if (!name.equals("/") && name.endsWith("/"))
+        {
+            return false;
+        }
+
+        return true;
     }
 
     private void unregisterFilter(Filter filter, final boolean destroy)
@@ -176,22 +330,7 @@ public final class HttpServiceImpl implements ExtHttpService
             this.localServlets.remove(servlet);
         }
     }
-
-    private boolean isNameValid(String name)
-    {
-        if (name == null)
-        {
-            return false;
-        }
-
-        if (!name.equals("/") && name.endsWith("/"))
-        {
-            return false;
-        }
-
-        return true;
-    }
-
+    
     private boolean isAliasValid(String alias)
     {
         if (alias == null)

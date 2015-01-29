@@ -43,6 +43,7 @@ import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
+import org.apache.felix.http.base.internal.runtime.ServletInfo;
 
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
@@ -73,6 +74,7 @@ public final class ServletHandler extends AbstractHandler implements Comparable<
             this.named = false;
         }
 
+        @Override
         public void forward(ServletRequest req, ServletResponse res) throws ServletException, IOException
         {
             if (res.isCommitted())
@@ -98,6 +100,7 @@ public final class ServletHandler extends AbstractHandler implements Comparable<
             }
         }
 
+        @Override
         public void include(ServletRequest req, ServletResponse res) throws ServletException, IOException
         {
             // Since we're already created this RequestDispatcher for *this* servlet handler, we do not need to
@@ -241,6 +244,15 @@ public final class ServletHandler extends AbstractHandler implements Comparable<
         this.servlet = servlet;
     }
 
+    public ServletHandler(ExtServletContext context, Servlet servlet, ServletInfo servletInfo)
+    {
+        // TODO
+        super(context, servletInfo.name);
+        this.servlet = servlet;
+        this.alias = servletInfo.patterns[0];
+    }
+
+    @Override
     public int compareTo(ServletHandler other)
     {
         return other.alias.length() - this.alias.length();
@@ -256,6 +268,7 @@ public final class ServletHandler extends AbstractHandler implements Comparable<
         return new RequestDispatcherImpl(path, pathInContext, query);
     }
 
+    @Override
     public void destroy()
     {
         this.servlet.destroy();
@@ -300,6 +313,7 @@ public final class ServletHandler extends AbstractHandler implements Comparable<
         return matches;
     }
 
+    @Override
     public void init() throws ServletException
     {
         this.servlet.init(new ServletConfigImpl(getName(), getContext(), getInitParams()));

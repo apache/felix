@@ -121,6 +121,11 @@ public final class HandlerRegistry
         return aliasMap.get(alias);
     }
 
+    public void addErrorServlet(String errorPage, ServletHandler handler) throws ServletException
+    {
+        // TODO
+    }
+
     public void removeAll()
     {
         for (Iterator<ServletHandler> it = servletMap.values().iterator(); it.hasNext(); )
