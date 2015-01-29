@@ -16,20 +16,64 @@
  */
 package org.apache.felix.http.api;
 
+import java.util.Dictionary;
+
 import javax.servlet.Filter;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
-import org.osgi.service.http.HttpService;
+
 import org.osgi.service.http.HttpContext;
-import java.util.Dictionary;
+import org.osgi.service.http.HttpService;
 
-public interface ExtHttpService
-    extends HttpService
+import aQute.bnd.annotation.ProviderType;
+
+/**
+ * The {@link ExtHttpService} allows other bundles in the OSGi environment to dynamically
+ * register resources, {@link Filter}s and {@link Servlet}s into the URI namespace of a
+ * HTTP service implementation. A bundle may later unregister its resources, {@link Filter}s
+ * or {@link Servlet}s.
+ *
+ * @see HttpContext
+ */
+@ProviderType
+public interface ExtHttpService extends HttpService
 {
-    public void registerFilter(Filter filter, String pattern, Dictionary initParams, int ranking, HttpContext context)
-        throws ServletException;
-    
-    public void unregisterFilter(Filter filter);
+    /**
+     * Allows for programmatic registration of a {@link Filter} instance.
+     *
+     * @param filter the {@link Filter} to register, cannot be <code>null</code>;
+     * @param pattern the filter pattern to register the for, cannot be <code>null</code> and
+     *        should be a valid regular expression;
+     * @param initParams the initialization parameters passed to the given filter during its
+     *        initialization, can be <code>null</code> in case no additional parameters should
+     *        be provided;
+     * @param ranking defines the order in which filters are called. A higher ranking causes
+     *        the filter to be placed earlier in the filter chain;
+     * @param context the optional {@link HttpContext} to associate with this filter, can be
+     *        <code>null</code> in case a default context should be associated.
+     * @throws ServletException in case the registration failed, for example because the
+     *         initialization failed or due any other problem;
+     * @throws IllegalArgumentException in case the given filter was <code>null</code>.
+     */
+    void registerFilter(Filter filter, String pattern, Dictionary initParams, int ranking, HttpContext context) throws ServletException;
 
-    public void unregisterServlet(Servlet servlet);
+    /**
+     * Unregisters a previously registered {@link Filter}.
+     * <p>
+     * In case the given filter is not registered, this method is essentially a no-op.
+     * </p>
+     *
+     * @param filter the {@link Filter} to unregister, cannot be <code>null</code>.
+     */
+    void unregisterFilter(Filter filter);
+
+    /**
+     * Unregisters a previously registered {@link Servlet}.
+     * <p>
+     * In case the given servlet is not registered, this method is essentially a no-op.
+     * </p>
+     *
+     * @param servlet the {@link Servlet} to unregister, cannot be <code>null</code>.
+     */
+    void unregisterServlet(Servlet servlet);
 }
