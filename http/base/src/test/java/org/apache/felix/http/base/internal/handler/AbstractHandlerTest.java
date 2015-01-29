@@ -16,6 +16,7 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
+import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
@@ -51,7 +52,7 @@ public abstract class AbstractHandlerTest
         AbstractHandler handler = createHandler();
         Assert.assertEquals(0, handler.getInitParams().size());
 
-        Hashtable<String, String> map = new Hashtable<String, String>();
+        Dictionary<String, String> map = new Hashtable<String, String>();
         map.put("key1", "value1");
 
         handler.setInitParams(map);

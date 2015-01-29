@@ -16,14 +16,17 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.servlet.Filter;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class AbstractHandler
 {
@@ -61,6 +64,10 @@ public abstract class AbstractHandler
 
     public abstract void init() throws ServletException;
 
+    /**
+     * TODO - We can remove this, once we switched to {@link #setInitParams(Map)}
+     * @param map
+     */
     public final void setInitParams(Dictionary map)
     {
         this.initParams.clear();
@@ -80,6 +87,17 @@ public abstract class AbstractHandler
                 this.initParams.put((String) key, (String) value);
             }
         }
+    }
+
+    public final void setInitParams(Map<String, String> map)
+    {
+        this.initParams.clear();
+        if (map == null)
+        {
+            return;
+        }
+
+        this.initParams.putAll(map);
     }
 
     protected final ExtServletContext getContext()
