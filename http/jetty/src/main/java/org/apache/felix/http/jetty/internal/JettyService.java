@@ -29,7 +29,6 @@ import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -132,7 +131,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         // FELIX-4422: start Jetty synchronously...
         startJetty();
 
-        Properties props = new Properties();
+        Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(Constants.SERVICE_PID, PID);
         this.configServiceReg = this.context.registerService(ManagedService.class.getName(), new JettyManagedService(this), props);
 
@@ -741,7 +740,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         if (bundle.getState() == Bundle.ACTIVE || (bundle.getState() == Bundle.STARTING && "Lazy".equals(bundle.getHeaders().get(HEADER_ACTIVATION_POLICY))))
         {
 
-            String contextPath = (String) bundle.getHeaders().get(HEADER_WEB_CONTEXT_PATH);
+            String contextPath = bundle.getHeaders().get(HEADER_WEB_CONTEXT_PATH);
             if (contextPath != null)
             {
                 return startWebAppBundle(bundle, contextPath);
@@ -752,7 +751,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 
     public void removedBundle(Bundle bundle, BundleEvent event, Object object)
     {
-        String contextPath = (String) bundle.getHeaders().get(HEADER_WEB_CONTEXT_PATH);
+        String contextPath = bundle.getHeaders().get(HEADER_WEB_CONTEXT_PATH);
         if (contextPath == null)
         {
             return;
