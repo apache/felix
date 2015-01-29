@@ -109,31 +109,10 @@ public final class HttpServiceImpl implements ExtHttpService
             filterInfo.name = filter.getClass().getName();
         }
 
-        ExtServletContext servletContext = getServletContext(filterInfo.context);
-
-        try
-        {
-            FilterHandler handler = new FilterHandler(servletContext, filter, filterInfo);
-
-            synchronized (this)
-            {
-                if (this.localFilters.add(filter))
-                {
-                    this.handlerRegistry.addFilter(handler);
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            if (e instanceof ServletException)
-            {
-                throw (ServletException) e;
-            }
-            else
-            {
-                throw new ServletException("Failed to register filter " + filterInfo.name, e);
-            }
-        }
+        FilterHandler handler = new FilterHandler(getServletContext(filterInfo.context), filter, filterInfo);
+        handler.setInitParams(filterInfo.initParams);
+        this.handlerRegistry.addFilter(handler);
+        this.localFilters.add(filter);
     }
 
     @Override
@@ -188,44 +167,13 @@ public final class HttpServiceImpl implements ExtHttpService
             servletInfo.name = servlet.getClass().getName();
         }
 
-        ExtServletContext servletContext = getServletContext(servletInfo.context);
-
-        try
-        {
-            ServletHandler handler = new ServletHandler(servletContext, servlet, servletInfo);
-
-            synchronized (this)
-            {
-                if (this.localServlets.add(servlet))
-                {
-                    this.handlerRegistry.addServlet(handler);
-                    if (servletInfo.errorPage != null && servletInfo.errorPage.length != 0)
-                    {
-                        for (String errorPage : servletInfo.errorPage)
-                        {
-                            this.handlerRegistry.addErrorServlet(errorPage, handler);
-                        }
-                    }
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            if (e instanceof ServletException)
-            {
-                throw (ServletException) e;
-            }
-            else if (e instanceof NamespaceException)
-            {
-                throw (NamespaceException) e;
-            }
-            else
-            {
-                throw new ServletException("Failed to register servlet " + servletInfo.name, e);
-            }
-        }
+        ServletHandler handler = new ServletHandler(getServletContext(servletInfo.context), servlet, servletInfo);
+        handler.setInitParams(servletInfo.initParams);
+        this.handlerRegistry.addServlet(handler);
+        this.localServlets.add(servlet);
     }
 
+    @Override
     public void registerServlet(String alias, Servlet servlet, Dictionary initParams, HttpContext context) throws ServletException, NamespaceException
     {
         if (servlet == null)
@@ -243,6 +191,7 @@ public final class HttpServiceImpl implements ExtHttpService
         this.localServlets.add(servlet);
     }
 
+    @Override
     public void unregister(String alias)
     {
         final Servlet servlet = this.handlerRegistry.getServletByAlias(alias);
@@ -330,7 +279,7 @@ public final class HttpServiceImpl implements ExtHttpService
             this.localServlets.remove(servlet);
         }
     }
-    
+
     private boolean isAliasValid(String alias)
     {
         if (alias == null)
