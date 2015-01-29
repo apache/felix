@@ -16,6 +16,10 @@
  */
 package org.apache.felix.http.jetty.internal;
 
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -36,6 +40,8 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
+import junit.framework.TestCase;
+
 import org.apache.felix.http.base.internal.DispatcherServlet;
 import org.apache.felix.http.base.internal.EventDispatcher;
 import org.apache.felix.http.base.internal.HttpServiceController;
@@ -45,9 +51,6 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Version;
-
-import junit.framework.TestCase;
-import static org.mockito.Mockito.*;
 
 public class JettyServiceTest extends TestCase
 {
@@ -66,6 +69,7 @@ public class JettyServiceTest extends TestCase
 
     private Bundle mockBundle;
 
+    @Override
     public void setUp() throws Exception
     {
         //Setup Mocks
@@ -75,6 +79,9 @@ public class JettyServiceTest extends TestCase
 
         //Setup Behaviors
         when(mockBundleContext.getBundle()).thenReturn(mockBundle);
+        final org.osgi.framework.Filter f = mock(org.osgi.framework.Filter.class);
+        when(f.toString()).thenReturn("(prop=*)");
+        when(mockBundleContext.createFilter(anyString())).thenReturn(f);
         when(mockBundle.getSymbolicName()).thenReturn("main");
         when(mockBundle.getVersion()).thenReturn(new Version("1.0.0"));
         when(mockBundle.getHeaders()).thenReturn(new Hashtable<String, String>());
@@ -92,13 +99,13 @@ public class JettyServiceTest extends TestCase
     }
 
     /**
-     * 
+     *
      * Tests to ensure the osgi-bundlecontext is available for init methods.
-     * 
+     *
      * @throws MalformedURLException
      * @throws InterruptedException
      */
-    public void testInitBundleContextDeployIT() throws MalformedURLException, InterruptedException
+    public void testInitBundleContextDeployIT() throws Exception
     {
         //Setup mocks
         Deployment mockDeployment = mock(Deployment.class);
@@ -107,6 +114,9 @@ public class JettyServiceTest extends TestCase
 
         //Setup behaviors
         when(mockDeployment.getBundle()).thenReturn(mockBundle);
+        final org.osgi.framework.Filter f = mock(org.osgi.framework.Filter.class);
+        when(f.toString()).thenReturn("(prop=*)");
+        when(mockBundleContext.createFilter(anyString())).thenReturn(f);
         when(mockBundle.getBundleContext()).thenReturn(mockBundleContext);
         when(mockBundle.getSymbolicName()).thenReturn("test");
         when(mockBundle.getVersion()).thenReturn(new Version("0.0.1"));
