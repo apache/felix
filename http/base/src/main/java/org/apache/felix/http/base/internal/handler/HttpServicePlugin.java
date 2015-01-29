@@ -19,20 +19,22 @@
 
 package org.apache.felix.http.base.internal.handler;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceRegistration;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.Dictionary;
+import java.util.Hashtable;
 
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Arrays;
-import java.util.Properties;
+
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceRegistration;
 
 @SuppressWarnings("serial")
 public class HttpServicePlugin extends HttpServlet
@@ -51,7 +53,7 @@ public class HttpServicePlugin extends HttpServlet
 
     public void register()
     {
-        Properties props = new Properties();
+        final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(Constants.SERVICE_VENDOR, "Apache Software Foundation");
         props.put(Constants.SERVICE_DESCRIPTION, "HTTP Service Web Console Plugin");
         props.put("felix.webconsole.label", "httpservice");

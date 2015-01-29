@@ -16,7 +16,9 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
-import static javax.servlet.http.HttpServletResponse.*;
+import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static javax.servlet.http.HttpServletResponse.SC_OK;
+
 import java.io.IOException;
 import java.util.regex.Pattern;
 
@@ -27,6 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
+import org.apache.felix.http.base.internal.runtime.FilterInfo;
 
 public final class FilterHandler extends AbstractHandler implements Comparable<FilterHandler>
 {
@@ -42,6 +45,16 @@ public final class FilterHandler extends AbstractHandler implements Comparable<F
         this.regex = Pattern.compile(pattern);
     }
 
+    public FilterHandler(ExtServletContext context, Filter filter, FilterInfo filterInfo)
+    {
+        // TODO
+        super(context, filterInfo.name);
+        this.filter = filter;
+        this.ranking = filterInfo.ranking;
+        this.regex = Pattern.compile(filterInfo.regexs[0]);
+    }
+
+    @Override
     public int compareTo(FilterHandler other)
     {
         if (other.ranking == this.ranking)
@@ -52,6 +65,7 @@ public final class FilterHandler extends AbstractHandler implements Comparable<F
         return (other.ranking > this.ranking) ? 1 : -1;
     }
 
+    @Override
     public void destroy()
     {
         this.filter.destroy();
@@ -85,6 +99,7 @@ public final class FilterHandler extends AbstractHandler implements Comparable<F
         }
     }
 
+    @Override
     public void init() throws ServletException
     {
         this.filter.init(new FilterConfigImpl(getName(), getContext(), getInitParams()));
@@ -109,7 +124,7 @@ public final class FilterHandler extends AbstractHandler implements Comparable<F
         }
         else
         {
-            // FELIX-3988: If the response is not yet committed and still has the default 
+            // FELIX-3988: If the response is not yet committed and still has the default
             // status, we're going to override this and send an error instead.
             if (!res.isCommitted() && (res.getStatus() == SC_OK || res.getStatus() == 0))
             {
