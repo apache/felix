@@ -237,25 +237,25 @@ public final class ServletHandler extends AbstractHandler implements Comparable<
     private final String alias;
     private final Servlet servlet;
 
-    public ServletHandler(ExtServletContext context, Servlet servlet, String alias, String name)
+    public ServletHandler(final ExtServletContext context,
+            final Servlet servlet,
+            final ServletInfo servletInfo,
+            final String alias)
     {
-        super(context, name);
-        this.alias = alias;
-        this.servlet = servlet;
-    }
-
-    public ServletHandler(ExtServletContext context, Servlet servlet, ServletInfo servletInfo)
-    {
-        // TODO
         super(context, servletInfo.name);
         this.servlet = servlet;
-        this.alias = servletInfo.patterns[0];
+        this.alias = alias;
     }
 
     @Override
     public int compareTo(ServletHandler other)
     {
-        return other.alias.length() - this.alias.length();
+        int result = other.alias.length() - this.alias.length();
+        if ( result == 0 )
+        {
+            result = this.alias.compareTo(other.alias);
+        }
+        return result;
     }
 
     public RequestDispatcher createNamedRequestDispatcher()

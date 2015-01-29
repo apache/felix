@@ -72,5 +72,4 @@ public final class ServletInfo
      * The {@link HttpContext} for the servlet.
      */
     public HttpContext context;
-
 }

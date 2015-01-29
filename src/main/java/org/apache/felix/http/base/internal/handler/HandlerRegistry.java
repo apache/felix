@@ -29,9 +29,8 @@ import org.osgi.service.http.NamespaceException;
 
 public final class HandlerRegistry
 {
-    private final ConcurrentMap<Servlet, ServletHandler> servletMap = new ConcurrentHashMap<Servlet, ServletHandler>();
     private final ConcurrentMap<Filter, FilterHandler> filterMap = new ConcurrentHashMap<Filter, FilterHandler>();
-    private final ConcurrentMap<String, Servlet> aliasMap = new ConcurrentHashMap<String, Servlet>();
+    private final ConcurrentMap<String, ServletHandler> aliasMap = new ConcurrentHashMap<String, ServletHandler>();
     private volatile ServletHandler[] servlets;
     private volatile FilterHandler[] filters;
 
@@ -55,18 +54,8 @@ public final class HandlerRegistry
     {
         handler.init();
 
-        // there is a window of opportunity that the servlet/alias was registered between the
-        // previous check and this one, so we have to atomically add if absent here.
-        if (servletMap.putIfAbsent(handler.getServlet(), handler) != null)
+        if (aliasMap.putIfAbsent(handler.getAlias(), handler) != null)
         {
-            // Do not destroy the servlet as the same instance was already registered
-            throw new ServletException("Servlet instance already registered");
-        }
-        if (aliasMap.putIfAbsent(handler.getAlias(), handler.getServlet()) != null)
-        {
-            // Remove it from the servletmap too
-            servletMap.remove(handler.getServlet(), handler);
-
             handler.destroy();
             throw new NamespaceException("Servlet with alias '" + handler.getAlias() + "' already registered");
         }
@@ -91,15 +80,22 @@ public final class HandlerRegistry
 
     public void removeServlet(Servlet servlet, final boolean destroy)
     {
-        ServletHandler handler = servletMap.remove(servlet);
-        if (handler != null)
+        boolean update = false;
+        for (Iterator<ServletHandler> it = aliasMap.values().iterator(); it.hasNext(); )
+        {
+            ServletHandler handler = it.next();
+            if (handler.getServlet() == servlet ) {
+                it.remove();
+                if (destroy)
+                {
+                    handler.destroy();
+                }
+                update = true;
+            }
+        }
+        if ( update )
         {
             updateServletArray();
-            aliasMap.remove(handler.getAlias());
-            if (destroy)
-            {
-                handler.destroy();
-            }
         }
     }
 
@@ -118,7 +114,11 @@ public final class HandlerRegistry
 
     public Servlet getServletByAlias(String alias)
     {
-        return aliasMap.get(alias);
+        final ServletHandler handler = aliasMap.get(alias);
+        if ( handler != null ) {
+            return handler.getServlet();
+        }
+        return null;
     }
 
     public void addErrorServlet(String errorPage, ServletHandler handler) throws ServletException
@@ -128,12 +128,11 @@ public final class HandlerRegistry
 
     public void removeAll()
     {
-        for (Iterator<ServletHandler> it = servletMap.values().iterator(); it.hasNext(); )
+        for (Iterator<ServletHandler> it = aliasMap.values().iterator(); it.hasNext(); )
         {
             ServletHandler handler = it.next();
             it.remove();
 
-            aliasMap.remove(handler.getAlias());
             handler.destroy();
         }
 
@@ -150,14 +149,14 @@ public final class HandlerRegistry
 
     private void updateServletArray()
     {
-        ServletHandler[] tmp = servletMap.values().toArray(new ServletHandler[servletMap.size()]);
+        final ServletHandler[] tmp = aliasMap.values().toArray(new ServletHandler[aliasMap.size()]);
         Arrays.sort(tmp);
         servlets = tmp;
     }
 
     private void updateFilterArray()
     {
-        FilterHandler[] tmp = filterMap.values().toArray(new FilterHandler[filterMap.size()]);
+        final FilterHandler[] tmp = filterMap.values().toArray(new FilterHandler[filterMap.size()]);
         Arrays.sort(tmp);
         filters = tmp;
     }
