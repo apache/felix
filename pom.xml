@@ -22,14 +22,14 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.http.parent</artifactId>
-        <version>5-SNAPSHOT</version>
+        <version>6-SNAPSHOT</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
     <name>Apache Felix Http Api</name>
     <artifactId>org.apache.felix.http.api</artifactId>
     <version>3.0.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <packaging>bundle</packaging>
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http/api</connection>
@@ -42,18 +42,36 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.osgi.service.http;version=${http.service.version},
+                            org.osgi.service.http,
+                            org.osgi.service.http.context,
+                            org.osgi.service.http.runtime,
+                            org.osgi.service.http.runtime.dto,
+                            org.osgi.service.http.whiteboard,
                             org.apache.felix.http.api
                         </Export-Package>
                         <Import-Package>
                             org.osgi.service.http,
+                            org.osgi.service.http.context,
+                            org.osgi.service.http.runtime,
+                            org.osgi.service.http.runtime.dto,
+                            org.osgi.service.http.whiteboard,
                             javax.servlet.*;version="[2.3,4)",
                             *
                         </Import-Package>
                     </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>**/packageinfo</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
         </plugins>
@@ -62,8 +80,19 @@
     <dependencies>
         <dependency>
             <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-            <version>2.3</version>
+            <artifactId>javax.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+            <version>6.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.annotation</artifactId>
+            <version>6.0.0</version>
             <scope>provided</scope>
         </dependency>
         <!-- Explicitely use 5.0.0 to export version 1.2.1 of the http service api -->
