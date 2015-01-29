@@ -33,6 +33,7 @@ import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -40,6 +41,7 @@ public class ServletHandlerTest extends AbstractHandlerTest
 {
     private Servlet servlet;
 
+    @Override
     @Before
     public void setUp()
     {
@@ -220,6 +222,7 @@ public class ServletHandlerTest extends AbstractHandlerTest
         assertTrue(h1.matches("/a/b/c"));
     }
 
+    @Override
     protected AbstractHandler createHandler()
     {
         return createHandler("/dummy");
@@ -227,6 +230,7 @@ public class ServletHandlerTest extends AbstractHandlerTest
 
     private ServletHandler createHandler(String alias)
     {
-        return new ServletHandler(this.context, this.servlet, alias, null /* name */);
+        final ServletInfo info = new ServletInfo();
+        return new ServletHandler(this.context, this.servlet, info, alias);
     }
 }

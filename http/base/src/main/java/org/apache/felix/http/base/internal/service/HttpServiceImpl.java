@@ -148,11 +148,22 @@ public final class HttpServiceImpl implements ExtHttpService
         }
     }
 
+    /**
+     * TODO As the servlet can be registered with multiple patterns
+     *      we shouldn't pass the servlet object around in order to
+     *      be able to get different instances (prototype scope).
+     *      Or we do the splitting into single pattern registrations
+     *      already before calling registerServlet()
+     * @param servlet
+     * @param servletInfo
+     * @throws ServletException
+     * @throws NamespaceException
+     */
     public void registerServlet(Servlet servlet, ServletInfo servletInfo) throws ServletException, NamespaceException
     {
         if (servlet == null)
         {
-            throw new IllegalArgumentException("Servlet cannot be null!");
+            throw new IllegalArgumentException("Servlet must not be null");
         }
         if (servletInfo == null)
         {
@@ -167,28 +178,45 @@ public final class HttpServiceImpl implements ExtHttpService
             servletInfo.name = servlet.getClass().getName();
         }
 
-        ServletHandler handler = new ServletHandler(getServletContext(servletInfo.context), servlet, servletInfo);
-        handler.setInitParams(servletInfo.initParams);
-        this.handlerRegistry.addServlet(handler);
-        this.localServlets.add(servlet);
+        for(final String pattern : servletInfo.patterns) {
+            final ServletHandler handler = new ServletHandler(getServletContext(servletInfo.context), servlet, servletInfo, pattern);
+            handler.setInitParams(servletInfo.initParams);
+            this.handlerRegistry.addServlet(handler);
+            this.localServlets.add(servlet);
+        }
     }
 
+    /**
+     * @see org.osgi.service.http.HttpService#registerServlet(java.lang.String, javax.servlet.Servlet, java.util.Dictionary, org.osgi.service.http.HttpContext)
+     */
     @Override
     public void registerServlet(String alias, Servlet servlet, Dictionary initParams, HttpContext context) throws ServletException, NamespaceException
     {
-        if (servlet == null)
-        {
-            throw new IllegalArgumentException("Servlet must not be null");
-        }
         if (!isAliasValid(alias))
         {
             throw new IllegalArgumentException("Malformed servlet alias [" + alias + "]");
         }
-        String servletName = null; // XXX
-        ServletHandler handler = new ServletHandler(getServletContext(context), servlet, alias, servletName);
-        handler.setInitParams(initParams);
-        this.handlerRegistry.addServlet(handler);
-        this.localServlets.add(servlet);
+
+        final ServletInfo info = new ServletInfo();
+        if ( initParams != null && initParams.size() > 0 )
+        {
+            info.initParams = new HashMap<String, String>();
+            Enumeration e = initParams.keys();
+            while (e.hasMoreElements())
+            {
+                Object key = e.nextElement();
+                Object value = initParams.get(key);
+
+                if ((key instanceof String) && (value instanceof String))
+                {
+                    info.initParams.put((String) key, (String) value);
+                }
+            }
+        }
+        info.patterns = new String[] {alias};
+        info.context = context;
+
+        this.registerServlet(servlet, info);
     }
 
     @Override
