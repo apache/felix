@@ -34,7 +34,6 @@ import aQute.bnd.annotation.ConsumerType;
  * This class only provides information used at registration time, and as such differs slightly from {@link DTO}s like, {@link ServletDTO}.
  * </p>
  *
- * TODO - we should move this to the same place as {@link ExtHttpServiceRuntime}.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @ConsumerType
@@ -72,4 +71,7 @@ public final class ServletInfo
      * The {@link HttpContext} for the servlet.
      */
     public HttpContext context;
+
+    public int ranking = 0;
+    public long serviceId;
 }

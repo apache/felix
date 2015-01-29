@@ -21,6 +21,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.servlet.Filter;
 import javax.servlet.Servlet;
@@ -48,6 +49,8 @@ public final class HttpServiceImpl implements ExtHttpService
     private final HashSet<Servlet> localServlets;
     private final HashSet<Filter> localFilters;
     private final ServletContextManager contextManager;
+
+    private final AtomicLong serviceIdCounter = new AtomicLong(-1);
 
     public HttpServiceImpl(Bundle bundle, ServletContext context, HandlerRegistry handlerRegistry, ServletContextAttributeListener servletAttributeListener, boolean sharedContextAttributes)
     {
@@ -90,7 +93,18 @@ public final class HttpServiceImpl implements ExtHttpService
         return new DefaultHttpContext(this.bundle);
     }
 
-    public void registerFilter(Filter filter, FilterInfo filterInfo) throws ServletException
+    /**
+     * TODO As the filter can be registered with multiple patterns
+     *      we shouldn't pass the filter object around in order to
+     *      be able to get different instances (prototype scope).
+     *      Or we do the splitting into single pattern registrations
+     *      already before calling registerFilter()
+     * @param servlet
+     * @param servletInfo
+     * @throws ServletException
+     * @throws NamespaceException
+     */
+    public void registerFilter(final Filter filter, final FilterInfo filterInfo)
     {
         if (filter == null)
         {
@@ -111,10 +125,17 @@ public final class HttpServiceImpl implements ExtHttpService
 
         FilterHandler handler = new FilterHandler(getServletContext(filterInfo.context), filter, filterInfo);
         handler.setInitParams(filterInfo.initParams);
-        this.handlerRegistry.addFilter(handler);
+        try {
+            this.handlerRegistry.addFilter(handler);
+        } catch (ServletException e) {
+            // TODO create failure DTO
+        }
         this.localFilters.add(filter);
     }
 
+    /**
+     * @see org.apache.felix.http.api.ExtHttpService#registerFilter(javax.servlet.Filter, java.lang.String, java.util.Dictionary, int, org.osgi.service.http.HttpContext)
+     */
     @Override
     public void registerFilter(Filter filter, String pattern, Dictionary initParams, int ranking, HttpContext context) throws ServletException
     {
@@ -122,11 +143,28 @@ public final class HttpServiceImpl implements ExtHttpService
         {
             throw new IllegalArgumentException("Filter must not be null");
         }
-        String filterName = null; // XXX
-        FilterHandler handler = new FilterHandler(getServletContext(context), filter, pattern, ranking, filterName);
-        handler.setInitParams(initParams);
-        this.handlerRegistry.addFilter(handler);
-        this.localFilters.add(filter);
+        final FilterInfo info = new FilterInfo();
+        if ( initParams != null && initParams.size() > 0 )
+        {
+            info.initParams = new HashMap<String, String>();
+            Enumeration e = initParams.keys();
+            while (e.hasMoreElements())
+            {
+                Object key = e.nextElement();
+                Object value = initParams.get(key);
+
+                if ((key instanceof String) && (value instanceof String))
+                {
+                    info.initParams.put((String) key, (String) value);
+                }
+            }
+        }
+        info.patterns = new String[] {pattern};
+        info.context = context;
+        info.ranking = ranking;
+        info.serviceId = serviceIdCounter.getAndDecrement();
+
+        this.registerFilter(filter, info);
     }
 
     @Override
@@ -159,7 +197,7 @@ public final class HttpServiceImpl implements ExtHttpService
      * @throws ServletException
      * @throws NamespaceException
      */
-    public void registerServlet(Servlet servlet, ServletInfo servletInfo) throws ServletException, NamespaceException
+    public void registerServlet(Servlet servlet, ServletInfo servletInfo)
     {
         if (servlet == null)
         {
@@ -181,9 +219,38 @@ public final class HttpServiceImpl implements ExtHttpService
         for(final String pattern : servletInfo.patterns) {
             final ServletHandler handler = new ServletHandler(getServletContext(servletInfo.context), servlet, servletInfo, pattern);
             handler.setInitParams(servletInfo.initParams);
-            this.handlerRegistry.addServlet(handler);
+            try {
+                this.handlerRegistry.addServlet(handler);
+            } catch (ServletException e) {
+                // TODO create failure DTO
+            } catch (NamespaceException e) {
+                // TODO create failure DTO
+            }
             this.localServlets.add(servlet);
         }
+    }
+
+    public void unregisterServlet(final Servlet servlet, final ServletInfo servletInfo)
+    {
+        if (servletInfo == null)
+        {
+            throw new IllegalArgumentException("ServletInfo cannot be null!");
+        }
+        if ( servletInfo.patterns != null )
+        {
+            this.handlerRegistry.removeServlet(servlet, true);
+            this.localServlets.remove(servlet);
+        }
+    }
+
+    public void unregisterFilter(final Filter filter, final FilterInfo filterInfo)
+    {
+        if (filterInfo == null)
+        {
+            throw new IllegalArgumentException("FilterInfo cannot be null!");
+        }
+        this.handlerRegistry.removeFilter(filter, true);
+        this.localFilters.remove(filter);
     }
 
     /**
@@ -213,6 +280,8 @@ public final class HttpServiceImpl implements ExtHttpService
                 }
             }
         }
+        info.ranking = 0;
+        info.serviceId = serviceIdCounter.getAndDecrement();
         info.patterns = new String[] {alias};
         info.context = context;
 
@@ -253,12 +322,20 @@ public final class HttpServiceImpl implements ExtHttpService
         }
     }
 
+    /**
+     * Old whiteboard support
+     * @see org.apache.felix.http.api.ExtHttpService#unregisterFilter(javax.servlet.Filter)
+     */
     @Override
     public void unregisterFilter(Filter filter)
     {
         unregisterFilter(filter, true);
     }
 
+    /**
+     * Old whiteboard support
+     * @see org.apache.felix.http.api.ExtHttpService#unregisterServlet(javax.servlet.Servlet)
+     */
     @Override
     public void unregisterServlet(Servlet servlet)
     {

@@ -65,6 +65,6 @@ public final class ServletTracker extends AbstractTracker<Servlet>
     @Override
     protected void removed(Servlet service, ServiceReference ref)
     {
-        this.manager.removeServlet(ref);
+        this.manager.removeServlet(service, ref);
     }
 }

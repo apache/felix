@@ -27,6 +27,7 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 
+import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -181,14 +182,23 @@ public class HandlerRegistryTest
         HandlerRegistry hr = new HandlerRegistry();
 
         Filter filter = Mockito.mock(Filter.class);
-        FilterHandler handler = new FilterHandler(null, filter, "/aha", 1, "oho");
+        final FilterInfo info = new FilterInfo();
+        info.name = "oho";
+        info.patterns = new String[] {"/aha"};
+        info.ranking = 1;
+
+        FilterHandler handler = new FilterHandler(null, filter, info);
         assertEquals("Precondition", 0, hr.getFilters().length);
         hr.addFilter(handler);
         Mockito.verify(filter, Mockito.times(1)).init(Mockito.any(FilterConfig.class));
         assertEquals(1, hr.getFilters().length);
         assertSame(handler, hr.getFilters()[0]);
 
-        FilterHandler handler2 = new FilterHandler(null, filter, "/hihi", 2, "haha");
+        final FilterInfo info2 = new FilterInfo();
+        info2.name = "haha";
+        info2.patterns = new String[] {"/hihi"};
+        info2.ranking = 2;
+        FilterHandler handler2 = new FilterHandler(null, filter, info2);
         try
         {
             hr.addFilter(handler2);
@@ -212,7 +222,11 @@ public class HandlerRegistryTest
         final HandlerRegistry hr = new HandlerRegistry();
 
         Filter filter = Mockito.mock(Filter.class);
-        final FilterHandler otherHandler = new FilterHandler(null, filter, "/two", 99, "two");
+        final FilterInfo info = new FilterInfo();
+        info.name = "two";
+        info.patterns = new String[] {"/two"};
+        info.ranking = 99;
+        final FilterHandler otherHandler = new FilterHandler(null, filter, info);
 
         Mockito.doAnswer(new Answer<Void>()
         {
@@ -231,7 +245,11 @@ public class HandlerRegistryTest
             }
         }).when(filter).init(Mockito.any(FilterConfig.class));
 
-        FilterHandler handler = new FilterHandler(null, filter, "/one", 1, "one");
+        final FilterInfo info2 = new FilterInfo();
+        info2.name = "one";
+        info2.patterns = new String[] {"/one"};
+        info2.ranking = 1;
+        FilterHandler handler = new FilterHandler(null, filter, info2);
 
         try
         {
@@ -262,7 +280,11 @@ public class HandlerRegistryTest
         ServletHandler servletHandler2 = new ServletHandler(null, servlet2, info2, "/ff");
         hr.addServlet(servletHandler2);
         Filter filter = Mockito.mock(Filter.class);
-        FilterHandler filterHandler = new FilterHandler(null, filter, "/f", 0, "f");
+        final FilterInfo fi = new FilterInfo();
+        fi.name = "f";
+        fi.patterns = new String[] {"/f"};
+        fi.ranking = 0;
+        FilterHandler filterHandler = new FilterHandler(null, filter, fi);
         hr.addFilter(filterHandler);
 
         assertEquals(2, hr.getServlets().length);
