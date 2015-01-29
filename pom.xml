@@ -28,13 +28,13 @@
 
     <name>Apache Felix Http Bundle</name>
     <artifactId>org.apache.felix.http.bundle</artifactId>
-    <version>2.3.3-SNAPSHOT</version>
+    <version>3.0.0</version>
     <packaging>jar</packaging>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http/bundle</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/http/bundle</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/http/bundle/</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http.bundle-3.0.0</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http.bundle-3.0.0</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.http.bundle-3.0.0</url>
     </scm>
 
     <build>
