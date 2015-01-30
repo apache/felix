@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2013, 2014). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2013, 2015). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,54 +23,9 @@ import org.osgi.dto.DTO;
  * 
  * @since 1.3
  * @NotThreadSafe
- * @author $Id: 906b26512776b149670ec3048a8714dc99ff447a $
+ * @author $Id: fca2413271fcded16b4ebe3c6628fe8660e2575e $
  */
 public class ReferenceDTO extends DTO {
-
-	/**
-	 * Constant for the lookup strategy
-	 * 
-	 * @see #strategy
-	 */
-	public static final String	STRATEGY_LOOKUP			= "LOOKUP";
-
-	/**
-	 * Constant for the method strategy
-	 * 
-	 * @see #strategy
-	 */
-	public static final String	STRATEGY_METHOD			= "METHOD";
-
-	/**
-	 * Constant for the field replace strategy
-	 * 
-	 * @see #strategy
-	 */
-	public static final String	STRATEGY_FIELD_REPLACE	= "FIELD_REPLACE";
-
-	/**
-	 * Constant for the field update strategy
-	 * 
-	 * @see #strategy
-	 */
-	public static final String	STRATEGY_FIELD_UPDATE	= "FIELD_UPDATE";
-
-	/**
-	 * The strategy of the reference.
-	 * 
-	 * <p>
-	 * This field returns the strategy used for this reference. If the value is
-	 * either {@code #STRATEGY_FIELD_REPLACE} or {@code #STRATEGY_FIELD_UPDATE},
-	 * {@link #field} returns the name of the field. If the strategy is
-	 * {@code #STRATEGY_METHOD} {@link #bind}, {@link #unbind}, and
-	 * {@link #updated} return the name of the methods.
-	 *
-	 * @see #STRATEGY_FIELD_REPLACE
-	 * @see #STRATEGY_FIELD_UPDATE
-	 * @see #STRATEGY_LOOKUP
-	 * @see #STRATEGY_METHOD
-	 */
-	public String	strategy;
 
 	/**
 	 * The name of the reference.
@@ -136,9 +91,8 @@ public class ReferenceDTO extends DTO {
 	 * 
 	 * <p>
 	 * This is declared in the {@code bind} attribute of the {@code reference}
-	 * element. This must be {@code null} if the component is not using the
-	 * method strategy or the component description does not declare a bind
-	 * method for the reference.
+	 * element. This must be {@code null} if the component description does not
+	 * declare a bind method for the reference.
 	 */
 	public String	bind;
 
@@ -147,11 +101,8 @@ public class ReferenceDTO extends DTO {
 	 * 
 	 * <p>
 	 * This is declared in the {@code unbind} attribute of the {@code reference}
-	 * element. This must be {@code null} if the component is not using the
-	 * method strategy or the component description does not declare an unbind
-	 * method for the reference.
-	 *
-	 * @see #strategy
+	 * element. This must be {@code null} if the component description does not
+	 * declare an unbind method for the reference.
 	 */
 	public String	unbind;
 
@@ -160,11 +111,8 @@ public class ReferenceDTO extends DTO {
 	 * 
 	 * <p>
 	 * This is declared in the {@code updated} attribute of the
-	 * {@code reference} element. This must be {@code null} if the component is
-	 * not using the method strategy or the component description does not
-	 * declare an updated method for the reference.
-	 * 
-	 * @see #strategy
+	 * {@code reference} element. This must be {@code null} if the component
+	 * description does not declare an updated method for the reference.
 	 */
 	public String	updated;
 
@@ -173,12 +121,20 @@ public class ReferenceDTO extends DTO {
 	 * 
 	 * <p>
 	 * This is declared in the {@code field} attribute of the {@code reference}
-	 * element. This must be {@code null} if the component is using the lookup
-	 * or method strategy.
-	 * 
-	 * @see #strategy
+	 * element. This must be {@code null} if the component description does not
+	 * declare a field for the reference.
 	 */
 	public String	field;
+
+	/**
+	 * The field option of the reference.
+	 * 
+	 * <p>
+	 * This is declared in the {@code field-option} attribute of the
+	 * {@code reference} element. This must be {@code null} if the component
+	 * description does not declare a field for the reference.
+	 */
+	public String	fieldOption;
 
 	/**
 	 * The scope of the reference.
