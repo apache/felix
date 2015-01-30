@@ -37,6 +37,7 @@ import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.ContextInfo;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
+import org.apache.felix.http.base.internal.runtime.ResourceInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.whiteboard.HttpContextBridge;
 import org.osgi.framework.Bundle;
@@ -309,6 +310,32 @@ public final class HttpServiceImpl implements ExtHttpService
         unregisterServlet(servlet);
     }
 
+    /**
+     * Register a resource with a {@link ServletContextHelper}.
+     */
+    public void registerResource(final ServletContextHelper context,
+            final ContextInfo contextInfo,
+            final ResourceInfo resourceInfo)
+    {
+        if (resourceInfo == null)
+        {
+            throw new IllegalArgumentException("ResourceInfo cannot be null!");
+        }
+        final ServletInfo servletInfo = new ServletInfo(resourceInfo, new ResourceServlet(resourceInfo.getPrefix()));
+
+        this.registerServlet(context, contextInfo, servletInfo);
+    }
+
+    public void unregisterResource(final ContextInfo contextInfo, final ResourceInfo resourceInfo)
+    {
+        if (resourceInfo == null)
+        {
+            throw new IllegalArgumentException("ResourceInfo cannot be null!");
+        }
+        final ServletInfo servletInfo = new ServletInfo(resourceInfo, null);
+        this.unregisterServlet(contextInfo, servletInfo);
+    }
+
     public void unregisterAll()
     {
         HashSet<Servlet> servlets = new HashSet<Servlet>(this.localServlets);
@@ -387,7 +414,7 @@ public final class HttpServiceImpl implements ExtHttpService
         }
     }
 
-    private boolean isAliasValid(String alias)
+    private boolean isAliasValid(final String alias)
     {
         if (alias == null)
         {
