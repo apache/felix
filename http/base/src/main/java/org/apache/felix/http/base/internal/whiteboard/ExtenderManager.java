@@ -272,34 +272,16 @@ public final class ExtenderManager
         return filterInfo;
     }
 
-    private ServletInfo createServletInfo(final ServiceReference<?> servletRef, final boolean log)
+    public void addServlet(final Servlet service, final ServiceReference<Servlet> ref)
     {
-        final ServletInfo servletInfo = new ServletInfo();
-        servletInfo.name = getStringProperty(servletRef, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_NAME);
-        servletInfo.errorPage = getStringArrayProperty(servletRef, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_ERROR_PAGE);
-        servletInfo.patterns = getStringArrayProperty(servletRef, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN);
-        servletInfo.asyncSupported = getBooleanProperty(servletRef, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_ASYNC_SUPPORTED);
-        servletInfo.initParams = getInitParams(servletRef, SERVLET_INIT_PREFIX);
-        servletInfo.ranking = getIntProperty(servletRef, Constants.SERVICE_RANKING, 0);
-        servletInfo.serviceId = (Long)servletRef.getProperty(Constants.SERVICE_ID);
-
-        if (isEmpty(servletInfo.patterns))
+        final ServletInfo servletInfo = new ServletInfo(ref, service);
+        if ( servletInfo.isValid() )
         {
-            if ( log ) {
-                SystemLogger.debug("Ignoring Servlet Service " + servletRef + ", " + HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN +
-                        "is missing or empty");
-            }
-            return null;
+            ((HttpServiceImpl)this.httpService).registerServlet(servletInfo);
         }
-        return servletInfo;
-    }
-
-    public void add(Servlet service, ServiceReference<Servlet> ref)
-    {
-        final ServletInfo servletInfo = createServletInfo(ref, true);
-        if ( servletInfo != null )
+        else
         {
-            ((HttpServiceImpl)this.httpService).registerServlet(service, servletInfo);
+            SystemLogger.debug("Ignoring Servlet Service " + ref);
         }
     }
 
@@ -312,10 +294,10 @@ public final class ExtenderManager
         }
     }
 
-    public void removeServlet(Servlet service, ServiceReference<Servlet> ref)
+    public void removeServlet(final Servlet service, final ServiceReference<Servlet> ref)
     {
-        final ServletInfo servletInfo = createServletInfo(ref, false);
-        if ( servletInfo != null )
+        final ServletInfo servletInfo = new ServletInfo(ref, null);
+        if ( servletInfo.isValid() )
         {
             ((HttpServiceImpl)this.httpService).unregisterServlet(service, servletInfo);
         }

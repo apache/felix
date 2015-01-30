@@ -18,6 +18,9 @@
  */
 package org.apache.felix.http.base.internal.runtime;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.osgi.framework.Constants;
@@ -94,12 +97,85 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
         return value == null || value.length() == 0;
     }
 
-    protected String getStringProperty(final ServiceReference<?> ref, final String key)
+    protected boolean isEmpty(final String[] value)
+    {
+        return value == null || value.length == 0;
+    }
+
+    protected String getStringProperty(final ServiceReference<T> ref, final String key)
     {
         final Object value = ref.getProperty(key);
         return (value instanceof String) ? (String) value : null;
     }
 
+    protected String[] getStringArrayProperty(ServiceReference<T> ref, String key)
+    {
+        Object value = ref.getProperty(key);
+
+        if (value instanceof String)
+        {
+            return new String[] { (String) value };
+        }
+        else if (value instanceof String[])
+        {
+            return (String[]) value;
+        }
+        else if (value instanceof Collection<?>)
+        {
+            Collection<?> collectionValues = (Collection<?>) value;
+            String[] values = new String[collectionValues.size()];
+
+            int i = 0;
+            for (Object current : collectionValues)
+            {
+                values[i++] = current != null ? String.valueOf(current) : null;
+            }
+
+            return values;
+        }
+
+        return null;
+    }
+
+    protected boolean getBooleanProperty(ServiceReference<T> ref, String key)
+    {
+        Object value = ref.getProperty(key);
+        if (value instanceof String)
+        {
+            return Boolean.valueOf((String) value);
+        }
+        else if (value instanceof Boolean)
+        {
+            return ((Boolean) value).booleanValue();
+        }
+        return false;
+    }
+
+    /**
+     * Get the init parameters.
+     */
+    protected Map<String, String> getInitParams(final ServiceReference<T> ref, final String prefix)
+    {
+        Map<String, String> result = null;
+        for (final String key : ref.getPropertyKeys())
+        {
+            if ( key.startsWith(prefix))
+            {
+                final String paramKey = key.substring(prefix.length());
+                final String paramValue = getStringProperty(ref, key);
+
+                if (paramValue != null)
+                {
+                    if ( result == null )
+                    {
+                        result = new HashMap<String, String>();
+                    }
+                    result.put(paramKey, paramValue);
+                }
+            }
+        }
+        return result;
+    }
 
     public int getRanking()
     {

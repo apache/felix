@@ -38,7 +38,7 @@ public final class FilterHandler extends AbstractHandler implements Comparable<F
 
     public FilterHandler(ExtServletContext context, Filter filter, FilterInfo filterInfo)
     {
-        super(context, filterInfo.name);
+        super(context, filterInfo.initParams, filterInfo.name);
         this.filter = filter;
         this.filterInfo = filterInfo;
     }

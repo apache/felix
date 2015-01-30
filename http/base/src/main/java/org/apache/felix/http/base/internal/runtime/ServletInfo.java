@@ -23,10 +23,10 @@ import java.util.Map;
 import javax.servlet.Servlet;
 
 import org.osgi.dto.DTO;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.runtime.dto.ServletDTO;
-
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 /**
  * Provides registration information for a {@link Servlet}, and is used to programmatically register {@link Servlet}s.
@@ -36,13 +36,18 @@ import aQute.bnd.annotation.ConsumerType;
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@ConsumerType
-public final class ServletInfo
+public final class ServletInfo extends AbstractInfo<Servlet>
 {
+    /**
+     * Properties starting with this prefix are passed as servlet init parameters to the
+     * {@code init()} method of the servlet.
+     */
+    private static final String SERVLET_INIT_PREFIX = "servlet.init.";
+
     /**
      * The name of the servlet.
      */
-    public String name;
+    private final String name;
 
     /**
      * The request mappings for the servlet.
@@ -50,28 +55,96 @@ public final class ServletInfo
      * The specified patterns are used to determine whether a request is mapped to the servlet.
      * </p>
      */
-    public String[] patterns;
+    private final String[] patterns;
 
     /**
      * The error pages and/or codes.
      */
-    public String[] errorPage;
+    private final String[] errorPage;
 
     /**
      * Specifies whether the servlet supports asynchronous processing.
      */
-    public boolean asyncSupported = false;
+    private final boolean asyncSupported;
 
     /**
      * The servlet initialization parameters as provided during registration of the servlet.
      */
-    public Map<String, String> initParams;
+    private final Map<String, String> initParams;
+
+    private final HttpContext context;
+
+    private final Servlet servlet;
+
+    public ServletInfo(final ServiceReference<Servlet> ref, final Servlet servlet)
+    {
+        super(ref);
+        this.name = getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_NAME);
+        this.errorPage = getStringArrayProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_ERROR_PAGE);
+        this.patterns = getStringArrayProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN);
+        this.asyncSupported = getBooleanProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_ASYNC_SUPPORTED);
+        this.initParams = getInitParams(ref, SERVLET_INIT_PREFIX);
+        this.context = null;
+        this.servlet = servlet;
+    }
 
     /**
-     * The {@link HttpContext} for the servlet.
+     * Constructor for Http Service
      */
-    public HttpContext context;
+    public ServletInfo(final String name,
+            final String pattern,
+            final int serviceRanking,
+            final Map<String, String> initParams,
+            final Servlet servlet,
+            final HttpContext context)
+    {
+        super(serviceRanking);
+        this.name = name;
+        this.patterns = new String[] {pattern};
+        this.initParams = initParams;
+        this.asyncSupported = false;
+        this.errorPage = null;
+        this.servlet = servlet;
+        this.context = context;
+    }
 
-    public int ranking = 0;
-    public long serviceId;
+    public boolean isValid()
+    {
+        return  !isEmpty(this.patterns);
+    }
+
+    public String getName()
+    {
+        return name;
+    }
+
+    public String[] getPatterns()
+    {
+        return patterns;
+    }
+
+    public String[] getErrorPage()
+    {
+        return errorPage;
+    }
+
+    public boolean isAsyncSupported()
+    {
+        return asyncSupported;
+    }
+
+    public Map<String, String> getInitParams()
+    {
+        return initParams;
+    }
+
+    public HttpContext getContext()
+    {
+        return this.context;
+    }
+
+    public Servlet getServlet()
+    {
+        return this.servlet;
+    }
 }
