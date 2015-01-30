@@ -24,25 +24,14 @@ package org.apache.felix.dm.itest.api;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import org.junit.Assert;
 
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ResourceHandler;
-import org.apache.felix.dm.ResourceUtil;
 import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Filter;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
+import org.junit.Assert;
 
-@SuppressWarnings({"deprecation", "unchecked", "rawtypes"})
 public class FilterIndexResourceAdapterTest extends TestBase {
   public void testBasicResourceAdapter() throws Exception {
       System.setProperty("org.apache.felix.dependencymanager.filterindex", "objectClass");

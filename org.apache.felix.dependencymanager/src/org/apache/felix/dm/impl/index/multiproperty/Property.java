@@ -29,17 +29,17 @@ public class Property {
 	boolean m_valid = true;
 	String m_key;
 	String m_value;
-	Set m_values = new TreeSet(String.CASE_INSENSITIVE_ORDER);
+	Set<String> m_values = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 	
 	public Property() {
 	}
 	
 	public Property(boolean negate, String key, String value) {
 		super();
-		this.m_negate = negate;
-		this.m_key = key.toLowerCase();
-		this.m_values.add(value);
-		this.m_value = value;
+		m_negate = negate;
+		m_key = key.toLowerCase();
+		m_values.add(value);
+		m_value = value;
 	}
 
 	public void setNegate(boolean negate) {
@@ -76,7 +76,7 @@ public class Property {
 		return m_value;
 	}
 	
-	public Set getValues() {
+	public Set<String> getValues() {
 		return m_values;
 	}
 	

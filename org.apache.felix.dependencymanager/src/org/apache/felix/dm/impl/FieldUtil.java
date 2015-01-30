@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import org.apache.felix.dm.Logger;
 import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
 

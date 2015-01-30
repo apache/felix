@@ -18,12 +18,7 @@
  */
 package org.apache.felix.dm.itest.api;
 
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.junit.Assert;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentState;
@@ -31,15 +26,9 @@ import org.apache.felix.dm.ComponentStateListener;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ResourceHandler;
-import org.apache.felix.dm.ResourceUtil;
 import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Filter;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
 
-@SuppressWarnings({"deprecation", "unused"})
 public class ResourceAdapterDependencyAddAndRemoveTest extends TestBase {
     public void testBasicResourceAdapter() throws Exception {
         DependencyManager m = getDM();
@@ -98,10 +87,8 @@ public class ResourceAdapterDependencyAddAndRemoveTest extends TestBase {
     
     static class ResourceAdapter {
         protected URL m_resource; // injected by reflection.
-        private Ensure m_ensure;
         
         ResourceAdapter(Ensure e) {
-            m_ensure = e;
         }
     }
         
@@ -110,9 +97,7 @@ public class ResourceAdapterDependencyAddAndRemoveTest extends TestBase {
     }
 
     static class ServiceProvider implements ServiceInterface {
-        private final Ensure m_ensure;
         public ServiceProvider(Ensure e) {
-            m_ensure = e;
         }
         public void invoke() {
         }

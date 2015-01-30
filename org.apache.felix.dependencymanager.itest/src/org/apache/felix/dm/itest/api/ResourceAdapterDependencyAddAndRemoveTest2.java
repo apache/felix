@@ -18,14 +18,8 @@
  */
 package org.apache.felix.dm.itest.api;
 
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import org.junit.Assert;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentState;
@@ -33,15 +27,9 @@ import org.apache.felix.dm.ComponentStateListener;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ResourceHandler;
-import org.apache.felix.dm.ResourceUtil;
 import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Filter;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
 
-@SuppressWarnings({"deprecation", "unchecked", "rawtypes", "unused"})
 public class ResourceAdapterDependencyAddAndRemoveTest2 extends TestBase {
     public void testBasicResourceAdapter() throws Exception {
         DependencyManager m = getDM();
@@ -50,14 +38,14 @@ public class ResourceAdapterDependencyAddAndRemoveTest2 extends TestBase {
         // create a resource provider
         ResourceProvider provider = new ResourceProvider(context, new URL("file://localhost/path/to/file1.txt"));
         // activate it
-        Hashtable props = new Hashtable();
+        Hashtable<String, String> props = new Hashtable<String, String>();
         props.put("id", "1");
         m.add(m.createComponent()
             .setInterface(ServiceInterface.class.getName(), props)
             .setImplementation(new ServiceProvider(e))
         );
         
-        props = new Hashtable();
+        props = new Hashtable<String, String>();
         props.put("id", "2");
         m.add(m.createComponent()
             .setInterface(ServiceInterface.class.getName(), props)
@@ -97,11 +85,9 @@ public class ResourceAdapterDependencyAddAndRemoveTest2 extends TestBase {
     
     static class ResourceAdapter {
         protected URL m_resource; // injected by reflection.
-        private Ensure m_ensure;
         final Dependency m_dependency;
         
         ResourceAdapter(Ensure e, Dependency d) {
-            m_ensure = e;
             m_dependency = d;
         }
     }
@@ -111,16 +97,13 @@ public class ResourceAdapterDependencyAddAndRemoveTest2 extends TestBase {
     }
 
     static class ServiceProvider implements ServiceInterface {
-        private final Ensure m_ensure;
         public ServiceProvider(Ensure e) {
-            m_ensure = e;
         }
         public void invoke() {
         }
     }    
     
     static class CallbackInstance {
-        
         private final Ensure m_ensure;
         private final Dependency m_dependency;
         
@@ -161,10 +144,7 @@ public class ResourceAdapterDependencyAddAndRemoveTest2 extends TestBase {
     }
     
     static class ComponentStateListenerImpl implements ComponentStateListener {
-        private final Ensure m_ensure;
-        
         public ComponentStateListenerImpl(Ensure e) {
-            this.m_ensure = e;
         }
 
         @Override

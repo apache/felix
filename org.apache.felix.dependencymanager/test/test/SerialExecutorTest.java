@@ -25,7 +25,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.felix.dm.impl.Logger;
+import org.apache.felix.dm.Logger;
 import org.apache.felix.dm.impl.SerialExecutor;
 import org.junit.Assert;
 import org.junit.Test;

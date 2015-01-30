@@ -23,6 +23,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.felix.dm.Logger;
 import org.osgi.service.log.LogService;
 
 /**   

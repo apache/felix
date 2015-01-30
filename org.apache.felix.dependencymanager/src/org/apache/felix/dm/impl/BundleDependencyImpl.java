@@ -35,7 +35,6 @@ import org.osgi.framework.BundleEvent;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.service.log.LogService;
 
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>

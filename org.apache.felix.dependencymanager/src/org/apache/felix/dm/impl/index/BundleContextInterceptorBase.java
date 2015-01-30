@@ -44,10 +44,10 @@ import org.osgi.framework.ServiceRegistration;
 public abstract class BundleContextInterceptorBase implements BundleContext, ServiceListener {
     protected final BundleContext m_context;
     /** Keeps track of all service listeners and their optional filters. */
-    private final Map /* <ServiceListener, String> */m_serviceListenerFilterMap = new HashMap();
+	private final Map<ServiceListener, String> m_serviceListenerFilterMap = new HashMap<>();
     private long m_currentVersion = 0;
     private long m_entryVersion = -1;
-    private Entry[] m_serviceListenerFilterMapEntries;
+	private Entry<ServiceListener, String>[] m_serviceListenerFilterMapEntries;
 
     public BundleContextInterceptorBase(BundleContext context) {
         m_context = context;
@@ -77,14 +77,14 @@ public abstract class BundleContextInterceptorBase implements BundleContext, Ser
         return m_context.getBundles();
     }
 
-    public void addServiceListener(ServiceListener listener, String filter) throws InvalidSyntaxException {
+	public void addServiceListener(ServiceListener listener, String filter) throws InvalidSyntaxException {
         synchronized (m_serviceListenerFilterMap) {
             m_serviceListenerFilterMap.put(listener, filter);
             m_currentVersion++;
         }
     }
 
-    public void addServiceListener(ServiceListener listener) {
+	public void addServiceListener(ServiceListener listener) {
         synchronized (m_serviceListenerFilterMap) {
             m_serviceListenerFilterMap.put(listener, null);
             m_currentVersion++;
@@ -114,11 +114,11 @@ public abstract class BundleContextInterceptorBase implements BundleContext, Ser
         m_context.removeFrameworkListener(listener);
     }
 
-    public ServiceRegistration registerService(String[] clazzes, Object service, Dictionary properties) {
+    public ServiceRegistration registerService(String[] clazzes, Object service, @SuppressWarnings("rawtypes") Dictionary properties) {
         return m_context.registerService(clazzes, service, properties);
     }
 
-    public ServiceRegistration registerService(String clazz, Object service, Dictionary properties) {
+    public ServiceRegistration registerService(String clazz, Object service, @SuppressWarnings("rawtypes") Dictionary properties) {
         return m_context.registerService(clazz, service, properties);
     }
 
@@ -150,11 +150,12 @@ public abstract class BundleContextInterceptorBase implements BundleContext, Ser
         return m_context.createFilter(filter);
     }
 
-    protected Entry[] synchronizeCollection() {
+	@SuppressWarnings("unchecked")
+	protected Entry<ServiceListener, String>[] synchronizeCollection() {
         // lazy copy on write: we make a new copy only if writes have changed the collection
         synchronized (m_serviceListenerFilterMap) {
             if (m_currentVersion != m_entryVersion) {
-                m_serviceListenerFilterMapEntries = (Entry[]) m_serviceListenerFilterMap.entrySet().toArray(new Entry[m_serviceListenerFilterMap.size()]);
+                m_serviceListenerFilterMapEntries = (Entry<ServiceListener, String>[]) m_serviceListenerFilterMap.entrySet().toArray(new Entry[m_serviceListenerFilterMap.size()]);
                 m_entryVersion = m_currentVersion;
             }
         }

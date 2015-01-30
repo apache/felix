@@ -42,7 +42,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.log.LogService;
 
 public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency> implements ServiceDependency, ServiceTrackerCustomizer {
 	protected volatile ServiceTracker m_tracker;
@@ -54,13 +53,13 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
     private volatile Object m_defaultImplementation;
     private volatile Object m_defaultImplementationInstance;
     private volatile Object m_nullObject;
-    private boolean debug = false;
-    private String debugKey;
+    private boolean m_debug = false;
+    private String m_debugKey;
     private long m_trackedServiceReferenceId;
     
     public ServiceDependency setDebug(String debugKey) {
-    	this.debugKey = debugKey;
-    	this.debug = true;
+    	m_debugKey = debugKey;
+    	m_debug = true;
     	return this;
     }
 
@@ -219,8 +218,8 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
         } else {
             throw new IllegalStateException("Could not create tracker for dependency, no service name specified.");
         }
-        if (debug) {
-            m_tracker.setDebug(debugKey);
+        if (m_debug) {
+            m_tracker.setDebug(m_debugKey);
         }
         m_tracker.open();
         super.start();
@@ -249,8 +248,8 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
 
 	@Override
 	public void addedService(ServiceReference reference, Object service) {
-		if (debug) {
-			System.out.println(debugKey + " addedService: ref=" + reference + ", service=" + service);
+		if (m_debug) {
+			System.out.println(m_debugKey + " addedService: ref=" + reference + ", service=" + service);
 		}
         m_component.handleEvent(this, EventType.ADDED,
             new ServiceEventImpl(m_component.getBundle(), m_component.getBundleContext(), reference, service));
@@ -511,7 +510,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
         
     public void invokeSwap(String swapMethod, ServiceReference previousReference, Object previous,
 			ServiceReference currentReference, Object current, Object[] instances) {
-    	if (debug) {
+    	if (m_debug) {
     		System.out.println("invoke swap: " + swapMethod + " on component " + m_component + ", instances: " + Arrays.toString(instances) + " - " + ((ComponentDeclaration)m_component).getState());
     	}
     	try {

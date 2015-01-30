@@ -18,7 +18,6 @@
  */
 package org.apache.felix.dm;
 
-import org.apache.felix.dm.impl.Logger;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 

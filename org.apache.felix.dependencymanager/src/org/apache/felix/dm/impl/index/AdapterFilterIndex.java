@@ -51,8 +51,8 @@ public class AdapterFilterIndex extends AbstractFactoryFilterIndex implements Fi
     private final Object m_lock = new Object();
     private ServiceTracker m_tracker;
     private BundleContext m_context;
-    private final Map /* <String, List<ServiceListener>> */ m_sidToListenersMap = new HashMap();
-    protected final Map /* <ServiceListener, String> */ m_listenerToObjectClassMap = new HashMap();
+	private final Map<Object, List<ServiceListener>> m_sidToListenersMap = new HashMap<>();
+	protected final Map<ServiceListener, String> m_listenerToObjectClassMap = new HashMap<>();
 
     public void open(BundleContext context) {
         synchronized (m_lock) {
@@ -99,24 +99,24 @@ public class AdapterFilterIndex extends AbstractFactoryFilterIndex implements Fi
 	    		String sid2 = matcher.group(3);
 	    		if (sid.equals(sid2)) {
 	    			resultData = new FilterData();
-	    			resultData.serviceId = Long.parseLong(sid);
+	    			resultData.m_serviceId = Long.parseLong(sid);
 	    		}
 	    	}
     	}
     	return resultData;
     }
 
-	public List getAllServiceReferences(String clazz, String filter) {
-		List /* <ServiceReference> */result = new ArrayList();
+	public List<ServiceReference> getAllServiceReferences(String clazz, String filter) {
+		List<ServiceReference> result = new ArrayList<>();
 		Matcher matcher = PATTERN.matcher(filter);
 		if (matcher.matches()) {
 			FilterData data = getFilterData(clazz, filter);
 			if (data != null) {
-				SortedSet /* <ServiceReference> */list = null;
+				SortedSet<ServiceReference> list = null;
 				synchronized (m_sidToServiceReferencesMap) {
-					list = (SortedSet) m_sidToServiceReferencesMap.get(Long.valueOf(data.serviceId));
+					list = m_sidToServiceReferencesMap.get(Long.valueOf(data.m_serviceId));
 					if (list != null) {
-						Iterator iterator = list.iterator();
+						Iterator<ServiceReference> iterator = list.iterator();
 						while (iterator.hasNext()) {
 							ServiceReference ref = (ServiceReference) iterator.next();
 							String objectClass = matcher.group(1);
@@ -131,17 +131,17 @@ public class AdapterFilterIndex extends AbstractFactoryFilterIndex implements Fi
 		return result;
 	}
     
-    public void serviceChanged(ServiceEvent event) {
+	public void serviceChanged(ServiceEvent event) {
         ServiceReference reference = event.getServiceReference();
         Long sid = ServiceUtil.getServiceIdObject(reference);
-        List /* <ServiceListener> */ notificationList = new ArrayList();
+        List<ServiceListener> notificationList = new ArrayList<>();
         synchronized (m_sidToListenersMap) {
-            List /* <ServiceListener> */ list = (ArrayList) m_sidToListenersMap.get(sid);
+            List<ServiceListener> list = m_sidToListenersMap.get(sid);
             if (list != null) {
-            	Iterator iterator = list.iterator();
+            	Iterator<ServiceListener> iterator = list.iterator();
             	while (iterator.hasNext()) {
                 	ServiceListener listener = (ServiceListener) iterator.next();
-                	String objectClass = (String) m_listenerToObjectClassMap.get(listener);
+                	String objectClass = m_listenerToObjectClassMap.get(listener);
                 	if (referenceMatchesObjectClass(reference, objectClass)) {
                 		notificationList.add(listener);
                 	} 
@@ -149,21 +149,21 @@ public class AdapterFilterIndex extends AbstractFactoryFilterIndex implements Fi
             }
         }
         // notify
-        Iterator iterator = notificationList.iterator();
+        Iterator<ServiceListener> iterator = notificationList.iterator();
         while (iterator.hasNext()) {
         	ServiceListener listener = (ServiceListener) iterator.next();
         	listener.serviceChanged(event);
         }
     }
 
-    public void addServiceListener(ServiceListener listener, String filter) {
+	public void addServiceListener(ServiceListener listener, String filter) {
         FilterData data = getFilterData(null, filter);
         if (data != null) {
-            Long sidObject = Long.valueOf(data.serviceId);
+            Long sidObject = Long.valueOf(data.m_serviceId);
             synchronized (m_sidToListenersMap) {
-            	List /* <ServiceListener> */ listeners = (List) m_sidToListenersMap.get(sidObject);
+            	List<ServiceListener> listeners = m_sidToListenersMap.get(sidObject);
             	if (listeners == null) {
-            		listeners = new ArrayList();
+            		listeners = new ArrayList<>();
             		m_sidToListenersMap.put(sidObject, listeners);
             	}
             	listeners.add(listener);
@@ -180,7 +180,7 @@ public class AdapterFilterIndex extends AbstractFactoryFilterIndex implements Fi
         }
     }
 
-    public void removeServiceListener(ServiceListener listener) {
+	public void removeServiceListener(ServiceListener listener) {
         synchronized (m_sidToListenersMap) {
         	m_listenerToObjectClassMap.remove(listener);
             String filter = (String) m_listenerToFilterMap.remove(listener);
@@ -188,8 +188,8 @@ public class AdapterFilterIndex extends AbstractFactoryFilterIndex implements Fi
             	// the listener does exist
             	FilterData data = getFilterData(null, filter);
             	if (data != null) {
-            		Long sidObject = Long.valueOf(data.serviceId);
-            		List /* ServiceListener */ listeners = (List) m_sidToListenersMap.get(sidObject);
+            		Long sidObject = Long.valueOf(data.m_serviceId);
+            		List<ServiceListener> listeners = m_sidToListenersMap.get(sidObject);
             		if (listeners != null) {
             			listeners.remove(listener);
             		}

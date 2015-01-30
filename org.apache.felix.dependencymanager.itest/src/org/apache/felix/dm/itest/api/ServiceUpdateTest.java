@@ -18,30 +18,18 @@
  */
 package org.apache.felix.dm.itest.api;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Dictionary;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
-
-import org.junit.Assert;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ResourceHandler;
-import org.apache.felix.dm.ResourceUtil;
 import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Filter;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
 
-@SuppressWarnings({"deprecation", "unchecked", "rawtypes"})
 public class ServiceUpdateTest extends TestBase {
     public void testServiceUpdate() throws Exception {
         final DependencyManager m = getDM();
@@ -71,7 +59,7 @@ public class ServiceUpdateTest extends TestBase {
         // note that we can provide an actual implementation instance here because there will be only one
         // adapter, normally you'd want to specify a Class here
         CallbackInstance callbackInstance = new CallbackInstance(e);
-        Hashtable serviceProps = new Hashtable();
+        Hashtable<String, String> serviceProps = new Hashtable<String, String>();
         serviceProps.put("number", "1");
         Component component = m.createResourceAdapterService("(&(path=/path/to/*.txt)(host=localhost))", false, callbackInstance, "changed")
             .setImplementation(new ResourceAdapter(e))
@@ -150,11 +138,11 @@ public class ServiceUpdateTest extends TestBase {
             
             Properties newProps = new Properties();
             // update the component's service properties
-            Dictionary dict = component.getServiceProperties();
-            Enumeration e = dict.keys();
+            Dictionary<String, String> dict = component.getServiceProperties();
+            Enumeration<String> e = dict.keys();
             while (e.hasMoreElements()) {
-                String key = (String) e.nextElement();
-                String value = (String) dict.get(key);
+                String key = e.nextElement();
+                String value = dict.get(key);
                 newProps.setProperty(key, value);
             }
             newProps.setProperty("new-property", "2");

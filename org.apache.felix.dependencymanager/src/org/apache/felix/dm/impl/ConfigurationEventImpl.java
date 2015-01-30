@@ -22,6 +22,11 @@ import java.util.Dictionary;
 
 import org.apache.felix.dm.context.Event;
 
+/**
+ * Implementation for a configuration event.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class ConfigurationEventImpl extends Event {
     private final String m_pid;
     
@@ -39,7 +44,8 @@ public class ConfigurationEventImpl extends Event {
         return m_pid.compareTo(((ConfigurationEventImpl) other).m_pid);
     }
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public Dictionary<String, Object> getProperties() {
         return getEvent();
     }

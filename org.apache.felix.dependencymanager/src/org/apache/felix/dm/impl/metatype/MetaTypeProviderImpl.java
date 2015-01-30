@@ -30,8 +30,8 @@ import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
 
+import org.apache.felix.dm.Logger;
 import org.apache.felix.dm.PropertyMetaData;
-import org.apache.felix.dm.impl.Logger;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.service.cm.ConfigurationException;

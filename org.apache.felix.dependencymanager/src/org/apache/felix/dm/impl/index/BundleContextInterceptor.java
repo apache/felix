@@ -23,7 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.felix.dm.FilterIndex;
-import org.apache.felix.dm.impl.Logger;
+import org.apache.felix.dm.Logger;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
@@ -34,19 +34,18 @@ import org.osgi.framework.ServiceReference;
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@SuppressWarnings("unchecked")
 public class BundleContextInterceptor extends BundleContextInterceptorBase {
 	protected static final String INDEX_LOG_TRESHOLD = "org.apache.felix.dm.index.log.treshold";
     private final ServiceRegistryCache m_cache;
     private final boolean m_perfmon = System.getProperty(INDEX_LOG_TRESHOLD) != null;
 	private Logger m_logger;
-	private long m_treshold;
+	private long m_threshold;
 
     public BundleContextInterceptor(ServiceRegistryCache cache, BundleContext context) {
         super(context);
         m_cache = cache;
 		if (m_perfmon) {
-			m_treshold = Long.parseLong(System.getProperty(INDEX_LOG_TRESHOLD));
+			m_threshold = Long.parseLong(System.getProperty(INDEX_LOG_TRESHOLD));
 			m_logger = new Logger(context);
 		}
     }
@@ -57,7 +56,6 @@ public class BundleContextInterceptor extends BundleContextInterceptorBase {
             filterIndex.addServiceListener(listener, filter);
         }
         else {
-//            System.out.println("BCI:Listener " + listener.getClass().getName() + " filter " + filter);
             m_context.addServiceListener(listener, filter);
         }
     }
@@ -68,22 +66,21 @@ public class BundleContextInterceptor extends BundleContextInterceptorBase {
             filterIndex.addServiceListener(listener, null);
         }
         else {
-//            System.out.println("BCI:Listener " + listener.getClass().getName() + " without filter");
             m_context.addServiceListener(listener);
         }
     }
 
-    public void removeServiceListener(ServiceListener listener) {
+	public void removeServiceListener(ServiceListener listener) {
     	// remove servicelistener. although it would be prettier to find the correct filterindex first it's
     	// probaby faster to do a brute force removal.
-    	Iterator filterIndexIterator = m_cache.getFilterIndices().iterator();
+    	Iterator<FilterIndex> filterIndexIterator = m_cache.getFilterIndices().iterator();
     	while (filterIndexIterator.hasNext()) {
-    		((FilterIndex) filterIndexIterator.next()).removeServiceListener(listener);
+    		filterIndexIterator.next().removeServiceListener(listener);
     	}
     	m_context.removeServiceListener(listener);
     }
 
-    public ServiceReference[] getServiceReferences(String clazz, String filter) throws InvalidSyntaxException {
+	public ServiceReference[] getServiceReferences(String clazz, String filter) throws InvalidSyntaxException {
     	long start = 0L;
     	if (m_perfmon) {
     		start = System.currentTimeMillis();
@@ -91,10 +88,10 @@ public class BundleContextInterceptor extends BundleContextInterceptorBase {
         // first we ask the cache if there is an index for our request (class and filter combination)
         FilterIndex filterIndex = m_cache.hasFilterIndexFor(clazz, filter);
         if (filterIndex != null) {
-            List /* <ServiceReference> */ result = filterIndex.getAllServiceReferences(clazz, filter);
-            Iterator iterator = result.iterator();
+            List<ServiceReference> result = filterIndex.getAllServiceReferences(clazz, filter);
+            Iterator<ServiceReference> iterator = result.iterator();
             while (iterator.hasNext()) {
-                ServiceReference reference = (ServiceReference) iterator.next();
+                ServiceReference reference = iterator.next();
                 String[] list = (String[]) reference.getProperty(Constants.OBJECTCLASS);
                 for (int i = 0; i < list.length; i++) {
                     if (!reference.isAssignableTo(m_context.getBundle(), list[i])) {
@@ -105,8 +102,8 @@ public class BundleContextInterceptor extends BundleContextInterceptorBase {
             }
             if (m_perfmon) {
 	        	long duration = System.currentTimeMillis() - start;
-	        	if (duration > m_treshold) {
-	        		m_logger.log(Logger.LOG_DEBUG, "Indexed filter exceeds lookup time treshold (" + duration + "ms.): " + clazz + " " + filter);
+	        	if (duration > m_threshold) {
+	        		m_logger.log(Logger.LOG_DEBUG, "Indexed filter exceeds lookup time threshold (" + duration + " ms): " + clazz + " " + filter);
 	        	}
             }
             if (result.size() == 0) {
@@ -119,19 +116,19 @@ public class BundleContextInterceptor extends BundleContextInterceptorBase {
             ServiceReference[] serviceReferences = m_context.getServiceReferences(clazz, filter);
             if (m_perfmon) {
 	        	long duration = System.currentTimeMillis() - start;
-	        	if (duration > m_treshold) {
-	        		m_logger.log(Logger.LOG_DEBUG, "Unindexed filter exceeds lookup time treshold (" + duration + "ms.): " + clazz + " " + filter);
+	        	if (duration > m_threshold) {
+	        		m_logger.log(Logger.LOG_DEBUG, "Unindexed filter exceeds lookup time threshold (" + duration + " ms): " + clazz + " " + filter);
 	        	}
             }
         	return serviceReferences;
         }
     }
 
-    public ServiceReference[] getAllServiceReferences(String clazz, String filter) throws InvalidSyntaxException {
+	public ServiceReference[] getAllServiceReferences(String clazz, String filter) throws InvalidSyntaxException {
         // first we ask the cache if there is an index for our request (class and filter combination)
         FilterIndex filterIndex = m_cache.hasFilterIndexFor(clazz, filter);
         if (filterIndex != null) {
-            List /* <ServiceReference> */ result = filterIndex.getAllServiceReferences(clazz, filter);
+            List<ServiceReference> result = filterIndex.getAllServiceReferences(clazz, filter);
             if (result == null || result.size() == 0) {
                 return null;
             }

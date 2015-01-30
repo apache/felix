@@ -48,11 +48,11 @@ public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCust
     private final Object m_lock = new Object();
     private ServiceTracker m_tracker;
     private BundleContext m_context;
-	private Map /* <String, Property> */ m_configProperties = new LinkedHashMap();
-	private List /* <String> */ m_negatePropertyKeys = new ArrayList();
-    private final Map /* <String, List<ServiceReference>> */ m_keyToServiceReferencesMap = new HashMap();
-    private final Map /* <String, List<ServiceListener>> */ m_keyToListenersMap = new HashMap();
-    private final Map /* <ServiceListener, String> */ m_listenerToFilterMap = new HashMap();
+	private Map<String, Property> m_configProperties = new LinkedHashMap<>();
+	private List<String> m_negatePropertyKeys = new ArrayList<>();
+    private final Map<String, List<ServiceReference>> m_keyToServiceReferencesMap = new HashMap<>();
+    private final Map<String, List<ServiceListener>> m_keyToListenersMap = new HashMap<>();
+    private final Map<ServiceListener, String> m_listenerToFilterMap = new HashMap<>();
 
 	public MultiPropertyFilterIndex(String configString) {
 		parseConfig(configString);
@@ -65,16 +65,16 @@ public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCust
 			return false;
 		}
 		// compare property keys to the ones in the configuration
-		Set /* <String> */ filterPropertyKeys = filter.getPropertyKeys();
+		Set<String> filterPropertyKeys = filter.getPropertyKeys();
 		if (m_configProperties.size() != filterPropertyKeys.size()) {
 			return false;
 		}
-		Iterator filterPropertyKeysIterator = filterPropertyKeys.iterator();
+		Iterator<String> filterPropertyKeysIterator = filterPropertyKeys.iterator();
 		while (filterPropertyKeysIterator.hasNext()) {
-			String filterPropertyKey = (String) filterPropertyKeysIterator.next();
+			String filterPropertyKey = filterPropertyKeysIterator.next();
 			if (!m_configProperties.containsKey(filterPropertyKey)) {
 				return false;
-			} else if (((Property)m_configProperties.get(filterPropertyKey)).isNegate() != filter.getProperty(filterPropertyKey).isNegate()) {
+			} else if ((m_configProperties.get(filterPropertyKey)).isNegate() != filter.getProperty(filterPropertyKey).isNegate()) {
 				// negation should be equal
 				return false;
 			} else if (!filter.getProperty(filterPropertyKey).isNegate() && filter.getProperty(filterPropertyKey).getValue().equals("*")) {
@@ -88,14 +88,14 @@ public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCust
 	
     public boolean isApplicable(ServiceReference ref) {
     	String[] propertyKeys = ref.getPropertyKeys();
-        TreeSet referenceProperties = new TreeSet(String.CASE_INSENSITIVE_ORDER);
+        TreeSet<String> referenceProperties = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         for (int i = 0; i < propertyKeys.length; i++) {
             referenceProperties.add(propertyKeys[i]);
         }
-        Iterator iterator = m_configProperties.keySet().iterator();
+        Iterator<String> iterator = m_configProperties.keySet().iterator();
         while (iterator.hasNext()) {
-            String item = (String) iterator.next();
-            Property configProperty = (Property) m_configProperties.get(item);
+            String item = iterator.next();
+            Property configProperty = m_configProperties.get(item);
             if (!configProperty.isNegate() && !(referenceProperties.contains(item))) {
                 return false;
             } else if (configProperty.isNegate() && referenceProperties.contains(item)) {
@@ -131,7 +131,7 @@ public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCust
 		}
 	}
 	
-	protected Collection /* <Property> */ getProperties() {
+	protected Collection<Property> getProperties() {
 		return m_configProperties.values();
 	}
 	
@@ -154,13 +154,13 @@ public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCust
 		return filter;
     }
     
-    protected List createKeys(ServiceReference reference) {
-    	List /* <String> */ results = new ArrayList();
-    	List sets = new ArrayList();   	
+    protected List<String> createKeys(ServiceReference reference) {
+    	List<String> results = new ArrayList<>();
+    	List<List<String>> sets = new ArrayList<>();   	
     	String[] keys = reference.getPropertyKeys();
     	Arrays.sort(keys, String.CASE_INSENSITIVE_ORDER);
     	for (int i = 0; i < keys.length; i++) {
-    		List set = new ArrayList();
+    		List<String> set = new ArrayList<>();
     		String key = keys[i].toLowerCase();
     		if (m_configProperties.containsKey(key)) {
 	    		Object valueObject = reference.getProperty(key);
@@ -173,18 +173,18 @@ public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCust
     		}
     	}
     	
-    	List reversedSets = new ArrayList();
+    	List<List<String>> reversedSets = new ArrayList<>();
     	int size = sets.size();
     	for (int i = size - 1; i > -1; i--) {
     		reversedSets.add(sets.get(i));
     	}
-    	List products = carthesianProduct(0, reversedSets);
+    	List<List<String>> products = carthesianProduct(0, reversedSets);
     	// convert sets into strings
     	for (int i = 0; i < products.size(); i++) {
-    		List set = (List) products.get(i);
+    		List<String> set = products.get(i);
     		StringBuilder b = new StringBuilder();
     		for (int j = 0; j < set.size(); j++) {
-    			String item = (String) set.get(j);
+    			String item = set.get(j);
     			b.append(item);
     			if (j < set.size() - 1) {
     				b.append(";");
@@ -204,17 +204,17 @@ public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCust
      * @param sets
      * @return
      */
-    private List carthesianProduct(int index, List sets) {
-    	List result = new ArrayList();
+    private List<List<String>> carthesianProduct(int index, List<List<String>> sets) {
+    	List<List<String>> result = new ArrayList<>();
     	if (index == sets.size()) {
-    		result.add(new ArrayList());
+    		result.add(new ArrayList<String>());
     	} else {
-			List set = (List) sets.get(index);
+			List<String> set = sets.get(index);
 			for (int i = 0; i < set.size(); i++) {
-				Object object = set.get(i);
-    			List pSets = carthesianProduct(index + 1, sets);
+				String object = set.get(i);
+    			List<List<String>> pSets = carthesianProduct(index + 1, sets);
     			for (int j = 0; j < pSets.size(); j++) {
-    				List pSet = (List) pSets.get(j);
+    				List<String> pSet = pSets.get(j);
     				pSet.add(object);
     				result.add(pSet);
     			}
@@ -223,18 +223,18 @@ public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCust
     	return result;
     }
     
-    List getPermutations(String key, String[] values) {
-    	List results = new ArrayList();
+    List<String> getPermutations(String key, String[] values) {
+    	List<String> results = new ArrayList<>();
 		Arrays.sort(values, String.CASE_INSENSITIVE_ORDER);
 		for (int v = 0; v < values.length; v++) {
 			String processValue = values[v];
-			List /* <String> */ items = new ArrayList();
+			List<String> items = new ArrayList<>();
 			items.add(processValue);
 			// per value get combinations
-			List /* <String> */ subItems = new ArrayList(items);
+			List<String> subItems = new ArrayList<>(items);
 			for (int w = v; w < values.length; w++) {
 				// make a copy of the current list
-				subItems = new ArrayList(subItems);
+				subItems = new ArrayList<>(subItems);
 				if (w != v) {
 					String value = values[w];
 					subItems.add(value);
@@ -245,10 +245,10 @@ public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCust
 		return results;
     }
     
-    protected String toKey(String key, List values) {
+    protected String toKey(String key, List<String> values) {
     	StringBuilder builder = new StringBuilder();
     	for (int i = 0; i < values.size(); i++) {
-    		builder.append(toKey(key, (String) values.get(i)));
+    		builder.append(toKey(key, values.get(i)));
     		if (i < values.size() - 1) {
     			builder.append(";");
     		}
@@ -296,12 +296,12 @@ public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCust
     }
     
     protected void handleServiceAdd(ServiceReference reference) {
-        List /* <String> */ keys = createKeys(reference);
+        List<String> keys = createKeys(reference);
         synchronized (m_keyToServiceReferencesMap) {
             for (int i = 0; i < keys.size(); i++) {
-                List /* <ServiceReference> */ references = (List) m_keyToServiceReferencesMap.get(keys.get(i));
+                List<ServiceReference> references = m_keyToServiceReferencesMap.get(keys.get(i));
                 if (references == null) {
-                    references = new ArrayList();
+                    references = new ArrayList<>();
                     m_keyToServiceReferencesMap.put(keys.get(i), references);
                 }
                 references.add(reference);
@@ -315,13 +315,13 @@ public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCust
             // TODO this is a quite expensive linear scan over the existing collection
             // because we first need to remove any existing references and they can be
             // all over the place :)
-            Iterator iterator = m_keyToServiceReferencesMap.values().iterator();
+            Iterator<List<ServiceReference>> iterator = m_keyToServiceReferencesMap.values().iterator();
             while (iterator.hasNext()) {
-                List /* <ServiceReference> */ list = (List) iterator.next();
+                List<ServiceReference> list = iterator.next();
                 if (list != null) {
-                    Iterator i2 = list.iterator();
+                    Iterator<ServiceReference> i2 = list.iterator();
                     while (i2.hasNext()) {
-                        ServiceReference ref = (ServiceReference) i2.next();
+                        ServiceReference ref = i2.next();
                         if (ref.equals(reference)) {
                             i2.remove();
                         }
@@ -330,11 +330,11 @@ public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCust
             }
             // only re-add the reference when it is still applicable for this filter index
             if (shouldBeIndexed(reference)) {
-            	List /* <String> */ keys = createKeys(reference);
+            	List<String> keys = createKeys(reference);
 	            for (int i = 0; i < keys.size(); i++) {
-	                List /* <ServiceReference> */ references = (List) m_keyToServiceReferencesMap.get(keys.get(i));
+	                List<ServiceReference> references = m_keyToServiceReferencesMap.get(keys.get(i));
 	                if (references == null) {
-	                    references = new ArrayList();
+	                    references = new ArrayList<>();
 	                    m_keyToServiceReferencesMap.put(keys.get(i), references);
 	                }
 	                references.add(reference);
@@ -344,10 +344,10 @@ public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCust
     }
 
     protected void handleServiceRemove(ServiceReference reference) {
-        List /* <String> */ keys = createKeys(reference);
+        List<String> keys = createKeys(reference);
         synchronized (m_keyToServiceReferencesMap) {
             for (int i = 0; i < keys.size(); i++) {
-                List /* <ServiceReference> */ references = (List) m_keyToServiceReferencesMap.get(keys.get(i));
+                List<ServiceReference> references = m_keyToServiceReferencesMap.get(keys.get(i));
                 if (references != null) {
                     references.remove(reference);
                     if (references.isEmpty()) {
@@ -360,9 +360,9 @@ public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCust
     
     protected boolean shouldBeIndexed(ServiceReference reference) {
     	// is already applicable, so we should only check whether there's a negate field in the filter which has a value in the reference
-    	Iterator negatePropertyKeyIterator = m_negatePropertyKeys.iterator();
+    	Iterator<String> negatePropertyKeyIterator = m_negatePropertyKeys.iterator();
     	while (negatePropertyKeyIterator.hasNext()) {
-    		String negatePropertyKey = (String) negatePropertyKeyIterator.next();
+    		String negatePropertyKey = negatePropertyKeyIterator.next();
     		if (reference.getProperty(negatePropertyKey) != null) {
     			return false;
     		}
@@ -399,12 +399,11 @@ public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCust
         tracker.close();
 	}
 
-    public List /* <ServiceReference> */ getAllServiceReferences(String clazz, String filter) {
-        List /* <ServiceReference> */ result = new ArrayList();
+    public List<ServiceReference> getAllServiceReferences(String clazz, String filter) {
+        List<ServiceReference> result = new ArrayList<>();
         String key = createKeyFromFilter(clazz, filter);
-        ServiceReference reference;
         synchronized (m_keyToServiceReferencesMap) {
-            List references = (List) m_keyToServiceReferencesMap.get(key);
+            List<ServiceReference> references = m_keyToServiceReferencesMap.get(key);
             if (references != null) {
                 result.addAll(references);
             }
@@ -414,21 +413,21 @@ public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCust
 
     public void serviceChanged(ServiceEvent event) {
         if (isApplicable(event.getServiceReference())) {
-            List /* <String> */ keys = createKeys(event.getServiceReference());
-            List list = new ArrayList();
+            List<String> keys = createKeys(event.getServiceReference());
+            List<ServiceListener> list = new ArrayList<ServiceListener>();
             synchronized (m_keyToListenersMap) {
                 for (int i = 0; i < keys.size(); i++) {
-                    String key = (String) keys.get(i);
-                    List listeners = (List) m_keyToListenersMap.get(key);
+                    String key = keys.get(i);
+                    List<ServiceListener> listeners = m_keyToListenersMap.get(key);
                     if (listeners != null) {
                         list.addAll(listeners);
                     }
                 }
             }
             if (list != null) {
-                Iterator iterator = list.iterator();
+                Iterator<ServiceListener> iterator = list.iterator();
                 while (iterator.hasNext()) {
-                    ServiceListener listener = (ServiceListener) iterator.next();
+                    ServiceListener listener = iterator.next();
                     listener.serviceChanged(event);
                 }
             }
@@ -438,9 +437,9 @@ public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCust
     public void addServiceListener(ServiceListener listener, String filter) {
         String key = createKeyFromFilter(null, filter);
         synchronized (m_keyToListenersMap) {
-            List /* <ServiceListener> */ listeners = (List) m_keyToListenersMap.get(key);
+            List<ServiceListener> listeners = m_keyToListenersMap.get(key);
             if (listeners == null) {
-                listeners = new CopyOnWriteArrayList();
+                listeners = new CopyOnWriteArrayList<ServiceListener>();
                 m_keyToListenersMap.put(key, listeners);
             }
             listeners.add(listener);
@@ -450,14 +449,14 @@ public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCust
 
     public void removeServiceListener(ServiceListener listener) {
         synchronized (m_keyToListenersMap) {
-            String filter = (String) m_listenerToFilterMap.remove(listener);
+            String filter = m_listenerToFilterMap.remove(listener);
             if (filter != null) {
             	// the listener does exist
         		String key = createKeyFromFilter(null, filter);
         		
         		boolean result = filter != null;
         		if (result) {
-        			List /* <ServiceListener> */ listeners = (List) m_keyToListenersMap.get(key);
+        			List<ServiceListener> listeners = m_keyToListenersMap.get(key);
         			if (listeners != null) {
         				listeners.remove(listener);
         				if (listeners.isEmpty()) {
@@ -470,7 +469,7 @@ public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCust
         }
     }
     
-    protected Collection getServiceListeners() {
+    protected Collection<ServiceListener> getServiceListeners() {
     	return m_listenerToFilterMap.keySet();
     }
     

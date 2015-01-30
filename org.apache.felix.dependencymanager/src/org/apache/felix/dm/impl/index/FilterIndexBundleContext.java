@@ -33,12 +33,12 @@ public class FilterIndexBundleContext extends BundleContextInterceptorBase {
         super(context);
     }
 
-    public void serviceChanged(ServiceEvent event) {
-        Entry[] entries = synchronizeCollection();
+	public void serviceChanged(ServiceEvent event) {
+        Entry<ServiceListener, String>[] entries = synchronizeCollection();
         for (int i = 0; i < entries.length; i++) {
-            Entry serviceListenerFilterEntry = entries[i];
-            ServiceListener serviceListener = (ServiceListener) serviceListenerFilterEntry.getKey();
-            String filter = (String) serviceListenerFilterEntry.getValue();
+            Entry<ServiceListener, String> serviceListenerFilterEntry = entries[i];
+            ServiceListener serviceListener = serviceListenerFilterEntry.getKey();
+            String filter = serviceListenerFilterEntry.getValue();
             if (filter == null) {
                 serviceListener.serviceChanged(event);
             }

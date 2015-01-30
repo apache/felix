@@ -29,13 +29,11 @@ import java.util.TreeSet;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class Filter {
-	
 	private boolean m_valid = true;
-	private Map /* <String, Property> */ m_properties = new HashMap();
-	private Set /* <String> */ m_propertyKeys = new TreeSet(String.CASE_INSENSITIVE_ORDER);
+	private Map<String, Property> m_properties = new HashMap<>();
+	private Set<String> m_propertyKeys = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 	
 	private Filter() {
-		
 	}
 	
 	// Sample valid filter string (&(objectClass=OBJECTCLASS)(&(model=MODEL)(concept=CONCEPT)(role=ROLE)(!(context=*))))
@@ -69,7 +67,7 @@ public class Filter {
 					// set complete
 					if (filter.m_properties.containsKey(key)) {
 						// set current property to multivalue
-						Property property = (Property) filter.m_properties.get(key);
+						Property property = filter.m_properties.get(key);
 						property.addValue(valueBuilder.toString(), negate);
 					} else {
 						Property property = new Property(negate, key, valueBuilder.toString());
@@ -89,12 +87,12 @@ public class Filter {
 		return m_properties.containsKey(propertyKey);
 	}
 	
-	public Set /* <String> */ getPropertyKeys() {
+	public Set<String> getPropertyKeys() {
 		return m_properties.keySet();
 	}
 	
 	public Property getProperty(String key) {
-		return (Property) m_properties.get(key);
+		return m_properties.get(key);
 	}
 	
 	public boolean isValid() {
@@ -102,9 +100,9 @@ public class Filter {
 			return m_valid;
 		} else {
 			// also check the properties
-			Iterator propertiesIterator = m_properties.values().iterator();
+			Iterator<Property> propertiesIterator = m_properties.values().iterator();
 			while (propertiesIterator.hasNext()) {
-				Property property = (Property) propertiesIterator.next();
+				Property property = propertiesIterator.next();
 				if (!property.isValid()) {
 					return false;
 				}
@@ -120,15 +118,15 @@ public class Filter {
 
 	protected String createKey() {
 		StringBuilder builder = new StringBuilder();
-		Iterator keys = m_propertyKeys.iterator();
+		Iterator<String> keys = m_propertyKeys.iterator();
 		
 		while (keys.hasNext()) {
-			String key = (String) keys.next();
-			Property prop = (Property) m_properties.get(key);
+			String key = keys.next();
+			Property prop = m_properties.get(key);
 			if (!prop.isWildcard()) {
-				Iterator values = prop.getValues().iterator();
+				Iterator<String> values = prop.getValues().iterator();
 				while (values.hasNext()) {
-					String value = (String) values.next();
+					String value = values.next();
 					builder.append(key);
 					builder.append("=");
 					builder.append(value);

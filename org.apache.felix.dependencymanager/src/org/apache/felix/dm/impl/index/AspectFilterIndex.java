@@ -19,7 +19,6 @@
 package org.apache.felix.dm.impl.index;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -55,7 +54,7 @@ public class AspectFilterIndex extends AbstractFactoryFilterIndex implements Fil
     private ServiceTracker m_tracker;
     private BundleContext m_context;
     
-    private final Map /* <Long, Map<String, SortedMap<Integer, Collection<ServiceListener>>> */ m_sidToObjectClassToRankingToListenersMap = new HashMap();
+	private final Map<Long, Map<String, SortedMap<Integer, List<ServiceListener>>>> m_sidToObjectClassToRankingToListenersMap = new HashMap<>();
 
     public void open(BundleContext context) {
         synchronized (m_lock) {
@@ -116,26 +115,26 @@ public class AspectFilterIndex extends AbstractFactoryFilterIndex implements Fil
                 return null;
             }
             FilterData result = new FilterData();
-            result.objectClass = filter.substring(FILTER_START.length(), i0);
-            result.serviceId = sid;
-            result.ranking = Integer.parseInt(filter.substring(i0 + FILTER_SUBSTRING_0.length(), i1));
+            result.m_objectClass = filter.substring(FILTER_START.length(), i0);
+            result.m_serviceId = sid;
+            result.m_ranking = Integer.parseInt(filter.substring(i0 + FILTER_SUBSTRING_0.length(), i1));
             return result;
         }
         return null;
     }
 
-    public List getAllServiceReferences(String clazz, String filter) {
-        List /* <ServiceReference> */ result = new ArrayList();
+	public List<ServiceReference> getAllServiceReferences(String clazz, String filter) {
+        List<ServiceReference> result = new ArrayList<>();
         FilterData data = getFilterData(clazz, filter);
         if (data != null) {
-        	SortedSet /* <ServiceReference> */ list = null;
+        	SortedSet<ServiceReference> list = null;
         	synchronized (m_sidToServiceReferencesMap) {
-        		list = (SortedSet) m_sidToServiceReferencesMap.get(Long.valueOf(data.serviceId));
+        		list = m_sidToServiceReferencesMap.get(Long.valueOf(data.m_serviceId));
         		if (list != null) {
-        			Iterator iterator = list.iterator();
+        			Iterator<ServiceReference> iterator = list.iterator();
         			while (iterator.hasNext()) {
         				ServiceReference reference = (ServiceReference) iterator.next();
-        				if (referenceMatchesObjectClass(reference, data.objectClass) && ServiceUtil.getRanking(reference) <= data.ranking) {
+        				if (referenceMatchesObjectClass(reference, data.m_objectClass) && ServiceUtil.getRanking(reference) <= data.m_ranking) {
         					result.add(reference);
         				}
         			}
@@ -145,8 +144,8 @@ public class AspectFilterIndex extends AbstractFactoryFilterIndex implements Fil
         return result;
     }
 
-    public void serviceChanged(ServiceEvent event) {
-        List list = new ArrayList();
+	public void serviceChanged(ServiceEvent event) {
+        List<ServiceListener> list = new ArrayList<>();
         ServiceReference reference = event.getServiceReference();
         Long sidObject = ServiceUtil.getServiceIdObject(reference);
         int ranking = ServiceUtil.getRanking(reference);
@@ -156,49 +155,49 @@ public class AspectFilterIndex extends AbstractFactoryFilterIndex implements Fil
         	for (int i = 0; i < objectClasses.length; i++) {
         		// handle each of the object classes separately since aspects only work on one object class at a time
         		String objectClass = objectClasses[i];
-        		Map /* <String, Map<Integer, Collection<ServiceListener>>> */ objectClassToRankingToListenersMap = (SortedMap) m_sidToObjectClassToRankingToListenersMap.get(sidObject);
+        		Map<String, SortedMap<Integer, List<ServiceListener>>> objectClassToRankingToListenersMap = m_sidToObjectClassToRankingToListenersMap.get(sidObject);
         		if (objectClassToRankingToListenersMap != null) {
-        			SortedMap /* Integer, ServiceListener> */ rankingToListenersMap = (SortedMap) objectClassToRankingToListenersMap.get(objectClass);
+        			SortedMap<Integer, List<ServiceListener>> rankingToListenersMap = objectClassToRankingToListenersMap.get(objectClass);
         			if (rankingToListenersMap != null) {
-        				Iterator iterator = rankingToListenersMap.entrySet().iterator();
+        				Iterator<Entry<Integer, List<ServiceListener>>> iterator = rankingToListenersMap.entrySet().iterator();
         				while (iterator.hasNext()) {
-        					Entry entry = (Entry) iterator.next();
+        					Entry<Integer, List<ServiceListener>> entry = iterator.next();
         					if (ranking <= ((Integer) entry.getKey()).intValue()) {
-        						list.addAll((Collection)entry.getValue());
+        						list.addAll(entry.getValue());
         					}
         				}
         			}
         		}
         	}
 		}
-        Iterator iterator = list.iterator();
+        Iterator<ServiceListener> iterator = list.iterator();
         while (iterator.hasNext()) {
-            ServiceListener listener = (ServiceListener) iterator.next();
+            ServiceListener listener = iterator.next();
             listener.serviceChanged(event);
         }
     }
 
-    public void addServiceListener(ServiceListener listener, String filter) {
+	public void addServiceListener(ServiceListener listener, String filter) {
         FilterData data = getFilterData(null, filter);
         if (data != null) {
-            Long sidObject = Long.valueOf(data.serviceId);
+            Long sidObject = Long.valueOf(data.m_serviceId);
             synchronized (m_sidToObjectClassToRankingToListenersMap) {
-            	Map /* <String, Map<Integer, Collection<ServiceListener>>> */ objectClassToRankingToListenersMap = (SortedMap) m_sidToObjectClassToRankingToListenersMap.get(sidObject);
+            	Map<String, SortedMap<Integer, List<ServiceListener>>> objectClassToRankingToListenersMap = m_sidToObjectClassToRankingToListenersMap.get(sidObject);
             	if (objectClassToRankingToListenersMap == null) {
-            		objectClassToRankingToListenersMap = new TreeMap();
+            		objectClassToRankingToListenersMap = new TreeMap<>();
             		m_sidToObjectClassToRankingToListenersMap.put(sidObject, objectClassToRankingToListenersMap);
             	}
             	
-            	SortedMap /* Integer, ServiceListener> */ rankingToListenersMap = (SortedMap) objectClassToRankingToListenersMap.get(data.objectClass);
+            	SortedMap<Integer, List<ServiceListener>> rankingToListenersMap = objectClassToRankingToListenersMap.get(data.m_objectClass);
                 if (rankingToListenersMap == null) {
-                    rankingToListenersMap = new TreeMap();
-                    objectClassToRankingToListenersMap.put(data.objectClass, rankingToListenersMap);
+                    rankingToListenersMap = new TreeMap<>();
+                    objectClassToRankingToListenersMap.put(data.m_objectClass, rankingToListenersMap);
                 }            	
             	
-            	Collection listeners = (Collection) rankingToListenersMap.get(Integer.valueOf(data.ranking));
+            	List<ServiceListener> listeners = rankingToListenersMap.get(Integer.valueOf(data.m_ranking));
             	if (listeners == null) {
-            		listeners = new ArrayList();
-            		rankingToListenersMap.put(Integer.valueOf(data.ranking), listeners);
+            		listeners = new ArrayList<>();
+            		rankingToListenersMap.put(Integer.valueOf(data.m_ranking), listeners);
             	}
             	
             	listeners.add(listener);
@@ -207,7 +206,7 @@ public class AspectFilterIndex extends AbstractFactoryFilterIndex implements Fil
         }
     }
 
-    public void removeServiceListener(ServiceListener listener) {
+	public void removeServiceListener(ServiceListener listener) {
     	synchronized (m_sidToObjectClassToRankingToListenersMap) {
     		String filter = (String) m_listenerToFilterMap.remove(listener);
     		if (filter != null) {
@@ -215,21 +214,21 @@ public class AspectFilterIndex extends AbstractFactoryFilterIndex implements Fil
     			FilterData data = getFilterData(null, filter);
     			if (data != null) {
     				// this index is applicable
-    				Long sidObject = Long.valueOf(data.serviceId);
-                	Map /* <String, Map<Integer, Collection<ServiceListener>>> */ objectClassToRankingToListenersMap = (SortedMap) m_sidToObjectClassToRankingToListenersMap.get(sidObject);
+    				Long sidObject = Long.valueOf(data.m_serviceId);
+                	Map<String, SortedMap<Integer, List<ServiceListener>>> objectClassToRankingToListenersMap = m_sidToObjectClassToRankingToListenersMap.get(sidObject);
                 	if (objectClassToRankingToListenersMap != null) {
-                		SortedMap /* Integer, ServiceListener> */ rankingToListenersMap = (SortedMap) objectClassToRankingToListenersMap.get(data.objectClass);
+                		SortedMap<Integer, List<ServiceListener>> rankingToListenersMap = objectClassToRankingToListenersMap.get(data.m_objectClass);
                 		if (rankingToListenersMap != null) {
-                			Collection listeners = (Collection) rankingToListenersMap.get(Integer.valueOf(data.ranking));
+                			List<ServiceListener> listeners = rankingToListenersMap.get(Integer.valueOf(data.m_ranking));
                 			if (listeners != null) {
                 				listeners.remove(listener);
                 			}
                 			// cleanup 
                 			if (listeners != null && listeners.isEmpty()) {
-                				rankingToListenersMap.remove(Integer.valueOf(data.ranking));
+                				rankingToListenersMap.remove(Integer.valueOf(data.m_ranking));
                 			}
                 			if (rankingToListenersMap.isEmpty()) {
-                				objectClassToRankingToListenersMap.remove(data.objectClass);
+                				objectClassToRankingToListenersMap.remove(data.m_objectClass);
                 			}
                 			if (objectClassToRankingToListenersMap.isEmpty()) {
                 				m_sidToObjectClassToRankingToListenersMap.remove(sidObject);

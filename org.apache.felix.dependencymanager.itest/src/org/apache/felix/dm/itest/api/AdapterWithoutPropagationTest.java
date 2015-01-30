@@ -22,7 +22,6 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.junit.Assert;
-
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.itest.util.Ensure;
@@ -83,10 +82,8 @@ public class AdapterWithoutPropagationTest extends TestBase {
     }
     
     static class ServiceProvider implements OriginalService {
-        private final Ensure m_ensure;
         private volatile ServiceRegistration m_registration; // auto injected when started.
         public ServiceProvider(Ensure e) {
-            m_ensure = e;
         }
         public void changeServiceProperties() {
             Hashtable<String, String> props = new Hashtable<>();
@@ -96,7 +93,6 @@ public class AdapterWithoutPropagationTest extends TestBase {
     }
     
     public static class ServiceAdapter implements AdaptedService {
-        private volatile OriginalService m_originalService;
         private final Ensure m_ensure;
         
         public ServiceAdapter(Ensure e) {
@@ -104,7 +100,6 @@ public class AdapterWithoutPropagationTest extends TestBase {
         }
 
         public void set(OriginalService adaptee, Dictionary<String, String> props) {
-            m_originalService = adaptee;
             Assert.assertEquals("bar", props.get("foo"));
             m_ensure.step(1);
         }
@@ -116,7 +111,8 @@ public class AdapterWithoutPropagationTest extends TestBase {
     }
 
     static class ServiceConsumer {
-        private volatile AdaptedService m_service;
+        @SuppressWarnings("unused")
+		private volatile AdaptedService m_service;
         private final Ensure m_ensure;
         
         public ServiceConsumer(Ensure e) {

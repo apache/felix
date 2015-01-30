@@ -27,12 +27,11 @@ import java.util.List;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.runtime.api.ComponentFactory;
 import org.apache.felix.dm.runtime.api.ComponentInstance;
 import org.osgi.framework.Bundle;
 
 /**
- * Implemantation for our DM Runtime ComponentInstance.
+ * Implementation for our DM Runtime ComponentInstance.
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */

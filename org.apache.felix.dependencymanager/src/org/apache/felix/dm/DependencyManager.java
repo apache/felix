@@ -35,7 +35,6 @@ import org.apache.felix.dm.impl.ComponentImpl;
 import org.apache.felix.dm.impl.ComponentScheduler;
 import org.apache.felix.dm.impl.ConfigurationDependencyImpl;
 import org.apache.felix.dm.impl.FactoryConfigurationAdapterImpl;
-import org.apache.felix.dm.impl.Logger;
 import org.apache.felix.dm.impl.ResourceAdapterImpl;
 import org.apache.felix.dm.impl.ResourceDependencyImpl;
 import org.apache.felix.dm.impl.ServiceDependencyImpl;

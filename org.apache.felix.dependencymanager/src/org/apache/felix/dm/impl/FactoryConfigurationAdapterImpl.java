@@ -27,6 +27,7 @@ import java.util.Hashtable;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.Logger;
 import org.apache.felix.dm.PropertyMetaData;
 import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.impl.metatype.MetaTypeProviderImpl;

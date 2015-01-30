@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.felix.dm.Logger;
 import org.osgi.service.log.LogService;
 
 /**

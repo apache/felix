@@ -16,12 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.dm.impl;
+package org.apache.felix.dm;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.context.Log;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;

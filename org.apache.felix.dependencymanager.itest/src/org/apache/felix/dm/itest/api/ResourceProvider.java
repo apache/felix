@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Assert;
-
 import org.apache.felix.dm.ResourceHandler;
 import org.apache.felix.dm.ResourceUtil;
 import org.osgi.framework.BundleContext;
@@ -47,7 +46,8 @@ class ResourceProvider {
         }    	
     }
     
-    public void change(int resourceIndex) {
+    @SuppressWarnings("deprecation")
+	public void change(int resourceIndex) {
         Map<ResourceHandler, Filter> handlers = new HashMap<>();
         synchronized (m_handlers) {
             handlers.putAll(m_handlers);
@@ -61,7 +61,8 @@ class ResourceProvider {
         }
     }
 
-    public void add(ServiceReference ref, ResourceHandler handler) {
+    @SuppressWarnings("deprecation")
+	public void add(ServiceReference ref, ResourceHandler handler) {
         String filterString = (String) ref.getProperty("filter");
         Filter filter = null;
         if (filterString != null) {
@@ -93,7 +94,8 @@ class ResourceProvider {
         }
     }
 
-    private void removeResources(ResourceHandler handler, Filter filter) {
+    @SuppressWarnings("deprecation")
+	private void removeResources(ResourceHandler handler, Filter filter) {
             for (int i = 0; i < m_resources.length; i++) {
                 if (filter == null || filter.match(ResourceUtil.createProperties(m_resources[i]))) {
                     handler.removed(m_resources[i]);

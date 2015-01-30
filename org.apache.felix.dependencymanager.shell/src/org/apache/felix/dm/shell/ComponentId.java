@@ -18,6 +18,11 @@
  */
 package org.apache.felix.dm.shell;
 
+/**
+ * Unique identification of a component based on its name, type and bundle name.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class ComponentId implements Comparable<ComponentId> {
     private final String name;
     private final String type;
@@ -88,7 +93,8 @@ public class ComponentId implements Comparable<ComponentId> {
     }
 
     public int compareTo(ComponentId o) {
+    	// TODO it is common to have compareTo use the same fields that equals does
+    	// if not for a good reason, document this
         return name.compareTo(o.name);
     }
-    
 }

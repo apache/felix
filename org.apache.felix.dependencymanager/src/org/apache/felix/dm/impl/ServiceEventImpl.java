@@ -76,7 +76,8 @@ public class ServiceEventImpl extends Event {
 		return m_reference;
 	}
 	    
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public Dictionary<String, Object> getProperties() {
         return ServiceUtil.propertiesToDictionary(m_reference);
     }

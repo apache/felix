@@ -108,7 +108,8 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
         return m_component.getClassName();
     }
     
-    public  Dictionary<String, Object> getServiceProperties() {
+    @SuppressWarnings("unchecked")
+	public Dictionary<String, Object> getServiceProperties() {
         return m_serviceProperties;
     }
 

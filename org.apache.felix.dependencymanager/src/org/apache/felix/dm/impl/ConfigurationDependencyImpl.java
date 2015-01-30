@@ -24,6 +24,7 @@ import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.felix.dm.ConfigurationDependency;
+import org.apache.felix.dm.Logger;
 import org.apache.felix.dm.PropertyMetaData;
 import org.apache.felix.dm.context.AbstractDependency;
 import org.apache.felix.dm.context.DependencyContext;
@@ -36,6 +37,11 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 
+/**
+ * Implementation for a configuration dependency.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class ConfigurationDependencyImpl extends AbstractDependency<ConfigurationDependency> implements ConfigurationDependency, ManagedService {
     private Dictionary<String, Object> m_settings;
 	private String m_pid;
@@ -167,6 +173,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
         return this;
     }
     
+	@SuppressWarnings("unchecked")
 	@Override
 	public Dictionary<String, Object> getProperties() {
 		if (m_settings == null) {

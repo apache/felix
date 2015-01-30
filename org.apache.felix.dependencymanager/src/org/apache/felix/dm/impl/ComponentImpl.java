@@ -39,9 +39,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -52,6 +50,7 @@ import org.apache.felix.dm.ComponentState;
 import org.apache.felix.dm.ComponentStateListener;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.Logger;
 import org.apache.felix.dm.context.ComponentContext;
 import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.EventType;

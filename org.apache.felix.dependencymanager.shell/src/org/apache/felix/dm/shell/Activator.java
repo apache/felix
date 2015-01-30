@@ -40,8 +40,6 @@ public class Activator implements BundleActivator {
     private final static String DEFAULT_SCOPE = "dependencymanager";
 
     public void start(BundleContext context) throws Exception {
-        // Provide DependencyManager shell commands for the Gogo Shell.
-        
         String scope = context.getProperty(SCOPE);
         if (scope == null) {
             scope = DEFAULT_SCOPE;
