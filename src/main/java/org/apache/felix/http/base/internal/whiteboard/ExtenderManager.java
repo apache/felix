@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.Filter;
@@ -30,21 +29,17 @@ import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.service.HttpServiceImpl;
-import org.apache.felix.http.base.internal.whiteboard.HttpContextManager.HttpContextHolder;
 import org.apache.felix.http.base.internal.whiteboard.tracker.FilterTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextHelperTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ServletTracker;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.HttpService;
-import org.osgi.service.http.context.ServletContextHelper;
 import org.osgi.service.http.runtime.dto.ResourceDTO;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 import org.osgi.util.tracker.ServiceTracker;
 
-@SuppressWarnings({ "deprecation" })
 public final class ExtenderManager
 {
     static final String TYPE_RESOURCE = "r";
@@ -62,33 +57,35 @@ public final class ExtenderManager
     public static final String FILTER_INIT_PREFIX = "filter.init.";
 
     private final Map<String, AbstractMapping> mapping;
-    private final HttpContextManager contextManager;
+
+    private final ServletContextHelperManager contextManager;
 
     private final HttpService httpService;
 
-    private final ArrayList<ServiceTracker> trackers = new ArrayList<ServiceTracker>();
+    private final ArrayList<ServiceTracker<?, ?>> trackers = new ArrayList<ServiceTracker<?, ?>>();
 
     public ExtenderManager(final HttpService httpService, final BundleContext bundleContext)
     {
         this.mapping = new HashMap<String, AbstractMapping>();
-        this.contextManager = new HttpContextManager();
+        this.contextManager = new ServletContextHelperManager();
         this.httpService = httpService;
         addTracker(new FilterTracker(bundleContext, this));
         addTracker(new ServletTracker(bundleContext, this));
-        addTracker(new ServletContextHelperTracker(bundleContext, this));
+        addTracker(new ServletContextHelperTracker(bundleContext, this.contextManager));
     }
 
     public void close()
     {
-        for(final ServiceTracker t : this.trackers)
+        for(final ServiceTracker<?, ?> t : this.trackers)
         {
             t.close();
         }
         this.trackers.clear();
         this.unregisterAll();
+        this.contextManager.close();
     }
 
-    private void addTracker(ServiceTracker tracker)
+    private void addTracker(ServiceTracker<?, ?> tracker)
     {
         this.trackers.add(tracker);
         tracker.open();
@@ -197,26 +194,6 @@ public final class ExtenderManager
         return result;
     }
 
-    public void add(ServletContextHelper service, ServiceReference ref)
-    {
-        String name = getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME);
-        String path = getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH);
-
-        // TODO - check if name and path are valid values
-        if (!isEmpty(name) && !isEmpty(path) )
-        {
-            Collection<AbstractMapping> mappings = this.contextManager.addContextHelper(ref.getBundle(), name, path, service);
-            for (AbstractMapping mapping : mappings)
-            {
-                registerMapping(mapping);
-            }
-        }
-        else
-        {
-            SystemLogger.debug("Ignoring ServletContextHelper Service " + ref + ", " + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + " is missing or empty");
-        }
-    }
-
     public void addResource(final ServiceReference ref)
     {
         final String[] pattern = getStringArrayProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PATTERN);
@@ -250,30 +227,6 @@ public final class ExtenderManager
     public void removeResource(final ServiceReference ref)
     {
         this.removeMapping(TYPE_RESOURCE, ref);
-    }
-
-    public void remove(ServletContextHelper service)
-    {
-        Collection<AbstractMapping> mappings = this.contextManager.removeContextHelper(service);
-        if (mappings != null)
-        {
-            for (AbstractMapping mapping : mappings)
-            {
-                unregisterMapping(mapping);
-            }
-        }
-    }
-
-    private void ungetHttpContext(AbstractMapping mapping, ServiceReference ref)
-    {
-        Bundle bundle = ref.getBundle();
-        String contextName = getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT);
-        if (!isEmpty(contextName))
-        {
-            this.contextManager.ungetHttpContext(bundle, contextName, mapping, true);
-            return;
-        }
-        this.contextManager.ungetHttpContext(bundle, null, mapping);
     }
 
     public void add(final Filter service, final ServiceReference ref)
@@ -341,7 +294,7 @@ public final class ExtenderManager
         return servletInfo;
     }
 
-    public void add(Servlet service, ServiceReference<?> ref)
+    public void add(Servlet service, ServiceReference<Servlet> ref)
     {
         final ServletInfo servletInfo = createServletInfo(ref, true);
         if ( servletInfo != null )
@@ -350,7 +303,7 @@ public final class ExtenderManager
         }
     }
 
-    public void removeFilter(final Filter service, ServiceReference ref)
+    public void removeFilter(final Filter service, ServiceReference<Filter> ref)
     {
         final FilterInfo filterInfo = createFilterInfo(ref, false);
         if ( filterInfo != null )
@@ -359,7 +312,7 @@ public final class ExtenderManager
         }
     }
 
-    public void removeServlet(Servlet service, ServiceReference ref)
+    public void removeServlet(Servlet service, ServiceReference<Servlet> ref)
     {
         final ServletInfo servletInfo = createServletInfo(ref, false);
         if ( servletInfo != null )
@@ -401,7 +354,6 @@ public final class ExtenderManager
         AbstractMapping mapping = this.mapping.remove(ref.getProperty(Constants.SERVICE_ID).toString().concat(servType));
         if (mapping != null)
         {
-            ungetHttpContext(mapping, ref);
             unregisterMapping(mapping);
         }
     }
@@ -423,36 +375,4 @@ public final class ExtenderManager
             mapping.unregister(httpService);
         }
     }
-
-    /**
-     * Returns
-     * {@link org.apache.felix.http.base.internal.whiteboard.whiteboard.internal.manager.HttpContextManager.HttpContextHolder}
-     * instances of HttpContext services.
-     *
-     * @return
-     */
-    Map<String, HttpContextHolder> getHttpContexts()
-    {
-        return this.contextManager.getHttpContexts();
-    }
-
-    /**
-     * Returns {@link AbstractMapping} instances for which there is no
-     * registered HttpContext as desired by the context ID.
-     */
-    Map<String, Set<AbstractMapping>> getOrphanMappings()
-    {
-        return this.contextManager.getOrphanMappings();
-    }
-
-    /**
-     * Returns mappings indexed by there owning OSGi service.
-     */
-    Map<String, AbstractMapping> getMappings()
-    {
-        synchronized (this)
-        {
-            return new HashMap<String, AbstractMapping>(this.mapping);
-        }
-    }
-}
+ }
