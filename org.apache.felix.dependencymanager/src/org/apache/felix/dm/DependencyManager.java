@@ -78,34 +78,33 @@ public class DependencyManager {
     private static ServiceRegistryCache m_serviceRegistryCache;
     private static final Set<WeakReference<DependencyManager>> m_dependencyManagers = new HashSet<>();
     static {
-        String index = System.getProperty(SERVICEREGISTRY_CACHE_INDICES);
-        if (index != null) {
-            Bundle bundle = FrameworkUtil.getBundle(DependencyManager.class);
-            try {
-                if (bundle.getState() != Bundle.ACTIVE) {
-                    bundle.start();
-                }
-                BundleContext bundleContext = bundle.getBundleContext();
-
-                m_serviceRegistryCache = new ServiceRegistryCache(bundleContext);
-                m_serviceRegistryCache.open(); // TODO close it somewhere
-                String[] props = index.split(";");
-                for (int i = 0; i < props.length; i++) {
-                    if (props[i].equals("*aspect*")) {
-                        m_serviceRegistryCache.addFilterIndex(new AspectFilterIndex());
-                    }
-                    else if (props[i].equals("*adapter*")) {
-                        m_serviceRegistryCache.addFilterIndex(new AdapterFilterIndex());
-                    }
-                    else {
-                        m_serviceRegistryCache.addFilterIndex(new MultiPropertyFilterIndex(props[i]));
-                    }
-                }
-            }
-            catch (BundleException e) {
-                // if we cannot start ourselves, we cannot use the indices
-            	e.printStackTrace();
-            }
+        try {
+	    	Bundle bundle = FrameworkUtil.getBundle(DependencyManager.class);
+	        if (bundle != null && bundle.getState() != Bundle.ACTIVE) {
+	            bundle.start();
+	            BundleContext bundleContext = bundle.getBundleContext();
+	            String index = bundleContext.getProperty(SERVICEREGISTRY_CACHE_INDICES);
+	            if (index != null) {
+	            	m_serviceRegistryCache = new ServiceRegistryCache(bundleContext);
+	            	m_serviceRegistryCache.open(); // TODO close it somewhere
+	            	String[] props = index.split(";");
+	            	for (int i = 0; i < props.length; i++) {
+	            		if (props[i].equals("*aspect*")) {
+	            			m_serviceRegistryCache.addFilterIndex(new AspectFilterIndex());
+	            		}
+	            		else if (props[i].equals("*adapter*")) {
+	            			m_serviceRegistryCache.addFilterIndex(new AdapterFilterIndex());
+	            		}
+	            		else {
+	            			m_serviceRegistryCache.addFilterIndex(new MultiPropertyFilterIndex(props[i]));
+	            		}
+	            	}
+	            }
+	        }
+        }
+        catch (BundleException e) {
+        	// if we cannot start ourselves, we cannot use the indices
+        	e.printStackTrace();
         }
     }
 

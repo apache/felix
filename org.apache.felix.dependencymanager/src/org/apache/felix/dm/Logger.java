@@ -66,7 +66,7 @@ public class Logger implements ServiceListener, Log {
     private String m_debugKey;
 
     public Logger(BundleContext context) {
-    	if ("true".equals(System.getProperty(LOG_SINGLE_CONTEXT))) {
+    	if (context != null && "true".equals(context.getProperty(LOG_SINGLE_CONTEXT))) {
     		m_context = FrameworkUtil.getBundle(DependencyManager.class).getBundleContext();
     	} else {
     		m_context = context;

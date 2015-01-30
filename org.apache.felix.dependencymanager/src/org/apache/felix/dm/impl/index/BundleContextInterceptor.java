@@ -37,15 +37,16 @@ import org.osgi.framework.ServiceReference;
 public class BundleContextInterceptor extends BundleContextInterceptorBase {
 	protected static final String INDEX_LOG_TRESHOLD = "org.apache.felix.dm.index.log.treshold";
     private final ServiceRegistryCache m_cache;
-    private final boolean m_perfmon = System.getProperty(INDEX_LOG_TRESHOLD) != null;
+    private final boolean m_perfmon;
 	private Logger m_logger;
 	private long m_threshold;
 
     public BundleContextInterceptor(ServiceRegistryCache cache, BundleContext context) {
         super(context);
         m_cache = cache;
+        m_perfmon = context.getProperty(INDEX_LOG_TRESHOLD) != null;
 		if (m_perfmon) {
-			m_threshold = Long.parseLong(System.getProperty(INDEX_LOG_TRESHOLD));
+			m_threshold = Long.parseLong(context.getProperty(INDEX_LOG_TRESHOLD));
 			m_logger = new Logger(context);
 		}
     }
