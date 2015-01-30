@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2004, 2014). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2004, 2015). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import org.osgi.annotation.versioning.ProviderType;
 /**
  * Defines standard names for Service Component constants.
  * 
- * @author $Id: 93b7c4e0215afc23d3f2dce477cdf4298fd366a4 $
+ * @author $Id: 624eb5610c2127d24ce76f16b3cc146cbcf6db57 $
  */
 @ProviderType
 public interface ComponentConstants {
@@ -123,4 +123,20 @@ public interface ComponentConstants {
 	 * @since 1.1
 	 */
 	public static final int		DEACTIVATION_REASON_BUNDLE_STOPPED			= 6;
+
+	/**
+	 * Capability name for Service Component Runtime.
+	 * 
+	 * <p>
+	 * Used in {@code Provide-Capability} and {@code Require-Capability}
+	 * manifest headers with the {@code osgi.extender} namespace. For example:
+	 * 
+	 * <pre>
+	 * Require-Capability: osgi.extender;
+	 *  filter:="(&amp;(osgi.extender=osgi.component)(version&gt;=1.3)(!(version&gt;=2.0)))"
+	 * </pre>
+	 * 
+	 * @since 1.3
+	 */
+	public static final String	COMPONENT_CAPABILITY_NAME					= "osgi.component";
 }

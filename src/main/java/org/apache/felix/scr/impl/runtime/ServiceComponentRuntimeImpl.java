@@ -310,19 +310,12 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
 			dto.bind = r.getBind();
 			dto.cardinality = r.getCardinality();
 			dto.field = r.getField();
+			dto.fieldOption = r.getFieldOption();
 			dto.interfaceName = r.getInterface();
 			dto.name = r.getName();
 			dto.policy = r.getPolicy();
 			dto.policyOption = r.getPolicyOption();
 			dto.scope = r.getScope().name();
-			if ( r.getField() != null )
-			{
-		        dto.strategy = r.isReplace() ? ReferenceDTO.STRATEGY_FIELD_REPLACE : ReferenceDTO.STRATEGY_FIELD_UPDATE;
-			}
-			else
-			{
-			    dto.strategy = r.getBind() != null ? ReferenceDTO.STRATEGY_METHOD : ReferenceDTO.STRATEGY_LOOKUP;
-			}
 			dto.target = r.getTarget();
 			dto.unbind = r.getUnbind();
 			dto.updated = r.getUpdated();
