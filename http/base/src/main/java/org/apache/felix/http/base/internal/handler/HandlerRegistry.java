@@ -122,6 +122,16 @@ public final class HandlerRegistry
             }
         }
 
+        // TODO - we should already check for the context when building up the result set
+        final Iterator<FilterHandler> i = result.iterator();
+        while ( i.hasNext() )
+        {
+            final FilterHandler handler = i.next();
+            if ( handler.getContextServiceId() != servletHandler.getContextServiceId() )
+            {
+                i.remove();
+            }
+        }
         return result.toArray(new FilterHandler[result.size()]);
     }
 

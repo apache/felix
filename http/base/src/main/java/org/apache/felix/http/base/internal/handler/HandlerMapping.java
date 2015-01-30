@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
  * Represents a Map-like structure that can map path-patterns to servlet/filter handlers, allowing
  * for easy access to those handlers, based on the match rules defined in section 12.1 of Servlet
  * 3.0 specification.
- * 
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class HandlerMapping<V extends AbstractHandler>
@@ -48,12 +48,13 @@ public class HandlerMapping<V extends AbstractHandler>
      * <li>lastly all wildcard extension matches.</li>
      * </ol>
      * <p>
-     * Equal matches will first be sorted on length in descending order (longest patterns first), 
+     * Equal matches will first be sorted on length in descending order (longest patterns first),
      * and in case of equal lengths, they are sorted in natural (ascending) order.
      * </p>
      */
     static class PatternComparator implements Comparator<Pattern>
     {
+        @Override
         public int compare(Pattern p1, Pattern p2)
         {
             String ps1 = p1.pattern();
@@ -135,7 +136,7 @@ public class HandlerMapping<V extends AbstractHandler>
 
     /**
      * Creates a new {@link HandlerMapping} instance for the given elements.
-     * 
+     *
      * @param elements the elements to map, cannot be <code>null</code>.
      */
     public HandlerMapping(Collection<V> elements)
@@ -180,7 +181,7 @@ public class HandlerMapping<V extends AbstractHandler>
 
     /**
      * Returns all mapped elements.
-     * 
+     *
      * @return a collection of mapped elements, never <code>null</code>.
      */
     public Collection<V> getAllElements()
@@ -190,7 +191,7 @@ public class HandlerMapping<V extends AbstractHandler>
 
     /**
      * Returns all matching handlers for the given path.
-     * 
+     *
      * @param path the path that should match, cannot be <code>null</code>.
      * @return a {@link Collection} of all matching handlers, never <code>null</code>.
      */
@@ -208,7 +209,7 @@ public class HandlerMapping<V extends AbstractHandler>
      * <li>if the last segment in the URL path contains an extension (e.g. .jsp), the servlet container will try to match a servlet that
      *     handles requests for the extension. An extension is defined as the part of the last segment after the last '.' character.</li>
      * </ul>
-     * 
+     *
      * @param path the path that should match, cannot be <code>null</code>.
      * @return the best matching handler for the given path, or <code>null</code> in case no handler matched.
      */
@@ -243,7 +244,7 @@ public class HandlerMapping<V extends AbstractHandler>
 
     /**
      * Provides information on whether there are elements mapped or not.
-     * 
+     *
      * @return <code>true</code> if there is at least one element mapped, <code>false</code> otherwise.
      */
     public boolean hasElements()
@@ -253,10 +254,10 @@ public class HandlerMapping<V extends AbstractHandler>
 
     /**
      * Performs the actual matching, yielding a list of either the first or all matching patterns.
-     * 
-     * @param path the path to match, can be <code>null</code> in which case an empty string is 
+     *
+     * @param path the path to match, can be <code>null</code> in which case an empty string is
      *        used;
-     * @param firstOnly <code>true</code> if only the first matching pattern should be returned, 
+     * @param firstOnly <code>true</code> if only the first matching pattern should be returned,
      *        <code>false</code> if all matching patterns should be returned.
      * @return a list with matching elements, never <code>null</code>.
      */
@@ -309,7 +310,7 @@ public class HandlerMapping<V extends AbstractHandler>
                 }
             }
         }
-        
+
         // Make sure the results are properly sorted...
         Collections.sort(result);
 

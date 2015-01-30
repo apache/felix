@@ -116,7 +116,7 @@ public final class HttpServiceImpl implements ExtHttpService
             // TODO create failure DTO if null
         }
 
-        FilterHandler handler = new FilterHandler(httpContext, filter, filterInfo);
+        FilterHandler handler = new FilterHandler(contextInfo, httpContext, filter, filterInfo);
         try {
             this.handlerRegistry.addFilter(handler);
         } catch (ServletException e) {
