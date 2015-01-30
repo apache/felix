@@ -31,11 +31,11 @@ import org.apache.felix.dm.ComponentDependencyDeclaration;
 import org.apache.felix.dm.ComponentStateListener;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.Logger;
 import org.apache.felix.dm.context.ComponentContext;
 import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
 import org.apache.felix.dm.context.EventType;
-import org.apache.felix.dm.context.Log;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -343,7 +343,7 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     }
 
     @Override
-    public Log getLogger() {
+    public Logger getLogger() {
         return m_component.getLogger();
     }
 }

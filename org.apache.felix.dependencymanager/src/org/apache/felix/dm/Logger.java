@@ -21,7 +21,6 @@ package org.apache.felix.dm;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import org.apache.felix.dm.context.Log;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.FrameworkUtil;
@@ -48,7 +47,7 @@ import org.osgi.service.log.LogService;
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class Logger implements ServiceListener, Log {
+public class Logger implements ServiceListener {
 	private static final String LOG_SINGLE_CONTEXT = "org.apache.felix.dependencymanager.singleContextLog";
     public static final int LOG_ERROR = 1;
     public static final int LOG_WARNING = 2;
@@ -267,54 +266,44 @@ public class Logger implements ServiceListener, Log {
         return m_debugKey;
     }
 
-    // --------------- org.apache.felix.dm.context.Log interface --------------------------------------------
+    // --------------- Convenient helper log methods --------------------------------------------
     
-    @Override
     public void err(String format, Object... params) {
         log(LogService.LOG_ERROR, String.format(format, params));        
     }
 
-    @Override
     public void err(String format, Throwable err, Object... params) {
         log(LogService.LOG_ERROR, String.format(format, params), err);        
     }
 
-    @Override
     public void warn(String format, Object... params) {
         log(LogService.LOG_WARNING, String.format(format, params));        
     }
 
-    @Override
     public void warn(String format, Throwable err, Object... params) {
         log(LogService.LOG_WARNING, String.format(format, params), err);        
     }
 
-    @Override
     public boolean info() {
         return m_enabledLevel >= LogService.LOG_INFO;
     }
 
-    @Override
     public void info(String format, Object... params) {
         log(LogService.LOG_INFO, String.format(format, params));        
     }
 
-    @Override
     public void info(String format, Throwable err, Object... params) {
         log(LogService.LOG_INFO, String.format(format, params), err);        
     }
 
-    @Override
     public boolean debug() {
         return m_enabledLevel >= LogService.LOG_DEBUG;
     }
 
-    @Override
     public void debug(String format, Object... params) {
         log(LogService.LOG_DEBUG, String.format(format, params));        
     }
 
-    @Override
     public void debug(String format, Throwable err, Object... params) {
         log(LogService.LOG_DEBUG, String.format(format, params), err);        
     }

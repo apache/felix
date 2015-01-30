@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 
 import org.apache.felix.dm.Component;
+import org.apache.felix.dm.Logger;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
@@ -36,7 +37,7 @@ public interface ComponentContext extends Component {
     /**
      * Returns the logger which can be used by the DependencyManager Dependencies implementations.
      */
-    public Log getLogger();
+    public Logger getLogger();
     
     /**
      * Returns the Component's bundle context
