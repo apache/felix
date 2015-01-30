@@ -16,16 +16,23 @@
  */
 package org.apache.felix.http.base.internal.whiteboard.tracker;
 
-import org.apache.felix.http.base.internal.whiteboard.ExtenderManager;
+import org.apache.felix.http.base.internal.logger.SystemLogger;
+import org.apache.felix.http.base.internal.runtime.ContextInfo;
+import org.apache.felix.http.base.internal.whiteboard.ServletContextHelperManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.context.ServletContextHelper;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
-public final class ServletContextHelperTracker extends AbstractTracker<ServletContextHelper>
+/**
+ * Tracks all {@link ServletContextHelper} services.
+ * Only services with the required properties are tracker, services missing these
+ * properties are ignored.
+ */
+public final class ServletContextHelperTracker extends AbstractReferenceTracker<ServletContextHelper>
 {
-    private final ExtenderManager manager;
+    private final ServletContextHelperManager contextManager;
 
     private static org.osgi.framework.Filter createFilter(final BundleContext btx)
     {
@@ -43,28 +50,34 @@ public final class ServletContextHelperTracker extends AbstractTracker<ServletCo
         return null; // we never get here - and if we get an NPE which is fine
     }
 
-    public ServletContextHelperTracker(final BundleContext context, ExtenderManager manager)
+    public ServletContextHelperTracker(final BundleContext context, final ServletContextHelperManager manager)
     {
         super(context, createFilter(context));
-        this.manager = manager;
+        this.contextManager = manager;
     }
 
     @Override
-    protected void added(ServletContextHelper service, ServiceReference ref)
+    protected void added(final ServiceReference<ServletContextHelper> ref)
     {
-        this.manager.add(service, ref);
+        final ContextInfo info = new ContextInfo(ref);
+
+        if ( info.isValid() )
+        {
+            this.contextManager.addContextHelper(info);
+        }
+        else
+        {
+            SystemLogger.debug("Ignoring ServletContextHelper service " + ref);
+        }
     }
 
     @Override
-    protected void modified(ServletContextHelper service, ServiceReference ref)
+    protected void removed(final ServiceReference<ServletContextHelper> ref)
     {
-        removed(service, ref);
-        added(service, ref);
-    }
-
-    @Override
-    protected void removed(ServletContextHelper service, ServiceReference ref)
-    {
-        this.manager.remove(service);
+        final ContextInfo info = new ContextInfo(ref);
+        if ( info.isValid() )
+        {
+            this.contextManager.removeContextHelper(info);
+        }
     }
 }

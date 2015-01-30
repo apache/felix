@@ -23,11 +23,6 @@ import org.osgi.util.tracker.ServiceTracker;
 
 public abstract class AbstractTracker<T> extends ServiceTracker
 {
-    public AbstractTracker(final BundleContext context, final Class<T> clz)
-    {
-        super(context, clz.getName(), null);
-    }
-
     public AbstractTracker(final BundleContext context, final Filter filter)
     {
         super(context, filter, null);
