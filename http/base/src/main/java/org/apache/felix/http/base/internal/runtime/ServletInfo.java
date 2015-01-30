@@ -88,6 +88,24 @@ public final class ServletInfo extends AbstractInfo<Servlet>
         this.servlet = null;
     }
 
+    @SuppressWarnings("unchecked")
+    public ServletInfo(final ResourceInfo resource, final Servlet servlet)
+    {
+        super(getRef(resource.getServiceReference()));
+        this.name = null;
+        this.patterns = resource.getPatterns();
+        this.errorPage = null;
+        this.asyncSupported = false;
+        this.initParams = null;
+        this.context = null;
+        this.servlet = servlet;
+    }
+
+    private static ServiceReference getRef(final ServiceReference ref)
+    {
+        return ref;
+    }
+
     /**
      * Constructor for Http Service
      */

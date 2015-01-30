@@ -35,7 +35,6 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.http.NamespaceException;
 import org.osgi.service.http.context.ServletContextHelper;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
@@ -250,24 +249,12 @@ public final class ServletContextHelperManager
     private void registerResource(final ResourceInfo resourceInfo, final ContextHolder holder)
     {
         final ServletContextHelper helper = holder.getContext(resourceInfo.getServiceReference().getBundle());
-        // TODO - use servlet context helper and move registration to http service
-        for(final String alias : resourceInfo.getPatterns())
-        {
-            try {
-                this.httpService.registerResources(alias, resourceInfo.getPrefix(), null);
-            } catch (NamespaceException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
+        this.httpService.registerResource(helper, holder.getInfo(), resourceInfo);
     }
 
     private void unregisterResource(final ResourceInfo resourceInfo, final ContextHolder holder)
     {
-        for(final String alias : resourceInfo.getPatterns())
-        {
-            this.httpService.unregister(alias);
-        }
+        this.httpService.unregisterResource(holder.getInfo(), resourceInfo);
     }
 
     /**
