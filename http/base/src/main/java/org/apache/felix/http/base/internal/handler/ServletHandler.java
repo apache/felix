@@ -235,29 +235,29 @@ public final class ServletHandler extends AbstractHandler implements Comparable<
         }
     }
 
+    private final ServletInfo servletInfo;
+
     private final Servlet servlet;
-    private final Pattern[] patterns;
+
+    private final Pattern pattern;
 
     private final String alias;
 
     public ServletHandler(final ExtServletContext context,
-            final ServletInfo servletInfo)
+                          final ServletInfo servletInfo,
+                          final Servlet servlet,
+                          final String alias)
     {
         super(context, servletInfo.getInitParams(), servletInfo.getName());
-        this.servlet = servletInfo.getServlet();
-        this.patterns = new Pattern[servletInfo.getPatterns().length];
-        for(int i=0; i<servletInfo.getPatterns().length;i++)
-        {
-            this.patterns[i] = Pattern.compile(servletInfo.getPatterns()[i].replace(".", "\\.").replace("*", ".*"));
-        }
-        // TODO - currently we just provide one
-        this.alias = servletInfo.getPatterns()[0];
+        this.servlet = servlet;
+        this.pattern = Pattern.compile(alias.replace(".", "\\.").replace("*", ".*"));
+        this.alias = alias;
+        this.servletInfo = servletInfo;
     }
 
     @Override
     public int compareTo(ServletHandler other)
     {
-        // TODO - currently we just compare based on the first one
         int result = other.alias.length() - this.alias.length();
         if ( result == 0 )
         {
@@ -342,8 +342,12 @@ public final class ServletHandler extends AbstractHandler implements Comparable<
         {
             return true;
         }
-        // TODO only first pattern is used
-        return this.patterns[0].matcher(uri).matches();
+        return this.pattern.matcher(uri).matches();
+    }
+
+    public ServletInfo getServletInfo()
+    {
+        return this.servletInfo;
     }
 
     final void doHandle(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException

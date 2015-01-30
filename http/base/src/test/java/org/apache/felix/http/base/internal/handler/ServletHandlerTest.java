@@ -231,6 +231,6 @@ public class ServletHandlerTest extends AbstractHandlerTest
     private ServletHandler createHandler(String alias)
     {
         final ServletInfo info = new ServletInfo(null, alias, 0, null, this.servlet, null);
-        return new ServletHandler(this.context, info);
+        return new ServletHandler(this.context, info, info.getServlet(), info.getPatterns()[0]);
     }
 }
