@@ -29,7 +29,7 @@ public class HttpContextBridge extends ServletContextHelper implements HttpConte
 
     private final ServletContextHelper delegatee;
 
-    HttpContextBridge(final ServletContextHelper delegatee)
+    public HttpContextBridge(final ServletContextHelper delegatee)
     {
         this.delegatee = delegatee;
     }

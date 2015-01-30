@@ -39,9 +39,11 @@ import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.whiteboard.HttpContextBridge;
 import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.NamespaceException;
+import org.osgi.service.http.context.ServletContextHelper;
 
 public final class HttpServiceImpl implements ExtHttpService
 {
@@ -187,17 +189,10 @@ public final class HttpServiceImpl implements ExtHttpService
     }
 
     /**
-     * TODO As the servlet can be registered with multiple patterns
-     *      we shouldn't pass the servlet object around in order to
-     *      be able to get different instances (prototype scope).
-     *      Or we do the splitting into single pattern registrations
-     *      already before calling registerServlet()
-     * @param servlet
-     * @param servletInfo
-     * @throws ServletException
-     * @throws NamespaceException
      */
-    public void registerServlet(final ServletInfo servletInfo)
+    public void registerServlet(final ServletContextHelper context,
+    		final String prefix,
+    		final ServletInfo servletInfo)
     {
         if (servletInfo == null)
         {
@@ -208,6 +203,15 @@ public final class HttpServiceImpl implements ExtHttpService
             throw new IllegalArgumentException("ServletInfo must at least have one pattern or error page!");
         }
 
+        final ExtServletContext httpContext;
+        if ( context != null )
+        {
+        	httpContext = getServletContext(new HttpContextBridge(context));
+        }
+        else
+        {
+        	httpContext = getServletContext(servletInfo.getContext());
+        }
         for(final String alias : servletInfo.getPatterns())
         {
             // create a handler for each alias
@@ -217,10 +221,11 @@ public final class HttpServiceImpl implements ExtHttpService
                 servlet = this.bundle.getBundleContext().getServiceObjects(servletInfo.getServiceReference()).getService();
                 // TODO - handle null
             }
-            final ServletHandler handler = new ServletHandler(getServletContext(servletInfo.getContext()),
+            final String pattern = (prefix == null ? alias : prefix + alias);
+            final ServletHandler handler = new ServletHandler(httpContext,
                     servletInfo,
                     servlet,
-                    alias);
+                    pattern);
             try {
                 this.handlerRegistry.addServlet(handler);
             } catch (ServletException e) {
@@ -292,7 +297,7 @@ public final class HttpServiceImpl implements ExtHttpService
 
         final ServletInfo info = new ServletInfo(null, alias, 0, paramMap, servlet, context);
 
-        this.registerServlet(info);
+        this.registerServlet(null, null, info);
     }
 
     @Override
