@@ -18,48 +18,102 @@ package org.apache.felix.http.base.internal.whiteboard;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.http.base.internal.runtime.AbstractInfo;
 import org.apache.felix.http.base.internal.runtime.ContextInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.service.HttpServiceImpl;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.http.context.ServletContextHelper;
+import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 public final class ServletContextHelperManager
 {
-    private final Map<String, List<ContextHolder>> nameMap = new HashMap<String, List<ContextHolder>>();
+    /** A map containing all servlet context registrations. Mapped by context name */
+    private final Map<String, List<ContextHolder>> contextMap = new HashMap<String, List<ContextHolder>>();
+
+    /** A map with all servlet registrations, mapped by servlet info. */
+    private final Map<ServletInfo, List<ContextHolder>> servletList = new HashMap<ServletInfo, List<ContextHolder>>();
 
     private final HttpServiceImpl httpService;
 
+    private final ServiceRegistration<ServletContextHelper> defaultContextRegistration;
     /**
      * Create a new servlet context helper manager
      * and the default context
      */
-    public ServletContextHelperManager(final HttpServiceImpl httpService)
+    public ServletContextHelperManager(final BundleContext bundleContext, final HttpServiceImpl httpService)
     {
         this.httpService = httpService;
 
-        // create default context
-        final ContextInfo info = new ContextInfo();
-        this.addContextHelper(info);
+        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, HttpWhiteboardConstants.HTTP_WHITEBOARD_DEFAULT_CONTEXT_NAME);
+        props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, "/");
+
+        this.defaultContextRegistration = bundleContext.registerService(ServletContextHelper.class,
+                new ServiceFactory<ServletContextHelper>() {
+
+                    @Override
+                    public ServletContextHelper getService(
+                            final Bundle bundle,
+                            final ServiceRegistration<ServletContextHelper> registration) {
+                        return new ServletContextHelper(bundle) {
+                        };
+                    }
+
+                    @Override
+                    public void ungetService(
+                            final Bundle bundle,
+                            final ServiceRegistration<ServletContextHelper> registration,
+                            final ServletContextHelper service) {
+                        // nothing to do
+                    }
+                },
+                props);
     }
 
     public void close()
     {
-        // TODO Auto-generated method stub
+        // TODO cleanup
 
+        this.defaultContextRegistration.unregister();
     }
 
     private void activate(final ContextHolder holder)
     {
-        // TODO
+        for(final Map.Entry<ServletInfo, List<ContextHolder>> entry : this.servletList.entrySet())
+        {
+            if ( entry.getKey().getContextSelectionFilter().match(holder.getInfo().getServiceReference()) )
+            {
+                entry.getValue().add(holder);
+                this.httpService.registerServlet(entry.getKey());
+            }
+        }
     }
 
     private void deactivate(final ContextHolder holder)
     {
-     // TODO
+        final Iterator<Map.Entry<ServletInfo, List<ContextHolder>>> i = this.servletList.entrySet().iterator();
+        while ( i.hasNext() )
+        {
+            final Map.Entry<ServletInfo, List<ContextHolder>> entry = i.next();
+            if ( entry.getValue().remove(holder) )
+            {
+                this.httpService.unregisterServlet(entry.getKey());
+                if ( entry.getValue().isEmpty() ) {
+                    i.remove();
+                }
+            }
+        }
     }
 
     /**
@@ -68,13 +122,13 @@ public final class ServletContextHelperManager
     public void addContextHelper(final ContextInfo info)
     {
         final ContextHolder holder = new ContextHolder(info);
-        synchronized ( this.nameMap )
+        synchronized ( this.contextMap )
         {
-            List<ContextHolder> holderList = this.nameMap.get(info.getName());
+            List<ContextHolder> holderList = this.contextMap.get(info.getName());
             if ( holderList == null )
             {
                 holderList = new ArrayList<ContextHolder>();
-                this.nameMap.put(info.getName(), holderList);
+                this.contextMap.put(info.getName(), holderList);
             }
             holderList.add(holder);
             Collections.sort(holderList);
@@ -96,9 +150,9 @@ public final class ServletContextHelperManager
      */
     public void removeContextHelper(final ContextInfo info)
     {
-        synchronized ( this.nameMap )
+        synchronized ( this.contextMap )
         {
-            final List<ContextHolder> holderList = this.nameMap.get(info.getName());
+            final List<ContextHolder> holderList = this.contextMap.get(info.getName());
             if ( holderList != null )
             {
                 final Iterator<ContextHolder> i = holderList.iterator();
@@ -122,7 +176,7 @@ public final class ServletContextHelperManager
                 }
                 if ( holderList.isEmpty() )
                 {
-                    this.nameMap.remove(info.getName());
+                    this.contextMap.remove(info.getName());
                 }
                 else if ( activateNext )
                 {
@@ -132,16 +186,58 @@ public final class ServletContextHelperManager
         }
     }
 
+    private List<ContextHolder> getMatchingContexts(final AbstractInfo<?> info)
+    {
+        final List<ContextHolder> result = new ArrayList<ContextHolder>();
+        for(final List<ContextHolder> holders : this.contextMap.values()) {
+            final ContextHolder h = holders.get(0);
+            if ( info.getContextSelectionFilter().match(h.getInfo().getServiceReference()) )
+            {
+                result.add(h);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Add a new servlet.
+     * @param servletInfo The servlet info
+     */
     public void addServlet(final ServletInfo servletInfo)
     {
-        this.httpService.registerServlet(servletInfo);
+        synchronized ( this.contextMap )
+        {
+            final List<ContextHolder> holderList = this.getMatchingContexts(servletInfo);
+            this.servletList.put(servletInfo, holderList);
+            for(final ContextHolder h : holderList)
+            {
+                this.httpService.registerServlet(servletInfo);
+            }
+        }
     }
 
+    /**
+     * Remove a servlet
+     * @param servletInfo The servlet info
+     */
     public void removeServlet(final ServletInfo servletInfo)
     {
-        this.httpService.unregisterServlet(servletInfo);
+        synchronized ( this.contextMap )
+        {
+            final List<ContextHolder> holderList = this.servletList.remove(servletInfo);
+            if ( holderList != null )
+            {
+                for(final ContextHolder h : holderList)
+                {
+                    this.httpService.unregisterServlet(servletInfo);
+                }
+            }
+        }
     }
 
+    /**
+     * Hold information about a context.
+     */
     private final static class ContextHolder implements Comparable<ContextHolder>
     {
         private final ContextInfo info;

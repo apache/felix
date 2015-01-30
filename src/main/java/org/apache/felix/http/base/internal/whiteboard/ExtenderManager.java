@@ -65,7 +65,7 @@ public final class ExtenderManager
     public ExtenderManager(final HttpServiceImpl httpService, final BundleContext bundleContext)
     {
         this.mapping = new HashMap<String, AbstractMapping>();
-        this.contextManager = new ServletContextHelperManager(httpService);
+        this.contextManager = new ServletContextHelperManager(bundleContext, httpService);
         this.httpService = httpService;
         addTracker(new FilterTracker(bundleContext, this));
         addTracker(new ServletTracker(bundleContext, this.contextManager));

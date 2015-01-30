@@ -37,20 +37,11 @@ public final class ContextInfo extends AbstractInfo<ServletContextHelper> {
         this.path = this.getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH);
     }
 
-    /**
-     * Create an info object for the default context.
-     */
-    public ContextInfo()
-    {
-        super(0, Long.MIN_VALUE);
-        this.name = HttpWhiteboardConstants.HTTP_WHITEBOARD_DEFAULT_CONTEXT_NAME;
-        this.path = "/";
-    }
-
+    @Override
     public boolean isValid()
     {
         // TODO - check if name and path are valid values
-        return !this.isEmpty(this.name) && !this.isEmpty(this.path);
+        return super.isValid() && !this.isEmpty(this.name) && !this.isEmpty(this.path);
     }
 
     public String getName()

@@ -108,9 +108,10 @@ public final class ServletInfo extends AbstractInfo<Servlet>
         this.context = context;
     }
 
+    @Override
     public boolean isValid()
     {
-        return  !isEmpty(this.patterns);
+        return super.isValid() && !isEmpty(this.patterns);
     }
 
     public String getName()
