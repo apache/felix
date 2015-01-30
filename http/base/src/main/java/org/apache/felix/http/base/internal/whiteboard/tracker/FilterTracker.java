@@ -18,15 +18,17 @@ package org.apache.felix.http.base.internal.whiteboard.tracker;
 
 import javax.servlet.Filter;
 
-import org.apache.felix.http.base.internal.whiteboard.ExtenderManager;
+import org.apache.felix.http.base.internal.logger.SystemLogger;
+import org.apache.felix.http.base.internal.runtime.FilterInfo;
+import org.apache.felix.http.base.internal.whiteboard.ServletContextHelperManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
-public final class FilterTracker extends AbstractTracker<Filter>
+public final class FilterTracker extends AbstractReferenceTracker<Filter>
 {
-    private final ExtenderManager manager;
+    private final ServletContextHelperManager contextManager;
 
     private static org.osgi.framework.Filter createFilter(final BundleContext btx)
     {
@@ -45,28 +47,35 @@ public final class FilterTracker extends AbstractTracker<Filter>
         return null; // we never get here - and if we get an NPE which is fine
     }
 
-    public FilterTracker(BundleContext context, ExtenderManager manager)
+    public FilterTracker(final BundleContext context, final ServletContextHelperManager manager)
     {
         super(context, createFilter(context));
-        this.manager = manager;
+        this.contextManager = manager;
     }
 
     @Override
-    protected void added(Filter service, ServiceReference ref)
+    protected void added(final ServiceReference<Filter> ref)
     {
-        this.manager.add(service, ref);
+        final FilterInfo info = new FilterInfo(ref);
+
+        if ( info.isValid() )
+        {
+            this.contextManager.addFilter(info);
+        }
+        else
+        {
+            SystemLogger.debug("Ignoring Filter service " + ref);
+        }
     }
 
     @Override
-    protected void modified(Filter service, ServiceReference ref)
+    protected void removed(final ServiceReference<Filter> ref)
     {
-        removed(service, ref);
-        added(service, ref);
-    }
+        final FilterInfo info = new FilterInfo(ref);
 
-    @Override
-    protected void removed(Filter service, ServiceReference ref)
-    {
-        this.manager.removeFilter(service, ref);
+        if ( info.isValid() )
+        {
+            this.contextManager.removeFilter(info);
+        }
     }
 }

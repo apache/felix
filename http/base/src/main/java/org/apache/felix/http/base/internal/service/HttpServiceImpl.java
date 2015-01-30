@@ -21,8 +21,6 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
 
 import javax.servlet.Filter;
 import javax.servlet.Servlet;
@@ -37,6 +35,7 @@ import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.HandlerRegistry;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
+import org.apache.felix.http.base.internal.runtime.ContextInfo;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.whiteboard.HttpContextBridge;
@@ -52,8 +51,6 @@ public final class HttpServiceImpl implements ExtHttpService
     private final HashSet<Servlet> localServlets;
     private final HashSet<Filter> localFilters;
     private final ServletContextManager contextManager;
-
-    private final AtomicLong serviceIdCounter = new AtomicLong(-1);
 
     public HttpServiceImpl(Bundle bundle, ServletContext context, HandlerRegistry handlerRegistry, ServletContextAttributeListener servletAttributeListener, boolean sharedContextAttributes)
     {
@@ -97,36 +94,29 @@ public final class HttpServiceImpl implements ExtHttpService
     }
 
     /**
-     * TODO As the filter can be registered with multiple patterns
-     *      we shouldn't pass the filter object around in order to
-     *      be able to get different instances (prototype scope).
-     *      Or we do the splitting into single pattern registrations
-     *      already before calling registerFilter()
-     * @param servlet
-     * @param servletInfo
-     * @throws ServletException
-     * @throws NamespaceException
+     * Register a filter
      */
-    public void registerFilter(final Filter filter, final FilterInfo filterInfo)
+    public void registerFilter(final ServletContextHelper context,
+            final ContextInfo contextInfo,
+            final FilterInfo filterInfo)
     {
-        if (filter == null)
+        final ExtServletContext httpContext;
+        if ( context != null )
         {
-            throw new IllegalArgumentException("Filter cannot be null!");
+            httpContext = getServletContext(new HttpContextBridge(context));
         }
-        if (filterInfo == null)
+        else
         {
-            throw new IllegalArgumentException("FilterInfo cannot be null!");
+            httpContext = getServletContext(filterInfo.getContext());
         }
-        if (isEmpty(filterInfo.patterns) && isEmpty(filterInfo.regexs) && isEmpty(filterInfo.servletNames))
+        Filter filter = filterInfo.getFilter();
+        if ( filter == null )
         {
-            throw new IllegalArgumentException("FilterInfo must have at least one pattern or regex, or provide at least one servlet name!");
-        }
-        if (isEmpty(filterInfo.name))
-        {
-            filterInfo.name = filter.getClass().getName();
+            filter = this.bundle.getBundleContext().getServiceObjects(filterInfo.getServiceReference()).getService();
+            // TODO create failure DTO if null
         }
 
-        FilterHandler handler = new FilterHandler(getServletContext(filterInfo.context), filter, filterInfo);
+        FilterHandler handler = new FilterHandler(httpContext, filter, filterInfo);
         try {
             this.handlerRegistry.addFilter(handler);
         } catch (ServletException e) {
@@ -145,10 +135,10 @@ public final class HttpServiceImpl implements ExtHttpService
         {
             throw new IllegalArgumentException("Filter must not be null");
         }
-        final FilterInfo info = new FilterInfo();
+
+        final Map<String, String> paramMap = new HashMap<String, String>();
         if ( initParams != null && initParams.size() > 0 )
         {
-            info.initParams = new HashMap<String, String>();
             Enumeration e = initParams.keys();
             while (e.hasMoreElements())
             {
@@ -157,16 +147,17 @@ public final class HttpServiceImpl implements ExtHttpService
 
                 if ((key instanceof String) && (value instanceof String))
                 {
-                    info.initParams.put((String) key, (String) value);
+                    paramMap.put((String) key, (String) value);
                 }
             }
         }
-        info.patterns = new String[] {pattern};
-        info.context = context;
-        info.ranking = ranking;
-        info.serviceId = serviceIdCounter.getAndDecrement();
 
-        this.registerFilter(filter, info);
+        final FilterInfo info = new FilterInfo(null, pattern, ranking, paramMap, filter, context);
+        if ( !info.isValid() )
+        {
+            throw new ServletException("Invalid registration information for filter.");
+        }
+        this.registerFilter(null, null, info);
     }
 
     @Override
@@ -189,9 +180,11 @@ public final class HttpServiceImpl implements ExtHttpService
     }
 
     /**
+     * Register a servlet with a {@link ServletContextHelper}.
+     * The prefix is the path where the servlet context helper is mounted.
      */
     public void registerServlet(final ServletContextHelper context,
-    		final String prefix,
+    		final ContextInfo contextInfo,
     		final ServletInfo servletInfo)
     {
         if (servletInfo == null)
@@ -212,55 +205,52 @@ public final class HttpServiceImpl implements ExtHttpService
         {
         	httpContext = getServletContext(servletInfo.getContext());
         }
-        for(final String alias : servletInfo.getPatterns())
+        Servlet servlet = servletInfo.getServlet();
+        if ( servlet == null )
         {
-            // create a handler for each alias
-            Servlet servlet = servletInfo.getServlet();
-            if ( servlet == null )
-            {
-                servlet = this.bundle.getBundleContext().getServiceObjects(servletInfo.getServiceReference()).getService();
-                // TODO - handle null
-            }
-            final String pattern = (prefix == null ? alias : prefix + alias);
-            final ServletHandler handler = new ServletHandler(httpContext,
-                    servletInfo,
-                    servlet,
-                    pattern);
-            try {
-                this.handlerRegistry.addServlet(handler);
-            } catch (ServletException e) {
-                // TODO create failure DTO
-            } catch (NamespaceException e) {
-                // TODO create failure DTO
-            }
-            this.localServlets.add(servlet);
+            servlet = this.bundle.getBundleContext().getServiceObjects(servletInfo.getServiceReference()).getService();
+            // TODO create failure DTO if null
         }
+
+        final ServletHandler handler = new ServletHandler(contextInfo,
+                httpContext,
+                servletInfo,
+                servlet);
+        try {
+            this.handlerRegistry.addServlet(contextInfo, handler);
+        } catch (ServletException e) {
+            // TODO create failure DTO
+        } catch (NamespaceException e) {
+            // TODO create failure DTO
+        }
+
+        this.localServlets.add(servlet);
     }
 
-    public void unregisterServlet(final ServletInfo servletInfo)
+    public void unregisterServlet(final ContextInfo contextInfo, final ServletInfo servletInfo)
     {
         if (servletInfo == null)
         {
             throw new IllegalArgumentException("ServletInfo cannot be null!");
         }
-        if ( servletInfo.getPatterns() != null )
+        final Servlet servlet = this.handlerRegistry.removeServlet(contextInfo, servletInfo, true);
+        if ( servlet != null )
         {
-            final Set<Servlet> instances = this.handlerRegistry.removeServlet(servletInfo, true);
-            for(final Servlet servlet : instances)
-            {
-                this.localServlets.remove(servlet);
-            }
+            this.localServlets.remove(servlet);
         }
     }
 
-    public void unregisterFilter(final Filter filter, final FilterInfo filterInfo)
+    public void unregisterFilter(final ContextInfo contextInfo, final FilterInfo filterInfo)
     {
         if (filterInfo == null)
         {
             throw new IllegalArgumentException("FilterInfo cannot be null!");
         }
-        this.handlerRegistry.removeFilter(filter, true);
-        this.localFilters.remove(filter);
+        final Filter instance = this.handlerRegistry.removeFilter(filterInfo, true);
+        if ( instance != null )
+        {
+            this.localFilters.remove(instance);
+        }
     }
 
     /**

@@ -16,157 +16,136 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.List;
+import java.util.Map;
 
+import javax.servlet.DispatcherType;
 import javax.servlet.Filter;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 
+import org.apache.felix.http.base.internal.runtime.ContextInfo;
+import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.osgi.service.http.NamespaceException;
 
 public final class HandlerRegistry
 {
-    private final ConcurrentMap<Filter, FilterHandler> filterMap = new ConcurrentHashMap<Filter, FilterHandler>();
-    private final ConcurrentMap<String, ServletHandler> aliasMap = new ConcurrentHashMap<String, ServletHandler>();
-    private volatile ServletHandler[] servlets;
-    private volatile FilterHandler[] filters;
+    private final Map<Servlet, ServletHandler> servletMap = new HashMap<Servlet, ServletHandler>();
+    private final Map<Filter, FilterHandler> filterMap = new HashMap<Filter, FilterHandler>();
+    private final Map<String, Servlet> servletPatternMap= new HashMap<String, Servlet>();
+    private volatile HandlerMapping<ServletHandler> servletMapping = new HandlerMapping<ServletHandler>();
+    private volatile HandlerMapping<FilterHandler> filterMapping = new HandlerMapping<FilterHandler>();
+    private volatile ErrorsMapping errorsMapping = new ErrorsMapping();
 
-    public HandlerRegistry()
+    public synchronized void addErrorServlet(String errorPage, ServletHandler handler) throws ServletException
     {
-        servlets = new ServletHandler[0];
-        filters = new FilterHandler[0];
+        this.errorsMapping.addErrorServlet(errorPage, handler);
     }
 
-    public ServletHandler[] getServlets()
+    public synchronized void addFilter(FilterHandler handler) throws ServletException
     {
-        return servlets;
-    }
-
-    public FilterHandler[] getFilters()
-    {
-        return filters;
-    }
-
-    public void addServlet(final ServletHandler handler)
-    throws ServletException, NamespaceException
-    {
-        handler.init();
-
-        if (aliasMap.putIfAbsent(handler.getAlias(), handler) != null)
+        if (this.filterMap.containsKey(handler.getFilter()))
         {
-            handler.destroy();
-            throw new NamespaceException("Servlet with alias '" + handler.getAlias() + "' already registered");
-        }
-
-        updateServletArray();
-    }
-
-    public void addFilter(FilterHandler handler) throws ServletException
-    {
-        handler.init();
-
-        // there is a window of opportunity that the servlet/alias was registered between the
-        // previous check and this one, so we have to atomically add if absent here.
-        if (filterMap.putIfAbsent(handler.getFilter(), handler) != null)
-        {
-            // Do not destroy the filter as the same instance was already registered
             throw new ServletException("Filter instance already registered");
         }
 
-        updateFilterArray();
-    }
+        handler.init();
+        this.filterMap.put(handler.getFilter(), handler);
 
-    public Set<Servlet> removeServlet(final ServletInfo servletInfo, final boolean destroy)
-    {
-        final Set<Servlet> servletInstances = new HashSet<Servlet>();
-        boolean update = false;
-        for (Iterator<ServletHandler> it = aliasMap.values().iterator(); it.hasNext(); )
-        {
-            final ServletHandler handler = it.next();
-            if (handler.getServletInfo().compareTo(servletInfo) == 0 ) {
-                it.remove();
-                servletInstances.add(handler.getServlet());
-                if (destroy)
-                {
-                    handler.destroy();
-                }
-                update = true;
-            }
-        }
-        if ( update )
-        {
-            updateServletArray();
-        }
-
-        return servletInstances;
+        updateFilterMapping();
     }
 
     /**
-     * Support for old Http Service registrations
-     * @param servlet
-     * @param destroy
+     * Add a new servlet.
      */
-    public void removeServlet(final Servlet servlet, final boolean destroy)
+    public synchronized void addServlet(ContextInfo contextInfo, ServletHandler handler) throws ServletException, NamespaceException
     {
-        boolean update = false;
-        for (Iterator<ServletHandler> it = aliasMap.values().iterator(); it.hasNext(); )
+        if (this.servletMap.containsKey(handler.getServlet()))
         {
-            ServletHandler handler = it.next();
-            if (handler.getServlet() == servlet ) {
-                it.remove();
-                if (destroy)
-                {
-                    handler.destroy();
-                }
-                update = true;
-            }
+            // Do not destroy the servlet as the same instance was already registered
+            throw new ServletException("Servlet instance " + handler.getName() + " already registered");
         }
-        if ( update )
-        {
-            updateServletArray();
-        }
-    }
 
-    public void removeFilter(Filter filter, final boolean destroy)
-    {
-        FilterHandler handler = filterMap.remove(filter);
-        if (handler != null)
+        // Can be null in case of error-handling servlets...
+        String[] patterns = handler.getServletInfo().getPatterns();
+        int length = patterns == null ? 0 : patterns.length;
+
+        for (int i = 0; i < length; i++)
         {
-            updateFilterArray();
-            if (destroy)
+            String pattern = contextInfo != null ? contextInfo.getFullPath(patterns[i]) : patterns[i];
+            if (this.servletPatternMap.containsKey(pattern))
             {
-                handler.destroy();
+                throw new ServletException("Servlet instance " + handler.getName() + " already registered");
+            }
+            this.servletPatternMap.put(pattern, handler.getServlet());
+        }
+
+        handler.init();
+        this.servletMap.put(handler.getServlet(), handler);
+
+        updateServletMapping();
+    }
+
+    public ErrorsMapping getErrorsMapping()
+    {
+        return this.errorsMapping;
+    }
+
+    public FilterHandler[] getFilterHandlers(ServletHandler servletHandler, DispatcherType dispatcherType, String requestURI)
+    {
+        // See Servlet 3.0 specification, section 6.2.4...
+        List<FilterHandler> result = new ArrayList<FilterHandler>();
+        result.addAll(this.filterMapping.getAllMatches(requestURI));
+
+        // TODO this is not the most efficient/fastest way of doing this...
+        Iterator<FilterHandler> iter = result.iterator();
+        while (iter.hasNext())
+        {
+            if (!referencesDispatcherType(iter.next(), dispatcherType))
+            {
+                iter.remove();
             }
         }
-    }
 
-    public Servlet getServletByAlias(String alias)
-    {
-        final ServletHandler handler = aliasMap.get(alias);
-        if ( handler != null ) {
-            return handler.getServlet();
+        String servletName = (servletHandler != null) ? servletHandler.getName() : null;
+        // TODO this is not the most efficient/fastest way of doing this...
+        for (FilterHandler filterHandler : this.filterMapping.getAllElements())
+        {
+            if (referencesServletByName(filterHandler, servletName))
+            {
+                result.add(filterHandler);
+            }
         }
-        return null;
+
+        return result.toArray(new FilterHandler[result.size()]);
     }
 
-    public void addErrorServlet(String errorPage, ServletHandler handler) throws ServletException
+    public synchronized Servlet getServletByAlias(String alias)
     {
-        // TODO
+        return this.servletPatternMap.get(alias);
     }
 
-    public void removeAll()
+    public ServletHandler getServletHandlerByName(String name)
     {
-        for (Iterator<ServletHandler> it = aliasMap.values().iterator(); it.hasNext(); )
+        return this.servletMapping.getByName(name);
+    }
+
+    public ServletHandler getServletHander(String requestURI)
+    {
+        return this.servletMapping.getBestMatch(requestURI);
+    }
+
+    public synchronized void removeAll()
+    {
+        for (Iterator<ServletHandler> it = servletMap.values().iterator(); it.hasNext(); )
         {
             ServletHandler handler = it.next();
             it.remove();
-
             handler.destroy();
         }
 
@@ -177,21 +156,127 @@ public final class HandlerRegistry
             handler.destroy();
         }
 
-        updateServletArray();
-        updateFilterArray();
+        this.servletMap.clear();
+        this.filterMap.clear();
+        this.servletPatternMap.clear();
+        this.errorsMapping.clear();
+
+        updateServletMapping();
+        updateFilterMapping();
     }
 
-    private void updateServletArray()
+    public synchronized void removeFilter(Filter filter, final boolean destroy)
     {
-        final ServletHandler[] tmp = aliasMap.values().toArray(new ServletHandler[aliasMap.size()]);
-        Arrays.sort(tmp);
-        servlets = tmp;
+        FilterHandler handler = this.filterMap.remove(filter);
+        if (handler != null)
+        {
+            updateFilterMapping();
+            if (destroy)
+            {
+                handler.destroy();
+            }
+        }
     }
 
-    private void updateFilterArray()
+    public synchronized Filter removeFilter(final FilterInfo filterInfo, final boolean destroy)
     {
-        final FilterHandler[] tmp = filterMap.values().toArray(new FilterHandler[filterMap.size()]);
-        Arrays.sort(tmp);
-        filters = tmp;
+        for(final FilterHandler handler : this.filterMap.values())
+        {
+            if ( handler.getFilterInfo().compareTo(filterInfo) == 0)
+            {
+                this.filterMap.remove(handler.getFilter());
+                updateFilterMapping();
+                if (destroy)
+                {
+                    handler.destroy();
+                }
+                return handler.getFilter();
+            }
+        }
+        return null;
+    }
+
+    public synchronized Servlet removeServlet(final ContextInfo contextInfo, ServletInfo servletInfo, final boolean destroy)
+    {
+        for(final ServletHandler handler : this.servletMap.values())
+        {
+            if ( handler.getServletInfo().compareTo(servletInfo) == 0 )
+            {
+                this.servletMap.remove(handler.getServlet());
+                updateServletMapping();
+
+                // Can be null in case of error-handling servlets...
+                String[] patterns = handler.getServletInfo().getPatterns();
+                int length = patterns == null ? 0 : patterns.length;
+
+                for (int i = 0; i < length; i++)
+                {
+                    this.servletPatternMap.remove(contextInfo.getFullPath(patterns[i]));
+                }
+
+                this.errorsMapping.removeServlet(handler.getServlet());
+
+                if (destroy)
+                {
+                    handler.destroy();
+                }
+                return handler.getServlet();
+            }
+        }
+        return null;
+    }
+
+    public synchronized void removeServlet(Servlet servlet, final boolean destroy)
+    {
+        ServletHandler handler = this.servletMap.remove(servlet);
+        if (handler != null)
+        {
+            updateServletMapping();
+
+            // Can be null in case of error-handling servlets...
+            String[] patterns = handler.getServletInfo().getPatterns();
+            int length = patterns == null ? 0 : patterns.length;
+
+            for (int i = 0; i < length; i++)
+            {
+                this.servletPatternMap.remove(patterns[i]);
+            }
+
+            this.errorsMapping.removeServlet(servlet);
+
+            if (destroy)
+            {
+                handler.destroy();
+            }
+        }
+    }
+
+    private boolean referencesDispatcherType(FilterHandler handler, DispatcherType dispatcherType)
+    {
+        return Arrays.asList(handler.getFilterInfo().getDispatcher()).contains(dispatcherType);
+    }
+
+    private boolean referencesServletByName(FilterHandler handler, String servletName)
+    {
+        if (servletName == null)
+        {
+            return false;
+        }
+        String[] names = handler.getFilterInfo().getServletNames();
+        if (names != null && names.length > 0)
+        {
+            return Arrays.asList(names).contains(servletName);
+        }
+        return false;
+    }
+
+    private void updateFilterMapping()
+    {
+        this.filterMapping = new HandlerMapping<FilterHandler>(this.filterMap.values());
+    }
+
+    private void updateServletMapping()
+    {
+        this.servletMapping = new HandlerMapping<ServletHandler>(this.servletMap.values());
     }
 }

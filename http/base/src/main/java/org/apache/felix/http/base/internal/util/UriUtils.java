@@ -37,6 +37,66 @@ public class UriUtils
     private static final char DOT = '.';
     private static final char SLASH = '/';
 
+    public static String compactPath(String path)
+    {
+        if (path == null)
+        {
+            return null;
+        }
+
+        StringBuilder sb = new StringBuilder();
+
+        int len = path.length();
+        boolean inQuery = false;
+        for (int i = 0; i < len; i++)
+        {
+            char ch = path.charAt(i);
+            if (!inQuery && ch == SLASH && la(path, i + 1) == SLASH)
+            {
+                continue;
+            }
+            if (ch == '?')
+            {
+                inQuery = true;
+            }
+            sb.append(ch);
+        }
+
+        return sb.toString();
+    }
+
+    public static String relativePath(String base, String path)
+    {
+        if (path == null)
+        {
+            return null;
+        }
+        if (base == null)
+        {
+            return path;
+        }
+
+        int len = base.length();
+        if (base.endsWith("/"))
+        {
+            len--;
+        }
+        else if (!base.equals(path))
+        {
+            base = base.concat("/");
+        }
+
+        if (path.startsWith(base))
+        {
+            path = path.substring(len);
+        }
+        if ("".equals(path) || "/".equals(path))
+        {
+            return null;
+        }
+        return path;
+    }
+
     /**
      * Concatenates two paths keeping their respective path-parts into consideration.
      * 

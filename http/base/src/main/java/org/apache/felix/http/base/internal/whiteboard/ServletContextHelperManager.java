@@ -20,16 +20,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.felix.http.base.internal.runtime.AbstractInfo;
 import org.apache.felix.http.base.internal.runtime.ContextInfo;
+import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.service.HttpServiceImpl;
 import org.osgi.framework.Bundle;
@@ -44,13 +42,13 @@ public final class ServletContextHelperManager
     /** A map containing all servlet context registrations. Mapped by context name */
     private final Map<String, List<ContextHolder>> contextMap = new HashMap<String, List<ContextHolder>>();
 
-    /** A map with all servlet registrations, mapped by servlet info. */
-    private final Map<ServletInfo, List<ContextHolder>> servletList = new HashMap<ServletInfo, List<ContextHolder>>();
+    /** A map with all servlet/filter registrations, mapped by abstract info. */
+    private final Map<AbstractInfo<?>, List<ContextHolder>> servicesMap = new HashMap<AbstractInfo<?>, List<ContextHolder>>();
 
     private final HttpServiceImpl httpService;
 
     private final ServiceRegistration<ServletContextHelper> defaultContextRegistration;
-    
+
     /**
      * Create a new servlet context helper manager
      * and the default context
@@ -94,25 +92,39 @@ public final class ServletContextHelperManager
 
     private void activate(final ContextHolder holder)
     {
-        for(final Map.Entry<ServletInfo, List<ContextHolder>> entry : this.servletList.entrySet())
+        for(final Map.Entry<AbstractInfo<?>, List<ContextHolder>> entry : this.servicesMap.entrySet())
         {
             if ( entry.getKey().getContextSelectionFilter().match(holder.getInfo().getServiceReference()) )
             {
                 entry.getValue().add(holder);
-            	this.registerServlet(entry.getKey(), holder);
+                if ( entry.getKey() instanceof ServletInfo )
+                {
+                    this.registerServlet((ServletInfo)entry.getKey(), holder);
+                }
+                else if ( entry.getKey() instanceof FilterInfo )
+                {
+                    this.registerFilter((FilterInfo)entry.getKey(), holder);
+                }
             }
         }
     }
 
     private void deactivate(final ContextHolder holder)
     {
-        final Iterator<Map.Entry<ServletInfo, List<ContextHolder>>> i = this.servletList.entrySet().iterator();
+        final Iterator<Map.Entry<AbstractInfo<?>, List<ContextHolder>>> i = this.servicesMap.entrySet().iterator();
         while ( i.hasNext() )
         {
-            final Map.Entry<ServletInfo, List<ContextHolder>> entry = i.next();
+            final Map.Entry<AbstractInfo<?>, List<ContextHolder>> entry = i.next();
             if ( entry.getValue().remove(holder) )
             {
-                this.unregisterServlet(entry.getKey(), holder);
+                if ( entry.getKey() instanceof ServletInfo )
+                {
+                    this.unregisterServlet((ServletInfo)entry.getKey(), holder);
+                }
+                else if ( entry.getKey() instanceof FilterInfo )
+                {
+                    this.unregisterFilter((FilterInfo)entry.getKey(), holder);
+                }
                 if ( entry.getValue().isEmpty() ) {
                     i.remove();
                 }
@@ -206,13 +218,23 @@ public final class ServletContextHelperManager
     private void registerServlet(final ServletInfo servletInfo, final ContextHolder holder)
     {
     	final ServletContextHelper helper = holder.getContext(servletInfo.getServiceReference().getBundle());
-    	String prefix = holder.getPrefix();
-        this.httpService.registerServlet(helper, prefix, servletInfo);    	
+        this.httpService.registerServlet(helper, holder.getInfo(), servletInfo);
     }
 
     private void unregisterServlet(final ServletInfo servletInfo, final ContextHolder holder)
     {
-        this.httpService.unregisterServlet(servletInfo);    	
+        this.httpService.unregisterServlet(holder.getInfo(), servletInfo);
+    }
+
+    private void registerFilter(final FilterInfo filterInfo, final ContextHolder holder)
+    {
+        final ServletContextHelper helper = holder.getContext(filterInfo.getServiceReference().getBundle());
+        this.httpService.registerFilter(helper, holder.getInfo(), filterInfo);
+    }
+
+    private void unregisterFilter(final FilterInfo filterInfo, final ContextHolder holder)
+    {
+        this.httpService.unregisterFilter(holder.getInfo(), filterInfo);
     }
 
     /**
@@ -224,7 +246,7 @@ public final class ServletContextHelperManager
         synchronized ( this.contextMap )
         {
             final List<ContextHolder> holderList = this.getMatchingContexts(servletInfo);
-            this.servletList.put(servletInfo, holderList);
+            this.servicesMap.put(servletInfo, holderList);
             for(final ContextHolder h : holderList)
             {
             	this.registerServlet(servletInfo, h);
@@ -240,7 +262,7 @@ public final class ServletContextHelperManager
     {
         synchronized ( this.contextMap )
         {
-            final List<ContextHolder> holderList = this.servletList.remove(servletInfo);
+            final List<ContextHolder> holderList = this.servicesMap.remove(servletInfo);
             if ( holderList != null )
             {
                 for(final ContextHolder h : holderList)
@@ -258,19 +280,9 @@ public final class ServletContextHelperManager
     {
         private final ContextInfo info;
 
-        private final String prefix;
-        
         public ContextHolder(final ContextInfo info)
         {
             this.info = info;
-            if ( info.getPath().equals("/") )
-            {
-            	prefix = null;
-            }
-            else
-            {
-            	prefix = info.getPath().substring(0, info.getPath().length() - 1);
-            }
         }
 
         public ContextInfo getInfo()
@@ -278,22 +290,42 @@ public final class ServletContextHelperManager
             return this.info;
         }
 
-        public String getPrefix() 
-        {
-        	return this.prefix;
-        }
-        
         @Override
         public int compareTo(final ContextHolder o)
         {
             return this.info.compareTo(o.info);
         }
-        
-        public ServletContextHelper getContext(final Bundle b) 
+
+        public ServletContextHelper getContext(final Bundle b)
         {
         	// TODO - we should somehow keep track of these objects to later on dispose them
         	return b.getBundleContext().getServiceObjects(this.info.getServiceReference()).getService();
         }
     }
 
+    public void addFilter(final FilterInfo info) {
+        synchronized ( this.contextMap )
+        {
+            final List<ContextHolder> holderList = this.getMatchingContexts(info);
+            this.servicesMap.put(info, holderList);
+            for(final ContextHolder h : holderList)
+            {
+                this.registerFilter(info, h);
+            }
+        }
+    }
+
+    public void removeFilter(final FilterInfo info) {
+        synchronized ( this.contextMap )
+        {
+            final List<ContextHolder> holderList = this.servicesMap.remove(info);
+            if ( holderList != null )
+            {
+                for(final ContextHolder h : holderList)
+                {
+                    this.unregisterFilter(info, h);
+                }
+            }
+        }
+    }
 }

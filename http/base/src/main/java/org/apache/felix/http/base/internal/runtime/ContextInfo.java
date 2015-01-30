@@ -31,10 +31,21 @@ public final class ContextInfo extends AbstractInfo<ServletContextHelper> {
 
     private final String path;
 
+    private final String prefix;
+
     public ContextInfo(final ServiceReference<ServletContextHelper> ref) {
         super(ref);
         this.name = this.getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME);
         this.path = this.getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH);
+        String prefix = null;
+        if ( !isEmpty(this.path) )
+        {
+            if ( !this.path.equals("/") && this.path.length() > 1 )
+            {
+                prefix = this.path.substring(0, this.path.length() - 1);
+            }
+        }
+        this.prefix = prefix;
     }
 
     @Override
@@ -52,5 +63,19 @@ public final class ContextInfo extends AbstractInfo<ServletContextHelper> {
     public String getPath()
     {
         return this.path;
+    }
+
+    public String getPrefix()
+    {
+        return this.prefix;
+    }
+
+    public String getFullPath(final String path)
+    {
+        if ( this.prefix == null )
+        {
+            return path;
+        }
+        return this.prefix.concat(path);
     }
 }

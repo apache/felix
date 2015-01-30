@@ -20,6 +20,8 @@ import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import javax.servlet.Filter;
@@ -30,32 +32,33 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
+import org.apache.felix.http.base.internal.util.PatternUtil;
 
-public final class FilterHandler extends AbstractHandler implements Comparable<FilterHandler>
+public final class FilterHandler extends AbstractHandler<FilterHandler>
 {
     private final Filter filter;
     private final FilterInfo filterInfo;
+    private final Pattern[] patterns;
 
     public FilterHandler(ExtServletContext context, Filter filter, FilterInfo filterInfo)
     {
-        super(context, filterInfo.initParams, filterInfo.name);
+        super(context, filterInfo.getInitParams(), filterInfo.getName());
         this.filter = filter;
         this.filterInfo = filterInfo;
+        // Compose a single array of all patterns & regexs the filter must represent...
+        String[] patterns = getFilterPatterns(filterInfo);
+
+        this.patterns = new Pattern[patterns.length];
+        for (int i = 0; i < patterns.length; i++)
+        {
+            this.patterns[i] = Pattern.compile(patterns[i]);
+        }
     }
 
     @Override
     public int compareTo(FilterHandler other)
     {
-        if (other.filterInfo.ranking == this.filterInfo.ranking)
-        {
-            if (other.filterInfo.serviceId == this.filterInfo.serviceId)
-            {
-                return 0;
-            }
-            return other.filterInfo.serviceId > this.filterInfo.serviceId ? -1 : 1;
-        }
-
-        return (other.filterInfo.ranking > this.filterInfo.ranking) ? 1 : -1;
+        return this.filterInfo.compareTo(other.filterInfo);
     }
 
     @Override
@@ -69,59 +72,33 @@ public final class FilterHandler extends AbstractHandler implements Comparable<F
         return this.filter;
     }
 
-    public String getPattern()
+    public FilterInfo getFilterInfo()
     {
-        final StringBuilder sb = new StringBuilder();
-        boolean first = true;
-        if ( this.filterInfo.regexs != null )
-        {
-            for(final String p : this.filterInfo.regexs)
-            {
-                if ( first )
-                {
-                    first = false;
-                }
-                else
-                {
-                    sb.append(", ");
-                }
-                sb.append(p);
-            }
-        }
-        if ( this.filterInfo.patterns != null )
-        {
-            for(final String p : this.filterInfo.patterns)
-            {
-                if ( first )
-                {
-                    first = false;
-                }
-                else
-                {
-                    sb.append(", ");
-                }
-                sb.append(p);
-            }
-        }
-        return sb.toString();
+        return this.filterInfo;
     }
 
     public int getRanking()
     {
-        return filterInfo.ranking;
+        return filterInfo.getRanking();
     }
 
-    public void handle(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws ServletException, IOException
+    public boolean handle(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws ServletException, IOException
     {
-        final boolean matches = matches(req.getPathInfo());
-        if (matches)
+        if (getContext().handleSecurity(req, res))
         {
-            doHandle(req, res, chain);
+            this.filter.doFilter(req, res, chain);
+
+            return true;
         }
-        else
+
+        // FELIX-3988: If the response is not yet committed and still has the default
+        // status, we're going to override this and send an error instead.
+        if (!res.isCommitted() && (res.getStatus() == SC_OK || res.getStatus() == 0))
         {
-            chain.doFilter(req, res);
+            res.sendError(SC_FORBIDDEN);
         }
+
+        return false;
     }
 
     @Override
@@ -130,60 +107,34 @@ public final class FilterHandler extends AbstractHandler implements Comparable<F
         this.filter.init(new FilterConfigImpl(getName(), getContext(), getInitParams()));
     }
 
-    public boolean matches(String uri)
-    {
-        // assume root if uri is null
-        if (uri == null)
-        {
-            uri = "/";
-        }
-
-        if ( this.filterInfo.patterns != null )
-        {
-            for(final String p : this.filterInfo.patterns)
-            {
-                if ( Pattern.compile(p.replace(".", "\\.").replace("*", ".*")).matcher(uri).matches() )
-                {
-                    return true;
-                }
-            }
-        }
-        if ( this.filterInfo.regexs != null )
-        {
-            for(final String p : this.filterInfo.regexs)
-            {
-                if ( Pattern.compile(p).matcher(uri).matches() )
-                {
-                    return true;
-                }
-            }
-        }
-
-        // TODO implement servlet name matching
-
-        return false;
-    }
-
-    final void doHandle(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws ServletException, IOException
-    {
-        if (getContext().handleSecurity(req, res))
-        {
-            this.filter.doFilter(req, res, chain);
-        }
-        else
-        {
-            // FELIX-3988: If the response is not yet committed and still has the default
-            // status, we're going to override this and send an error instead.
-            if (!res.isCommitted() && (res.getStatus() == SC_OK || res.getStatus() == 0))
-            {
-                res.sendError(SC_FORBIDDEN);
-            }
-        }
-    }
-
     @Override
     protected Object getSubject()
     {
         return this.filter;
+    }
+
+    private static String[] getFilterPatterns(FilterInfo filterInfo)
+    {
+        List<String> result = new ArrayList<String>();
+        if (filterInfo.getPatterns() != null)
+        {
+            for (int i = 0; i < filterInfo.getPatterns().length; i++)
+            {
+                result.add(PatternUtil.convertToRegEx(filterInfo.getPatterns()[i]));
+            }
+        }
+        if (filterInfo.getRegexs() != null)
+        {
+            for (int i = 0; i < filterInfo.getRegexs().length; i++)
+            {
+                result.add(filterInfo.getRegexs()[i]);
+            }
+        }
+        return result.toArray(new String[result.size()]);
+    }
+
+    @Override
+    public Pattern[] getPatterns() {
+        return this.patterns;
     }
 }

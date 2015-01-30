@@ -21,11 +21,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.servlet.DispatcherType;
-import javax.servlet.Filter;
-
 import org.apache.felix.http.base.internal.logger.SystemLogger;
-import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.service.HttpServiceImpl;
 import org.apache.felix.http.base.internal.whiteboard.tracker.FilterTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextHelperTracker;
@@ -42,18 +38,6 @@ public final class ExtenderManager
 {
     static final String TYPE_RESOURCE = "r";
 
-    /**
-     * Properties starting with this prefix are passed as servlet init parameters to the
-     * {@code init()} method of the servlet.
-     */
-    public static final String SERVLET_INIT_PREFIX = "servlet.init.";
-
-    /**
-     * Properties starting with this prefix are passed as filter
-     * init parameters to the {@code init()} method of the filter.
-     */
-    public static final String FILTER_INIT_PREFIX = "filter.init.";
-
     private final Map<String, AbstractMapping> mapping;
 
     private final ServletContextHelperManager contextManager;
@@ -67,7 +51,7 @@ public final class ExtenderManager
         this.mapping = new HashMap<String, AbstractMapping>();
         this.contextManager = new ServletContextHelperManager(bundleContext, httpService);
         this.httpService = httpService;
-        addTracker(new FilterTracker(bundleContext, this));
+        addTracker(new FilterTracker(bundleContext, contextManager));
         addTracker(new ServletTracker(bundleContext, this.contextManager));
         addTracker(new ServletContextHelperTracker(bundleContext, this.contextManager));
     }
@@ -134,64 +118,6 @@ public final class ExtenderManager
         return null;
     }
 
-    private boolean getBooleanProperty(ServiceReference ref, String key)
-    {
-        Object value = ref.getProperty(key);
-        if (value instanceof String)
-        {
-            return Boolean.valueOf((String) value);
-        }
-        else if (value instanceof Boolean)
-        {
-            return ((Boolean) value).booleanValue();
-        }
-        return false;
-    }
-
-    private int getIntProperty(ServiceReference ref, String key, int defValue)
-    {
-        Object value = ref.getProperty(key);
-        if (value == null)
-        {
-            return defValue;
-        }
-
-        try
-        {
-            return Integer.parseInt(value.toString());
-        }
-        catch (Exception e)
-        {
-            return defValue;
-        }
-    }
-
-    /**
-     * Get the init parameters.
-     */
-    private Map<String, String> getInitParams(final ServiceReference<?> ref, final String prefix)
-    {
-        Map<String, String> result = null;
-        for (final String key : ref.getPropertyKeys())
-        {
-            if ( key.startsWith(prefix))
-            {
-                final String paramKey = key.substring(prefix.length());
-                final String paramValue = getStringProperty(ref, key);
-
-                if (paramValue != null)
-                {
-                    if ( result == null )
-                    {
-                        result = new HashMap<String, String>();
-                    }
-                    result.put(paramKey, paramValue);
-                }
-            }
-        }
-        return result;
-    }
-
     public void addResource(final ServiceReference ref)
     {
         final String[] pattern = getStringArrayProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PATTERN);
@@ -225,58 +151,6 @@ public final class ExtenderManager
     public void removeResource(final ServiceReference ref)
     {
         this.removeMapping(TYPE_RESOURCE, ref);
-    }
-
-    public void add(final Filter service, final ServiceReference ref)
-    {
-        final FilterInfo filterInfo = createFilterInfo(ref, true);
-        if ( filterInfo != null )
-        {
-            ((HttpServiceImpl)this.httpService).registerFilter(service, filterInfo);
-        }
-    }
-
-    private FilterInfo createFilterInfo(final ServiceReference<?> filterRef, final boolean log)
-    {
-        final FilterInfo filterInfo = new FilterInfo();
-        filterInfo.name = getStringProperty(filterRef, HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_NAME);
-        filterInfo.asyncSupported = getBooleanProperty(filterRef, HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_ASYNC_SUPPORTED);
-        filterInfo.servletNames = getStringArrayProperty(filterRef, HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_SERVLET);
-        filterInfo.patterns = getStringArrayProperty(filterRef, HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN);
-        filterInfo.ranking = getIntProperty(filterRef, Constants.SERVICE_RANKING, 0);
-        filterInfo.serviceId = (Long)filterRef.getProperty(Constants.SERVICE_ID);
-        filterInfo.initParams = getInitParams(filterRef, FILTER_INIT_PREFIX);
-        String[] dispatcherNames = getStringArrayProperty(filterRef, HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_DISPATCHER);
-        if (dispatcherNames != null && dispatcherNames.length > 0)
-        {
-            DispatcherType[] dispatchers = new DispatcherType[dispatcherNames.length];
-            for (int i = 0; i < dispatchers.length; i++)
-            {
-                dispatchers[i] = DispatcherType.valueOf(dispatcherNames[i].toUpperCase());
-            }
-            filterInfo.dispatcher = dispatchers;
-        }
-
-        if (isEmpty(filterInfo.patterns))
-        {
-            if ( log )
-            {
-                SystemLogger.debug("Ignoring Filter Service " + filterRef + ", " + HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN +
-                        " is missing or empty");
-            }
-            return null;
-        }
-
-        return filterInfo;
-    }
-
-    public void removeFilter(final Filter service, ServiceReference<Filter> ref)
-    {
-        final FilterInfo filterInfo = createFilterInfo(ref, false);
-        if ( filterInfo != null )
-        {
-            ((HttpServiceImpl)this.httpService).unregisterFilter(service, filterInfo);
-        }
     }
 
     private synchronized void unregisterAll()

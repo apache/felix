@@ -31,6 +31,37 @@ import org.junit.Test;
 public class UriUtilsTest
 {
     @Test
+    public void testCompactPath()
+    {
+        assertEquals(null, compactPath(null));
+        assertEquals("", compactPath(""));
+        assertEquals("/", compactPath("/"));
+        assertEquals("/", compactPath("//"));
+        assertEquals("/foo/", compactPath("/foo//"));
+        assertEquals("/foo/", compactPath("//foo/"));
+        assertEquals("/foo/bar", compactPath("/foo/bar"));
+        assertEquals("/foo/bar", compactPath("//foo//bar"));
+        assertEquals("/foo/bar", compactPath("/foo///bar"));
+        assertEquals("/foo/bar?qux=quu//baz", compactPath("/foo/bar?qux=quu//baz"));
+    }
+
+    @Test
+    public void testRelativePath()
+    {
+        assertEquals(null, relativePath("/foo", null));
+        assertEquals(null, relativePath("/foo", ""));
+        assertEquals(null, relativePath("/foo", "/foo"));
+        assertEquals(null, relativePath("/foo", "/foo/")); // XXX or "/"?   
+        assertEquals("/foo", relativePath("/", "/foo"));
+        assertEquals("/foo/", relativePath("/", "/foo/"));
+        assertEquals("/foo/", relativePath(null, "/foo/"));
+        assertEquals("/bar", relativePath("/foo", "/foo/bar"));
+        assertEquals("/bar/foo", relativePath("/foo", "/bar/foo"));
+        assertEquals("/bar", relativePath("/foo/", "/foo/bar"));
+        assertEquals("/foobar", relativePath("/foo", "/foobar"));
+    }
+
+    @Test
     public void testConcatOk()
     {
         assertEquals(null, concat(null, null));

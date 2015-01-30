@@ -19,7 +19,6 @@ package org.apache.felix.http.base.internal.handler;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static javax.servlet.http.HttpServletResponse.SC_PAYMENT_REQUIRED;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -27,6 +26,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.util.Map;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
@@ -47,16 +48,6 @@ public class ServletHandlerTest extends AbstractHandlerTest
     {
         super.setUp();
         this.servlet = mock(Servlet.class);
-    }
-
-    @Test
-    public void testCompare()
-    {
-        ServletHandler h1 = createHandler("/a");
-        ServletHandler h2 = createHandler("/a/b");
-
-        assertEquals(2, h1.compareTo(h2));
-        assertEquals(-2, h2.compareTo(h1));
     }
 
     @Test
@@ -117,7 +108,7 @@ public class ServletHandlerTest extends AbstractHandlerTest
         when(req.getPathInfo()).thenReturn("/a/b");
         boolean result = h1.handle(req, res);
 
-        assertTrue(result);
+        assertFalse(result);
         verify(this.servlet, never()).service(req, res);
         verify(res).sendError(SC_FORBIDDEN);
     }
@@ -142,7 +133,7 @@ public class ServletHandlerTest extends AbstractHandlerTest
         when(req.getPathInfo()).thenReturn("/a/b");
         boolean result = h1.handle(req, res);
 
-        assertTrue(result);
+        assertFalse(result);
         verify(this.servlet, never()).service(req, res);
         verify(res, never()).sendError(SC_FORBIDDEN);
     }
@@ -167,7 +158,7 @@ public class ServletHandlerTest extends AbstractHandlerTest
         when(req.getPathInfo()).thenReturn("/a/b");
         boolean result = h1.handle(req, res);
 
-        assertTrue(result);
+        assertFalse(result);
         verify(this.servlet, never()).service(req, res);
         verify(res, never()).sendError(SC_FORBIDDEN);
     }
@@ -194,11 +185,11 @@ public class ServletHandlerTest extends AbstractHandlerTest
         HttpServletResponse res = mock(HttpServletResponse.class);
         when(this.context.handleSecurity(req, res)).thenReturn(true);
 
-        when(req.getPathInfo()).thenReturn(null);
+        when(req.getRequestURI()).thenReturn(null);
         boolean result = h1.handle(req, res);
 
-        assertFalse(result);
-        verify(this.servlet, never()).service(req, res);
+        assertTrue(result);
+        verify(this.servlet).service(req, res);
     }
 
     @Test
@@ -209,28 +200,26 @@ public class ServletHandlerTest extends AbstractHandlerTest
         verify(this.servlet).init(any(ServletConfig.class));
     }
 
-    @Test
-    public void testMatches()
-    {
-        ServletHandler h1 = createHandler("/a/b");
-
-        assertFalse(h1.matches(null));
-        assertFalse(h1.matches("/"));
-        assertFalse(h1.matches("/a/"));
-        assertTrue(h1.matches("/a/b"));
-        assertTrue(h1.matches("/a/b/"));
-        assertTrue(h1.matches("/a/b/c"));
-    }
-
     @Override
     protected AbstractHandler createHandler()
     {
-        return createHandler("/dummy");
+        return createHandler("/dummy", null);
+    }
+
+    @Override
+    protected AbstractHandler createHandler(Map<String, String> map)
+    {
+        return createHandler("/dummy", map);
     }
 
     private ServletHandler createHandler(String alias)
     {
-        final ServletInfo info = new ServletInfo(null, alias, 0, null, this.servlet, null);
-        return new ServletHandler(this.context, info, info.getServlet(), info.getPatterns()[0]);
+        return createHandler(alias, null);
+    }
+
+    private ServletHandler createHandler(String alias, Map<String, String> map)
+    {
+        final ServletInfo info = new ServletInfo(null, alias, 0, map, this.servlet, null);
+        return new ServletHandler(null, this.context, info, info.getServlet());
     }
 }

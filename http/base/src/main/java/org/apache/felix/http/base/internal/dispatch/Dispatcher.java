@@ -16,19 +16,374 @@
  */
 package org.apache.felix.http.base.internal.dispatch;
 
+import static javax.servlet.RequestDispatcher.FORWARD_CONTEXT_PATH;
+import static javax.servlet.RequestDispatcher.FORWARD_PATH_INFO;
+import static javax.servlet.RequestDispatcher.FORWARD_QUERY_STRING;
+import static javax.servlet.RequestDispatcher.FORWARD_REQUEST_URI;
+import static javax.servlet.RequestDispatcher.FORWARD_SERVLET_PATH;
+import static javax.servlet.RequestDispatcher.INCLUDE_CONTEXT_PATH;
+import static javax.servlet.RequestDispatcher.INCLUDE_PATH_INFO;
+import static javax.servlet.RequestDispatcher.INCLUDE_QUERY_STRING;
+import static javax.servlet.RequestDispatcher.INCLUDE_REQUEST_URI;
+import static javax.servlet.RequestDispatcher.INCLUDE_SERVLET_PATH;
+import static org.apache.felix.http.base.internal.util.UriUtils.concat;
+import static org.apache.felix.http.base.internal.util.UriUtils.decodePath;
+import static org.apache.felix.http.base.internal.util.UriUtils.removeDotSegments;
+
 import java.io.IOException;
 
+import javax.servlet.DispatcherType;
 import javax.servlet.FilterChain;
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
+import org.apache.felix.http.base.internal.context.ExtServletContext;
+import org.apache.felix.http.base.internal.handler.ErrorsMapping;
+import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.HandlerRegistry;
+import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
+import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.util.UriUtils;
+import org.osgi.service.http.HttpContext;
+import org.osgi.service.useradmin.Authorization;
 
-public final class Dispatcher
+public final class Dispatcher implements RequestDispatcherProvider
 {
+    /**
+     * Wrapper implementation for {@link RequestDispatcher}.
+     */
+    final class RequestDispatcherImpl implements RequestDispatcher
+    {
+        private final RequestInfo requestInfo;
+        private final ServletHandler handler;
+
+        public RequestDispatcherImpl(ServletHandler handler, RequestInfo requestInfo)
+        {
+            this.handler = handler;
+            this.requestInfo = requestInfo;
+        }
+
+        @Override
+        public void forward(ServletRequest request, ServletResponse response) throws ServletException, IOException
+        {
+            if (response.isCommitted())
+            {
+                throw new ServletException("Response has been committed");
+            }
+            else
+            {
+                // See section 9.4 of Servlet 3.0 spec
+                response.resetBuffer();
+            }
+
+            try
+            {
+                ServletRequestWrapper req = new ServletRequestWrapper((HttpServletRequest) request, this.handler.getContext(), this.requestInfo, DispatcherType.FORWARD);
+                Dispatcher.this.forward(this.handler, req, (HttpServletResponse) response);
+            }
+            finally
+            {
+                // After a forward has taken place, the results should be committed,
+                // see section 9.4 of Servlet 3.0 spec...
+                if (!request.isAsyncStarted())
+                {
+                    response.flushBuffer();
+                    response.getWriter().close();
+                }
+            }
+        }
+
+        @Override
+        public void include(ServletRequest request, ServletResponse response) throws ServletException, IOException
+        {
+            ServletRequestWrapper req = new ServletRequestWrapper((HttpServletRequest) request, this.handler.getContext(), this.requestInfo, DispatcherType.INCLUDE);
+            Dispatcher.this.include(this.handler, req, (HttpServletResponse) response);
+        }
+    }
+
+    final class ServletRequestWrapper extends HttpServletRequestWrapper
+    {
+        private final DispatcherType type;
+        private final RequestInfo requestInfo;
+        private final ExtServletContext servletContext;
+
+        public ServletRequestWrapper(HttpServletRequest req, ExtServletContext servletContext, RequestInfo requestInfo)
+        {
+            this(req, servletContext, requestInfo, null /* type */);
+        }
+
+        public ServletRequestWrapper(HttpServletRequest req, ExtServletContext servletContext, RequestInfo requestInfo, DispatcherType type)
+        {
+            super(req);
+
+            this.servletContext = servletContext;
+            this.requestInfo = requestInfo;
+            this.type = type;
+        }
+
+        @Override
+        public Object getAttribute(String name)
+        {
+            HttpServletRequest request = (HttpServletRequest) getRequest();
+            if (isInclusionDispatcher())
+            {
+                // The javax.servlet.include.* attributes refer to the information of the *included* request,
+                // meaning that the request information comes from the *original* request...
+                if (INCLUDE_REQUEST_URI.equals(name))
+                {
+                    return concat(request.getContextPath(), this.requestInfo.requestURI);
+                }
+                else if (INCLUDE_CONTEXT_PATH.equals(name))
+                {
+                    return request.getContextPath();
+                }
+                else if (INCLUDE_SERVLET_PATH.equals(name))
+                {
+                    return this.requestInfo.servletPath;
+                }
+                else if (INCLUDE_PATH_INFO.equals(name))
+                {
+                    return this.requestInfo.pathInfo;
+                }
+                else if (INCLUDE_QUERY_STRING.equals(name))
+                {
+                    return this.requestInfo.queryString;
+                }
+            }
+            else if (isForwardingDispatcher())
+            {
+                // The javax.servlet.forward.* attributes refer to the information of the *original* request,
+                // meaning that the request information comes from the *forwarded* request...
+                if (FORWARD_REQUEST_URI.equals(name))
+                {
+                    return super.getRequestURI();
+                }
+                else if (FORWARD_CONTEXT_PATH.equals(name))
+                {
+                    return request.getContextPath();
+                }
+                else if (FORWARD_SERVLET_PATH.equals(name))
+                {
+                    return super.getServletPath();
+                }
+                else if (FORWARD_PATH_INFO.equals(name))
+                {
+                    return super.getPathInfo();
+                }
+                else if (FORWARD_QUERY_STRING.equals(name))
+                {
+                    return super.getQueryString();
+                }
+            }
+            return super.getAttribute(name);
+        }
+
+        @Override
+        public String getAuthType()
+        {
+            String authType = (String) getAttribute(HttpContext.AUTHENTICATION_TYPE);
+            if (authType == null)
+            {
+                authType = super.getAuthType();
+            }
+            return authType;
+        }
+
+        @Override
+        public String getContextPath()
+        {
+            /*
+             * FELIX-2030 Calculate the context path for the Http Service
+             * registered servlets from the container context and servlet paths
+             */
+            //            if (contextPath == null)
+            //            {
+            //                final String context = super.getContextPath();
+            //                final String servlet = super.getServletPath();
+            //                if (context == null || context.length() == 0)
+            //                {
+            //                    contextPath = servlet;
+            //                }
+            //                else if (servlet == null || servlet.length() == 0)
+            //                {
+            //                    contextPath = context;
+            //                }
+            //                else
+            //                {
+            //                    contextPath = context + servlet;
+            //                }
+            //            }
+
+            return super.getContextPath();
+        }
+
+        @Override
+        public DispatcherType getDispatcherType()
+        {
+            return (this.type == null) ? super.getDispatcherType() : this.type;
+        }
+
+        @Override
+        public String getPathInfo()
+        {
+            String pathInfo = super.getPathInfo();
+            if (isForwardingDispatcher() || !isWrapperFor(ServletRequestWrapper.class))
+            {
+                pathInfo = this.requestInfo.pathInfo;
+            }
+            return pathInfo;
+        }
+
+        @Override
+        @SuppressWarnings("deprecation")
+        public String getPathTranslated()
+        {
+            final String info = getPathInfo();
+            return (null == info) ? null : getRealPath(info);
+        }
+
+        @Override
+        public String getRemoteUser()
+        {
+            String remoteUser = (String) getAttribute(HttpContext.REMOTE_USER);
+            if (remoteUser != null)
+            {
+                return remoteUser;
+            }
+
+            return super.getRemoteUser();
+        }
+
+        @Override
+        public RequestDispatcher getRequestDispatcher(String path)
+        {
+            // See section 9.1 of Servlet 3.0 specification...
+            if (path == null)
+            {
+                return null;
+            }
+            // Handle relative paths, see Servlet 3.0 spec, section 9.1 last paragraph.
+            boolean relPath = !path.startsWith("/") && !"".equals(path);
+            if (relPath)
+            {
+                path = concat(getServletPath(), path);
+            }
+            return Dispatcher.this.getRequestDispatcher(path);
+        }
+
+        @Override
+        public String getRequestURI()
+        {
+            String requestURI = super.getRequestURI();
+            if (isForwardingDispatcher() || !isWrapperFor(ServletRequestWrapper.class))
+            {
+                requestURI = concat(getContextPath(), this.requestInfo.requestURI);
+            }
+            return requestURI;
+        }
+
+        @Override
+        public ServletContext getServletContext()
+        {
+            return new ServletContextWrapper(this.servletContext, Dispatcher.this);
+        }
+
+        @Override
+        public String getServletPath()
+        {
+            String servletPath = super.getServletPath();
+            if (isForwardingDispatcher() || !isWrapperFor(ServletRequestWrapper.class))
+            {
+                servletPath = this.requestInfo.servletPath;
+            }
+            if ("/".equals(servletPath))
+            {
+                return ""; // XXX still necessary?
+            }
+            return servletPath;
+        }
+
+        @Override
+        public HttpSession getSession(boolean create)
+        {
+            // FELIX-2797: wrap the original HttpSession to provide access to the correct ServletContext...
+            HttpSession session = super.getSession(create);
+            if (session == null)
+            {
+                return null;
+            }
+            return new HttpSessionWrapper(session, this.servletContext);
+        }
+
+        @Override
+        public boolean isUserInRole(String role)
+        {
+            Authorization authorization = (Authorization) getAttribute(HttpContext.AUTHORIZATION);
+            if (authorization != null)
+            {
+                return authorization.hasRole(role);
+            }
+
+            return super.isUserInRole(role);
+        }
+
+        @Override
+        public String toString()
+        {
+            return getClass().getSimpleName() + "->" + super.getRequest();
+        }
+
+        private boolean isForwardingDispatcher()
+        {
+            return (DispatcherType.FORWARD == this.type) && (this.requestInfo != null);
+        }
+
+        private boolean isInclusionDispatcher()
+        {
+            return (DispatcherType.INCLUDE == this.type) && (this.requestInfo != null);
+        }
+    }
+
+    private static class RequestInfo
+    {
+        final String servletPath;
+        final String pathInfo;
+        final String queryString;
+        final String requestURI;
+
+        public RequestInfo(String servletPath, String pathInfo, String queryString)
+        {
+            this.servletPath = servletPath;
+            this.pathInfo = pathInfo;
+            this.queryString = queryString;
+            this.requestURI = UriUtils.compactPath(concat(servletPath, pathInfo));
+        }
+
+        @Override
+        public String toString()
+        {
+            StringBuilder sb = new StringBuilder("RequestInfo[servletPath =");
+            sb.append(this.servletPath).append(", pathInfo = ").append(this.pathInfo);
+            sb.append(", queryString = ").append(this.queryString).append("]");
+            return sb.toString();
+        }
+    }
+
+    /**
+     * Request attribute that provides access to the request dispatcher provider.
+     */
     public static final String REQUEST_DISPATCHER_PROVIDER = "org.apache.felix.http.requestDispatcherProvider";
 
+    /**
+     * Catch-all filter chain that simple finishes all requests with a "404 Not Found" error.
+     */
     private static final FilterChain DEFAULT_CHAIN = new NotFoundFilterChain();
 
     private final HandlerRegistry handlerRegistry;
@@ -38,19 +393,145 @@ public final class Dispatcher
         this.handlerRegistry = handlerRegistry;
     }
 
+    /**
+     * Responsible for dispatching a given request to the actual applicable servlet and/or filters in the local registry.
+     *
+     * @param req the {@link ServletRequest} to dispatch;
+     * @param res the {@link ServletResponse} to dispatch.
+     * @throws ServletException in case of exceptions during the actual dispatching;
+     * @throws IOException in case of I/O problems.
+     */
     public void dispatch(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException
     {
-        ServletPipeline servletPipeline = new ServletPipeline(this.handlerRegistry.getServlets());
+        String requestURI = getRequestURI(req);
+
+        // Determine which servlets we should forward the request to...
+        ServletHandler servletHandler = this.handlerRegistry.getServletHander(requestURI);
+        FilterHandler[] filterHandlers = this.handlerRegistry.getFilterHandlers(servletHandler, req.getDispatcherType(), requestURI);
+
         // Provides access to the correct request dispatcher...
-        req.setAttribute(REQUEST_DISPATCHER_PROVIDER, servletPipeline);
+        req.setAttribute(REQUEST_DISPATCHER_PROVIDER, this);
+
+        String servletPath = (servletHandler != null) ? servletHandler.determineServletPath(requestURI) : "";
+        String pathInfo = UriUtils.compactPath(UriUtils.relativePath(servletPath, requestURI));
+        String queryString = null; // XXX
+
+        ExtServletContext servletContext = (servletHandler != null) ? servletHandler.getContext() : null;
+        RequestInfo requestInfo = new RequestInfo(servletPath, pathInfo, queryString);
 
         try
         {
-            new FilterPipeline(this.handlerRegistry.getFilters(), servletPipeline).dispatch(req, res, DEFAULT_CHAIN);
+            invokeChain(filterHandlers, servletHandler, new ServletRequestWrapper(req, servletContext, requestInfo), res);
         }
         finally
         {
             req.removeAttribute(REQUEST_DISPATCHER_PROVIDER);
         }
+    }
+
+    public boolean handleError(HttpServletRequest request, HttpServletResponse response, int errorCode, String exceptionType) throws IOException
+    {
+        ErrorsMapping errorsMapping = this.handlerRegistry.getErrorsMapping();
+        ServletHandler errorHandler = null;
+
+        if (exceptionType != null)
+        {
+            errorHandler = errorsMapping.get(exceptionType);
+        }
+        else
+        {
+            errorHandler = errorsMapping.get(errorCode);
+        }
+
+        if (errorHandler != null)
+        {
+            // TODO set error attributes! See Servlet 3.0 specification, section 10.9.1...
+            try
+            {
+                return errorHandler.handle(request, response);
+            }
+            catch (ServletException e)
+            {
+                return false; // XXX
+            }
+        }
+
+        return false;
+    }
+
+    @Override
+    public RequestDispatcher getNamedDispatcher(String name)
+    {
+        ServletHandler handler = this.handlerRegistry.getServletHandlerByName(name);
+        return handler != null ? new RequestDispatcherImpl(handler, null) : null;
+    }
+
+    @Override
+    public RequestDispatcher getRequestDispatcher(String path)
+    {
+        // See section 9.1 of Servlet 3.x specification...
+        if (path == null || (!path.startsWith("/") && !"".equals(path)))
+        {
+            return null;
+        }
+
+        String query = null;
+        int q = 0;
+        if ((q = path.indexOf('?')) > 0)
+        {
+            query = path.substring(q + 1);
+            path = path.substring(0, q);
+        }
+        // TODO remove path parameters...
+        String requestURI = decodePath(removeDotSegments(path));
+
+        ServletHandler handler = this.handlerRegistry.getServletHander(requestURI);
+        if (handler == null)
+        {
+            return null;
+        }
+
+        String servletPath = handler.determineServletPath(requestURI);
+        String pathInfo = UriUtils.relativePath(servletPath, path);
+
+        RequestInfo requestInfo = new RequestInfo(servletPath, pathInfo, query);
+        return new RequestDispatcherImpl(handler, requestInfo);
+    }
+
+    /**
+     * @param servletHandler the servlet that should handle the forward request;
+     * @param request the {@link HttpServletRequest};
+     * @param response the {@link HttpServletResponse};
+     */
+    void forward(ServletHandler servletHandler, HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
+    {
+        String requestURI = getRequestURI(request);
+        FilterHandler[] filterHandlers = this.handlerRegistry.getFilterHandlers(servletHandler, DispatcherType.FORWARD, requestURI);
+
+        invokeChain(filterHandlers, servletHandler, request, response);
+    }
+
+    /**
+     * @param servletHandler the servlet that should handle the include request;
+     * @param request the {@link HttpServletRequest};
+     * @param response the {@link HttpServletResponse};
+     */
+    void include(ServletHandler servletHandler, HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
+    {
+        String requestURI = getRequestURI(request);
+        FilterHandler[] filterHandlers = this.handlerRegistry.getFilterHandlers(servletHandler, DispatcherType.INCLUDE, requestURI);
+
+        invokeChain(filterHandlers, servletHandler, request, response);
+    }
+
+    private String getRequestURI(HttpServletRequest req)
+    {
+        return UriUtils.relativePath(req.getContextPath(), req.getRequestURI());
+    }
+
+    private void invokeChain(FilterHandler[] filterHandlers, ServletHandler servletHandler, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
+    {
+        FilterChain filterChain = new InvocationFilterChain(servletHandler, filterHandlers, DEFAULT_CHAIN);
+        filterChain.doFilter(request, response);
     }
 }

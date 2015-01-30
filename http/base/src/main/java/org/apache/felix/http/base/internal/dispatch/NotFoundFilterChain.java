@@ -16,13 +16,15 @@
  */
 package org.apache.felix.http.base.internal.dispatch;
 
+import java.io.IOException;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 
 public final class NotFoundFilterChain extends HttpFilterChain
 {
+    @Override
     protected void doFilter(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException
     {
         res.sendError(HttpServletResponse.SC_NOT_FOUND);
