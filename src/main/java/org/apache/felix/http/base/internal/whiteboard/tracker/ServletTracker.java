@@ -52,7 +52,7 @@ public final class ServletTracker extends AbstractTracker<Servlet>
     @Override
     protected void added(Servlet service, ServiceReference ref)
     {
-        this.manager.add(service, ref);
+        this.manager.addServlet(service, ref);
     }
 
     @Override

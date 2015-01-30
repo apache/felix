@@ -43,18 +43,16 @@ public class HandlerRegistryTest
         HandlerRegistry hr = new HandlerRegistry();
 
         Servlet servlet = Mockito.mock(Servlet.class);
-        final ServletInfo info = new ServletInfo();
-        info.name = "foo";
-        ServletHandler handler = new ServletHandler(null, servlet, info, "/foo");
+        final ServletInfo info = new ServletInfo("foo", "/foo", 0, null, servlet, null);
+        ServletHandler handler = new ServletHandler(null, info);
         assertEquals("Precondition", 0, hr.getServlets().length);
         hr.addServlet(handler);
         Mockito.verify(servlet, Mockito.times(1)).init(Mockito.any(ServletConfig.class));
         assertEquals(1, hr.getServlets().length);
         assertSame(handler, hr.getServlets()[0]);
 
-        final ServletInfo info2 = new ServletInfo();
-        info2.name = "bar";
-        ServletHandler handler2 = new ServletHandler(null, servlet, info2, "/bar");
+        final ServletInfo info2 = new ServletInfo("bar", "/bar", 0, null, servlet, null);
+        ServletHandler handler2 = new ServletHandler(null, info2);
         try
         {
             hr.addServlet(handler2);
@@ -67,10 +65,9 @@ public class HandlerRegistryTest
         }
         assertArrayEquals(new ServletHandler[] {handler2, handler}, hr.getServlets());
 
-        final ServletInfo info3 = new ServletInfo();
-        info3.name = "zar";
-        ServletHandler handler3 = new ServletHandler(null, Mockito.mock(Servlet.class), info3,
-                "/foo");
+        final ServletInfo info3 = new ServletInfo("zar", "/foo", 0, null, Mockito.mock(Servlet.class), null);
+        ServletHandler handler3 = new ServletHandler(null,info3);
+
         try
         {
             hr.addServlet(handler3);
@@ -95,9 +92,8 @@ public class HandlerRegistryTest
         final HandlerRegistry hr = new HandlerRegistry();
 
         Servlet servlet = Mockito.mock(Servlet.class);
-        final ServletInfo info = new ServletInfo();
-        info.name = "bar";
-        final ServletHandler otherHandler = new ServletHandler(null, servlet, info, "/bar");
+        final ServletInfo info = new ServletInfo("bar", "/bar", 0, null, servlet, null);
+        final ServletHandler otherHandler = new ServletHandler(null, info);
 
         Mockito.doAnswer(new Answer<Void>()
         {
@@ -116,9 +112,8 @@ public class HandlerRegistryTest
             }
         }).when(servlet).init(Mockito.any(ServletConfig.class));
 
-        final ServletInfo info2 = new ServletInfo();
-        info2.name = "foo";
-        ServletHandler handler = new ServletHandler(null, servlet, info2, "/foo");
+        final ServletInfo info2 = new ServletInfo("foo", "/foo", 0, null, servlet, null);
+        ServletHandler handler = new ServletHandler(null, info2);
         try
         {
             hr.addServlet(handler);
@@ -141,9 +136,8 @@ public class HandlerRegistryTest
         final HandlerRegistry hr = new HandlerRegistry();
 
         Servlet otherServlet = Mockito.mock(Servlet.class);
-        final ServletInfo info = new ServletInfo();
-        info.name = "bar";
-        final ServletHandler otherHandler = new ServletHandler(null, otherServlet, info, "/foo");
+        final ServletInfo info = new ServletInfo("bar", "/foo", 0, null, otherServlet, null);
+        final ServletHandler otherHandler = new ServletHandler(null, info);
 
         Servlet servlet = Mockito.mock(Servlet.class);
         Mockito.doAnswer(new Answer<Void>()
@@ -157,9 +151,8 @@ public class HandlerRegistryTest
             }
         }).when(servlet).init(Mockito.any(ServletConfig.class));
 
-        final ServletInfo info2 = new ServletInfo();
-        info2.name = "foo";
-        ServletHandler handler = new ServletHandler(null, servlet, info2, "/foo");
+        final ServletInfo info2 = new ServletInfo("foo", "/foo", 0, null, servlet, null);
+        ServletHandler handler = new ServletHandler(null, info2);
 
         try
         {
@@ -270,14 +263,12 @@ public class HandlerRegistryTest
         HandlerRegistry hr = new HandlerRegistry();
 
         Servlet servlet = Mockito.mock(Servlet.class);
-        final ServletInfo info = new ServletInfo();
-        info.name = "f";
-        ServletHandler servletHandler = new ServletHandler(null, servlet, info, "/f");
+        final ServletInfo info = new ServletInfo("f", "/f", 0, null, servlet, null);
+        ServletHandler servletHandler = new ServletHandler(null, info);
         hr.addServlet(servletHandler);
         Servlet servlet2 = Mockito.mock(Servlet.class);
-        final ServletInfo info2 = new ServletInfo();
-        info2.name = "ff";
-        ServletHandler servletHandler2 = new ServletHandler(null, servlet2, info2, "/ff");
+        final ServletInfo info2 = new ServletInfo("ff", "/ff", 0, null, servlet2, null);
+        ServletHandler servletHandler2 = new ServletHandler(null, info2);
         hr.addServlet(servletHandler2);
         Filter filter = Mockito.mock(Filter.class);
         final FilterInfo fi = new FilterInfo();

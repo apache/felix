@@ -124,7 +124,6 @@ public final class HttpServiceImpl implements ExtHttpService
         }
 
         FilterHandler handler = new FilterHandler(getServletContext(filterInfo.context), filter, filterInfo);
-        handler.setInitParams(filterInfo.initParams);
         try {
             this.handlerRegistry.addFilter(handler);
         } catch (ServletException e) {
@@ -197,37 +196,26 @@ public final class HttpServiceImpl implements ExtHttpService
      * @throws ServletException
      * @throws NamespaceException
      */
-    public void registerServlet(Servlet servlet, ServletInfo servletInfo)
+    public void registerServlet(final ServletInfo servletInfo)
     {
-        if (servlet == null)
-        {
-            throw new IllegalArgumentException("Servlet must not be null");
-        }
         if (servletInfo == null)
         {
             throw new IllegalArgumentException("ServletInfo cannot be null!");
         }
-        if (isEmpty(servletInfo.patterns) && isEmpty(servletInfo.errorPage))
+        if (isEmpty(servletInfo.getPatterns()) && isEmpty(servletInfo.getErrorPage()))
         {
             throw new IllegalArgumentException("ServletInfo must at least have one pattern or error page!");
         }
-        if (isEmpty(servletInfo.name))
-        {
-            servletInfo.name = servlet.getClass().getName();
-        }
 
-        for(final String pattern : servletInfo.patterns) {
-            final ServletHandler handler = new ServletHandler(getServletContext(servletInfo.context), servlet, servletInfo, pattern);
-            handler.setInitParams(servletInfo.initParams);
-            try {
-                this.handlerRegistry.addServlet(handler);
-            } catch (ServletException e) {
-                // TODO create failure DTO
-            } catch (NamespaceException e) {
-                // TODO create failure DTO
-            }
-            this.localServlets.add(servlet);
+        final ServletHandler handler = new ServletHandler(getServletContext(servletInfo.getContext()), servletInfo);
+        try {
+            this.handlerRegistry.addServlet(handler);
+        } catch (ServletException e) {
+            // TODO create failure DTO
+        } catch (NamespaceException e) {
+            // TODO create failure DTO
         }
+        this.localServlets.add(servletInfo.getServlet());
     }
 
     public void unregisterServlet(final Servlet servlet, final ServletInfo servletInfo)
@@ -236,7 +224,7 @@ public final class HttpServiceImpl implements ExtHttpService
         {
             throw new IllegalArgumentException("ServletInfo cannot be null!");
         }
-        if ( servletInfo.patterns != null )
+        if ( servletInfo.getPatterns() != null )
         {
             this.handlerRegistry.removeServlet(servlet, true);
             this.localServlets.remove(servlet);
@@ -259,15 +247,18 @@ public final class HttpServiceImpl implements ExtHttpService
     @Override
     public void registerServlet(String alias, Servlet servlet, Dictionary initParams, HttpContext context) throws ServletException, NamespaceException
     {
+        if (servlet == null)
+        {
+            throw new IllegalArgumentException("Servlet must not be null");
+        }
         if (!isAliasValid(alias))
         {
             throw new IllegalArgumentException("Malformed servlet alias [" + alias + "]");
         }
 
-        final ServletInfo info = new ServletInfo();
+        final Map<String, String> paramMap = new HashMap<String, String>();
         if ( initParams != null && initParams.size() > 0 )
         {
-            info.initParams = new HashMap<String, String>();
             Enumeration e = initParams.keys();
             while (e.hasMoreElements())
             {
@@ -276,16 +267,14 @@ public final class HttpServiceImpl implements ExtHttpService
 
                 if ((key instanceof String) && (value instanceof String))
                 {
-                    info.initParams.put((String) key, (String) value);
+                    paramMap.put((String) key, (String) value);
                 }
             }
         }
-        info.ranking = 0;
-        info.serviceId = serviceIdCounter.getAndDecrement();
-        info.patterns = new String[] {alias};
-        info.context = context;
 
-        this.registerServlet(servlet, info);
+        final ServletInfo info = new ServletInfo(null, alias, 0, paramMap, servlet, context);
+
+        this.registerServlet(info);
     }
 
     @Override

@@ -45,6 +45,18 @@ public abstract class AbstractHandler
         this.initParams = new HashMap<String, String>();
     }
 
+    public AbstractHandler(ExtServletContext context, final Map<String, String> initParams, String baseName)
+    {
+        this.context = context;
+        this.baseName = baseName;
+        this.id = ID.incrementAndGet();
+        this.initParams = new HashMap<String, String>();
+        if ( initParams != null)
+        {
+            this.initParams.putAll(initParams);
+        }
+    }
+
     public abstract void destroy();
 
     public final Map<String, String> getInitParams()
@@ -87,17 +99,6 @@ public abstract class AbstractHandler
                 this.initParams.put((String) key, (String) value);
             }
         }
-    }
-
-    public final void setInitParams(Map<String, String> map)
-    {
-        this.initParams.clear();
-        if (map == null)
-        {
-            return;
-        }
-
-        this.initParams.putAll(map);
     }
 
     protected final ExtServletContext getContext()
