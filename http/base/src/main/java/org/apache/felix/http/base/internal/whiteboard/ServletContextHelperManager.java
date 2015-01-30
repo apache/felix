@@ -20,10 +20,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.felix.http.base.internal.runtime.AbstractInfo;
 import org.apache.felix.http.base.internal.runtime.ContextInfo;
@@ -47,6 +50,7 @@ public final class ServletContextHelperManager
     private final HttpServiceImpl httpService;
 
     private final ServiceRegistration<ServletContextHelper> defaultContextRegistration;
+    
     /**
      * Create a new servlet context helper manager
      * and the default context
@@ -95,7 +99,7 @@ public final class ServletContextHelperManager
             if ( entry.getKey().getContextSelectionFilter().match(holder.getInfo().getServiceReference()) )
             {
                 entry.getValue().add(holder);
-                this.httpService.registerServlet(entry.getKey());
+            	this.registerServlet(entry.getKey(), holder);
             }
         }
     }
@@ -108,7 +112,7 @@ public final class ServletContextHelperManager
             final Map.Entry<ServletInfo, List<ContextHolder>> entry = i.next();
             if ( entry.getValue().remove(holder) )
             {
-                this.httpService.unregisterServlet(entry.getKey());
+                this.unregisterServlet(entry.getKey(), holder);
                 if ( entry.getValue().isEmpty() ) {
                     i.remove();
                 }
@@ -199,6 +203,18 @@ public final class ServletContextHelperManager
         return result;
     }
 
+    private void registerServlet(final ServletInfo servletInfo, final ContextHolder holder)
+    {
+    	final ServletContextHelper helper = holder.getContext(servletInfo.getServiceReference().getBundle());
+    	String prefix = holder.getPrefix();
+        this.httpService.registerServlet(helper, prefix, servletInfo);    	
+    }
+
+    private void unregisterServlet(final ServletInfo servletInfo, final ContextHolder holder)
+    {
+        this.httpService.unregisterServlet(servletInfo);    	
+    }
+
     /**
      * Add a new servlet.
      * @param servletInfo The servlet info
@@ -211,7 +227,7 @@ public final class ServletContextHelperManager
             this.servletList.put(servletInfo, holderList);
             for(final ContextHolder h : holderList)
             {
-                this.httpService.registerServlet(servletInfo);
+            	this.registerServlet(servletInfo, h);
             }
         }
     }
@@ -229,7 +245,7 @@ public final class ServletContextHelperManager
             {
                 for(final ContextHolder h : holderList)
                 {
-                    this.httpService.unregisterServlet(servletInfo);
+                    this.unregisterServlet(servletInfo, h);
                 }
             }
         }
@@ -242,9 +258,19 @@ public final class ServletContextHelperManager
     {
         private final ContextInfo info;
 
+        private final String prefix;
+        
         public ContextHolder(final ContextInfo info)
         {
             this.info = info;
+            if ( info.getPath().equals("/") )
+            {
+            	prefix = null;
+            }
+            else
+            {
+            	prefix = info.getPath().substring(0, info.getPath().length() - 1);
+            }
         }
 
         public ContextInfo getInfo()
@@ -252,10 +278,21 @@ public final class ServletContextHelperManager
             return this.info;
         }
 
+        public String getPrefix() 
+        {
+        	return this.prefix;
+        }
+        
         @Override
         public int compareTo(final ContextHolder o)
         {
             return this.info.compareTo(o.info);
+        }
+        
+        public ServletContextHelper getContext(final Bundle b) 
+        {
+        	// TODO - we should somehow keep track of these objects to later on dispose them
+        	return b.getBundleContext().getServiceObjects(this.info.getServiceReference()).getService();
         }
     }
 
