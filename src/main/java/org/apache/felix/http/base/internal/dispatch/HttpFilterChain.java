@@ -16,20 +16,28 @@
  */
 package org.apache.felix.http.base.internal.dispatch;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+/**
+ * Convenience adapter for {@link FilterChain}s that makes the obtrusive casting unnecessary.
+ */
 public abstract class HttpFilterChain implements FilterChain
 {
+    @Override
     public final void doFilter(ServletRequest req, ServletResponse res) throws IOException, ServletException
     {
         doFilter((HttpServletRequest) req, (HttpServletResponse) res);
     }
 
+    /**
+     * @see FilterChain#doFilter(ServletRequest, ServletResponse)
+     */
     protected abstract void doFilter(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException;
 }

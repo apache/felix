@@ -24,10 +24,10 @@ import javax.servlet.DispatcherType;
 import javax.servlet.Filter;
 
 import org.osgi.dto.DTO;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.runtime.dto.FilterDTO;
-
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 /**
  * Provides registration information for a {@link Filter}, and is used to programmatically register {@link Filter}s.
@@ -37,13 +37,18 @@ import aQute.bnd.annotation.ConsumerType;
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@ConsumerType
-public final class FilterInfo
+public final class FilterInfo extends AbstractInfo<Filter>
 {
     /**
-     * The name of the servlet.
+     * Properties starting with this prefix are passed as filter init parameters to the
+     * {@code init()} method of the filter.
      */
-    public String name;
+    private static final String FILTER_INIT_PREFIX = "filter.init.";
+
+    /**
+     * The name of the filter.
+     */
+    private final String name;
 
     /**
      * The request mappings for the servlet.
@@ -52,7 +57,7 @@ public final class FilterInfo
      * Note that these patterns should conform to the Servlet specification.
      * </p>
      */
-    public String[] patterns;
+    private final String[] patterns;
 
     /**
      * The servlet names for the servlet filter.
@@ -60,7 +65,7 @@ public final class FilterInfo
      * The specified names are used to determine the servlets whose requests are mapped to the servlet filter.
      * </p>
      */
-    public String[] servletNames;
+    private final String[] servletNames;
 
     /**
      * The request mappings for the servlet filter.
@@ -69,18 +74,12 @@ public final class FilterInfo
      * These regular expressions are a convenience extension allowing one to specify filters that match paths that are difficult to match with plain Servlet patterns alone.
      * </p>
      */
-    public String[] regexs;
+    private final String[] regexs;
 
     /**
      * Specifies whether the servlet filter supports asynchronous processing.
      */
-    public boolean asyncSupported = false;
-
-    /**
-     * Specifies the ranking order in which this filter should be called. Higher rankings are called first.
-     */
-    public int ranking = 0;
-    public long serviceId;
+    private final boolean asyncSupported;
 
     /**
      * The dispatcher associations for the servlet filter.
@@ -89,16 +88,108 @@ public final class FilterInfo
      * See {@link DispatcherType} and Servlet 3.0 specification, section 6.2.5.
      * </p>
      */
-    public DispatcherType[] dispatcher = { DispatcherType.REQUEST };
+    private final DispatcherType[] dispatcher;
 
     /**
      * The filter initialization parameters as provided during registration of the filter.
      */
-    public Map<String, String> initParams;
+    private final Map<String, String> initParams;
 
     /**
-     * The {@link HttpContext} for the servlet.
+     * The {@link HttpContext} for the filter.
      */
-    public HttpContext context;
+    private final HttpContext context;
 
+    private final Filter filter;
+
+    public FilterInfo(final ServiceReference<Filter> ref)
+    {
+        super(ref);
+        this.name = getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_NAME);
+        this.asyncSupported = getBooleanProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_ASYNC_SUPPORTED);
+        this.servletNames = getStringArrayProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_SERVLET);
+        this.patterns = getStringArrayProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN);
+        this.regexs = getStringArrayProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_REGEX);
+        this.initParams = getInitParams(ref, FILTER_INIT_PREFIX);
+        String[] dispatcherNames = getStringArrayProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_DISPATCHER);
+        if (dispatcherNames != null && dispatcherNames.length > 0)
+        {
+            DispatcherType[] dispatchers = new DispatcherType[dispatcherNames.length];
+            for (int i = 0; i < dispatchers.length; i++)
+            {
+                dispatchers[i] = DispatcherType.valueOf(dispatcherNames[i].toUpperCase());
+            }
+            this.dispatcher = dispatchers;
+        }
+        else
+        {
+            this.dispatcher = new DispatcherType[] {DispatcherType.REQUEST};
+        }
+        this.context = null;
+        this.filter = null;
+    }
+
+    /**
+     * Constructor for Http Service
+     */
+    public FilterInfo(final String name,
+            final String regex,
+            final int serviceRanking,
+            final Map<String, String> initParams,
+            final Filter filter,
+            final HttpContext context)
+    {
+        super(serviceRanking);
+        this.name = name;
+        this.patterns = null;
+        this.servletNames = null;
+        this.regexs = new String[] {regex};
+        this.initParams = initParams;
+        this.asyncSupported = false;
+        this.dispatcher = new DispatcherType[] {DispatcherType.REQUEST};
+        this.filter = filter;
+        this.context = context;
+    }
+
+    @Override
+    public boolean isValid()
+    {
+        return super.isValid() && (!isEmpty(this.patterns) || !isEmpty(this.regexs) || !isEmpty(this.servletNames));
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String[] getPatterns() {
+        return patterns;
+    }
+
+    public String[] getServletNames() {
+        return servletNames;
+    }
+
+    public String[] getRegexs() {
+        return regexs;
+    }
+
+    public boolean isAsyncSupported() {
+        return asyncSupported;
+    }
+
+    public DispatcherType[] getDispatcher() {
+        return dispatcher;
+    }
+
+    public Map<String, String> getInitParams() {
+        return initParams;
+    }
+
+    public HttpContext getContext() {
+        return context;
+    }
+
+    public Filter getFilter() {
+        return filter;
+    }
 }

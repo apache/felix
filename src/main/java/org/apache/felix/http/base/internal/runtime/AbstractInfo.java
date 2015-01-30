@@ -119,6 +119,19 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
             {
                 return 0;
             }
+            // service id might be negative, we have to change the behaviour in that case
+            if ( this.serviceId < 0 )
+            {
+                if ( other.serviceId > 0 )
+                {
+                    return -1;
+                }
+                return other.serviceId < this.serviceId ? -1 : 1;
+            }
+            if ( other.serviceId < 0 )
+            {
+                return -1;
+            }
             return other.serviceId > this.serviceId ? -1 : 1;
         }
 

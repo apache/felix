@@ -16,11 +16,10 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
-import java.util.Dictionary;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
 import javax.servlet.Filter;
 import javax.servlet.Servlet;
@@ -28,7 +27,7 @@ import javax.servlet.ServletException;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 
-public abstract class AbstractHandler
+public abstract class AbstractHandler<T extends AbstractHandler> implements Comparable<T>
 {
     private final static AtomicInteger ID = new AtomicInteger();
 
@@ -76,32 +75,7 @@ public abstract class AbstractHandler
 
     public abstract void init() throws ServletException;
 
-    /**
-     * TODO - We can remove this, once we switched to {@link #setInitParams(Map)}
-     * @param map
-     */
-    public final void setInitParams(Dictionary map)
-    {
-        this.initParams.clear();
-        if (map == null)
-        {
-            return;
-        }
-
-        Enumeration e = map.keys();
-        while (e.hasMoreElements())
-        {
-            Object key = e.nextElement();
-            Object value = map.get(key);
-
-            if ((key instanceof String) && (value instanceof String))
-            {
-                this.initParams.put((String) key, (String) value);
-            }
-        }
-    }
-
-    protected final ExtServletContext getContext()
+    public ExtServletContext getContext()
     {
         return this.context;
     }
@@ -118,4 +92,6 @@ public abstract class AbstractHandler
      * @return the {@link Servlet} or {@link Filter} this handler handles.
      */
     protected abstract Object getSubject();
+
+    public abstract Pattern[] getPatterns();
 }

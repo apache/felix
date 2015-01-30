@@ -17,13 +17,12 @@
  * under the License.
  */
 
-package org.apache.felix.http.base.internal.handler;
+package org.apache.felix.http.base.internal.dispatch;
 
 import javax.servlet.RequestDispatcher;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.context.ServletContextImpl;
-import org.apache.felix.http.base.internal.dispatch.RequestDispatcherProvider;
 
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>

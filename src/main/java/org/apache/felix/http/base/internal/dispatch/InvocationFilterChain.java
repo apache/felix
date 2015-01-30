@@ -16,41 +16,59 @@
  */
 package org.apache.felix.http.base.internal.dispatch;
 
+import static javax.servlet.http.HttpServletResponse.SC_OK;
+
+import java.io.IOException;
+
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import org.apache.felix.http.base.internal.handler.FilterHandler;
 
-public final class InvocationFilterChain extends HttpFilterChain
+import org.apache.felix.http.base.internal.handler.FilterHandler;
+import org.apache.felix.http.base.internal.handler.ServletHandler;
+
+class InvocationFilterChain extends HttpFilterChain
 {
-    private final FilterHandler[] handlers;
-    private final ServletPipeline servletPipeline;
-    private final FilterChain proceedingChain;
+    private final ServletHandler servletHandler;
+    private final FilterHandler[] filterHandlers;
+    private final FilterChain defaultChain;
+
     private int index = -1;
 
-    public InvocationFilterChain(FilterHandler[] handlers, ServletPipeline servletPipeline, FilterChain proceedingChain)
+    public InvocationFilterChain(ServletHandler servletHandler, FilterHandler[] filterHandlers, FilterChain defaultChain)
     {
-        this.handlers = handlers;
-        this.servletPipeline = servletPipeline;
-        this.proceedingChain = proceedingChain;
+        this.filterHandlers = filterHandlers;
+        this.servletHandler = servletHandler;
+        this.defaultChain = defaultChain;
     }
 
+    @Override
     protected void doFilter(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException
     {
         this.index++;
 
-        if (this.index < this.handlers.length)
+        if (this.index < this.filterHandlers.length)
         {
-            this.handlers[this.index].handle(req, res, this);
-        }
-        else
-        {
-            if (!this.servletPipeline.handle(req, res))
+            if (this.filterHandlers[this.index].handle(req, res, this))
             {
-                this.proceedingChain.doFilter(req, res);
+                // We're done...
+                return;
             }
+        }
+
+        // Last entry in the chain...
+        if (this.servletHandler != null && this.servletHandler.handle(req, res))
+        {
+            // We're done...
+            return;
+        }
+
+        // FELIX-3988: If the response is not yet committed and still has the default
+        // status, we're going to override this and send an error instead.
+        if (!res.isCommitted() && res.getStatus() == SC_OK)
+        {
+            this.defaultChain.doFilter(req, res);
         }
     }
 }

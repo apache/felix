@@ -53,7 +53,7 @@ public class HttpServicePlugin extends HttpServlet
 
     public void register()
     {
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(Constants.SERVICE_VENDOR, "Apache Software Foundation");
         props.put(Constants.SERVICE_DESCRIPTION, "HTTP Service Web Console Plugin");
         props.put("felix.webconsole.label", "httpservice");
@@ -88,14 +88,14 @@ public class HttpServicePlugin extends HttpServlet
         pw.println("<th class=\"header\">${Bundle}</th>");
         pw.println("</tr></thead>");
 
-        FilterHandler[] filters = registry.getFilters();
+        FilterHandler[] filters = new FilterHandler[0]; // XXX was: registry.getFilters();
         Arrays.sort(filters);
         String rowClass = "odd";
         for (FilterHandler filter : filters)
         {
             pw.println("<tr class=\"" + rowClass + " ui-state-default\">");
-            pw.println("<td>" + filter.getPattern() + "</td>");
-            pw.println("<td>" + filter.getFilter().getClass().getName() + "(" + filter.getRanking() + ")" + "</td>");
+//            pw.println("<td>" + Arrays.toString(filter.getPatternStrings()) + "</td>"); // XXX
+//            pw.println("<td>" + filter.getFilter().getClass().getName() + "(" + filter.getRanking() + ")" + "</td>");
 
             printBundleDetails(pw, filter.getFilter().getClass());
 
@@ -122,14 +122,14 @@ public class HttpServicePlugin extends HttpServlet
         pw.println("<th class=\"header\">${Bundle}</th>");
         pw.println("</tr></thead>");
 
-        ServletHandler[] servlets = registry.getServlets();
+        ServletHandler[] servlets = new ServletHandler[0]; // XXX was: registry.getServlets();
         String rowClass = "odd";
         for (ServletHandler servlet : servlets)
         {
 
             pw.println("<tr class=\"" + rowClass + " ui-state-default\">");
-            pw.println("<td>" + servlet.getAlias() + "</td>");
-            pw.println("<td>" + servlet.getServlet().getClass().getName() + "</td>");
+//            pw.println("<td>" + Arrays.toString(servlet.getPatternStrings()) + "</td>"); // XXX
+//            pw.println("<td>" + servlet.getServlet().getClass().getName() + "</td>");
 
             printBundleDetails(pw, servlet.getServlet().getClass());
 
@@ -154,33 +154,30 @@ public class HttpServicePlugin extends HttpServlet
         pw.println("HTTP Service Details:");
         pw.println();
         pw.println("Registered Servlet Services");
-        ServletHandler[] servlets = registry.getServlets();
+        ServletHandler[] servlets = new ServletHandler[0]; // XXX was: registry.getServlets();
         for (ServletHandler servlet : servlets)
         {
-            pw.println("Alias : " + servlet.getAlias());
-
+//            pw.println("Patterns : " + Arrays.toString(servlet.getPatternStrings())); // XXX
             addSpace(pw, 1);
-            pw.println("Class  :" + servlet.getServlet().getClass().getName());
+            pw.println("Class    : " + servlet.getServlet().getClass().getName());
             addSpace(pw, 1);
-            pw.println("Bundle :" + getBundleDetails(servlet.getServlet().getClass()));
-
+            pw.println("Bundle   : " + getBundleDetails(servlet.getServlet().getClass()));
         }
 
         pw.println();
 
         pw.println("Registered Filter Services");
-        FilterHandler[] filters = registry.getFilters();
+        FilterHandler[] filters = new FilterHandler[0]; // XXX was: registry.getFilters();
         Arrays.sort(filters);
         for (FilterHandler filter : filters)
         {
-            pw.println("Pattern : " + filter.getPattern());
-
+//            pw.println("Patterns : " + Arrays.toString(filter.getPatternStrings())); // XXX
             addSpace(pw, 1);
-            pw.println("Ranking :" + filter.getRanking());
+//            pw.println("Ranking  : " + filter.getRanking()); // XXX
             addSpace(pw, 1);
-            pw.println("Class   :" + filter.getFilter().getClass().getName());
+            pw.println("Class    : " + filter.getFilter().getClass().getName());
             addSpace(pw, 1);
-            pw.println("Bundle  :" + getBundleDetails(filter.getFilter().getClass()));
+            pw.println("Bundle   : " + getBundleDetails(filter.getFilter().getClass()));
         }
     }
 
