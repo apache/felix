@@ -39,7 +39,7 @@ public final class ServletContextHelperTracker extends AbstractReferenceTracker<
         try
         {
             return btx.createFilter(String.format("(&(objectClass=%s)(%s=*)(%s=*))",
-                    ServletContextHelperTracker.class.getName(),
+                    ServletContextHelper.class.getName(),
                     HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME,
                     HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH));
         }
