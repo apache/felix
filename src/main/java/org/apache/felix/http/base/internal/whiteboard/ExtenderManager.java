@@ -23,11 +23,9 @@ import java.util.Map;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.Filter;
-import javax.servlet.Servlet;
 
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
-import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.service.HttpServiceImpl;
 import org.apache.felix.http.base.internal.whiteboard.tracker.FilterTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextHelperTracker;
@@ -64,13 +62,13 @@ public final class ExtenderManager
 
     private final ArrayList<ServiceTracker<?, ?>> trackers = new ArrayList<ServiceTracker<?, ?>>();
 
-    public ExtenderManager(final HttpService httpService, final BundleContext bundleContext)
+    public ExtenderManager(final HttpServiceImpl httpService, final BundleContext bundleContext)
     {
         this.mapping = new HashMap<String, AbstractMapping>();
-        this.contextManager = new ServletContextHelperManager();
+        this.contextManager = new ServletContextHelperManager(httpService);
         this.httpService = httpService;
         addTracker(new FilterTracker(bundleContext, this));
-        addTracker(new ServletTracker(bundleContext, this));
+        addTracker(new ServletTracker(bundleContext, this.contextManager));
         addTracker(new ServletContextHelperTracker(bundleContext, this.contextManager));
     }
 
@@ -272,34 +270,12 @@ public final class ExtenderManager
         return filterInfo;
     }
 
-    public void addServlet(final Servlet service, final ServiceReference<Servlet> ref)
-    {
-        final ServletInfo servletInfo = new ServletInfo(ref, service);
-        if ( servletInfo.isValid() )
-        {
-            ((HttpServiceImpl)this.httpService).registerServlet(servletInfo);
-        }
-        else
-        {
-            SystemLogger.debug("Ignoring Servlet Service " + ref);
-        }
-    }
-
     public void removeFilter(final Filter service, ServiceReference<Filter> ref)
     {
         final FilterInfo filterInfo = createFilterInfo(ref, false);
         if ( filterInfo != null )
         {
             ((HttpServiceImpl)this.httpService).unregisterFilter(service, filterInfo);
-        }
-    }
-
-    public void removeServlet(final Servlet service, final ServiceReference<Servlet> ref)
-    {
-        final ServletInfo servletInfo = new ServletInfo(ref, null);
-        if ( servletInfo.isValid() )
-        {
-            ((HttpServiceImpl)this.httpService).unregisterServlet(service, servletInfo);
         }
     }
 

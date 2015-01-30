@@ -17,7 +17,9 @@
 package org.apache.felix.http.base.internal.handler;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -25,6 +27,7 @@ import javax.servlet.Filter;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 
+import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.osgi.service.http.NamespaceException;
 
 public final class HandlerRegistry
@@ -50,7 +53,8 @@ public final class HandlerRegistry
         return filters;
     }
 
-    public void addServlet(ServletHandler handler) throws ServletException, NamespaceException
+    public void addServlet(final ServletHandler handler)
+    throws ServletException, NamespaceException
     {
         handler.init();
 
@@ -78,7 +82,37 @@ public final class HandlerRegistry
         updateFilterArray();
     }
 
-    public void removeServlet(Servlet servlet, final boolean destroy)
+    public Set<Servlet> removeServlet(final ServletInfo servletInfo, final boolean destroy)
+    {
+        final Set<Servlet> servletInstances = new HashSet<Servlet>();
+        boolean update = false;
+        for (Iterator<ServletHandler> it = aliasMap.values().iterator(); it.hasNext(); )
+        {
+            final ServletHandler handler = it.next();
+            if (handler.getServletInfo().compareTo(servletInfo) == 0 ) {
+                it.remove();
+                servletInstances.add(handler.getServlet());
+                if (destroy)
+                {
+                    handler.destroy();
+                }
+                update = true;
+            }
+        }
+        if ( update )
+        {
+            updateServletArray();
+        }
+
+        return servletInstances;
+    }
+
+    /**
+     * Support for old Http Service registrations
+     * @param servlet
+     * @param destroy
+     */
+    public void removeServlet(final Servlet servlet, final boolean destroy)
     {
         boolean update = false;
         for (Iterator<ServletHandler> it = aliasMap.values().iterator(); it.hasNext(); )

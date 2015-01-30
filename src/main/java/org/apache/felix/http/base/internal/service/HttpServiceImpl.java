@@ -21,6 +21,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.servlet.Filter;
@@ -207,18 +208,31 @@ public final class HttpServiceImpl implements ExtHttpService
             throw new IllegalArgumentException("ServletInfo must at least have one pattern or error page!");
         }
 
-        final ServletHandler handler = new ServletHandler(getServletContext(servletInfo.getContext()), servletInfo);
-        try {
-            this.handlerRegistry.addServlet(handler);
-        } catch (ServletException e) {
-            // TODO create failure DTO
-        } catch (NamespaceException e) {
-            // TODO create failure DTO
+        for(final String alias : servletInfo.getPatterns())
+        {
+            // create a handler for each alias
+            Servlet servlet = servletInfo.getServlet();
+            if ( servlet == null )
+            {
+                servlet = this.bundle.getBundleContext().getServiceObjects(servletInfo.getServiceReference()).getService();
+                // TODO - handle null
+            }
+            final ServletHandler handler = new ServletHandler(getServletContext(servletInfo.getContext()),
+                    servletInfo,
+                    servlet,
+                    alias);
+            try {
+                this.handlerRegistry.addServlet(handler);
+            } catch (ServletException e) {
+                // TODO create failure DTO
+            } catch (NamespaceException e) {
+                // TODO create failure DTO
+            }
+            this.localServlets.add(servlet);
         }
-        this.localServlets.add(servletInfo.getServlet());
     }
 
-    public void unregisterServlet(final Servlet servlet, final ServletInfo servletInfo)
+    public void unregisterServlet(final ServletInfo servletInfo)
     {
         if (servletInfo == null)
         {
@@ -226,8 +240,11 @@ public final class HttpServiceImpl implements ExtHttpService
         }
         if ( servletInfo.getPatterns() != null )
         {
-            this.handlerRegistry.removeServlet(servlet, true);
-            this.localServlets.remove(servlet);
+            final Set<Servlet> instances = this.handlerRegistry.removeServlet(servletInfo, true);
+            for(final Servlet servlet : instances)
+            {
+                this.localServlets.remove(servlet);
+            }
         }
     }
 
@@ -245,7 +262,8 @@ public final class HttpServiceImpl implements ExtHttpService
      * @see org.osgi.service.http.HttpService#registerServlet(java.lang.String, javax.servlet.Servlet, java.util.Dictionary, org.osgi.service.http.HttpContext)
      */
     @Override
-    public void registerServlet(String alias, Servlet servlet, Dictionary initParams, HttpContext context) throws ServletException, NamespaceException
+    public void registerServlet(String alias, Servlet servlet, Dictionary initParams, HttpContext context)
+    throws ServletException, NamespaceException
     {
         if (servlet == null)
         {
@@ -326,9 +344,18 @@ public final class HttpServiceImpl implements ExtHttpService
      * @see org.apache.felix.http.api.ExtHttpService#unregisterServlet(javax.servlet.Servlet)
      */
     @Override
-    public void unregisterServlet(Servlet servlet)
+    public void unregisterServlet(final Servlet servlet)
     {
-        unregisterServlet(servlet, true);
+        this.unregisterServlet(servlet, true);
+    }
+
+    private void unregisterServlet(final Servlet servlet, final boolean destroy)
+    {
+        if ( servlet != null )
+        {
+            this.handlerRegistry.removeServlet(servlet, destroy);
+            this.localServlets.remove(servlet);
+        }
     }
 
     private ExtServletContext getServletContext(HttpContext context)
@@ -362,15 +389,6 @@ public final class HttpServiceImpl implements ExtHttpService
         {
             this.handlerRegistry.removeFilter(filter, destroy);
             this.localFilters.remove(filter);
-        }
-    }
-
-    private void unregisterServlet(Servlet servlet, final boolean destroy)
-    {
-        if (servlet != null)
-        {
-            this.handlerRegistry.removeServlet(servlet, destroy);
-            this.localServlets.remove(servlet);
         }
     }
 

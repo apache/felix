@@ -30,6 +30,7 @@ import org.apache.felix.http.base.internal.listener.ServletContextAttributeListe
 import org.apache.felix.http.base.internal.listener.ServletRequestAttributeListenerManager;
 import org.apache.felix.http.base.internal.listener.ServletRequestListenerManager;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
+import org.apache.felix.http.base.internal.service.HttpServiceImpl;
 import org.apache.felix.http.base.internal.service.HttpServiceRuntimeImpl;
 import org.apache.felix.http.base.internal.whiteboard.ExtenderManager;
 import org.osgi.framework.BundleContext;
@@ -143,7 +144,7 @@ public final class HttpServiceController
         HttpServiceFactory factory = new HttpServiceFactory(servletContext, this.registry, this.contextAttributeListener, this.sharedContextAttributes);
 
         this.serviceReg = this.bundleContext.registerService(ifaces, factory, this.serviceProps);
-        this.manager = new ExtenderManager((HttpService)factory.getService(this.bundleContext.getBundle(), this.serviceReg), this.bundleContext);
+        this.manager = new ExtenderManager((HttpServiceImpl)factory.getService(this.bundleContext.getBundle(), this.serviceReg), this.bundleContext);
 
         this.runtimeReg = this.bundleContext.registerService(HttpServiceRuntime.class, new HttpServiceRuntimeImpl(), null);
     }

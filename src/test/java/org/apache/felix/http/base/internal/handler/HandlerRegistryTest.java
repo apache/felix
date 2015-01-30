@@ -44,7 +44,7 @@ public class HandlerRegistryTest
 
         Servlet servlet = Mockito.mock(Servlet.class);
         final ServletInfo info = new ServletInfo("foo", "/foo", 0, null, servlet, null);
-        ServletHandler handler = new ServletHandler(null, info);
+        ServletHandler handler = new ServletHandler(null, info, info.getServlet(), info.getPatterns()[0]);
         assertEquals("Precondition", 0, hr.getServlets().length);
         hr.addServlet(handler);
         Mockito.verify(servlet, Mockito.times(1)).init(Mockito.any(ServletConfig.class));
@@ -52,7 +52,7 @@ public class HandlerRegistryTest
         assertSame(handler, hr.getServlets()[0]);
 
         final ServletInfo info2 = new ServletInfo("bar", "/bar", 0, null, servlet, null);
-        ServletHandler handler2 = new ServletHandler(null, info2);
+        ServletHandler handler2 = new ServletHandler(null, info2, info2.getServlet(), info2.getPatterns()[0]);
         try
         {
             hr.addServlet(handler2);
@@ -66,7 +66,7 @@ public class HandlerRegistryTest
         assertArrayEquals(new ServletHandler[] {handler2, handler}, hr.getServlets());
 
         final ServletInfo info3 = new ServletInfo("zar", "/foo", 0, null, Mockito.mock(Servlet.class), null);
-        ServletHandler handler3 = new ServletHandler(null,info3);
+        ServletHandler handler3 = new ServletHandler(null,info3, info3.getServlet(), info3.getPatterns()[0]);
 
         try
         {
@@ -93,7 +93,7 @@ public class HandlerRegistryTest
 
         Servlet servlet = Mockito.mock(Servlet.class);
         final ServletInfo info = new ServletInfo("bar", "/bar", 0, null, servlet, null);
-        final ServletHandler otherHandler = new ServletHandler(null, info);
+        final ServletHandler otherHandler = new ServletHandler(null, info, info.getServlet(), info.getPatterns()[0]);
 
         Mockito.doAnswer(new Answer<Void>()
         {
@@ -113,7 +113,7 @@ public class HandlerRegistryTest
         }).when(servlet).init(Mockito.any(ServletConfig.class));
 
         final ServletInfo info2 = new ServletInfo("foo", "/foo", 0, null, servlet, null);
-        ServletHandler handler = new ServletHandler(null, info2);
+        ServletHandler handler = new ServletHandler(null, info2, info2.getServlet(), info2.getPatterns()[0]);
         try
         {
             hr.addServlet(handler);
@@ -137,7 +137,7 @@ public class HandlerRegistryTest
 
         Servlet otherServlet = Mockito.mock(Servlet.class);
         final ServletInfo info = new ServletInfo("bar", "/foo", 0, null, otherServlet, null);
-        final ServletHandler otherHandler = new ServletHandler(null, info);
+        final ServletHandler otherHandler = new ServletHandler(null, info, info.getServlet(), info.getPatterns()[0]);
 
         Servlet servlet = Mockito.mock(Servlet.class);
         Mockito.doAnswer(new Answer<Void>()
@@ -152,7 +152,7 @@ public class HandlerRegistryTest
         }).when(servlet).init(Mockito.any(ServletConfig.class));
 
         final ServletInfo info2 = new ServletInfo("foo", "/foo", 0, null, servlet, null);
-        ServletHandler handler = new ServletHandler(null, info2);
+        ServletHandler handler = new ServletHandler(null, info2, info2.getServlet(), info2.getPatterns()[0]);
 
         try
         {
@@ -264,11 +264,11 @@ public class HandlerRegistryTest
 
         Servlet servlet = Mockito.mock(Servlet.class);
         final ServletInfo info = new ServletInfo("f", "/f", 0, null, servlet, null);
-        ServletHandler servletHandler = new ServletHandler(null, info);
+        ServletHandler servletHandler = new ServletHandler(null, info, info.getServlet(), info.getPatterns()[0]);
         hr.addServlet(servletHandler);
         Servlet servlet2 = Mockito.mock(Servlet.class);
         final ServletInfo info2 = new ServletInfo("ff", "/ff", 0, null, servlet2, null);
-        ServletHandler servletHandler2 = new ServletHandler(null, info2);
+        ServletHandler servletHandler2 = new ServletHandler(null, info2, info2.getServlet(), info2.getPatterns()[0]);
         hr.addServlet(servletHandler2);
         Filter filter = Mockito.mock(Filter.class);
         final FilterInfo fi = new FilterInfo();

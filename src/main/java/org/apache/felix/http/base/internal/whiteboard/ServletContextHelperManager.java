@@ -24,17 +24,23 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.http.base.internal.runtime.ContextInfo;
+import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.service.HttpServiceImpl;
 
 public final class ServletContextHelperManager
 {
     private final Map<String, List<ContextHolder>> nameMap = new HashMap<String, List<ContextHolder>>();
 
+    private final HttpServiceImpl httpService;
+
     /**
      * Create a new servlet context helper manager
      * and the default context
      */
-    public ServletContextHelperManager()
+    public ServletContextHelperManager(final HttpServiceImpl httpService)
     {
+        this.httpService = httpService;
+
         // create default context
         final ContextInfo info = new ContextInfo();
         this.addContextHelper(info);
@@ -124,6 +130,16 @@ public final class ServletContextHelperManager
                 }
             }
         }
+    }
+
+    public void addServlet(final ServletInfo servletInfo)
+    {
+        this.httpService.registerServlet(servletInfo);
+    }
+
+    public void removeServlet(final ServletInfo servletInfo)
+    {
+        this.httpService.unregisterServlet(servletInfo);
     }
 
     private final static class ContextHolder implements Comparable<ContextHolder>

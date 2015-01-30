@@ -76,7 +76,7 @@ public final class ServletInfo extends AbstractInfo<Servlet>
 
     private final Servlet servlet;
 
-    public ServletInfo(final ServiceReference<Servlet> ref, final Servlet servlet)
+    public ServletInfo(final ServiceReference<Servlet> ref)
     {
         super(ref);
         this.name = getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_NAME);
@@ -85,7 +85,7 @@ public final class ServletInfo extends AbstractInfo<Servlet>
         this.asyncSupported = getBooleanProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_ASYNC_SUPPORTED);
         this.initParams = getInitParams(ref, SERVLET_INIT_PREFIX);
         this.context = null;
-        this.servlet = servlet;
+        this.servlet = null;
     }
 
     /**
