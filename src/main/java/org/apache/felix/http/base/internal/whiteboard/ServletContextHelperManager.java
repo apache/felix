@@ -28,12 +28,14 @@ import java.util.Map;
 import org.apache.felix.http.base.internal.runtime.AbstractInfo;
 import org.apache.felix.http.base.internal.runtime.ContextInfo;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
+import org.apache.felix.http.base.internal.runtime.ResourceInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.service.HttpServiceImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.http.NamespaceException;
 import org.osgi.service.http.context.ServletContextHelper;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
@@ -105,6 +107,10 @@ public final class ServletContextHelperManager
                 {
                     this.registerFilter((FilterInfo)entry.getKey(), holder);
                 }
+                else if ( entry.getKey() instanceof ResourceInfo )
+                {
+                    this.registerResource((ResourceInfo)entry.getKey(), holder);
+                }
             }
         }
     }
@@ -124,6 +130,10 @@ public final class ServletContextHelperManager
                 else if ( entry.getKey() instanceof FilterInfo )
                 {
                     this.unregisterFilter((FilterInfo)entry.getKey(), holder);
+                }
+                else if ( entry.getKey() instanceof ResourceInfo )
+                {
+                    this.unregisterResource((ResourceInfo)entry.getKey(), holder);
                 }
                 if ( entry.getValue().isEmpty() ) {
                     i.remove();
@@ -237,6 +247,29 @@ public final class ServletContextHelperManager
         this.httpService.unregisterFilter(holder.getInfo(), filterInfo);
     }
 
+    private void registerResource(final ResourceInfo resourceInfo, final ContextHolder holder)
+    {
+        final ServletContextHelper helper = holder.getContext(resourceInfo.getServiceReference().getBundle());
+        // TODO - use servlet context helper and move registration to http service
+        for(final String alias : resourceInfo.getPatterns())
+        {
+            try {
+                this.httpService.registerResources(alias, resourceInfo.getPrefix(), null);
+            } catch (NamespaceException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void unregisterResource(final ResourceInfo resourceInfo, final ContextHolder holder)
+    {
+        for(final String alias : resourceInfo.getPatterns())
+        {
+            this.httpService.unregister(alias);
+        }
+    }
+
     /**
      * Add a new servlet.
      * @param servletInfo The servlet info
@@ -324,6 +357,32 @@ public final class ServletContextHelperManager
                 for(final ContextHolder h : holderList)
                 {
                     this.unregisterFilter(info, h);
+                }
+            }
+        }
+    }
+
+    public void addResource(final ResourceInfo info) {
+        synchronized ( this.contextMap )
+        {
+            final List<ContextHolder> holderList = this.getMatchingContexts(info);
+            this.servicesMap.put(info, holderList);
+            for(final ContextHolder h : holderList)
+            {
+                this.registerResource(info, h);
+            }
+        }
+    }
+
+    public void removeResource(final ResourceInfo info) {
+        synchronized ( this.contextMap )
+        {
+            final List<ContextHolder> holderList = this.servicesMap.remove(info);
+            if ( holderList != null )
+            {
+                for(final ContextHolder h : holderList)
+                {
+                    this.unregisterResource(info, h);
                 }
             }
         }

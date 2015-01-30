@@ -16,16 +16,18 @@
  */
 package org.apache.felix.http.base.internal.whiteboard.tracker;
 
-import org.apache.felix.http.base.internal.whiteboard.ExtenderManager;
+import org.apache.felix.http.base.internal.logger.SystemLogger;
+import org.apache.felix.http.base.internal.runtime.ResourceInfo;
+import org.apache.felix.http.base.internal.whiteboard.ServletContextHelperManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
-public final class ResourceTracker extends AbstractTracker<Object>
+public final class ResourceTracker extends AbstractReferenceTracker<Object>
 {
-    private final ExtenderManager manager;
+    private final ServletContextHelperManager contextManager;
 
     private static Filter createFilter(final BundleContext btx)
     {
@@ -42,28 +44,34 @@ public final class ResourceTracker extends AbstractTracker<Object>
         return null; // we never get here - and if we get an NPE which is fine
     }
 
-    public ResourceTracker(final BundleContext context, final ExtenderManager manager)
+    public ResourceTracker(final BundleContext context, final ServletContextHelperManager manager)
     {
         super(context, createFilter(context));
-        this.manager = manager;
+        this.contextManager = manager;
     }
 
     @Override
-    protected void added(final Object service, final ServiceReference ref)
+    protected void added(final ServiceReference<Object> ref)
     {
-        this.manager.addResource(ref);
+        final ResourceInfo info = new ResourceInfo(ref);
+
+        if ( info.isValid() )
+        {
+            this.contextManager.addResource(info);
+        }
+        else
+        {
+            SystemLogger.debug("Ignoring Resource service " + ref);
+        }
     }
 
     @Override
-    protected void modified(final Object service, final ServiceReference ref)
+    protected void removed(final ServiceReference<Object> ref)
     {
-        removed(service, ref);
-        added(service, ref);
-    }
+        final ResourceInfo info = new ResourceInfo(ref);
 
-    @Override
-    protected void removed(final Object service, final ServiceReference ref)
-    {
-        this.manager.removeResource(ref);
-    }
-}
+        if ( info.isValid() )
+        {
+            this.contextManager.removeResource(info);
+        }
+    }}
