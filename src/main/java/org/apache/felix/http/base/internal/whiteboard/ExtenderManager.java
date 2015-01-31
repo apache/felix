@@ -18,7 +18,7 @@ package org.apache.felix.http.base.internal.whiteboard;
 
 import java.util.ArrayList;
 
-import org.apache.felix.http.base.internal.service.HttpServiceImpl;
+import org.apache.felix.http.base.internal.service.InternalHttpService;
 import org.apache.felix.http.base.internal.whiteboard.tracker.FilterTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ResourceTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextHelperTracker;
@@ -35,7 +35,7 @@ public final class ExtenderManager
 
     private final ArrayList<ServiceTracker<?, ?>> trackers = new ArrayList<ServiceTracker<?, ?>>();
 
-    public ExtenderManager(final HttpServiceImpl httpService, final BundleContext bundleContext)
+    public ExtenderManager(final InternalHttpService httpService, final BundleContext bundleContext)
     {
         this.contextManager = new ServletContextHelperManager(bundleContext, httpService);
         addTracker(new FilterTracker(bundleContext, contextManager));

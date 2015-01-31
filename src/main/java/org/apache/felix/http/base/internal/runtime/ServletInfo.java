@@ -24,7 +24,6 @@ import javax.servlet.Servlet;
 
 import org.osgi.dto.DTO;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.runtime.dto.ServletDTO;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
@@ -72,10 +71,6 @@ public final class ServletInfo extends AbstractInfo<Servlet>
      */
     private final Map<String, String> initParams;
 
-    private final HttpContext context;
-
-    private final Servlet servlet;
-
     public ServletInfo(final ServiceReference<Servlet> ref)
     {
         super(ref);
@@ -84,8 +79,6 @@ public final class ServletInfo extends AbstractInfo<Servlet>
         this.patterns = getStringArrayProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN);
         this.asyncSupported = getBooleanProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_ASYNC_SUPPORTED);
         this.initParams = getInitParams(ref, SERVLET_INIT_PREFIX);
-        this.context = null;
-        this.servlet = null;
     }
 
     @SuppressWarnings("unchecked")
@@ -97,8 +90,6 @@ public final class ServletInfo extends AbstractInfo<Servlet>
         this.errorPage = null;
         this.asyncSupported = false;
         this.initParams = null;
-        this.context = null;
-        this.servlet = servlet;
     }
 
     private static ServiceReference getRef(final ServiceReference ref)
@@ -112,9 +103,7 @@ public final class ServletInfo extends AbstractInfo<Servlet>
     public ServletInfo(final String name,
             final String pattern,
             final int serviceRanking,
-            final Map<String, String> initParams,
-            final Servlet servlet,
-            final HttpContext context)
+            final Map<String, String> initParams)
     {
         super(serviceRanking);
         this.name = name;
@@ -122,8 +111,6 @@ public final class ServletInfo extends AbstractInfo<Servlet>
         this.initParams = initParams;
         this.asyncSupported = false;
         this.errorPage = null;
-        this.servlet = servlet;
-        this.context = context;
     }
 
     @Override
@@ -155,15 +142,5 @@ public final class ServletInfo extends AbstractInfo<Servlet>
     public Map<String, String> getInitParams()
     {
         return initParams;
-    }
-
-    public HttpContext getContext()
-    {
-        return this.context;
-    }
-
-    public Servlet getServlet()
-    {
-        return this.servlet;
     }
 }
