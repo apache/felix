@@ -17,7 +17,6 @@ package org.apache.felix.dm.tracker;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -27,7 +26,6 @@ import java.util.Map.Entry;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.impl.ServiceUtil;
 import org.osgi.framework.AllServiceListener;
 import org.osgi.framework.BundleContext;
@@ -261,8 +259,8 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 		this.trackReference = null;
 		this.trackClass = null;
 		final Version frameworkVersion = (Version) AccessController
-				.doPrivileged(new PrivilegedAction() {
-					public Object run() {
+				.doPrivileged(new PrivilegedAction<Version>() {
+					public Version run() {
 						String version = context
 								.getProperty(Constants.FRAMEWORK_VERSION);
 						return (version == null) ? Version.emptyVersion
@@ -892,82 +890,13 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 	     * A list of services that are currently hidden because there is an aspect available with a higher ranking.
 	     * @GuardedBy this
 	     */
-	    private final List m_hidden = new ArrayList();
-	    
-	    /**
-	     * Returns the highest hidden aspect for the specified service ID.
-	     * 
-	     * @param serviceId the service ID
-	     * @return a service reference, or <code>null</code> if there was no such service
-	     */
-	    private ServiceReference highestHidden(long serviceId) {
-	        ServiceReference result = null;
-	        int max = Integer.MIN_VALUE;
-	        synchronized (this) {
-    	        for (int i = 0; i < m_hidden.size(); i++) {
-    	            ServiceReference ref = (ServiceReference) m_hidden.get(i);
-    	            Long sid = (Long) ref.getProperty(Constants.SERVICE_ID);
-    	            Long aid = (Long) ref.getProperty(DependencyManager.ASPECT);
-    	            if ((aid != null && aid.longValue() == serviceId) 
-    	                || (aid == null && sid != null && sid.longValue() == serviceId)) {
-    	                Integer ranking = (Integer) ref.getProperty(Constants.SERVICE_RANKING);
-    	                int r = 0;
-    	                if (ranking != null) {
-    	                    r = ranking.intValue();
-    	                }
-    	                if (r > max) {
-    	                    max = r;
-    	                    result = ref;
-    	                }
-    	            }
-    	        }
-	        }
-	        return result;
-	    }
-	    
-        /**
-         * Returns the highest tracked service for the specified service ID.
-         * 
-         * @param serviceId the service ID
-         * @return a service reference, or <code>null</code> if there was no such service
-         */
-        private ServiceReference highestTracked(long serviceId) {
-            ServiceReference result = null;
-            int max = Integer.MIN_VALUE;
-            
-            synchronized (this) {
-                int length = size();
-                if (length == 0) {
-                    return null;
-                }
-                Object[] trackedServices = getTracked(new ServiceReference[length]);
-                for (int i = 0; i < trackedServices.length; i++) {
-                    ServiceReference ref = (ServiceReference) trackedServices[i];
-                    Long sid = (Long) ref.getProperty(Constants.SERVICE_ID);
-                    Long aid = (Long) ref.getProperty(DependencyManager.ASPECT);
-                    if ((aid != null && aid.longValue() == serviceId) 
-                        || (aid == null && sid != null && sid.longValue() == serviceId)) {
-                        Integer ranking = (Integer) ref.getProperty(Constants.SERVICE_RANKING);
-                        int r = 0;
-                        if (ranking != null) {
-                            r = ranking.intValue();
-                        }
-                        if (r > max) {
-                            max = r;
-                            result = ref;
-                        }
-                    }
-                }
-                return result;
-            }
-        }
-        
-        private final HashMap m_highestTrackedCache = new HashMap();
+	    private final Map<Long, TreeSet<ServiceReference>> m_highestTrackedCache = new HashMap<>();
+	    private final Map<Long, TreeSet<ServiceReference>> m_highestHiddenCache = new HashMap<>();
         
         private ServiceReference highestTrackedCache(long serviceId) {
             Long sid = Long.valueOf(serviceId);
             synchronized (this) {
-            	TreeSet services = (TreeSet) m_highestTrackedCache.get(sid);
+            	TreeSet<ServiceReference> services = m_highestTrackedCache.get(sid);
             	if (services != null && services.size() > 0) {
             		ServiceReference result = (ServiceReference) services.last();
             		return result;
@@ -979,9 +908,9 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
         private void addHighestTrackedCache(ServiceReference reference) {
             Long serviceId = ServiceUtil.getServiceIdObject(reference);
             synchronized (this) {
-            	TreeSet services = (TreeSet) m_highestTrackedCache.get(serviceId);
+            	TreeSet<ServiceReference> services = m_highestTrackedCache.get(serviceId);
             	if (services == null) {
-            		services = new TreeSet();
+            		services = new TreeSet<ServiceReference>();
             		m_highestTrackedCache.put(serviceId, services);
             	}
             	services.add(reference);
@@ -991,7 +920,7 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
         private void removeHighestTrackedCache(ServiceReference reference) {
             Long serviceId = ServiceUtil.getServiceIdObject(reference);
             synchronized (this) {
-            	TreeSet services = (TreeSet) m_highestTrackedCache.get(serviceId);
+            	TreeSet<ServiceReference> services = m_highestTrackedCache.get(serviceId);
             	if (services != null) {
             		services.remove(reference);
             	}
@@ -1004,12 +933,10 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 			}
         }
         
-        private final HashMap m_highestHiddenCache = new HashMap();
-        
         private ServiceReference highestHiddenCache(long serviceId) {
             Long sid = Long.valueOf(serviceId);
             synchronized (this) {
-            	TreeSet services = (TreeSet) m_highestHiddenCache.get(sid);
+            	TreeSet<ServiceReference> services = m_highestHiddenCache.get(sid);
 	            if (services != null && services.size() > 0) {
 	                ServiceReference result = (ServiceReference) services.last();
 	                return result;
@@ -1021,9 +948,9 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
         private void addHighestHiddenCache(ServiceReference reference) {
             Long serviceId = ServiceUtil.getServiceIdObject(reference);
             synchronized (this) {
-            	TreeSet services = (TreeSet) m_highestHiddenCache.get(serviceId);
+            	TreeSet<ServiceReference> services = m_highestHiddenCache.get(serviceId);
             	if (services == null) {
-            		services = new TreeSet();
+            		services = new TreeSet<ServiceReference>();
             		m_highestHiddenCache.put(serviceId, services);
             	}
             	services.add(reference);
@@ -1033,7 +960,7 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
         private void removeHighestHiddenCache(ServiceReference reference) {
             Long serviceId = ServiceUtil.getServiceIdObject(reference);
             synchronized (this) {
-            	TreeSet services = (TreeSet) m_highestHiddenCache.get(serviceId);
+            	TreeSet<ServiceReference> services = m_highestHiddenCache.get(serviceId);
             	if (services != null) {
             		services.remove(reference);
             	}
@@ -1063,7 +990,7 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 		 */
 		Tracked() {
 			super();
-			setTracked(new HashMapCache());
+			setTracked(new HashMapCache<Object, Object>());
 		}
 		
 		void setInitial(Object[] list) {
@@ -1074,7 +1001,7 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 		    	// not hiding aspects
 		    	super.setInitial(list);
 		    } else { 
-			    Map highestRankedServiceMap = new HashMap(); // <Long, RankedService>
+			    Map<Long, RankedService> highestRankedServiceMap = new HashMap<>();
 			    for (int i = 0; i < list.length; i++) {
 			    	ServiceReference sr = (ServiceReference) list[i];
 			    	if (sr != null) {
@@ -1100,8 +1027,8 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 			    if (highestRankedServiceMap.size() > 0) {
 			        Object[] result = new Object[highestRankedServiceMap.size()];
 			        int index = 0;
-			        for(Iterator it = highestRankedServiceMap.entrySet().iterator(); it.hasNext(); ) {
-			        	Entry entry = (Entry) it.next();
+			        for(Iterator<Entry<Long, RankedService>> it = highestRankedServiceMap.entrySet().iterator(); it.hasNext(); ) {
+			        	Entry<Long, RankedService> entry = it.next();
 			        	result[index] = ((RankedService)entry.getValue()).getServiceReference();
 			        	index++;
 			        }
@@ -1377,21 +1304,24 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 			customizer.removedService((ServiceReference) item, object);
 		}
 		
-		class HashMapCache extends LinkedHashMap {
-		    public Object put(Object key, Object value) {
+		class HashMapCache<K, V> extends LinkedHashMap<K, V> {
+
+			private static final long serialVersionUID = 1627005136730183946L;
+
+			public V put(K key, V value) {
 		        addHighestTrackedCache((ServiceReference) key);
 		        return super.put(key, value);
 		    }
 
-		    public void putAll(Map m) {
-		        Iterator i = m.keySet().iterator();
+		    public void putAll(Map<? extends K, ? extends V> m) {
+		        Iterator<? extends K> i = m.keySet().iterator();
 		        while (i.hasNext()) {
 		            addHighestTrackedCache((ServiceReference) i.next());
 		        }
 		        super.putAll(m);
 		    }
 
-		    public Object remove(Object key) {
+		    public V remove(Object key) {
 		        removeHighestTrackedCache((ServiceReference) key);
 		        return super.remove(key);
 		    }
@@ -1504,7 +1434,7 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 		 */
 		AllTracked() {
 			super();
-            setTracked(new HashMapCache());
+            setTracked(new HashMapCache<Object, Object>());
 		}
 	}
 	
