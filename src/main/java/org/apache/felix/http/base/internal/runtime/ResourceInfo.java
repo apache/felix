@@ -26,7 +26,7 @@ import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public final class ResourceInfo extends AbstractInfo<Object>
+public final class ResourceInfo extends WhiteboardServiceInfo<Object>
 {
     /**
      * The request mappings for the resource.

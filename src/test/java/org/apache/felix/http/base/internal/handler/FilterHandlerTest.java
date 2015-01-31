@@ -242,7 +242,7 @@ public class FilterHandlerTest extends AbstractHandlerTest
 
     private FilterHandler createHandler(String pattern, int ranking, final Map<String, String> initParams)
     {
-        final FilterInfo info = new FilterInfo(null, pattern, ranking, initParams, this.filter, null);
+        final FilterInfo info = new FilterInfo(null, pattern, ranking, initParams);
         return new FilterHandler(null, this.context, this.filter, info);
     }
 

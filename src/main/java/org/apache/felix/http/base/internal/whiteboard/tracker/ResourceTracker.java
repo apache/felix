@@ -57,7 +57,7 @@ public final class ResourceTracker extends AbstractReferenceTracker<Object>
 
         if ( info.isValid() )
         {
-            this.contextManager.addResource(info);
+            this.contextManager.addWhiteboardService(info);
         }
         else
         {
@@ -72,6 +72,6 @@ public final class ResourceTracker extends AbstractReferenceTracker<Object>
 
         if ( info.isValid() )
         {
-            this.contextManager.removeResource(info);
+            this.contextManager.removeWhiteboardService(info);
         }
     }}

@@ -35,7 +35,7 @@ import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public final class ServletInfo extends AbstractInfo<Servlet>
+public final class ServletInfo extends WhiteboardServiceInfo<Servlet>
 {
     /**
      * Properties starting with this prefix are passed as servlet init parameters to the

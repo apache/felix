@@ -21,13 +21,9 @@ package org.apache.felix.http.base.internal.runtime;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.osgi.framework.Constants;
-import org.osgi.framework.Filter;
-import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 /**
  * Base class for all info objects.
@@ -35,19 +31,11 @@ import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
  */
 public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
 {
-    /** Service id for services not provided through the service registry. */
-    private static final AtomicLong serviceIdCounter = new AtomicLong(-1);
-
     /** Service ranking. */
     private final int ranking;
 
     /** Service id. */
     private final long serviceId;
-
-    /** The context selection. */
-    private final String contextSelection;
-
-    private final Filter filter;
 
     /** Service reference. */
     private final ServiceReference<T> serviceReference;
@@ -65,33 +53,6 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
             this.ranking = 0;
         }
         this.serviceReference = ref;
-        String sel = getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT);
-        if ( isEmpty(sel) )
-        {
-            this.contextSelection = "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "="
-                                   + HttpWhiteboardConstants.HTTP_WHITEBOARD_DEFAULT_CONTEXT_NAME + ")";
-        }
-        else
-        {
-            this.contextSelection = sel;
-        }
-        Filter f = null;
-        try
-        {
-            f = ref.getBundle().getBundleContext().createFilter(this.contextSelection);
-        }
-        catch ( final InvalidSyntaxException ise)
-        {
-            // ignore
-            f = null;
-        }
-        this.filter = f;
-    }
-
-    public AbstractInfo(final int ranking)
-    {
-        this(ranking, serviceIdCounter.getAndDecrement());
-
     }
 
     public AbstractInfo(final int ranking, final long serviceId)
@@ -99,12 +60,11 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
         this.ranking = ranking;
         this.serviceId = serviceId;
         this.serviceReference = null;
-        this.contextSelection = null;
-        this.filter = null;
     }
 
-    public boolean isValid() {
-        return this.filter != null || this.serviceReference == null;
+    public boolean isValid()
+    {
+        return true;
     }
 
     /**
@@ -236,16 +196,6 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
     public ServiceReference<T> getServiceReference()
     {
         return this.serviceReference;
-    }
-
-    public String getContextSelection()
-    {
-        return this.contextSelection;
-    }
-
-    public Filter getContextSelectionFilter()
-    {
-        return this.filter;
     }
 
     @Override
