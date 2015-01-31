@@ -58,7 +58,7 @@ public final class ServletTracker extends AbstractReferenceTracker<Servlet>
 
         if ( info.isValid() )
         {
-            this.contextManager.addServlet(info);
+            this.contextManager.addWhiteboardService(info);
         }
         else
         {
@@ -73,7 +73,7 @@ public final class ServletTracker extends AbstractReferenceTracker<Servlet>
 
         if ( info.isValid() )
         {
-            this.contextManager.removeServlet(info);
+            this.contextManager.removeWhiteboardService(info);
         }
     }
 }

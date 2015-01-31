@@ -91,7 +91,7 @@ public final class HttpServiceImpl implements ExtHttpService
             }
         }
 
-        final FilterInfo filterInfo = new FilterInfo(null, pattern, ranking, paramMap, filter, context);
+        final FilterInfo filterInfo = new FilterInfo(null, pattern, ranking, paramMap);
         if ( !filterInfo.isValid() )
         {
             throw new ServletException("Invalid registration information for filter.");

@@ -60,7 +60,7 @@ public final class FilterTracker extends AbstractReferenceTracker<Filter>
 
         if ( info.isValid() )
         {
-            this.contextManager.addFilter(info);
+            this.contextManager.addWhiteboardService(info);
         }
         else
         {
@@ -75,7 +75,7 @@ public final class FilterTracker extends AbstractReferenceTracker<Filter>
 
         if ( info.isValid() )
         {
-            this.contextManager.removeFilter(info);
+            this.contextManager.removeWhiteboardService(info);
         }
     }
 }

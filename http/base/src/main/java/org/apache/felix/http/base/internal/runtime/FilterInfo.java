@@ -25,7 +25,6 @@ import javax.servlet.Filter;
 
 import org.osgi.dto.DTO;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.runtime.dto.FilterDTO;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
@@ -37,7 +36,7 @@ import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public final class FilterInfo extends AbstractInfo<Filter>
+public final class FilterInfo extends WhiteboardServiceInfo<Filter>
 {
     /**
      * Properties starting with this prefix are passed as filter init parameters to the
@@ -95,13 +94,6 @@ public final class FilterInfo extends AbstractInfo<Filter>
      */
     private final Map<String, String> initParams;
 
-    /**
-     * The {@link HttpContext} for the filter.
-     */
-    private final HttpContext context;
-
-    private final Filter filter;
-
     public FilterInfo(final ServiceReference<Filter> ref)
     {
         super(ref);
@@ -125,8 +117,6 @@ public final class FilterInfo extends AbstractInfo<Filter>
         {
             this.dispatcher = new DispatcherType[] {DispatcherType.REQUEST};
         }
-        this.context = null;
-        this.filter = null;
     }
 
     /**
@@ -135,9 +125,7 @@ public final class FilterInfo extends AbstractInfo<Filter>
     public FilterInfo(final String name,
             final String regex,
             final int serviceRanking,
-            final Map<String, String> initParams,
-            final Filter filter,
-            final HttpContext context)
+            final Map<String, String> initParams)
     {
         super(serviceRanking);
         this.name = name;
@@ -147,8 +135,6 @@ public final class FilterInfo extends AbstractInfo<Filter>
         this.initParams = initParams;
         this.asyncSupported = false;
         this.dispatcher = new DispatcherType[] {DispatcherType.REQUEST};
-        this.filter = filter;
-        this.context = context;
     }
 
     @Override
@@ -183,13 +169,5 @@ public final class FilterInfo extends AbstractInfo<Filter>
 
     public Map<String, String> getInitParams() {
         return initParams;
-    }
-
-    public HttpContext getContext() {
-        return context;
-    }
-
-    public Filter getFilter() {
-        return filter;
     }
 }

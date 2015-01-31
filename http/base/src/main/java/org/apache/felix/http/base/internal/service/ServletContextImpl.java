@@ -41,7 +41,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
-import org.apache.felix.http.base.internal.util.MimeTypes;
 import org.osgi.framework.Bundle;
 import org.osgi.service.http.context.ServletContextHelper;
 
@@ -63,33 +62,28 @@ public class ServletContextImpl implements ExtServletContext {
         this.attributes = new ConcurrentHashMap<String, Object>();
     }
 
+    /**
+     * @see org.apache.felix.http.base.internal.context.ExtServletContext#handleSecurity(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+     */
     @Override
     public boolean handleSecurity(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
         return delegatee.handleSecurity(request, response);
     }
 
+    /**
+     * @see javax.servlet.ServletContext#getResource(java.lang.String)
+     */
     @Override
     public URL getResource(String path)
     {
-        return delegatee.getResource(normalizeResourcePath(path));
+        return delegatee.getResource(path);
     }
 
     @Override
     public String getMimeType(String file)
     {
-        String type = delegatee.getMimeType(file);
-        if (type != null)
-        {
-            return type;
-        }
-
-        return MimeTypes.get().getByFile(file);
-    }
-
-    public ServletContextHelper getDelegatee()
-    {
-        return delegatee;
+        return delegatee.getMimeType(file);
     }
 
     @Override
@@ -178,13 +172,13 @@ public class ServletContextImpl implements ExtServletContext {
     @Override
     public Object getAttribute(String name)
     {
-        return (this.attributes != null) ? this.attributes.get(name) : this.context.getAttribute(name);
+        return this.attributes.get(name);
     }
 
     @Override
     public Enumeration getAttributeNames()
     {
-        return (this.attributes != null) ? Collections.enumeration(this.attributes.keySet()) : this.context.getAttributeNames();
+        return Collections.enumeration(this.attributes.keySet());
     }
 
     @Override
@@ -196,12 +190,14 @@ public class ServletContextImpl implements ExtServletContext {
     @Override
     public ServletContext getContext(String uri)
     {
+        // TODO
         return this.context.getContext(uri);
     }
 
     @Override
     public String getContextPath()
     {
+        // TODO
         return this.context.getContextPath();
     }
 
@@ -278,14 +274,9 @@ public class ServletContextImpl implements ExtServletContext {
     }
 
     @Override
-    public String getRealPath(String name)
+    public String getRealPath(String path)
     {
-        URL url = getResource(name);
-        if (url == null)
-        {
-            return null;
-        }
-        return url.toExternalForm();
+        return this.delegatee.getRealPath(path);
     }
 
     @Override
@@ -297,7 +288,7 @@ public class ServletContextImpl implements ExtServletContext {
     @Override
     public InputStream getResourceAsStream(String path)
     {
-        URL res = getResource(path);
+        final URL res = getResource(path);
         if (res != null)
         {
             try
@@ -313,10 +304,9 @@ public class ServletContextImpl implements ExtServletContext {
     }
 
     @Override
-    public Set getResourcePaths(String path)
+    public Set<String> getResourcePaths(final String path)
     {
-        // TODO
-        return null;
+        return this.delegatee.getResourcePaths(path);
     }
 
     @Override
@@ -388,16 +378,7 @@ public class ServletContextImpl implements ExtServletContext {
     @Override
     public void removeAttribute(String name)
     {
-        Object oldValue;
-        if (this.attributes != null)
-        {
-            oldValue = this.attributes.remove(name);
-        }
-        else
-        {
-            oldValue = this.context.getAttribute(name);
-            this.context.removeAttribute(name);
-        }
+        Object oldValue = this.attributes.remove(name);
 
         if (oldValue != null)
         {
@@ -414,16 +395,7 @@ public class ServletContextImpl implements ExtServletContext {
         }
         else if (name != null)
         {
-            Object oldValue;
-            if (this.attributes != null)
-            {
-                oldValue = this.attributes.put(name, value);
-            }
-            else
-            {
-                oldValue = this.context.getAttribute(name);
-                this.context.setAttribute(name, value);
-            }
+            Object oldValue = this.attributes.put(name, value);
 
             if (oldValue == null)
             {
@@ -446,32 +418,5 @@ public class ServletContextImpl implements ExtServletContext {
     public void setSessionTrackingModes(Set<SessionTrackingMode> modes)
     {
         this.context.setSessionTrackingModes(modes);
-    }
-
-    private String normalizePath(String path)
-    {
-        if (path == null)
-        {
-            return null;
-        }
-
-        String normalizedPath = normalizeResourcePath(path);
-        if (normalizedPath.startsWith("/") && (normalizedPath.length() > 1))
-        {
-            normalizedPath = normalizedPath.substring(1);
-        }
-
-        return normalizedPath;
-    }
-
-    private String normalizeResourcePath(String path)
-    {
-        if ( path == null)
-        {
-            return null;
-        }
-        String normalizedPath = path.trim().replaceAll("/+", "/");
-
-        return normalizedPath;
     }
 }

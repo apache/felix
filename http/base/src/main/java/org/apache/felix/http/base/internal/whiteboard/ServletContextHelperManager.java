@@ -25,12 +25,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.http.base.internal.runtime.AbstractInfo;
 import org.apache.felix.http.base.internal.runtime.ContextInfo;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ResourceInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
 import org.apache.felix.http.base.internal.service.InternalHttpService;
+import org.apache.felix.http.base.internal.util.MimeTypes;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -45,7 +46,7 @@ public final class ServletContextHelperManager
     private final Map<String, List<ContextInfo>> contextMap = new HashMap<String, List<ContextInfo>>();
 
     /** A map with all servlet/filter registrations, mapped by abstract info. */
-    private final Map<AbstractInfo<?>, List<ContextInfo>> servicesMap = new HashMap<AbstractInfo<?>, List<ContextInfo>>();
+    private final Map<WhiteboardServiceInfo<?>, List<ContextInfo>> servicesMap = new HashMap<WhiteboardServiceInfo<?>, List<ContextInfo>>();
 
     private final InternalHttpService httpService;
 
@@ -62,7 +63,7 @@ public final class ServletContextHelperManager
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, HttpWhiteboardConstants.HTTP_WHITEBOARD_DEFAULT_CONTEXT_NAME);
         props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, "/");
-        props.put(Constants.SERVICE_RANKING, Integer.MAX_VALUE);
+        props.put(Constants.SERVICE_RANKING, Integer.MIN_VALUE);
 
         this.defaultContextRegistration = bundleContext.registerService(ServletContextHelper.class,
                 new ServiceFactory<ServletContextHelper>() {
@@ -72,6 +73,11 @@ public final class ServletContextHelperManager
                             final Bundle bundle,
                             final ServiceRegistration<ServletContextHelper> registration) {
                         return new ServletContextHelper(bundle) {
+
+                            @Override
+                            public String getMimeType(final String file) {
+                                return MimeTypes.get().getByFile(file);
+                            }
                         };
                     }
 
@@ -93,49 +99,27 @@ public final class ServletContextHelperManager
         this.defaultContextRegistration.unregister();
     }
 
-    private void activate(final ContextInfo holder)
+    private void activate(final ContextInfo contextInfo)
     {
-        for(final Map.Entry<AbstractInfo<?>, List<ContextInfo>> entry : this.servicesMap.entrySet())
+        for(final Map.Entry<WhiteboardServiceInfo<?>, List<ContextInfo>> entry : this.servicesMap.entrySet())
         {
-            if ( entry.getKey().getContextSelectionFilter().match(holder.getServiceReference()) )
+            if ( entry.getKey().getContextSelectionFilter().match(contextInfo.getServiceReference()) )
             {
-                entry.getValue().add(holder);
-                if ( entry.getKey() instanceof ServletInfo )
-                {
-                    this.registerServlet((ServletInfo)entry.getKey(), holder);
-                }
-                else if ( entry.getKey() instanceof FilterInfo )
-                {
-                    this.registerFilter((FilterInfo)entry.getKey(), holder);
-                }
-                else if ( entry.getKey() instanceof ResourceInfo )
-                {
-                    this.registerResource((ResourceInfo)entry.getKey(), holder);
-                }
+                entry.getValue().add(contextInfo);
+                this.registerWhiteboardService(contextInfo, entry.getKey());
             }
         }
     }
 
-    private void deactivate(final ContextInfo holder)
+    private void deactivate(final ContextInfo contextInfo)
     {
-        final Iterator<Map.Entry<AbstractInfo<?>, List<ContextInfo>>> i = this.servicesMap.entrySet().iterator();
+        final Iterator<Map.Entry<WhiteboardServiceInfo<?>, List<ContextInfo>>> i = this.servicesMap.entrySet().iterator();
         while ( i.hasNext() )
         {
-            final Map.Entry<AbstractInfo<?>, List<ContextInfo>> entry = i.next();
-            if ( entry.getValue().remove(holder) )
+            final Map.Entry<WhiteboardServiceInfo<?>, List<ContextInfo>> entry = i.next();
+            if ( entry.getValue().remove(contextInfo) )
             {
-                if ( entry.getKey() instanceof ServletInfo )
-                {
-                    this.unregisterServlet((ServletInfo)entry.getKey(), holder);
-                }
-                else if ( entry.getKey() instanceof FilterInfo )
-                {
-                    this.unregisterFilter((FilterInfo)entry.getKey(), holder);
-                }
-                else if ( entry.getKey() instanceof ResourceInfo )
-                {
-                    this.unregisterResource((ResourceInfo)entry.getKey(), holder);
-                }
+                this.unregisterWhiteboardService(contextInfo, entry.getKey());
                 if ( entry.getValue().isEmpty() ) {
                     i.remove();
                 }
@@ -212,7 +196,7 @@ public final class ServletContextHelperManager
         }
     }
 
-    private List<ContextInfo> getMatchingContexts(final AbstractInfo<?> info)
+    private List<ContextInfo> getMatchingContexts(final WhiteboardServiceInfo<?> info)
     {
         final List<ContextInfo> result = new ArrayList<ContextInfo>();
         for(final List<ContextInfo> holders : this.contextMap.values()) {
@@ -225,85 +209,29 @@ public final class ServletContextHelperManager
         return result;
     }
 
-    private void registerServlet(final ServletInfo servletInfo, final ContextInfo holder)
-    {
-        this.httpService.registerServlet(holder, servletInfo);
-    }
-
-    private void unregisterServlet(final ServletInfo servletInfo, final ContextInfo holder)
-    {
-        this.httpService.unregisterServlet(holder, servletInfo);
-    }
-
-    private void registerFilter(final FilterInfo filterInfo, final ContextInfo holder)
-    {
-        this.httpService.registerFilter(holder, filterInfo);
-    }
-
-    private void unregisterFilter(final FilterInfo filterInfo, final ContextInfo holder)
-    {
-        this.httpService.unregisterFilter(holder, filterInfo);
-    }
-
-    private void registerResource(final ResourceInfo resourceInfo, final ContextInfo holder)
-    {
-        this.httpService.registerResource(holder, resourceInfo);
-    }
-
-    private void unregisterResource(final ResourceInfo resourceInfo, final ContextInfo holder)
-    {
-        this.httpService.unregisterResource(holder, resourceInfo);
-    }
-
     /**
-     * Add a new servlet.
-     * @param servletInfo The servlet info
+     * Add new whiteboard service to the registry
+     * @param info Whiteboard service info
      */
-    public void addServlet(final ServletInfo servletInfo)
+    public void addWhiteboardService(final WhiteboardServiceInfo<?> info)
     {
-        synchronized ( this.contextMap )
-        {
-            final List<ContextInfo> holderList = this.getMatchingContexts(servletInfo);
-            this.servicesMap.put(servletInfo, holderList);
-            for(final ContextInfo h : holderList)
-            {
-            	this.registerServlet(servletInfo, h);
-            }
-        }
-    }
-
-    /**
-     * Remove a servlet
-     * @param servletInfo The servlet info
-     */
-    public void removeServlet(final ServletInfo servletInfo)
-    {
-        synchronized ( this.contextMap )
-        {
-            final List<ContextInfo> holderList = this.servicesMap.remove(servletInfo);
-            if ( holderList != null )
-            {
-                for(final ContextInfo h : holderList)
-                {
-                    this.unregisterServlet(servletInfo, h);
-                }
-            }
-        }
-    }
-
-    public void addFilter(final FilterInfo info) {
         synchronized ( this.contextMap )
         {
             final List<ContextInfo> holderList = this.getMatchingContexts(info);
             this.servicesMap.put(info, holderList);
             for(final ContextInfo h : holderList)
             {
-                this.registerFilter(info, h);
+                this.registerWhiteboardService(h, info);
             }
         }
     }
 
-    public void removeFilter(final FilterInfo info) {
+    /**
+     * Remove whiteboard service from the registry
+     * @param info Whiteboard service info
+     */
+    public void removeWhiteboardService(final WhiteboardServiceInfo<?> info)
+    {
         synchronized ( this.contextMap )
         {
             final List<ContextInfo> holderList = this.servicesMap.remove(info);
@@ -311,35 +239,51 @@ public final class ServletContextHelperManager
             {
                 for(final ContextInfo h : holderList)
                 {
-                    this.unregisterFilter(info, h);
+                    this.unregisterWhiteboardService(h, info);
                 }
             }
         }
     }
 
-    public void addResource(final ResourceInfo info) {
-        synchronized ( this.contextMap )
+    /**
+     * Register whiteboard service in the http service
+     * @param contextInfo Context info
+     * @param info Whiteboard service info
+     */
+    private void registerWhiteboardService(final ContextInfo contextInfo, final WhiteboardServiceInfo<?> info)
+    {
+        if ( info instanceof ServletInfo )
         {
-            final List<ContextInfo> holderList = this.getMatchingContexts(info);
-            this.servicesMap.put(info, holderList);
-            for(final ContextInfo h : holderList)
-            {
-                this.registerResource(info, h);
-            }
+            this.httpService.registerServlet(contextInfo, (ServletInfo)info);
+        }
+        else if ( info instanceof FilterInfo )
+        {
+            this.httpService.registerFilter(contextInfo, (FilterInfo)info);
+        }
+        else if ( info instanceof ResourceInfo )
+        {
+            this.httpService.registerResource(contextInfo, (ResourceInfo)info);
         }
     }
 
-    public void removeResource(final ResourceInfo info) {
-        synchronized ( this.contextMap )
+    /**
+     * Unregister whiteboard service from the http service
+     * @param contextInfo Context info
+     * @param info Whiteboard service info
+     */
+    private void unregisterWhiteboardService(final ContextInfo contextInfo, final WhiteboardServiceInfo<?> info)
+    {
+        if ( info instanceof ServletInfo )
         {
-            final List<ContextInfo> holderList = this.servicesMap.remove(info);
-            if ( holderList != null )
-            {
-                for(final ContextInfo h : holderList)
-                {
-                    this.unregisterResource(info, h);
-                }
-            }
+            this.httpService.unregisterServlet(contextInfo, (ServletInfo)info);
+        }
+        else if ( info instanceof FilterInfo )
+        {
+            this.httpService.unregisterFilter(contextInfo, (FilterInfo)info);
+        }
+        else if ( info instanceof ResourceInfo )
+        {
+            this.httpService.unregisterResource(contextInfo, (ResourceInfo)info);
         }
     }
 }
