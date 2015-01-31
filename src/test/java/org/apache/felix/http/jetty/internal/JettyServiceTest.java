@@ -54,6 +54,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.Version;
+import org.osgi.service.http.context.ServletContextHelper;
 
 public class JettyServiceTest extends TestCase
 {
@@ -89,8 +90,8 @@ public class JettyServiceTest extends TestCase
         when(mockBundle.getVersion()).thenReturn(new Version("1.0.0"));
         when(mockBundle.getHeaders()).thenReturn(new Hashtable<String, String>());
         final ServiceRegistration reg = mock(ServiceRegistration.class);
-        when(mockBundleContext.registerService((Class)Matchers.isNotNull(),
-                Matchers.any(ServiceFactory.class),
+        when(mockBundleContext.registerService((Class<ServletContextHelper>)Matchers.isNotNull(),
+                (ServiceFactory<ServletContextHelper>)Matchers.any(ServiceFactory.class),
                 Matchers.any(Dictionary.class))).thenReturn(reg);
 
         httpServiceController = new HttpServiceController(mockBundleContext);
