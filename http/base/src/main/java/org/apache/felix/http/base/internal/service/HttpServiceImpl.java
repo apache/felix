@@ -35,15 +35,11 @@ import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.HandlerRegistry;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
-import org.apache.felix.http.base.internal.runtime.ContextInfo;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
-import org.apache.felix.http.base.internal.runtime.ResourceInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
-import org.apache.felix.http.base.internal.whiteboard.HttpContextBridge;
 import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.NamespaceException;
-import org.osgi.service.http.context.ServletContextHelper;
 
 public final class HttpServiceImpl implements ExtHttpService
 {
@@ -62,68 +58,10 @@ public final class HttpServiceImpl implements ExtHttpService
         this.contextManager = new ServletContextManager(this.bundle, context, servletAttributeListener, sharedContextAttributes);
     }
 
-    static Map<String, String> convertToMap(Dictionary dict)
-    {
-        Map<String, String> result = new HashMap<String, String>();
-        if (dict != null)
-        {
-            Enumeration keyEnum = dict.keys();
-            while (keyEnum.hasMoreElements())
-            {
-                String key = String.valueOf(keyEnum.nextElement());
-                Object value = dict.get(key);
-                result.put(key, value == null ? null : String.valueOf(value));
-            }
-        }
-        return result;
-    }
-
-    static <T> boolean isEmpty(T[] array)
-    {
-        return array == null || array.length < 1;
-    }
-
-    static boolean isEmpty(String str)
-    {
-        return str == null || "".equals(str.trim());
-    }
-
     @Override
     public HttpContext createDefaultHttpContext()
     {
         return new DefaultHttpContext(this.bundle);
-    }
-
-    /**
-     * Register a filter
-     */
-    public void registerFilter(final ServletContextHelper context,
-            final ContextInfo contextInfo,
-            final FilterInfo filterInfo)
-    {
-        final ExtServletContext httpContext;
-        if ( context != null )
-        {
-            httpContext = getServletContext(new HttpContextBridge(context));
-        }
-        else
-        {
-            httpContext = getServletContext(filterInfo.getContext());
-        }
-        Filter filter = filterInfo.getFilter();
-        if ( filter == null )
-        {
-            filter = this.bundle.getBundleContext().getServiceObjects(filterInfo.getServiceReference()).getService();
-            // TODO create failure DTO if null
-        }
-
-        FilterHandler handler = new FilterHandler(contextInfo, httpContext, filter, filterInfo);
-        try {
-            this.handlerRegistry.addFilter(handler);
-        } catch (ServletException e) {
-            // TODO create failure DTO
-        }
-        this.localFilters.add(filter);
     }
 
     /**
@@ -153,12 +91,21 @@ public final class HttpServiceImpl implements ExtHttpService
             }
         }
 
-        final FilterInfo info = new FilterInfo(null, pattern, ranking, paramMap, filter, context);
-        if ( !info.isValid() )
+        final FilterInfo filterInfo = new FilterInfo(null, pattern, ranking, paramMap, filter, context);
+        if ( !filterInfo.isValid() )
         {
             throw new ServletException("Invalid registration information for filter.");
         }
-        this.registerFilter(null, null, info);
+
+        final ExtServletContext httpContext = getServletContext(context);
+
+        FilterHandler handler = new FilterHandler(null, httpContext, filter, filterInfo);
+        try {
+            this.handlerRegistry.addFilter(handler);
+        } catch (ServletException e) {
+            // TODO create failure DTO
+        }
+        this.localFilters.add(filter);
     }
 
     @Override
@@ -177,80 +124,6 @@ public final class HttpServiceImpl implements ExtHttpService
         catch (ServletException e)
         {
             SystemLogger.error("Failed to register resources", e);
-        }
-    }
-
-    /**
-     * Register a servlet with a {@link ServletContextHelper}.
-     * The prefix is the path where the servlet context helper is mounted.
-     */
-    public void registerServlet(final ServletContextHelper context,
-    		final ContextInfo contextInfo,
-    		final ServletInfo servletInfo)
-    {
-        if (servletInfo == null)
-        {
-            throw new IllegalArgumentException("ServletInfo cannot be null!");
-        }
-        if (isEmpty(servletInfo.getPatterns()) && isEmpty(servletInfo.getErrorPage()))
-        {
-            throw new IllegalArgumentException("ServletInfo must at least have one pattern or error page!");
-        }
-
-        final ExtServletContext httpContext;
-        if ( context != null )
-        {
-        	httpContext = getServletContext(new HttpContextBridge(context));
-        }
-        else
-        {
-        	httpContext = getServletContext(servletInfo.getContext());
-        }
-        Servlet servlet = servletInfo.getServlet();
-        if ( servlet == null )
-        {
-            servlet = this.bundle.getBundleContext().getServiceObjects(servletInfo.getServiceReference()).getService();
-            // TODO create failure DTO if null
-        }
-
-        final ServletHandler handler = new ServletHandler(contextInfo,
-                httpContext,
-                servletInfo,
-                servlet);
-        try {
-            this.handlerRegistry.addServlet(contextInfo, handler);
-        } catch (ServletException e) {
-            // TODO create failure DTO
-        } catch (NamespaceException e) {
-            // TODO create failure DTO
-        }
-
-        this.localServlets.add(servlet);
-    }
-
-    public void unregisterServlet(final ContextInfo contextInfo, final ServletInfo servletInfo)
-    {
-        if (servletInfo == null)
-        {
-            throw new IllegalArgumentException("ServletInfo cannot be null!");
-        }
-        final Servlet servlet = this.handlerRegistry.removeServlet(contextInfo, servletInfo, true);
-        if ( servlet != null )
-        {
-            this.localServlets.remove(servlet);
-        }
-    }
-
-    public void unregisterFilter(final ContextInfo contextInfo, final FilterInfo filterInfo)
-    {
-        if (filterInfo == null)
-        {
-            throw new IllegalArgumentException("FilterInfo cannot be null!");
-        }
-        final Filter instance = this.handlerRegistry.removeFilter(filterInfo, true);
-        if ( instance != null )
-        {
-            this.localFilters.remove(instance);
         }
     }
 
@@ -286,11 +159,28 @@ public final class HttpServiceImpl implements ExtHttpService
             }
         }
 
-        final ServletInfo info = new ServletInfo(null, alias, 0, paramMap, servlet, context);
+        final ServletInfo servletInfo = new ServletInfo(null, alias, 0, paramMap);
 
-        this.registerServlet(null, null, info);
+        final ExtServletContext httpContext = getServletContext(context);
+
+        final ServletHandler handler = new ServletHandler(null,
+                httpContext,
+                servletInfo,
+                servlet);
+        try {
+            this.handlerRegistry.addServlet(null, handler);
+        } catch (ServletException e) {
+            // TODO create failure DTO
+        } catch (NamespaceException e) {
+            // TODO create failure DTO
+        }
+
+        this.localServlets.add(servlet);
     }
 
+    /**
+     * @see org.osgi.service.http.HttpService#unregister(java.lang.String)
+     */
     @Override
     public void unregister(String alias)
     {
@@ -308,32 +198,6 @@ public final class HttpServiceImpl implements ExtHttpService
             }
         }
         unregisterServlet(servlet);
-    }
-
-    /**
-     * Register a resource with a {@link ServletContextHelper}.
-     */
-    public void registerResource(final ServletContextHelper context,
-            final ContextInfo contextInfo,
-            final ResourceInfo resourceInfo)
-    {
-        if (resourceInfo == null)
-        {
-            throw new IllegalArgumentException("ResourceInfo cannot be null!");
-        }
-        final ServletInfo servletInfo = new ServletInfo(resourceInfo, new ResourceServlet(resourceInfo.getPrefix()));
-
-        this.registerServlet(context, contextInfo, servletInfo);
-    }
-
-    public void unregisterResource(final ContextInfo contextInfo, final ResourceInfo resourceInfo)
-    {
-        if (resourceInfo == null)
-        {
-            throw new IllegalArgumentException("ResourceInfo cannot be null!");
-        }
-        final ServletInfo servletInfo = new ServletInfo(resourceInfo, null);
-        this.unregisterServlet(contextInfo, servletInfo);
     }
 
     public void unregisterAll()
