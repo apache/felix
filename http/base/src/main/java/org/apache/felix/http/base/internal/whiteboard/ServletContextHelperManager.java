@@ -30,6 +30,7 @@ import javax.servlet.ServletContext;
 import org.apache.felix.http.base.internal.runtime.ContextInfo;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ResourceInfo;
+import org.apache.felix.http.base.internal.runtime.ServletContextAttributeListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
@@ -316,6 +317,10 @@ public final class ServletContextHelperManager
         {
             this.httpService.registerResource(handler, (ResourceInfo)info);
         }
+        else if ( info instanceof ServletContextAttributeListenerInfo )
+        {
+            handler.addListener(this.bundle, (ServletContextAttributeListenerInfo)info );
+        }
     }
 
     /**
@@ -336,6 +341,10 @@ public final class ServletContextHelperManager
         else if ( info instanceof ResourceInfo )
         {
             this.httpService.unregisterResource(handler, (ResourceInfo)info);
+        }
+        else if ( info instanceof ServletContextAttributeListenerInfo )
+        {
+            handler.removeListener(this.bundle, (ServletContextAttributeListenerInfo)info );
         }
     }
 }

@@ -31,6 +31,8 @@ import javax.servlet.FilterRegistration;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletContextAttributeEvent;
+import javax.servlet.ServletContextAttributeListener;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration;
 import javax.servlet.SessionCookieConfig;
@@ -52,10 +54,12 @@ public class SharedServletContextImpl implements ServletContext
     private final Map<String, Object> attributes = new ConcurrentHashMap<String, Object>();
     private final String contextPath;
     private final String name;
+    private final ServletContextAttributeListener attributeListener;
 
     public SharedServletContextImpl(final ServletContext webContext,
             final String name,
-            final String prefix)
+            final String prefix,
+            final ServletContextAttributeListener servletContextAttributeListener)
     {
         this.context = webContext;
         if ( prefix == null )
@@ -67,6 +71,7 @@ public class SharedServletContextImpl implements ServletContext
             this.contextPath = webContext.getContextPath() + prefix;
         }
         this.name = name;
+        this.attributeListener = servletContextAttributeListener;
     }
 
     @Override
@@ -384,11 +389,11 @@ public class SharedServletContextImpl implements ServletContext
     @Override
     public void removeAttribute(final String name)
     {
-        Object oldValue = this.attributes.remove(name);
+        final Object oldValue = this.attributes.remove(name);
 
         if (oldValue != null)
         {
-            //this.attributeListener.attributeRemoved(new ServletContextAttributeEvent(this, name, oldValue));
+            this.attributeListener.attributeRemoved(new ServletContextAttributeEvent(this, name, oldValue));
         }
     }
 
@@ -405,11 +410,11 @@ public class SharedServletContextImpl implements ServletContext
 
             if (oldValue == null)
             {
-                //this.attributeListener.attributeAdded(new ServletContextAttributeEvent(this, name, value));
+                this.attributeListener.attributeAdded(new ServletContextAttributeEvent(this, name, value));
             }
             else
             {
-                //this.attributeListener.attributeReplaced(new ServletContextAttributeEvent(this, name, oldValue));
+                this.attributeListener.attributeReplaced(new ServletContextAttributeEvent(this, name, oldValue));
             }
         }
     }
