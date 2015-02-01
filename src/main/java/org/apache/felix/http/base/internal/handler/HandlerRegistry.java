@@ -150,6 +150,7 @@ public final class HandlerRegistry
 
     public ServletHandler getServletHander(String requestURI)
     {
+        // TODO - take servlet context helper ranking and prefix into account (FELIX-4778)
         return this.servletMapping.getBestMatch(requestURI);
     }
 
