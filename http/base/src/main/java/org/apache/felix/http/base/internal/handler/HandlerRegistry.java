@@ -42,11 +42,6 @@ public final class HandlerRegistry
     private volatile HandlerMapping<FilterHandler> filterMapping = new HandlerMapping<FilterHandler>();
     private volatile ErrorsMapping errorsMapping = new ErrorsMapping();
 
-    public synchronized void addErrorServlet(String errorPage, ServletHandler handler) throws ServletException
-    {
-        this.errorsMapping.addErrorServlet(errorPage, handler);
-    }
-
     public synchronized void addFilter(FilterHandler handler) throws ServletException
     {
         if (this.filterMap.containsKey(handler.getFilter()))
@@ -85,6 +80,14 @@ public final class HandlerRegistry
             this.servletPatternMap.put(pattern, handler.getServlet());
         }
 
+        patterns = handler.getServletInfo().getErrorPage();
+        if ( patterns != null )
+        {
+            for(final String errorPage : patterns)
+            {
+                this.errorsMapping.addErrorServlet(errorPage, handler);
+            }
+        }
         handler.init();
         this.servletMap.put(handler.getServlet(), handler);
 
