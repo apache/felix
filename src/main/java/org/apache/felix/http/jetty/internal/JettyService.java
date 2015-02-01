@@ -117,6 +117,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         this.deployments = new LinkedHashMap<String, Deployment>();
         this.executor = Executors.newSingleThreadExecutor(new ThreadFactory()
         {
+            @Override
             public Thread newThread(Runnable runnable)
             {
                 Thread t = new Thread(runnable);
@@ -240,6 +241,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             this.server.addLifeCycleListener(this);
 
             this.server.addBean(new HashLoginService("OSGi HTTP Service Realm"));
+            this.server.addBean(new CustomErrorHandler(this.dispatcher));
 
             this.parent = new ContextHandlerCollection();
 
@@ -725,11 +727,13 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         });
     }
 
+    @Override
     public Object addingBundle(Bundle bundle, BundleEvent event)
     {
         return detectWebAppBundle(bundle);
     }
 
+    @Override
     public void modifiedBundle(Bundle bundle, BundleEvent event, Object object)
     {
         detectWebAppBundle(bundle);
@@ -749,6 +753,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         return null;
     }
 
+    @Override
     public void removedBundle(Bundle bundle, BundleEvent event, Object object)
     {
         String contextPath = bundle.getHeaders().get(HEADER_WEB_CONTEXT_PATH);
@@ -766,6 +771,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         }
     }
 
+    @Override
     public Object addingService(ServiceReference reference)
     {
         Object service = this.context.getService(reference);
@@ -773,11 +779,13 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         return service;
     }
 
+    @Override
     public void modifiedService(ServiceReference reference, Object service)
     {
         this.eventAdmin = (EventAdmin) service;
     }
 
+    @Override
     public void removedService(ServiceReference reference, Object service)
     {
         this.context.ungetService(reference);
@@ -871,6 +879,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
      */
     abstract static class JettyOperation implements Callable<Void>
     {
+        @Override
         public Void call() throws Exception
         {
             ClassLoader cl = Thread.currentThread().getContextClassLoader();
