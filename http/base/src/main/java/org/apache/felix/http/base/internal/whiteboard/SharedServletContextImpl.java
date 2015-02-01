@@ -290,14 +290,14 @@ public class SharedServletContextImpl implements ServletContext
     @Override
     public RequestDispatcher getNamedDispatcher(final String name)
     {
-        // TODO
+        // This is implemented by the ServletContext wrapper created in the Dispatcher
         return this.context.getNamedDispatcher(name);
     }
 
     @Override
     public RequestDispatcher getRequestDispatcher(final String uri)
     {
-        // TODO
+        // This is implemented by the ServletContext wrapper created in the Dispatcher
         return this.context.getRequestDispatcher(uri);
     }
 
