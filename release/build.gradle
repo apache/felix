@@ -22,7 +22,7 @@
  */
 import aQute.bnd.build.Workspace
 
-// Our release number, which have to be monotonically incremented each time we make a new release.
+// Our release number, which has to be monotonically incremented each time we make a new release.
 ext.dmRelease = "r1"
 
 // Our Apache svn Staging repo
@@ -81,7 +81,8 @@ task makeStaging << {
     def topdir="apache-felix-dependencymanager-" + dmRelease
     ant.zip(destfile: "staging/"+topdir+'-src.zip') {
 		zipfileset(dir: '../cnf', prefix: topdir+"-src/cnf", includes: ".project,.classpath,src/**,*.bnd,ext/**")
-		zipfileset(dir: '..', prefix: topdir+"-src", includes: '*.gradle,*.properties,README,NOTICE,LICENSE')
+		zipfileset(dir: '..', prefix: topdir+"-src", includes: '*.gradle,*.properties')
+		zipfileset(dir: 'resources/src', prefix: topdir+"-src", includes: '*')
 		new File('.').eachFile { 
 	    	if(new File(it, 'bnd.bnd').exists()) {
     			def bndProject = workspace.getProject(it.name)
@@ -100,10 +101,17 @@ task makeStaging << {
 		    		   includes: 'buildrepo/**,localrepo/**,releaserepo/**,plugins/**,gradle/**')
     }
 
-    // Package binaries as a simple collection of bundles.
+    // Package binaries as a simple collection of bundles. We use same license files as for src distrib.
     ant.zip(destfile: "staging/"+topdir+"-bin.zip") {
         ant.mappedresources() {
-            ant.fileset(dir: '..', includes: '*/generated/*.jar,LICENSE,NOTICE', excludes: '*.itest/generated/*.jar')
+        	ant.fileset(dir: '..', includes: '*/generated/*.jar', excludes: '*.itest/generated/*.jar')
+            ant.chainedmapper() {
+                ant.flattenmapper()
+                ant.globmapper(from: '*', to: topdir+'-bin/*')
+            }
+        }
+        ant.mappedresources() {
+        	ant.fileset(dir: 'resources/bin', includes: '*')
             ant.chainedmapper() {
                 ant.flattenmapper()
                 ant.globmapper(from: '*', to: topdir+'-bin/*')
