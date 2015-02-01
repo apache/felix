@@ -50,10 +50,23 @@ public class SharedServletContextImpl implements ServletContext
 
     private final ServletContext context;
     private final Map<String, Object> attributes = new ConcurrentHashMap<String, Object>();
+    private final String contextPath;
+    private final String name;
 
-    public SharedServletContextImpl(final ServletContext webContext)
+    public SharedServletContextImpl(final ServletContext webContext,
+            final String name,
+            final String prefix)
     {
         this.context = webContext;
+        if ( prefix == null )
+        {
+            this.contextPath = webContext.getContextPath();
+        }
+        else
+        {
+            this.contextPath = webContext.getContextPath() + prefix;
+        }
+        this.name = name;
     }
 
     @Override
@@ -95,79 +108,79 @@ public class SharedServletContextImpl implements ServletContext
     }
 
     @Override
-    public FilterRegistration.Dynamic addFilter(String filterName, Class<? extends Filter> type)
+    public FilterRegistration.Dynamic addFilter(final String filterName, final Class<? extends Filter> type)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public FilterRegistration.Dynamic addFilter(String filterName, Filter filter)
+    public FilterRegistration.Dynamic addFilter(final String filterName, final Filter filter)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public FilterRegistration.Dynamic addFilter(String filterName, String className)
+    public FilterRegistration.Dynamic addFilter(final String filterName, final String className)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void addListener(Class<? extends EventListener> type)
+    public void addListener(final Class<? extends EventListener> type)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void addListener(String className)
+    public void addListener(final String className)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public <T extends EventListener> void addListener(T listener)
+    public <T extends EventListener> void addListener(final T listener)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public ServletRegistration.Dynamic addServlet(String servletName, Class<? extends Servlet> type)
+    public ServletRegistration.Dynamic addServlet(final String servletName, final Class<? extends Servlet> type)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public ServletRegistration.Dynamic addServlet(String servletName, Servlet servlet)
+    public ServletRegistration.Dynamic addServlet(final String servletName, final Servlet servlet)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public ServletRegistration.Dynamic addServlet(String servletName, String className)
+    public ServletRegistration.Dynamic addServlet(final String servletName, final String className)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public <T extends Filter> T createFilter(Class<T> type) throws ServletException
+    public <T extends Filter> T createFilter(final Class<T> type) throws ServletException
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public <T extends EventListener> T createListener(Class<T> type) throws ServletException
+    public <T extends EventListener> T createListener(final Class<T> type) throws ServletException
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public <T extends Servlet> T createServlet(Class<T> type) throws ServletException
+    public <T extends Servlet> T createServlet(final Class<T> type) throws ServletException
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void declareRoles(String... roleNames)
+    public void declareRoles(final String... roleNames)
     {
         this.context.declareRoles(roleNames);
     }
@@ -178,7 +191,7 @@ public class SharedServletContextImpl implements ServletContext
     }
 
     @Override
-    public Object getAttribute(String name)
+    public Object getAttribute(final String name)
     {
         return this.attributes.get(name);
     }
@@ -190,17 +203,15 @@ public class SharedServletContextImpl implements ServletContext
     }
 
     @Override
-    public ServletContext getContext(String uri)
+    public ServletContext getContext(final String uri)
     {
-        // TODO
         return this.context.getContext(uri);
     }
 
     @Override
     public String getContextPath()
     {
-        // TODO
-        return this.context.getContextPath();
+        return this.contextPath;
     }
 
     @Override
@@ -228,7 +239,7 @@ public class SharedServletContextImpl implements ServletContext
     }
 
     @Override
-    public FilterRegistration getFilterRegistration(String filterName)
+    public FilterRegistration getFilterRegistration(final String filterName)
     {
         return this.context.getFilterRegistration(filterName);
     }
@@ -240,21 +251,23 @@ public class SharedServletContextImpl implements ServletContext
     }
 
     @Override
-    public String getInitParameter(String name)
+    public String getInitParameter(final String name)
     {
+        // TODO
         return this.context.getInitParameter(name);
     }
 
     @Override
     public Enumeration getInitParameterNames()
     {
+        // TODO
         return this.context.getInitParameterNames();
     }
 
     @Override
     public JspConfigDescriptor getJspConfigDescriptor()
     {
-        throw new UnsupportedOperationException();
+        return null;
     }
 
     @Override
@@ -270,19 +283,21 @@ public class SharedServletContextImpl implements ServletContext
     }
 
     @Override
-    public RequestDispatcher getNamedDispatcher(String name)
+    public RequestDispatcher getNamedDispatcher(final String name)
     {
+        // TODO
         return this.context.getNamedDispatcher(name);
     }
 
     @Override
-    public RequestDispatcher getRequestDispatcher(String uri)
+    public RequestDispatcher getRequestDispatcher(final String uri)
     {
+        // TODO
         return this.context.getRequestDispatcher(uri);
     }
 
     @Override
-    public InputStream getResourceAsStream(String path)
+    public InputStream getResourceAsStream(final String path)
     {
         final URL res = getResource(path);
         if (res != null)
@@ -306,7 +321,7 @@ public class SharedServletContextImpl implements ServletContext
     }
 
     @Override
-    public Servlet getServlet(String name) throws ServletException
+    public Servlet getServlet(final String name) throws ServletException
     {
         return this.context.getServlet(name);
     }
@@ -314,7 +329,7 @@ public class SharedServletContextImpl implements ServletContext
     @Override
     public String getServletContextName()
     {
-        return this.context.getServletContextName();
+        return this.name;
     }
 
     @Override
@@ -324,7 +339,7 @@ public class SharedServletContextImpl implements ServletContext
     }
 
     @Override
-    public ServletRegistration getServletRegistration(String servletName)
+    public ServletRegistration getServletRegistration(final String servletName)
     {
         return this.context.getServletRegistration(servletName);
     }
@@ -344,29 +359,30 @@ public class SharedServletContextImpl implements ServletContext
     @Override
     public SessionCookieConfig getSessionCookieConfig()
     {
+        // TODO
         return this.context.getSessionCookieConfig();
     }
 
     @Override
-    public void log(Exception cause, String message)
+    public void log(final Exception cause, final String message)
     {
         SystemLogger.error(message, cause);
     }
 
     @Override
-    public void log(String message)
+    public void log(final String message)
     {
         SystemLogger.info(message);
     }
 
     @Override
-    public void log(String message, Throwable cause)
+    public void log(final String message, final Throwable cause)
     {
         SystemLogger.error(message, cause);
     }
 
     @Override
-    public void removeAttribute(String name)
+    public void removeAttribute(final String name)
     {
         Object oldValue = this.attributes.remove(name);
 
@@ -377,7 +393,7 @@ public class SharedServletContextImpl implements ServletContext
     }
 
     @Override
-    public void setAttribute(String name, Object value)
+    public void setAttribute(final String name, final Object value)
     {
         if (value == null)
         {
@@ -399,14 +415,14 @@ public class SharedServletContextImpl implements ServletContext
     }
 
     @Override
-    public boolean setInitParameter(String name, String value)
+    public boolean setInitParameter(final String name, final String value)
     {
-        return this.context.setInitParameter(name, value);
+        throw new IllegalStateException();
     }
 
     @Override
-    public void setSessionTrackingModes(Set<SessionTrackingMode> modes)
+    public void setSessionTrackingModes(final Set<SessionTrackingMode> modes)
     {
-        this.context.setSessionTrackingModes(modes);
+        throw new IllegalStateException();
     }
 }
