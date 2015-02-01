@@ -18,8 +18,10 @@ package org.apache.felix.http.whiteboard.internal.tracker;
 
 import javax.servlet.Servlet;
 
+import org.apache.felix.http.whiteboard.HttpWhiteboardConstants;
 import org.apache.felix.http.whiteboard.internal.manager.ExtenderManager;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 
 public final class ServletTracker
@@ -27,9 +29,24 @@ public final class ServletTracker
 {
     private final ExtenderManager manager;
 
+    private static org.osgi.framework.Filter createFilter(final BundleContext btx)
+    {
+        try
+        {
+            return btx.createFilter(String.format("(&(objectClass=%s)(%s=*))",
+                    Servlet.class.getName(),
+                    HttpWhiteboardConstants.ALIAS));
+        }
+        catch ( final InvalidSyntaxException ise)
+        {
+            // we can safely ignore it as the above filter is a constant
+        }
+        return null; // we never get here - and if we get an NPE which is fine
+    }
+
     public ServletTracker(BundleContext context, ExtenderManager manager)
     {
-        super(context, Servlet.class);
+        super(context, createFilter(context));
         this.manager = manager;
     }
 

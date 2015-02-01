@@ -17,15 +17,21 @@
 package org.apache.felix.http.whiteboard.internal.tracker;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Filter;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
 public abstract class AbstractTracker<T>
     extends ServiceTracker
 {
-    public AbstractTracker(BundleContext context, Class<T> clz)
+    public AbstractTracker(BundleContext context, Filter filter)
     {
-        super(context, clz.getName(), null);
+        super(context, filter, null);
+    }
+
+    public AbstractTracker(BundleContext context, Class clazz)
+    {
+        super(context, clazz.getName(), null);
     }
 
     @Override
