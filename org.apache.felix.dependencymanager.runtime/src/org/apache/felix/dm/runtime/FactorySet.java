@@ -52,12 +52,10 @@ public class FactorySet extends AbstractSet<Dictionary>
      */
     private final static String DM_FACTORY_INSTANCE = "dm.factory.instance";
     
-    public final static String DM_FACTORY_NAME = "dm.factory.name";
-
     /**
      * The actual Service instance that is allocated for each dictionaries added in this Set.
      */
-    private Object m_impl;
+    private volatile Object m_impl;
 
     /**
      * The Service provided in the OSGi registry.
@@ -75,31 +73,32 @@ public class FactorySet extends AbstractSet<Dictionary>
     private final String m_configure;
 
     /**
-     * The map between our Dictionaries and corresponding Service instances.
+     * The map between our Dictionaries and corresponding Service instances. 
+     * This map is modified from our serial executor, or from the add method.
      */
     private final ConcurrentHashMap<ServiceKey, Object> m_services = new ConcurrentHashMap<ServiceKey, Object>();
 
     /**
      * The list of Dependencies which are applied in the Service.
      */
-    private MetaData m_srvMeta;
+    private final MetaData m_srvMeta;
 
     /**
      * The list of Dependencies which are applied in the Service.
      */
-    private List<MetaData> m_depsMeta;
+    private final List<MetaData> m_depsMeta;
 
     /**
      * The DependencyManager which is used to create Service instances.
      */
-    private DependencyManager m_dm;
+    private volatile DependencyManager m_dm;
 
     /**
      * This class is used to serialize concurrent method calls, and allow to leave our methods unsynchronized.
      * This is required because some of our methods may invoke some Service callbacks, which must be called outside 
      * synchronized block (in order to avoid potential dead locks).
      */
-    private SerialExecutor m_serialExecutor = new SerialExecutor();
+    private final SerialExecutor m_serialExecutor = new SerialExecutor();
 
     /**
      * Flag used to check if our service is Active.
@@ -109,7 +108,7 @@ public class FactorySet extends AbstractSet<Dictionary>
     /**
      * The bundle containing the Service annotated with the factory attribute.
      */
-    private Bundle m_bundle;
+    private final Bundle m_bundle;
 
     /**
      * Flag used to check if a service is being created
@@ -214,23 +213,16 @@ public class FactorySet extends AbstractSet<Dictionary>
 
         // Check if service is being created
         ServiceKey serviceKey = new ServiceKey(configuration);
-        boolean creating = false;
-        synchronized (this)
+        boolean creating = m_services.putIfAbsent(serviceKey, SERVICE_CREATING) == null;
+        
+        // Create or Update the Service.
+        m_serialExecutor.enqueue(new Runnable()
         {
-            if (!m_services.containsKey(serviceKey))
+            public void run()
             {
-                m_services.put(serviceKey, SERVICE_CREATING);
-                creating = true;
+                doAdd(configuration);
             }
-            // Create or Update the Service.
-            m_serialExecutor.enqueue(new Runnable()
-            {
-                public void run()
-                {
-                    doAdd(configuration);
-                }
-            });
-        }
+        });
 
         m_serialExecutor.execute();
         return creating;
@@ -289,7 +281,7 @@ public class FactorySet extends AbstractSet<Dictionary>
             return;
         }
 
-        // Create or Update the Service.
+        // Make sure add/update/clear events are handled in FIFO order (serially).
         m_serialExecutor.enqueue(new Runnable()
         {
             public void run()
@@ -350,6 +342,7 @@ public class FactorySet extends AbstractSet<Dictionary>
         // Check if the service exists.
         ServiceKey serviceKey = new ServiceKey(configuration);
         Object service = m_services.get(serviceKey);
+
         if (service == null || service == SERVICE_CREATING)
         {
             try
@@ -457,20 +450,14 @@ public class FactorySet extends AbstractSet<Dictionary>
 
     private void doClear()
     {
-        try
+        for (Object service : m_services.values())
         {
-            for (Object service: m_services.values())
+            if (service instanceof Component)
             {
-                if (service instanceof Component)
-                {
-                    m_dm.remove((Component) service);
-                }
+                m_dm.remove((Component) service);
             }
         }
-        finally
-        {
-            m_services.clear();
-        }
+        m_services.clear();
     }
 
     /**

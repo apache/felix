@@ -18,13 +18,9 @@
  */
 package org.apache.felix.dm.runtime;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.ServiceDependency;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
@@ -45,13 +41,7 @@ public class Activator extends DependencyActivatorBase
      * (default = false)
      */
     final static String CONF_LOG = "org.apache.felix.dependencymanager.runtime.log";
-    
-    /**
-     * Name of bundle context property telling if PackageAdmin service is required or not.
-     * (default = false)
-     */
-    private final static String CONF_PACKAGE_ADMIN = "org.apache.felix.dependencymanager.runtime.packageAdmin";
-    
+        
     /**
      * Name of bundle context property telling if Components must be auto configured
      * with BundleContext/ServiceRegistration etc .. (default = false) 
@@ -74,31 +64,22 @@ public class Activator extends DependencyActivatorBase
     @Override
     public void init(BundleContext context, DependencyManager dm) throws Exception
     {
-        Component component = createComponent()
-            .setImplementation( DependencyManagerRuntime.class )
-            .setComposition( "getComposition" )
-            .add(createBundleDependency()
-                .setRequired( false )
-                .setAutoConfig( false )
-                .setStateMask( Bundle.ACTIVE )
-                .setFilter( "(DependencyManager-Component=*)" )
-                .setCallbacks( "bundleStarted", "bundleStopped" ) );
-                
-        Map<String, Class<?>> services = new HashMap<String, Class<?>>( 2 );
-        services.put( CONF_LOG, LogService.class );
-        services.put( CONF_PACKAGE_ADMIN, PackageAdmin.class );
-        for (Map.Entry<String, Class<?>> entry : services.entrySet())
-        {
-            String serviceProperty = entry.getKey();
-            Class<?> service = entry.getValue();
-            boolean serviceActive = "true".equalsIgnoreCase(context.getProperty(serviceProperty));
-            ServiceDependency serviceDep =
-                    serviceActive ? createTemporalServiceDependency(30000L)
-                                 : createServiceDependency().setRequired(false);
-            serviceDep.setService(service).setAutoConfig(true);
-            component.add(serviceDep);
-        }
-        dm.add( component );
+		Component component = createComponent()
+				.setImplementation(DependencyManagerRuntime.class)
+				.setComposition("getComposition")
+				.add(createBundleDependency()
+						.setRequired(false)
+						.setStateMask(Bundle.ACTIVE)
+						.setFilter("(DependencyManager-Component=*)")
+						.setCallbacks("bundleStarted", "bundleStopped"))
+				.add(createServiceDependency()
+						.setRequired(true)
+						.setService(PackageAdmin.class))
+				.add(createServiceDependency()
+						.setRequired("true".equalsIgnoreCase(context.getProperty(CONF_LOG)))
+						.setService(LogService.class));
+				                
+        dm.add(component);
     }
 
     /**

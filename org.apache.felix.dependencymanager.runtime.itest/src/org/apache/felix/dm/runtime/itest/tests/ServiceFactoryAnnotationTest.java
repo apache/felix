@@ -68,5 +68,6 @@ public class ServiceFactoryAnnotationTest extends TestBase {
 
         // remove instance
         Assert.assertTrue(factory.remove(conf));
+        Assert.assertFalse(factory.remove(conf));
     }
 }

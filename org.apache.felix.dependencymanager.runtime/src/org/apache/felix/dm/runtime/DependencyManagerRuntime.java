@@ -23,8 +23,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
@@ -40,11 +41,23 @@ import org.osgi.service.packageadmin.PackageAdmin;
  */
 public class DependencyManagerRuntime
 {
-    private ConcurrentHashMap<Bundle, DependencyManager> m_managers =
-            new ConcurrentHashMap<Bundle, DependencyManager>();
-    private DescriptorParser m_parser;
-    private PackageAdmin m_packageAdmin; // Possibly a NullObject
-
+    /**
+     * Map between bundles and their corresponding DependencyManager objects used to create bundle's components.
+     * Notice that we can safely use this map without synchronization because we are relying on the new DM4 thread
+     * model which serialize all component events safely.
+     */
+    private final Map<Bundle, DependencyManager> m_managers = new HashMap<Bundle, DependencyManager>();
+    
+    /**
+     * Parser used to scan component descriptors defined in bundles meta data.
+     */
+    private final DescriptorParser m_parser;
+    
+    /**
+     * We use the PackageAdmin service to allow support for annotations in fragment bundles.
+     */
+    private volatile PackageAdmin m_packageAdmin;
+    
     /**
      * Our constructor. We'll initialize here our DM component builders.
      */
