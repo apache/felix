@@ -16,16 +16,16 @@
  */
 package org.apache.felix.http.base.internal.whiteboard.tracker;
 
-import javax.servlet.ServletContextListener;
+import javax.servlet.ServletContextAttributeListener;
 
 import org.apache.felix.http.base.internal.logger.SystemLogger;
-import org.apache.felix.http.base.internal.runtime.ServletContextListenerInfo;
+import org.apache.felix.http.base.internal.runtime.ServletContextAttributeListenerInfo;
 import org.apache.felix.http.base.internal.whiteboard.ServletContextHelperManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 
-public final class ServletContextListenerTracker extends AbstractReferenceTracker<ServletContextListener>
+public final class ServletContextAttributeListenerTracker extends AbstractReferenceTracker<ServletContextAttributeListener>
 {
     private final ServletContextHelperManager contextManager;
 
@@ -37,7 +37,7 @@ public final class ServletContextListenerTracker extends AbstractReferenceTracke
         try
         {
             return btx.createFilter(String.format("(&(objectClass=%s)(%s=*))",
-                    ServletContextListener.class.getName(),
+                    ServletContextAttributeListener.class.getName(),
                     OPT_IN_PROP));
         }
         catch ( final InvalidSyntaxException ise)
@@ -47,16 +47,16 @@ public final class ServletContextListenerTracker extends AbstractReferenceTracke
         return null; // we never get here - and if we get an NPE which is fine
     }
 
-    public ServletContextListenerTracker(final BundleContext context, final ServletContextHelperManager manager)
+    public ServletContextAttributeListenerTracker(final BundleContext context, final ServletContextHelperManager manager)
     {
         super(context, createFilter(context));
         this.contextManager = manager;
     }
 
     @Override
-    protected void added(final ServiceReference<ServletContextListener> ref)
+    protected void added(final ServiceReference<ServletContextAttributeListener> ref)
     {
-        final ServletContextListenerInfo info = new ServletContextListenerInfo(ref);
+        final ServletContextAttributeListenerInfo info = new ServletContextAttributeListenerInfo(ref);
 
         if ( info.isValid() )
         {
@@ -64,14 +64,14 @@ public final class ServletContextListenerTracker extends AbstractReferenceTracke
         }
         else
         {
-            SystemLogger.debug("Ignoring ServletContextListenerInfo service " + ref);
+            SystemLogger.debug("Ignoring ServletContextAttributeListenerInfo service " + ref);
         }
     }
 
     @Override
-    protected void removed(final ServiceReference<ServletContextListener> ref)
+    protected void removed(final ServiceReference<ServletContextAttributeListener> ref)
     {
-        final ServletContextListenerInfo info = new ServletContextListenerInfo(ref);
+        final ServletContextAttributeListenerInfo info = new ServletContextAttributeListenerInfo(ref);
 
         if ( info.isValid() )
         {

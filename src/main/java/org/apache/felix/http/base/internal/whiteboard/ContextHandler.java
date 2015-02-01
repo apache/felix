@@ -18,14 +18,18 @@ package org.apache.felix.http.base.internal.whiteboard;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nonnull;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletContextAttributeEvent;
+import javax.servlet.ServletContextAttributeListener;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.runtime.ContextInfo;
+import org.apache.felix.http.base.internal.runtime.ServletContextAttributeListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextListenerInfo;
 import org.osgi.framework.Bundle;
 import org.osgi.service.http.context.ServletContextHelper;
@@ -41,7 +45,11 @@ public final class ContextHandler implements Comparable<ContextHandler>
     /** The shared part of the servlet context. */
     private final ServletContext sharedContext;
 
+    /** Servlet context listeners. */
     private final Map<Long, ServletContextListener> listeners = new HashMap<Long, ServletContextListener>();
+
+    /** Servlet context attribute listeners. */
+    private final Map<Long, ServletContextAttributeListener> contextAttributeListeners = new ConcurrentHashMap<Long, ServletContextAttributeListener>();
 
     /**
      * Create new handler.
@@ -51,7 +59,35 @@ public final class ContextHandler implements Comparable<ContextHandler>
     public ContextHandler(final ContextInfo info, final ServletContext webContext)
     {
         this.info = info;
-        this.sharedContext = new SharedServletContextImpl(webContext, info.getPrefix(), info.getName());
+        this.sharedContext = new SharedServletContextImpl(webContext,
+                info.getPrefix(),
+                info.getName(),
+                new ServletContextAttributeListener() {
+
+                    @Override
+                    public void attributeReplaced(final ServletContextAttributeEvent event) {
+                        for(final ServletContextAttributeListener l : contextAttributeListeners.values())
+                        {
+                            l.attributeReplaced(event);
+                        }
+                    }
+
+                    @Override
+                    public void attributeRemoved(final ServletContextAttributeEvent event) {
+                        for(final ServletContextAttributeListener l : contextAttributeListeners.values())
+                        {
+                            l.attributeReplaced(event);
+                        }
+                    }
+
+                    @Override
+                    public void attributeAdded(final ServletContextAttributeEvent event) {
+                        for(final ServletContextAttributeListener l : contextAttributeListeners.values())
+                        {
+                            l.attributeReplaced(event);
+                        }
+                    }
+                });
     }
 
     /**
@@ -140,6 +176,24 @@ public final class ContextHandler implements Comparable<ContextHandler>
                     bundle.getBundleContext().getServiceObjects(this.info.getServiceReference()).ungetService(holder.servletContextHelper);
                 }
             }
+        }
+    }
+
+    public void addListener(@Nonnull final Bundle bundle, @Nonnull final ServletContextAttributeListenerInfo info)
+    {
+        final  ServletContextAttributeListener service = bundle.getBundleContext().getServiceObjects(info.getServiceReference()).getService();
+        if ( service != null )
+        {
+            this.contextAttributeListeners.put(info.getServiceId(), service);
+        }
+    }
+
+    public void removeListener(@Nonnull final Bundle bundle, @Nonnull final ServletContextAttributeListenerInfo info)
+    {
+        final  ServletContextAttributeListener service = this.contextAttributeListeners.remove(info.getServiceId());
+        if ( service != null )
+        {
+            bundle.getBundleContext().getServiceObjects(info.getServiceReference()).ungetService(service);
         }
     }
 
