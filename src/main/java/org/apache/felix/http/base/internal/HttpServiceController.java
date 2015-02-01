@@ -31,8 +31,7 @@ import org.apache.felix.http.base.internal.listener.ServletRequestAttributeListe
 import org.apache.felix.http.base.internal.listener.ServletRequestListenerManager;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.apache.felix.http.base.internal.service.HttpServiceRuntimeImpl;
-import org.apache.felix.http.base.internal.service.InternalHttpService;
-import org.apache.felix.http.base.internal.whiteboard.ExtenderManager;
+import org.apache.felix.http.base.internal.whiteboard.WhiteboardHttpService;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.HttpService;
@@ -71,7 +70,7 @@ public final class HttpServiceController
     private final HttpSessionAttributeListenerManager sessionAttributeListener;
     private final boolean sharedContextAttributes;
     private final HttpServicePlugin plugin;
-    private volatile ExtenderManager manager;
+    private volatile WhiteboardHttpService whiteboardHttpService;
     private volatile ServiceRegistration serviceReg;
     private volatile ServiceRegistration<HttpServiceRuntime> runtimeReg;
 
@@ -144,17 +143,17 @@ public final class HttpServiceController
         HttpServiceFactory factory = new HttpServiceFactory(servletContext, this.registry, this.contextAttributeListener, this.sharedContextAttributes);
 
         this.serviceReg = this.bundleContext.registerService(ifaces, factory, this.serviceProps);
-        this.manager = new ExtenderManager(new InternalHttpService(this.bundleContext, servletContext, this.registry), this.bundleContext);
+        this.whiteboardHttpService = new WhiteboardHttpService(this.bundleContext, servletContext, this.registry);
 
         this.runtimeReg = this.bundleContext.registerService(HttpServiceRuntime.class, new HttpServiceRuntimeImpl(), null);
     }
 
     public void unregister()
     {
-        if ( this.manager != null )
+        if ( this.whiteboardHttpService != null )
         {
-            this.manager.close();
-            this.manager = null;
+            this.whiteboardHttpService.close();
+            this.whiteboardHttpService = null;
         }
 
         if ( this.runtimeReg != null )

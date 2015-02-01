@@ -48,11 +48,24 @@ public final class ContextInfo extends AbstractInfo<ServletContextHelper> {
         this.prefix = prefix;
     }
 
+    private boolean isValidPath()
+    {
+        if ( !this.isEmpty(path) )
+        {
+            // TODO we need more validation
+            if ( path.startsWith("/") && path.endsWith("/") )
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public boolean isValid()
     {
-        // TODO - check if name and path are valid values
-        return super.isValid() && !this.isEmpty(this.name) && !this.isEmpty(this.path);
+        // TODO - check if name has valid value
+        return super.isValid() && !this.isEmpty(this.name) && isValidPath();
     }
 
     public String getName()
