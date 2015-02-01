@@ -54,6 +54,11 @@ public final class DispatcherServlet extends HttpServlet
         super.destroy();
     }
 
+    public boolean handleError(HttpServletRequest request, HttpServletResponse response, int errorCode, String exceptionType) throws IOException
+    {
+        return this.controller.getDispatcher().handleError(request, response, errorCode, exceptionType);
+    }
+
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException
     {
@@ -84,6 +89,7 @@ public final class DispatcherServlet extends HttpServlet
             this.listener = requestAttributeListener;
         }
 
+        @Override
         public void setAttribute(String name, Object value)
         {
             if (value == null)
@@ -106,6 +112,7 @@ public final class DispatcherServlet extends HttpServlet
             }
         }
 
+        @Override
         public void removeAttribute(String name)
         {
             Object oldValue = this.getAttribute(name);

@@ -34,9 +34,10 @@ public final class ServletTracker extends AbstractReferenceTracker<Servlet>
     {
         try
         {
-            return btx.createFilter(String.format("(&(objectClass=%s)(%s=*))",
+            return btx.createFilter(String.format("(&(objectClass=%s)(|(%s=*)(%s=*)))",
                     Servlet.class.getName(),
-                    HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN));
+                    HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN,
+                    HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_ERROR_PAGE));
         }
         catch ( final InvalidSyntaxException ise)
         {
