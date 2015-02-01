@@ -375,8 +375,7 @@ public final class HttpWhiteboardConstants {
 	 * mapped.
 	 *
 	 * <p>
-	 * The value of this service property must be of type {@code String},
-	 * {@code String[]}, or {@code Collection<String>}.
+	 * The value of this service property must be of type {@code String}.
 	 * 
 	 * @see #HTTP_WHITEBOARD_RESOURCE_PATTERN
 	 */
