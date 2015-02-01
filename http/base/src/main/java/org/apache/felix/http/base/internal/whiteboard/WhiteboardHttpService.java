@@ -30,7 +30,6 @@ import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ResourceInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
-import org.apache.felix.http.base.internal.service.ResourceServlet;
 import org.apache.felix.http.base.internal.whiteboard.tracker.FilterTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ResourceTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextHelperTracker;
@@ -175,9 +174,20 @@ public final class WhiteboardHttpService
     public void registerResource(@Nonnull final ContextHandler contextHandler,
             @Nonnull final ResourceInfo resourceInfo)
     {
-        final ServletInfo servletInfo = new ServletInfo(resourceInfo, new ResourceServlet(resourceInfo.getPrefix()));
+        final ServletInfo servletInfo = new ServletInfo(resourceInfo);
 
-        this.registerServlet(contextHandler, servletInfo);
+        final Servlet servlet = new ResourceServlet(resourceInfo.getPrefix());
+        final ServletHandler handler = new ServletHandler(contextHandler.getContextInfo(),
+                contextHandler.getServletContext(servletInfo.getServiceReference().getBundle()),
+                servletInfo,
+                servlet);
+        try {
+            this.handlerRegistry.addServlet(contextHandler.getContextInfo(), handler);
+        } catch (ServletException e) {
+            // TODO create failure DTO
+        } catch (NamespaceException e) {
+            // TODO create failure DTO
+        }
     }
 
     /**
@@ -187,7 +197,7 @@ public final class WhiteboardHttpService
      */
     public void unregisterResource(@Nonnull final ContextHandler contextHandler, @Nonnull final ResourceInfo resourceInfo)
     {
-        final ServletInfo servletInfo = new ServletInfo(resourceInfo, null);
+        final ServletInfo servletInfo = new ServletInfo(resourceInfo);
         this.unregisterServlet(contextHandler, servletInfo);
     }
 }

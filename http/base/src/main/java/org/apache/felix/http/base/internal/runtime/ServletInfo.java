@@ -82,7 +82,7 @@ public final class ServletInfo extends WhiteboardServiceInfo<Servlet>
     }
 
     @SuppressWarnings("unchecked")
-    public ServletInfo(final ResourceInfo resource, final Servlet servlet)
+    public ServletInfo(final ResourceInfo resource)
     {
         super(getRef(resource.getServiceReference()));
         this.name = null;
