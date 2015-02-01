@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.http.base.internal.service;
+package org.apache.felix.http.base.internal.whiteboard;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,39 +36,31 @@ import javax.servlet.ServletRegistration;
 import javax.servlet.SessionCookieConfig;
 import javax.servlet.SessionTrackingMode;
 import javax.servlet.descriptor.JspConfigDescriptor;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
-import org.osgi.framework.Bundle;
-import org.osgi.service.http.context.ServletContextHelper;
 
-public class ServletContextImpl implements ExtServletContext {
+/**
+ * This servlet context implementation represents the shared
+ * part for a servlet context backed by a servlet context helper.
+ *
+ * For each using bundle, a {@link PerBundleServletContextImpl} is created.
+ */
+public class SharedServletContextImpl implements ServletContext
+{
 
-    private final ServletContextHelper delegatee;
-
-    private final Bundle bundle;
     private final ServletContext context;
-    private final Map<String, Object> attributes;
+    private final Map<String, Object> attributes = new ConcurrentHashMap<String, Object>();
 
-    public ServletContextImpl(final Bundle bundle,
-            final ServletContext context,
-            final ServletContextHelper delegatee)
+    public SharedServletContextImpl(final ServletContext webContext)
     {
-        this.bundle = bundle;
-        this.context = context;
-        this.delegatee = delegatee;
-        this.attributes = new ConcurrentHashMap<String, Object>();
+        this.context = webContext;
     }
 
-    /**
-     * @see org.apache.felix.http.base.internal.context.ExtServletContext#handleSecurity(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
     @Override
-    public boolean handleSecurity(HttpServletRequest request, HttpServletResponse response) throws IOException
+    public ClassLoader getClassLoader()
     {
-        return delegatee.handleSecurity(request, response);
+        // is implemented by {@link PerBundleServletContextImpl}.
+        return null;
     }
 
     /**
@@ -77,13 +69,29 @@ public class ServletContextImpl implements ExtServletContext {
     @Override
     public URL getResource(String path)
     {
-        return delegatee.getResource(path);
+        // is implemented by {@link PerBundleServletContextImpl}.
+        return null;
     }
 
     @Override
     public String getMimeType(String file)
     {
-        return delegatee.getMimeType(file);
+        // is implemented by {@link PerBundleServletContextImpl}.
+        return null;
+    }
+
+    @Override
+    public String getRealPath(String path)
+    {
+        // is implemented by {@link PerBundleServletContextImpl}.
+        return null;
+    }
+
+    @Override
+    public Set<String> getResourcePaths(final String path)
+    {
+        // is implemented by {@link PerBundleServletContextImpl}.
+        return null;
     }
 
     @Override
@@ -182,12 +190,6 @@ public class ServletContextImpl implements ExtServletContext {
     }
 
     @Override
-    public ClassLoader getClassLoader()
-    {
-        return bundle.getClass().getClassLoader();
-    }
-
-    @Override
     public ServletContext getContext(String uri)
     {
         // TODO
@@ -274,12 +276,6 @@ public class ServletContextImpl implements ExtServletContext {
     }
 
     @Override
-    public String getRealPath(String path)
-    {
-        return this.delegatee.getRealPath(path);
-    }
-
-    @Override
     public RequestDispatcher getRequestDispatcher(String uri)
     {
         return this.context.getRequestDispatcher(uri);
@@ -301,12 +297,6 @@ public class ServletContextImpl implements ExtServletContext {
             }
         }
         return null;
-    }
-
-    @Override
-    public Set<String> getResourcePaths(final String path)
-    {
-        return this.delegatee.getResourcePaths(path);
     }
 
     @Override

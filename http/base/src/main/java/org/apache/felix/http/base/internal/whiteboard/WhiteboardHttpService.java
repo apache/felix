@@ -14,10 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.http.base.internal.service;
+package org.apache.felix.http.base.internal.whiteboard;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
 
 import javax.annotation.Nonnull;
 import javax.servlet.Filter;
@@ -25,84 +24,67 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
-import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.HandlerRegistry;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
-import org.apache.felix.http.base.internal.runtime.AbstractInfo;
-import org.apache.felix.http.base.internal.runtime.ContextInfo;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ResourceInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.service.ResourceServlet;
+import org.apache.felix.http.base.internal.whiteboard.tracker.FilterTracker;
+import org.apache.felix.http.base.internal.whiteboard.tracker.ResourceTracker;
+import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextHelperTracker;
+import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextListenerTracker;
+import org.apache.felix.http.base.internal.whiteboard.tracker.ServletTracker;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.http.NamespaceException;
-import org.osgi.service.http.context.ServletContextHelper;
+import org.osgi.util.tracker.ServiceTracker;
 
-public final class InternalHttpService
+public final class WhiteboardHttpService
 {
 
     private final HandlerRegistry handlerRegistry;
 
     private final BundleContext bundleContext;
 
-    private final ServletContext webContext;
+    private final ServletContextHelperManager contextManager;
 
-    private static final class ContextHolder
-    {
-        public long counter;
-        public ExtServletContext servletContext;
-        public ServletContextHelper servletContextHelper;
-    }
+    private final ArrayList<ServiceTracker<?, ?>> trackers = new ArrayList<ServiceTracker<?, ?>>();
 
-    private final Map<Long, ContextHolder> contextMap = new HashMap<Long, ContextHolder>();
-
-    public InternalHttpService(final BundleContext bundleContext,
+    /**
+     * Create a new whiteboard http service
+     * @param bundleContext
+     * @param context
+     * @param handlerRegistry
+     */
+    public WhiteboardHttpService(final BundleContext bundleContext,
             final ServletContext context,
             final HandlerRegistry handlerRegistry)
     {
         this.handlerRegistry = handlerRegistry;
         this.bundleContext = bundleContext;
-        this.webContext = context;
+        this.contextManager = new ServletContextHelperManager(bundleContext, context, this);
+        addTracker(new FilterTracker(bundleContext, contextManager));
+        addTracker(new ServletTracker(bundleContext, this.contextManager));
+        addTracker(new ResourceTracker(bundleContext, this.contextManager));
+        addTracker(new ServletContextHelperTracker(bundleContext, this.contextManager));
+        addTracker(new ServletContextListenerTracker(bundleContext, this.contextManager));
     }
 
-    private ExtServletContext getServletContext(@Nonnull final ContextInfo contextInfo,
-            @Nonnull final AbstractInfo<?> serviceInfo)
+    public void close()
     {
-        final Long key = contextInfo.getServiceId();
-        synchronized ( this.contextMap )
+        for(final ServiceTracker<?, ?> t : this.trackers)
         {
-            ContextHolder holder = this.contextMap.get(key);
-            if ( holder == null )
-            {
-                holder = new ContextHolder();
-                // TODO check for null
-                holder.servletContextHelper = serviceInfo.getServiceReference().getBundle().getBundleContext()
-                        .getServiceObjects(contextInfo.getServiceReference()).getService();
-                holder.servletContext = new ServletContextImpl(serviceInfo.getServiceReference().getBundle(),
-                        this.webContext,
-                        holder.servletContextHelper);
-            }
-            holder.counter++;
-
-            return holder.servletContext;
+            t.close();
         }
+        this.trackers.clear();
+        this.contextManager.close();
     }
 
-    private void ungetServletContext(@Nonnull final ContextInfo contextInfo)
+    private void addTracker(ServiceTracker<?, ?> tracker)
     {
-        final Long key = contextInfo.getServiceId();
-        synchronized ( this.contextMap )
-        {
-            ContextHolder holder = this.contextMap.get(key);
-            if ( holder != null )
-            {
-                holder.counter--;
-                if ( holder.counter <= 0 )
-                {
-                    this.contextMap.remove(key);
-                }
-            }
-        }
+        this.trackers.add(tracker);
+        tracker.open();
     }
 
     /**
@@ -110,19 +92,19 @@ public final class InternalHttpService
      * @param contextInfo The servlet context helper info
      * @param servletInfo The servlet info
      */
-    public void registerServlet(@Nonnull final ContextInfo contextInfo,
+    public void registerServlet(@Nonnull final ContextHandler contextHandler,
             @Nonnull final ServletInfo servletInfo)
     {
         final Servlet servlet = this.bundleContext.getServiceObjects(servletInfo.getServiceReference()).getService();
         // TODO create failure DTO if null
         if ( servlet != null )
         {
-            final ServletHandler handler = new ServletHandler(contextInfo,
-                    getServletContext(contextInfo, servletInfo),
+            final ServletHandler handler = new ServletHandler(contextHandler.getContextInfo(),
+                    contextHandler.getServletContext(servletInfo.getServiceReference().getBundle()),
                     servletInfo,
                     servlet);
             try {
-                this.handlerRegistry.addServlet(contextInfo, handler);
+                this.handlerRegistry.addServlet(contextHandler.getContextInfo(), handler);
             } catch (ServletException e) {
                 // TODO create failure DTO
             } catch (NamespaceException e) {
@@ -136,13 +118,13 @@ public final class InternalHttpService
      * @param contextInfo The servlet context helper info
      * @param servletInfo The servlet info
      */
-    public void unregisterServlet(@Nonnull final ContextInfo contextInfo, @Nonnull final ServletInfo servletInfo)
+    public void unregisterServlet(@Nonnull final ContextHandler contextHandler, @Nonnull final ServletInfo servletInfo)
     {
-        final Servlet instance = this.handlerRegistry.removeServlet(contextInfo, servletInfo, true);
+        final Servlet instance = this.handlerRegistry.removeServlet(contextHandler.getContextInfo(), servletInfo, true);
         if ( instance != null )
         {
             this.bundleContext.getServiceObjects(servletInfo.getServiceReference()).ungetService(instance);
-            this.ungetServletContext(contextInfo);
+            contextHandler.ungetServletContext(servletInfo.getServiceReference().getBundle());
         }
     }
 
@@ -151,15 +133,15 @@ public final class InternalHttpService
      * @param contextInfo The servlet context helper info
      * @param filterInfo The filter info
      */
-    public void registerFilter(@Nonnull  final ContextInfo contextInfo,
+    public void registerFilter(@Nonnull  final ContextHandler contextHandler,
             @Nonnull final FilterInfo filterInfo)
     {
         final Filter filter = this.bundleContext.getServiceObjects(filterInfo.getServiceReference()).getService();
         // TODO create failure DTO if null
         if ( filter != null )
         {
-            final FilterHandler handler = new FilterHandler(contextInfo,
-                    getServletContext(contextInfo, filterInfo),
+            final FilterHandler handler = new FilterHandler(contextHandler.getContextInfo(),
+                    contextHandler.getServletContext(filterInfo.getServiceReference().getBundle()),
                     filter,
                     filterInfo);
             try {
@@ -175,13 +157,13 @@ public final class InternalHttpService
      * @param contextInfo The servlet context helper info
      * @param filterInfo The filter info
      */
-    public void unregisterFilter(@Nonnull final ContextInfo contextInfo, @Nonnull final FilterInfo filterInfo)
+    public void unregisterFilter(@Nonnull final ContextHandler contextHandler, @Nonnull final FilterInfo filterInfo)
     {
         final Filter instance = this.handlerRegistry.removeFilter(filterInfo, true);
         if ( instance != null )
         {
             this.bundleContext.getServiceObjects(filterInfo.getServiceReference()).ungetService(instance);
-            this.ungetServletContext(contextInfo);
+            contextHandler.ungetServletContext(filterInfo.getServiceReference().getBundle());
         }
     }
 
@@ -190,12 +172,12 @@ public final class InternalHttpService
      * @param contextInfo The servlet context helper info
      * @param resourceInfo The resource info
      */
-    public void registerResource(@Nonnull final ContextInfo contextInfo,
+    public void registerResource(@Nonnull final ContextHandler contextHandler,
             @Nonnull final ResourceInfo resourceInfo)
     {
         final ServletInfo servletInfo = new ServletInfo(resourceInfo, new ResourceServlet(resourceInfo.getPrefix()));
 
-        this.registerServlet(contextInfo, servletInfo);
+        this.registerServlet(contextHandler, servletInfo);
     }
 
     /**
@@ -203,9 +185,9 @@ public final class InternalHttpService
      * @param contextInfo The servlet context helper info
      * @param resourceInfo The resource info
      */
-    public void unregisterResource(@Nonnull final ContextInfo contextInfo, @Nonnull final ResourceInfo resourceInfo)
+    public void unregisterResource(@Nonnull final ContextHandler contextHandler, @Nonnull final ResourceInfo resourceInfo)
     {
         final ServletInfo servletInfo = new ServletInfo(resourceInfo, null);
-        this.unregisterServlet(contextInfo, servletInfo);
+        this.unregisterServlet(contextHandler, servletInfo);
     }
 }
