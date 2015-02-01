@@ -65,7 +65,6 @@ public final class ContextHandler implements Comparable<ContextHandler>
     @Override
     public int compareTo(final ContextHandler o)
     {
-        // TODO Auto-generated method stub
         return this.info.compareTo(o.info);
     }
 
