@@ -51,7 +51,7 @@ public final class ContextHandler implements Comparable<ContextHandler>
     public ContextHandler(final ContextInfo info, final ServletContext webContext)
     {
         this.info = info;
-        this.sharedContext = new SharedServletContextImpl(webContext);
+        this.sharedContext = new SharedServletContextImpl(webContext, info.getPrefix(), info.getName());
     }
 
     /**
