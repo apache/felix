@@ -32,7 +32,7 @@ import org.apache.felix.http.api.ExtHttpService;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.context.ServletContextManager;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
-import org.apache.felix.http.base.internal.handler.HandlerRegistry;
+import org.apache.felix.http.base.internal.handler.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
@@ -44,12 +44,12 @@ import org.osgi.service.http.NamespaceException;
 public final class HttpServiceImpl implements ExtHttpService
 {
     private final Bundle bundle;
-    private final HandlerRegistry handlerRegistry;
+    private final PerContextHandlerRegistry handlerRegistry;
     private final HashSet<Servlet> localServlets;
     private final HashSet<Filter> localFilters;
     private final ServletContextManager contextManager;
 
-    public HttpServiceImpl(Bundle bundle, ServletContext context, HandlerRegistry handlerRegistry, ServletContextAttributeListener servletAttributeListener, boolean sharedContextAttributes)
+    public HttpServiceImpl(Bundle bundle, ServletContext context, PerContextHandlerRegistry handlerRegistry, ServletContextAttributeListener servletAttributeListener, boolean sharedContextAttributes)
     {
         this.bundle = bundle;
         this.handlerRegistry = handlerRegistry;

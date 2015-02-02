@@ -54,11 +54,6 @@ public final class DispatcherServlet extends HttpServlet
         super.destroy();
     }
 
-    public boolean handleError(HttpServletRequest request, HttpServletResponse response, int errorCode, String exceptionType) throws IOException
-    {
-        return this.controller.getDispatcher().handleError(request, response, errorCode, exceptionType);
-    }
-
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException
     {

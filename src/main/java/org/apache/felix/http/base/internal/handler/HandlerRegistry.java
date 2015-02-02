@@ -17,280 +17,148 @@
 package org.apache.felix.http.base.internal.handler;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
+import javax.annotation.Nonnull;
 import javax.servlet.DispatcherType;
-import javax.servlet.Filter;
-import javax.servlet.Servlet;
-import javax.servlet.ServletException;
 
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
-import org.apache.felix.http.base.internal.runtime.FilterInfo;
-import org.apache.felix.http.base.internal.runtime.ServletInfo;
-import org.osgi.service.http.NamespaceException;
 
 public final class HandlerRegistry
 {
-    private final Map<Servlet, ServletHandler> servletMap = new HashMap<Servlet, ServletHandler>();
-    private final Map<Filter, FilterHandler> filterMap = new HashMap<Filter, FilterHandler>();
-    private final Map<String, Servlet> servletPatternMap= new HashMap<String, Servlet>();
-    private volatile HandlerMapping<ServletHandler> servletMapping = new HandlerMapping<ServletHandler>();
-    private volatile HandlerMapping<FilterHandler> filterMapping = new HandlerMapping<FilterHandler>();
-    private volatile ErrorsMapping errorsMapping = new ErrorsMapping();
+    private volatile List<PerContextHandlerRegistry> registrations = Collections.emptyList();
 
-    public synchronized void addFilter(FilterHandler handler) throws ServletException
+    public void add(@Nonnull PerContextHandlerRegistry registry)
     {
-        if (this.filterMap.containsKey(handler.getFilter()))
+        synchronized ( this )
         {
-            throw new ServletException("Filter instance already registered");
+            final List<PerContextHandlerRegistry> updatedList = new ArrayList<PerContextHandlerRegistry>(this.registrations);
+            updatedList.add(registry);
+            Collections.sort(updatedList);
+
+            this.registrations = updatedList;
         }
-
-        handler.init();
-        this.filterMap.put(handler.getFilter(), handler);
-
-        updateFilterMapping();
     }
 
-    /**
-     * Add a new servlet.
-     */
-    public synchronized void addServlet(ServletContextHelperInfo contextInfo, ServletHandler handler) throws ServletException, NamespaceException
+    public void remove(@Nonnull PerContextHandlerRegistry registry)
     {
-        if (this.servletMap.containsKey(handler.getServlet()))
+        synchronized ( this )
         {
-            // Do not destroy the servlet as the same instance was already registered
-            throw new ServletException("Servlet instance " + handler.getName() + " already registered");
+            final List<PerContextHandlerRegistry> updatedList = new ArrayList<PerContextHandlerRegistry>(this.registrations);
+            updatedList.remove(registry);
+
+            this.registrations = updatedList;
         }
-
-        // Can be null in case of error-handling servlets...
-        String[] patterns = handler.getServletInfo().getPatterns();
-        int length = patterns == null ? 0 : patterns.length;
-
-        for (int i = 0; i < length; i++)
-        {
-            String pattern = contextInfo != null ? contextInfo.getFullPath(patterns[i]) : patterns[i];
-            if (this.servletPatternMap.containsKey(pattern))
-            {
-                throw new ServletException("Servlet instance " + handler.getName() + " already registered");
-            }
-            this.servletPatternMap.put(pattern, handler.getServlet());
-        }
-
-        patterns = handler.getServletInfo().getErrorPage();
-        if ( patterns != null )
-        {
-            for(final String errorPage : patterns)
-            {
-                this.errorsMapping.addErrorServlet(errorPage, handler);
-            }
-        }
-        handler.init();
-        this.servletMap.put(handler.getServlet(), handler);
-
-        updateServletMapping();
     }
 
-    public ErrorsMapping getErrorsMapping()
+    public PerContextHandlerRegistry getRegistry(final ServletContextHelperInfo info)
     {
-        return this.errorsMapping;
+        synchronized ( this )
+        {
+            for(final PerContextHandlerRegistry r : this.registrations)
+            {
+                if ( info == null )
+                {
+                    if ( r.getContextServiceid() == -1)
+                    {
+                        return r;
+                    }
+                }
+                else
+                {
+                    if ( info.getServiceId() == r.getContextServiceid())
+                    {
+                        return r;
+                    }
+                }
+            }
+            final PerContextHandlerRegistry reg = new PerContextHandlerRegistry(info);
+            this.add(reg);
+
+            return reg;
+        }
     }
 
-    public FilterHandler[] getFilterHandlers(ServletHandler servletHandler, DispatcherType dispatcherType, String requestURI)
+    public ErrorsMapping getErrorsMapping(final String requestURI, final Long serviceId)
     {
-        // See Servlet 3.0 specification, section 6.2.4...
-        List<FilterHandler> result = new ArrayList<FilterHandler>();
-        result.addAll(this.filterMapping.getAllMatches(requestURI));
-
-        // TODO this is not the most efficient/fastest way of doing this...
-        Iterator<FilterHandler> iter = result.iterator();
-        while (iter.hasNext())
+        final List<PerContextHandlerRegistry> regs = this.registrations;
+        for(final PerContextHandlerRegistry r : regs)
         {
-            if (!referencesDispatcherType(iter.next(), dispatcherType))
+            if ( serviceId != null && serviceId == r.getContextServiceid() )
             {
-                iter.remove();
+                return r.getErrorsMapping();
+            }
+            else if ( serviceId == null && requestURI.startsWith(r.getPrefixPath()) )
+            {
+                return r.getErrorsMapping();
             }
         }
 
-        String servletName = (servletHandler != null) ? servletHandler.getName() : null;
-        // TODO this is not the most efficient/fastest way of doing this...
-        for (FilterHandler filterHandler : this.filterMapping.getAllElements())
-        {
-            if (referencesServletByName(filterHandler, servletName))
-            {
-                result.add(filterHandler);
-            }
-        }
-
-        // TODO - we should already check for the context when building up the result set
-        final Iterator<FilterHandler> i = result.iterator();
-        while ( i.hasNext() )
-        {
-            final FilterHandler handler = i.next();
-            if ( handler.getContextServiceId() != servletHandler.getContextServiceId() )
-            {
-                i.remove();
-            }
-        }
-        return result.toArray(new FilterHandler[result.size()]);
+        return null;
     }
 
+    private static FilterHandler[] EMPTY_FILTER_HANDLER = new FilterHandler[0];
+
+    public FilterHandler[] getFilterHandlers(final ServletHandler servletHandler,
+            final DispatcherType dispatcherType,
+            final String requestURI)
+    {
+        final long id = servletHandler.getContextServiceId();
+        final List<PerContextHandlerRegistry> regs = this.registrations;
+        for(final PerContextHandlerRegistry r : regs)
+        {
+            if ( id == r.getContextServiceid() )
+            {
+                return r.getFilterHandlers(servletHandler, dispatcherType, requestURI);
+            }
+        }
+        return EMPTY_FILTER_HANDLER;
+    }
+/*
     public synchronized Servlet getServletByAlias(String alias)
     {
         return this.servletPatternMap.get(alias);
     }
-
-    public ServletHandler getServletHandlerByName(String name)
+*/
+    public ServletHandler getServletHandlerByName(final String name)
     {
-        return this.servletMapping.getByName(name);
+        // TODO
+        return null;
     }
 
-    public ServletHandler getServletHander(String requestURI)
+    public ServletHandler getServletHander(final String requestURI)
     {
-        // TODO - take servlet context helper ranking and prefix into account (FELIX-4778)
-        return this.servletMapping.getBestMatch(requestURI);
+        final List<PerContextHandlerRegistry> regs = this.registrations;
+        for(final PerContextHandlerRegistry r : regs)
+        {
+            if ( requestURI.startsWith(r.getPrefixPath()))
+            {
+                // TODO - we could stip of the prefix and simplify handler registration
+                final ServletHandler handler = r.getServletHander(requestURI);
+                if ( handler != null )
+                {
+                    return handler;
+                }
+            }
+        }
+        return null;
     }
 
     public synchronized void removeAll()
     {
-        for (Iterator<ServletHandler> it = servletMap.values().iterator(); it.hasNext(); )
+        final List<PerContextHandlerRegistry> list;
+
+        synchronized ( this )
         {
-            ServletHandler handler = it.next();
-            it.remove();
-            handler.destroy();
+            list = new ArrayList<PerContextHandlerRegistry>(this.registrations);
+            this.registrations = Collections.emptyList();
+
         }
 
-        for (Iterator<FilterHandler> it = filterMap.values().iterator(); it.hasNext(); )
+        for(final PerContextHandlerRegistry r : list)
         {
-            FilterHandler handler = it.next();
-            it.remove();
-            handler.destroy();
+            r.removeAll();
         }
-
-        this.servletMap.clear();
-        this.filterMap.clear();
-        this.servletPatternMap.clear();
-        this.errorsMapping.clear();
-
-        updateServletMapping();
-        updateFilterMapping();
-    }
-
-    public synchronized void removeFilter(Filter filter, final boolean destroy)
-    {
-        FilterHandler handler = this.filterMap.remove(filter);
-        if (handler != null)
-        {
-            updateFilterMapping();
-            if (destroy)
-            {
-                handler.destroy();
-            }
-        }
-    }
-
-    public synchronized Filter removeFilter(final FilterInfo filterInfo, final boolean destroy)
-    {
-        for(final FilterHandler handler : this.filterMap.values())
-        {
-            if ( handler.getFilterInfo().compareTo(filterInfo) == 0)
-            {
-                this.filterMap.remove(handler.getFilter());
-                updateFilterMapping();
-                if (destroy)
-                {
-                    handler.destroy();
-                }
-                return handler.getFilter();
-            }
-        }
-        return null;
-    }
-
-    public synchronized Servlet removeServlet(final ServletContextHelperInfo contextInfo, ServletInfo servletInfo, final boolean destroy)
-    {
-        for(final ServletHandler handler : this.servletMap.values())
-        {
-            if ( handler.getServletInfo().compareTo(servletInfo) == 0 )
-            {
-                this.servletMap.remove(handler.getServlet());
-                updateServletMapping();
-
-                // Can be null in case of error-handling servlets...
-                String[] patterns = handler.getServletInfo().getPatterns();
-                int length = patterns == null ? 0 : patterns.length;
-
-                for (int i = 0; i < length; i++)
-                {
-                    this.servletPatternMap.remove(contextInfo.getFullPath(patterns[i]));
-                }
-
-                this.errorsMapping.removeServlet(handler.getServlet());
-
-                if (destroy)
-                {
-                    handler.destroy();
-                }
-                return handler.getServlet();
-            }
-        }
-        return null;
-    }
-
-    public synchronized void removeServlet(Servlet servlet, final boolean destroy)
-    {
-        ServletHandler handler = this.servletMap.remove(servlet);
-        if (handler != null)
-        {
-            updateServletMapping();
-
-            // Can be null in case of error-handling servlets...
-            String[] patterns = handler.getServletInfo().getPatterns();
-            int length = patterns == null ? 0 : patterns.length;
-
-            for (int i = 0; i < length; i++)
-            {
-                this.servletPatternMap.remove(patterns[i]);
-            }
-
-            this.errorsMapping.removeServlet(servlet);
-
-            if (destroy)
-            {
-                handler.destroy();
-            }
-        }
-    }
-
-    private boolean referencesDispatcherType(FilterHandler handler, DispatcherType dispatcherType)
-    {
-        return Arrays.asList(handler.getFilterInfo().getDispatcher()).contains(dispatcherType);
-    }
-
-    private boolean referencesServletByName(FilterHandler handler, String servletName)
-    {
-        if (servletName == null)
-        {
-            return false;
-        }
-        String[] names = handler.getFilterInfo().getServletNames();
-        if (names != null && names.length > 0)
-        {
-            return Arrays.asList(names).contains(servletName);
-        }
-        return false;
-    }
-
-    private void updateFilterMapping()
-    {
-        this.filterMapping = new HandlerMapping<FilterHandler>(this.filterMap.values());
-    }
-
-    private void updateServletMapping()
-    {
-        this.servletMapping = new HandlerMapping<ServletHandler>(this.servletMap.values());
     }
 }

@@ -103,7 +103,7 @@ public final class WhiteboardHttpService
                     servletInfo,
                     servlet);
             try {
-                this.handlerRegistry.addServlet(contextHandler.getContextInfo(), handler);
+                this.handlerRegistry.getRegistry(contextHandler.getContextInfo()).addServlet(contextHandler.getContextInfo(), handler);
             } catch (ServletException e) {
                 // TODO create failure DTO
             } catch (NamespaceException e) {
@@ -119,7 +119,7 @@ public final class WhiteboardHttpService
      */
     public void unregisterServlet(@Nonnull final ContextHandler contextHandler, @Nonnull final ServletInfo servletInfo)
     {
-        final Servlet instance = this.handlerRegistry.removeServlet(contextHandler.getContextInfo(), servletInfo, true);
+        final Servlet instance = this.handlerRegistry.getRegistry(contextHandler.getContextInfo()).removeServlet(contextHandler.getContextInfo(), servletInfo, true);
         if ( instance != null )
         {
             this.bundleContext.getServiceObjects(servletInfo.getServiceReference()).ungetService(instance);
@@ -144,7 +144,7 @@ public final class WhiteboardHttpService
                     filter,
                     filterInfo);
             try {
-                this.handlerRegistry.addFilter(handler);
+                this.handlerRegistry.getRegistry(contextHandler.getContextInfo()).addFilter(handler);
             } catch (final ServletException e) {
                 // TODO create failure DTO
             }
@@ -158,7 +158,7 @@ public final class WhiteboardHttpService
      */
     public void unregisterFilter(@Nonnull final ContextHandler contextHandler, @Nonnull final FilterInfo filterInfo)
     {
-        final Filter instance = this.handlerRegistry.removeFilter(filterInfo, true);
+        final Filter instance = this.handlerRegistry.getRegistry(contextHandler.getContextInfo()).removeFilter(filterInfo, true);
         if ( instance != null )
         {
             this.bundleContext.getServiceObjects(filterInfo.getServiceReference()).ungetService(instance);
@@ -182,7 +182,7 @@ public final class WhiteboardHttpService
                 servletInfo,
                 servlet);
         try {
-            this.handlerRegistry.addServlet(contextHandler.getContextInfo(), handler);
+            this.handlerRegistry.getRegistry(contextHandler.getContextInfo()).addServlet(contextHandler.getContextInfo(), handler);
         } catch (ServletException e) {
             // TODO create failure DTO
         } catch (NamespaceException e) {

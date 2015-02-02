@@ -41,12 +41,14 @@ public final class HttpServiceFactory
         this.sharedContextAttributes = sharedContextAttributes;
     }
 
+    @Override
     public Object getService(Bundle bundle, ServiceRegistration reg)
     {
-        return new HttpServiceImpl(bundle, this.context, this.handlerRegistry, this.attributeListener,
+        return new HttpServiceImpl(bundle, this.context, this.handlerRegistry.getRegistry(null), this.attributeListener,
             this.sharedContextAttributes);
     }
 
+    @Override
     public void ungetService(Bundle bundle, ServiceRegistration reg, Object service)
     {
         ((HttpServiceImpl)service).unregisterAll();
