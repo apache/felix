@@ -575,7 +575,7 @@ public final class Dispatcher implements RequestDispatcherProvider
     @Override
     public RequestDispatcher getNamedDispatcher(final long contextId, final String name)
     {
-        ServletHandler handler = this.handlerRegistry.getServletHandlerByName(name);
+        ServletHandler handler = this.handlerRegistry.getServletHandlerByName(contextId, name);
         return handler != null ? new RequestDispatcherImpl(handler, null) : null;
     }
 
