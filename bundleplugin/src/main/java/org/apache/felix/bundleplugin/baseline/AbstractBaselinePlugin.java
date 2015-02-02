@@ -183,7 +183,8 @@ abstract class AbstractBaselinePlugin
             return;
         }
 
-        final Jar previousBundle = getPreviousBundle();
+        final Artifact previousArtifact = getPreviousArtifact();
+        final Jar previousBundle = openJar(previousArtifact.getFile());
         if ( previousBundle == null )
         {
             getLog().info( "Not generating Baseline report as there is no previous version of the library to compare against" );
@@ -214,7 +215,7 @@ abstract class AbstractBaselinePlugin
             Set<Info> infoSet = new Baseline( reporter, new DiffPluginImpl() )
                                 .baseline( currentBundle, previousBundle, packageFilters );
 
-            startBaseline( generationDate, project.getArtifactId(), project.getVersion(), comparisonVersion );
+            startBaseline( generationDate, project.getArtifactId(), project.getVersion(), previousArtifact.getVersion() );
 
             final Info[] infos = infoSet.toArray( new Info[infoSet.size()] );
             Arrays.sort( infos, new InfoComparator() );
@@ -434,7 +435,7 @@ abstract class AbstractBaselinePlugin
         return openJar( currentBundle );
     }
 
-    private Jar getPreviousBundle()
+    private Artifact getPreviousArtifact()
         throws MojoFailureException, MojoExecutionException
     {
         // Find the previous version JAR and resolve it, and it's dependencies
@@ -504,7 +505,7 @@ abstract class AbstractBaselinePlugin
                 + " does not exist on local/remote repositories", anfe );
         }
 
-        return openJar( previousArtifact.getFile() );
+        return previousArtifact;
     }
 
     private void filterSnapshots( List<ArtifactVersion> versions )
