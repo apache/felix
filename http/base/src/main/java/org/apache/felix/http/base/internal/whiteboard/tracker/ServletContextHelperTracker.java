@@ -16,21 +16,23 @@
  */
 package org.apache.felix.http.base.internal.whiteboard.tracker;
 
-import org.apache.felix.http.base.internal.logger.SystemLogger;
-import org.apache.felix.http.base.internal.runtime.ContextInfo;
+import javax.annotation.Nonnull;
+
+import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.whiteboard.ServletContextHelperManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.context.ServletContextHelper;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
+import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * Tracks all {@link ServletContextHelper} services.
  * Only services with the required properties are tracker, services missing these
  * properties are ignored.
  */
-public final class ServletContextHelperTracker extends AbstractReferenceTracker<ServletContextHelper>
+public final class ServletContextHelperTracker extends ServiceTracker<ServletContextHelper, ServiceReference<ServletContextHelper>>
 {
     private final ServletContextHelperManager contextManager;
 
@@ -50,34 +52,41 @@ public final class ServletContextHelperTracker extends AbstractReferenceTracker<
         return null; // we never get here - and if we get an NPE which is fine
     }
 
-    public ServletContextHelperTracker(final BundleContext context, final ServletContextHelperManager manager)
+    public ServletContextHelperTracker(@Nonnull final BundleContext context, @Nonnull final ServletContextHelperManager manager)
     {
-        super(context, createFilter(context));
+        super(context, createFilter(context), null);
         this.contextManager = manager;
     }
 
     @Override
-    protected void added(final ServiceReference<ServletContextHelper> ref)
+    public final ServiceReference<ServletContextHelper> addingService(@Nonnull final ServiceReference<ServletContextHelper> ref)
     {
-        final ContextInfo info = new ContextInfo(ref);
-
-        if ( info.isValid() )
-        {
-            this.contextManager.addContextHelper(info);
-        }
-        else
-        {
-            SystemLogger.debug("Ignoring ServletContextHelper service " + ref);
-        }
+        this.added(ref);
+        return ref;
     }
 
     @Override
-    protected void removed(final ServiceReference<ServletContextHelper> ref)
+    public final void modifiedService(@Nonnull final ServiceReference<ServletContextHelper> ref, @Nonnull final ServiceReference<ServletContextHelper> service)
     {
-        final ContextInfo info = new ContextInfo(ref);
-        if ( info.isValid() )
-        {
-            this.contextManager.removeContextHelper(info);
-        }
+        this.removed(ref);
+        this.added(ref);
+    }
+
+    @Override
+    public final void removedService(@Nonnull final ServiceReference<ServletContextHelper> ref, @Nonnull final ServiceReference<ServletContextHelper> service)
+    {
+        this.removed(ref);
+    }
+
+    private void added(@Nonnull final ServiceReference<ServletContextHelper> ref)
+    {
+        final ServletContextHelperInfo info = new ServletContextHelperInfo(ref);
+        this.contextManager.addContextHelper(info);
+    }
+
+    private void removed(@Nonnull final ServiceReference<ServletContextHelper> ref)
+    {
+        final ServletContextHelperInfo info = new ServletContextHelperInfo(ref);
+        this.contextManager.removeContextHelper(info);
     }
 }

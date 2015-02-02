@@ -25,7 +25,7 @@ import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 /**
  * Provides registration information for a {@link ServletContextHelper}
  */
-public final class ContextInfo extends AbstractInfo<ServletContextHelper> {
+public final class ServletContextHelperInfo extends AbstractInfo<ServletContextHelper> {
 
     private final String name;
 
@@ -33,7 +33,7 @@ public final class ContextInfo extends AbstractInfo<ServletContextHelper> {
 
     private final String prefix;
 
-    public ContextInfo(final ServiceReference<ServletContextHelper> ref) {
+    public ServletContextHelperInfo(final ServiceReference<ServletContextHelper> ref) {
         super(ref);
         this.name = this.getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME);
         this.path = this.getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH);

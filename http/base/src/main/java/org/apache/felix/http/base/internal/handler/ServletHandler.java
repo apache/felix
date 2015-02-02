@@ -29,7 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.apache.felix.http.base.internal.runtime.ContextInfo;
+import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.util.PatternUtil;
 
@@ -46,7 +46,7 @@ public final class ServletHandler extends AbstractHandler<ServletHandler>
 
     private final long contextServiceId;
 
-    public ServletHandler(final ContextInfo contextInfo,
+    public ServletHandler(final ServletContextHelperInfo contextInfo,
                           final ExtServletContext context,
                           final ServletInfo servletInfo,
                           final Servlet servlet)

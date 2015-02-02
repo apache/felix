@@ -18,8 +18,8 @@ package org.apache.felix.http.base.internal.whiteboard.tracker;
 
 import javax.servlet.ServletContextAttributeListener;
 
-import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.ServletContextAttributeListenerInfo;
+import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
 import org.apache.felix.http.base.internal.whiteboard.ServletContextHelperManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
@@ -27,7 +27,6 @@ import org.osgi.framework.ServiceReference;
 
 public final class ServletContextAttributeListenerTracker extends AbstractReferenceTracker<ServletContextAttributeListener>
 {
-    private final ServletContextHelperManager contextManager;
 
     /** TODO Currently under discussion. */
     private static final String OPT_IN_PROP = "osgi.http.whiteboard.listener";
@@ -49,33 +48,11 @@ public final class ServletContextAttributeListenerTracker extends AbstractRefere
 
     public ServletContextAttributeListenerTracker(final BundleContext context, final ServletContextHelperManager manager)
     {
-        super(context, createFilter(context));
-        this.contextManager = manager;
+        super(manager, context, createFilter(context));
     }
 
     @Override
-    protected void added(final ServiceReference<ServletContextAttributeListener> ref)
-    {
-        final ServletContextAttributeListenerInfo info = new ServletContextAttributeListenerInfo(ref);
-
-        if ( info.isValid() )
-        {
-            this.contextManager.addWhiteboardService(info);
-        }
-        else
-        {
-            SystemLogger.debug("Ignoring ServletContextAttributeListenerInfo service " + ref);
-        }
-    }
-
-    @Override
-    protected void removed(final ServiceReference<ServletContextAttributeListener> ref)
-    {
-        final ServletContextAttributeListenerInfo info = new ServletContextAttributeListenerInfo(ref);
-
-        if ( info.isValid() )
-        {
-            this.contextManager.removeWhiteboardService(info);
-        }
+    protected WhiteboardServiceInfo<ServletContextAttributeListener> getServiceInfo(final ServiceReference<ServletContextAttributeListener> ref) {
+        return new ServletContextAttributeListenerInfo(ref);
     }
 }

@@ -18,8 +18,8 @@ package org.apache.felix.http.base.internal.whiteboard.tracker;
 
 import javax.servlet.Servlet;
 
-import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
 import org.apache.felix.http.base.internal.whiteboard.ServletContextHelperManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
@@ -28,7 +28,6 @@ import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 public final class ServletTracker extends AbstractReferenceTracker<Servlet>
 {
-    private final ServletContextHelperManager contextManager;
 
     private static org.osgi.framework.Filter createFilter(final BundleContext btx)
     {
@@ -48,33 +47,11 @@ public final class ServletTracker extends AbstractReferenceTracker<Servlet>
 
     public ServletTracker(final BundleContext context, final ServletContextHelperManager manager)
     {
-        super(context, createFilter(context));
-        this.contextManager = manager;
+        super(manager, context, createFilter(context));
     }
 
     @Override
-    protected void added(final ServiceReference<Servlet> ref)
-    {
-        final ServletInfo info = new ServletInfo(ref);
-
-        if ( info.isValid() )
-        {
-            this.contextManager.addWhiteboardService(info);
-        }
-        else
-        {
-            SystemLogger.debug("Ignoring Servlet service " + ref);
-        }
-    }
-
-    @Override
-    protected void removed(final ServiceReference<Servlet> ref)
-    {
-        final ServletInfo info = new ServletInfo(ref);
-
-        if ( info.isValid() )
-        {
-            this.contextManager.removeWhiteboardService(info);
-        }
+    protected WhiteboardServiceInfo<Servlet> getServiceInfo(final ServiceReference<Servlet> ref) {
+        return new ServletInfo(ref);
     }
 }
