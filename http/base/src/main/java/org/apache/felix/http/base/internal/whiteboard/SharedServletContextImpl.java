@@ -296,14 +296,14 @@ public class SharedServletContextImpl implements ServletContext
     public RequestDispatcher getNamedDispatcher(final String name)
     {
         // This is implemented by the ServletContext wrapper created in the Dispatcher
-        return this.context.getNamedDispatcher(name);
+        return null;
     }
 
     @Override
     public RequestDispatcher getRequestDispatcher(final String uri)
     {
         // This is implemented by the ServletContext wrapper created in the Dispatcher
-        return this.context.getRequestDispatcher(uri);
+        return null;
     }
 
     @Override
