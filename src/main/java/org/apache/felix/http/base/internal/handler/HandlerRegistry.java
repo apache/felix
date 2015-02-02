@@ -115,12 +115,7 @@ public final class HandlerRegistry
         }
         return EMPTY_FILTER_HANDLER;
     }
-/*
-    public synchronized Servlet getServletByAlias(String alias)
-    {
-        return this.servletPatternMap.get(alias);
-    }
-*/
+
     public ServletHandler getServletHandlerByName(final Long contextId, final String name)
     {
         if ( contextId != null )
@@ -144,8 +139,7 @@ public final class HandlerRegistry
         {
             if ( requestURI.startsWith(r.getPrefixPath()))
             {
-                // TODO - we could stip of the prefix and simplify handler registration
-                final ServletHandler handler = r.getServletHander(requestURI);
+                final ServletHandler handler = r.getServletHander(requestURI.substring(r.getPrefixPath().length() - 1));
                 if ( handler != null )
                 {
                     return handler;

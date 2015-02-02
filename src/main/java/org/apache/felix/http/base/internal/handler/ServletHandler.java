@@ -62,7 +62,7 @@ public final class ServletHandler extends AbstractHandler<ServletHandler>
         this.patterns = new Pattern[length];
         for (int i = 0; i < length; i++)
         {
-            String pattern = (contextInfo == null ? patterns[i] : contextInfo.getFullPath(patterns[i]));
+            final String pattern = patterns[i];
             this.patterns[i] = Pattern.compile(PatternUtil.convertToRegEx(pattern));
         }
         if ( contextInfo != null )
@@ -76,7 +76,7 @@ public final class ServletHandler extends AbstractHandler<ServletHandler>
     }
 
     @Override
-    public int compareTo(ServletHandler other)
+    public int compareTo(final ServletHandler other)
     {
         return getId() - other.getId();
     }
@@ -88,10 +88,14 @@ public final class ServletHandler extends AbstractHandler<ServletHandler>
             uri = "/";
         }
 
-        Matcher matcher = this.patterns[0].matcher(uri);
-        if (matcher.find(0))
+        // Patterns are sorted on length in descending order, so we should get the longest match first...
+        for (int i = 0; i < this.patterns.length; i++)
         {
-            return matcher.groupCount() > 0 ? matcher.group(1) : matcher.group();
+            Matcher matcher = this.patterns[i].matcher(uri);
+            if (matcher.find(0))
+            {
+                return matcher.groupCount() > 0 ? matcher.group(1) : matcher.group();
+            }
         }
 
         return null;

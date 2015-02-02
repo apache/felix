@@ -37,7 +37,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
 {
     private final Map<Servlet, ServletHandler> servletMap = new HashMap<Servlet, ServletHandler>();
     private final Map<Filter, FilterHandler> filterMap = new HashMap<Filter, FilterHandler>();
-    private final Map<String, Servlet> servletPatternMap= new HashMap<String, Servlet>();
+    private final Map<String, Servlet> servletPatternMap = new HashMap<String, Servlet>();
     private volatile HandlerMapping<ServletHandler> servletMapping = new HandlerMapping<ServletHandler>();
     private volatile HandlerMapping<FilterHandler> filterMapping = new HandlerMapping<FilterHandler>();
     private volatile ErrorsMapping errorsMapping = new ErrorsMapping();
@@ -123,7 +123,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
 
         for (int i = 0; i < length; i++)
         {
-            String pattern = contextInfo != null ? contextInfo.getFullPath(patterns[i]) : patterns[i];
+            final String pattern = patterns[i];
             if (this.servletPatternMap.containsKey(pattern))
             {
                 throw new ServletException("Servlet instance " + handler.getName() + " already registered");
@@ -275,7 +275,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
 
                 for (int i = 0; i < length; i++)
                 {
-                    this.servletPatternMap.remove(contextInfo.getFullPath(patterns[i]));
+                    this.servletPatternMap.remove(patterns[i]);
                 }
 
                 this.errorsMapping.removeServlet(handler.getServlet());

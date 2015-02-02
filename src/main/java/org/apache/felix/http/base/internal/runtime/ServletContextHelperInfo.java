@@ -97,15 +97,6 @@ public final class ServletContextHelperInfo extends AbstractInfo<ServletContextH
         return this.prefix;
     }
 
-    public String getFullPath(final String path)
-    {
-        if ( this.prefix == null )
-        {
-            return path;
-        }
-        return this.prefix.concat(path);
-    }
-
     public Map<String, String> getInitParams()
     {
         return initParams;
