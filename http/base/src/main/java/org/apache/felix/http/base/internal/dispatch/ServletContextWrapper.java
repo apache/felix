@@ -31,12 +31,12 @@ class ServletContextWrapper extends ServletContextImpl
 {
     private final RequestDispatcherProvider provider;
 
-    private final long contextId;
+    private final Long contextId;
 
     /**
      * Creates a new {@link ServletContextWrapper} instance.
      */
-    public ServletContextWrapper(long contextId, ExtServletContext delegate, RequestDispatcherProvider provider)
+    public ServletContextWrapper(Long contextId, ExtServletContext delegate, RequestDispatcherProvider provider)
     {
         super(delegate);
 

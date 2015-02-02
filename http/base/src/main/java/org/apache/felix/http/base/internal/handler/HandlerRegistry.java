@@ -121,9 +121,19 @@ public final class HandlerRegistry
         return this.servletPatternMap.get(alias);
     }
 */
-    public ServletHandler getServletHandlerByName(final String name)
+    public ServletHandler getServletHandlerByName(final Long contextId, final String name)
     {
-        // TODO
+        if ( contextId != null )
+        {
+            final List<PerContextHandlerRegistry> regs = this.registrations;
+            for(final PerContextHandlerRegistry r : regs)
+            {
+                if ( contextId == r.getContextServiceid() )
+                {
+                    return r.getServletHandlerByName(name);
+                }
+            }
+        }
         return null;
     }
 
