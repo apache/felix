@@ -16,6 +16,7 @@
 
 package org.osgi.service.http.whiteboard;
 
+import javax.servlet.Servlet;
 import org.osgi.framework.Filter;
 import org.osgi.service.http.context.ServletContextHelper;
 import org.osgi.service.http.runtime.HttpServiceRuntimeConstants;
@@ -88,6 +89,23 @@ public final class HttpWhiteboardConstants {
 	 * @see #HTTP_WHITEBOARD_CONTEXT_SELECT
 	 */
 	public static final String	HTTP_WHITEBOARD_CONTEXT_PATH			= "osgi.http.whiteboard.context.path";
+
+	/**
+	 * Service property prefix referencing a {@link ServletContextHelper}
+	 * service.
+	 * 
+	 * <p>
+	 * For {@link ServletContextHelper} services this prefix can be used for
+	 * service properties to mark them as initialization parameters which can be
+	 * retrieved from the associated servlet context. The prefix is removed from
+	 * the service property name to build the initialization parameter name.
+	 *
+	 * <p>
+	 * For {@link ServletContextHelper} services, the value of each
+	 * initialization parameter service property must be of type {@code String}.
+	 * 
+	 */
+	public static final String	HTTP_WHITEBOARD_CONTEXT_INIT_PARAM_PREFIX	= "context.init.";
 
 	/**
 	 * Service property referencing a {@link ServletContextHelper} service.
@@ -187,6 +205,22 @@ public final class HttpWhiteboardConstants {
 	 * @see "Java Servlet Specification Version 3.0, Section 2.3.3.3 Asynchronous Processing"
 	 */
 	public static final String	HTTP_WHITEBOARD_SERVLET_ASYNC_SUPPORTED	= "osgi.http.whiteboard.servlet.asyncSupported";
+
+	/**
+	 * Service property prefix referencing a {@link Servlet} service.
+	 * 
+	 * <p>
+	 * For {@link Servlet} services this prefix can be used for service
+	 * properties to mark them as initialization parameters which can be
+	 * retrieved from the associated servlet config. The prefix is removed from
+	 * the service property name to build the initialization parameter name.
+	 *
+	 * <p>
+	 * For {@link Servlet} services, the value of each initialization parameter
+	 * service property must be of type {@code String}.
+	 * 
+	 */
+	public static final String	HTTP_WHITEBOARD_SERVLET_INIT_PARAM_PREFIX	= "servlet.init.";
 
 	/**
 	 * Service property specifying the servlet filter name of a {@code Filter}
@@ -297,6 +331,22 @@ public final class HttpWhiteboardConstants {
 	 * @see "Java Servlet Specification Version 3.0, Section 6.2.5 Filters and the RequestDispatcher"
 	 */
 	public static final String	HTTP_WHITEBOARD_FILTER_DISPATCHER		= "osgi.http.whiteboard.filter.dispatcher";
+
+	/**
+	 * Service property prefix referencing a {@link Filter} service.
+	 * 
+	 * <p>
+	 * For {@link Filter} services this prefix can be used for service
+	 * properties to mark them as initialization parameters which can be
+	 * retrieved from the associated filter config. The prefix is removed from
+	 * the service property name to build the initialization parameter name.
+	 *
+	 * <p>
+	 * For {@link Filter} services, the value of each initialization parameter
+	 * service property must be of type {@code String}.
+	 * 
+	 */
+	public static final String	HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX	= "filter.init.";
 
 	/**
 	 * Possible value for the {@link #HTTP_WHITEBOARD_FILTER_DISPATCHER}
