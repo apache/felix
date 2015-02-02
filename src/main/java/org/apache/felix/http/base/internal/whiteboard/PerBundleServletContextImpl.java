@@ -40,6 +40,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.service.http.context.ServletContextHelper;
 
 /**
@@ -74,7 +75,7 @@ public class PerBundleServletContextImpl implements ExtServletContext {
     @Override
     public ClassLoader getClassLoader()
     {
-        return this.bundle.getClass().getClassLoader();
+        return this.bundle.adapt(BundleWiring.class).getClassLoader();
     }
 
     /**
