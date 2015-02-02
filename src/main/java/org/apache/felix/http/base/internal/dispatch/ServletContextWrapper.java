@@ -31,14 +31,17 @@ class ServletContextWrapper extends ServletContextImpl
 {
     private final RequestDispatcherProvider provider;
 
+    private final long contextId;
+
     /**
      * Creates a new {@link ServletContextWrapper} instance.
      */
-    public ServletContextWrapper(ExtServletContext delegate, RequestDispatcherProvider provider)
+    public ServletContextWrapper(long contextId, ExtServletContext delegate, RequestDispatcherProvider provider)
     {
         super(delegate);
 
         this.provider = provider;
+        this.contextId = contextId;
     }
 
     @Override
@@ -49,7 +52,7 @@ class ServletContextWrapper extends ServletContextImpl
             return null;
         }
 
-        RequestDispatcher dispatcher = this.provider.getNamedDispatcher(name);
+        RequestDispatcher dispatcher = this.provider.getNamedDispatcher(contextId, name);
         return dispatcher != null ? dispatcher : super.getNamedDispatcher(name);
     }
 
@@ -62,7 +65,7 @@ class ServletContextWrapper extends ServletContextImpl
             return null;
         }
 
-        RequestDispatcher dispatcher = this.provider.getRequestDispatcher(path);
+        RequestDispatcher dispatcher = this.provider.getRequestDispatcher(contextId, path);
         return dispatcher != null ? dispatcher : super.getRequestDispatcher(path);
     }
 }

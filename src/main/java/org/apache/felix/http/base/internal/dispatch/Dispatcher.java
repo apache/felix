@@ -87,7 +87,7 @@ public final class Dispatcher implements RequestDispatcherProvider
 
             try
             {
-                ServletRequestWrapper req = new ServletRequestWrapper((HttpServletRequest) request, this.handler.getContext(), this.requestInfo, DispatcherType.FORWARD);
+                ServletRequestWrapper req = new ServletRequestWrapper((HttpServletRequest) request, this.handler.getContext(), this.requestInfo, DispatcherType.FORWARD, this.handler.getContextServiceId());
                 Dispatcher.this.forward(this.handler, req, (HttpServletResponse) response);
             }
             finally
@@ -105,7 +105,7 @@ public final class Dispatcher implements RequestDispatcherProvider
         @Override
         public void include(ServletRequest request, ServletResponse response) throws ServletException, IOException
         {
-            ServletRequestWrapper req = new ServletRequestWrapper((HttpServletRequest) request, this.handler.getContext(), this.requestInfo, DispatcherType.INCLUDE);
+            ServletRequestWrapper req = new ServletRequestWrapper((HttpServletRequest) request, this.handler.getContext(), this.requestInfo, DispatcherType.INCLUDE, this.handler.getContextServiceId());
             Dispatcher.this.include(this.handler, req, (HttpServletResponse) response);
         }
     }
@@ -201,7 +201,7 @@ public final class Dispatcher implements RequestDispatcherProvider
 
                                 final FilterHandler[] filterHandlers = handlerRegistry.getFilterHandlers(errorHandler, DispatcherType.ERROR, request.getRequestURI());
 
-                                invokeChain(filterHandlers, errorHandler, new ServletRequestWrapper(request, errorHandler.getContext(), requestInfo), this);
+                                invokeChain(filterHandlers, errorHandler, new ServletRequestWrapper(request, errorHandler.getContext(), requestInfo, this.serviceId), this);
 
                                 invokeSuper = false;
                             }
@@ -234,19 +234,22 @@ public final class Dispatcher implements RequestDispatcherProvider
         private final DispatcherType type;
         private final RequestInfo requestInfo;
         private final ExtServletContext servletContext;
+        private final Long contextId;
 
-        public ServletRequestWrapper(HttpServletRequest req, ExtServletContext servletContext, RequestInfo requestInfo)
+        public ServletRequestWrapper(HttpServletRequest req, ExtServletContext servletContext, RequestInfo requestInfo, final Long contextId)
         {
-            this(req, servletContext, requestInfo, null /* type */);
+            this(req, servletContext, requestInfo, null /* type */, contextId);
         }
 
-        public ServletRequestWrapper(HttpServletRequest req, ExtServletContext servletContext, RequestInfo requestInfo, DispatcherType type)
+        public ServletRequestWrapper(HttpServletRequest req, ExtServletContext servletContext, RequestInfo requestInfo,
+                DispatcherType type, final Long contextId)
         {
             super(req);
 
             this.servletContext = servletContext;
             this.requestInfo = requestInfo;
             this.type = type;
+            this.contextId = contextId;
         }
 
         @Override
@@ -385,6 +388,10 @@ public final class Dispatcher implements RequestDispatcherProvider
         @Override
         public RequestDispatcher getRequestDispatcher(String path)
         {
+            if ( this.contextId == null )
+            {
+                return null;
+            }
             // See section 9.1 of Servlet 3.0 specification...
             if (path == null)
             {
@@ -396,7 +403,7 @@ public final class Dispatcher implements RequestDispatcherProvider
             {
                 path = concat(getServletPath(), path);
             }
-            return Dispatcher.this.getRequestDispatcher(path);
+            return Dispatcher.this.getRequestDispatcher(this.contextId, path);
         }
 
         @Override
@@ -413,7 +420,7 @@ public final class Dispatcher implements RequestDispatcherProvider
         @Override
         public ServletContext getServletContext()
         {
-            return new ServletContextWrapper(this.servletContext, Dispatcher.this);
+            return new ServletContextWrapper(this.contextId, this.servletContext, Dispatcher.this);
         }
 
         @Override
@@ -548,7 +555,7 @@ public final class Dispatcher implements RequestDispatcherProvider
 
         try
         {
-            final HttpServletRequest wrappedRequest = new ServletRequestWrapper(req, servletContext, requestInfo);
+            final HttpServletRequest wrappedRequest = new ServletRequestWrapper(req, servletContext, requestInfo, servletHandler.getContextServiceId());
             final FilterHandler[] filterHandlers = this.handlerRegistry.getFilterHandlers(servletHandler, req.getDispatcherType(), requestURI);
             invokeChain(filterHandlers, servletHandler, wrappedRequest, wrappedResponse);
         }
@@ -566,14 +573,14 @@ public final class Dispatcher implements RequestDispatcherProvider
     }
 
     @Override
-    public RequestDispatcher getNamedDispatcher(String name)
+    public RequestDispatcher getNamedDispatcher(final long contextId, final String name)
     {
         ServletHandler handler = this.handlerRegistry.getServletHandlerByName(name);
         return handler != null ? new RequestDispatcherImpl(handler, null) : null;
     }
 
     @Override
-    public RequestDispatcher getRequestDispatcher(String path)
+    public RequestDispatcher getRequestDispatcher(final long contextId, String path)
     {
         // See section 9.1 of Servlet 3.x specification...
         if (path == null || (!path.startsWith("/") && !"".equals(path)))
