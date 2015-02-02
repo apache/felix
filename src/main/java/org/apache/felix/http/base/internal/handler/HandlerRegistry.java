@@ -28,7 +28,7 @@ import javax.servlet.Filter;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 
-import org.apache.felix.http.base.internal.runtime.ContextInfo;
+import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.osgi.service.http.NamespaceException;
@@ -58,7 +58,7 @@ public final class HandlerRegistry
     /**
      * Add a new servlet.
      */
-    public synchronized void addServlet(ContextInfo contextInfo, ServletHandler handler) throws ServletException, NamespaceException
+    public synchronized void addServlet(ServletContextHelperInfo contextInfo, ServletHandler handler) throws ServletException, NamespaceException
     {
         if (this.servletMap.containsKey(handler.getServlet()))
         {
@@ -210,7 +210,7 @@ public final class HandlerRegistry
         return null;
     }
 
-    public synchronized Servlet removeServlet(final ContextInfo contextInfo, ServletInfo servletInfo, final boolean destroy)
+    public synchronized Servlet removeServlet(final ServletContextHelperInfo contextInfo, ServletInfo servletInfo, final boolean destroy)
     {
         for(final ServletHandler handler : this.servletMap.values())
         {

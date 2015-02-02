@@ -16,8 +16,8 @@
  */
 package org.apache.felix.http.base.internal.whiteboard.tracker;
 
-import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.ResourceInfo;
+import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
 import org.apache.felix.http.base.internal.whiteboard.ServletContextHelperManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
@@ -27,7 +27,6 @@ import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 public final class ResourceTracker extends AbstractReferenceTracker<Object>
 {
-    private final ServletContextHelperManager contextManager;
 
     private static Filter createFilter(final BundleContext btx)
     {
@@ -46,32 +45,11 @@ public final class ResourceTracker extends AbstractReferenceTracker<Object>
 
     public ResourceTracker(final BundleContext context, final ServletContextHelperManager manager)
     {
-        super(context, createFilter(context));
-        this.contextManager = manager;
+        super(manager, context, createFilter(context));
     }
 
     @Override
-    protected void added(final ServiceReference<Object> ref)
-    {
-        final ResourceInfo info = new ResourceInfo(ref);
-
-        if ( info.isValid() )
-        {
-            this.contextManager.addWhiteboardService(info);
-        }
-        else
-        {
-            SystemLogger.debug("Ignoring Resource service " + ref);
-        }
+    protected WhiteboardServiceInfo<Object> getServiceInfo(final ServiceReference<Object> ref) {
+        return new ResourceInfo(ref);
     }
-
-    @Override
-    protected void removed(final ServiceReference<Object> ref)
-    {
-        final ResourceInfo info = new ResourceInfo(ref);
-
-        if ( info.isValid() )
-        {
-            this.contextManager.removeWhiteboardService(info);
-        }
-    }}
+}

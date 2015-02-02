@@ -31,7 +31,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.apache.felix.http.base.internal.runtime.ContextInfo;
+import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.util.PatternUtil;
 
@@ -43,7 +43,7 @@ public final class FilterHandler extends AbstractHandler<FilterHandler>
 
     private final long contextServiceId;
 
-    public FilterHandler(final ContextInfo contextInfo, ExtServletContext context, Filter filter, FilterInfo filterInfo)
+    public FilterHandler(final ServletContextHelperInfo contextInfo, ExtServletContext context, Filter filter, FilterInfo filterInfo)
     {
         super(context, filterInfo.getInitParams(), filterInfo.getName());
         this.filter = filter;

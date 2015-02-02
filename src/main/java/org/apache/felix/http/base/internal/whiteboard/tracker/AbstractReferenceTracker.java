@@ -16,6 +16,8 @@
  */
 package org.apache.felix.http.base.internal.whiteboard.tracker;
 
+import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
+import org.apache.felix.http.base.internal.whiteboard.ServletContextHelperManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
 import org.osgi.framework.ServiceReference;
@@ -27,9 +29,13 @@ import org.osgi.util.tracker.ServiceTracker;
  */
 public abstract class AbstractReferenceTracker<T> extends ServiceTracker<T, ServiceReference<T>>
 {
-    public AbstractReferenceTracker(final BundleContext context, final Filter filter)
+    private final ServletContextHelperManager contextManager;
+
+    public AbstractReferenceTracker(final ServletContextHelperManager contextManager,
+            final BundleContext context, final Filter filter)
     {
         super(context, filter, null);
+        this.contextManager = contextManager;
     }
 
     @Override
@@ -51,12 +57,23 @@ public abstract class AbstractReferenceTracker<T> extends ServiceTracker<T, Serv
         this.removed(ref);
     }
 
-    private void modified(final ServiceReference<T> ref) {
+    protected void modified(final ServiceReference<T> ref)
+    {
         removed(ref);
         added(ref);
     }
 
-    protected abstract void added(final ServiceReference<T> ref);
+    protected void added(final ServiceReference<T> ref)
+    {
+        final WhiteboardServiceInfo<T> info = this.getServiceInfo(ref);
+        this.contextManager.addWhiteboardService(info);
+    }
 
-    protected abstract void removed(final ServiceReference<T> ref);
+    protected void removed(final ServiceReference<T> ref)
+    {
+        final WhiteboardServiceInfo<T> info = this.getServiceInfo(ref);
+        this.contextManager.removeWhiteboardService(info);
+    }
+
+    protected abstract WhiteboardServiceInfo<T> getServiceInfo(final ServiceReference<T> ref);
 }
