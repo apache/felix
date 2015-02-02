@@ -77,29 +77,33 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     @Override
     public int compareTo(final PerContextHandlerRegistry other)
     {
-        if (other.ranking == this.ranking)
-        {
-            if (other.serviceId == this.serviceId)
+        final int result = other.prefixPath.compareTo(this.prefixPath);
+        if ( result == 0 ) {
+            if (other.ranking == this.ranking)
             {
-                return 0;
-            }
-            // service id might be negative, we have to change the behavior in that case
-            if ( this.serviceId < 0 )
-            {
-                if ( other.serviceId > 0 )
+                if (other.serviceId == this.serviceId)
+                {
+                    return 0;
+                }
+                // service id might be negative, we have to change the behavior in that case
+                if ( this.serviceId < 0 )
+                {
+                    if ( other.serviceId > 0 )
+                    {
+                        return -1;
+                    }
+                    return other.serviceId < this.serviceId ? -1 : 1;
+                }
+                if ( other.serviceId < 0 )
                 {
                     return -1;
                 }
-                return other.serviceId < this.serviceId ? -1 : 1;
+                return other.serviceId > this.serviceId ? -1 : 1;
             }
-            if ( other.serviceId < 0 )
-            {
-                return -1;
-            }
-            return other.serviceId > this.serviceId ? -1 : 1;
-        }
 
-        return (other.ranking > this.ranking) ? 1 : -1;
+            return (other.ranking > this.ranking) ? 1 : -1;
+        }
+        return result;
     }
 
     /**
