@@ -49,8 +49,8 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     private final String prefixPath;
 
     public PerContextHandlerRegistry() {
-        this.serviceId = -1;
-        this.ranking = Integer.MIN_VALUE;
+        this.serviceId = 0;
+        this.ranking = Integer.MAX_VALUE;
         this.prefixPath = "/";
     }
 

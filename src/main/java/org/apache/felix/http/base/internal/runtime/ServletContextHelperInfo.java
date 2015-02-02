@@ -18,6 +18,8 @@
  */
 package org.apache.felix.http.base.internal.runtime;
 
+import java.util.Map;
+
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.context.ServletContextHelper;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
@@ -25,13 +27,24 @@ import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 /**
  * Provides registration information for a {@link ServletContextHelper}
  */
-public final class ServletContextHelperInfo extends AbstractInfo<ServletContextHelper> {
+public final class ServletContextHelperInfo extends AbstractInfo<ServletContextHelper>
+{
+
+    /**
+     * Properties starting with this prefix are passed as context init parameters.
+     */
+    private static final String CONTEXT_INIT_PREFIX = "context.init.";
 
     private final String name;
 
     private final String path;
 
     private final String prefix;
+
+    /**
+     * The filter initialization parameters as provided during registration of the filter.
+     */
+    private final Map<String, String> initParams;
 
     public ServletContextHelperInfo(final ServiceReference<ServletContextHelper> ref) {
         super(ref);
@@ -46,6 +59,7 @@ public final class ServletContextHelperInfo extends AbstractInfo<ServletContextH
             }
         }
         this.prefix = prefix;
+        this.initParams = getInitParams(ref, CONTEXT_INIT_PREFIX);
     }
 
     private boolean isValidPath()
@@ -90,5 +104,10 @@ public final class ServletContextHelperInfo extends AbstractInfo<ServletContextH
             return path;
         }
         return this.prefix.concat(path);
+    }
+
+    public Map<String, String> getInitParams()
+    {
+        return initParams;
     }
 }

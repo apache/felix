@@ -143,31 +143,38 @@ public final class FilterInfo extends WhiteboardServiceInfo<Filter>
         return super.isValid() && (!isEmpty(this.patterns) || !isEmpty(this.regexs) || !isEmpty(this.servletNames));
     }
 
-    public String getName() {
+    public String getName()
+    {
         return name;
     }
 
-    public String[] getPatterns() {
+    public String[] getPatterns()
+    {
         return patterns;
     }
 
-    public String[] getServletNames() {
+    public String[] getServletNames()
+    {
         return servletNames;
     }
 
-    public String[] getRegexs() {
+    public String[] getRegexs()
+    {
         return regexs;
     }
 
-    public boolean isAsyncSupported() {
+    public boolean isAsyncSupported()
+    {
         return asyncSupported;
     }
 
-    public DispatcherType[] getDispatcher() {
+    public DispatcherType[] getDispatcher()
+    {
         return dispatcher;
     }
 
-    public Map<String, String> getInitParams() {
+    public Map<String, String> getInitParams()
+    {
         return initParams;
     }
 }

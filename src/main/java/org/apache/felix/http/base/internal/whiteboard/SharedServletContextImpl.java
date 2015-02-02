@@ -22,6 +22,7 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.EventListener;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -55,10 +56,12 @@ public class SharedServletContextImpl implements ServletContext
     private final String contextPath;
     private final String name;
     private final ServletContextAttributeListener attributeListener;
+    private final Map<String, String> initParameters = new HashMap<String, String>();
 
     public SharedServletContextImpl(final ServletContext webContext,
             final String name,
             final String prefix,
+            final Map<String, String> initParameters,
             final ServletContextAttributeListener servletContextAttributeListener)
     {
         this.context = webContext;
@@ -71,6 +74,10 @@ public class SharedServletContextImpl implements ServletContext
             this.contextPath = webContext.getContextPath() + prefix;
         }
         this.name = name;
+        if ( initParameters != null )
+        {
+            this.initParameters.putAll(initParameters);
+        }
         this.attributeListener = servletContextAttributeListener;
     }
 
@@ -258,15 +265,13 @@ public class SharedServletContextImpl implements ServletContext
     @Override
     public String getInitParameter(final String name)
     {
-        // TODO
-        return this.context.getInitParameter(name);
+        return this.initParameters.get(name);
     }
 
     @Override
     public Enumeration getInitParameterNames()
     {
-        // TODO
-        return this.context.getInitParameterNames();
+        return Collections.enumeration(this.initParameters.keySet());
     }
 
     @Override
