@@ -505,11 +505,6 @@ public final class Dispatcher implements RequestDispatcherProvider
     }
 
     /**
-     * Request attribute that provides access to the request dispatcher provider.
-     */
-    public static final String REQUEST_DISPATCHER_PROVIDER = "org.apache.felix.http.requestDispatcherProvider";
-
-    /**
      * Catch-all filter chain that simple finishes all requests with a "404 Not Found" error.
      */
     private static final FilterChain DEFAULT_CHAIN = new NotFoundFilterChain();
@@ -529,9 +524,9 @@ public final class Dispatcher implements RequestDispatcherProvider
      * @throws ServletException in case of exceptions during the actual dispatching;
      * @throws IOException in case of I/O problems.
      */
-    public void dispatch(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException
+    public void dispatch(final HttpServletRequest req, final HttpServletResponse res) throws ServletException, IOException
     {
-        final String requestURI = getRequestURI(req);
+        String requestURI = getRequestURI(req);
 
         // Determine which servlets we should forward the request to...
         final ServletHandler servletHandler = this.handlerRegistry.getServletHander(requestURI);
@@ -543,10 +538,10 @@ public final class Dispatcher implements RequestDispatcherProvider
             return;
         }
 
-        // Provides access to the correct request dispatcher...
-        req.setAttribute(REQUEST_DISPATCHER_PROVIDER, this);
+        // strip of context path
+        requestURI = requestURI.substring(servletHandler.getContext().getContextPath().length());
 
-        String servletPath = (servletHandler != null) ? servletHandler.determineServletPath(requestURI) : "";
+        final String servletPath = servletHandler.determineServletPath(requestURI);
         String pathInfo = UriUtils.compactPath(UriUtils.relativePath(servletPath, requestURI));
         String queryString = null; // XXX
 
@@ -565,10 +560,6 @@ public final class Dispatcher implements RequestDispatcherProvider
             req.setAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE, e.getClass().getName());
 
             wrappedResponse.sendError(500);
-        }
-        finally
-        {
-            req.removeAttribute(REQUEST_DISPATCHER_PROVIDER);
         }
     }
 
