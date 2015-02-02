@@ -30,10 +30,10 @@ public interface RequestDispatcherProvider
     /**
      * @see ServletContext#getNamedDispatcher(String)
      */
-    RequestDispatcher getNamedDispatcher(String name);
+    RequestDispatcher getNamedDispatcher(long contextId, String name);
 
     /**
      * @see ServletContext#getRequestDispatcher(String)
      */
-    RequestDispatcher getRequestDispatcher(String path);
+    RequestDispatcher getRequestDispatcher(long contextId, String path);
 }
