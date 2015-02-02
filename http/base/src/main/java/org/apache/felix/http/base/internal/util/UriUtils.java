@@ -28,7 +28,7 @@ import java.nio.charset.CodingErrorAction;
 
 /**
  * Some convenience methods for handling URI(-parts).
- * 
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class UriUtils
@@ -99,7 +99,7 @@ public class UriUtils
 
     /**
      * Concatenates two paths keeping their respective path-parts into consideration.
-     * 
+     *
      * @param path1 the first part of the path, can be <code>null</code>;
      * @param path2 the second part of the path, can be <code>null</code>.
      * @return the concatenated path, can be <code>null</code> in case both given arguments were <code>null</code>.
@@ -182,7 +182,7 @@ public class UriUtils
 
     /**
      * Decodes a given URL-encoded path assuming it is UTF-8 encoded.
-     *  
+     *
      * @param path the URL-encoded path, can be <code>null</code>.
      * @return the decoded path, can be <code>null</code> only if the given path was <code>null</code>.
      */
@@ -193,7 +193,7 @@ public class UriUtils
 
     /**
      * Decodes a given URL-encoded path using a given character encoding.
-     *  
+     *
      * @param path the URL-encoded path, can be <code>null</code>;
      * @param encoding the character encoding to use, cannot be <code>null</code>.
      * @return the decoded path, can be <code>null</code> only if the given path was <code>null</code>.
@@ -247,7 +247,7 @@ public class UriUtils
 
     /**
      * Removes all superfluous dot-segments using the algorithm described in RFC-3986 section 5.2.4.
-     *  
+     *
      * @param path the path to remove all dot-segments from, can be <code>null</code>.
      * @return the cleaned path, can be <code>null</code> only if the given path was <code>null</code>.
      */
@@ -418,6 +418,109 @@ public class UriUtils
     private static boolean isEmpty(String value)
     {
         return value == null || "".equals(value.trim());
+    }
+
+    public static String statusToString(final int statusCode)
+    {
+        switch (statusCode)
+        {
+            case 100:
+                return "Continue";
+            case 101:
+                return "Switching Protocols";
+            case 102:
+                return "Processing (WebDAV)";
+            case 200:
+                return "OK";
+            case 201:
+                return "Created";
+            case 202:
+                return "Accepted";
+            case 203:
+                return "Non-Authoritative Information";
+            case 204:
+                return "No Content";
+            case 205:
+                return "Reset Content";
+            case 206:
+                return "Partial Content";
+            case 207:
+                return "Multi-Status (WebDAV)";
+            case 300:
+                return "Multiple Choices";
+            case 301:
+                return "Moved Permanently";
+            case 302:
+                return "Found";
+            case 303:
+                return "See Other";
+            case 304:
+                return "Not Modified";
+            case 305:
+                return "Use Proxy";
+            case 307:
+                return "Temporary Redirect";
+            case 400:
+                return "Bad Request";
+            case 401:
+                return "Unauthorized";
+            case 402:
+                return "Payment Required";
+            case 403:
+                return "Forbidden";
+            case 404:
+                return "Not Found";
+            case 405:
+                return "Method Not Allowed";
+            case 406:
+                return "Not Acceptable";
+            case 407:
+                return "Proxy Authentication Required";
+            case 408:
+                return "Request Time-out";
+            case 409:
+                return "Conflict";
+            case 410:
+                return "Gone";
+            case 411:
+                return "Length Required";
+            case 412:
+                return "Precondition Failed";
+            case 413:
+                return "Request Entity Too Large";
+            case 414:
+                return "Request-URI Too Large";
+            case 415:
+                return "Unsupported Media Type";
+            case 416:
+                return "Requested range not satisfiable";
+            case 417:
+                return "Expectation Failed";
+            case 422:
+                return "Unprocessable Entity (WebDAV)";
+            case 423:
+                return "Locked (WebDAV)";
+            case 424:
+                return "Failed Dependency (WebDAV)";
+            case 500:
+                return "Internal Server Error";
+            case 501:
+                return "Not Implemented";
+            case 502:
+                return "Bad Gateway";
+            case 503:
+                return "Service Unavailable";
+            case 504:
+                return "Gateway Time-out";
+            case 505:
+                return "HTTP Version not supported";
+            case 507:
+                return "Insufficient Storage (WebDAV)";
+            case 510:
+                return "Not Extended";
+            default:
+                return String.valueOf(statusCode);
+        }
     }
 
     /**

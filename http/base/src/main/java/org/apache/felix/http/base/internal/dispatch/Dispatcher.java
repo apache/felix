@@ -31,6 +31,7 @@ import static org.apache.felix.http.base.internal.util.UriUtils.decodePath;
 import static org.apache.felix.http.base.internal.util.UriUtils.removeDotSegments;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterChain;
@@ -42,6 +43,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
 import javax.servlet.http.HttpSession;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
@@ -105,6 +107,125 @@ public final class Dispatcher implements RequestDispatcherProvider
         {
             ServletRequestWrapper req = new ServletRequestWrapper((HttpServletRequest) request, this.handler.getContext(), this.requestInfo, DispatcherType.INCLUDE);
             Dispatcher.this.include(this.handler, req, (HttpServletResponse) response);
+        }
+    }
+
+    final class ServletResponseWrapper extends HttpServletResponseWrapper
+    {
+
+        private final HttpServletRequest request;
+
+        private final AtomicInteger invocationCount = new AtomicInteger();
+
+        private final Long serviceId;
+
+        private final String servletName;
+
+        public ServletResponseWrapper(final HttpServletRequest req, final HttpServletResponse res, final ServletHandler servletHandler)
+        {
+            super(res);
+            this.request = req;
+            if ( servletHandler != null )
+            {
+                this.serviceId = servletHandler.getContextServiceId();
+                this.servletName = servletHandler.getName();
+            }
+            else
+            {
+                this.serviceId = null;
+                this.servletName = null;
+            }
+        }
+
+        @Override
+        public void sendError(int sc) throws IOException
+        {
+            sendError(sc, null);
+        }
+
+        @Override
+        public void sendError(final int code, final String message) throws IOException
+        {
+            resetBuffer();
+
+            setStatus(code);
+
+            boolean invokeSuper = true;
+
+            if ( invocationCount.incrementAndGet() == 1 )
+            {
+                // If we are allowed to have a body
+                if (code != SC_NO_CONTENT &&
+                    code != SC_NOT_MODIFIED &&
+                    code != SC_PARTIAL_CONTENT &&
+                    code >= SC_OK)
+                {
+
+                    final ErrorsMapping errorsMapping = handlerRegistry.getErrorsMapping(request.getRequestURI(), this.serviceId);
+                    if ( errorsMapping != null )
+                    {
+                        final String exceptionType = (String)request.getAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE);
+
+                        ServletHandler errorHandler = null;
+
+                        if (exceptionType != null)
+                        {
+                            errorHandler = errorsMapping.get(exceptionType);
+                        }
+
+                        if ( errorHandler == null )
+                        {
+                            errorHandler = errorsMapping.get(code);
+                        }
+
+                        if ( errorHandler != null )
+                        {
+                            try
+                            {
+                                request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, new Integer(code));
+                                if ( message != null )
+                                {
+                                    request.setAttribute(RequestDispatcher.ERROR_MESSAGE, message);
+                                }
+                                request.setAttribute(RequestDispatcher.ERROR_REQUEST_URI, request.getRequestURI());
+                                if ( this.servletName != null )
+                                {
+                                    request.setAttribute(RequestDispatcher.ERROR_SERVLET_NAME, this.servletName);
+                                }
+
+                                final String servletPath = null;
+                                final String pathInfo = request.getRequestURI();
+                                final String queryString = null; // XXX
+
+                                final RequestInfo requestInfo = new RequestInfo(servletPath, pathInfo, queryString);
+
+                                final FilterHandler[] filterHandlers = handlerRegistry.getFilterHandlers(errorHandler, DispatcherType.ERROR, request.getRequestURI());
+
+                                invokeChain(filterHandlers, errorHandler, new ServletRequestWrapper(request, errorHandler.getContext(), requestInfo), this);
+
+                                invokeSuper = false;
+                            }
+                            catch (final ServletException e)
+                            {
+                                // ignore
+                            }
+                            finally
+                            {
+                                request.removeAttribute(RequestDispatcher.ERROR_STATUS_CODE);
+                                request.removeAttribute(RequestDispatcher.ERROR_MESSAGE);
+                                request.removeAttribute(RequestDispatcher.ERROR_REQUEST_URI);
+                                request.removeAttribute(RequestDispatcher.ERROR_SERVLET_NAME);
+                                request.removeAttribute(RequestDispatcher.ERROR_EXCEPTION);
+                                request.removeAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE);
+                            }
+                        }
+                    }
+                }
+            }
+            if ( invokeSuper )
+            {
+                super.sendError(code, message);
+            }
         }
     }
 
@@ -403,11 +524,17 @@ public final class Dispatcher implements RequestDispatcherProvider
      */
     public void dispatch(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException
     {
-        String requestURI = getRequestURI(req);
+        final String requestURI = getRequestURI(req);
 
         // Determine which servlets we should forward the request to...
-        ServletHandler servletHandler = this.handlerRegistry.getServletHander(requestURI);
-        FilterHandler[] filterHandlers = this.handlerRegistry.getFilterHandlers(servletHandler, req.getDispatcherType(), requestURI);
+        final ServletHandler servletHandler = this.handlerRegistry.getServletHander(requestURI);
+
+        final HttpServletResponse wrappedResponse = new ServletResponseWrapper(req, res, servletHandler);
+        if ( servletHandler == null )
+        {
+            wrappedResponse.sendError(404);
+            return;
+        }
 
         // Provides access to the correct request dispatcher...
         req.setAttribute(REQUEST_DISPATCHER_PROVIDER, this);
@@ -421,42 +548,21 @@ public final class Dispatcher implements RequestDispatcherProvider
 
         try
         {
-            invokeChain(filterHandlers, servletHandler, new ServletRequestWrapper(req, servletContext, requestInfo), res);
+            final HttpServletRequest wrappedRequest = new ServletRequestWrapper(req, servletContext, requestInfo);
+            final FilterHandler[] filterHandlers = this.handlerRegistry.getFilterHandlers(servletHandler, req.getDispatcherType(), requestURI);
+            invokeChain(filterHandlers, servletHandler, wrappedRequest, wrappedResponse);
+        }
+        catch ( final Exception e)
+        {
+            req.setAttribute(RequestDispatcher.ERROR_EXCEPTION, e);
+            req.setAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE, e.getClass().getName());
+
+            wrappedResponse.sendError(500);
         }
         finally
         {
             req.removeAttribute(REQUEST_DISPATCHER_PROVIDER);
         }
-    }
-
-    public boolean handleError(HttpServletRequest request, HttpServletResponse response, int errorCode, String exceptionType) throws IOException
-    {
-        ErrorsMapping errorsMapping = this.handlerRegistry.getErrorsMapping();
-        ServletHandler errorHandler = null;
-
-        if (exceptionType != null)
-        {
-            errorHandler = errorsMapping.get(exceptionType);
-        }
-        else
-        {
-            errorHandler = errorsMapping.get(errorCode);
-        }
-
-        if (errorHandler != null)
-        {
-            // TODO set error attributes! See Servlet 3.0 specification, section 10.9.1...
-            try
-            {
-                return errorHandler.handle(request, response);
-            }
-            catch (ServletException e)
-            {
-                return false; // XXX
-            }
-        }
-
-        return false;
     }
 
     @Override

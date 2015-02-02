@@ -24,6 +24,7 @@ import org.apache.felix.http.api.ExtHttpService;
 import org.apache.felix.http.base.internal.dispatch.Dispatcher;
 import org.apache.felix.http.base.internal.handler.HandlerRegistry;
 import org.apache.felix.http.base.internal.handler.HttpServicePlugin;
+import org.apache.felix.http.base.internal.handler.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.listener.HttpSessionAttributeListenerManager;
 import org.apache.felix.http.base.internal.listener.HttpSessionListenerManager;
 import org.apache.felix.http.base.internal.listener.ServletContextAttributeListenerManager;
@@ -78,6 +79,7 @@ public final class HttpServiceController
     {
         this.bundleContext = bundleContext;
         this.registry = new HandlerRegistry();
+        this.registry.add(new PerContextHandlerRegistry());
         this.dispatcher = new Dispatcher(this.registry);
         this.serviceProps = new Hashtable<String, Object>();
         this.contextAttributeListener = new ServletContextAttributeListenerManager(bundleContext);
