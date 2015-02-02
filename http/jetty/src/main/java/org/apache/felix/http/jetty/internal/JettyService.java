@@ -241,7 +241,6 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             this.server.addLifeCycleListener(this);
 
             this.server.addBean(new HashLoginService("OSGi HTTP Service Realm"));
-            this.server.addBean(new CustomErrorHandler(this.dispatcher));
 
             this.parent = new ContextHandlerCollection();
 
