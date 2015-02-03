@@ -564,14 +564,14 @@ public final class Dispatcher implements RequestDispatcherProvider
     }
 
     @Override
-    public RequestDispatcher getNamedDispatcher(final long contextId, final String name)
+    public RequestDispatcher getNamedDispatcher(final Long contextId, final String name)
     {
         ServletHandler handler = this.handlerRegistry.getServletHandlerByName(contextId, name);
         return handler != null ? new RequestDispatcherImpl(handler, null) : null;
     }
 
     @Override
-    public RequestDispatcher getRequestDispatcher(final long contextId, String path)
+    public RequestDispatcher getRequestDispatcher(final Long contextId, String path)
     {
         // See section 9.1 of Servlet 3.x specification...
         if (path == null || (!path.startsWith("/") && !"".equals(path)))

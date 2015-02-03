@@ -71,7 +71,7 @@ public final class ServletHandler extends AbstractHandler<ServletHandler>
         }
         else
         {
-            this.contextServiceId = -1;
+            this.contextServiceId = 0;
         }
     }
 
