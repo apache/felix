@@ -34,9 +34,15 @@ import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
  */
 public final class HandlerRegistry
 {
+    private static FilterHandler[] EMPTY_FILTER_HANDLER = new FilterHandler[0];
+
     /** Current list of context registrations. */
     private volatile List<PerContextHandlerRegistry> registrations = Collections.emptyList();
 
+    /**
+     * Create a new registry.
+     * Register default context registry for Http Service
+     */
     public HandlerRegistry()
     {
         this.add(new PerContextHandlerRegistry());
@@ -151,17 +157,15 @@ public final class HandlerRegistry
         return null;
     }
 
-    private static FilterHandler[] EMPTY_FILTER_HANDLER = new FilterHandler[0];
-
-    public FilterHandler[] getFilterHandlers(final ServletHandler servletHandler,
+    public FilterHandler[] getFilterHandlers(@Nonnull final ServletHandler servletHandler,
             final DispatcherType dispatcherType,
-            final String requestURI)
+            @Nonnull final String requestURI)
     {
-        final long id = servletHandler.getContextServiceId();
+        final long key = servletHandler.getContextServiceId();
         final List<PerContextHandlerRegistry> regs = this.registrations;
         for(final PerContextHandlerRegistry r : regs)
         {
-            if ( id == r.getContextServiceId() )
+            if ( key == r.getContextServiceId() )
             {
                 return r.getFilterHandlers(servletHandler, dispatcherType, requestURI);
             }
@@ -169,24 +173,35 @@ public final class HandlerRegistry
         return EMPTY_FILTER_HANDLER;
     }
 
-    public ServletHandler getServletHandlerByName(final Long contextId, final String name)
+    /**
+     * Get the servlet handler for a servlet by name
+     * @param contextId The context id or {@code null}
+     * @param name The servlet name
+     * @return The servlet handler or {@code null}
+     */
+    public ServletHandler getServletHandlerByName(final Long contextId, @Nonnull final String name)
     {
-        if ( contextId != null )
+        final long key = (contextId == null ? 0 : contextId);
+        final List<PerContextHandlerRegistry> regs = this.registrations;
+        for(final PerContextHandlerRegistry r : regs)
         {
-            final List<PerContextHandlerRegistry> regs = this.registrations;
-            for(final PerContextHandlerRegistry r : regs)
+            if ( key == r.getContextServiceId() )
             {
-                if ( contextId == r.getContextServiceId() )
-                {
-                    return r.getServletHandlerByName(name);
-                }
+                return r.getServletHandlerByName(name);
             }
         }
+
         return null;
     }
 
-    public ServletHandler getServletHander(final String requestURI)
+    /**
+     * Search the servlet handler for the request uri
+     * @param requestURI The request uri
+     * @return
+     */
+    public ServletHandler getServletHander(@Nonnull final String requestURI)
     {
+        // search the first matching context registry
         final List<PerContextHandlerRegistry> regs = this.registrations;
         for(final PerContextHandlerRegistry r : regs)
         {

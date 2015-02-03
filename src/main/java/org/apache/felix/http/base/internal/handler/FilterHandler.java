@@ -62,7 +62,7 @@ public final class FilterHandler extends AbstractHandler<FilterHandler>
         }
         else
         {
-            this.contextServiceId = -1;
+            this.contextServiceId = 0;
         }
     }
 
