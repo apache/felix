@@ -120,6 +120,9 @@ public final class ServletContextHelperManager
     private void activate(final ContextHandler handler)
     {
         handler.activate();
+
+        this.httpService.registerContext(handler);
+
         // context listeners first
         final List<WhiteboardServiceInfo<?>> services = new ArrayList<WhiteboardServiceInfo<?>>();
         for(final Map.Entry<WhiteboardServiceInfo<?>, List<ContextHandler>> entry : this.servicesMap.entrySet())
@@ -150,6 +153,8 @@ public final class ServletContextHelperManager
      */
     private void deactivate(final ContextHandler handler)
     {
+        this.httpService.unregisterContext(handler);
+
         // context listeners last
         final List<ServletContextListenerInfo> listeners = new ArrayList<ServletContextListenerInfo>();
         final Iterator<Map.Entry<WhiteboardServiceInfo<?>, List<ContextHandler>>> i = this.servicesMap.entrySet().iterator();
