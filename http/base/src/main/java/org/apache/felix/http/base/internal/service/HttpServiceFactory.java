@@ -23,9 +23,10 @@ import org.apache.felix.http.base.internal.handler.HandlerRegistry;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.http.HttpService;
 
 public final class HttpServiceFactory
-    implements ServiceFactory
+    implements ServiceFactory<HttpService>
 {
     private final ServletContext context;
     private final ServletContextAttributeListener attributeListener;
@@ -42,15 +43,21 @@ public final class HttpServiceFactory
     }
 
     @Override
-    public Object getService(Bundle bundle, ServiceRegistration reg)
+    public HttpService getService(final Bundle bundle, final ServiceRegistration<HttpService> reg)
     {
-        return new HttpServiceImpl(bundle, this.context, this.handlerRegistry.getRegistry(null), this.attributeListener,
-            this.sharedContextAttributes);
+        return new HttpServiceImpl(bundle, this.context,
+                this.handlerRegistry.getRegistry(null),
+                this.attributeListener,
+                this.sharedContextAttributes);
     }
 
     @Override
-    public void ungetService(Bundle bundle, ServiceRegistration reg, Object service)
+    public void ungetService(final Bundle bundle, final ServiceRegistration<HttpService> reg,
+            final HttpService service)
     {
-        ((HttpServiceImpl)service).unregisterAll();
+        if ( service instanceof HttpServiceImpl )
+        {
+            ((HttpServiceImpl)service).unregisterAll();
+        }
     }
 }

@@ -209,7 +209,7 @@ public class SharedServletContextImpl implements ServletContext
     }
 
     @Override
-    public Enumeration getAttributeNames()
+    public Enumeration<String> getAttributeNames()
     {
         return Collections.enumeration(this.attributes.keySet());
     }
@@ -269,7 +269,7 @@ public class SharedServletContextImpl implements ServletContext
     }
 
     @Override
-    public Enumeration getInitParameterNames()
+    public Enumeration<String> getInitParameterNames()
     {
         return Collections.enumeration(this.initParameters.keySet());
     }
@@ -330,6 +330,7 @@ public class SharedServletContextImpl implements ServletContext
         return this.context.getServerInfo();
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public Servlet getServlet(final String name) throws ServletException
     {
@@ -342,8 +343,9 @@ public class SharedServletContextImpl implements ServletContext
         return this.name;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
-    public Enumeration getServletNames()
+    public Enumeration<String> getServletNames()
     {
         return this.context.getServletNames();
     }
@@ -360,8 +362,9 @@ public class SharedServletContextImpl implements ServletContext
         return this.context.getServletRegistrations();
     }
 
+    @SuppressWarnings("deprecation")
     @Override
-    public Enumeration getServlets()
+    public Enumeration<Servlet> getServlets()
     {
         return this.context.getServlets();
     }

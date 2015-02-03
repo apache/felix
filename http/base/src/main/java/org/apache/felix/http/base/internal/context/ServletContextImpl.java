@@ -75,150 +75,180 @@ public class ServletContextImpl implements ExtServletContext
         this.attributes = impl.attributes;
     }
 
+    @Override
     public FilterRegistration.Dynamic addFilter(String filterName, Class<? extends Filter> type)
     {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public FilterRegistration.Dynamic addFilter(String filterName, Filter filter)
     {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public FilterRegistration.Dynamic addFilter(String filterName, String className)
     {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public void addListener(Class<? extends EventListener> type)
     {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public void addListener(String className)
     {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public <T extends EventListener> void addListener(T listener)
     {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public ServletRegistration.Dynamic addServlet(String servletName, Class<? extends Servlet> type)
     {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public ServletRegistration.Dynamic addServlet(String servletName, Servlet servlet)
     {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public ServletRegistration.Dynamic addServlet(String servletName, String className)
     {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public <T extends Filter> T createFilter(Class<T> type) throws ServletException
     {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public <T extends EventListener> T createListener(Class<T> type) throws ServletException
     {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public <T extends Servlet> T createServlet(Class<T> type) throws ServletException
     {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public void declareRoles(String... roleNames)
     {
         this.context.declareRoles(roleNames);
     }
 
+    @Override
     public String getVirtualServerName() {
         return context.getVirtualServerName();
     }
 
+    @Override
     public Object getAttribute(String name)
     {
         return (this.attributes != null) ? this.attributes.get(name) : this.context.getAttribute(name);
     }
 
-    public Enumeration getAttributeNames()
+    @Override
+    public Enumeration<String> getAttributeNames()
     {
         return (this.attributes != null) ? Collections.enumeration(this.attributes.keySet()) : this.context.getAttributeNames();
     }
 
+    @Override
     public ClassLoader getClassLoader()
     {
         return bundle.getClass().getClassLoader();
     }
 
+    @Override
     public ServletContext getContext(String uri)
     {
         return this.context.getContext(uri);
     }
 
+    @Override
     public String getContextPath()
     {
         return this.context.getContextPath();
     }
 
+    @Override
     public Set<SessionTrackingMode> getDefaultSessionTrackingModes()
     {
         return this.context.getDefaultSessionTrackingModes();
     }
 
+    @Override
     public int getEffectiveMajorVersion()
     {
         return this.context.getEffectiveMajorVersion();
     }
 
+    @Override
     public int getEffectiveMinorVersion()
     {
         return this.context.getEffectiveMinorVersion();
     }
 
+    @Override
     public Set<SessionTrackingMode> getEffectiveSessionTrackingModes()
     {
         return this.context.getEffectiveSessionTrackingModes();
     }
 
+    @Override
     public FilterRegistration getFilterRegistration(String filterName)
     {
         return this.context.getFilterRegistration(filterName);
     }
 
+    @Override
     public Map<String, ? extends FilterRegistration> getFilterRegistrations()
     {
         return this.context.getFilterRegistrations();
     }
 
+    @Override
     public String getInitParameter(String name)
     {
         return this.context.getInitParameter(name);
     }
 
-    public Enumeration getInitParameterNames()
+    @Override
+    public Enumeration<String> getInitParameterNames()
     {
         return this.context.getInitParameterNames();
     }
 
+    @Override
     public JspConfigDescriptor getJspConfigDescriptor()
     {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public int getMajorVersion()
     {
         return this.context.getMajorVersion();
     }
 
+    @Override
     public String getMimeType(String file)
     {
         String type = this.httpContext.getMimeType(file);
@@ -230,16 +260,19 @@ public class ServletContextImpl implements ExtServletContext
         return MimeTypes.get().getByFile(file);
     }
 
+    @Override
     public int getMinorVersion()
     {
         return this.context.getMinorVersion();
     }
 
+    @Override
     public RequestDispatcher getNamedDispatcher(String name)
     {
         return this.context.getNamedDispatcher(name);
     }
 
+    @Override
     public String getRealPath(String name)
     {
         URL url = getResource(name);
@@ -250,16 +283,19 @@ public class ServletContextImpl implements ExtServletContext
         return url.toExternalForm();
     }
 
+    @Override
     public RequestDispatcher getRequestDispatcher(String uri)
     {
         return this.context.getRequestDispatcher(uri);
     }
 
+    @Override
     public URL getResource(String path)
     {
         return this.httpContext.getResource(normalizeResourcePath(path));
     }
 
+    @Override
     public InputStream getResourceAsStream(String path)
     {
         URL res = getResource(path);
@@ -277,9 +313,10 @@ public class ServletContextImpl implements ExtServletContext
         return null;
     }
 
-    public Set getResourcePaths(String path)
+    @Override
+    public Set<String> getResourcePaths(String path)
     {
-        Enumeration paths = this.bundle.getEntryPaths(normalizePath(path));
+        Enumeration<String> paths = this.bundle.getEntryPaths(normalizePath(path));
         if ((paths == null) || !paths.hasMoreElements())
         {
             return null;
@@ -288,72 +325,85 @@ public class ServletContextImpl implements ExtServletContext
         Set<String> set = new HashSet<String>();
         while (paths.hasMoreElements())
         {
-            set.add((String) paths.nextElement());
+            set.add(paths.nextElement());
         }
 
         return set;
     }
 
+    @Override
     public String getServerInfo()
     {
         return this.context.getServerInfo();
     }
 
+    @Override
     public Servlet getServlet(String name) throws ServletException
     {
         return this.context.getServlet(name);
     }
 
+    @Override
     public String getServletContextName()
     {
         return this.context.getServletContextName();
     }
 
-    public Enumeration getServletNames()
+    @Override
+    public Enumeration<String> getServletNames()
     {
         return this.context.getServletNames();
     }
 
+    @Override
     public ServletRegistration getServletRegistration(String servletName)
     {
         return this.context.getServletRegistration(servletName);
     }
 
+    @Override
     public Map<String, ? extends ServletRegistration> getServletRegistrations()
     {
         return this.context.getServletRegistrations();
     }
 
-    public Enumeration getServlets()
+    @Override
+    public Enumeration<Servlet> getServlets()
     {
         return this.context.getServlets();
     }
 
+    @Override
     public SessionCookieConfig getSessionCookieConfig()
     {
         return this.context.getSessionCookieConfig();
     }
 
+    @Override
     public boolean handleSecurity(HttpServletRequest req, HttpServletResponse res) throws IOException
     {
         return this.httpContext.handleSecurity(req, res);
     }
 
+    @Override
     public void log(Exception cause, String message)
     {
         SystemLogger.error(message, cause);
     }
 
+    @Override
     public void log(String message)
     {
         SystemLogger.info(message);
     }
 
+    @Override
     public void log(String message, Throwable cause)
     {
         SystemLogger.error(message, cause);
     }
 
+    @Override
     public void removeAttribute(String name)
     {
         Object oldValue;
@@ -373,6 +423,7 @@ public class ServletContextImpl implements ExtServletContext
         }
     }
 
+    @Override
     public void setAttribute(String name, Object value)
     {
         if (value == null)
@@ -403,11 +454,13 @@ public class ServletContextImpl implements ExtServletContext
         }
     }
 
+    @Override
     public boolean setInitParameter(String name, String value)
     {
         return this.context.setInitParameter(name, value);
     }
 
+    @Override
     public void setSessionTrackingModes(Set<SessionTrackingMode> modes)
     {
         this.context.setSessionTrackingModes(modes);
