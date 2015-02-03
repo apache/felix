@@ -16,9 +16,7 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
-import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 import javax.servlet.Filter;
@@ -29,34 +27,16 @@ import org.apache.felix.http.base.internal.context.ExtServletContext;
 
 public abstract class AbstractHandler<T extends AbstractHandler> implements Comparable<T>
 {
-    private final static AtomicInteger ID = new AtomicInteger();
-
-    private final int id;
     private final String baseName;
     private final ExtServletContext context;
     private final Map<String, String> initParams;
-
-    public AbstractHandler(ExtServletContext context, String baseName)
-    {
-        this.context = context;
-        this.baseName = baseName;
-        this.id = ID.incrementAndGet();
-        this.initParams = new HashMap<String, String>();
-    }
 
     public AbstractHandler(ExtServletContext context, final Map<String, String> initParams, String baseName)
     {
         this.context = context;
         this.baseName = baseName;
-        this.id = ID.incrementAndGet();
-        this.initParams = new HashMap<String, String>();
-        if ( initParams != null)
-        {
-            this.initParams.putAll(initParams);
-        }
+        this.initParams = initParams;
     }
-
-    public abstract void destroy();
 
     public final Map<String, String> getInitParams()
     {
@@ -68,30 +48,26 @@ public abstract class AbstractHandler<T extends AbstractHandler> implements Comp
         String name = this.baseName;
         if (name == null)
         {
-            name = String.format("%s_%d", getSubject().getClass(), this.id);
+            name = String.format("%s_%d", getSubject().getClass(), this.hashCode());
         }
         return name;
     }
-
-    public abstract void init() throws ServletException;
 
     public ExtServletContext getContext()
     {
         return this.context;
     }
 
-    /**
-     * @return a unique ID for this handler, &gt; 0.
-     */
-    protected final int getId()
-    {
-        return id;
-    }
+    public abstract void init() throws ServletException;
+
+    public abstract void destroy();
 
     /**
      * @return the {@link Servlet} or {@link Filter} this handler handles.
      */
     protected abstract Object getSubject();
+
+    protected abstract long getServiceId();
 
     public abstract Pattern[] getPatterns();
 }

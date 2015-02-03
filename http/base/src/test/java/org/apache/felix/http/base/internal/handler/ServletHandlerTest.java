@@ -27,6 +27,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Collections;
 import java.util.Map;
 
 import javax.servlet.Servlet;
@@ -219,6 +220,10 @@ public class ServletHandlerTest extends AbstractHandlerTest
 
     private ServletHandler createHandler(String alias, Map<String, String> map)
     {
+        if ( map == null )
+        {
+            map = Collections.emptyMap();
+        }
         final ServletInfo info = new ServletInfo(null, alias, 0, map);
         return new ServletHandler(null, this.context, info, this.servlet);
     }

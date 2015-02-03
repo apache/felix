@@ -51,7 +51,7 @@ public final class ServletHandler extends AbstractHandler<ServletHandler>
                           final ServletInfo servletInfo,
                           final Servlet servlet)
     {
-        super(context, servletInfo.getInitParams(), servletInfo.getName());
+        super(context, servletInfo.getInitParameters(), servletInfo.getName());
         this.servlet = servlet;
         this.servletInfo = servletInfo;
 
@@ -78,7 +78,7 @@ public final class ServletHandler extends AbstractHandler<ServletHandler>
     @Override
     public int compareTo(final ServletHandler other)
     {
-        return getId() - other.getId();
+        return this.servletInfo.compareTo(other.servletInfo);
     }
 
     public String determineServletPath(String uri)
@@ -157,5 +157,11 @@ public final class ServletHandler extends AbstractHandler<ServletHandler>
     public long getContextServiceId()
     {
         return this.contextServiceId;
+    }
+
+    @Override
+    protected long getServiceId()
+    {
+        return this.servletInfo.getServiceId();
     }
 }

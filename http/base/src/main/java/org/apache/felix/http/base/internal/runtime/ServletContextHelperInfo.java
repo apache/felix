@@ -46,7 +46,8 @@ public final class ServletContextHelperInfo extends AbstractInfo<ServletContextH
      */
     private final Map<String, String> initParams;
 
-    public ServletContextHelperInfo(final ServiceReference<ServletContextHelper> ref) {
+    public ServletContextHelperInfo(final ServiceReference<ServletContextHelper> ref)
+    {
         super(ref);
         this.name = this.getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME);
         this.path = this.getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH);
@@ -97,7 +98,7 @@ public final class ServletContextHelperInfo extends AbstractInfo<ServletContextH
         return this.prefix;
     }
 
-    public Map<String, String> getInitParams()
+    public Map<String, String> getInitParameters()
     {
         return initParams;
     }

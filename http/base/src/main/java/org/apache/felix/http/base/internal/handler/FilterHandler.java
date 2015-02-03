@@ -31,8 +31,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
+import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.util.PatternUtil;
 
 public final class FilterHandler extends AbstractHandler<FilterHandler>
@@ -45,7 +45,7 @@ public final class FilterHandler extends AbstractHandler<FilterHandler>
 
     public FilterHandler(final ServletContextHelperInfo contextInfo, ExtServletContext context, Filter filter, FilterInfo filterInfo)
     {
-        super(context, filterInfo.getInitParams(), filterInfo.getName());
+        super(context, filterInfo.getInitParameters(), filterInfo.getName());
         this.filter = filter;
         this.filterInfo = filterInfo;
         // Compose a single array of all patterns & regexs the filter must represent...
@@ -152,5 +152,11 @@ public final class FilterHandler extends AbstractHandler<FilterHandler>
     public long getContextServiceId()
     {
         return this.contextServiceId;
+    }
+
+    @Override
+    protected long getServiceId()
+    {
+        return this.filterInfo.getServiceId();
     }
 }

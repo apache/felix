@@ -26,6 +26,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Collections;
 import java.util.Map;
 
 import javax.servlet.DispatcherType;
@@ -240,8 +241,12 @@ public class FilterHandlerTest extends AbstractHandlerTest
         return createHandler(pattern, ranking, null);
     }
 
-    private FilterHandler createHandler(String pattern, int ranking, final Map<String, String> initParams)
+    private FilterHandler createHandler(String pattern, int ranking, Map<String, String> initParams)
     {
+        if ( initParams == null )
+        {
+            initParams = Collections.emptyMap();
+        }
         final FilterInfo info = new FilterInfo(null, pattern, ranking, initParams);
         return new FilterHandler(null, this.context, this.filter, info);
     }

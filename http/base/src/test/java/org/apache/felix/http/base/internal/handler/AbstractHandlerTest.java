@@ -43,9 +43,9 @@ public abstract class AbstractHandlerTest
         AbstractHandler h1 = createHandler();
         AbstractHandler h2 = createHandler();
 
-        Assert.assertTrue(h1.getId() > 0);
-        Assert.assertTrue(h2.getId() > 0);
-        Assert.assertFalse(h1.getId() == h2.getId());
+        Assert.assertTrue(h1.getServiceId() < 0);
+        Assert.assertTrue(h2.getServiceId() < 0);
+        Assert.assertFalse(h1.getServiceId() == h2.getServiceId());
     }
 
     @Test

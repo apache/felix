@@ -173,7 +173,7 @@ public final class FilterInfo extends WhiteboardServiceInfo<Filter>
         return dispatcher;
     }
 
-    public Map<String, String> getInitParams()
+    public Map<String, String> getInitParameters()
     {
         return initParams;
     }
