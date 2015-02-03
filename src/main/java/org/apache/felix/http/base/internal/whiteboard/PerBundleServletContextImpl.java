@@ -84,21 +84,18 @@ public class PerBundleServletContextImpl implements ExtServletContext {
     @Override
     public URL getResource(final String path)
     {
-        // is implemented by {@link PerBundleServletContextImpl}.
         return this.contextHelper.getResource(path);
     }
 
     @Override
     public String getMimeType(final String name)
     {
-        // is implemented by {@link PerBundleServletContextImpl}.
         return this.contextHelper.getMimeType(name);
     }
 
     @Override
     public String getRealPath(final String path)
     {
-        // is implemented by {@link PerBundleServletContextImpl}.
         return this.contextHelper.getRealPath(path);
     }
 
@@ -162,18 +159,21 @@ public class PerBundleServletContextImpl implements ExtServletContext {
         return delegatee.getNamedDispatcher(name);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public Servlet getServlet(String name) throws ServletException
     {
         return delegatee.getServlet(name);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public Enumeration<Servlet> getServlets()
     {
         return delegatee.getServlets();
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public Enumeration<String> getServletNames()
     {
@@ -186,6 +186,7 @@ public class PerBundleServletContextImpl implements ExtServletContext {
         delegatee.log(msg);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void log(Exception exception, String msg)
     {

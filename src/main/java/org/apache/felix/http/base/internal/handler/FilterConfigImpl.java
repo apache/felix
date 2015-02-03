@@ -16,11 +16,12 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.Map;
+
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletContext;
-import java.util.Enumeration;
-import java.util.Collections;
-import java.util.Map;
 
 public final class FilterConfigImpl implements FilterConfig
 {
@@ -28,29 +29,33 @@ public final class FilterConfigImpl implements FilterConfig
     private final ServletContext context;
     private final Map<String, String> initParams;
 
-    public FilterConfigImpl(String name, ServletContext context, Map<String, String> initParams)
+    public FilterConfigImpl(final String name, final ServletContext context, final Map<String, String> initParams)
     {
         this.name = name;
         this.context = context;
         this.initParams = initParams;
     }
 
+    @Override
     public String getFilterName()
     {
         return this.name;
     }
 
+    @Override
     public ServletContext getServletContext()
     {
         return this.context;
     }
 
+    @Override
     public String getInitParameter(String name)
     {
         return this.initParams.get(name);
     }
 
-    public Enumeration getInitParameterNames()
+    @Override
+    public Enumeration<String> getInitParameterNames()
     {
         return Collections.enumeration(this.initParams.keySet());
     }
