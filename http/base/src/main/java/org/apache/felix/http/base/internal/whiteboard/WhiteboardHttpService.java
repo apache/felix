@@ -201,4 +201,14 @@ public final class WhiteboardHttpService
         final ServletInfo servletInfo = new ServletInfo(resourceInfo);
         this.unregisterServlet(contextHandler, servletInfo);
     }
+
+    public void registerContext(@Nonnull final ContextHandler contextHandler)
+    {
+        this.handlerRegistry.add(contextHandler.getContextInfo());
+    }
+
+    public void unregisterContext(@Nonnull final ContextHandler contextHandler)
+    {
+        this.handlerRegistry.remove(contextHandler.getContextInfo());
+    }
 }

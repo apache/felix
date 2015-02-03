@@ -18,6 +18,7 @@ package org.apache.felix.http.base.internal.handler;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -25,11 +26,79 @@ import javax.servlet.DispatcherType;
 
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 
+/**
+ * Registry for all services.
+ *
+ * The registry is organized per servlet context and is dispatching to one
+ * of the {@link PerContextHandlerRegistry} registries.
+ */
 public final class HandlerRegistry
 {
+    /** Current list of context registrations. */
     private volatile List<PerContextHandlerRegistry> registrations = Collections.emptyList();
 
-    public void add(@Nonnull PerContextHandlerRegistry registry)
+    public HandlerRegistry()
+    {
+        this.add(new PerContextHandlerRegistry());
+    }
+
+    /**
+     * Shutdown
+     */
+    public void shutdown()
+    {
+        final List<PerContextHandlerRegistry> list;
+
+        synchronized ( this )
+        {
+            list = new ArrayList<PerContextHandlerRegistry>(this.registrations);
+            this.registrations = Collections.emptyList();
+
+        }
+
+        for(final PerContextHandlerRegistry r : list)
+        {
+            r.removeAll();
+        }
+    }
+
+    /**
+     * Add a context registration.
+     * @param info The servlet context helper info
+     */
+    public void add(@Nonnull ServletContextHelperInfo info)
+    {
+        this.add(new PerContextHandlerRegistry(info));
+    }
+
+    /**
+     * Remove a context registration.
+     * @param info The servlet context helper info
+     */
+    public void remove(@Nonnull ServletContextHelperInfo info)
+    {
+        synchronized ( this )
+        {
+            final List<PerContextHandlerRegistry> updatedList = new ArrayList<PerContextHandlerRegistry>(this.registrations);
+            final Iterator<PerContextHandlerRegistry> i = updatedList.iterator();
+            while ( i.hasNext() )
+            {
+                final PerContextHandlerRegistry reg = i.next();
+                if ( reg.getContextServiceId() == info.getServiceId() )
+                {
+                    i.remove();
+                    this.registrations = updatedList;
+                    break;
+                }
+            }
+        }
+    }
+
+
+    /**
+     * Add a new context registration.
+     */
+    private void add(@Nonnull PerContextHandlerRegistry registry)
     {
         synchronized ( this )
         {
@@ -41,17 +110,11 @@ public final class HandlerRegistry
         }
     }
 
-    public void remove(@Nonnull PerContextHandlerRegistry registry)
-    {
-        synchronized ( this )
-        {
-            final List<PerContextHandlerRegistry> updatedList = new ArrayList<PerContextHandlerRegistry>(this.registrations);
-            updatedList.remove(registry);
-
-            this.registrations = updatedList;
-        }
-    }
-
+    /**
+     * Get the per context registry.
+     * @param info The servlet context helper info or {@code null} for the Http Service context.
+     * @return A per context registry or {@code null}
+     */
     public PerContextHandlerRegistry getRegistry(final ServletContextHelperInfo info)
     {
         final long key = (info == null ? 0 : info.getServiceId());
@@ -65,11 +128,9 @@ public final class HandlerRegistry
                     return r;
                 }
             }
-            final PerContextHandlerRegistry reg = new PerContextHandlerRegistry(info);
-            this.add(reg);
-
-            return reg;
         }
+
+        return null;
     }
 
     public ErrorsMapping getErrorsMapping(final String requestURI, final Long serviceId)
@@ -139,22 +200,5 @@ public final class HandlerRegistry
             }
         }
         return null;
-    }
-
-    public synchronized void removeAll()
-    {
-        final List<PerContextHandlerRegistry> list;
-
-        synchronized ( this )
-        {
-            list = new ArrayList<PerContextHandlerRegistry>(this.registrations);
-            this.registrations = Collections.emptyList();
-
-        }
-
-        for(final PerContextHandlerRegistry r : list)
-        {
-            r.removeAll();
-        }
     }
 }
