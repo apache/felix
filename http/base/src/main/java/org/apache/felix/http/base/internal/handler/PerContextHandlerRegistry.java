@@ -31,7 +31,6 @@ import javax.servlet.ServletException;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
-import org.osgi.service.http.NamespaceException;
 
 public final class PerContextHandlerRegistry implements Comparable<PerContextHandlerRegistry>
 {
@@ -109,14 +108,8 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     /**
      * Add a new servlet.
      */
-    public synchronized void addServlet(ServletContextHelperInfo contextInfo, ServletHandler handler) throws ServletException, NamespaceException
+    public synchronized void addServlet(final ServletHandler handler) throws ServletException
     {
-        if (this.servletMap.containsKey(handler.getServlet()))
-        {
-            // Do not destroy the servlet as the same instance was already registered
-            throw new ServletException("Servlet instance " + handler.getName() + " already registered");
-        }
-
         // Can be null in case of error-handling servlets...
         String[] patterns = handler.getServletInfo().getPatterns();
         int length = patterns == null ? 0 : patterns.length;
@@ -189,11 +182,6 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
         return result.toArray(new FilterHandler[result.size()]);
     }
 
-    public synchronized Servlet getServletByAlias(String alias)
-    {
-        return this.servletPatternMap.get(alias);
-    }
-
     public ServletHandler getServletHandlerByName(String name)
     {
         return this.servletMapping.getByName(name);
@@ -260,7 +248,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
         return null;
     }
 
-    public synchronized Servlet removeServlet(final ServletContextHelperInfo contextInfo, ServletInfo servletInfo, final boolean destroy)
+    public synchronized Servlet removeServlet(ServletInfo servletInfo, final boolean destroy)
     {
         for(final ServletHandler handler : this.servletMap.values())
         {
