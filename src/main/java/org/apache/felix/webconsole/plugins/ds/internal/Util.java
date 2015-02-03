@@ -20,23 +20,22 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Enumeration;
 
-import org.apache.felix.scr.Component;
+import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
 class Util
 {
 
-    static final Comparator COMPONENT_COMPARATOR = new Comparator()
+    static final Comparator<ComponentConfigurationDTO> COMPONENT_COMPARATOR = new Comparator<ComponentConfigurationDTO>()
     {
-        public int compare(Object o0, Object o1)
+        @Override
+        public int compare(ComponentConfigurationDTO c0, ComponentConfigurationDTO c1)
         {
-            final Component c0 = (Component) o0;
-            final Component c1 = (Component) o1;
-            final int nameCmp = c0.getName().compareTo(c1.getName());
+            final int nameCmp = c0.description.name.compareTo(c1.description.name);
             if (nameCmp != 0)
             {
                 return nameCmp;
             }
-            return (c0.getId() < c1.getId()) ? -1 : ((c0.getId() > c1.getId()) ? 1 : 0);
+            return (c0.id < c1.id) ? -1 : ((c0.id > c1.id) ? 1 : 0);
         }
     };
 

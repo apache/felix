@@ -19,18 +19,18 @@ package org.apache.felix.webconsole.plugins.ds.internal;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.Arrays;
-import java.util.Dictionary;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.scr.Component;
-import org.apache.felix.scr.Reference;
-import org.apache.felix.scr.ScrService;
 import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleUtil;
@@ -40,10 +40,14 @@ import org.json.JSONWriter;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentConstants;
+import org.osgi.service.component.runtime.ServiceComponentRuntime;
+import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
+import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
+import org.osgi.service.component.runtime.dto.ReferenceDTO;
+import org.osgi.service.component.runtime.dto.SatisfiedReferenceDTO;
 import org.osgi.service.metatype.MetaTypeInformation;
 import org.osgi.service.metatype.MetaTypeService;
 
@@ -68,7 +72,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     //private static final String OPERATION_CONFIGURE = "configure";
 
     // needed services
-    static final String SCR_SERVICE = "org.apache.felix.scr.ScrService"; //$NON-NLS-1$
+    static final String SCR_SERVICE = ServiceComponentRuntime.class.getName(); //$NON-NLS-1$
     private static final String META_TYPE_NAME = "org.osgi.service.metatype.MetaTypeService"; //$NON-NLS-1$
     private static final String CONFIGURATION_ADMIN_NAME = "org.osgi.service.cm.ConfigurationAdmin"; //$NON-NLS-1$
 
@@ -84,6 +88,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         TEMPLATE = readTemplateFile("/res/plugin.html"); //$NON-NLS-1$
     }
 
+    @Override
     public String getCategory()
     {
         return CATEGORY;
@@ -92,6 +97,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     /**
      * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
+    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
         throws IOException
     {
@@ -109,22 +115,23 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         String op = request.getParameter(OPERATION);
         if (OPERATION_ENABLE.equals(op))
         {
-            reqInfo.component.enable();
+            getScrService().enableComponent(reqInfo.component.description);
         }
         else if (OPERATION_DISABLE.equals(op))
         {
-            reqInfo.component.disable();
+            getScrService().disableComponent(reqInfo.component.description);
         }
 
         final PrintWriter pw = response.getWriter();
         response.setContentType("application/json"); //$NON-NLS-1$
         response.setCharacterEncoding("UTF-8"); //$NON-NLS-1$
-        renderResult(pw, null);
+        renderResult(pw, reqInfo, null);
     }
 
     /**
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#doGet(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
+    @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
         throws ServletException, IOException
     {
@@ -143,7 +150,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                 response.setContentType("application/json"); //$NON-NLS-1$
                 response.setCharacterEncoding("UTF-8"); //$NON-NLS-1$
 
-                this.renderResult(response.getWriter(), reqInfo.component);
+                this.renderResult(response.getWriter(), reqInfo, reqInfo.component);
 
                 // nothing more to do
                 return;
@@ -155,6 +162,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     /**
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
+    @Override
     protected void renderContent(HttpServletRequest request, HttpServletResponse response)
         throws IOException
     {
@@ -163,7 +171,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
 
         StringWriter w = new StringWriter();
         PrintWriter w2 = new PrintWriter(w);
-        renderResult(w2, reqInfo.component);
+        renderResult(w2, reqInfo, reqInfo.component);
 
         // prepare variables
         DefaultVariableResolver vars = ((DefaultVariableResolver) WebConsoleUtil.getVariableResolver(request));
@@ -174,7 +182,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
 
     }
 
-    private void renderResult(final PrintWriter pw, final Component component)
+    private void renderResult(final PrintWriter pw, RequestInfo info, final ComponentConfigurationDTO component)
         throws IOException
     {
         final JSONWriter jw = new JSONWriter(pw);
@@ -182,7 +190,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         {
             jw.object();
 
-            final ScrService scrService = getScrService();
+            final ServiceComponentRuntime scrService = getScrService();
             if (scrService == null)
             {
                 jw.key("status"); //$NON-NLS-1$
@@ -190,28 +198,23 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
             }
             else
             {
-                final Component[] components = scrService.getComponents();
-
-                if (components == null || components.length == 0)
+                if (info.configurations.size() == 0)
                 {
                     jw.key("status"); //$NON-NLS-1$
                     jw.value(0);
                 }
                 else
                 {
-                    // order components by name
-                    sortComponents(components);
-
                     final StringBuffer buffer = new StringBuffer();
-                    buffer.append(components.length);
+                    buffer.append(info.configurations.size());
                     buffer.append(" component"); //$NON-NLS-1$
-                    if (components.length != 1)
+                    if (info.configurations.size() != 1)
                     {
                         buffer.append('s');
                     }
                     buffer.append(" installed."); //$NON-NLS-1$
                     jw.key("status"); //$NON-NLS-1$
-                    jw.value(components.length);
+                    jw.value(info.configurations.size());
 
                     // render components
                     jw.key("data"); //$NON-NLS-1$
@@ -222,9 +225,9 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                     }
                     else
                     {
-                        for (int i = 0; i < components.length; i++)
+                        for (final ComponentConfigurationDTO cfg : info.configurations)
                         {
-                            component(jw, components[i], false);
+                            component(jw, cfg, false);
                         }
                     }
                     jw.endArray();
@@ -239,17 +242,12 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         }
     }
 
-    private void sortComponents(Component[] components)
-    {
-        Arrays.sort(components, Util.COMPONENT_COMPARATOR);
-    }
-
-    private void component(JSONWriter jw, Component component, boolean details)
+    private void component(JSONWriter jw, ComponentConfigurationDTO component, boolean details)
         throws JSONException
     {
-        String id = String.valueOf(component.getId());
-        String name = component.getName();
-        int state = component.getState();
+        String id = String.valueOf(component.id);
+        String name = component.description.name;
+        int state = component.state;
 
         jw.object();
 
@@ -263,7 +261,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         jw.key("stateRaw"); //$NON-NLS-1$
         jw.value(state);
 
-        final Dictionary props = component.getProperties();
+        final Map<String, Object> props = component.properties;
 
         final String pid = (String) (props != null ? props.get(Constants.SERVICE_PID)
             : null);
@@ -271,7 +269,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         {
             jw.key("pid"); //$NON-NLS-1$
             jw.value(pid);
-            if (isConfigurable(component.getBundle(), pid))
+            if (isConfigurable(this.getBundleContext().getBundle(0).getBundleContext().getBundle(component.description.bundle.id), pid))
             {
                 jw.key("configurable"); //$NON-NLS-1$
                 jw.value(pid);
@@ -287,25 +285,27 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         jw.endObject();
     }
 
-    private void gatherComponentDetails(JSONWriter jw, Component component)
+    private void gatherComponentDetails(JSONWriter jw, ComponentConfigurationDTO component)
         throws JSONException
     {
+        final Bundle bundle = this.getBundleContext().getBundle(0).getBundleContext().getBundle(component.description.bundle.id);
+
         jw.key("props"); //$NON-NLS-1$
         jw.array();
 
-        keyVal(jw, "Bundle", component.getBundle().getSymbolicName() + " ("
-            + component.getBundle().getBundleId() + ")");
-        keyVal(jw, "Implementation Class", component.getClassName());
-        if (component.getFactory() != null)
+        keyVal(jw, "Bundle", bundle.getSymbolicName() + " ("
+            + bundle.getBundleId() + ")");
+        keyVal(jw, "Implementation Class", component.description.implementationClass);
+        if (component.description.factory != null)
         {
-            keyVal(jw, "Component Factory Name", component.getFactory());
+            keyVal(jw, "Component Factory Name", component.description.factory);
         }
-        keyVal(jw, "Default State", component.isDefaultEnabled() ? "enabled" : "disabled");
-        keyVal(jw, "Activation", component.isImmediate() ? "immediate" : "delayed");
+        keyVal(jw, "Default State", component.description.defaultEnabled ? "enabled" : "disabled");
+        keyVal(jw, "Activation", component.description.immediate ? "immediate" : "delayed");
 
         try
         {
-            keyVal(jw, "Configuration Policy", component.getConfigurationPolicy());
+            keyVal(jw, "Configuration Policy", component.description.configurationPolicy);
         }
         catch (Throwable t)
         {
@@ -320,16 +320,15 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         jw.endArray();
     }
 
-    private void listServices(JSONWriter jw, Component component)
+    private void listServices(JSONWriter jw, ComponentConfigurationDTO component)
     {
-        String[] services = component.getServices();
+        String[] services = component.description.serviceInterfaces;
         if (services == null)
         {
             return;
         }
 
-        keyVal(jw, "Service Type", component.isServiceFactory() ? "service factory"
-            : "service");
+        keyVal(jw, "Service Type", component.description.scope);
 
         JSONArray buf = new JSONArray();
         for (int i = 0; i < services.length; i++)
@@ -340,73 +339,82 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         keyVal(jw, "Services", buf);
     }
 
-    private void listReferences(JSONWriter jw, Component component)
+    private SatisfiedReferenceDTO findReference(final ComponentConfigurationDTO component, final String name)
     {
-        Reference[] refs = component.getReferences();
-        if (refs != null)
+        for(final SatisfiedReferenceDTO dto : component.satisfiedReferences)
         {
-            for (int i = 0; i < refs.length; i++)
+            if ( dto.name.equals(name))
             {
-                JSONArray buf = new JSONArray();
-                buf.put(refs[i].isSatisfied() ? "Satisfied" : "Unsatisfied");
-                buf.put("Service Name: " + refs[i].getServiceName());
-                if (refs[i].getTarget() != null)
-                {
-                    buf.put("Target Filter: " + refs[i].getTarget());
-                }
-                buf.put("Multiple: " + (refs[i].isMultiple() ? "multiple" : "single"));
-                buf.put("Optional: " + (refs[i].isOptional() ? "optional" : "mandatory"));
-                buf.put("Policy: " + (refs[i].isStatic() ? "static" : "dynamic"));
+                return dto;
+            }
+        }
+        return null;
+    }
 
-                // list bound services
-                ServiceReference[] boundRefs = refs[i].getServiceReferences();
-                if (boundRefs != null && boundRefs.length > 0)
+    private void listReferences(JSONWriter jw, ComponentConfigurationDTO component)
+    {
+        for(final ReferenceDTO dto : component.description.references)
+        {
+            JSONArray buf = new JSONArray();
+            final SatisfiedReferenceDTO satisfiedRef = findReference(component, dto.name);
+
+            buf.put(satisfiedRef != null ? "Satisfied" : "Unsatisfied");
+            buf.put("Service Name: " + dto.interfaceName);
+            if (dto.target != null)
+            {
+                buf.put("Target Filter: " + dto.target);
+            }
+            buf.put("Cardinality: " + dto.cardinality);
+            buf.put("Policy: " + dto.policy);
+            buf.put("Policy Option: " + dto.policyOption);
+
+            // list bound services
+            if ( satisfiedRef != null )
+            {
+                for (int j = 0; j < satisfiedRef.boundServices.length; j++)
                 {
-                    for (int j = 0; j < boundRefs.length; j++)
+                    final StringBuffer b = new StringBuffer();
+                    b.append("Bound Service ID ");
+                    b.append(satisfiedRef.boundServices[j].id);
+
+                    String name = (String) satisfiedRef.boundServices[j].properties.get(ComponentConstants.COMPONENT_NAME);
+                    if (name == null)
                     {
-                        final StringBuffer b = new StringBuffer();
-                        b.append("Bound Service ID ");
-                        b.append(boundRefs[j].getProperty(Constants.SERVICE_ID));
-
-                        String name = (String) boundRefs[j].getProperty(ComponentConstants.COMPONENT_NAME);
+                        name = (String) satisfiedRef.boundServices[j].properties.get(Constants.SERVICE_PID);
                         if (name == null)
                         {
-                            name = (String) boundRefs[j].getProperty(Constants.SERVICE_PID);
-                            if (name == null)
-                            {
-                                name = (String) boundRefs[j].getProperty(Constants.SERVICE_DESCRIPTION);
-                            }
+                            name = (String) satisfiedRef.boundServices[j].properties.get(Constants.SERVICE_DESCRIPTION);
                         }
-                        if (name != null)
-                        {
-                            b.append(" (");
-                            b.append(name);
-                            b.append(")");
-                        }
-                        buf.put(b.toString());
                     }
+                    if (name != null)
+                    {
+                        b.append(" (");
+                        b.append(name);
+                        b.append(")");
+                    }
+                    buf.put(b.toString());
                 }
-                else
-                {
-                    buf.put("No Services bound");
-                }
-
-                keyVal(jw, "Reference " + refs[i].getName(), buf.toString());
             }
+            else
+            {
+                buf.put("No Services bound");
+            }
+
+            keyVal(jw, "Reference " + dto.name, buf.toString());
         }
     }
 
-    private void listProperties(JSONWriter jw, Component component)
+    private void listProperties(JSONWriter jw, ComponentConfigurationDTO component)
     {
-        Dictionary props = component.getProperties();
+        Map<String, Object> props = component.properties;
         if (props != null)
         {
             JSONArray buf = new JSONArray();
-            TreeSet keys = new TreeSet(Util.list(props.keys()));
-            for (Iterator ki = keys.iterator(); ki.hasNext();)
+            TreeSet<String> keys = new TreeSet<String>(props.keySet());
+            for (Iterator<String> ki = keys.iterator(); ki.hasNext();)
             {
-                final String key = (String) ki.next();
-                final StringBuffer b = new StringBuffer();
+                final String key = ki.next();
+                final StringBuilder b = new StringBuilder();
                 b.append(key).append(" = ");
 
                 Object prop = props.get(key);
@@ -492,9 +500,9 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         return (ConfigurationAdmin) getService(CONFIGURATION_ADMIN_NAME);
     }
 
-    final ScrService getScrService()
+    final ServiceComponentRuntime getScrService()
     {
-        return (ScrService) getService(SCR_SERVICE);
+        return (ServiceComponentRuntime) getService(SCR_SERVICE);
     }
 
     private final MetaTypeService getMetaTypeService()
@@ -505,11 +513,29 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     private final class RequestInfo
     {
         public final String extension;
-        public final Component component;
+        public final ComponentConfigurationDTO component;
         public final boolean componentRequested;
+        public final ServiceComponentRuntime scrService;
+        public final List<ComponentDescriptionDTO> descriptions = new ArrayList<ComponentDescriptionDTO>();
+        public final List<ComponentConfigurationDTO> configurations = new ArrayList<ComponentConfigurationDTO>();
 
         protected RequestInfo(final HttpServletRequest request)
         {
+            this.scrService = getScrService();
+            if ( scrService != null )
+            {
+                final Collection<ComponentDescriptionDTO> descs = scrService.getComponentDescriptionDTOs();
+                for(final ComponentDescriptionDTO d : descs)
+                {
+                    for(final ComponentConfigurationDTO cfg : scrService.getComponentConfigurationDTOs(d))
+                    {
+                        configurations.add(cfg);
+                    }
+                    descriptions.add(d);
+                }
+                Collections.sort(configurations, Util.COMPONENT_COMPARATOR);
+            }
+
             String info = request.getPathInfo();
             // remove label and starting slash
             info = info.substring(getLabel().length() + 1);
@@ -529,7 +555,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
             {
                 this.componentRequested = true;
                 info = info.substring(1);
-                Component component = getComponentId(info);
+                ComponentConfigurationDTO component = getComponentId(info);
                 if (component == null)
                 {
                     component = getComponentByName(info);
@@ -545,76 +571,80 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
             request.setAttribute(WebConsolePlugin.this.getClass().getName(), this);
         }
 
-        protected Component getComponentId(final String componentIdPar)
+        protected ComponentConfigurationDTO getComponentId(final String componentIdPar)
         {
-            final ScrService scrService = getScrService();
-            if (scrService != null)
+            try
             {
-                try
+                final long componentId = Long.parseLong(componentIdPar);
+                for(final ComponentConfigurationDTO cfg : this.configurations)
                 {
-                    final long componentId = Long.parseLong(componentIdPar);
-                    return scrService.getComponent(componentId);
+                    if ( cfg.id == componentId )
+                    {
+                        return cfg;
+                    }
                 }
-                catch (NumberFormatException nfe)
-                {
-                    // don't care
-                }
+            }
+            catch (NumberFormatException nfe)
+            {
+                // don't care
             }
 
             return null;
         }
 
-        protected Component getComponentByName(final String names)
+        protected ComponentConfigurationDTO getComponentByName(final String names)
         {
             if (names.length() > 0)
             {
-                final ScrService scrService = getScrService();
-                if (scrService != null)
+                final int slash = names.lastIndexOf('/');
+                final String componentName;
+                final String pid;
+                if (slash > 0)
                 {
+                    componentName = names.substring(0, slash);
+                    pid = names.substring(slash + 1);
+                }
+                else
+                {
+                    componentName = names;
+                    pid = null;
+                }
 
-                    final int slash = names.lastIndexOf('/');
-                    final String componentName;
-                    final String pid;
-                    if (slash > 0)
+                Collection<ComponentConfigurationDTO> components = null;
+                try
+                {
+                    for(final ComponentDescriptionDTO d : this.descriptions)
                     {
-                        componentName = names.substring(0, slash);
-                        pid = names.substring(slash + 1);
-                    }
-                    else
-                    {
-                        componentName = names;
-                        pid = null;
-                    }
-
-                    Component[] components;
-                    try
-                    {
-                        components = scrService.getComponents(componentName);
-                    }
-                    catch (Throwable t)
-                    {
-                        // not implemented in the used API version
-                        components = null;
-                    }
-
-                    if (components != null)
-                    {
-                        if (pid != null)
+                        if ( d.name.equals(componentName) )
                         {
-                            for (int i = 0; i < components.length; i++)
+                            components = scrService.getComponentConfigurationDTOs(d);
+                        }
+                    }
+                }
+                catch (Throwable t)
+                {
+                    // not implemented in the used API version
+                    components = null;
+                }
+
+                if (components != null)
+                {
+                    if (pid != null)
+                    {
+                        final Iterator<ComponentConfigurationDTO> i = components.iterator();
+                        while ( i.hasNext() )
+                        {
+                            ComponentConfigurationDTO c = i.next();
+                            if (pid.equals(c.properties.get(Constants.SERVICE_PID)))
                             {
-                                Component component = components[i];
-                                if (pid.equals(component.getProperties().get(
-                                    Constants.SERVICE_PID)))
-                                {
-                                    return component;
-                                }
+                                return c;
                             }
+
                         }
-                        else if (components.length > 0)
-                        {
-                            return components[0];
-                        }
+                    }
+                    else if (components.size() > 0)
+                    {
+                        return components.iterator().next();
                     }
                 }
             }

@@ -19,11 +19,13 @@
 package org.apache.felix.webconsole.plugins.ds.internal;
 
 import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import org.apache.felix.scr.Component;
-import org.apache.felix.scr.ScrService;
 import org.apache.felix.webconsole.bundleinfo.BundleInfo;
 import org.apache.felix.webconsole.bundleinfo.BundleInfoProvider;
 import org.apache.felix.webconsole.bundleinfo.BundleInfoType;
@@ -31,23 +33,27 @@ import org.apache.felix.webconsole.i18n.LocalizationHelper;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.runtime.ServiceComponentRuntime;
+import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
+import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 
 class InfoProvider implements BundleInfoProvider
 {
 
     private final LocalizationHelper localization;
 
-    private final ScrService scrService;
+    private final ServiceComponentRuntime scrService;
 
     InfoProvider(Bundle bundle, Object scrService)
     {
-        this.scrService = (ScrService) scrService;
+        this.scrService = (ServiceComponentRuntime) scrService;
         localization = new LocalizationHelper(bundle);
     }
 
     /**
      * @see org.apache.felix.webconsole.bundleinfo.BundleInfoProvider#getName(java.util.Locale)
      */
+    @Override
     public String getName(Locale locale)
     {
         return localization.getResourceBundle(locale).getString("info.name"); //$NON-NLS-1$;;
@@ -57,36 +63,51 @@ class InfoProvider implements BundleInfoProvider
     * @see org.apache.felix.webconsole.bundleinfo.BundleInfoProvider#getBundleInfo(org.osgi.framework.Bundle,
     *      java.lang.String, java.util.Locale)
     */
+    @Override
     public BundleInfo[] getBundleInfo(Bundle bundle, String webConsoleRoot, Locale locale)
     {
+        final List<ComponentDescriptionDTO> descriptions = new ArrayList<ComponentDescriptionDTO>();
+        final List<ComponentConfigurationDTO> configurations = new ArrayList<ComponentConfigurationDTO>();
 
-        final Component[] components = scrService.getComponents(bundle);
-        if (null == components || components.length == 0)
+        final Collection<ComponentDescriptionDTO> descs = scrService.getComponentDescriptionDTOs();
+        for(final ComponentDescriptionDTO d : descs)
+        {
+            for(final ComponentConfigurationDTO cfg : scrService.getComponentConfigurationDTOs(d))
+            {
+                configurations.add(cfg);
+            }
+            descriptions.add(d);
+        }
+        Collections.sort(configurations, Util.COMPONENT_COMPARATOR);
+
+        if (configurations.size() == 0)
         {
             return NO_INFO;
         }
 
-        BundleInfo[] ret = new BundleInfo[components.length];
-        for (int i = 0; i < components.length; i++)
+        BundleInfo[] ret = new BundleInfo[configurations.size()];
+        int i=0;
+        for (final ComponentConfigurationDTO cfg : configurations)
         {
-            ret[i] = toInfo(components[i], webConsoleRoot, locale);
+            ret[i] = toInfo(cfg, webConsoleRoot, locale);
+            i++;
         }
         return ret;
     }
 
-    private BundleInfo toInfo(Component component, String webConsoleRoot, Locale locale)
+    private BundleInfo toInfo(final ComponentConfigurationDTO cfg, String webConsoleRoot, Locale locale)
     {
         final ResourceBundle bundle = localization.getResourceBundle(locale);
-        final String state = ComponentConfigurationPrinter.toStateString(component.getState());
-        final String name = component.getName();
+        final String state = ComponentConfigurationPrinter.toStateString(cfg.state);
+        final String name = cfg.description.name;
         final String descr = bundle.getString("info.descr"); //$NON-NLS-1$;
         String key = bundle.getString("info.key"); //$NON-NLS-1$;
         // Component #{0} {1}, state {2}
-        key = MessageFormat.format(key, new Object[] { String.valueOf(component.getId()), //
+        key = MessageFormat.format(key, new Object[] { String.valueOf(cfg.id), //
                 name != null ? name : "", //$NON-NLS-1$
                 state, //
         });
-        return new BundleInfo(key, webConsoleRoot + "/components/" + component.getId(), //$NON-NLS-1$
+        return new BundleInfo(key, webConsoleRoot + "/components/" + cfg.id, //$NON-NLS-1$
             BundleInfoType.LINK, descr);
     }
 
