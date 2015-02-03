@@ -88,6 +88,7 @@ public class CommandProcessorImpl implements CommandProcessor
             {
                 session.close();
             }
+			sessions.clear();
         }
     }
 
