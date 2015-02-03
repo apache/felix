@@ -72,10 +72,7 @@ public class CommandProcessorImpl implements CommandProcessor
     {
         synchronized (sessions)
         {
-            if (sessions.remove(session) != null)
-            {
-                System.out.println("CLOSED: " + session);
-            }
+            sessions.remove(session);
         }
     }
 
@@ -84,10 +81,13 @@ public class CommandProcessorImpl implements CommandProcessor
         synchronized (sessions)
         {
             stopped = true;
-            for (CommandSession session : sessions.keySet())
+            // Create a copy, as calling session.close() will remove the session from the map
+            CommandSession[] toClose = this.sessions.keySet().toArray(new CommandSession[this.sessions.size()]);
+            for (CommandSession session : toClose)
             {
                 session.close();
             }
+            // Just in case...
 			sessions.clear();
         }
     }
