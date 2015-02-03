@@ -108,7 +108,7 @@ public final class ServletInfo extends WhiteboardServiceInfo<Servlet>
     {
         super(serviceRanking);
         this.name = name;
-        this.patterns = new String[] {pattern};
+        this.patterns = new String[] {pattern, pattern + "/*"};
         this.initParams = initParams;
         this.asyncSupported = false;
         this.errorPage = null;

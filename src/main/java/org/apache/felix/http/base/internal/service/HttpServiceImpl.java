@@ -20,7 +20,9 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.Filter;
 import javax.servlet.Servlet;
@@ -45,16 +47,16 @@ public final class HttpServiceImpl implements ExtHttpService
 {
     private final Bundle bundle;
     private final PerContextHandlerRegistry handlerRegistry;
-    private final HashSet<Servlet> localServlets;
-    private final HashSet<Filter> localFilters;
+    private final Set<Servlet> localServlets = new HashSet<Servlet>();
+    private final Set<Filter> localFilters = new HashSet<Filter>();
     private final ServletContextManager contextManager;
 
+    private final Map<String, ServletHandler> aliasMap = new HashMap<String, ServletHandler>();
+    
     public HttpServiceImpl(Bundle bundle, ServletContext context, PerContextHandlerRegistry handlerRegistry, ServletContextAttributeListener servletAttributeListener, boolean sharedContextAttributes)
     {
         this.bundle = bundle;
         this.handlerRegistry = handlerRegistry;
-        this.localServlets = new HashSet<Servlet>();
-        this.localFilters = new HashSet<Filter>();
         this.contextManager = new ServletContextManager(this.bundle, context, servletAttributeListener, sharedContextAttributes);
     }
 
@@ -108,14 +110,19 @@ public final class HttpServiceImpl implements ExtHttpService
         this.localFilters.add(filter);
     }
 
+    /**
+     * No need to sync this method, syncing is done via {@link #registerServlet(String, Servlet, Dictionary, HttpContext)}
+     * @see org.osgi.service.http.HttpService#registerResources(java.lang.String, java.lang.String, org.osgi.service.http.HttpContext)
+     */
     @Override
-    public void registerResources(String alias, String name, HttpContext context) throws NamespaceException
+    public void registerResources(final String alias, final String name, final HttpContext context) throws NamespaceException
     {
         if (!isNameValid(name))
         {
             throw new IllegalArgumentException("Malformed resource name [" + name + "]");
         }
 
+        // TODO - check validity of alias
         try
         {
             Servlet servlet = new ResourceServlet(name);
@@ -160,56 +167,62 @@ public final class HttpServiceImpl implements ExtHttpService
         }
 
         final ServletInfo servletInfo = new ServletInfo(null, alias, 0, paramMap);
-
         final ExtServletContext httpContext = getServletContext(context);
 
         final ServletHandler handler = new ServletHandler(null,
                 httpContext,
                 servletInfo,
                 servlet);
-        try {
-            this.handlerRegistry.addServlet(null, handler);
-        } catch (ServletException e) {
-            // TODO create failure DTO
-        } catch (NamespaceException e) {
-            // TODO create failure DTO
-        }
 
-        this.localServlets.add(servlet);
+        synchronized ( this.aliasMap ) 
+        {
+        	if ( this.aliasMap.containsKey(alias) ) 
+        	{
+        	    throw new NamespaceException("Alias " + alias + " is already in use.");	
+        	}
+        	if ( this.localServlets.contains(servlet) )
+        	{
+                throw new ServletException("Servlet instance " + handler.getName() + " already registered");        		
+        	}
+            
+            this.handlerRegistry.addServlet(handler);
+
+            this.aliasMap.put(alias, handler);
+            this.localServlets.add(servlet);
+        }
     }
 
     /**
      * @see org.osgi.service.http.HttpService#unregister(java.lang.String)
      */
     @Override
-    public void unregister(String alias)
+    public void unregister(final String alias)
     {
-        final Servlet servlet = this.handlerRegistry.getServletByAlias(alias);
-        if (servlet == null)
+        synchronized ( this.aliasMap ) 
         {
-            // FELIX-4561 - don't bother throwing an exception if we're stopping anyway...
-            if ((bundle.getState() & Bundle.STOPPING) != 0)
-            {
-                throw new IllegalArgumentException("Nothing registered at " + alias);
-            }
-            else
-            {
-                SystemLogger.debug("Nothing registered at " + alias + "; ignoring this because the bundle is stopping!", null);
-            }
-        }
-        unregisterServlet(servlet);
+		    final ServletHandler handler = this.aliasMap.remove(alias);	
+	        if ( handler == null )
+	        {
+	        	throw new IllegalArgumentException("Nothing registered at " + alias);        	
+	        }
+	        final Servlet servlet = this.handlerRegistry.removeServlet(handler.getServletInfo(), true);
+	        if (servlet != null)
+	        {
+	        	this.localServlets.remove(servlet);
+	        }
+		}
     }
 
     public void unregisterAll()
     {
-        HashSet<Servlet> servlets = new HashSet<Servlet>(this.localServlets);
-        for (Servlet servlet : servlets)
+        final Set<Servlet> servlets = new HashSet<Servlet>(this.localServlets);
+        for (final Servlet servlet : servlets)
         {
             unregisterServlet(servlet, false);
         }
 
-        HashSet<Filter> filters = new HashSet<Filter>(this.localFilters);
-        for (Filter fiter : filters)
+        final Set<Filter> filters = new HashSet<Filter>(this.localFilters);
+        for (final Filter fiter : filters)
         {
             unregisterFilter(fiter, false);
         }
@@ -240,7 +253,21 @@ public final class HttpServiceImpl implements ExtHttpService
         if ( servlet != null )
         {
             this.handlerRegistry.removeServlet(servlet, destroy);
-            this.localServlets.remove(servlet);
+            synchronized ( this.aliasMap )
+            {
+            	final Iterator<Map.Entry<String, ServletHandler>> i = this.aliasMap.entrySet().iterator();
+            	while ( i.hasNext() )
+            	{
+            		final Map.Entry<String, ServletHandler> entry = i.next();
+            		if ( entry.getValue().getServlet() == servlet )
+            		{
+            			i.remove();
+            			break;
+            		}
+            		
+            	}
+            	this.localServlets.remove(servlet);
+            }
         }
     }
 

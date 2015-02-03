@@ -36,7 +36,7 @@ import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextHelp
 import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextListenerTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ServletTracker;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.http.NamespaceException;
+import org.osgi.framework.ServiceObjects;
 import org.osgi.util.tracker.ServiceTracker;
 
 public final class WhiteboardHttpService
@@ -94,20 +94,23 @@ public final class WhiteboardHttpService
     public void registerServlet(@Nonnull final ContextHandler contextHandler,
             @Nonnull final ServletInfo servletInfo)
     {
-        final Servlet servlet = this.bundleContext.getServiceObjects(servletInfo.getServiceReference()).getService();
-        // TODO create failure DTO if null
-        if ( servlet != null )
+        final ServiceObjects<Servlet> so = this.bundleContext.getServiceObjects(servletInfo.getServiceReference());
+        if ( so != null )
         {
-            final ServletHandler handler = new ServletHandler(contextHandler.getContextInfo(),
-                    contextHandler.getServletContext(servletInfo.getServiceReference().getBundle()),
-                    servletInfo,
-                    servlet);
-            try {
-                this.handlerRegistry.getRegistry(contextHandler.getContextInfo()).addServlet(contextHandler.getContextInfo(), handler);
-            } catch (ServletException e) {
-                // TODO create failure DTO
-            } catch (NamespaceException e) {
-                // TODO create failure DTO
+            final Servlet servlet = so.getService();
+            // TODO create failure DTO if null
+            if ( servlet != null )
+            {
+                final ServletHandler handler = new ServletHandler(contextHandler.getContextInfo(),
+                        contextHandler.getServletContext(servletInfo.getServiceReference().getBundle()),
+                        servletInfo,
+                        servlet);
+                try {
+                    this.handlerRegistry.getRegistry(contextHandler.getContextInfo()).addServlet(handler);
+                } catch (final ServletException e) {
+                    so.ungetService(servlet);
+                    // TODO create failure DTO
+                }
             }
         }
     }
@@ -119,7 +122,7 @@ public final class WhiteboardHttpService
      */
     public void unregisterServlet(@Nonnull final ContextHandler contextHandler, @Nonnull final ServletInfo servletInfo)
     {
-        final Servlet instance = this.handlerRegistry.getRegistry(contextHandler.getContextInfo()).removeServlet(contextHandler.getContextInfo(), servletInfo, true);
+        final Servlet instance = this.handlerRegistry.getRegistry(contextHandler.getContextInfo()).removeServlet(servletInfo, true);
         if ( instance != null )
         {
             this.bundleContext.getServiceObjects(servletInfo.getServiceReference()).ungetService(instance);
@@ -182,10 +185,8 @@ public final class WhiteboardHttpService
                 servletInfo,
                 servlet);
         try {
-            this.handlerRegistry.getRegistry(contextHandler.getContextInfo()).addServlet(contextHandler.getContextInfo(), handler);
+            this.handlerRegistry.getRegistry(contextHandler.getContextInfo()).addServlet(handler);
         } catch (ServletException e) {
-            // TODO create failure DTO
-        } catch (NamespaceException e) {
             // TODO create failure DTO
         }
     }
