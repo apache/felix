@@ -349,7 +349,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
         return this.prefixPath;
     }
 
-    public long getContextServiceid()
+    public long getContextServiceId()
     {
         return this.serviceId;
     }

@@ -54,23 +54,15 @@ public final class HandlerRegistry
 
     public PerContextHandlerRegistry getRegistry(final ServletContextHelperInfo info)
     {
+        final long key = (info == null ? 0 : info.getServiceId());
+
         synchronized ( this )
         {
             for(final PerContextHandlerRegistry r : this.registrations)
             {
-                if ( info == null )
+                if ( key == r.getContextServiceId())
                 {
-                    if ( r.getContextServiceid() == -1)
-                    {
-                        return r;
-                    }
-                }
-                else
-                {
-                    if ( info.getServiceId() == r.getContextServiceid())
-                    {
-                        return r;
-                    }
+                    return r;
                 }
             }
             final PerContextHandlerRegistry reg = new PerContextHandlerRegistry(info);
@@ -85,7 +77,7 @@ public final class HandlerRegistry
         final List<PerContextHandlerRegistry> regs = this.registrations;
         for(final PerContextHandlerRegistry r : regs)
         {
-            if ( serviceId != null && serviceId == r.getContextServiceid() )
+            if ( serviceId != null && serviceId == r.getContextServiceId() )
             {
                 return r.getErrorsMapping();
             }
@@ -108,7 +100,7 @@ public final class HandlerRegistry
         final List<PerContextHandlerRegistry> regs = this.registrations;
         for(final PerContextHandlerRegistry r : regs)
         {
-            if ( id == r.getContextServiceid() )
+            if ( id == r.getContextServiceId() )
             {
                 return r.getFilterHandlers(servletHandler, dispatcherType, requestURI);
             }
@@ -123,7 +115,7 @@ public final class HandlerRegistry
             final List<PerContextHandlerRegistry> regs = this.registrations;
             for(final PerContextHandlerRegistry r : regs)
             {
-                if ( contextId == r.getContextServiceid() )
+                if ( contextId == r.getContextServiceId() )
                 {
                     return r.getServletHandlerByName(name);
                 }

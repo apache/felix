@@ -18,6 +18,7 @@
  */
 package org.apache.felix.http.base.internal.runtime;
 
+import java.util.Collections;
 import java.util.Map;
 
 import javax.servlet.Servlet;
@@ -89,7 +90,7 @@ public final class ServletInfo extends WhiteboardServiceInfo<Servlet>
         this.patterns = resource.getPatterns();
         this.errorPage = null;
         this.asyncSupported = false;
-        this.initParams = null;
+        this.initParams = Collections.emptyMap();
     }
 
     private static ServiceReference getRef(final ServiceReference ref)
@@ -139,7 +140,7 @@ public final class ServletInfo extends WhiteboardServiceInfo<Servlet>
         return asyncSupported;
     }
 
-    public Map<String, String> getInitParams()
+    public Map<String, String> getInitParameters()
     {
         return initParams;
     }

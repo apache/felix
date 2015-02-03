@@ -162,7 +162,7 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
      */
     protected Map<String, String> getInitParams(final ServiceReference<T> ref, final String prefix)
     {
-        Map<String, String> result = null;
+        final Map<String, String> result = new HashMap<String, String>();
         for (final String key : ref.getPropertyKeys())
         {
             if ( key.startsWith(prefix))
@@ -172,10 +172,6 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
 
                 if (paramValue != null)
                 {
-                    if ( result == null )
-                    {
-                        result = new HashMap<String, String>();
-                    }
                     result.put(paramKey, paramValue);
                 }
             }
