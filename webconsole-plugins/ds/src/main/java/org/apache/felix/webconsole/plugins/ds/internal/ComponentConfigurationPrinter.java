@@ -19,102 +19,120 @@
 package org.apache.felix.webconsole.plugins.ds.internal;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Dictionary;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.InventoryPrinter;
-import org.apache.felix.scr.Component;
-import org.apache.felix.scr.Reference;
-import org.apache.felix.scr.ScrService;
 import org.apache.felix.webconsole.WebConsoleUtil;
 import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
+import org.osgi.framework.dto.ServiceReferenceDTO;
 import org.osgi.service.component.ComponentConstants;
+import org.osgi.service.component.runtime.ServiceComponentRuntime;
+import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
+import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
+import org.osgi.service.component.runtime.dto.ReferenceDTO;
+import org.osgi.service.component.runtime.dto.SatisfiedReferenceDTO;
 
 /**
- * ComponentConfigurationPrinter prints the available SCR services. 
+ * ComponentConfigurationPrinter prints the available SCR services.
  */
 class ComponentConfigurationPrinter implements InventoryPrinter
 {
 
-    private final ScrService scrService;
+    private final ServiceComponentRuntime scrService;
 
     ComponentConfigurationPrinter(Object scrService)
     {
-        this.scrService = (ScrService)scrService;
+        this.scrService = (ServiceComponentRuntime)scrService;
     }
 
     /**
      * @see org.apache.felix.inventory.InventoryPrinter#print(java.io.PrintWriter, org.apache.felix.inventory.Format, boolean)
      */
+    @Override
     public void print(PrintWriter pw, Format format, boolean isZip)
     {
-        printComponents(pw, scrService.getComponents());
+        final List<ComponentDescriptionDTO> descriptions = new ArrayList<ComponentDescriptionDTO>();
+        final List<ComponentConfigurationDTO> configurations = new ArrayList<ComponentConfigurationDTO>();
+
+        final Collection<ComponentDescriptionDTO> descs = scrService.getComponentDescriptionDTOs();
+        for(final ComponentDescriptionDTO d : descs)
+        {
+            for(final ComponentConfigurationDTO cfg : scrService.getComponentConfigurationDTOs(d))
+            {
+                configurations.add(cfg);
+            }
+            descriptions.add(d);
+        }
+        Collections.sort(configurations, Util.COMPONENT_COMPARATOR);
+
+        printComponents(pw, configurations);
     }
-    
-    
+
+
     private static final void printComponents(final PrintWriter pw,
-        final Component[] components)
+            final List<ComponentConfigurationDTO> configurations)
     {
-        if (components == null || components.length == 0)
+        if (configurations.size() == 0)
         {
             pw.println("Status: No Components Registered");
         }
         else
         {
             // order components by id
-            TreeMap componentMap = new TreeMap();
-            for (int i = 0; i < components.length; i++)
+            TreeMap<Long, ComponentConfigurationDTO> componentMap = new TreeMap<Long, ComponentConfigurationDTO>();
+            for(final ComponentConfigurationDTO cfg : configurations)
             {
-                Component component = components[i];
-                componentMap.put(new Long(component.getId()), component);
+                componentMap.put(new Long(cfg.id), cfg);
             }
 
             // render components
-            for (Iterator ci = componentMap.values().iterator(); ci.hasNext();)
+            for (final ComponentConfigurationDTO cfg : componentMap.values())
             {
-                Component component = (Component) ci.next();
-                component(pw, component);
+                component(pw, cfg);
             }
         }
     }
 
-    private static final void component(PrintWriter pw, Component component)
+    private static final void component(PrintWriter pw, final ComponentConfigurationDTO cfg)
     {
 
-        pw.print(component.getId());
+        pw.print(cfg.id);
         pw.print("=[");
-        pw.print(component.getName());
+        pw.print(cfg.description.name);
         pw.println("]");
 
-        pw.println("  Bundle" + component.getBundle().getSymbolicName() + " ("
-            + component.getBundle().getBundleId() + ")");
-        pw.println("  State=" + toStateString(component.getState()));
+        pw.println("  Bundle" + cfg.description.bundle.symbolicName + " ("
+            + cfg.description.bundle.id + ")");
+        pw.println("  State=" + toStateString(cfg.state));
         pw.println("  DefaultState="
-            + (component.isDefaultEnabled() ? "enabled" : "disabled"));
-        pw.println("  Activation=" + (component.isImmediate() ? "immediate" : "delayed"));
+            + (cfg.description.defaultEnabled ? "enabled" : "disabled"));
+        pw.println("  Activation=" + (cfg.description.immediate ? "immediate" : "delayed"));
 
-        listServices(pw, component);
-        listReferences(pw, component);
-        listProperties(pw, component);
+        listServices(pw, cfg);
+        listReferences(pw, cfg);
+        listProperties(pw, cfg);
 
         pw.println();
     }
 
-    private static void listServices(PrintWriter pw, Component component)
+    private static void listServices(PrintWriter pw, final ComponentConfigurationDTO cfg)
     {
-        String[] services = component.getServices();
+        String[] services = cfg.description.serviceInterfaces;
         if (services == null)
         {
             return;
         }
 
-        pw.println("  ServiceType="
-            + (component.isServiceFactory() ? "service factory" : "service"));
+        pw.println("  ServiceType=" + cfg.description.scope);
 
         StringBuffer buf = new StringBuffer();
         for (int i = 0; i < services.length; i++)
@@ -129,76 +147,82 @@ class ComponentConfigurationPrinter implements InventoryPrinter
         pw.println("  Services=" + buf);
     }
 
-    private static final void listReferences(PrintWriter pw, Component component)
+    private static SatisfiedReferenceDTO findReference(final ComponentConfigurationDTO component, final String name)
     {
-        Reference[] refs = component.getReferences();
-        if (refs != null)
+        for(final SatisfiedReferenceDTO dto : component.satisfiedReferences)
         {
-            for (int i = 0; i < refs.length; i++)
+            if ( dto.name.equals(name))
             {
+                return dto;
+            }
+        }
+        return null;
+    }
 
-                pw.println("  Reference=" + refs[i].getName() + ", "
-                    + (refs[i].isSatisfied() ? "Satisfied" : "Unsatisfied"));
+    private static final void listReferences(PrintWriter pw, final ComponentConfigurationDTO cfg)
+    {
+        for(final ReferenceDTO dto : cfg.description.references)
+        {
+            final SatisfiedReferenceDTO satisfiedRef = findReference(cfg, dto.name);
 
-                pw.println("    Service Name: " + refs[i].getServiceName());
+            pw.println("  Reference=" + dto.name + ", "
+                + (satisfiedRef != null ? "Satisfied" : "Unsatisfied"));
 
-                if (refs[i].getTarget() != null)
+            pw.println("    Service Name: " + dto.interfaceName);
+
+            if (dto.target != null)
+            {
+                pw.println("  Target Filter: " + dto.target);
+            }
+
+            pw.println("    Cardinality: " + dto.cardinality);
+            pw.println("    Policy: " + dto.policy);
+            pw.println("    Policy Option: " + dto.policyOption);
+
+            // list bound services
+            if ( satisfiedRef != null )
+            {
+                for(final ServiceReferenceDTO sref : satisfiedRef.boundServices )
                 {
-                    pw.println("  Target Filter: " + refs[i].getTarget());
-                }
+                    pw.print("    Bound Service: ID ");
+                    pw.print(sref.properties.get(Constants.SERVICE_ID));
 
-                pw.println("    Multiple: "
-                    + (refs[i].isMultiple() ? "multiple" : "single"));
-                pw.println("    Optional: "
-                    + (refs[i].isOptional() ? "optional" : "mandatory"));
-                pw.println("    Policy: " + (refs[i].isStatic() ? "static" : "dynamic"));
-
-                // list bound services
-                ServiceReference[] boundRefs = refs[i].getServiceReferences();
-                if (boundRefs != null && boundRefs.length > 0)
-                {
-                    for (int j = 0; j < boundRefs.length; j++)
+                    String name = (String) sref.properties.get(ComponentConstants.COMPONENT_NAME);
+                    if (name == null)
                     {
-                        pw.print("    Bound Service: ID ");
-                        pw.print(boundRefs[j].getProperty(Constants.SERVICE_ID));
-
-                        String name = (String) boundRefs[j].getProperty(ComponentConstants.COMPONENT_NAME);
+                        name = (String) sref.properties.get(Constants.SERVICE_PID);
                         if (name == null)
                         {
-                            name = (String) boundRefs[j].getProperty(Constants.SERVICE_PID);
-                            if (name == null)
-                            {
-                                name = (String) boundRefs[j].getProperty(Constants.SERVICE_DESCRIPTION);
-                            }
+                            name = (String) sref.properties.get(Constants.SERVICE_DESCRIPTION);
                         }
-                        if (name != null)
-                        {
-                            pw.print(" (");
-                            pw.print(name);
-                            pw.print(")");
-                        }
-                        pw.println();
                     }
+                    if (name != null)
+                    {
+                        pw.print(" (");
+                        pw.print(name);
+                        pw.print(")");
+                    }
+                    pw.println();
                 }
-                else
-                {
-                    pw.println("    No Services bound");
-                }
+            }
+            else
+            {
+                pw.println("    No Services bound");
             }
         }
     }
 
-    private static final void listProperties(PrintWriter pw, Component component)
+    private static final void listProperties(PrintWriter pw, final ComponentConfigurationDTO cfg)
     {
-        Dictionary props = component.getProperties();
+        Map<String, Object> props = cfg.properties;
         if (props != null)
         {
 
             pw.println("  Properties=");
-            TreeSet keys = new TreeSet(Util.list(props.keys()));
-            for (Iterator ki = keys.iterator(); ki.hasNext();)
+            TreeSet<String> keys = new TreeSet<String>(props.keySet());
+            for (Iterator<String> ki = keys.iterator(); ki.hasNext();)
             {
-                String key = (String) ki.next();
+                String key = ki.next();
                 Object value = props.get(key);
                 value = WebConsoleUtil.toString(value);
                 if (value.getClass().isArray())
@@ -214,34 +238,16 @@ class ComponentConfigurationPrinter implements InventoryPrinter
     {
         switch (state)
         {
-            case Component.STATE_DISABLED:
-                return "disabled";
-            case Component.STATE_ENABLING:
-                return "enabling";
-            case Component.STATE_ENABLED:
-                return "enabled";
-            case Component.STATE_UNSATISFIED:
-                return "unsatisfied";
-            case Component.STATE_ACTIVATING:
-                return "activating";
-            case Component.STATE_ACTIVE:
+            case ComponentConfigurationDTO.ACTIVE:
                 return "active";
-            case Component.STATE_REGISTERED:
-                return "registered";
-            case Component.STATE_FACTORY:
-                return "factory";
-            case Component.STATE_DEACTIVATING:
-                return "deactivating";
-            case Component.STATE_DISABLING:
-                return "disabling";
-            case Component.STATE_DISPOSING:
-                return "disposing";
-            case Component.STATE_DESTROYED:
-                return "destroyed/disposed";
+            case ComponentConfigurationDTO.SATISFIED:
+                return "satisfied";
+            case ComponentConfigurationDTO.UNSATISFIED_CONFIGURATION:
+                return "unsatisfied (configuration)";
+            case ComponentConfigurationDTO.UNSATISFIED_REFERENCE:
+                return "unsatisfied (reference)";
             default:
                 return String.valueOf(state);
         }
     }
-
-
 }
