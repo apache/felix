@@ -125,7 +125,7 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
             suitableMethodNotAccessible = true;
         }
 
-        //case 2 ServiceObjects parameter
+        //case 2 ComponentServiceObjects parameter
         try
         {
             method = getServiceObjectsMethod( targetClass, acceptPrivate, acceptPackage, logger );
@@ -251,9 +251,9 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
                                     paramTypes.add(ParamType.serviceReference);
                                 }
                             }
-                            else if (paramType == ClassUtils.SERVICE_OBJECTS_CLASS)
+                            else if (paramType == ClassUtils.COMPONENTS_SERVICE_OBJECTS_CLASS)
                             {
-                                if (specialMatch && parameterClass == ClassUtils.SERVICE_OBJECTS_CLASS)
+                                if (specialMatch && parameterClass == ClassUtils.COMPONENTS_SERVICE_OBJECTS_CLASS)
                                 {
                                     specialMatch = false;
                                     paramTypes.add(ParamType.serviceType);
@@ -352,7 +352,7 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
         if ( m_referenceScope == ReferenceMetadata.ReferenceScope.prototype )
         {
             return getMethod(targetClass, getMethodName(),
-                new Class[] { ClassUtils.SERVICE_OBJECTS_CLASS }, acceptPrivate, acceptPackage,
+                new Class[] { ClassUtils.COMPONENTS_SERVICE_OBJECTS_CLASS }, acceptPrivate, acceptPackage,
                 logger);
         }
         return null;
@@ -593,7 +593,7 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
                     break;
 
                 case serviceObjects:
-                    result[i++] = refPair.getServiceObjects();
+                    result[i++] = bp.getComponentContext().getComponentServiceObjectsHelper().getServiceObjects(refPair.getRef());
                     break;
 
                 case map:

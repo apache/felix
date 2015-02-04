@@ -22,10 +22,11 @@ package org.apache.felix.scr.impl.helper;
 import junit.framework.TestCase;
 
 import org.apache.felix.scr.impl.BundleComponentActivator;
+import org.apache.felix.scr.impl.MockBundle;
 import org.apache.felix.scr.impl.config.ComponentContainer;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
-import org.apache.felix.scr.impl.manager.SingleComponentManager;
 import org.apache.felix.scr.impl.manager.RefPair;
+import org.apache.felix.scr.impl.manager.SingleComponentManager;
 import org.apache.felix.scr.impl.manager.SingleRefPair;
 import org.apache.felix.scr.impl.manager.components.FakeService;
 import org.apache.felix.scr.impl.manager.components.T1;
@@ -36,7 +37,6 @@ import org.apache.felix.scr.impl.manager.components2.T2;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
-import org.apache.felix.scr.impl.metadata.XmlHandler;
 import org.easymock.EasyMock;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -51,11 +51,12 @@ public class BindMethodTest extends TestCase
     private BundleContext m_context;
 
 
+    @Override
     public void setUp()
     {
-        m_serviceReference = (ServiceReference) EasyMock.createNiceMock( ServiceReference.class );
-        m_serviceInstance = (FakeService) EasyMock.createNiceMock( FakeService.class );
-        m_context = ( BundleContext ) EasyMock.createNiceMock( BundleContext.class );
+        m_serviceReference = EasyMock.createNiceMock( ServiceReference.class );
+        m_serviceInstance = EasyMock.createNiceMock( FakeService.class );
+        m_context = EasyMock.createNiceMock( BundleContext.class );
 
         EasyMock.expect( m_context.getService( m_serviceReference ) ).andReturn( m_serviceInstance )
                 .anyTimes();
@@ -430,13 +431,13 @@ public class BindMethodTest extends TestCase
         testMethod( "suitable", new T1a(), DSVersion.DS10, "suitableT1" );
         testMethod( "suitable", new T1a(), DSVersion.DS11, "suitableT1" );
     }
-    
+
     public void test_13()
     {
         //single map param
         testMethod( "packageT1Map", new T1(), DSVersion.DS12, null);
         testMethod( "packageT1Map", new T1(), DSVersion.DS13, "packageT1Map");
-        
+
         //map, sr
         testMethod( "packageT1MapSR", new T1MapSR(), DSVersion.DS12, null);
         testMethod( "packageT1MapSR", new T1MapSR(), DSVersion.DS13, "packageT1MapSR");
@@ -451,13 +452,13 @@ public class BindMethodTest extends TestCase
         BindMethod bm = new BindMethod( methodName, component.getClass(),
                 FakeService.class.getName(), dsVersion, false, ReferenceMetadata.ReferenceScope.bundle );
         RefPair refPair = new SingleRefPair( m_serviceReference );
-        ComponentContextImpl<T1> cc = new ComponentContextImpl(icm, null);
+        ComponentContextImpl<T1> cc = new ComponentContextImpl(icm, new MockBundle());
         assertTrue( bm.getServiceObject( cc, refPair, m_context, icm ) );
         BindParameters bp = new BindParameters(cc, refPair);
         bm.invoke( component, bp, null, icm );
         assertEquals( expectCallPerformed, component.callPerformed );
     }
-    
+
     private ComponentContainer newContainer()
     {
         final ComponentMetadata metadata = newMetadata();
@@ -476,7 +477,7 @@ public class BindMethodTest extends TestCase
             public void disposed(SingleComponentManager component)
             {
             }
-            
+
         };
         return container;
     }

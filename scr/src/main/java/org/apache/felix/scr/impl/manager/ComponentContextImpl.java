@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.scr.component.ExtComponentContext;
 import org.apache.felix.scr.impl.BundleComponentActivator;
+import org.apache.felix.scr.impl.helper.ComponentServiceObjectsHelper;
 import org.apache.felix.scr.impl.helper.ReadOnlyDictionary;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -40,18 +41,20 @@ import org.osgi.service.log.LogService;
 public class ComponentContextImpl<S> implements ExtComponentContext {
 
     private final SingleComponentManager<S> m_componentManager;
-    
+
     private final EdgeInfo[] edgeInfos;
-    
+
     private final ComponentInstance m_componentInstance = new ComponentInstanceImpl(this);
-    
+
     private final Bundle m_usingBundle;
-    
+
     private S m_implementationObject;
-    
+
     private volatile boolean m_implementationAccessible;
-    
+
     private final CountDownLatch accessibleLatch = new CountDownLatch(1);
+
+    private ComponentServiceObjectsHelper serviceObjectsHelper;
 
     public ComponentContextImpl( SingleComponentManager<S> componentManager, Bundle usingBundle )
     {
@@ -62,9 +65,19 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         {
             edgeInfos[i] = new EdgeInfo();
         }
+        this.serviceObjectsHelper = new ComponentServiceObjectsHelper(usingBundle.getBundleContext());
     }
-    
-    
+
+    public void cleanup()
+    {
+        this.serviceObjectsHelper.cleanup();
+    }
+
+    public ComponentServiceObjectsHelper getComponentServiceObjectsHelper()
+    {
+        return this.serviceObjectsHelper;
+    }
+
     public void setImplementationObject(S implementationObject)
     {
         this.m_implementationObject = implementationObject;
@@ -79,7 +92,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
             accessibleLatch.countDown();
         }
     }
-    
+
     EdgeInfo getEdgeInfo(DependencyManager<S, ?> dm)
     {
         int index = dm.getIndex();
@@ -193,7 +206,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     {
         getComponentManager().setServiceProperties(properties );
     }
-    
+
     //---------- ComponentInstance interface support ------------------------------
 
     S getImplementationObject( boolean requireAccessible )
@@ -227,7 +240,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         }
         return null;
     }
-    
+
     private static class ComponentInstanceImpl<S> implements ComponentInstance
     {
         private final ComponentContextImpl<S> m_componentContext;
