@@ -74,7 +74,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
    /**
      * The constructor receives both the activator and the metadata
- * @param componentMethods
+     * @param componentMethods
      */
     public SingleComponentManager( ComponentContainer<S> container, ComponentMethods componentMethods )
     {
@@ -155,6 +155,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         {
             m_useCount.set( 0 );
             disposeImplementationObject( m_componentContext, reason );
+            m_componentContext.cleanup();
             m_componentContext = null;
             log( LogService.LOG_DEBUG, "Unset and deconfigured implementation object for component {0} in deleteComponent for reason {1}", new Object[] { getName(), REASONS[ reason ] },  null );
             clearServiceProperties();
@@ -773,7 +774,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             boolean success = true;
             if ( m_componentContext == null )
             {
-                ComponentContextImpl<S> componentContext = new ComponentContextImpl<S>(this, null);
+                ComponentContextImpl<S> componentContext = new ComponentContextImpl<S>(this, this.getBundle());
                 if ( collectDependencies(componentContext))
                 {
                         log(

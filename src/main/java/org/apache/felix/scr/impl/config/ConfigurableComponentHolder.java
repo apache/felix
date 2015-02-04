@@ -22,7 +22,6 @@ package org.apache.felix.scr.impl.config;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -38,8 +37,8 @@ import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.apache.felix.scr.impl.manager.ComponentFactoryImpl;
 import org.apache.felix.scr.impl.manager.PrototypeServiceFactoryComponentManager;
-import org.apache.felix.scr.impl.manager.SingleComponentManager;
 import org.apache.felix.scr.impl.manager.ServiceFactoryComponentManager;
+import org.apache.felix.scr.impl.manager.SingleComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata.Scope;
 import org.osgi.framework.Constants;
@@ -51,8 +50,8 @@ import org.osgi.util.promise.Promises;
 
 
 /**
- * The <code>ImmediateComponentHolder</code> class is a
- * {@link ComponentHolder} for automatically configured components instances 
+ * The <code>ConfigurableComponentHolder</code> class is a
+ * {@link ComponentHolder} for automatically configured components instances
  * that may or may not be configured through Config Admin.
  * <p>
  * The holder copes with three situations:
@@ -79,7 +78,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
      */
     private final ComponentMetadata m_componentMetadata;
 
-    /** the targeted pids corresponding to the pids specified in the config metadata, except possibly for the single 
+    /** the targeted pids corresponding to the pids specified in the config metadata, except possibly for the single
      * factory pid
      */
     private final TargetedPID[] m_targetedPids;
@@ -147,7 +146,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
     private Promise<Void> m_enablePromise;
     private Promise<Void> m_disablePromise = Promises.resolved(null);
 
-    private final ComponentMethods m_componentMethods;    
+    private final ComponentMethods m_componentMethods;
 
     public ConfigurableComponentHolder( final BundleComponentActivator activator, final ComponentMetadata metadata )
     {
@@ -196,10 +195,10 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
 
         return manager;
     }
-    
-    private static class PSFLoader 
+
+    private static class PSFLoader
     {
-        static <S> AbstractComponentManager<S> newPSFComponentManager(ConfigurableComponentHolder<S> holder, ComponentMethods methods) 
+        static <S> AbstractComponentManager<S> newPSFComponentManager(ConfigurableComponentHolder<S> holder, ComponentMethods methods)
         {
             return new PrototypeServiceFactoryComponentManager<S>( holder, methods );
         }
@@ -310,7 +309,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
                     {
                         for (Map.Entry<String, AbstractComponentManager<S>> entry : m_components.entrySet()) {
                             scms.put(entry.getValue(), null );
-                        }	
+                        }
                         m_components.clear();
                     }
                 }
@@ -387,10 +386,10 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
                 if (m_enabled && isSatisfied()) {
                     if (m_singleComponent != null) {
                         scms.put( m_singleComponent, mergeProperties( pid.getServicePid() ) );
-                    } 
-                    else if ( m_factoryPidIndex != null) 
+                    }
+                    else if ( m_factoryPidIndex != null)
                     {
-                        for (Map.Entry<String, AbstractComponentManager<S>> entry: m_components.entrySet()) 
+                        for (Map.Entry<String, AbstractComponentManager<S>> entry: m_components.entrySet())
                         {
                             scms.put(entry.getValue(), mergeProperties( entry.getKey()));
                         }
@@ -497,7 +496,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
         return index;
     }
 
-    //TODO update error messages so they make sense for deleting config too. 
+    //TODO update error messages so they make sense for deleting config too.
     private void checkFactoryPidIndex(TargetedPID factoryPid) {
         int index = m_componentMetadata.getPidIndex(factoryPid);
         if (index == -1) {
@@ -545,7 +544,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
      * @return true if configuration optional or all pids supplied with configurations
      */
     private boolean isSatisfied() {
-        if ( m_componentMetadata.isConfigurationOptional() || m_componentMetadata.isConfigurationIgnored() ) 
+        if ( m_componentMetadata.isConfigurationOptional() || m_componentMetadata.isConfigurationIgnored() )
         {
             return true;
         }
@@ -628,7 +627,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
             Thread.currentThread().interrupt();
         }
     }
-    
+
     public Promise<Void> enableComponents( final boolean async )
     {
         synchronized (enableLock)
@@ -746,17 +745,18 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
 
     /**
      * Compares this {@code ImmediateComponentHolder} object to another object.
-     * 
+     *
      * <p>
-     * A ImmediateComponentHolder is considered to be <b>equal to </b> another 
-     * ImmediateComponentHolder if the component names are equal(using 
+     * A ImmediateComponentHolder is considered to be <b>equal to </b> another
+     * ImmediateComponentHolder if the component names are equal(using
      * {@code String.equals}) and they have the same bundle activator
-     * 
+     *
      * @param object The {@code ImmediateComponentHolder} object to be compared.
      * @return {@code true} if {@code object} is a
      *         {@code ImmediateComponentHolder} and is equal to this object;
      *         {@code false} otherwise.
      */
+    @Override
     public boolean equals(Object object)
     {
         if (!(object instanceof ConfigurableComponentHolder))
@@ -771,7 +771,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
 
     /**
      * Returns a hash code value for the object.
-     * 
+     *
      * @return An integer which is a hash code value for this object.
      */
     @Override
@@ -812,7 +812,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
         }
         return cms;
     }
-    
+
     List<AbstractComponentManager<S>> getDirectComponentManagers( )
     {
         List<AbstractComponentManager<S>> cms = new ArrayList<AbstractComponentManager<S>>();

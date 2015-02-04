@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.scr.impl.Activator;
-import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
@@ -40,7 +40,8 @@ public class ClassUtils
     private static final Class<?> OBJECT_CLASS = Object.class;
 
     public static final Class<?> SERVICE_REFERENCE_CLASS = ServiceReference.class;
-    public static final Class<?> SERVICE_OBJECTS_CLASS;
+
+    public static final Class<?> COMPONENTS_SERVICE_OBJECTS_CLASS;
 
     public static final Class<?> MAP_CLASS = Map.class;
     public static final Class<?> MAP_ENTRY_CLASS = Map.Entry.class;
@@ -51,13 +52,13 @@ public class ClassUtils
     static {
         Class<?> serviceObjectsClass = null;
         try {
-            serviceObjectsClass = ServiceObjects.class;
+            serviceObjectsClass = ComponentServiceObjects.class;
         }
         catch (Throwable t)
         {
             //can't load class
         }
-        SERVICE_OBJECTS_CLASS = serviceObjectsClass;
+        COMPONENTS_SERVICE_OBJECTS_CLASS = serviceObjectsClass;
     }
 
     /**

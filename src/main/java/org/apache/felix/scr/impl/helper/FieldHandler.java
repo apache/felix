@@ -285,7 +285,7 @@ public class FieldHandler
             {
                 valueType = ParamType.serviceReference;
             }
-            else if ( fieldType == ClassUtils.SERVICE_OBJECTS_CLASS )
+            else if ( fieldType == ClassUtils.COMPONENTS_SERVICE_OBJECTS_CLASS )
             {
                 valueType = ParamType.serviceObjects;
             }
@@ -452,7 +452,7 @@ public class FieldHandler
         {
             case serviceType : obj = refPair.getServiceObject(key); break;
             case serviceReference : obj = refPair.getRef(); break;
-            case serviceObjects : obj = refPair.getServiceObjects(); break;
+            case serviceObjects : obj = key.getComponentServiceObjectsHelper().getServiceObjects(refPair.getRef()); break;
             case map : obj = new ReadOnlyDictionary<String, Object>( refPair.getRef() ); break;
             case tuple : final Object tupleKey = new ReadOnlyDictionary<String, Object>( refPair.getRef() );
                          final Object tupleValue = refPair.getServiceObject(key);
