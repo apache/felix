@@ -41,25 +41,13 @@ public class ClassUtils
 
     public static final Class<?> SERVICE_REFERENCE_CLASS = ServiceReference.class;
 
-    public static final Class<?> COMPONENTS_SERVICE_OBJECTS_CLASS;
+    public static final Class<?> COMPONENTS_SERVICE_OBJECTS_CLASS = ComponentServiceObjects.class;
 
     public static final Class<?> MAP_CLASS = Map.class;
     public static final Class<?> MAP_ENTRY_CLASS = Map.Entry.class;
 
     public static final Class<?> COLLECTION_CLASS = Collection.class;
     public static final Class<?> LIST_CLASS = List.class;
-
-    static {
-        Class<?> serviceObjectsClass = null;
-        try {
-            serviceObjectsClass = ComponentServiceObjects.class;
-        }
-        catch (Throwable t)
-        {
-            //can't load class
-        }
-        COMPONENTS_SERVICE_OBJECTS_CLASS = serviceObjectsClass;
-    }
 
     /**
      * Returns the class object representing the class of the field reference
