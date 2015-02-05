@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.felix.scr.ScrService;
 import org.apache.felix.scr.impl.config.ScrConfiguration;
 import org.apache.felix.scr.impl.runtime.ServiceComponentRuntimeImpl;
 import org.apache.felix.utils.extender.AbstractExtender;
@@ -149,7 +150,8 @@ public class Activator extends AbstractExtender
         m_componentRegistry = new ComponentRegistry( m_context );
 
         ServiceComponentRuntime runtime = new ServiceComponentRuntimeImpl(m_context, m_componentRegistry);
-        m_runtime_reg = m_context.registerService(new String[] {ServiceComponentRuntime.class.getName()},
+        m_runtime_reg = m_context.registerService(new String[] {ScrService.class.getName(),
+                ServiceComponentRuntime.class.getName()},
                 runtime, null);
 
         // log SCR startup
