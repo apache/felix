@@ -19,12 +19,14 @@
 package org.apache.felix.scr.integration;
 
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
+
 import org.apache.felix.scr.integration.components.MutatingService;
 import org.apache.felix.scr.integration.components.SimpleServiceImpl;
 import org.junit.Test;
@@ -57,7 +59,9 @@ public class MutablePropertiesTest extends ComponentTestBase
         ServiceReference[] serviceReferences = bundleContext.getServiceReferences( MutatingService.class.getName(), "(service.pid=" + componentName + ")" );
         TestCase.assertEquals( 1, serviceReferences.length );
         ServiceReference serviceReference = serviceReferences[0];
-        checkProperties( serviceReference, 8, "otherValue", "p1", "p2" );
+        Assert.assertEquals("otherValue", serviceReference.getProperty(PROP_NAME));
+        Assert.assertEquals("p1", serviceReference.getProperty("p1"));
+        Assert.assertEquals("p2", serviceReference.getProperty("p2"));
 
         //update theValue
         MutatingService s = ( MutatingService ) bundleContext.getService(serviceReference );
@@ -65,17 +69,21 @@ public class MutablePropertiesTest extends ComponentTestBase
         findComponentConfigurationByName(componentName, ComponentConfigurationDTO.ACTIVE);
         Dictionary d = new Hashtable(Collections.singletonMap( PROP_NAME, "anotherValue" ));
         s.updateProperties(d);
-        checkProperties(serviceReference, 5, "anotherValue", "p1", "p2");
+        Assert.assertEquals("anotherValue", serviceReference.getProperty(PROP_NAME));
+        checkPropertiesNotPresent(serviceReference, "p1", "p2");
 
         //configure with configAdmin
         configure( componentName );
         delay();
         //no change
-        checkProperties(serviceReference, 5, "anotherValue", "p1", "p2");
+        Assert.assertEquals("anotherValue", serviceReference.getProperty(PROP_NAME));
+        checkPropertiesNotPresent(serviceReference, "p1", "p2");
 
         //check that removing config switches back to defaults modified by config admin
         s.updateProperties(null);
-        checkProperties( serviceReference, 8, "theValue", "p1", "p2" );
+        Assert.assertEquals("theValue", serviceReference.getProperty(PROP_NAME));
+        Assert.assertEquals("p1", serviceReference.getProperty("p1"));
+        Assert.assertEquals("p2", serviceReference.getProperty("p2"));
 
         bundleContext.ungetService(serviceReference);
     }
@@ -89,27 +97,36 @@ public class MutablePropertiesTest extends ComponentTestBase
         ServiceReference[] serviceReferences = bundleContext.getServiceReferences( MutatingService.class.getName(), "(service.pid=" + componentName + ")" );
         TestCase.assertEquals( 1, serviceReferences.length );
         ServiceReference serviceReference = serviceReferences[0];
-        checkProperties( serviceReference, 8, "otherValue", "p1", "p2" );
+        Assert.assertEquals("otherValue", serviceReference.getProperty(PROP_NAME));
+        Assert.assertEquals("p1", serviceReference.getProperty("p1"));
+        Assert.assertEquals("p2", serviceReference.getProperty("p2"));
 
         //update theValue
         MutatingService s = ( MutatingService ) bundleContext.getService( serviceReference );
         Assert.assertNotNull(s);
-        checkProperties( serviceReference, 8, "anotherValue1", "p1", "p2" );
+        Assert.assertEquals("anotherValue1", serviceReference.getProperty(PROP_NAME));
+        Assert.assertEquals("p1", serviceReference.getProperty("p1"));
+        Assert.assertEquals("p2", serviceReference.getProperty("p2"));
         findComponentConfigurationByName(componentName, ComponentConfigurationDTO.ACTIVE);
         Dictionary d = new Hashtable(Collections.singletonMap( PROP_NAME, "anotherValue" ));
         s.updateProperties(d);
-        checkProperties(serviceReference, 5, "anotherValue", "p1", "p2");
+        Assert.assertEquals("anotherValue", serviceReference.getProperty(PROP_NAME));
+        checkPropertiesNotPresent(serviceReference, "p1", "p2");
 
         //configure with configAdmin
         configure( componentName );
         delay();
         delay();
         //no change
-        checkProperties(serviceReference, 8, "anotherValue2", "p1", "p2");
+        Assert.assertEquals("anotherValue2", serviceReference.getProperty(PROP_NAME));
+        Assert.assertEquals("p1", serviceReference.getProperty("p1"));
+        Assert.assertEquals("p2", serviceReference.getProperty("p2"));
 
         //check that removing config switches back to defaults modified by config admin
         s.updateProperties(null);
-        checkProperties( serviceReference, 8, "theValue", "p1", "p2" );
+        Assert.assertEquals("theValue", serviceReference.getProperty(PROP_NAME));
+        Assert.assertEquals("p1", serviceReference.getProperty("p1"));
+        Assert.assertEquals("p2", serviceReference.getProperty("p2"));
 
         bundleContext.ungetService(serviceReference);
     }
@@ -123,27 +140,36 @@ public class MutablePropertiesTest extends ComponentTestBase
         ServiceReference[] serviceReferences = bundleContext.getServiceReferences( MutatingService.class.getName(), "(service.pid=" + componentName + ")" );
         TestCase.assertEquals( 1, serviceReferences.length );
         ServiceReference serviceReference = serviceReferences[0];
-        checkProperties( serviceReference, 8, "otherValue", "p1", "p2" );
+        Assert.assertEquals("otherValue", serviceReference.getProperty(PROP_NAME));
+        Assert.assertEquals("p1", serviceReference.getProperty("p1"));
+        Assert.assertEquals("p2", serviceReference.getProperty("p2"));
 
         //update theValue
         MutatingService s = ( MutatingService ) bundleContext.getService( serviceReference );
         Assert.assertNotNull(s);
-        checkProperties( serviceReference, 8, "anotherValue1", "p1", "p2" );
+        Assert.assertEquals("anotherValue1", serviceReference.getProperty(PROP_NAME));
+        Assert.assertEquals("p1", serviceReference.getProperty("p1"));
+        Assert.assertEquals("p2", serviceReference.getProperty("p2"));
         findComponentConfigurationByName(componentName, ComponentConfigurationDTO.ACTIVE);
         Dictionary d = new Hashtable(Collections.singletonMap( PROP_NAME, "anotherValue" ));
         s.updateProperties(d);
-        checkProperties(serviceReference, 5, "anotherValue", "p1", "p2");
+        Assert.assertEquals("anotherValue", serviceReference.getProperty(PROP_NAME));
+        checkPropertiesNotPresent(serviceReference, "p1", "p2");
 
         //configure with configAdmin
         configure( componentName );
         delay();
         delay();
         //no change
-        checkProperties(serviceReference, 8, "anotherValue2", "p1", "p2");
+        Assert.assertEquals("anotherValue2", serviceReference.getProperty(PROP_NAME));
+        Assert.assertEquals("p1", serviceReference.getProperty("p1"));
+        Assert.assertEquals("p2", serviceReference.getProperty("p2"));
 
         //check that removing config switches back to defaults modified by config admin
         s.updateProperties(null);
-        checkProperties( serviceReference, 8, "theValue", "p1", "p2" );
+        Assert.assertEquals("theValue", serviceReference.getProperty(PROP_NAME));
+        Assert.assertEquals("p1", serviceReference.getProperty("p1"));
+        Assert.assertEquals("p2", serviceReference.getProperty("p2"));
 
         bundleContext.ungetService(serviceReference);
     }
@@ -157,35 +183,29 @@ public class MutablePropertiesTest extends ComponentTestBase
         ServiceReference[] serviceReferences = bundleContext.getServiceReferences( MutatingService.class.getName(), "(service.pid=" + componentName + ")" );
         TestCase.assertEquals( 1, serviceReferences.length );
         ServiceReference serviceReference = serviceReferences[0];
-        checkProperties( serviceReference, 8, "otherValue", "p1", "p2" );
+        Assert.assertEquals("otherValue", serviceReference.getProperty(PROP_NAME));
+        Assert.assertEquals("p1", serviceReference.getProperty("p1"));
+        Assert.assertEquals("p2", serviceReference.getProperty("p2"));
         MutatingService s = ( MutatingService ) bundleContext.getService( serviceReference );
 
         SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
-        checkProperties( serviceReference, 5, null, "p1", "p2" );
+        checkPropertiesNotPresent(serviceReference, "p1", "p2");
         Assert.assertEquals("bound", serviceReference.getProperty("SimpleService"));
 
         srv1.update( "foo" );
-        checkProperties( serviceReference, 5, null, "p1", "p2" );
+        checkPropertiesNotPresent(serviceReference, "p1", "p2");
         Assert.assertEquals("updated", serviceReference.getProperty("SimpleService"));
 
         srv1.drop();
-        checkProperties( serviceReference, 5, null, "p1", "p2" );
+        checkPropertiesNotPresent(serviceReference, "p1", "p2");
         Assert.assertEquals("unbound", serviceReference.getProperty("SimpleService"));
 
         bundleContext.ungetService(serviceReference);
     }
 
-    private void checkProperties(ServiceReference serviceReference, int count, String otherValue, String p1, String p2) {
-        Assert.assertEquals("wrong property count", count, serviceReference.getPropertyKeys().length);
-        if ( otherValue != null )
-        {
-            Assert.assertEquals(otherValue, serviceReference.getProperty(PROP_NAME));
-        }
-        if ( count > 5 ) {
-            Assert.assertEquals(p1, serviceReference.getProperty("p1"));
-            Assert.assertEquals(p2, serviceReference.getProperty("p2"));
+    private void checkPropertiesNotPresent(ServiceReference<?> serviceReference, String ... props) {
+        for (String p : props) {
+            Assert.assertFalse("Should not contain property " + p, Arrays.asList(serviceReference.getPropertyKeys()).contains(p));
         }
     }
-
-
 }
