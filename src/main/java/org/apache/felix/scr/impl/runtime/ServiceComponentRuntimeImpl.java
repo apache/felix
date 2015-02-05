@@ -21,14 +21,22 @@ package org.apache.felix.scr.impl.runtime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.scr.Component;
+import org.apache.felix.scr.Reference;
+import org.apache.felix.scr.ScrService;
+import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.ComponentRegistry;
 import org.apache.felix.scr.impl.config.ComponentHolder;
 import org.apache.felix.scr.impl.config.ComponentManager;
 import org.apache.felix.scr.impl.config.ReferenceManager;
+import org.apache.felix.scr.impl.manager.AbstractComponentManager;
+import org.apache.felix.scr.impl.manager.SingleComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.osgi.dto.DTO;
@@ -38,6 +46,7 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.dto.BundleDTO;
 import org.osgi.framework.dto.ServiceReferenceDTO;
+import org.osgi.service.component.ComponentInstance;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
@@ -46,7 +55,7 @@ import org.osgi.service.component.runtime.dto.SatisfiedReferenceDTO;
 import org.osgi.service.component.runtime.dto.UnsatisfiedReferenceDTO;
 import org.osgi.util.promise.Promise;
 
-public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
+public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime, ScrService
 {
 
 	private static final String[] EMPTY = {};
@@ -344,4 +353,333 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
 		return b;
 	}
 
+	// ScrService
+
+    /**
+     * @see org.apache.felix.scr.ScrService#getComponents()
+     */
+    public Component[] getComponents()
+    {
+        final List<ComponentHolder<?>> holders = componentRegistry.getComponentHolders();
+        ArrayList<Component> list = new ArrayList<Component>();
+        for ( ComponentHolder<?> holder: holders )
+        {
+            if ( holder != null )
+            {
+                final List<? extends ComponentManager<?>> components = holder.getComponents();
+                for ( ComponentManager<?> component: components )
+                {
+                    list.add( new ComponentWrapper((AbstractComponentManager<?>)component) );
+                }
+            }
+        }
+
+        // nothing to return
+        if ( list.isEmpty() )
+        {
+            return null;
+        }
+
+        return list.toArray( new Component[list.size()] );
+    }
+
+
+    /**
+     * @see org.apache.felix.scr.ScrService#getComponents(org.osgi.framework.Bundle)
+     */
+    public Component[] getComponents( Bundle bundle )
+    {
+        final List<ComponentHolder<?>> holders = componentRegistry.getComponentHolders();
+        ArrayList<Component> list = new ArrayList<Component>();
+        for ( ComponentHolder<?> holder: holders )
+        {
+            if ( holder != null )
+            {
+                BundleComponentActivator activator = holder.getActivator();
+                if ( activator != null && activator.getBundleContext().getBundle() == bundle )
+                {
+                    final List<? extends ComponentManager<?>> components = holder.getComponents();
+                    for ( ComponentManager<?> component: components )
+                    {
+                        list.add( new ComponentWrapper((AbstractComponentManager<?>)component) );
+                    }
+                }
+            }
+        }
+
+        // nothing to return
+        if ( list.isEmpty() )
+        {
+            return null;
+        }
+
+        return list.toArray( new Component[list.size()] );
+    }
+
+
+    /**
+     * @see org.apache.felix.scr.ScrService#getComponent(long)
+     */
+    public Component getComponent( long componentId )
+    {
+        final AbstractComponentManager<?> c = componentRegistry.getComponentManagerById(componentId);
+        if ( c != null )
+        {
+            return new ComponentWrapper(c);
+        }
+        return null;
+    }
+
+    /**
+     * @see org.apache.felix.scr.ScrService#getComponents(java.lang.String)
+     */
+    public Component[] getComponents( final String componentName )
+    {
+        final List<Component> list = new ArrayList<Component>();
+        final List<ComponentHolder<?>> holders = componentRegistry.getComponentHolders();
+        for ( ComponentHolder<?> holder: holders )
+        {
+            if ( holder.getComponentMetadata().getName().equals(componentName) )
+            {
+                final List<? extends ComponentManager<?>> components = holder.getComponents();
+                for ( ComponentManager<?> component: components )
+                {
+                    list.add( new ComponentWrapper((AbstractComponentManager<?>)component) );
+                }
+            }
+        }
+
+        return ( list.isEmpty() ) ? null : list.toArray( new Component[list.size()] );
+    }
+
+
+    private static final class ComponentWrapper implements Component
+    {
+        private final AbstractComponentManager<?> mgr;
+
+        public ComponentWrapper(final AbstractComponentManager<?> mgr)
+        {
+            this.mgr = mgr;
+        }
+
+        public long getId()
+        {
+            return mgr.getId();
+        }
+
+        public String getName()
+        {
+            return mgr.getComponentMetadata().getName();
+        }
+
+        public int getState()
+        {
+            return mgr.getState();
+        }
+
+        public Bundle getBundle()
+        {
+            return mgr.getBundle();
+        }
+
+        public String getFactory()
+        {
+            return mgr.getComponentMetadata().getFactoryIdentifier();
+        }
+
+        public boolean isServiceFactory()
+        {
+            return mgr.getComponentMetadata().isFactory();
+        }
+
+        public String getClassName()
+        {
+            return mgr.getComponentMetadata().getImplementationClassName();
+        }
+
+        public boolean isDefaultEnabled()
+        {
+            return mgr.getComponentMetadata().isEnabled();
+        }
+
+        public boolean isImmediate()
+        {
+            return mgr.getComponentMetadata().isImmediate();
+        }
+
+        public String[] getServices()
+        {
+            if ( mgr.getComponentMetadata().getServiceMetadata() != null )
+            {
+                return mgr.getComponentMetadata().getServiceMetadata().getProvides();
+            }
+
+            return null;
+        }
+
+        public Dictionary getProperties()
+        {
+            return new Hashtable<String, Object>(mgr.getComponentMetadata().getProperties());
+        }
+
+        public Reference[] getReferences()
+        {
+            final List<? extends ReferenceManager<?, ?>> refs = mgr.getReferenceManagers();
+            if ( refs != null && refs.size() > 0 )
+            {
+                final List<Reference> list = new ArrayList<Reference>();
+                for(final ReferenceManager<?, ?> rm : refs)
+                {
+                    list.add(new ReferenceWrapper(rm));
+                }
+                return list.toArray(
+                        new Reference[list.size()] );
+            }
+
+            return null;
+        }
+
+        public ComponentInstance getComponentInstance()
+        {
+            if ( mgr instanceof SingleComponentManager<?> )
+            {
+                return ((SingleComponentManager<?>)mgr).getComponentInstance();
+            }
+
+            return null;
+        }
+
+        public String getActivate()
+        {
+            return mgr.getComponentMetadata().getActivate();
+        }
+
+        public boolean isActivateDeclared()
+        {
+            return mgr.getComponentMetadata().isActivateDeclared();
+        }
+
+        public String getDeactivate()
+        {
+            return mgr.getComponentMetadata().getDeactivate();
+        }
+
+        public boolean isDeactivateDeclared()
+        {
+            return mgr.getComponentMetadata().isDeactivateDeclared();
+        }
+
+        public String getModified()
+        {
+            return mgr.getComponentMetadata().getModified();
+        }
+
+        public String getConfigurationPolicy()
+        {
+            return mgr.getComponentMetadata().getConfigurationPolicy();
+        }
+
+        public String getConfigurationPid()
+        {
+            final List<String> pids = mgr.getComponentMetadata().getConfigurationPid();
+            if ( pids != null && pids.size() > 0 )
+            {
+                return pids.get(0);
+            }
+            return null;
+        }
+
+        public boolean isConfigurationPidDeclared()
+        {
+            return mgr.getComponentMetadata().isConfigurationPidDeclared();
+        }
+
+        public void enable()
+        {
+            mgr.enable(false);
+        }
+
+        public void disable()
+        {
+            mgr.disable(false);
+        }
+    }
+
+    private static final class ReferenceWrapper implements Reference
+    {
+        private final ReferenceManager<?, ?> mgr;
+
+        public ReferenceWrapper(final ReferenceManager<?, ?> mgr)
+        {
+            this.mgr = mgr;
+        }
+
+        public String getName()
+        {
+            return mgr.getReferenceMetadata().getName();
+        }
+
+        public String getServiceName()
+        {
+            return mgr.getReferenceMetadata().getInterface();
+        }
+
+        public ServiceReference[] getServiceReferences()
+        {
+            final List<ServiceReference<?>> refs = this.mgr.getServiceReferences();
+            return refs.toArray(new ServiceReference<?>[refs.size()]);
+        }
+
+        public ServiceReference<?>[] getBoundServiceReferences()
+        {
+            final List<ServiceReference<?>> refs = this.mgr.getServiceReferences();
+            return refs.toArray(new ServiceReference<?>[refs.size()]);
+        }
+
+        public boolean isSatisfied()
+        {
+            return mgr.isSatisfied();
+        }
+
+        public boolean isOptional()
+        {
+            return this.mgr.getReferenceMetadata().isOptional();
+        }
+
+        public boolean isMultiple()
+        {
+            return this.mgr.getReferenceMetadata().isMultiple();
+        }
+
+        public boolean isStatic()
+        {
+            return this.mgr.getReferenceMetadata().isStatic();
+        }
+
+        public boolean isReluctant()
+        {
+            return this.mgr.getReferenceMetadata().isReluctant();
+        }
+
+        public String getTarget()
+        {
+            return this.mgr.getTarget();
+        }
+
+        public String getBindMethodName()
+        {
+            return this.mgr.getReferenceMetadata().getBind();
+        }
+
+        public String getUnbindMethodName()
+        {
+            return this.mgr.getReferenceMetadata().getUnbind();
+        }
+
+        public String getUpdatedMethodName()
+        {
+            return this.mgr.getReferenceMetadata().getUpdated();
+        }
+
+    }
 }

@@ -20,6 +20,7 @@ package org.apache.felix.scr.impl.config;
 
 import java.util.List;
 
+import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.osgi.framework.ServiceReference;
 
 public interface ReferenceManager<S, T> {
@@ -47,4 +48,5 @@ public interface ReferenceManager<S, T> {
 
     boolean isSatisfied();
 
+    ReferenceMetadata getReferenceMetadata();
 }
