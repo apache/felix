@@ -18,6 +18,9 @@
  */
 package org.apache.felix.scr.integration;
 
+import static org.ops4j.pax.tinybundles.core.TinyBundles.bundle;
+import static org.ops4j.pax.tinybundles.core.TinyBundles.withBnd;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -25,7 +28,9 @@ import java.util.concurrent.CountDownLatch;
 
 import javax.inject.Inject;
 
+import junit.framework.Assert;
 import junit.framework.TestCase;
+
 import org.apache.felix.scr.integration.components.felix4188.Felix4188Component;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,10 +39,9 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
-
-import static org.ops4j.pax.tinybundles.core.TinyBundles.bundle;
-import static org.ops4j.pax.tinybundles.core.TinyBundles.withBnd;
 
 /**
  * This test validates the FELIX-4188 issue.
@@ -70,11 +74,11 @@ public class Felix4188Test extends ComponentTestBase
 
         final ComponentConfigurationDTO aComp1 =
                 findComponentConfigurationByName( bundle1, "org.apache.felix.scr.integration.components.Felix4188Component-1", ComponentConfigurationDTO.SATISFIED);
-        final Object aInst1 = getServiceFromConfiguration(aComp1, Felix4188Component.class);
+        final Object aInst1 = getServiceFromConfigurationInAllClassSpaces(aComp1, Felix4188Component.class.getName());
 
         final ComponentConfigurationDTO aComp2 =
                 findComponentConfigurationByName( bundle2, "org.apache.felix.scr.integration.components.Felix4188Component-2", ComponentConfigurationDTO.SATISFIED);
-        final Object aInst2 = getServiceFromConfiguration(aComp2, Felix4188Component.class);
+        final Object aInst2 = getServiceFromConfigurationInAllClassSpaces(aComp2, Felix4188Component.class.getName());
 
         final CountDownLatch latch = new CountDownLatch(1);
 
@@ -111,6 +115,23 @@ public class Felix4188Test extends ComponentTestBase
         field.setAccessible(true);
         return field.get(instance);
     }
+
+    // Note that this test installs two bundles both with the same class in it.
+    // This causes multiple class spaces to be created by the framework.
+    private Object getServiceFromConfigurationInAllClassSpaces( ComponentConfigurationDTO dto, String clazz ) throws InvalidSyntaxException
+    {
+        long id = dto.id;
+        String filter = "(component.id=" + id + ")";
+        ServiceReference<?>[] srs;
+
+        srs = bundleContext.getAllServiceReferences(clazz, filter);
+        Assert.assertEquals(1, srs.length);
+        ServiceReference<?> sr = srs[0];
+        Object s = bundleContext.getService(sr);
+        Assert.assertNotNull(s);
+        return s;
+    }
+
 
     protected Bundle installBundle( final String descriptorFile, String componentPackage, String symbolicname ) throws BundleException
     {
