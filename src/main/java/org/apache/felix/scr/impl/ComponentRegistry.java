@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.felix.scr.ScrService;
 import org.apache.felix.scr.impl.config.ComponentHolder;
 import org.apache.felix.scr.impl.config.ConfigurableComponentHolder;
 import org.apache.felix.scr.impl.config.ConfigurationSupport;
@@ -49,9 +48,7 @@ import org.osgi.service.log.LogService;
 
 /**
  * The <code>ComponentRegistry</code> class acts as the global registry for
- * components by name and by component ID. As such the component registry also
- * registers itself as the {@link ScrService} to support access to the
- * registered components.
+ * components by name and by component ID.
  */
 public class ComponentRegistry implements ServiceListener
 {
