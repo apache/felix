@@ -27,9 +27,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.felix.scr.ScrService;
 import org.apache.felix.scr.impl.config.ComponentHolder;
-import org.apache.felix.scr.impl.config.ConfigurationSupport;
 import org.apache.felix.scr.impl.config.ConfigurableComponentHolder;
+import org.apache.felix.scr.impl.config.ConfigurationSupport;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.apache.felix.scr.impl.manager.DependencyManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
@@ -40,7 +41,6 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentException;
@@ -121,7 +121,7 @@ public class ComponentRegistry implements ServiceListener
 
     private final Map<ServiceReference<?>, List<Entry<?, ?>>> m_missingDependencies = new HashMap<ServiceReference<?>, List<Entry<?, ?>>>( );
 
-    protected ComponentRegistry( BundleContext context )
+    protected ComponentRegistry( final BundleContext context )
     {
         m_bundleContext = context;
         m_componentHoldersByName = new HashMap<ComponentRegistryKey, ComponentHolder<?>>();
@@ -144,9 +144,7 @@ public class ComponentRegistry implements ServiceListener
         {
             getOrCreateConfigurationSupport();
         }
-
     }
-
 
     public void dispose()
     {
@@ -157,8 +155,8 @@ public class ComponentRegistry implements ServiceListener
             configurationSupport.dispose();
             configurationSupport = null;
         }
-
     }
+
 
 
     //---------- ComponentManager registration by component Id
@@ -278,7 +276,7 @@ public class ComponentRegistry implements ServiceListener
      */
     final void registerComponentHolder( final ComponentRegistryKey key, ComponentHolder<?> componentHolder )
     {
-        Activator.log(LogService.LOG_DEBUG, null, 
+        Activator.log(LogService.LOG_DEBUG, null,
                 "Registering component with pid {0} for bundle {1}",
                 new Object[] {componentHolder.getComponentMetadata().getConfigurationPid(), key.getBundleId()},
                 null);
@@ -314,7 +312,7 @@ public class ComponentRegistry implements ServiceListener
                 set.add( componentHolder );
             }
         }
-        
+
         if (configurationSupport != null)
         {
             configurationSupport.configureComponentHolder(componentHolder);
@@ -362,6 +360,18 @@ public class ComponentRegistry implements ServiceListener
         return componentHoldersUsingPid;
     }
 
+    /**
+     * We only need this for the ScrService implementation
+     * @param componentId
+     * @return
+     */
+    public final AbstractComponentManager<?> getComponentManagerById(final long componentId)
+    {
+        synchronized ( m_componentsById )
+        {
+            return m_componentsById.get( componentId );
+        }
+    }
     /**
      * Returns an array of all values currently stored in the component holders
      * map. The entries in the array are either String types for component
@@ -428,7 +438,7 @@ public class ComponentRegistry implements ServiceListener
         }
 
         if (component != null) {
-            Activator.log(LogService.LOG_DEBUG, null, 
+            Activator.log(LogService.LOG_DEBUG, null,
                     "Unregistering component with pid {0} for bundle {1}",
                     new Object[] {component.getComponentMetadata().getConfigurationPid(), key.getBundleId()}, null);
             synchronized (m_componentHoldersByPid)
@@ -623,5 +633,4 @@ public class ComponentRegistry implements ServiceListener
             return trackingCount;
         }
     }
-
 }

@@ -76,8 +76,8 @@ public class Activator extends AbstractExtender
 
     //  thread acting upon configurations
     private ComponentActorThread m_componentActor;
-    
-    private ServiceRegistration<ServiceComponentRuntime> m_runtime_reg;
+
+    private ServiceRegistration<?> m_runtime_reg;
 
     private ScrCommand m_scrCommand;
 
@@ -93,6 +93,7 @@ public class Activator extends AbstractExtender
      * @param context The <code>BundleContext</code> of the SCR implementation
      *      bundle.
      */
+    @Override
     public void start( BundleContext context ) throws Exception
     {
         m_context = context;
@@ -103,7 +104,7 @@ public class Activator extends AbstractExtender
         // get the configuration
         m_configuration.start( m_context ); //this will call restart, which calls super.start.
     }
-    
+
     public void restart( boolean globalExtender )
     {
         BundleContext context;
@@ -137,16 +138,19 @@ public class Activator extends AbstractExtender
         {
             log( LogService.LOG_ERROR, m_bundle, "Exception starting during restart", e );
         }
-        
+
     }
 
+    @Override
     protected void doStart() throws Exception {
 
         // prepare component registry
         m_componentBundles = new HashMap<Long, BundleComponentActivator>();
         m_componentRegistry = new ComponentRegistry( m_context );
+
         ServiceComponentRuntime runtime = new ServiceComponentRuntimeImpl(m_context, m_componentRegistry);
-        m_runtime_reg = m_context.registerService(ServiceComponentRuntime.class, runtime, null);
+        m_runtime_reg = m_context.registerService(new String[] {ServiceComponentRuntime.class.getName()},
+                runtime, null);
 
         // log SCR startup
         log( LogService.LOG_INFO, m_bundle, " Version = {0}",
@@ -163,7 +167,8 @@ public class Activator extends AbstractExtender
         m_scrCommand = ScrCommand.register(m_context, runtime, m_configuration);
         m_configuration.setScrCommand( m_scrCommand );
     }
-    
+
+    @Override
     public void stop(BundleContext context) throws Exception
     {
         super.stop(context);
@@ -177,6 +182,7 @@ public class Activator extends AbstractExtender
      * which have been registered during the active life time of the SCR
      * implementation bundle.
      */
+    @Override
     public void doStop() throws Exception
     {
         // stop tracking
@@ -193,7 +199,11 @@ public class Activator extends AbstractExtender
 			m_runtime_reg = null;
 		}
 		// dispose component registry
-        m_componentRegistry.dispose();
+    	if ( m_componentRegistry != null )
+    	{
+    	    m_componentRegistry.dispose();
+    	    m_componentRegistry = null;
+    	}
 
         // terminate the actor thread
         if ( m_componentActor != null )
