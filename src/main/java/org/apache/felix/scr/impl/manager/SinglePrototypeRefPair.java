@@ -20,8 +20,6 @@
 
 package org.apache.felix.scr.impl.manager;
 
-import java.util.concurrent.atomic.AtomicReference;
-
 import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceObjects;
@@ -29,12 +27,12 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
 
 /**
- * @version $Rev:$ $Date:$
+ * @version $Rev$ $Date$
  */
 public class SinglePrototypeRefPair<S, T> extends SingleRefPair<S, T>
 {
     private final ServiceObjects<T> serviceObjects;
-    
+
     public SinglePrototypeRefPair( BundleContext context, ServiceReference<T> ref )
     {
         super(ref);

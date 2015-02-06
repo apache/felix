@@ -593,7 +593,7 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
                     break;
 
                 case serviceObjects:
-                    result[i++] = bp.getComponentContext().getComponentServiceObjectsHelper().getServiceObjects(refPair.getRef());
+                    result[i++] = ((ComponentServiceObjectsHelper)bp.getComponentContext().getComponentServiceObjectsHelper()).getServiceObjects(refPair.getRef());
                     break;
 
                 case map:

@@ -20,7 +20,7 @@ package org.apache.felix.scr.impl;
 
 import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.util.StringTokenizer;
+
 import org.apache.felix.shell.Command;
 
 /**
@@ -68,7 +68,7 @@ class ScrShellCommand implements Command
         // Try to get the OBR command, default is HELP command.
         String command = st.length > 1? st[1]: HELP_CMD;
         String arg = (st.length > 2) ? st[2] : null;
-        
+
         // Perform the specified command.
         if (command.equals(HELP_CMD))
         {
