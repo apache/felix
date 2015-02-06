@@ -20,10 +20,8 @@
 
 package org.apache.felix.scr.impl.manager;
 
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.osgi.framework.BundleContext;
@@ -32,19 +30,19 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
 
 /**
- * @version $Rev:$ $Date:$
+ * @version $Rev$ $Date$
  */
 public class MultiplePrototypeRefPair<S, T> extends RefPair<S, T>
 {
     private final ServiceObjects<T> serviceObjects;
     private final ConcurrentMap<ComponentContextImpl<S>, T> instances = new ConcurrentHashMap<ComponentContextImpl<S>, T>();
-    
+
     public MultiplePrototypeRefPair( BundleContext context, ServiceReference<T> ref )
     {
         super(ref);
         this.serviceObjects = context.getServiceObjects(ref);
     }
-    
+
     @Override
     public Object getServiceObjects()
     {
