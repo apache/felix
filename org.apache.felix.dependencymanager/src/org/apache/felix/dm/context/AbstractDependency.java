@@ -136,7 +136,6 @@ public abstract class AbstractDependency<T extends Dependency> implements
      * @param prototype all the fields of the prototype will be copied to this dependency.
      */
     public AbstractDependency(AbstractDependency<T> prototype) {
-        m_component = prototype.m_component;
         m_instanceBound = prototype.m_instanceBound;
         m_required = prototype.m_required;
         m_add = prototype.m_add;
@@ -149,6 +148,11 @@ public abstract class AbstractDependency<T extends Dependency> implements
         m_propagate = prototype.m_propagate;
         m_propagateCallbackInstance = prototype.m_propagateCallbackInstance;
         m_propagateCallbackMethod = prototype.m_propagateCallbackMethod;
+    }
+    
+    @Override
+    public String toString() {
+        return new StringBuilder(getType()).append(" dependency [").append(getName()).append("]").toString();
     }
 
     // ----------------------- Dependency interface -----------------------------
@@ -530,7 +534,7 @@ public abstract class AbstractDependency<T extends Dependency> implements
      * Returns the component implementation context
      * @return the component implementation context
      */
-    protected ComponentContext getComponentContext() {
+    public ComponentContext getComponentContext() {
         return m_component;
     }
 

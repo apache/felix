@@ -127,10 +127,6 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 		return this;
 	}
 		
-    public String toString() {
-    	return "ConfigurationDependency[" + m_pid + "]";
-    }
-    
     @Override
     public String getSimpleName() {
         return m_pid;

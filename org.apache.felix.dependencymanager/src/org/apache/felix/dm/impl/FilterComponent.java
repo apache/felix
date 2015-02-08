@@ -65,6 +65,11 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     public FilterComponent(Component service) {
         m_component = (ComponentImpl) service;
     }
+    
+    @Override
+    public String toString() {
+        return m_component.toString();
+    }
 
     public Component add(Dependency ... dependencies) {
         m_component.add(dependencies);

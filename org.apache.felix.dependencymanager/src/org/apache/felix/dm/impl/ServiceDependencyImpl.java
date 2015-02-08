@@ -32,7 +32,6 @@ import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentDeclaration;
 import org.apache.felix.dm.ServiceDependency;
 import org.apache.felix.dm.context.AbstractDependency;
-import org.apache.felix.dm.context.ComponentContext;
 import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
 import org.apache.felix.dm.context.EventType;
@@ -307,11 +306,6 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
     }
     
     @Override
-    public String toString() {
-        return "ServiceDependency[" + m_trackedServiceName + " " + m_trackedServiceFilterUnmodified + "]";
-    }
-
-    @Override
     public String getName() {
         StringBuilder sb = new StringBuilder();
         if (m_trackedServiceName != null) {
@@ -554,8 +548,4 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
 			removedService(reference, service);
 		}
 	}	
-	
-    public ComponentContext getComponentContext() {
-        return m_component;
-    }
 }

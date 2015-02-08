@@ -38,6 +38,11 @@ public interface DependencyContext extends Dependency {
     public void setComponentContext(ComponentContext component);
     
     /**
+     * Returns the Component implementation context associated to this Dependency context.
+     */
+    public ComponentContext getComponentContext();
+    
+    /**
      * The Component implementation asks this dependency to invoke a component dependency callback.
      * 
      * @param type the type of the callback to invoke (add/change/remove/swap ...)

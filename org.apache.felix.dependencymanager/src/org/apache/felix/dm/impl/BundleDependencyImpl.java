@@ -83,7 +83,7 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
         m_tracker = null;
         super.stop();
     }
-
+    
     @Override
     public String getName() {
         StringBuilder sb = new StringBuilder();

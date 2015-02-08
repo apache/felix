@@ -234,7 +234,7 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
             throw new IllegalStateException("cannot find resource");
         }
     }
-
+    
     @Override
     public String getName() {
         StringBuilder sb = new StringBuilder();
