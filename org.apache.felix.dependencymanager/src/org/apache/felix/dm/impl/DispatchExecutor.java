@@ -33,7 +33,7 @@ import org.osgi.service.log.LogService;
  * <p>
  * 
  * This class also supports synchronous scheduling, like the @link {@link SerialExecutor} class; and in this case,
- * only one caller threads will execute the tasks scheduled in the DispatchQueue, and in this case the internal 
+ * only one caller thread will execute the tasks scheduled in the DispatchQueue (and the internal 
  * threadpool won't be used).
  * 
  * <p> 
