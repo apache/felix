@@ -1,0 +1,7 @@
+# Migrating from earlier versions
+
+DependencyManager 4.0 has some API changes that need to be taken into account when migrating from DependencyManager 3. 
+
+* A dependency can no longer be shared accross components. 
+* You no longer have to call setInstanceBound() when adding a dependency from within the init() method of a component. Therefore the method ServiceDependency.setInstanceBound() has been removed.
+* The DependencyManager 4 Shell commands are no longer available for framework specific shell implementations, and support the gogo shell only.
