@@ -163,7 +163,7 @@ public class BundleComponentActivator implements Logger
 
 
     /**
-     * Called outside the constructor so that the m_managers field is completely initialized.  
+     * Called outside the constructor so that the m_managers field is completely initialized.
      * A component might possibly start a thread to enable other components, which could access m_managers
      */
     void initialEnable()
@@ -179,7 +179,28 @@ public class BundleComponentActivator implements Logger
                 log( LogService.LOG_DEBUG, "BundleComponentActivator : Bundle [{0}] Enabling component holder {1}",
                         new Object[] {m_bundle.getBundleId(), componentHolder.getComponentMetadata().getName()}, null, null, null );
 
-                componentHolder.enableComponents( false );
+                try
+                {
+                    componentHolder.enableComponents( false );
+                }
+                catch ( Throwable t )
+                {
+                    // caught on unhandled RuntimeException or Error
+                    // (e.g. ClassDefNotFoundError)
+
+                    // make sure the component is properly disabled, just in case
+                    try
+                    {
+                        componentHolder.disableComponents( false );
+                    }
+                    catch ( Throwable ignore )
+                    {
+                    }
+
+                    log( LogService.LOG_ERROR,
+                        "BundleComponentActivator : Bundle [{0}] Unexpected failure enabling component holder {1}",
+                        new Object[] { m_bundle.getBundleId(), componentHolder.getComponentMetadata().getName() }, null, null, t );
+                }
             }
             else
             {
@@ -361,7 +382,7 @@ public class BundleComponentActivator implements Logger
             m_logService.close();
             m_closeLatch.countDown();
         }
-        else 
+        else
         {
             try
             {
