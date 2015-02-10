@@ -69,7 +69,7 @@ class InfoProvider implements BundleInfoProvider
         final List<ComponentDescriptionDTO> descriptions = new ArrayList<ComponentDescriptionDTO>();
         final List<ComponentConfigurationDTO> configurations = new ArrayList<ComponentConfigurationDTO>();
 
-        final Collection<ComponentDescriptionDTO> descs = scrService.getComponentDescriptionDTOs();
+        final Collection<ComponentDescriptionDTO> descs = scrService.getComponentDescriptionDTOs(bundle);
         for(final ComponentDescriptionDTO d : descs)
         {
             for(final ComponentConfigurationDTO cfg : scrService.getComponentConfigurationDTOs(d))
