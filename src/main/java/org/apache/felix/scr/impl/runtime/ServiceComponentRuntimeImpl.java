@@ -474,7 +474,16 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime, Scr
 
         public int getState()
         {
-            return mgr.getState();
+            final int s = mgr.getState();
+            switch ( s )
+            {
+                case ComponentManager.STATE_DISPOSED : return Component.STATE_DISPOSED;
+                case ComponentManager.STATE_DISABLED : return Component.STATE_DISABLED;
+                case ComponentManager.STATE_UNSATISFIED_REFERENCE : return Component.STATE_UNSATISFIED;
+                case ComponentManager.STATE_ACTIVE : return Component.STATE_ACTIVE;
+                default: // satisfied
+                    return Component.STATE_ENABLED;
+            }
         }
 
         public Bundle getBundle()
