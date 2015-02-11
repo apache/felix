@@ -644,7 +644,8 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
             {
                 if ( isSatisfied() )
                 {
-                    if ( m_factoryPidIndex == null || m_componentMetadata.isObsoleteFactoryComponentFactory())
+                    if ( m_factoryPidIndex == null ||
+                            (m_componentMetadata.isObsoleteFactoryComponentFactory() && !m_componentMetadata.isConfigurationRequired()))
                     {
                         m_singleComponent = createComponentManager(false);
                         cms.add( m_singleComponent );

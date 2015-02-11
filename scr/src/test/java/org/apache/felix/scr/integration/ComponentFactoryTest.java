@@ -143,6 +143,19 @@ public class ComponentFactoryTest extends ComponentTestBase
     }
 
     @Test
+    public void test_component_factory_require_configuration_obsolete() throws Exception
+    {
+        final String componentname = "factory.component.configuration.obsolete";
+
+        TestCase.assertNull(SimpleComponent.INSTANCE);
+
+        createFactoryConfiguration(componentname);
+        delay();
+        getConfigurationsDisabledThenEnable(componentname, 1, ComponentConfigurationDTO.ACTIVE);
+        TestCase.assertEquals(PROP_NAME, SimpleComponent.INSTANCE.getProperty(PROP_NAME));
+    }
+
+    @Test
     public void test_component_factory_optional_configuration() throws Exception
     {
         final String componentname = "factory.component.configuration.optional";
