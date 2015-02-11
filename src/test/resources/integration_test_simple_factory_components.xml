@@ -36,6 +36,15 @@
         <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
     </scr:component>
     
+    <scr:component name="factory.component.configuration.obsolete"
+        enabled="false"
+        configuration-policy="require"
+        xmlns:felix="http://felix.apache.org/xmlns/scr/extensions/v1.0.0"
+        felix:obsoleteFactoryComponentFactory="true" >
+        <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
+        <property name="foo">bar</property>
+    </scr:component>
+
     <scr:component name="factory.component.configuration.optional"
         enabled="false"
         configuration-policy="optional"
