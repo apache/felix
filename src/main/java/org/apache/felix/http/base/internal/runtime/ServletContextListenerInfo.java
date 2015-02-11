@@ -21,6 +21,7 @@ package org.apache.felix.http.base.internal.runtime;
 import javax.servlet.ServletContextListener;
 
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 /**
  * Info object for registered servlet context listeners
@@ -29,8 +30,17 @@ import org.osgi.framework.ServiceReference;
  */
 public final class ServletContextListenerInfo extends WhiteboardServiceInfo<ServletContextListener>
 {
+    private final String enabled;
+
     public ServletContextListenerInfo(final ServiceReference<ServletContextListener> ref)
     {
         super(ref);
+        this.enabled = this.getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER);
+    }
+
+    @Override
+    public boolean isValid()
+    {
+        return super.isValid() && "true".equalsIgnoreCase(this.enabled);
     }
 }

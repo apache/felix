@@ -29,7 +29,9 @@ public final class ServletConfigImpl implements ServletConfig
     private final ServletContext context;
     private final Map<String, String> initParams;
 
-    public ServletConfigImpl(final String name, final ServletContext context, final Map<String, String> initParams)
+    public ServletConfigImpl(final String name,
+            final ServletContext context,
+            final Map<String, String> initParams)
     {
         this.name = name;
         this.context = context;
