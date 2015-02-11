@@ -280,7 +280,7 @@ public class XmlHandler implements KXml2SAXHandler
                     m_currentComponent.setConfigurableServiceProperties("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, CONFIGURABLE_SERVICE_PROPERTIES)));
                     m_currentComponent.setPersistentFactoryComponent("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, PERSISTENT_FACTORY_COMPONENT)));
                     m_currentComponent.setDeleteCallsModify("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, DELETE_CALLS_MODIFY)));
-                    if ( attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS) != null)
+                    if ( attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, OBSOLETE_FACTORY_COMPONENT_FACTORY) != null)
                     {
                         m_currentComponent.setObsoleteFactoryComponentFactory("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, OBSOLETE_FACTORY_COMPONENT_FACTORY)));
                     }
