@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2014). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2015). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.osgi.annotation.versioning.ConsumerType;
 import org.osgi.framework.Bundle;
+import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 /**
  * Helper service for a servlet context used by a Http Whiteboard implementation
@@ -36,32 +37,33 @@ import org.osgi.framework.Bundle;
  * 
  * <p>
  * Each {@code ServletContextHelper} is registered with a
- * {@link org.osgi.service.http.whiteboard.HttpWhiteboardConstants#HTTP_WHITEBOARD_CONTEXT_NAME
- * service property} containing a name to reference by servlets, servlet
- * filters, resources, and listeners. If there is more than one
- * {@code ServletContextHelper} registered with the same context name, the one
- * with the highest service ranking is active, the others are inactive.
+ * {@link HttpWhiteboardConstants#HTTP_WHITEBOARD_CONTEXT_NAME service property}
+ * containing a name to reference by servlets, servlet filters, resources, and
+ * listeners. If there is more than one {@code ServletContextHelper} registered
+ * with the same context name, the one with the highest service ranking is
+ * active, the others are inactive.
  * 
  * <p>
  * A context is registered with the
- * {@link org.osgi.service.http.whiteboard.HttpWhiteboardConstants#HTTP_WHITEBOARD_CONTEXT_PATH
- * service property} to define a path under which all services registered with this context are 
- * reachable. If there is more than one {@code ServletContextHelper} registered with the same 
- * path, each duplicate context path is searched by service ranking order according to 
- * {@link org.osgi.framework.ServiceReference#compareTo(Object)} until a matching servlet or 
- * resource is found.
+ * {@link HttpWhiteboardConstants#HTTP_WHITEBOARD_CONTEXT_PATH service property}
+ * to define a path under which all services registered with this context are
+ * reachable. If there is more than one {@code ServletContextHelper} registered
+ * with the same path, each duplicate context path is searched by service
+ * ranking order according to
+ * {@link org.osgi.framework.ServiceReference#compareTo(Object)} until a
+ * matching servlet or resource is found.
  * 
  * <p>
  * Servlets, servlet filters, resources, and listeners services may be
- * {@link org.osgi.service.http.whiteboard.HttpWhiteboardConstants#HTTP_WHITEBOARD_CONTEXT_SELECT
- * associated} with a {@code ServletContextHelper} service. If the referenced
+ * {@link HttpWhiteboardConstants#HTTP_WHITEBOARD_CONTEXT_SELECT associated}
+ * with a {@code ServletContextHelper} service. If the referenced
  * {@code ServletContextHelper} service does not exist or is currently not
  * active, the whiteboard services for that {@code ServletContextHelper} are not
  * active either.
  * 
  * <p>
  * If no {@code ServletContextHelper} service is associated, that is no
- * {@link org.osgi.service.http.whiteboard.HttpWhiteboardConstants#HTTP_WHITEBOARD_CONTEXT_SELECT
+ * {@link HttpWhiteboardConstants#HTTP_WHITEBOARD_CONTEXT_SELECT
  * HTTP_WHITEBOARD_CONTEXT_SELECT} is configured for a whiteboard service, a
  * default {@code ServletContextHelper} is used.
  * 
@@ -80,10 +82,10 @@ import org.osgi.framework.Bundle;
  * <li>{@code handleSecurity} - Performs implementation-defined authentication
  * on the request.</li>
  * <li>{@code getResource} - Assumes the named resource is in the bundle of the
- * whiteboard service. This method calls the whiteboard service bundle's
- * {@code Bundle.getEntry} method, and returns the appropriate URL to access the
- * resource. On a Java runtime environment that supports permissions, the Http
- * Whiteboard Implementation needs to be granted
+ * whiteboard service, addressed from the root. This method calls the whiteboard
+ * service bundle's {@code Bundle.getEntry} method, and returns the appropriate
+ * URL to access the resource. On a Java runtime environment that supports
+ * permissions, the Http Whiteboard Implementation needs to be granted
  * {@code org.osgi.framework.AdminPermission[*,RESOURCE]}.</li>
  * <li>{@code getResourcePaths} - Assumes that the resources are in the bundle
  * of the whiteboard service. This method calls {@code Bundle.findEntries}
@@ -95,8 +97,8 @@ import org.osgi.framework.Bundle;
  * 
  * @ThreadSafe
  * @author $Id$
- * @see org.osgi.service.http.whiteboard.HttpWhiteboardConstants#HTTP_WHITEBOARD_CONTEXT_NAME
- * @see org.osgi.service.http.whiteboard.HttpWhiteboardConstants#HTTP_WHITEBOARD_CONTEXT_PATH
+ * @see HttpWhiteboardConstants#HTTP_WHITEBOARD_CONTEXT_NAME
+ * @see HttpWhiteboardConstants#HTTP_WHITEBOARD_CONTEXT_PATH
  */
 @ConsumerType
 public abstract class ServletContextHelper {
