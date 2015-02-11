@@ -1,9 +1,6 @@
 Bundle-Category: osgi
-Bundle-SymbolicName: ${project.artifactId}
-Bundle-Vendor: The Apache Software Foundation
 Bundle-DocURL: http://felix.apache.org/site/apache-felix-service-component-runtime.html
 Bundle-Activator: org.apache.felix.scr.impl.Activator
-Bundle-Version: ${project.version}
 
 Provide-Capability: osgi.extender;\
                    osgi.extender="osgi.component";\
@@ -11,11 +8,11 @@ Provide-Capability: osgi.extender;\
                    version:Version="1.3"
                    
 
-Export-Package: org.apache.felix.scr;version=1.8.1, \
- org.apache.felix.scr.component;version=1.1.0, \
- org.osgi.service.component;version=1.3;-split-package:=first, \
- org.osgi.service.component.runtime;version=1.3, \
- org.osgi.service.component.runtime.dto;version=1.3, \
+Export-Package: org.apache.felix.scr;version=1.8.1;provide:=true,, \
+ org.apache.felix.scr.component;version=1.1.0;provide:=true,, \
+ org.osgi.service.component;version=1.3;-split-package:=first;provide:=true,, \
+ org.osgi.service.component.runtime;version=1.3;provide:=true,, \
+ org.osgi.service.component.runtime.dto;version=1.3;provide:=true,, \
  org.osgi.dto;version=1.0, \
  org.osgi.framework.dto;version=1.8, \
  org.osgi.util.function;version=1.0, \
@@ -29,9 +26,9 @@ Private-Package: org.apache.felix.scr.impl.*, \
 #  Metatype import is optional and dynamic, but allow eager wiring by importing it
 # optional import for Gogo annotations 
 # The Felix Shell support is optional 
-# Framework version 1.7 (from R5) is required
+# Framework version 1.6 (from R4.3) is required
 # While the DS spec is based on R6 (because of prototype scope), this
-# implementation works on R5 as well; of course prototype scope is
+# implementation works on R4.3 as well; of course prototype scope is
 # not supported in that case.
 # LogService is optional but if present the R4.0 version 1.3 is sufficient.
 # PackageAdmin is used to find reference types if the component's bundle does not import it.
@@ -41,14 +38,9 @@ Import-Package: \
  org.osgi.service.metatype;version="[1.1,2)";resolution:=optional, \
  org.apache.felix.service.command;resolution:=optional, \
  org.apache.felix.shell;provide:=true;resolution:=optional, \
- org.osgi.framework;version="[1.7,2)", \
+ org.osgi.framework;version="[1.6,2)", \
  org.osgi.service.log;version="[1.3,2)";resolution:=optional, \
  org.osgi.service.packageadmin;version="[1.2,2)";resolution:=optional, \
- org.apache.felix.scr;provide:=true, \
- org.apache.felix.scr.component;provide:=true, \
- org.osgi.service.component;provide:=true, \
- org.osgi.service.component.runtime;provide:=true, \
- org.osgi.service.component.runtime.dto;provide:=true, \
  *
 
 DynamicImport-Package: \
