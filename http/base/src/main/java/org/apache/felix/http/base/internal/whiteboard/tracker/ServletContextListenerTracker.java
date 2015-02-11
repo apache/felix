@@ -24,20 +24,19 @@ import org.apache.felix.http.base.internal.whiteboard.ServletContextHelperManage
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 public final class ServletContextListenerTracker extends AbstractReferenceTracker<ServletContextListener>
 {
-
-    /** TODO Currently under discussion. */
-    private static final String OPT_IN_PROP = "osgi.http.whiteboard.listener";
 
     private static org.osgi.framework.Filter createFilter(final BundleContext btx)
     {
         try
         {
-            return btx.createFilter(String.format("(&(objectClass=%s)(%s=*))",
+            return btx.createFilter(String.format("(&(objectClass=%s)(%s=*)(!(%s~=false)))",
                     ServletContextListener.class.getName(),
-                    OPT_IN_PROP));
+                    HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER,
+                    HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER));
         }
         catch ( final InvalidSyntaxException ise)
         {

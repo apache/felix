@@ -439,15 +439,20 @@ public final class Dispatcher implements RequestDispatcherProvider
         }
 
         @Override
+        public HttpSession getSession() {
+            return this.getSession(true);
+        }
+
+        @Override
         public HttpSession getSession(boolean create)
         {
             // FELIX-2797: wrap the original HttpSession to provide access to the correct ServletContext...
-            HttpSession session = super.getSession(create);
+            final HttpSession session = super.getSession(create);
             if (session == null)
             {
                 return null;
             }
-            return new HttpSessionWrapper(session, this.servletContext);
+            return new HttpSessionWrapper(this.contextId, session, this.servletContext);
         }
 
         @Override
