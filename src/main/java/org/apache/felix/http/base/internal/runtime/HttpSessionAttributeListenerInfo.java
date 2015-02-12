@@ -18,19 +18,18 @@
  */
 package org.apache.felix.http.base.internal.runtime;
 
-import javax.servlet.ServletContextAttributeListener;
+import javax.servlet.http.HttpSessionAttributeListener;
 
 import org.osgi.framework.ServiceReference;
 
 /**
- * Info object for registered servlet context attribute listeners
+ * Info object for registered servlet context listeners
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public final class ServletContextAttributeListenerInfo extends ListenerInfo<ServletContextAttributeListener>
+public final class HttpSessionAttributeListenerInfo extends ListenerInfo<HttpSessionAttributeListener>
 {
-
-    public ServletContextAttributeListenerInfo(final ServiceReference<ServletContextAttributeListener> ref)
+    public HttpSessionAttributeListenerInfo(final ServiceReference<HttpSessionAttributeListener> ref)
     {
         super(ref);
     }

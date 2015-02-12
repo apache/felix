@@ -31,9 +31,12 @@ import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ResourceInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.whiteboard.tracker.FilterTracker;
+import org.apache.felix.http.base.internal.whiteboard.tracker.HttpSessionAttributeListenerTracker;
+import org.apache.felix.http.base.internal.whiteboard.tracker.HttpSessionListenerTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ResourceTracker;
-import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextHelperTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextListenerTracker;
+import org.apache.felix.http.base.internal.whiteboard.tracker.ServletRequestAttributeListenerTracker;
+import org.apache.felix.http.base.internal.whiteboard.tracker.ServletRequestListenerTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ServletTracker;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceObjects;
@@ -66,8 +69,12 @@ public final class WhiteboardHttpService
         addTracker(new FilterTracker(bundleContext, contextManager));
         addTracker(new ServletTracker(bundleContext, this.contextManager));
         addTracker(new ResourceTracker(bundleContext, this.contextManager));
-        addTracker(new ServletContextHelperTracker(bundleContext, this.contextManager));
+        addTracker(new HttpSessionAttributeListenerTracker(bundleContext, this.contextManager));
+        addTracker(new HttpSessionListenerTracker(bundleContext, this.contextManager));
         addTracker(new ServletContextListenerTracker(bundleContext, this.contextManager));
+        addTracker(new ServletContextListenerTracker(bundleContext, this.contextManager));
+        addTracker(new ServletRequestListenerTracker(bundleContext, this.contextManager));
+        addTracker(new ServletRequestAttributeListenerTracker(bundleContext, this.contextManager));
     }
 
     public void close()
