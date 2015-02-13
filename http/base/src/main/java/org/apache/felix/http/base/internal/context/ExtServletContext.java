@@ -21,8 +21,14 @@ import java.io.IOException;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSessionAttributeListener;
+import javax.servlet.http.HttpSessionListener;
 
 public interface ExtServletContext extends ServletContext
 {
     boolean handleSecurity(HttpServletRequest req, HttpServletResponse res) throws IOException;
+
+    HttpSessionAttributeListener getHttpSessionAttributeListener();
+
+    HttpSessionListener getHttpSessionListener();
 }

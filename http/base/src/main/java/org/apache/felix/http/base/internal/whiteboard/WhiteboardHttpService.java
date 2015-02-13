@@ -17,15 +17,19 @@
 package org.apache.felix.http.base.internal.whiteboard;
 
 import java.util.ArrayList;
+import java.util.Set;
 
 import javax.annotation.Nonnull;
 import javax.servlet.Filter;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpSession;
 
+import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.HandlerRegistry;
+import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ResourceInfo;
@@ -220,5 +224,19 @@ public final class WhiteboardHttpService
     public void unregisterContext(@Nonnull final ContextHandler contextHandler)
     {
         this.handlerRegistry.remove(contextHandler.getContextInfo());
+    }
+
+    public void sessionDestroyed(@Nonnull final HttpSession session, final Set<Long> contextIds)
+    {
+        for(final Long contextId : contextIds)
+        {
+            final ContextHandler handler = this.contextManager.getContextHandler(contextId);
+            if ( handler != null )
+            {
+                final ExtServletContext context = handler.getServletContext(this.bundleContext.getBundle());
+                new HttpSessionWrapper(contextId, session, context, true).invalidate();
+                handler.ungetServletContext(this.bundleContext.getBundle());
+            }
+        }
     }
 }

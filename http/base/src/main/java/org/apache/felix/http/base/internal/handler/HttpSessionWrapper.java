@@ -19,70 +19,184 @@
 
 package org.apache.felix.http.base.internal.handler;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpSessionBindingEvent;
+import javax.servlet.http.HttpSessionBindingListener;
 import javax.servlet.http.HttpSessionContext;
+import javax.servlet.http.HttpSessionEvent;
+
+import org.apache.felix.http.base.internal.context.ExtServletContext;
 
 /**
+ * The session wrapper keeps track of the internal session, manages their attributes
+ * separately and also handles session timeout.
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@SuppressWarnings("deprecation")
 public class HttpSessionWrapper implements HttpSession
 {
+    /** All special attributes are prefixed with this prefix. */
     private static final String PREFIX = "org.apache.felix.http.session.context.";
 
-    private static final String SESSION_MAP = "org.apache.felix.http.session.context.map";
+    /** For each internal session, the attributes are prefixed with this followed by the context id */
+    private static final String ATTR_PREFIX = PREFIX + "attr.";
 
+    /** The created time for the internal session (appended with context id) */
+    private static final String ATTR_CREATED = PREFIX + "created.";
+
+    /** The last accessed time for the internal session (appended with context id) */
+    private static final String ATTR_LAST_ACCESSED = PREFIX + "lastaccessed.";
+
+    /** The max inactive time (appended with context id) */
+    private static final String ATTR_MAX_INACTIVE = PREFIX + "maxinactive.";
+
+    /** The underlying container session. */
     private final HttpSession delegate;
-    private final ServletContext context;
 
+    /** The corresponding servlet context. */
+    private final ExtServletContext context;
+
+    /** The id for this session. */
+    private final String sessionId;
+
+    /** The key prefix for attributes belonging to this session. */
     private final String keyPrefix;
 
+    /** Flag to handle the validity of this session. */
     private volatile boolean isInvalid = false;
 
+    /** The time this has been created. */
     private final long created;
 
-    private final long contextId;
+    /** The time this has been last accessed. */
+    private final long lastAccessed;
+
+    /** The max timeout interval. */
+    private int maxTimeout;
+
+    /**
+     * Is this a new session?
+     */
+    private final boolean isNew;
+
+    public static boolean hasSession(final Long contextId, final HttpSession session)
+    {
+        final String sessionId = contextId == null ? "0" : String.valueOf(contextId);
+        return session.getAttribute(ATTR_CREATED + sessionId) != null;
+    }
+
+    public static Set<Long> getExpiredSessionContextIds(final HttpSession session)
+    {
+        final long now = System.currentTimeMillis();
+        final Set<Long> ids = new HashSet<Long>();
+        final Enumeration<String> names = session.getAttributeNames();
+        while ( names.hasMoreElements() )
+        {
+            final String name = names.nextElement();
+            if ( name.startsWith(ATTR_LAST_ACCESSED) )
+            {
+                final String id = name.substring(ATTR_LAST_ACCESSED.length());
+
+                final long lastAccess = (Long)session.getAttribute(name);
+                final Integer maxTimeout = (Integer)session.getAttribute(ATTR_MAX_INACTIVE + id);
+
+                if ( lastAccess + maxTimeout < now )
+                {
+                    ids.add(Long.valueOf(id));
+                }
+            }
+        }
+        return ids;
+    }
+
+    public static Set<Long> getSessionContextIds(final HttpSession session)
+    {
+        final Set<Long> ids = new HashSet<Long>();
+        final Enumeration<String> names = session.getAttributeNames();
+        while ( names.hasMoreElements() )
+        {
+            final String name = names.nextElement();
+            if ( name.startsWith(ATTR_LAST_ACCESSED) )
+            {
+                final String id = name.substring(ATTR_LAST_ACCESSED.length());
+                ids.add(Long.valueOf(id));
+            }
+        }
+        return ids;
+    }
 
     /**
      * Creates a new {@link HttpSessionWrapper} instance.
      */
-    public HttpSessionWrapper(final Long contextId, final HttpSession session,
-            final ServletContext context)
+    public HttpSessionWrapper(final Long contextId,
+            final HttpSession session,
+            final ExtServletContext context,
+            final boolean terminate)
     {
         this.delegate = session;
         this.context = context;
-        this.contextId = (contextId == null ? 0 : contextId);
-        this.keyPrefix = this.contextId == 0 ? null : PREFIX + String.valueOf(contextId) + ".";
-        synchronized ( this.getClass() )
+        this.sessionId = contextId == null ? "0" : String.valueOf(contextId);
+        this.keyPrefix = contextId == null ? null : ATTR_PREFIX + this.sessionId + ".";
+
+        if ( this.keyPrefix != null )
         {
-            @SuppressWarnings("unchecked")
-            Map<Long, Long> sessionMap = (Map<Long, Long>)session.getAttribute(SESSION_MAP);
-            if ( sessionMap == null )
+            final long now = System.currentTimeMillis();
+            if ( session.getAttribute(ATTR_CREATED + this.sessionId) == null )
             {
-                sessionMap = new HashMap<Long, Long>();
+                this.created = now;
+                this.maxTimeout = session.getMaxInactiveInterval();
+                isNew = true;
+
+                session.setAttribute(ATTR_CREATED + this.sessionId, this.created);
+                session.setAttribute(ATTR_MAX_INACTIVE + this.sessionId, this.maxTimeout);
+
+                if ( context.getHttpSessionListener() != null )
+                {
+                    context.getHttpSessionListener().sessionCreated(new HttpSessionEvent(this));
+                }
             }
-            if ( !sessionMap.containsKey(contextId) )
+            else
             {
-                sessionMap.put(contextId, System.currentTimeMillis());
-                session.setAttribute(SESSION_MAP, sessionMap);
+                this.created = (Long)session.getAttribute(ATTR_CREATED + this.sessionId);
+                this.maxTimeout = (Integer)session.getAttribute(ATTR_MAX_INACTIVE + this.sessionId);
+                isNew = false;
             }
-            this.created = sessionMap.get(contextId);
+
+            this.lastAccessed = now;
+            if ( !terminate )
+            {
+                session.setAttribute(ATTR_LAST_ACCESSED + this.sessionId, this.lastAccessed);
+            }
+        }
+        else
+        {
+            this.isNew = session.isNew();
+            this.lastAccessed = session.getLastAccessedTime();
+            this.created = session.getCreationTime();
         }
     }
 
+    /**
+     * Helper method to get the real key within the real session.
+     */
     private String getKey(final String name)
     {
         return this.keyPrefix == null ? name : this.keyPrefix.concat(name);
     }
 
+    /**
+     * Check whether this session is still valid.
+     * @throws IllegalStateException if session is not valid anymore
+     */
     private void checkInvalid()
     {
         if ( this.isInvalid )
@@ -95,7 +209,12 @@ public class HttpSessionWrapper implements HttpSession
     public Object getAttribute(final String name)
     {
         this.checkInvalid();
-        return this.delegate.getAttribute(this.getKey(name));
+        Object result = this.delegate.getAttribute(this.getKey(name));
+        if ( result instanceof SessionBindingValueListenerWrapper )
+        {
+            result = ((SessionBindingValueListenerWrapper)result).getHttpSessionBindingListener();
+        }
+        return result;
     }
 
     @Override
@@ -112,7 +231,7 @@ public class HttpSessionWrapper implements HttpSession
                 while ( e.hasMoreElements() )
                 {
                     final String name = e.nextElement();
-                    if ( keyPrefix == null )
+                    if ( keyPrefix == null && !name.startsWith(PREFIX) )
                     {
                         return name;
                     }
@@ -154,34 +273,28 @@ public class HttpSessionWrapper implements HttpSession
     public String getId()
     {
         this.checkInvalid();
-        return this.delegate.getId() + "-" + String.valueOf(this.contextId);
+        return this.delegate.getId() + "-" + this.sessionId;
     }
 
     @Override
     public long getLastAccessedTime()
     {
         this.checkInvalid();
-        // TODO
-        return this.delegate.getLastAccessedTime();
+        return this.lastAccessed;
     }
 
     @Override
     public int getMaxInactiveInterval()
     {
-        // TODO
-        return this.delegate.getMaxInactiveInterval();
+        // no validity check conforming to the javadocs
+        return this.maxTimeout;
     }
 
     @Override
     public ServletContext getServletContext()
     {
+        // no validity check conforming to the javadocs
         return this.context;
-    }
-
-    @Override
-    public HttpSessionContext getSessionContext()
-    {
-        return this.delegate.getSessionContext();
     }
 
     @Override
@@ -206,16 +319,43 @@ public class HttpSessionWrapper implements HttpSession
     public void invalidate()
     {
         this.checkInvalid();
+
+        if ( this.keyPrefix != null )
+        {
+            this.delegate.removeAttribute(ATTR_CREATED + this.sessionId);
+            this.delegate.removeAttribute(ATTR_LAST_ACCESSED + this.sessionId);
+            this.delegate.removeAttribute(ATTR_MAX_INACTIVE + this.sessionId);
+
+            final Enumeration<String> names = this.delegate.getAttributeNames();
+            while ( names.hasMoreElements() )
+            {
+                final String name = names.nextElement();
+
+                if ( name.startsWith(this.keyPrefix) ) {
+                    this.removeAttribute(name.substring(this.keyPrefix.length()));
+                }
+            }
+        }
+
+        // if the session is empty we can invalidate
+        final Enumeration<String> names = this.delegate.getAttributeNames();
+        if ( !names.hasMoreElements() )
+        {
+            this.delegate.invalidate();
+        }
+
+        if ( context.getHttpSessionListener() != null )
+        {
+            context.getHttpSessionListener().sessionDestroyed(new HttpSessionEvent(this));
+        }
         this.isInvalid = true;
-        // TODO
-        this.delegate.invalidate();
     }
 
     @Override
     public boolean isNew()
     {
         this.checkInvalid();
-        return this.delegate.isNew();
+        return this.isNew;
     }
 
     @Override
@@ -228,26 +368,97 @@ public class HttpSessionWrapper implements HttpSession
     public void removeAttribute(final String name)
     {
         this.checkInvalid();
-        this.delegate.removeAttribute(name);
+        final Object oldValue = this.getAttribute(name);
+        if ( oldValue != null )
+        {
+            this.delegate.removeAttribute(this.getKey(name));
+            if ( this.keyPrefix != null && oldValue instanceof HttpSessionBindingListener )
+            {
+                ((HttpSessionBindingListener)oldValue).valueUnbound(new HttpSessionBindingEvent(this, name));
+            }
+            if ( this.context.getHttpSessionAttributeListener() != null )
+            {
+                this.context.getHttpSessionAttributeListener().attributeRemoved(new HttpSessionBindingEvent(this, name, oldValue));
+            }
+        }
     }
 
     @Override
     public void removeValue(final String name)
     {
-        this.removeAttribute(this.getKey(name));
+        this.removeAttribute(name);
     }
 
     @Override
     public void setAttribute(final String name, final Object value)
     {
         this.checkInvalid();
-        this.delegate.setAttribute(this.getKey(name), value);
+        final Object oldValue = this.getAttribute(name);
+        // wrap http session binding listener to avoid container calling it!
+        if ( this.keyPrefix != null && value instanceof HttpSessionBindingListener )
+        {
+            this.delegate.setAttribute(this.getKey(name),
+                    new SessionBindingValueListenerWrapper((HttpSessionBindingListener)value));
+        }
+        else
+        {
+            this.delegate.setAttribute(this.getKey(name), value);
+        }
+        if ( this.keyPrefix != null && value instanceof HttpSessionBindingListener )
+        {
+            ((HttpSessionBindingListener)value).valueBound(new HttpSessionBindingEvent(this, name));
+        }
+
+        if ( this.context.getHttpSessionAttributeListener() != null )
+        {
+            if ( oldValue != null )
+            {
+                this.context.getHttpSessionAttributeListener().attributeReplaced(new HttpSessionBindingEvent(this, name, oldValue));
+            }
+            else
+            {
+                this.context.getHttpSessionAttributeListener().attributeAdded(new HttpSessionBindingEvent(this, name, value));
+            }
+        }
     }
 
     @Override
-    public void setMaxInactiveInterval(int interval)
+    public void setMaxInactiveInterval(final int interval)
     {
-        // TODO
-        this.delegate.setMaxInactiveInterval(interval);
+        if ( this.delegate.getMaxInactiveInterval() < interval )
+        {
+            this.delegate.setMaxInactiveInterval(interval);
+        }
+        if ( this.keyPrefix != null )
+        {
+            this.maxTimeout = interval;
+            this.delegate.setAttribute(ATTR_MAX_INACTIVE + this.sessionId, interval);
+        }
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public HttpSessionContext getSessionContext()
+    {
+        // no need to check validity conforming to the javadoc
+        return this.delegate.getSessionContext();
+    }
+
+    private static final class SessionBindingValueListenerWrapper implements Serializable
+    {
+
+        private static final long serialVersionUID = 4009563108883768425L;
+
+        private final HttpSessionBindingListener listener;
+
+        public SessionBindingValueListenerWrapper(final HttpSessionBindingListener listener)
+        {
+            this.listener = listener;
+        }
+
+        public HttpSessionBindingListener getHttpSessionBindingListener()
+        {
+            return listener;
+        }
     }
 }
