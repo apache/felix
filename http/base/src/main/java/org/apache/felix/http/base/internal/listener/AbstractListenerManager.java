@@ -21,22 +21,21 @@ package org.apache.felix.http.base.internal.listener;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Filter;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
-public class AbstractListenerManager<ListenerType> extends ServiceTracker
+public class AbstractListenerManager<ListenerType> extends ServiceTracker<ListenerType, ListenerType>
 {
 
     private ArrayList<ListenerType> allContextListeners;
 
-    private final Object lock;
+    private final Object lock = new Object();
 
-    protected AbstractListenerManager(BundleContext context, Class<ListenerType> clazz)
+    protected AbstractListenerManager(final BundleContext context, final Filter filter)
     {
-        super(context, clazz.getName(), null);
-        lock = new Object();
+        super(context, filter, null);
     }
 
     @SuppressWarnings("unchecked")
@@ -74,7 +73,7 @@ public class AbstractListenerManager<ListenerType> extends ServiceTracker
     }
 
     @Override
-    public Object addingService(ServiceReference reference)
+    public ListenerType addingService(ServiceReference<ListenerType> reference)
     {
         synchronized (lock)
         {
@@ -85,7 +84,7 @@ public class AbstractListenerManager<ListenerType> extends ServiceTracker
     }
 
     @Override
-    public void modifiedService(ServiceReference reference, Object service)
+    public void modifiedService(ServiceReference<ListenerType> reference, ListenerType service)
     {
         synchronized (lock)
         {
@@ -96,7 +95,7 @@ public class AbstractListenerManager<ListenerType> extends ServiceTracker
     }
 
     @Override
-    public void removedService(ServiceReference reference, Object service)
+    public void removedService(ServiceReference<ListenerType> reference, ListenerType service)
     {
         synchronized (lock)
         {

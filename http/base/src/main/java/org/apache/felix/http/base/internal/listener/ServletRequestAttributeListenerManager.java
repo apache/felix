@@ -24,6 +24,8 @@ import javax.servlet.ServletRequestAttributeEvent;
 import javax.servlet.ServletRequestAttributeListener;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 /**
  * The <code>ProxyListener</code> implements the Servlet API 2.4 listener
@@ -32,10 +34,24 @@ import org.osgi.framework.BundleContext;
  */
 public class ServletRequestAttributeListenerManager extends AbstractListenerManager<ServletRequestAttributeListener>
 {
+    private static org.osgi.framework.Filter createFilter(final BundleContext btx)
+    {
+        try
+        {
+            return btx.createFilter(String.format("(&(objectClass=%s)(!(%s=*)))",
+                    ServletRequestAttributeListener.class.getName(),
+                    HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER));
+        }
+        catch ( final InvalidSyntaxException ise)
+        {
+            // we can safely ignore it as the above filter is a constant
+        }
+        return null; // we never get here - and if we get an NPE which is fine
+    }
 
     public ServletRequestAttributeListenerManager(BundleContext context)
     {
-        super(context, ServletRequestAttributeListener.class);
+        super(context, createFilter(context));
     }
 
     public void attributeAdded(final ServletRequestAttributeEvent srae)

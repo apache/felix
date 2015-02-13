@@ -24,6 +24,8 @@ import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionListener;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 /**
  * The <code>ProxyListener</code> implements the Servlet API 2.4 listener
@@ -33,12 +35,27 @@ import org.osgi.framework.BundleContext;
 public class HttpSessionListenerManager extends AbstractListenerManager<HttpSessionListener> implements
     HttpSessionListener
 {
+    private static org.osgi.framework.Filter createFilter(final BundleContext btx)
+    {
+        try
+        {
+            return btx.createFilter(String.format("(&(objectClass=%s)(!(%s=*)))",
+                    HttpSessionListener.class.getName(),
+                    HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER));
+        }
+        catch ( final InvalidSyntaxException ise)
+        {
+            // we can safely ignore it as the above filter is a constant
+        }
+        return null; // we never get here - and if we get an NPE which is fine
+    }
 
     public HttpSessionListenerManager(BundleContext context)
     {
-        super(context, HttpSessionListener.class);
+        super(context, createFilter(context));
     }
 
+    @Override
     public void sessionCreated(final HttpSessionEvent se)
     {
         final Iterator<HttpSessionListener> listeners = getContextListeners();
@@ -48,6 +65,7 @@ public class HttpSessionListenerManager extends AbstractListenerManager<HttpSess
         }
     }
 
+    @Override
     public void sessionDestroyed(final HttpSessionEvent se)
     {
         final Iterator<HttpSessionListener> listeners = getContextListeners();
