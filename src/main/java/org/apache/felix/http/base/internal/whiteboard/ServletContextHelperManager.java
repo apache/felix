@@ -24,7 +24,9 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import javax.annotation.Nonnull;
 import javax.servlet.ServletContext;
@@ -73,6 +75,8 @@ public final class ServletContextHelperManager
     private final Bundle bundle;
 
     private final ServiceReference<HttpServiceRuntime> runtimeRef;
+
+    private final Set<AbstractInfo<?>> invalidRegistrations = new ConcurrentSkipListSet<AbstractInfo<?>>();
 
     /**
      * Create a new servlet context helper manager
@@ -243,9 +247,9 @@ public final class ServletContextHelperManager
             }
             else
             {
-                // TODO - failure DTO
                 final String type = info.getClass().getSimpleName().substring(0, info.getClass().getSimpleName().length() - 4);
                 SystemLogger.debug("Ignoring " + type + " service " + info.getServiceReference());
+                this.invalidRegistrations.add(info);
             }
         }
     }
@@ -256,41 +260,48 @@ public final class ServletContextHelperManager
     public void removeContextHelper(final ServletContextHelperInfo info)
     {
         // no failure DTO and no logging if not matching
-        if ( isMatchingService(info) && info.isValid() )
+        if ( isMatchingService(info) )
         {
-            synchronized ( this.contextMap )
+            if ( info.isValid() )
             {
-                final List<ContextHandler> handlerList = this.contextMap.get(info.getName());
-                if ( handlerList != null )
+                synchronized ( this.contextMap )
                 {
-                    final Iterator<ContextHandler> i = handlerList.iterator();
-                    boolean first = true;
-                    boolean activateNext = false;
-                    while ( i.hasNext() )
+                    final List<ContextHandler> handlerList = this.contextMap.get(info.getName());
+                    if ( handlerList != null )
                     {
-                        final ContextHandler handler = i.next();
-                        if ( handler.getContextInfo().compareTo(info) == 0 )
+                        final Iterator<ContextHandler> i = handlerList.iterator();
+                        boolean first = true;
+                        boolean activateNext = false;
+                        while ( i.hasNext() )
                         {
-                            i.remove();
-                            // check for deactivate
-                            if ( first )
+                            final ContextHandler handler = i.next();
+                            if ( handler.getContextInfo().compareTo(info) == 0 )
                             {
-                                this.deactivate(handler);
-                                activateNext = true;
+                                i.remove();
+                                // check for deactivate
+                                if ( first )
+                                {
+                                    this.deactivate(handler);
+                                    activateNext = true;
+                                }
+                                break;
                             }
-                            break;
+                            first = false;
                         }
-                        first = false;
-                    }
-                    if ( handlerList.isEmpty() )
-                    {
-                        this.contextMap.remove(info.getName());
-                    }
-                    else if ( activateNext )
-                    {
-                        this.activate(handlerList.get(0));
+                        if ( handlerList.isEmpty() )
+                        {
+                            this.contextMap.remove(info.getName());
+                        }
+                        else if ( activateNext )
+                        {
+                            this.activate(handlerList.get(0));
+                        }
                     }
                 }
+            }
+            else
+            {
+                this.invalidRegistrations.remove(info);
             }
         }
     }
@@ -334,9 +345,9 @@ public final class ServletContextHelperManager
             }
             else
             {
-                // TODO - failure DTO
                 final String type = info.getClass().getSimpleName().substring(0, info.getClass().getSimpleName().length() - 4);
                 SystemLogger.debug("Ignoring " + type + " service " + info.getServiceReference());
+                this.invalidRegistrations.add(info);
             }
         }
     }
@@ -348,18 +359,24 @@ public final class ServletContextHelperManager
     public void removeWhiteboardService(@Nonnull final WhiteboardServiceInfo<?> info)
     {
         // no logging and no DTO if other target service
-        if ( isMatchingService(info) && info.isValid() )
-        {
-            synchronized ( this.contextMap )
+        if ( isMatchingService(info) ) {
+            if ( info.isValid() )
             {
-                final List<ContextHandler> handlerList = this.servicesMap.remove(info);
-                if ( handlerList != null )
+                synchronized ( this.contextMap )
                 {
-                    for(final ContextHandler h : handlerList)
+                    final List<ContextHandler> handlerList = this.servicesMap.remove(info);
+                    if ( handlerList != null )
                     {
-                        this.unregisterWhiteboardService(h, info);
+                        for(final ContextHandler h : handlerList)
+                        {
+                            this.unregisterWhiteboardService(h, info);
+                        }
                     }
                 }
+            }
+            else
+            {
+                this.invalidRegistrations.remove(info);
             }
         }
     }
@@ -383,7 +400,7 @@ public final class ServletContextHelperManager
         {
             this.httpService.registerResource(handler, (ResourceInfo)info);
         }
-        
+
         else if ( info instanceof ServletContextAttributeListenerInfo )
         {
             handler.addListener((ServletContextAttributeListenerInfo)info );
@@ -427,12 +444,12 @@ public final class ServletContextHelperManager
         {
             this.httpService.unregisterResource(handler, (ResourceInfo)info);
         }
-        
+
         else if ( info instanceof ServletContextAttributeListenerInfo )
         {
             handler.removeListener((ServletContextAttributeListenerInfo)info );
         }
-        
+
         else if ( info instanceof HttpSessionListenerInfo )
         {
             handler.removeListener((HttpSessionListenerInfo)info );
