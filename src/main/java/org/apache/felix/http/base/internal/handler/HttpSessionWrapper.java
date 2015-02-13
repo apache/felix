@@ -393,6 +393,12 @@ public class HttpSessionWrapper implements HttpSession
     public void setAttribute(final String name, final Object value)
     {
         this.checkInvalid();
+        if ( value == null )
+        {
+            this.removeAttribute(name);
+            return;
+        }
+
         final Object oldValue = this.getAttribute(name);
         // wrap http session binding listener to avoid container calling it!
         if ( this.keyPrefix != null && value instanceof HttpSessionBindingListener )

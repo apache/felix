@@ -36,6 +36,8 @@ import javax.servlet.ServletContextAttributeEvent;
 import javax.servlet.ServletContextAttributeListener;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration;
+import javax.servlet.ServletRequestAttributeListener;
+import javax.servlet.ServletRequestListener;
 import javax.servlet.SessionCookieConfig;
 import javax.servlet.SessionTrackingMode;
 import javax.servlet.descriptor.JspConfigDescriptor;
@@ -389,6 +391,18 @@ public class ServletContextImpl implements ExtServletContext
 
     @Override
     public HttpSessionAttributeListener getHttpSessionAttributeListener()
+    {
+        return null;
+    }
+
+    @Override
+    public ServletRequestListener getServletRequestListener()
+    {
+        return null;
+    }
+
+    @Override
+    public ServletRequestAttributeListener getServletRequestAttributeListener()
     {
         return null;
     }
