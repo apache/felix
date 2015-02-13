@@ -29,6 +29,7 @@ import javax.annotation.Nonnull;
 import javax.servlet.ServletContext;
 
 import org.apache.felix.http.base.internal.logger.SystemLogger;
+import org.apache.felix.http.base.internal.runtime.AbstractInfo;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ResourceInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextAttributeListenerInfo;
@@ -40,9 +41,13 @@ import org.apache.felix.http.base.internal.util.MimeTypes;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.Filter;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.context.ServletContextHelper;
+import org.osgi.service.http.runtime.HttpServiceRuntime;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 public final class ServletContextHelperManager
@@ -61,15 +66,21 @@ public final class ServletContextHelperManager
 
     private final Bundle bundle;
 
+    private final ServiceReference<HttpServiceRuntime> runtimeRef;
+
     /**
      * Create a new servlet context helper manager
      * and the default context
      */
-    public ServletContextHelperManager(final BundleContext bundleContext, final ServletContext webContext, final WhiteboardHttpService httpService)
+    public ServletContextHelperManager(final BundleContext bundleContext,
+            final ServletContext webContext,
+            final ServiceReference<HttpServiceRuntime> runtimeRef,
+            final WhiteboardHttpService httpService)
     {
         this.httpService = httpService;
         this.webContext = webContext;
         this.bundle = bundleContext.getBundle();
+        this.runtimeRef = runtimeRef;
 
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, HttpWhiteboardConstants.HTTP_WHITEBOARD_DEFAULT_CONTEXT_NAME);
@@ -188,36 +199,40 @@ public final class ServletContextHelperManager
      */
     public void addContextHelper(final ServletContextHelperInfo info)
     {
-        if ( info.isValid() )
+        // no failure DTO and no logging if not matching
+        if ( isMatchingService(info) )
         {
-            final ContextHandler handler = new ContextHandler(info, this.webContext, this.bundle);
-            synchronized ( this.contextMap )
+            if ( info.isValid() )
             {
-                List<ContextHandler> handlerList = this.contextMap.get(info.getName());
-                if ( handlerList == null )
+                final ContextHandler handler = new ContextHandler(info, this.webContext, this.bundle);
+                synchronized ( this.contextMap )
                 {
-                    handlerList = new ArrayList<ContextHandler>();
-                    this.contextMap.put(info.getName(), handlerList);
-                }
-                handlerList.add(handler);
-                Collections.sort(handlerList);
-                // check for activate/deactivate
-                if ( handlerList.get(0) == handler )
-                {
-                    // check for deactivate
-                    if ( handlerList.size() > 1 )
+                    List<ContextHandler> handlerList = this.contextMap.get(info.getName());
+                    if ( handlerList == null )
                     {
-                        this.deactivate(handlerList.get(1));
+                        handlerList = new ArrayList<ContextHandler>();
+                        this.contextMap.put(info.getName(), handlerList);
                     }
-                    this.activate(handler);
+                    handlerList.add(handler);
+                    Collections.sort(handlerList);
+                    // check for activate/deactivate
+                    if ( handlerList.get(0) == handler )
+                    {
+                        // check for deactivate
+                        if ( handlerList.size() > 1 )
+                        {
+                            this.deactivate(handlerList.get(1));
+                        }
+                        this.activate(handler);
+                    }
                 }
             }
-        }
-        else
-        {
-            // TODO - failure DTO
-            final String type = info.getClass().getSimpleName().substring(0, info.getClass().getSimpleName().length() - 4);
-            SystemLogger.debug("Ignoring " + type + " service " + info.getServiceReference());
+            else
+            {
+                // TODO - failure DTO
+                final String type = info.getClass().getSimpleName().substring(0, info.getClass().getSimpleName().length() - 4);
+                SystemLogger.debug("Ignoring " + type + " service " + info.getServiceReference());
+            }
         }
     }
 
@@ -226,37 +241,41 @@ public final class ServletContextHelperManager
      */
     public void removeContextHelper(final ServletContextHelperInfo info)
     {
-        synchronized ( this.contextMap )
+        // no failure DTO and no logging if not matching
+        if ( isMatchingService(info) && info.isValid() )
         {
-            final List<ContextHandler> handlerList = this.contextMap.get(info.getName());
-            if ( handlerList != null )
+            synchronized ( this.contextMap )
             {
-                final Iterator<ContextHandler> i = handlerList.iterator();
-                boolean first = true;
-                boolean activateNext = false;
-                while ( i.hasNext() )
+                final List<ContextHandler> handlerList = this.contextMap.get(info.getName());
+                if ( handlerList != null )
                 {
-                    final ContextHandler handler = i.next();
-                    if ( handler.getContextInfo().compareTo(info) == 0 )
+                    final Iterator<ContextHandler> i = handlerList.iterator();
+                    boolean first = true;
+                    boolean activateNext = false;
+                    while ( i.hasNext() )
                     {
-                        i.remove();
-                        // check for deactivate
-                        if ( first )
+                        final ContextHandler handler = i.next();
+                        if ( handler.getContextInfo().compareTo(info) == 0 )
                         {
-                            this.deactivate(handler);
-                            activateNext = true;
+                            i.remove();
+                            // check for deactivate
+                            if ( first )
+                            {
+                                this.deactivate(handler);
+                                activateNext = true;
+                            }
+                            break;
                         }
-                        break;
+                        first = false;
                     }
-                    first = false;
-                }
-                if ( handlerList.isEmpty() )
-                {
-                    this.contextMap.remove(info.getName());
-                }
-                else if ( activateNext )
-                {
-                    this.activate(handlerList.get(0));
+                    if ( handlerList.isEmpty() )
+                    {
+                        this.contextMap.remove(info.getName());
+                    }
+                    else if ( activateNext )
+                    {
+                        this.activate(handlerList.get(0));
+                    }
                 }
             }
         }
@@ -284,23 +303,27 @@ public final class ServletContextHelperManager
      */
     public void addWhiteboardService(@Nonnull final WhiteboardServiceInfo<?> info)
     {
-        if ( info.isValid() )
+        // no logging and no DTO if other target service
+        if ( isMatchingService(info) )
         {
-            synchronized ( this.contextMap )
+            if ( info.isValid() )
             {
-                final List<ContextHandler> handlerList = this.getMatchingContexts(info);
-                this.servicesMap.put(info, handlerList);
-                for(final ContextHandler h : handlerList)
+                synchronized ( this.contextMap )
                 {
-                    this.registerWhiteboardService(h, info);
+                    final List<ContextHandler> handlerList = this.getMatchingContexts(info);
+                    this.servicesMap.put(info, handlerList);
+                    for(final ContextHandler h : handlerList)
+                    {
+                        this.registerWhiteboardService(h, info);
+                    }
                 }
             }
-        }
-        else
-        {
-            // TODO - failure DTO
-            final String type = info.getClass().getSimpleName().substring(0, info.getClass().getSimpleName().length() - 4);
-            SystemLogger.debug("Ignoring " + type + " service " + info.getServiceReference());
+            else
+            {
+                // TODO - failure DTO
+                final String type = info.getClass().getSimpleName().substring(0, info.getClass().getSimpleName().length() - 4);
+                SystemLogger.debug("Ignoring " + type + " service " + info.getServiceReference());
+            }
         }
     }
 
@@ -310,14 +333,18 @@ public final class ServletContextHelperManager
      */
     public void removeWhiteboardService(@Nonnull final WhiteboardServiceInfo<?> info)
     {
-        synchronized ( this.contextMap )
+        // no logging and no DTO if other target service
+        if ( isMatchingService(info) && info.isValid() )
         {
-            final List<ContextHandler> handlerList = this.servicesMap.remove(info);
-            if ( handlerList != null )
+            synchronized ( this.contextMap )
             {
-                for(final ContextHandler h : handlerList)
+                final List<ContextHandler> handlerList = this.servicesMap.remove(info);
+                if ( handlerList != null )
                 {
-                    this.unregisterWhiteboardService(h, info);
+                    for(final ContextHandler h : handlerList)
+                    {
+                        this.unregisterWhiteboardService(h, info);
+                    }
                 }
             }
         }
@@ -371,5 +398,29 @@ public final class ServletContextHelperManager
         {
             handler.removeListener((ServletContextAttributeListenerInfo)info );
         }
+    }
+
+    /**
+     * Check whether the service is specifying a target http service runtime
+     * and if so if that is matching this runtime
+     */
+    private boolean isMatchingService(final AbstractInfo<?> info)
+    {
+        final String target = info.getTarget();
+        if ( target != null )
+        {
+            try
+            {
+                final Filter f = this.bundle.getBundleContext().createFilter(target);
+                return f.match(this.runtimeRef);
+            }
+            catch ( final InvalidSyntaxException ise)
+            {
+                // log and ignore service
+                SystemLogger.error("Invalid target filter expression for " + info.getServiceReference() + " : " + target, ise);
+                return false;
+            }
+        }
+        return true;
     }
 }

@@ -40,6 +40,8 @@ import org.apache.felix.http.base.internal.whiteboard.tracker.ServletRequestList
 import org.apache.felix.http.base.internal.whiteboard.tracker.ServletTracker;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceObjects;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.http.runtime.HttpServiceRuntime;
 import org.osgi.util.tracker.ServiceTracker;
 
 public final class WhiteboardHttpService
@@ -61,11 +63,12 @@ public final class WhiteboardHttpService
      */
     public WhiteboardHttpService(final BundleContext bundleContext,
             final ServletContext context,
-            final HandlerRegistry handlerRegistry)
+            final HandlerRegistry handlerRegistry,
+            final ServiceReference<HttpServiceRuntime> runtimeRef)
     {
         this.handlerRegistry = handlerRegistry;
         this.bundleContext = bundleContext;
-        this.contextManager = new ServletContextHelperManager(bundleContext, context, this);
+        this.contextManager = new ServletContextHelperManager(bundleContext, context, runtimeRef, this);
         addTracker(new FilterTracker(bundleContext, contextManager));
         addTracker(new ServletTracker(bundleContext, this.contextManager));
         addTracker(new ResourceTracker(bundleContext, this.contextManager));
