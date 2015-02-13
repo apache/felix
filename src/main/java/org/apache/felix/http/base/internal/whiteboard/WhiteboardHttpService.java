@@ -38,6 +38,8 @@ import org.apache.felix.http.base.internal.whiteboard.tracker.FilterTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.HttpSessionAttributeListenerTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.HttpSessionListenerTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ResourceTracker;
+import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextAttributeListenerTracker;
+import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextHelperTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextListenerTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ServletRequestAttributeListenerTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ServletRequestListenerTracker;
@@ -73,13 +75,18 @@ public final class WhiteboardHttpService
         this.handlerRegistry = handlerRegistry;
         this.bundleContext = bundleContext;
         this.contextManager = new ServletContextHelperManager(bundleContext, context, runtimeRef, this);
+        
         addTracker(new FilterTracker(bundleContext, contextManager));
         addTracker(new ServletTracker(bundleContext, this.contextManager));
         addTracker(new ResourceTracker(bundleContext, this.contextManager));
-        addTracker(new HttpSessionAttributeListenerTracker(bundleContext, this.contextManager));
+
         addTracker(new HttpSessionListenerTracker(bundleContext, this.contextManager));
+        addTracker(new HttpSessionAttributeListenerTracker(bundleContext, this.contextManager));
+
+        addTracker(new ServletContextHelperTracker(bundleContext, this.contextManager));
         addTracker(new ServletContextListenerTracker(bundleContext, this.contextManager));
-        addTracker(new ServletContextListenerTracker(bundleContext, this.contextManager));
+        addTracker(new ServletContextAttributeListenerTracker(bundleContext, this.contextManager));
+        
         addTracker(new ServletRequestListenerTracker(bundleContext, this.contextManager));
         addTracker(new ServletRequestAttributeListenerTracker(bundleContext, this.contextManager));
     }
