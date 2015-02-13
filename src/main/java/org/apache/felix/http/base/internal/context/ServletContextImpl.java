@@ -41,6 +41,8 @@ import javax.servlet.SessionTrackingMode;
 import javax.servlet.descriptor.JspConfigDescriptor;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSessionAttributeListener;
+import javax.servlet.http.HttpSessionListener;
 
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.util.MimeTypes;
@@ -377,6 +379,18 @@ public class ServletContextImpl implements ExtServletContext
     public SessionCookieConfig getSessionCookieConfig()
     {
         return this.context.getSessionCookieConfig();
+    }
+
+    @Override
+    public HttpSessionListener getHttpSessionListener()
+    {
+        return null;
+    }
+
+    @Override
+    public HttpSessionAttributeListener getHttpSessionAttributeListener()
+    {
+        return null;
     }
 
     @Override

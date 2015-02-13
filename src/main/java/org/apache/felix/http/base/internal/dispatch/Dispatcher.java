@@ -31,6 +31,7 @@ import static org.apache.felix.http.base.internal.util.UriUtils.decodePath;
 import static org.apache.felix.http.base.internal.util.UriUtils.removeDotSegments;
 
 import java.io.IOException;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.DispatcherType;
@@ -53,6 +54,7 @@ import org.apache.felix.http.base.internal.handler.HandlerRegistry;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.util.UriUtils;
+import org.apache.felix.http.base.internal.whiteboard.WhiteboardHttpService;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.useradmin.Authorization;
 
@@ -452,7 +454,12 @@ public final class Dispatcher implements RequestDispatcherProvider
             {
                 return null;
             }
-            return new HttpSessionWrapper(this.contextId, session, this.servletContext);
+            // check if internal session is available
+            if ( !create && !HttpSessionWrapper.hasSession(this.contextId, session) )
+            {
+                return null;
+            }
+            return new HttpSessionWrapper(this.contextId, session, this.servletContext, false);
         }
 
         @Override
@@ -516,9 +523,16 @@ public final class Dispatcher implements RequestDispatcherProvider
 
     private final HandlerRegistry handlerRegistry;
 
-    public Dispatcher(HandlerRegistry handlerRegistry)
+    private WhiteboardHttpService whiteboardService;
+
+    public Dispatcher(final HandlerRegistry handlerRegistry)
     {
         this.handlerRegistry = handlerRegistry;
+    }
+
+    public void setWhiteboardHttpService(final WhiteboardHttpService service)
+    {
+        this.whiteboardService = service;
     }
 
     /**
@@ -531,6 +545,13 @@ public final class Dispatcher implements RequestDispatcherProvider
      */
     public void dispatch(final HttpServletRequest req, final HttpServletResponse res) throws ServletException, IOException
     {
+        // invalid sessions first
+        final HttpSession session = req.getSession(false);
+        if ( session != null )
+        {
+            final Set<Long> ids = HttpSessionWrapper.getExpiredSessionContextIds(session);
+            this.whiteboardService.sessionDestroyed(session, ids);
+        }
         String requestURI = getRequestURI(req);
 
         // Determine which servlets we should forward the request to...

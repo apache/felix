@@ -24,13 +24,17 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import javax.annotation.Nonnull;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletContextListener;
 
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.AbstractInfo;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
+import org.apache.felix.http.base.internal.runtime.HttpSessionAttributeListenerInfo;
+import org.apache.felix.http.base.internal.runtime.HttpSessionListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ResourceInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextAttributeListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
@@ -134,8 +138,9 @@ public final class ServletContextHelperManager
 
         this.httpService.registerContext(handler);
 
-        // context listeners first
+        final Map<ServiceReference<ServletContextListener>, ServletContextListenerInfo> listeners = new TreeMap<ServiceReference<ServletContextListener>, ServletContextListenerInfo>();
         final List<WhiteboardServiceInfo<?>> services = new ArrayList<WhiteboardServiceInfo<?>>();
+
         for(final Map.Entry<WhiteboardServiceInfo<?>, List<ContextHandler>> entry : this.servicesMap.entrySet())
         {
             if ( entry.getKey().getContextSelectionFilter().match(handler.getContextInfo().getServiceReference()) )
@@ -143,13 +148,19 @@ public final class ServletContextHelperManager
                 entry.getValue().add(handler);
                 if ( entry.getKey() instanceof ServletContextListenerInfo )
                 {
-                    handler.initialized((ServletContextListenerInfo)entry.getKey());
+                    final ServletContextListenerInfo info = (ServletContextListenerInfo)entry.getKey();
+                    listeners.put(info.getServiceReference(), info);
                 }
                 else
                 {
                     services.add(entry.getKey());
                 }
             }
+        }
+        // context listeners first
+        for(final ServletContextListenerInfo info : listeners.values())
+        {
+            handler.initialized(info);
         }
         // now register services
         for(final WhiteboardServiceInfo<?> info : services)
@@ -167,7 +178,7 @@ public final class ServletContextHelperManager
         this.httpService.unregisterContext(handler);
 
         // context listeners last
-        final List<ServletContextListenerInfo> listeners = new ArrayList<ServletContextListenerInfo>();
+        final Map<ServiceReference<ServletContextListener>, ServletContextListenerInfo> listeners = new TreeMap<ServiceReference<ServletContextListener>, ServletContextListenerInfo>();
         final Iterator<Map.Entry<WhiteboardServiceInfo<?>, List<ContextHandler>>> i = this.servicesMap.entrySet().iterator();
         while ( i.hasNext() )
         {
@@ -176,7 +187,8 @@ public final class ServletContextHelperManager
             {
                 if ( entry.getKey() instanceof ServletContextListenerInfo )
                 {
-                    listeners.add((ServletContextListenerInfo)entry.getKey());
+                    final ServletContextListenerInfo info = (ServletContextListenerInfo)entry.getKey();
+                    listeners.put(info.getServiceReference(), info);
                 }
                 else
                 {
@@ -187,7 +199,7 @@ public final class ServletContextHelperManager
                 }
             }
         }
-        for(final ServletContextListenerInfo info : listeners)
+        for(final ServletContextListenerInfo info : listeners.values())
         {
             handler.destroyed(info);
         }
@@ -373,6 +385,14 @@ public final class ServletContextHelperManager
         {
             handler.addListener((ServletContextAttributeListenerInfo)info );
         }
+        else if ( info instanceof HttpSessionAttributeListenerInfo )
+        {
+            handler.addListener((HttpSessionAttributeListenerInfo)info );
+        }
+        else if ( info instanceof HttpSessionListenerInfo )
+        {
+            handler.addListener((HttpSessionListenerInfo)info );
+        }
     }
 
     /**
@@ -398,6 +418,14 @@ public final class ServletContextHelperManager
         {
             handler.removeListener((ServletContextAttributeListenerInfo)info );
         }
+        else if ( info instanceof HttpSessionAttributeListenerInfo )
+        {
+            handler.removeListener((HttpSessionAttributeListenerInfo)info );
+        }
+        else if ( info instanceof HttpSessionListenerInfo )
+        {
+            handler.removeListener((HttpSessionListenerInfo)info );
+        }
     }
 
     /**
@@ -422,5 +450,21 @@ public final class ServletContextHelperManager
             }
         }
         return true;
+    }
+
+    public ContextHandler getContextHandler(final Long contextId)
+    {
+        synchronized ( this.contextMap )
+        {
+            for(final List<ContextHandler> handlerList : this.contextMap.values())
+            {
+                final ContextHandler h = handlerList.get(0);
+                if ( h.getContextInfo().getServiceId() == contextId )
+                {
+                    return h;
+                }
+            }
+        }
+        return null;
     }
 }

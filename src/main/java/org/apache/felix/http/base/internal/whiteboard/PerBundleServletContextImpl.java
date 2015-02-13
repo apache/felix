@@ -37,6 +37,8 @@ import javax.servlet.SessionTrackingMode;
 import javax.servlet.descriptor.JspConfigDescriptor;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSessionAttributeListener;
+import javax.servlet.http.HttpSessionListener;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.osgi.framework.Bundle;
@@ -54,14 +56,20 @@ public class PerBundleServletContextImpl implements ExtServletContext {
     private final Bundle bundle;
     private final ServletContext delegatee;
     private final ServletContextHelper contextHelper;
+    private final HttpSessionListener sessionListener;
+    private final HttpSessionAttributeListener sessionAttributeListener;
 
     public PerBundleServletContextImpl(final Bundle bundle,
             final ServletContext sharedContext,
-            final ServletContextHelper delegatee)
+            final ServletContextHelper delegatee,
+            final HttpSessionListener sessionListener,
+            final HttpSessionAttributeListener sessionAttributeListener)
     {
         this.bundle = bundle;
         this.delegatee = sharedContext;
         this.contextHelper = delegatee;
+        this.sessionListener = sessionListener;
+        this.sessionAttributeListener = sessionAttributeListener;
     }
 
     @Override
@@ -70,6 +78,18 @@ public class PerBundleServletContextImpl implements ExtServletContext {
     throws IOException
     {
         return this.contextHelper.handleSecurity(req, res);
+    }
+
+    @Override
+    public HttpSessionListener getHttpSessionListener()
+    {
+        return this.sessionListener;
+    }
+
+    @Override
+    public HttpSessionAttributeListener getHttpSessionAttributeListener()
+    {
+        return this.sessionAttributeListener;
     }
 
     @Override

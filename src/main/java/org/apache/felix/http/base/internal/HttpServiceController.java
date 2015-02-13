@@ -19,11 +19,15 @@ package org.apache.felix.http.base.internal;
 import java.util.Hashtable;
 
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpSessionAttributeListener;
+import javax.servlet.http.HttpSessionEvent;
+import javax.servlet.http.HttpSessionListener;
 
 import org.apache.felix.http.api.ExtHttpService;
 import org.apache.felix.http.base.internal.dispatch.Dispatcher;
 import org.apache.felix.http.base.internal.handler.HandlerRegistry;
 import org.apache.felix.http.base.internal.handler.HttpServicePlugin;
+import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.apache.felix.http.base.internal.listener.HttpSessionAttributeListenerManager;
 import org.apache.felix.http.base.internal.listener.HttpSessionListenerManager;
 import org.apache.felix.http.base.internal.listener.ServletContextAttributeListenerManager;
@@ -116,12 +120,24 @@ public final class HttpServiceController
         return requestAttributeListener;
     }
 
-    public HttpSessionListenerManager getSessionListener()
+    public HttpSessionListener getSessionListener()
     {
-        return sessionListener;
+        return new HttpSessionListener() {
+
+            @Override
+            public void sessionDestroyed(final HttpSessionEvent se) {
+                sessionListener.sessionDestroyed(se);
+                whiteboardHttpService.sessionDestroyed(se.getSession(), HttpSessionWrapper.getSessionContextIds(se.getSession()));
+            }
+
+            @Override
+            public void sessionCreated(final HttpSessionEvent se) {
+                sessionListener.sessionCreated(se);
+            }
+        };
     }
 
-    public HttpSessionAttributeListenerManager getSessionAttributeListener()
+    public HttpSessionAttributeListener getSessionAttributeListener()
     {
         return sessionAttributeListener;
     }
@@ -175,10 +191,12 @@ public final class HttpServiceController
                 servletContext,
                 this.registry,
                 this.runtimeServiceReg.getReference());
+        this.dispatcher.setWhiteboardHttpService(this.whiteboardHttpService);
     }
 
     public void unregister()
     {
+        this.dispatcher.setWhiteboardHttpService(null);
         if ( this.whiteboardHttpService != null )
         {
             this.whiteboardHttpService.close();
