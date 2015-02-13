@@ -383,18 +383,21 @@ public final class ServletContextHelperManager
         {
             this.httpService.registerResource(handler, (ResourceInfo)info);
         }
+        
         else if ( info instanceof ServletContextAttributeListenerInfo )
         {
             handler.addListener((ServletContextAttributeListenerInfo)info );
+        }
+
+        else if ( info instanceof HttpSessionListenerInfo )
+        {
+            handler.addListener((HttpSessionListenerInfo)info );
         }
         else if ( info instanceof HttpSessionAttributeListenerInfo )
         {
             handler.addListener((HttpSessionAttributeListenerInfo)info );
         }
-        else if ( info instanceof HttpSessionListenerInfo )
-        {
-            handler.addListener((HttpSessionListenerInfo)info );
-        }
+
         else if ( info instanceof ServletRequestListenerInfo )
         {
             handler.addListener((ServletRequestListenerInfo)info );
@@ -424,18 +427,21 @@ public final class ServletContextHelperManager
         {
             this.httpService.unregisterResource(handler, (ResourceInfo)info);
         }
+        
         else if ( info instanceof ServletContextAttributeListenerInfo )
         {
             handler.removeListener((ServletContextAttributeListenerInfo)info );
+        }
+        
+        else if ( info instanceof HttpSessionListenerInfo )
+        {
+            handler.removeListener((HttpSessionListenerInfo)info );
         }
         else if ( info instanceof HttpSessionAttributeListenerInfo )
         {
             handler.removeListener((HttpSessionAttributeListenerInfo)info );
         }
-        else if ( info instanceof HttpSessionListenerInfo )
-        {
-            handler.removeListener((HttpSessionListenerInfo)info );
-        }
+
         else if ( info instanceof ServletRequestListenerInfo )
         {
             handler.removeListener((ServletRequestListenerInfo)info );
