@@ -19,6 +19,8 @@ package org.apache.felix.http.base.internal.context;
 import java.io.IOException;
 
 import javax.servlet.ServletContext;
+import javax.servlet.ServletRequestAttributeListener;
+import javax.servlet.ServletRequestListener;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSessionAttributeListener;
@@ -31,4 +33,8 @@ public interface ExtServletContext extends ServletContext
     HttpSessionAttributeListener getHttpSessionAttributeListener();
 
     HttpSessionListener getHttpSessionListener();
+
+    ServletRequestListener getServletRequestListener();
+
+    ServletRequestAttributeListener getServletRequestAttributeListener();
 }

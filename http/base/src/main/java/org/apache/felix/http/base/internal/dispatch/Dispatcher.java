@@ -40,6 +40,8 @@ import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
+import javax.servlet.ServletRequestAttributeEvent;
+import javax.servlet.ServletRequestEvent;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
@@ -475,6 +477,41 @@ public final class Dispatcher implements RequestDispatcherProvider
         }
 
         @Override
+        public void setAttribute(final String name, final Object value)
+        {
+            if ( value == null )
+            {
+                this.removeAttribute(name);
+            }
+            final Object oldValue = this.getAttribute(name);
+            super.setAttribute(name, value);
+            if ( this.servletContext.getServletRequestAttributeListener() != null )
+            {
+                if ( oldValue == null )
+                {
+                    this.servletContext.getServletRequestAttributeListener().attributeAdded(new ServletRequestAttributeEvent(this.servletContext, this, name, value));
+                }
+                else
+                {
+                    this.servletContext.getServletRequestAttributeListener().attributeReplaced(new ServletRequestAttributeEvent(this.servletContext, this, name, oldValue));
+                }
+            }
+        }
+
+        @Override
+        public void removeAttribute(final String name) {
+            final Object oldValue = this.getAttribute(name);
+            if ( oldValue != null )
+            {
+                super.removeAttribute(name);
+                if ( this.servletContext.getServletRequestAttributeListener() != null )
+                {
+                    this.servletContext.getServletRequestAttributeListener().attributeRemoved(new ServletRequestAttributeEvent(this.servletContext, this, name, oldValue));
+                }
+            }
+        }
+
+        @Override
         public String toString()
         {
             return getClass().getSimpleName() + "->" + super.getRequest();
@@ -574,10 +611,15 @@ public final class Dispatcher implements RequestDispatcherProvider
         ExtServletContext servletContext = (servletHandler != null) ? servletHandler.getContext() : null;
         RequestInfo requestInfo = new RequestInfo(servletPath, pathInfo, queryString);
 
+        final HttpServletRequest wrappedRequest = new ServletRequestWrapper(req, servletContext, requestInfo, servletHandler.getContextServiceId());
+        final FilterHandler[] filterHandlers = this.handlerRegistry.getFilterHandlers(servletHandler, req.getDispatcherType(), requestURI);
+
         try
         {
-            final HttpServletRequest wrappedRequest = new ServletRequestWrapper(req, servletContext, requestInfo, servletHandler.getContextServiceId());
-            final FilterHandler[] filterHandlers = this.handlerRegistry.getFilterHandlers(servletHandler, req.getDispatcherType(), requestURI);
+            if ( servletContext.getServletRequestListener() != null )
+            {
+                servletContext.getServletRequestListener().requestInitialized(new ServletRequestEvent(servletContext, wrappedRequest));
+            }
             invokeChain(filterHandlers, servletHandler, wrappedRequest, wrappedResponse);
         }
         catch ( final Exception e)
@@ -586,6 +628,13 @@ public final class Dispatcher implements RequestDispatcherProvider
             req.setAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE, e.getClass().getName());
 
             wrappedResponse.sendError(500);
+        }
+        finally
+        {
+            if ( servletContext.getServletRequestListener() != null )
+            {
+                servletContext.getServletRequestListener().requestDestroyed(new ServletRequestEvent(servletContext, wrappedRequest));
+            }
         }
     }
 

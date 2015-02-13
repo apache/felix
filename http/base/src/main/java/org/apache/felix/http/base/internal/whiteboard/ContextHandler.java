@@ -26,6 +26,10 @@ import javax.servlet.ServletContextAttributeEvent;
 import javax.servlet.ServletContextAttributeListener;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
+import javax.servlet.ServletRequestAttributeEvent;
+import javax.servlet.ServletRequestAttributeListener;
+import javax.servlet.ServletRequestEvent;
+import javax.servlet.ServletRequestListener;
 import javax.servlet.http.HttpSessionAttributeListener;
 import javax.servlet.http.HttpSessionBindingEvent;
 import javax.servlet.http.HttpSessionEvent;
@@ -37,6 +41,8 @@ import org.apache.felix.http.base.internal.runtime.HttpSessionListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextAttributeListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextListenerInfo;
+import org.apache.felix.http.base.internal.runtime.ServletRequestAttributeListenerInfo;
+import org.apache.felix.http.base.internal.runtime.ServletRequestListenerInfo;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
@@ -67,6 +73,14 @@ public final class ContextHandler implements Comparable<ContextHandler>
     /** Session listeners. */
     private final Map<ServiceReference<HttpSessionListener>, HttpSessionListener> sessionListeners =
             new ConcurrentSkipListMap<ServiceReference<HttpSessionListener>, HttpSessionListener>();
+
+    /** Request listeners. */
+    private final Map<ServiceReference<ServletRequestListener>, ServletRequestListener> requestListeners =
+            new ConcurrentSkipListMap<ServiceReference<ServletRequestListener>, ServletRequestListener>();
+
+    /** Request attribute listeners. */
+    private final Map<ServiceReference<ServletRequestAttributeListener>, ServletRequestAttributeListener> requestAttributeListeners =
+            new ConcurrentSkipListMap<ServiceReference<ServletRequestAttributeListener>, ServletRequestAttributeListener>();
 
     /** The http bundle. */
     private final Bundle bundle;
@@ -168,7 +182,9 @@ public final class ContextHandler implements Comparable<ContextHandler>
                             this.sharedContext,
                             holder.servletContextHelper,
                             this.getSessionListener(),
-                            this.getSessionAttributeListener());
+                            this.getSessionAttributeListener(),
+                            this.getServletRequestListener(),
+                            this.getServletRequestAttributeListener());
                     this.contextMap.put(key, holder);
                 }
             }
@@ -299,6 +315,72 @@ public final class ContextHandler implements Comparable<ContextHandler>
         }
     }
 
+    /**
+     * Add request listener
+     * @param info
+     */
+    public void addListener(@Nonnull final ServletRequestListenerInfo info)
+    {
+        final ServiceObjects<ServletRequestListener> so =  bundle.getBundleContext().getServiceObjects(info.getServiceReference());
+        if ( so != null )
+        {
+            final  ServletRequestListener service = bundle.getBundleContext().getServiceObjects(info.getServiceReference()).getService();
+            if ( service != null )
+            {
+                this.requestListeners.put(info.getServiceReference(), service);
+            }
+        }
+    }
+
+    /**
+     * Remove request listener
+     * @param info
+     */
+    public void removeListener(@Nonnull final ServletRequestListenerInfo info)
+    {
+        final ServletRequestListener service = this.requestListeners.remove(info.getServiceReference());
+        if ( service != null )
+        {
+            final ServiceObjects<ServletRequestListener> so =  bundle.getBundleContext().getServiceObjects(info.getServiceReference());
+            if ( so != null ) {
+                so.ungetService(service);
+            }
+        }
+    }
+
+    /**
+     * Add request attribute listener
+     * @param info
+     */
+    public void addListener(@Nonnull final ServletRequestAttributeListenerInfo info)
+    {
+        final ServiceObjects<ServletRequestAttributeListener> so =  bundle.getBundleContext().getServiceObjects(info.getServiceReference());
+        if ( so != null )
+        {
+            final  ServletRequestAttributeListener service = bundle.getBundleContext().getServiceObjects(info.getServiceReference()).getService();
+            if ( service != null )
+            {
+                this.requestAttributeListeners.put(info.getServiceReference(), service);
+            }
+        }
+    }
+
+    /**
+     * Remove request attribute listener
+     * @param info
+     */
+    public void removeListener(@Nonnull final ServletRequestAttributeListenerInfo info)
+    {
+        final ServletRequestAttributeListener service = this.requestAttributeListeners.remove(info.getServiceReference());
+        if ( service != null )
+        {
+            final ServiceObjects<ServletRequestAttributeListener> so =  bundle.getBundleContext().getServiceObjects(info.getServiceReference());
+            if ( so != null ) {
+                so.ungetService(service);
+            }
+        }
+    }
+
     private static final class ContextHolder
     {
         public long counter;
@@ -383,6 +465,58 @@ public final class ContextHandler implements Comparable<ContextHandler>
                 for(final HttpSessionListener l : sessionListeners.values())
                 {
                     l.sessionDestroyed(se);
+                }
+            }
+        };
+    }
+
+    private ServletRequestListener getServletRequestListener()
+    {
+        return new ServletRequestListener() {
+
+            @Override
+            public void requestDestroyed(final ServletRequestEvent sre) {
+                for(final ServletRequestListener l : requestListeners.values())
+                {
+                    l.requestDestroyed(sre);
+                }
+            }
+
+            @Override
+            public void requestInitialized(final ServletRequestEvent sre) {
+                for(final ServletRequestListener l : requestListeners.values())
+                {
+                    l.requestInitialized(sre);
+                }
+            }
+        };
+    }
+
+    private ServletRequestAttributeListener getServletRequestAttributeListener()
+    {
+        return new ServletRequestAttributeListener() {
+
+            @Override
+            public void attributeAdded(final ServletRequestAttributeEvent srae) {
+                for(final ServletRequestAttributeListener l : requestAttributeListeners.values())
+                {
+                    l.attributeAdded(srae);
+                }
+            }
+
+            @Override
+            public void attributeRemoved(final ServletRequestAttributeEvent srae) {
+                for(final ServletRequestAttributeListener l : requestAttributeListeners.values())
+                {
+                    l.attributeRemoved(srae);
+                }
+            }
+
+            @Override
+            public void attributeReplaced(final ServletRequestAttributeEvent srae) {
+                for(final ServletRequestAttributeListener l : requestAttributeListeners.values())
+                {
+                    l.attributeReplaced(srae);
                 }
             }
         };

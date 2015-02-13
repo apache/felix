@@ -40,6 +40,8 @@ import org.apache.felix.http.base.internal.runtime.ServletContextAttributeListen
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.runtime.ServletRequestAttributeListenerInfo;
+import org.apache.felix.http.base.internal.runtime.ServletRequestListenerInfo;
 import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
 import org.apache.felix.http.base.internal.util.MimeTypes;
 import org.osgi.framework.Bundle;
@@ -393,6 +395,14 @@ public final class ServletContextHelperManager
         {
             handler.addListener((HttpSessionListenerInfo)info );
         }
+        else if ( info instanceof ServletRequestListenerInfo )
+        {
+            handler.addListener((ServletRequestListenerInfo)info );
+        }
+        else if ( info instanceof ServletRequestAttributeListenerInfo )
+        {
+            handler.addListener((ServletRequestAttributeListenerInfo)info );
+        }
     }
 
     /**
@@ -425,6 +435,14 @@ public final class ServletContextHelperManager
         else if ( info instanceof HttpSessionListenerInfo )
         {
             handler.removeListener((HttpSessionListenerInfo)info );
+        }
+        else if ( info instanceof ServletRequestListenerInfo )
+        {
+            handler.removeListener((ServletRequestListenerInfo)info );
+        }
+        else if ( info instanceof ServletRequestAttributeListenerInfo )
+        {
+            handler.removeListener((ServletRequestAttributeListenerInfo)info );
         }
     }
 

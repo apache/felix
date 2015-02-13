@@ -32,6 +32,8 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration;
 import javax.servlet.ServletRegistration.Dynamic;
+import javax.servlet.ServletRequestAttributeListener;
+import javax.servlet.ServletRequestListener;
 import javax.servlet.SessionCookieConfig;
 import javax.servlet.SessionTrackingMode;
 import javax.servlet.descriptor.JspConfigDescriptor;
@@ -58,18 +60,24 @@ public class PerBundleServletContextImpl implements ExtServletContext {
     private final ServletContextHelper contextHelper;
     private final HttpSessionListener sessionListener;
     private final HttpSessionAttributeListener sessionAttributeListener;
+    private final ServletRequestListener requestListener;
+    private final ServletRequestAttributeListener requestAttributeListener;
 
     public PerBundleServletContextImpl(final Bundle bundle,
             final ServletContext sharedContext,
             final ServletContextHelper delegatee,
             final HttpSessionListener sessionListener,
-            final HttpSessionAttributeListener sessionAttributeListener)
+            final HttpSessionAttributeListener sessionAttributeListener,
+            final ServletRequestListener requestListener,
+            final ServletRequestAttributeListener requestAttributeListener)
     {
         this.bundle = bundle;
         this.delegatee = sharedContext;
         this.contextHelper = delegatee;
         this.sessionListener = sessionListener;
         this.sessionAttributeListener = sessionAttributeListener;
+        this.requestListener = requestListener;
+        this.requestAttributeListener = requestAttributeListener;
     }
 
     @Override
@@ -90,6 +98,18 @@ public class PerBundleServletContextImpl implements ExtServletContext {
     public HttpSessionAttributeListener getHttpSessionAttributeListener()
     {
         return this.sessionAttributeListener;
+    }
+
+    @Override
+    public ServletRequestListener getServletRequestListener()
+    {
+        return this.requestListener;
+    }
+
+    @Override
+    public ServletRequestAttributeListener getServletRequestAttributeListener()
+    {
+        return this.requestAttributeListener;
     }
 
     @Override
