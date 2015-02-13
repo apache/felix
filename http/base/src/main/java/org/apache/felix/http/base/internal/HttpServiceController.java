@@ -33,9 +33,11 @@ import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.apache.felix.http.base.internal.service.HttpServiceRuntimeImpl;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardHttpService;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.HttpService;
 import org.osgi.service.http.runtime.HttpServiceRuntime;
+import org.osgi.service.http.runtime.HttpServiceRuntimeConstants;
 
 public final class HttpServiceController
 {
@@ -59,10 +61,12 @@ public final class HttpServiceController
      */
     private static final String FELIX_HTTP_SHARED_SERVLET_CONTEXT_ATTRIBUTES = "org.apache.felix.http.shared_servlet_context_attributes";
 
+    /** Compat property for previous versions. */
+    private static final String OBSOLETE_REG_PROPERTY_ENDPOINTS = "osgi.http.service.endpoints";
+
     private final BundleContext bundleContext;
     private final HandlerRegistry registry;
     private final Dispatcher dispatcher;
-    private final Hashtable<String, Object> serviceProps;
     private final ServletContextAttributeListenerManager contextAttributeListener;
     private final ServletRequestListenerManager requestListener;
     private final ServletRequestAttributeListenerManager requestAttributeListener;
@@ -71,15 +75,18 @@ public final class HttpServiceController
     private final boolean sharedContextAttributes;
     private final HttpServicePlugin plugin;
     private volatile WhiteboardHttpService whiteboardHttpService;
-    private volatile ServiceRegistration serviceReg;
-    private volatile ServiceRegistration<HttpServiceRuntime> runtimeReg;
+
+    private final Hashtable<String, Object> httpServiceProps = new Hashtable<String, Object>();;
+    private volatile ServiceRegistration httpServiceReg;
+
+    private volatile ServiceRegistration<HttpServiceRuntime> runtimeServiceReg;
+    private final Hashtable<String, Object> runtimeServiceProps = new Hashtable<String, Object>();;
 
     public HttpServiceController(BundleContext bundleContext)
     {
         this.bundleContext = bundleContext;
         this.registry = new HandlerRegistry();
         this.dispatcher = new Dispatcher(this.registry);
-        this.serviceProps = new Hashtable<String, Object>();
         this.contextAttributeListener = new ServletContextAttributeListenerManager(bundleContext);
         this.requestListener = new ServletRequestListenerManager(bundleContext);
         this.requestAttributeListener = new ServletRequestAttributeListenerManager(bundleContext);
@@ -121,12 +128,26 @@ public final class HttpServiceController
 
     public void setProperties(Hashtable<String, Object> props)
     {
-        this.serviceProps.clear();
-        this.serviceProps.putAll(props);
+        this.httpServiceProps.clear();
+        this.httpServiceProps.putAll(props);
 
-        if (this.serviceReg != null)
+        if ( this.httpServiceProps.get(HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT_ATTRIBUTE) != null )
         {
-            this.serviceReg.setProperties(this.serviceProps);
+            this.httpServiceProps.put(OBSOLETE_REG_PROPERTY_ENDPOINTS,
+                    this.httpServiceProps.get(HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT_ATTRIBUTE));
+        }
+
+        // runtime service gets the same props for now
+        this.runtimeServiceProps.clear();
+        this.runtimeServiceProps.putAll(this.httpServiceProps);
+
+        if (this.httpServiceReg != null)
+        {
+            this.httpServiceReg.setProperties(this.httpServiceProps);
+
+            this.runtimeServiceProps.put(HttpServiceRuntimeConstants.HTTP_SERVICE_ID_ATTRIBUTE,
+                    this.httpServiceReg.getReference().getProperty(Constants.SERVICE_ID));
+            this.runtimeServiceReg.setProperties(this.runtimeServiceProps);
         }
     }
 
@@ -142,10 +163,18 @@ public final class HttpServiceController
         String[] ifaces = new String[] { HttpService.class.getName(), ExtHttpService.class.getName() };
         HttpServiceFactory factory = new HttpServiceFactory(servletContext, this.registry, this.contextAttributeListener, this.sharedContextAttributes);
 
-        this.serviceReg = this.bundleContext.registerService(ifaces, factory, this.serviceProps);
-        this.whiteboardHttpService = new WhiteboardHttpService(this.bundleContext, servletContext, this.registry);
+        this.httpServiceReg = this.bundleContext.registerService(ifaces, factory, this.httpServiceProps);
 
-        this.runtimeReg = this.bundleContext.registerService(HttpServiceRuntime.class, new HttpServiceRuntimeImpl(), null);
+        this.runtimeServiceProps.put(HttpServiceRuntimeConstants.HTTP_SERVICE_ID_ATTRIBUTE,
+                this.httpServiceReg.getReference().getProperty(Constants.SERVICE_ID));
+        this.runtimeServiceReg = this.bundleContext.registerService(HttpServiceRuntime.class,
+                new HttpServiceRuntimeImpl(),
+                this.runtimeServiceProps);
+
+        this.whiteboardHttpService = new WhiteboardHttpService(this.bundleContext,
+                servletContext,
+                this.registry,
+                this.runtimeServiceReg.getReference());
     }
 
     public void unregister()
@@ -156,10 +185,10 @@ public final class HttpServiceController
             this.whiteboardHttpService = null;
         }
 
-        if ( this.runtimeReg != null )
+        if ( this.runtimeServiceReg != null )
         {
-            this.runtimeReg.unregister();
-            this.runtimeReg = null;
+            this.runtimeServiceReg.unregister();
+            this.runtimeServiceReg = null;
         }
 
         this.sessionAttributeListener.close();
@@ -170,16 +199,16 @@ public final class HttpServiceController
 
         this.plugin.unregister();
 
-        if ( this.serviceReg != null )
+        if ( this.httpServiceReg != null )
         {
             try
             {
-                this.serviceReg.unregister();
+                this.httpServiceReg.unregister();
                 this.registry.shutdown();
             }
             finally
             {
-                this.serviceReg = null;
+                this.httpServiceReg = null;
             }
         }
     }

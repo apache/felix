@@ -26,12 +26,10 @@ import javax.servlet.http.HttpServlet;
 import org.apache.felix.http.base.internal.AbstractHttpActivator;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.osgi.framework.Constants;
+import org.osgi.service.http.runtime.HttpServiceRuntimeConstants;
 
 public final class BridgeActivator extends AbstractHttpActivator
 {
-    /** Endpoint service registration property from RFC 189 */
-    private static final String REG_PROPERTY_ENDPOINTS = "osgi.http.service.endpoints";
-
     /** Framework property containing the endpoint registration information (optional). */
     private static final String FELIX_HTTP_SERVICE_ENDPOINTS = "org.apache.felix.http.service.endpoints";
 
@@ -60,7 +58,8 @@ public final class BridgeActivator extends AbstractHttpActivator
         if ( getBundleContext().getProperty(FELIX_HTTP_SERVICE_ENDPOINTS) != null )
         {
             final Hashtable<String, Object> serviceRegProps = new Hashtable<String, Object>();
-            serviceRegProps.put(REG_PROPERTY_ENDPOINTS, getBundleContext().getProperty(FELIX_HTTP_SERVICE_ENDPOINTS));
+            serviceRegProps.put(HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT_ATTRIBUTE,
+                    getBundleContext().getProperty(FELIX_HTTP_SERVICE_ENDPOINTS));
             this.getHttpServiceController().setProperties(serviceRegProps);
         }
 

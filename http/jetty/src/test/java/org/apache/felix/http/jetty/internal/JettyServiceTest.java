@@ -51,10 +51,13 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.mockito.Matchers;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.Version;
 import org.osgi.service.http.context.ServletContextHelper;
+import org.osgi.service.http.runtime.HttpServiceRuntime;
 
 public class JettyServiceTest extends TestCase
 {
@@ -89,9 +92,18 @@ public class JettyServiceTest extends TestCase
         when(mockBundle.getSymbolicName()).thenReturn("main");
         when(mockBundle.getVersion()).thenReturn(new Version("1.0.0"));
         when(mockBundle.getHeaders()).thenReturn(new Hashtable<String, String>());
+        final ServiceReference ref = mock(ServiceReference.class);
+        when(ref.getProperty(Constants.SERVICE_ID)).thenReturn(1L);
         final ServiceRegistration reg = mock(ServiceRegistration.class);
+        when(reg.getReference()).thenReturn(ref);
         when(mockBundleContext.registerService((Class<ServletContextHelper>)Matchers.isNotNull(),
                 (ServiceFactory<ServletContextHelper>)Matchers.any(ServiceFactory.class),
+                Matchers.any(Dictionary.class))).thenReturn(reg);
+        when(mockBundleContext.registerService(Matchers.<String[]>any(),
+                Matchers.any(ServiceFactory.class),
+                Matchers.any(Dictionary.class))).thenReturn(reg);
+        when(mockBundleContext.registerService((Class<HttpServiceRuntime>)Matchers.isNotNull(),
+                Matchers.any(HttpServiceRuntime.class),
                 Matchers.any(Dictionary.class))).thenReturn(reg);
 
         httpServiceController = new HttpServiceController(mockBundleContext);

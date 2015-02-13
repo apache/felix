@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 /**
  * Base class for all info objects.
@@ -40,6 +41,9 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
     /** Service reference. */
     private final ServiceReference<T> serviceReference;
 
+    /** Target. */
+    private final String target;
+
     public AbstractInfo(final ServiceReference<T> ref)
     {
         this.serviceId = (Long)ref.getProperty(Constants.SERVICE_ID);
@@ -53,6 +57,7 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
             this.ranking = 0;
         }
         this.serviceReference = ref;
+        this.target = getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET);
     }
 
     public AbstractInfo(final int ranking, final long serviceId)
@@ -60,6 +65,7 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
         this.ranking = ranking;
         this.serviceId = serviceId;
         this.serviceReference = null;
+        this.target = null;
     }
 
     public boolean isValid()
@@ -220,5 +226,10 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
         if (serviceId != other.serviceId)
             return false;
         return true;
+    }
+
+    public String getTarget()
+    {
+        return this.target;
     }
 }
