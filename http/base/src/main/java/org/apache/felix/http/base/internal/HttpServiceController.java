@@ -27,16 +27,12 @@ import org.apache.felix.http.base.internal.dispatch.Dispatcher;
 import org.apache.felix.http.base.internal.handler.HandlerRegistry;
 import org.apache.felix.http.base.internal.handler.HttpServicePlugin;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
-import org.apache.felix.http.base.internal.runtime.HttpServiceRuntimeImpl;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.apache.felix.http.base.internal.service.listener.ServletContextAttributeListenerManager;
 import org.apache.felix.http.base.internal.service.listener.ServletRequestAttributeListenerManager;
 import org.apache.felix.http.base.internal.service.listener.ServletRequestListenerManager;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardHttpService;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.http.runtime.HttpServiceRuntime;
-import org.osgi.service.http.runtime.HttpServiceRuntimeConstants;
 
 public final class HttpServiceController
 {
@@ -45,21 +41,19 @@ public final class HttpServiceController
     private final Dispatcher dispatcher;
     private final HttpServicePlugin plugin;
     private final HttpServiceFactory httpServiceFactory;
-    private volatile WhiteboardHttpService whiteboardHttpService;
+    private final WhiteboardHttpService whiteboardHttpService;
 
-    private volatile ServiceRegistration<HttpServiceRuntime> runtimeServiceReg;
-    private final Hashtable<String, Object> runtimeServiceProps = new Hashtable<String, Object>();;
-
-    public HttpServiceController(BundleContext bundleContext)
+    public HttpServiceController(final BundleContext bundleContext)
     {
         this.bundleContext = bundleContext;
         this.registry = new HandlerRegistry();
         this.dispatcher = new Dispatcher(this.registry);
         this.plugin = new HttpServicePlugin(bundleContext, registry);
         this.httpServiceFactory = new HttpServiceFactory(this.bundleContext, this.registry);
+        this.whiteboardHttpService = new WhiteboardHttpService(this.bundleContext, this.registry, this.httpServiceFactory);
     }
 
-    public Dispatcher getDispatcher()
+    Dispatcher getDispatcher()
     {
         return this.dispatcher;
     }
@@ -104,17 +98,7 @@ public final class HttpServiceController
     public void setProperties(final Hashtable<String, Object> props)
     {
         this.httpServiceFactory.setProperties(props);
-
-        // runtime service gets the same props for now
-        this.runtimeServiceProps.clear();
-        this.runtimeServiceProps.putAll(props);
-
-        if (this.runtimeServiceReg != null)
-        {
-            this.runtimeServiceProps.put(HttpServiceRuntimeConstants.HTTP_SERVICE_ID_ATTRIBUTE,
-                    this.httpServiceFactory.getHttpServiceServiceId());
-            this.runtimeServiceReg.setProperties(this.runtimeServiceProps);
-        }
+        this.whiteboardHttpService.setProperties(props);
     }
 
     public void register(final ServletContext servletContext)
@@ -122,36 +106,21 @@ public final class HttpServiceController
         this.plugin.register();
 
         this.httpServiceFactory.start(servletContext);
+        this.whiteboardHttpService.start(servletContext);
 
-        this.runtimeServiceProps.put(HttpServiceRuntimeConstants.HTTP_SERVICE_ID_ATTRIBUTE,
-                this.httpServiceFactory.getHttpServiceServiceId());
-        this.runtimeServiceReg = this.bundleContext.registerService(HttpServiceRuntime.class,
-                new HttpServiceRuntimeImpl(),
-                this.runtimeServiceProps);
-
-        this.whiteboardHttpService = new WhiteboardHttpService(this.bundleContext,
-                servletContext,
-                this.registry,
-                this.runtimeServiceReg.getReference());
         this.dispatcher.setWhiteboardHttpService(this.whiteboardHttpService);
     }
 
     public void unregister()
     {
+        this.plugin.unregister();
+
         this.dispatcher.setWhiteboardHttpService(null);
+
         if ( this.whiteboardHttpService != null )
         {
-            this.whiteboardHttpService.close();
-            this.whiteboardHttpService = null;
+            this.whiteboardHttpService.stop();
         }
-
-        if ( this.runtimeServiceReg != null )
-        {
-            this.runtimeServiceReg.unregister();
-            this.runtimeServiceReg = null;
-        }
-
-        this.plugin.unregister();
 
         if ( this.httpServiceFactory != null )
         {

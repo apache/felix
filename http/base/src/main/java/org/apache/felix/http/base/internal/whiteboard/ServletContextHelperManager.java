@@ -17,6 +17,7 @@
 package org.apache.felix.http.base.internal.whiteboard;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -55,7 +56,6 @@ import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.context.ServletContextHelper;
-import org.osgi.service.http.runtime.HttpServiceRuntime;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 public final class ServletContextHelperManager
@@ -74,8 +74,6 @@ public final class ServletContextHelperManager
 
     private final Bundle bundle;
 
-    private final ServiceReference<HttpServiceRuntime> runtimeRef;
-
     private final Set<AbstractInfo<?>> invalidRegistrations = new ConcurrentSkipListSet<AbstractInfo<?>>();
 
     /**
@@ -84,13 +82,11 @@ public final class ServletContextHelperManager
      */
     public ServletContextHelperManager(final BundleContext bundleContext,
             final ServletContext webContext,
-            final ServiceReference<HttpServiceRuntime> runtimeRef,
             final WhiteboardHttpService httpService)
     {
         this.httpService = httpService;
         this.webContext = webContext;
         this.bundle = bundleContext.getBundle();
-        this.runtimeRef = runtimeRef;
 
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, HttpWhiteboardConstants.HTTP_WHITEBOARD_DEFAULT_CONTEXT_NAME);
@@ -481,7 +477,7 @@ public final class ServletContextHelperManager
             try
             {
                 final Filter f = this.bundle.getBundleContext().createFilter(target);
-                return f.match(this.runtimeRef);
+                return f.match(this.httpService.getServiceReference());
             }
             catch ( final InvalidSyntaxException ise)
             {
@@ -507,5 +503,19 @@ public final class ServletContextHelperManager
             }
         }
         return null;
+    }
+
+    public Collection<ContextHandler> getContextHandlers()
+    {
+         final List<ContextHandler> handlers = new ArrayList<ContextHandler>();
+         synchronized ( this.contextMap )
+         {
+             for(final List<ContextHandler> handlerList : this.contextMap.values())
+             {
+                 final ContextHandler h = handlerList.get(0);
+                 handlers.add(h);
+             }
+         }
+         return handlers;
     }
 }
