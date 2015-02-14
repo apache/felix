@@ -17,6 +17,7 @@
 package org.apache.felix.http.base.internal.whiteboard;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
@@ -59,7 +60,7 @@ public final class WhiteboardHttpService
 
     private final ServletContextHelperManager contextManager;
 
-    private final ArrayList<ServiceTracker<?, ?>> trackers = new ArrayList<ServiceTracker<?, ?>>();
+    private final List<ServiceTracker<?, ?>> trackers = new ArrayList<ServiceTracker<?, ?>>();
 
     /**
      * Create a new whiteboard http service
@@ -75,7 +76,7 @@ public final class WhiteboardHttpService
         this.handlerRegistry = handlerRegistry;
         this.bundleContext = bundleContext;
         this.contextManager = new ServletContextHelperManager(bundleContext, context, runtimeRef, this);
-        
+
         addTracker(new FilterTracker(bundleContext, contextManager));
         addTracker(new ServletTracker(bundleContext, this.contextManager));
         addTracker(new ResourceTracker(bundleContext, this.contextManager));
@@ -86,7 +87,7 @@ public final class WhiteboardHttpService
         addTracker(new ServletContextHelperTracker(bundleContext, this.contextManager));
         addTracker(new ServletContextListenerTracker(bundleContext, this.contextManager));
         addTracker(new ServletContextAttributeListenerTracker(bundleContext, this.contextManager));
-        
+
         addTracker(new ServletRequestListenerTracker(bundleContext, this.contextManager));
         addTracker(new ServletRequestAttributeListenerTracker(bundleContext, this.contextManager));
     }

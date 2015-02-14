@@ -16,30 +16,108 @@
  */
 package org.apache.felix.http.base.internal.service;
 
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextAttributeListener;
+import java.util.Hashtable;
 
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpSessionAttributeListener;
+import javax.servlet.http.HttpSessionListener;
+
+import org.apache.felix.http.api.ExtHttpService;
 import org.apache.felix.http.base.internal.handler.HandlerRegistry;
+import org.apache.felix.http.base.internal.service.listener.HttpSessionAttributeListenerManager;
+import org.apache.felix.http.base.internal.service.listener.HttpSessionListenerManager;
+import org.apache.felix.http.base.internal.service.listener.ServletContextAttributeListenerManager;
+import org.apache.felix.http.base.internal.service.listener.ServletRequestAttributeListenerManager;
+import org.apache.felix.http.base.internal.service.listener.ServletRequestListenerManager;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.HttpService;
+import org.osgi.service.http.runtime.HttpServiceRuntimeConstants;
 
 public final class HttpServiceFactory
     implements ServiceFactory<HttpService>
 {
-    private final ServletContext context;
-    private final ServletContextAttributeListener attributeListener;
+    /**
+     * Name of the Framework property indicating whether the servlet context
+     * attributes of the ServletContext objects created for each HttpContext
+     * used to register servlets and resources share their attributes or not.
+     * By default (if this property is not specified or it's value is not
+     * <code>true</code> (case-insensitive)) servlet context attributes are not
+     * shared. To have servlet context attributes shared amongst servlet context
+     * and also with the ServletContext provided by the servlet container ensure
+     * setting the property as follows:
+     * <pre>
+     * org.apache.felix.http.shared_servlet_context_attributes = true
+     * </pre>
+     * <p>
+     * <b>WARNING:</b> Only set this property if absolutely needed (for example
+     * you implement an HttpSessionListener and want to access servlet context
+     * attributes of the ServletContext to which the HttpSession is linked).
+     * Otherwise leave this property unset.
+     */
+    private static final String FELIX_HTTP_SHARED_SERVLET_CONTEXT_ATTRIBUTES = "org.apache.felix.http.shared_servlet_context_attributes";
+
+    /** Compatiblity property for previous versions. */
+    private static final String OBSOLETE_REG_PROPERTY_ENDPOINTS = "osgi.http.service.endpoints";
+
+    private final BundleContext bundleContext;
     private final HandlerRegistry handlerRegistry;
     private final boolean sharedContextAttributes;
 
-    public HttpServiceFactory(ServletContext context, HandlerRegistry handlerRegistry,
-        ServletContextAttributeListener attributeListener, boolean sharedContextAttributes)
+    private final ServletContextAttributeListenerManager contextAttributeListenerManager;
+    private final ServletRequestListenerManager requestListenerManager;
+    private final ServletRequestAttributeListenerManager requestAttributeListenerManager;
+    private final HttpSessionListenerManager sessionListenerManager;
+    private final HttpSessionAttributeListenerManager sessionAttributeListenerManager;
+
+    private final Hashtable<String, Object> httpServiceProps = new Hashtable<String, Object>();
+    private volatile ServletContext context;
+    private volatile ServiceRegistration<?> httpServiceReg;
+
+    public HttpServiceFactory(final BundleContext bundleContext,
+            final HandlerRegistry handlerRegistry)
+    {
+        this.bundleContext = bundleContext;
+        this.handlerRegistry = handlerRegistry;
+        this.sharedContextAttributes = getBoolean(FELIX_HTTP_SHARED_SERVLET_CONTEXT_ATTRIBUTES);
+
+        this.contextAttributeListenerManager = new ServletContextAttributeListenerManager(bundleContext);
+        this.requestListenerManager = new ServletRequestListenerManager(bundleContext);
+        this.requestAttributeListenerManager = new ServletRequestAttributeListenerManager(bundleContext);
+        this.sessionListenerManager = new HttpSessionListenerManager(bundleContext);
+        this.sessionAttributeListenerManager = new HttpSessionAttributeListenerManager(bundleContext);
+    }
+
+    public void start(final ServletContext context)
     {
         this.context = context;
-        this.attributeListener = attributeListener;
-        this.handlerRegistry = handlerRegistry;
-        this.sharedContextAttributes = sharedContextAttributes;
+        this.contextAttributeListenerManager.open();
+        this.requestListenerManager.open();
+        this.requestAttributeListenerManager.open();
+        this.sessionListenerManager.open();
+        this.sessionAttributeListenerManager.open();
+
+        final String[] ifaces = new String[] { HttpService.class.getName(), ExtHttpService.class.getName() };
+        this.httpServiceReg = bundleContext.registerService(ifaces, this, this.httpServiceProps);
+    }
+
+    public void stop()
+    {
+        this.context = null;
+        if ( this.httpServiceReg != null )
+        {
+            this.httpServiceReg.unregister();
+            this.httpServiceReg = null;
+        }
+
+        this.contextAttributeListenerManager.close();
+        this.requestListenerManager.close();
+        this.requestAttributeListenerManager.close();
+        this.sessionListenerManager.close();
+        this.sessionAttributeListenerManager.close();
     }
 
     @Override
@@ -47,7 +125,7 @@ public final class HttpServiceFactory
     {
         return new HttpServiceImpl(bundle, this.context,
                 this.handlerRegistry.getRegistry(null),
-                this.attributeListener,
+                this.contextAttributeListenerManager,
                 this.sharedContextAttributes);
     }
 
@@ -59,5 +137,58 @@ public final class HttpServiceFactory
         {
             ((HttpServiceImpl)service).unregisterAll();
         }
+    }
+
+    public ServletContextAttributeListenerManager getContextAttributeListener()
+    {
+        return contextAttributeListenerManager;
+    }
+
+    public ServletRequestListenerManager getRequestListener()
+    {
+        return requestListenerManager;
+    }
+
+    public ServletRequestAttributeListenerManager getRequestAttributeListener()
+    {
+        return requestAttributeListenerManager;
+    }
+
+    public HttpSessionListener getSessionListener()
+    {
+        return sessionListenerManager;
+    }
+
+    public HttpSessionAttributeListener getSessionAttributeListener()
+    {
+        return sessionAttributeListenerManager;
+    }
+
+    public long getHttpServiceServiceId()
+    {
+        return (Long) this.httpServiceReg.getReference().getProperty(Constants.SERVICE_ID);
+    }
+
+    public void setProperties(final Hashtable<String, Object> props)
+    {
+        this.httpServiceProps.clear();
+        this.httpServiceProps.putAll(props);
+
+        if ( this.httpServiceProps.get(HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT_ATTRIBUTE) != null )
+        {
+            this.httpServiceProps.put(OBSOLETE_REG_PROPERTY_ENDPOINTS,
+                    this.httpServiceProps.get(HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT_ATTRIBUTE));
+        }
+
+        if (this.httpServiceReg != null)
+        {
+            this.httpServiceReg.setProperties(this.httpServiceProps);
+        }
+    }
+
+    private boolean getBoolean(final String property)
+    {
+        String prop = this.bundleContext.getProperty(property);
+        return (prop != null) ? Boolean.valueOf(prop).booleanValue() : false;
     }
 }
