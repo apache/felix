@@ -34,7 +34,9 @@ import aQute.bnd.annotation.ProviderType;
  * or {@link Servlet}s.
  *
  * @see HttpContext
+ * @deprecated The HTTP Whiteboard Service should be used instead.
  */
+@Deprecated
 @ProviderType
 public interface ExtHttpService extends HttpService
 {
