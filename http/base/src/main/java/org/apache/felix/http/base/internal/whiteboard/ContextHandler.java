@@ -18,7 +18,9 @@ package org.apache.felix.http.base.internal.whiteboard;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import javax.annotation.Nonnull;
 import javax.servlet.ServletContext;
@@ -43,6 +45,7 @@ import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletRequestAttributeListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletRequestListenerInfo;
+import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
@@ -53,11 +56,14 @@ public final class ContextHandler implements Comparable<ContextHandler>
     /** The info object for the context. */
     private final ServletContextHelperInfo info;
 
-    /** A map of all created servlet contexts. */
-    private final Map<Long, ContextHolder> contextMap = new HashMap<Long, ContextHolder>();
-
     /** The shared part of the servlet context. */
     private final ServletContext sharedContext;
+
+    /** The http bundle. */
+    private final Bundle bundle;
+
+    /** A map of all created servlet contexts. Each bundle gets it's own instance. */
+    private final Map<Long, ContextHolder> perBundleContextMap = new HashMap<Long, ContextHolder>();
 
     /** Servlet context listeners. */
     private final Map<Long, ServletContextListener> listeners = new HashMap<Long, ServletContextListener>();
@@ -82,8 +88,8 @@ public final class ContextHandler implements Comparable<ContextHandler>
     private final Map<ServiceReference<ServletRequestAttributeListener>, ServletRequestAttributeListener> requestAttributeListeners =
             new ConcurrentSkipListMap<ServiceReference<ServletRequestAttributeListener>, ServletRequestAttributeListener>();
 
-    /** The http bundle. */
-    private final Bundle bundle;
+    /** All whiteboard services - servlets, filters, resources. */
+    private final Set<WhiteboardServiceInfo<?>> whiteboardServices = new ConcurrentSkipListSet<WhiteboardServiceInfo<?>>();
 
     /**
      * Create new handler.
@@ -98,7 +104,7 @@ public final class ContextHandler implements Comparable<ContextHandler>
         this.bundle = bundle;
         this.sharedContext = new SharedServletContextImpl(webContext,
                 info.getName(),
-                info.getPrefix(),
+                info.getPath(),
                 info.getInitParameters(),
                 getContextAttributeListener());
     }
@@ -125,6 +131,7 @@ public final class ContextHandler implements Comparable<ContextHandler>
     public void deactivate()
     {
         this.ungetServletContext(bundle);
+        this.whiteboardServices.clear();
     }
 
     public void initialized(@Nonnull final ServletContextListenerInfo listenerInfo)
@@ -167,9 +174,9 @@ public final class ContextHandler implements Comparable<ContextHandler>
     public ExtServletContext getServletContext(@Nonnull final Bundle bundle)
     {
         final Long key = bundle.getBundleId();
-        synchronized ( this.contextMap )
+        synchronized ( this.perBundleContextMap )
         {
-            ContextHolder holder = this.contextMap.get(key);
+            ContextHolder holder = this.perBundleContextMap.get(key);
             if ( holder == null )
             {
                 final ServiceObjects<ServletContextHelper> so = bundle.getBundleContext().getServiceObjects(this.info.getServiceReference());
@@ -185,7 +192,7 @@ public final class ContextHandler implements Comparable<ContextHandler>
                             this.getSessionAttributeListener(),
                             this.getServletRequestListener(),
                             this.getServletRequestAttributeListener());
-                    this.contextMap.put(key, holder);
+                    this.perBundleContextMap.put(key, holder);
                 }
             }
             holder.counter++;
@@ -197,15 +204,15 @@ public final class ContextHandler implements Comparable<ContextHandler>
     public void ungetServletContext(@Nonnull final Bundle bundle)
     {
         final Long key = bundle.getBundleId();
-        synchronized ( this.contextMap )
+        synchronized ( this.perBundleContextMap )
         {
-            ContextHolder holder = this.contextMap.get(key);
+            ContextHolder holder = this.perBundleContextMap.get(key);
             if ( holder != null )
             {
                 holder.counter--;
                 if ( holder.counter <= 0 )
                 {
-                    this.contextMap.remove(key);
+                    this.perBundleContextMap.remove(key);
                     final ServiceObjects<ServletContextHelper> so = bundle.getBundleContext().getServiceObjects(this.info.getServiceReference());
                     if ( so != null )
                     {
@@ -520,5 +527,20 @@ public final class ContextHandler implements Comparable<ContextHandler>
                 }
             }
         };
+    }
+
+    public void addWhiteboardService(final WhiteboardServiceInfo<?> info)
+    {
+        this.whiteboardServices.add(info);
+    }
+
+    public void removeWhiteboardService(final WhiteboardServiceInfo<?> info)
+    {
+        this.whiteboardServices.remove(info);
+    }
+
+    public Set<WhiteboardServiceInfo<?>> getWhiteboardServices()
+    {
+        return this.whiteboardServices;
     }
 }

@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
+import javax.servlet.DispatcherType;
 import javax.servlet.Filter;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
@@ -39,6 +40,7 @@ import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ResourceInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.apache.felix.http.base.internal.whiteboard.tracker.FilterTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.HttpSessionAttributeListenerTracker;
@@ -184,6 +186,7 @@ public final class WhiteboardHttpService implements HttpServiceRuntime
                         servlet);
                 try {
                     this.handlerRegistry.getRegistry(contextHandler.getContextInfo()).addServlet(handler);
+                    contextHandler.addWhiteboardService(servletInfo);
                 } catch (final ServletException e) {
                     so.ungetService(servlet);
                     // TODO create failure DTO
@@ -204,6 +207,7 @@ public final class WhiteboardHttpService implements HttpServiceRuntime
         {
             this.bundleContext.getServiceObjects(servletInfo.getServiceReference()).ungetService(instance);
             contextHandler.ungetServletContext(servletInfo.getServiceReference().getBundle());
+            contextHandler.removeWhiteboardService(servletInfo);
         }
     }
 
@@ -225,6 +229,7 @@ public final class WhiteboardHttpService implements HttpServiceRuntime
                     filterInfo);
             try {
                 this.handlerRegistry.getRegistry(contextHandler.getContextInfo()).addFilter(handler);
+                contextHandler.addWhiteboardService(filterInfo);
             } catch (final ServletException e) {
                 // TODO create failure DTO
             }
@@ -243,6 +248,7 @@ public final class WhiteboardHttpService implements HttpServiceRuntime
         {
             this.bundleContext.getServiceObjects(filterInfo.getServiceReference()).ungetService(instance);
             contextHandler.ungetServletContext(filterInfo.getServiceReference().getBundle());
+            contextHandler.removeWhiteboardService(filterInfo);
         }
     }
 
@@ -263,6 +269,7 @@ public final class WhiteboardHttpService implements HttpServiceRuntime
                 servlet);
         try {
             this.handlerRegistry.getRegistry(contextHandler.getContextInfo()).addServlet(handler);
+            contextHandler.addWhiteboardService(resourceInfo);
         } catch (ServletException e) {
             // TODO create failure DTO
         }
@@ -277,6 +284,7 @@ public final class WhiteboardHttpService implements HttpServiceRuntime
     {
         final ServletInfo servletInfo = new ServletInfo(resourceInfo);
         this.unregisterServlet(contextHandler, servletInfo);
+        contextHandler.removeWhiteboardService(resourceInfo);
     }
 
     public void registerContext(@Nonnull final ContextHandler contextHandler)
@@ -348,11 +356,77 @@ public final class WhiteboardHttpService implements HttpServiceRuntime
                     }
                 }
 
-                dto.errorPageDTOs = new ErrorPageDTO[0]; // TODO
-                dto.filterDTOs = new FilterDTO[0]; // TODO
+                final List<ErrorPageDTO> errorPages = new ArrayList<ErrorPageDTO>();
+                final List<FilterDTO> filters = new ArrayList<FilterDTO>();
+                final List<ServletDTO> servlets = new ArrayList<ServletDTO>();
+                final List<ResourceDTO> resources = new ArrayList<ResourceDTO>();
+                for(final WhiteboardServiceInfo<?> info : handler.getWhiteboardServices())
+                {
+                    if ( info instanceof ServletInfo )
+                    {
+                        final ServletInfo si = (ServletInfo)info;
+                        if ( si.getErrorPage() != null )
+                        {
+                            final ErrorPageDTO page = new ErrorPageDTO();
+                            errorPages.add(page);
+                            page.asyncSupported = si.isAsyncSupported();
+                            page.errorCodes = new long[0]; // TODO
+                            page.exceptions = toStringArray(si.getErrorPage()); // TODO
+                            page.initParams = new HashMap<String, String>(si.getInitParameters());
+                            page.name = si.getName();
+                            page.serviceId = si.getServiceId();
+                            page.servletContextId = handler.getContextInfo().getServiceId();
+                            page.servletInfo = null; // TODO
+                        }
+                        if ( si.getPatterns() != null )
+                        {
+                            final ServletDTO servlet = new ServletDTO();
+                            servlets.add(servlet);
+                            servlet.asyncSupported = si.isAsyncSupported();
+                            servlet.initParams = new HashMap<String, String>(si.getInitParameters());
+                            servlet.name = si.getName();
+                            servlet.patterns = toStringArray(si.getPatterns());
+                            servlet.serviceId = si.getServiceId();
+                            servlet.servletContextId = handler.getContextInfo().getServiceId();
+                            servlet.servletInfo = null; // TODO
+                        }
+                    }
+                    else if ( info instanceof ResourceInfo )
+                    {
+                        final ResourceDTO rsrc = new ResourceDTO();
+                        resources.add(rsrc);
+                        rsrc.patterns = ((ResourceInfo)info).getPatterns();
+                        rsrc.prefix = ((ResourceInfo)info).getPrefix();
+                        rsrc.serviceId = info.getServiceId();
+                        rsrc.servletContextId = handler.getContextInfo().getServiceId();
+                    }
+                    else if ( info instanceof FilterInfo )
+                    {
+                        final FilterDTO filter = new FilterDTO();
+                        filters.add(filter);
+                        filter.asyncSupported = ((FilterInfo)info).isAsyncSupported();
+                        final DispatcherType[] dTypes = ((FilterInfo)info).getDispatcher();
+                        filter.dispatcher = new String[dTypes.length];
+                        int index = 0;
+                        for(final DispatcherType dt : dTypes)
+                        {
+                            filter.dispatcher[index++] = dt.name();
+                        }
+                        filter.initParams = new HashMap<String, String>(((FilterInfo)info).getInitParameters());
+                        filter.name = ((FilterInfo)info).getName();
+                        filter.patterns = toStringArray(((FilterInfo)info).getPatterns());
+                        filter.regexs = toStringArray(((FilterInfo)info).getRegexs());
+                        filter.serviceId = info.getServiceId();
+                        filter.servletContextId = handler.getContextInfo().getServiceId();
+                        filter.servletNames = toStringArray(((FilterInfo)info).getServletNames());
+                    }
+                }
+                dto.errorPageDTOs = errorPages.toArray(new ErrorPageDTO[errorPages.size()]);
+                dto.filterDTOs = filters.toArray(new FilterDTO[filters.size()]);
+                dto.resourceDTOs = resources.toArray(new ResourceDTO[resources.size()]);
+                dto.servletDTOs = servlets.toArray(new ServletDTO[servlets.size()]);
+
                 dto.listenerDTOs = new ListenerDTO[0]; // TODO
-                dto.resourceDTOs = new ResourceDTO[0]; // TODO
-                dto.servletDTOs = new ServletDTO[0]; // TODO
             }
             finally
             {
@@ -378,4 +452,13 @@ public final class WhiteboardHttpService implements HttpServiceRuntime
         return null;
     }
 
+    private static final String[] EMPTY_ARRAY = new String[0];
+    private String[] toStringArray(final String[] array)
+    {
+        if ( array == null )
+        {
+            return EMPTY_ARRAY;
+        }
+        return array;
+    }
 }

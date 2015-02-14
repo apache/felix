@@ -39,8 +39,6 @@ public final class ServletContextHelperInfo extends AbstractInfo<ServletContextH
 
     private final String path;
 
-    private final String prefix;
-
     /**
      * The filter initialization parameters as provided during registration of the filter.
      */
@@ -51,15 +49,6 @@ public final class ServletContextHelperInfo extends AbstractInfo<ServletContextH
         super(ref);
         this.name = this.getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME);
         this.path = this.getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH);
-        String prefix = null;
-        if ( !isEmpty(this.path) )
-        {
-            if ( !this.path.equals("/") && this.path.length() > 1 )
-            {
-                prefix = this.path.substring(0, this.path.length() - 1);
-            }
-        }
-        this.prefix = prefix;
         this.initParams = getInitParams(ref, CONTEXT_INIT_PREFIX);
     }
 
@@ -67,8 +56,12 @@ public final class ServletContextHelperInfo extends AbstractInfo<ServletContextH
     {
         if ( !this.isEmpty(path) )
         {
+        	if ( path.equals("/") ) 
+        	{
+        		return true;
+        	}
             // TODO we need more validation
-            if ( path.startsWith("/") && path.endsWith("/") )
+            if ( path.startsWith("/") && !path.endsWith("/") )
             {
                 return true;
             }
@@ -91,11 +84,6 @@ public final class ServletContextHelperInfo extends AbstractInfo<ServletContextH
     public String getPath()
     {
         return this.path;
-    }
-
-    public String getPrefix()
-    {
-        return this.prefix;
     }
 
     public Map<String, String> getInitParameters()

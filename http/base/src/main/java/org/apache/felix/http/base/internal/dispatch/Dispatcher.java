@@ -327,29 +327,7 @@ public final class Dispatcher implements RequestDispatcherProvider
         @Override
         public String getContextPath()
         {
-            /*
-             * FELIX-2030 Calculate the context path for the Http Service
-             * registered servlets from the container context and servlet paths
-             */
-            //            if (contextPath == null)
-            //            {
-            //                final String context = super.getContextPath();
-            //                final String servlet = super.getServletPath();
-            //                if (context == null || context.length() == 0)
-            //                {
-            //                    contextPath = servlet;
-            //                }
-            //                else if (servlet == null || servlet.length() == 0)
-            //                {
-            //                    contextPath = context;
-            //                }
-            //                else
-            //                {
-            //                    contextPath = context + servlet;
-            //                }
-            //            }
-
-            return super.getContextPath();
+            return this.getServletContext().getContextPath();
         }
 
         @Override

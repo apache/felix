@@ -22,12 +22,13 @@ package org.apache.felix.http.base.internal.dispatch;
 import javax.servlet.RequestDispatcher;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
+import org.apache.felix.http.base.internal.context.ExtServletContextWrapper;
 import org.apache.felix.http.base.internal.service.ServletContextImpl;
 
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-class ServletContextWrapper extends ServletContextImpl
+class ServletContextWrapper extends ExtServletContextWrapper
 {
     private final RequestDispatcherProvider provider;
 
@@ -36,7 +37,7 @@ class ServletContextWrapper extends ServletContextImpl
     /**
      * Creates a new {@link ServletContextWrapper} instance.
      */
-    public ServletContextWrapper(Long contextId, ExtServletContext delegate, RequestDispatcherProvider provider)
+    public ServletContextWrapper(final Long contextId, final ExtServletContext delegate, final RequestDispatcherProvider provider)
     {
         super(delegate);
 

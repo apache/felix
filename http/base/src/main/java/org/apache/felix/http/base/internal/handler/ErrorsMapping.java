@@ -47,6 +47,7 @@ public final class ErrorsMapping
 
     void addErrorServlet(String errorPage, ServletHandler handler) throws ServletException
     {
+        // TODO Handle special values 4xx and 5xx
         if (ERROR_CODE_PATTERN.matcher(errorPage).matches())
         {
             Integer errorCode = Integer.valueOf(errorPage);

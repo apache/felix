@@ -60,18 +60,18 @@ public class SharedServletContextImpl implements ServletContext
 
     public SharedServletContextImpl(final ServletContext webContext,
             final String name,
-            final String prefix,
+            final String path,
             final Map<String, String> initParameters,
             final ServletContextAttributeListener servletContextAttributeListener)
     {
         this.context = webContext;
-        if ( prefix == null )
+        if ( path.equals("/") )
         {
             this.contextPath = webContext.getContextPath();
         }
         else
         {
-            this.contextPath = webContext.getContextPath() + prefix;
+            this.contextPath = webContext.getContextPath() + path;
         }
         this.name = name;
         if ( initParameters != null )
@@ -372,7 +372,6 @@ public class SharedServletContextImpl implements ServletContext
     @Override
     public SessionCookieConfig getSessionCookieConfig()
     {
-        // TODO
         return this.context.getSessionCookieConfig();
     }
 
