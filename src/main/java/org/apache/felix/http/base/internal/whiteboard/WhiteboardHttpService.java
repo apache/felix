@@ -17,7 +17,11 @@
 package org.apache.felix.http.base.internal.whiteboard;
 
 import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
@@ -35,6 +39,7 @@ import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ResourceInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.apache.felix.http.base.internal.whiteboard.tracker.FilterTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.HttpSessionAttributeListenerTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.HttpSessionListenerTracker;
@@ -48,19 +53,35 @@ import org.apache.felix.http.base.internal.whiteboard.tracker.ServletTracker;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.runtime.HttpServiceRuntime;
+import org.osgi.service.http.runtime.HttpServiceRuntimeConstants;
+import org.osgi.service.http.runtime.dto.ErrorPageDTO;
+import org.osgi.service.http.runtime.dto.FilterDTO;
+import org.osgi.service.http.runtime.dto.ListenerDTO;
+import org.osgi.service.http.runtime.dto.RequestInfoDTO;
+import org.osgi.service.http.runtime.dto.ResourceDTO;
+import org.osgi.service.http.runtime.dto.RuntimeDTO;
+import org.osgi.service.http.runtime.dto.ServletContextDTO;
+import org.osgi.service.http.runtime.dto.ServletDTO;
 import org.osgi.util.tracker.ServiceTracker;
 
-public final class WhiteboardHttpService
+public final class WhiteboardHttpService implements HttpServiceRuntime
 {
 
     private final HandlerRegistry handlerRegistry;
 
     private final BundleContext bundleContext;
 
-    private final ServletContextHelperManager contextManager;
+    private volatile ServletContextHelperManager contextManager;
 
     private final List<ServiceTracker<?, ?>> trackers = new ArrayList<ServiceTracker<?, ?>>();
+
+    private final Hashtable<String, Object> runtimeServiceProps = new Hashtable<String, Object>();;
+
+    private final HttpServiceFactory httpServiceFactory;
+
+    private volatile ServiceRegistration<HttpServiceRuntime> runtimeServiceReg;
 
     /**
      * Create a new whiteboard http service
@@ -69,13 +90,17 @@ public final class WhiteboardHttpService
      * @param handlerRegistry
      */
     public WhiteboardHttpService(final BundleContext bundleContext,
-            final ServletContext context,
             final HandlerRegistry handlerRegistry,
-            final ServiceReference<HttpServiceRuntime> runtimeRef)
+            final HttpServiceFactory httpServiceFactory)
     {
         this.handlerRegistry = handlerRegistry;
         this.bundleContext = bundleContext;
-        this.contextManager = new ServletContextHelperManager(bundleContext, context, runtimeRef, this);
+        this.httpServiceFactory = httpServiceFactory;
+    }
+
+    public void start(final ServletContext context)
+    {
+        this.contextManager = new ServletContextHelperManager(bundleContext, context, this);
 
         addTracker(new FilterTracker(bundleContext, contextManager));
         addTracker(new ServletTracker(bundleContext, this.contextManager));
@@ -90,22 +115,52 @@ public final class WhiteboardHttpService
 
         addTracker(new ServletRequestListenerTracker(bundleContext, this.contextManager));
         addTracker(new ServletRequestAttributeListenerTracker(bundleContext, this.contextManager));
+
+        this.runtimeServiceProps.put(HttpServiceRuntimeConstants.HTTP_SERVICE_ID_ATTRIBUTE,
+                this.httpServiceFactory.getHttpServiceServiceId());
+        this.runtimeServiceReg = this.bundleContext.registerService(HttpServiceRuntime.class,
+                this,
+                this.runtimeServiceProps);
     }
 
-    public void close()
+    public void stop()
     {
+        if ( this.runtimeServiceReg != null )
+        {
+            this.runtimeServiceReg.unregister();
+            this.runtimeServiceReg = null;
+        }
+
         for(final ServiceTracker<?, ?> t : this.trackers)
         {
             t.close();
         }
         this.trackers.clear();
-        this.contextManager.close();
+        if ( this.contextManager != null )
+        {
+            this.contextManager.close();
+            this.contextManager = null;
+        }
     }
 
     private void addTracker(ServiceTracker<?, ?> tracker)
     {
         this.trackers.add(tracker);
         tracker.open();
+    }
+
+    public void setProperties(final Hashtable<String, Object> props)
+    {
+        // runtime service gets the same props for now
+        this.runtimeServiceProps.clear();
+        this.runtimeServiceProps.putAll(props);
+
+        if (this.runtimeServiceReg != null)
+        {
+            this.runtimeServiceProps.put(HttpServiceRuntimeConstants.HTTP_SERVICE_ID_ATTRIBUTE,
+                    this.httpServiceFactory.getHttpServiceServiceId());
+            this.runtimeServiceReg.setProperties(this.runtimeServiceProps);
+        }
     }
 
     /**
@@ -247,4 +302,80 @@ public final class WhiteboardHttpService
             }
         }
     }
+
+    public ServiceReference<HttpServiceRuntime> getServiceReference()
+    {
+        return this.runtimeServiceReg.getReference();
+    }
+
+    @Override
+    public RuntimeDTO getRuntimeDTO()
+    {
+        // create new DTO on every call
+        final RuntimeDTO runtime = new RuntimeDTO();
+
+        // attributes
+        runtime.attributes = new HashMap<String, String>();
+        for(final Map.Entry<String, Object> entry : this.runtimeServiceProps.entrySet())
+        {
+            runtime.attributes.put(entry.getKey(), entry.getValue().toString());
+        }
+
+        // servlet context DTOs
+        final List<ServletContextDTO> contextDTOs = new ArrayList<ServletContextDTO>();
+        for(final ContextHandler handler : this.contextManager.getContextHandlers())
+        {
+            final ServletContextDTO dto = new ServletContextDTO();
+
+            final ServletContext ctx = handler.getServletContext(this.bundleContext.getBundle());
+            try
+            {
+                dto.name = handler.getContextInfo().getName();
+                dto.contextPath = handler.getContextInfo().getPath();
+                dto.initParams = new HashMap<String, String>(handler.getContextInfo().getInitParameters());
+                dto.serviceId = handler.getContextInfo().getServiceId();
+
+                dto.contextName = ctx.getServletContextName();
+                dto.attributes = new HashMap<String, Object>();
+                final Enumeration<String> e = ctx.getAttributeNames();
+                while ( e.hasMoreElements() )
+                {
+                    final String name = e.nextElement();
+                    final Object value = ctx.getAttribute(name);
+                    if ( value != null )
+                    {
+                        // TODO - check for appropriate value types
+                    }
+                }
+
+                dto.errorPageDTOs = new ErrorPageDTO[0]; // TODO
+                dto.filterDTOs = new FilterDTO[0]; // TODO
+                dto.listenerDTOs = new ListenerDTO[0]; // TODO
+                dto.resourceDTOs = new ResourceDTO[0]; // TODO
+                dto.servletDTOs = new ServletDTO[0]; // TODO
+            }
+            finally
+            {
+                handler.ungetServletContext(this.bundleContext.getBundle());
+            }
+            contextDTOs.add(dto);
+        }
+        runtime.servletContextDTOs = contextDTOs.toArray(new ServletContextDTO[contextDTOs.size()]);
+
+        runtime.failedErrorPageDTOs = null; // TODO
+        runtime.failedFilterDTOs = null; // TODO
+        runtime.failedListenerDTOs = null; // TODO
+        runtime.failedResourceDTOs = null; // TODO
+        runtime.failedServletContextDTOs = null; // TODO
+        runtime.failedServletDTOs = null; // TODO
+
+        return runtime;
+    }
+
+    @Override
+    public RequestInfoDTO calculateRequestInfoDTO(final String path) {
+        // TODO
+        return null;
+    }
+
 }
