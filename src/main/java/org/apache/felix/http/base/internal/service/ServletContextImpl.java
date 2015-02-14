@@ -70,16 +70,6 @@ public class ServletContextImpl implements ExtServletContext
         this.attributes = sharedAttributes ? null : new ConcurrentHashMap<String, Object>();
     }
 
-    protected ServletContextImpl(ExtServletContext delegate)
-    {
-        ServletContextImpl impl = (ServletContextImpl) delegate;
-        this.bundle = impl.bundle;
-        this.context = impl.context;
-        this.httpContext = impl.httpContext;
-        this.attributeListener = impl.attributeListener;
-        this.attributes = impl.attributes;
-    }
-
     @Override
     public FilterRegistration.Dynamic addFilter(String filterName, Class<? extends Filter> type)
     {

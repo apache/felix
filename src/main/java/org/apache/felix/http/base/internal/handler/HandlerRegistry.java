@@ -148,7 +148,7 @@ public final class HandlerRegistry
             {
                 return r.getErrorsMapping();
             }
-            else if ( serviceId == null && requestURI.startsWith(r.getPrefixPath()) )
+            else if ( serviceId == null && r.isMatching(requestURI) != null )
             {
                 return r.getErrorsMapping();
             }
@@ -205,9 +205,10 @@ public final class HandlerRegistry
         final List<PerContextHandlerRegistry> regs = this.registrations;
         for(final PerContextHandlerRegistry r : regs)
         {
-            if ( requestURI.startsWith(r.getPrefixPath()))
-            {
-                final ServletHandler handler = r.getServletHander(requestURI.substring(r.getPrefixPath().length() - 1));
+        	final String pathInContext = r.isMatching(requestURI);
+        	if ( pathInContext != null )
+        	{
+                final ServletHandler handler = r.getServletHander(pathInContext);
                 if ( handler != null )
                 {
                     return handler;

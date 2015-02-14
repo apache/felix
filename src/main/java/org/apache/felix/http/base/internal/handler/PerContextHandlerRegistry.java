@@ -45,19 +45,30 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
 
     private final int ranking;
 
-    private final String prefixPath;
+    private final String path;
+    
+    private final String prefix;
 
     public PerContextHandlerRegistry() {
         this.serviceId = 0;
         this.ranking = Integer.MAX_VALUE;
-        this.prefixPath = "/";
+        this.path = "/";
+        this.prefix = null;
     }
 
     public PerContextHandlerRegistry(final ServletContextHelperInfo info)
     {
         this.serviceId = info.getServiceId();
         this.ranking = info.getRanking();
-        this.prefixPath = info.getPath();
+        this.path = info.getPath();
+        if ( this.path.equals("/") ) 
+        {
+        	prefix = null;
+        }
+        else
+        {
+        	prefix = this.path + "/";
+        }
     }
 
     public synchronized void addFilter(FilterHandler handler) throws ServletException
@@ -76,7 +87,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     @Override
     public int compareTo(final PerContextHandlerRegistry other)
     {
-        final int result = other.prefixPath.compareTo(this.prefixPath);
+        final int result = other.path.compareTo(this.path);
         if ( result == 0 ) {
             if (other.ranking == this.ranking)
             {
@@ -332,9 +343,21 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
         this.servletMapping = new HandlerMapping<ServletHandler>(this.servletMap.values());
     }
 
-    public String getPrefixPath()
+    public String isMatching(final String requestURI)
     {
-        return this.prefixPath;
+        if ( requestURI.equals(this.path) )
+        {
+        	return "";
+        }
+        if ( this.prefix == null )
+        {
+        	return requestURI;
+        }
+        if ( requestURI.startsWith(this.prefix) )
+        {
+        	return requestURI.substring(this.prefix.length() - 1);
+        }
+        return null;
     }
 
     public long getContextServiceId()
