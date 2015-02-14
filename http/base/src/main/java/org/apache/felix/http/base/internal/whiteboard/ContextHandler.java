@@ -183,7 +183,7 @@ public final class ContextHandler implements Comparable<ContextHandler>
                 if ( so != null )
                 {
                     holder = new ContextHolder();
-                    // TODO check for null
+                    // TODO check for null of getService()
                     holder.servletContextHelper = so.getService();
                     holder.servletContext = new PerBundleServletContextImpl(bundle,
                             this.sharedContext,
@@ -194,6 +194,7 @@ public final class ContextHandler implements Comparable<ContextHandler>
                             this.getServletRequestAttributeListener());
                     this.perBundleContextMap.put(key, holder);
                 }
+                // TODO - check null for so
             }
             holder.counter++;
 
