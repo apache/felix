@@ -177,8 +177,6 @@ public final class ServletContextHelperManager
      */
     private void deactivate(final ContextHandler handler)
     {
-        this.httpService.unregisterContext(handler);
-
         // context listeners last
         final Map<ServiceReference<ServletContextListener>, ServletContextListenerInfo> listeners = new TreeMap<ServiceReference<ServletContextListener>, ServletContextListenerInfo>();
         final Iterator<Map.Entry<WhiteboardServiceInfo<?>, List<ContextHandler>>> i = this.servicesMap.entrySet().iterator();
@@ -206,6 +204,9 @@ public final class ServletContextHelperManager
             handler.destroyed(info);
         }
         handler.deactivate();
+
+        this.httpService.unregisterContext(handler);
+
     }
 
     /**
