@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.http.base.internal.context;
+package org.apache.felix.http.base.internal.service;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,6 +46,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSessionAttributeListener;
 import javax.servlet.http.HttpSessionListener;
 
+import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.util.MimeTypes;
 import org.osgi.framework.Bundle;

@@ -32,7 +32,6 @@ import javax.servlet.ServletException;
 
 import org.apache.felix.http.api.ExtHttpService;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.apache.felix.http.base.internal.context.ServletContextManager;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.handler.ServletHandler;

@@ -16,12 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.http.base.internal.listener;
+package org.apache.felix.http.base.internal.service.listener;
 
 import java.util.Iterator;
 
-import javax.servlet.ServletContextAttributeEvent;
-import javax.servlet.ServletContextAttributeListener;
+import javax.servlet.http.HttpSessionEvent;
+import javax.servlet.http.HttpSessionListener;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
@@ -32,15 +32,15 @@ import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
  * interfaces forwarding any event calls to registered OSGi services
  * implementing the respective Servlet API 2.4 listener interface.
  */
-public class ServletContextAttributeListenerManager extends AbstractListenerManager<ServletContextAttributeListener>
-    implements ServletContextAttributeListener
+public class HttpSessionListenerManager extends AbstractListenerManager<HttpSessionListener> implements
+    HttpSessionListener
 {
     private static org.osgi.framework.Filter createFilter(final BundleContext btx)
     {
         try
         {
             return btx.createFilter(String.format("(&(objectClass=%s)(!(%s=*)))",
-                    ServletContextAttributeListener.class.getName(),
+                    HttpSessionListener.class.getName(),
                     HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER));
         }
         catch ( final InvalidSyntaxException ise)
@@ -50,39 +50,28 @@ public class ServletContextAttributeListenerManager extends AbstractListenerMana
         return null; // we never get here - and if we get an NPE which is fine
     }
 
-    public ServletContextAttributeListenerManager(BundleContext context)
+    public HttpSessionListenerManager(BundleContext context)
     {
         super(context, createFilter(context));
     }
 
     @Override
-    public void attributeAdded(final ServletContextAttributeEvent scab)
+    public void sessionCreated(final HttpSessionEvent se)
     {
-        final Iterator<ServletContextAttributeListener> listeners = getContextListeners();
+        final Iterator<HttpSessionListener> listeners = getContextListeners();
         while (listeners.hasNext())
         {
-            listeners.next().attributeAdded(scab);
+            listeners.next().sessionCreated(se);
         }
     }
 
     @Override
-    public void attributeRemoved(final ServletContextAttributeEvent scab)
+    public void sessionDestroyed(final HttpSessionEvent se)
     {
-        final Iterator<ServletContextAttributeListener> listeners = getContextListeners();
+        final Iterator<HttpSessionListener> listeners = getContextListeners();
         while (listeners.hasNext())
         {
-            listeners.next().attributeRemoved(scab);
+            listeners.next().sessionDestroyed(se);
         }
     }
-
-    @Override
-    public void attributeReplaced(final ServletContextAttributeEvent scab)
-    {
-        final Iterator<ServletContextAttributeListener> listeners = getContextListeners();
-        while (listeners.hasNext())
-        {
-            listeners.next().attributeReplaced(scab);
-        }
-    }
-
 }

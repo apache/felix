@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.http.base.internal.context;
+package org.apache.felix.http.base.internal.service;
 
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -22,6 +22,7 @@ import java.util.WeakHashMap;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextAttributeListener;
 
+import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpContext;
 
