@@ -43,6 +43,7 @@ import javax.servlet.descriptor.JspConfigDescriptor;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.http.base.internal.service.ServletContextImpl;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.http.base.internal.listener;
+package org.apache.felix.http.base.internal.service.listener;
 
 import java.util.Iterator;
 

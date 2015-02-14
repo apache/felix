@@ -28,8 +28,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.http.base.internal.listener.ServletRequestAttributeListenerManager;
-import org.apache.felix.http.base.internal.listener.ServletRequestListenerManager;
+import org.apache.felix.http.base.internal.service.listener.ServletRequestAttributeListenerManager;
+import org.apache.felix.http.base.internal.service.listener.ServletRequestListenerManager;
 
 public final class DispatcherServlet extends HttpServlet
 {

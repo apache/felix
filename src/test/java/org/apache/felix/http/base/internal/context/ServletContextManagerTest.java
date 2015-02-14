@@ -16,6 +16,7 @@
  */
 package org.apache.felix.http.base.internal.context;
 
+import org.apache.felix.http.base.internal.service.ServletContextManager;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.Assert;
