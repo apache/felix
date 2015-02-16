@@ -22,7 +22,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
@@ -195,9 +197,39 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
         return this.serviceId;
     }
 
+    public String getTarget()
+    {
+        return this.target;
+    }
+
     public ServiceReference<T> getServiceReference()
     {
         return this.serviceReference;
+    }
+
+    public T getService(final Bundle bundle)
+    {
+        if ( this.serviceReference != null )
+        {
+            final ServiceObjects<T> so = bundle.getBundleContext().getServiceObjects(this.serviceReference);
+            if ( so != null )
+            {
+                return so.getService();
+            }
+        }
+        return null;
+    }
+
+    public void ungetService(final Bundle bundle, final T service)
+    {
+        if ( this.serviceReference != null )
+        {
+            final ServiceObjects<T> so = bundle.getBundleContext().getServiceObjects(this.serviceReference);
+            if ( so != null )
+            {
+                so.ungetService(service);
+            }
+        }
     }
 
     @Override
@@ -226,10 +258,5 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
         if (serviceId != other.serviceId)
             return false;
         return true;
-    }
-
-    public String getTarget()
-    {
-        return this.target;
     }
 }
