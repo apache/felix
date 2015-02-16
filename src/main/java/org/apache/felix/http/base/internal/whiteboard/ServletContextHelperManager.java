@@ -194,9 +194,6 @@ public final class ServletContextHelperManager
                 {
                     this.unregisterWhiteboardService(handler, entry.getKey());
                 }
-                if ( entry.getValue().isEmpty() ) {
-                    i.remove();
-                }
             }
         }
         for(final ServletContextListenerInfo info : listeners.values())
