@@ -29,8 +29,6 @@ import org.apache.felix.http.base.internal.handler.HttpServicePlugin;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.apache.felix.http.base.internal.service.listener.ServletContextAttributeListenerManager;
-import org.apache.felix.http.base.internal.service.listener.ServletRequestAttributeListenerManager;
-import org.apache.felix.http.base.internal.service.listener.ServletRequestListenerManager;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardHttpService;
 import org.osgi.framework.BundleContext;
 
@@ -61,16 +59,6 @@ public final class HttpServiceController
     ServletContextAttributeListenerManager getContextAttributeListener()
     {
         return this.httpServiceFactory.getContextAttributeListener();
-    }
-
-    ServletRequestListenerManager getRequestListener()
-    {
-        return this.httpServiceFactory.getRequestListener();
-    }
-
-    ServletRequestAttributeListenerManager getRequestAttributeListener()
-    {
-        return this.httpServiceFactory.getRequestAttributeListener();
     }
 
     HttpSessionListener getSessionListener()

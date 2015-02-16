@@ -60,14 +60,30 @@ public class ServletContextImpl implements ExtServletContext
     private final HttpContext httpContext;
     private final Map<String, Object> attributes;
     private final ServletContextAttributeListener attributeListener;
+    private final HttpSessionAttributeListener httpSessionAttributeListener;
+    private final HttpSessionListener httpSessionListener;
+    private final ServletRequestListener servletRequestListener;
+    private final ServletRequestAttributeListener servletRequestAttributeListener;
 
-    public ServletContextImpl(Bundle bundle, ServletContext context, HttpContext httpContext, ServletContextAttributeListener attributeListener, boolean sharedAttributes)
+    public ServletContextImpl(final Bundle bundle,
+            final ServletContext context,
+            final HttpContext httpContext,
+            final ServletContextAttributeListener attributeListener,
+            final boolean sharedAttributes,
+            final HttpSessionAttributeListener httpSessionAttributeListener,
+            final HttpSessionListener httpSessionListener,
+            final ServletRequestListener servletRequestListener,
+            final ServletRequestAttributeListener servletRequestAttributeListener)
     {
         this.bundle = bundle;
         this.context = context;
         this.httpContext = httpContext;
         this.attributeListener = attributeListener;
         this.attributes = sharedAttributes ? null : new ConcurrentHashMap<String, Object>();
+        this.httpSessionAttributeListener = httpSessionAttributeListener;
+        this.httpSessionListener = httpSessionListener;
+        this.servletRequestAttributeListener = servletRequestAttributeListener;
+        this.servletRequestListener = servletRequestListener;
     }
 
     @Override
@@ -377,25 +393,25 @@ public class ServletContextImpl implements ExtServletContext
     @Override
     public HttpSessionListener getHttpSessionListener()
     {
-        return null;
+        return this.httpSessionListener;
     }
 
     @Override
     public HttpSessionAttributeListener getHttpSessionAttributeListener()
     {
-        return null;
+        return this.httpSessionAttributeListener;
     }
 
     @Override
     public ServletRequestListener getServletRequestListener()
     {
-        return null;
+        return this.servletRequestListener;
     }
 
     @Override
     public ServletRequestAttributeListener getServletRequestAttributeListener()
     {
-        return null;
+        return this.servletRequestAttributeListener;
     }
 
     @Override

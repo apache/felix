@@ -29,6 +29,8 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextAttributeListener;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequestAttributeListener;
+import javax.servlet.ServletRequestListener;
 
 import org.apache.felix.http.api.ExtHttpService;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
@@ -51,12 +53,20 @@ public final class HttpServiceImpl implements ExtHttpService
     private final ServletContextManager contextManager;
 
     private final Map<String, ServletHandler> aliasMap = new HashMap<String, ServletHandler>();
-    
-    public HttpServiceImpl(Bundle bundle, ServletContext context, PerContextHandlerRegistry handlerRegistry, ServletContextAttributeListener servletAttributeListener, boolean sharedContextAttributes)
+
+    public HttpServiceImpl(final Bundle bundle,
+            final ServletContext context,
+            final PerContextHandlerRegistry handlerRegistry,
+            final ServletContextAttributeListener servletAttributeListener,
+            final boolean sharedContextAttributes,
+            final ServletRequestListener reqListener,
+            final ServletRequestAttributeListener reqAttrListener)
     {
         this.bundle = bundle;
         this.handlerRegistry = handlerRegistry;
-        this.contextManager = new ServletContextManager(this.bundle, context, servletAttributeListener, sharedContextAttributes);
+        this.contextManager = new ServletContextManager(this.bundle, context,
+                servletAttributeListener, sharedContextAttributes,
+                reqListener, reqAttrListener);
     }
 
     @Override
@@ -173,17 +183,17 @@ public final class HttpServiceImpl implements ExtHttpService
                 servletInfo,
                 servlet);
 
-        synchronized ( this.aliasMap ) 
+        synchronized ( this.aliasMap )
         {
-        	if ( this.aliasMap.containsKey(alias) ) 
+        	if ( this.aliasMap.containsKey(alias) )
         	{
-        	    throw new NamespaceException("Alias " + alias + " is already in use.");	
+        	    throw new NamespaceException("Alias " + alias + " is already in use.");
         	}
         	if ( this.localServlets.contains(servlet) )
         	{
-                throw new ServletException("Servlet instance " + handler.getName() + " already registered");        		
+                throw new ServletException("Servlet instance " + handler.getName() + " already registered");
         	}
-            
+
             this.handlerRegistry.addServlet(handler);
 
             this.aliasMap.put(alias, handler);
@@ -197,12 +207,12 @@ public final class HttpServiceImpl implements ExtHttpService
     @Override
     public void unregister(final String alias)
     {
-        synchronized ( this.aliasMap ) 
+        synchronized ( this.aliasMap )
         {
-		    final ServletHandler handler = this.aliasMap.remove(alias);	
+		    final ServletHandler handler = this.aliasMap.remove(alias);
 	        if ( handler == null )
 	        {
-	        	throw new IllegalArgumentException("Nothing registered at " + alias);        	
+	        	throw new IllegalArgumentException("Nothing registered at " + alias);
 	        }
 	        final Servlet servlet = this.handlerRegistry.removeServlet(handler.getServletInfo(), true);
 	        if (servlet != null)
@@ -263,7 +273,7 @@ public final class HttpServiceImpl implements ExtHttpService
             			i.remove();
             			break;
             		}
-            		
+
             	}
             	this.localServlets.remove(servlet);
             }

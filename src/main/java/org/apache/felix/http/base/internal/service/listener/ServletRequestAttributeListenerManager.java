@@ -32,7 +32,9 @@ import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
  * interfaces forwarding any event calls to registered OSGi services
  * implementing the respective Servlet API 2.4 listener interface.
  */
-public class ServletRequestAttributeListenerManager extends AbstractListenerManager<ServletRequestAttributeListener>
+public class ServletRequestAttributeListenerManager
+    extends AbstractListenerManager<ServletRequestAttributeListener>
+    implements ServletRequestAttributeListener
 {
     private static org.osgi.framework.Filter createFilter(final BundleContext btx)
     {
@@ -54,6 +56,7 @@ public class ServletRequestAttributeListenerManager extends AbstractListenerMana
         super(context, createFilter(context));
     }
 
+    @Override
     public void attributeAdded(final ServletRequestAttributeEvent srae)
     {
         final Iterator<ServletRequestAttributeListener> listeners = getContextListeners();
@@ -63,6 +66,7 @@ public class ServletRequestAttributeListenerManager extends AbstractListenerMana
         }
     }
 
+    @Override
     public void attributeRemoved(final ServletRequestAttributeEvent srae)
     {
         final Iterator<ServletRequestAttributeListener> listeners = getContextListeners();
@@ -72,6 +76,7 @@ public class ServletRequestAttributeListenerManager extends AbstractListenerMana
         }
     }
 
+    @Override
     public void attributeReplaced(final ServletRequestAttributeEvent srae)
     {
         final Iterator<ServletRequestAttributeListener> listeners = getContextListeners();
