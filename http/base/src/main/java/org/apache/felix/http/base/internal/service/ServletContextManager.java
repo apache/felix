@@ -21,6 +21,8 @@ import java.util.WeakHashMap;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextAttributeListener;
+import javax.servlet.ServletRequestAttributeListener;
+import javax.servlet.ServletRequestListener;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.osgi.framework.Bundle;
@@ -33,15 +35,25 @@ public final class ServletContextManager
     private final ServletContextAttributeListener attributeListener;
     private final Map<HttpContext, ExtServletContext> contextMap;
     private final boolean sharedAttributes;
+    private final ServletRequestListener servletRequestListener;
+    private final ServletRequestAttributeListener servletRequestAttributeListener;
 
-    public ServletContextManager(Bundle bundle, ServletContext context, ServletContextAttributeListener attributeListener, boolean sharedAttributes)
+    public ServletContextManager(
+            final Bundle bundle,
+            final ServletContext context,
+            final ServletContextAttributeListener attributeListener,
+            final boolean sharedAttributes,
+            final ServletRequestListener servletRequestListener,
+            final ServletRequestAttributeListener servletRequestAttributeListener)
     {
         this.bundle = bundle;
         this.context = context;
         this.attributeListener = attributeListener;
-        // FELIX-4424 : avoid classloader leakage through HttpContext, for now this is sufficient, 
-        // the real fix should be to remove ExtServletContext's when the usage count of HttpContext 
-        // drops to zero. 
+        this.servletRequestAttributeListener = servletRequestAttributeListener;
+        this.servletRequestListener = servletRequestListener;
+        // FELIX-4424 : avoid classloader leakage through HttpContext, for now this is sufficient,
+        // the real fix should be to remove ExtServletContext's when the usage count of HttpContext
+        // drops to zero.
         this.contextMap = new WeakHashMap<HttpContext, ExtServletContext>();
         this.sharedAttributes = sharedAttributes;
     }
@@ -62,7 +74,15 @@ public final class ServletContextManager
 
     private ExtServletContext addServletContext(HttpContext httpContext)
     {
-        ExtServletContext context = new ServletContextImpl(this.bundle, this.context, httpContext, this.attributeListener, this.sharedAttributes);
+        ExtServletContext context = new ServletContextImpl(this.bundle,
+                this.context,
+                httpContext,
+                this.attributeListener,
+                this.sharedAttributes,
+                null,
+                null,
+                servletRequestListener,
+                servletRequestAttributeListener);
         this.contextMap.put(httpContext, context);
         return context;
     }

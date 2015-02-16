@@ -126,7 +126,9 @@ public final class HttpServiceFactory
         return new HttpServiceImpl(bundle, this.context,
                 this.handlerRegistry.getRegistry(null),
                 this.contextAttributeListenerManager,
-                this.sharedContextAttributes);
+                this.sharedContextAttributes,
+                this.requestListenerManager,
+                this.requestAttributeListenerManager);
     }
 
     @Override
@@ -142,16 +144,6 @@ public final class HttpServiceFactory
     public ServletContextAttributeListenerManager getContextAttributeListener()
     {
         return contextAttributeListenerManager;
-    }
-
-    public ServletRequestListenerManager getRequestListener()
-    {
-        return requestListenerManager;
-    }
-
-    public ServletRequestAttributeListenerManager getRequestAttributeListener()
-    {
-        return requestAttributeListenerManager;
     }
 
     public HttpSessionListener getSessionListener()
