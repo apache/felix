@@ -136,19 +136,15 @@ public final class ContextHandler implements Comparable<ContextHandler>
 
     public void initialized(@Nonnull final ServletContextListenerInfo listenerInfo)
     {
-        final ServiceObjects<ServletContextListener> so = bundle.getBundleContext().getServiceObjects(listenerInfo.getServiceReference());
-        if ( so != null )
+        final ServletContextListener listener = listenerInfo.getService(bundle);
+        if ( listener != null)
         {
-            final ServletContextListener listener = so.getService();
-            if ( listener != null)
-            {
-                // no need to sync map - initialized is called in sync
-                this.listeners.put(listenerInfo.getServiceId(), listener);
+            // no need to sync map - initialized is called in sync
+            this.listeners.put(listenerInfo.getServiceId(), listener);
 
-                final ServletContext context = this.getServletContext(listenerInfo.getServiceReference().getBundle());
+            final ServletContext context = this.getServletContext(listenerInfo.getServiceReference().getBundle());
 
-                listener.contextInitialized(new ServletContextEvent(context));
-            }
+            listener.contextInitialized(new ServletContextEvent(context));
         }
     }
 
@@ -163,11 +159,7 @@ public final class ContextHandler implements Comparable<ContextHandler>
             // call unget twice, once for the call in initialized and once for the call in this method(!)
             this.ungetServletContext(listenerInfo.getServiceReference().getBundle());
             this.ungetServletContext(listenerInfo.getServiceReference().getBundle());
-            final ServiceObjects<ServletContextListener> so = bundle.getBundleContext().getServiceObjects(listenerInfo.getServiceReference());
-            if ( so != null )
-            {
-                so.ungetService(listener);
-            }
+            listenerInfo.ungetService(bundle, listener);
         }
     }
 
@@ -230,14 +222,10 @@ public final class ContextHandler implements Comparable<ContextHandler>
      */
     public void addListener(@Nonnull final ServletContextAttributeListenerInfo info)
     {
-        final ServiceObjects<ServletContextAttributeListener> so =  bundle.getBundleContext().getServiceObjects(info.getServiceReference());
-        if ( so != null )
+        final  ServletContextAttributeListener service = info.getService(bundle);
+        if ( service != null )
         {
-            final  ServletContextAttributeListener service = bundle.getBundleContext().getServiceObjects(info.getServiceReference()).getService();
-            if ( service != null )
-            {
-                this.contextAttributeListeners.put(info.getServiceReference(), service);
-            }
+            this.contextAttributeListeners.put(info.getServiceReference(), service);
         }
     }
 
@@ -250,10 +238,7 @@ public final class ContextHandler implements Comparable<ContextHandler>
         final  ServletContextAttributeListener service = this.contextAttributeListeners.remove(info.getServiceReference());
         if ( service != null )
         {
-            final ServiceObjects<ServletContextAttributeListener> so =  bundle.getBundleContext().getServiceObjects(info.getServiceReference());
-            if ( so != null ) {
-                so.ungetService(service);
-            }
+            info.ungetService(bundle, service);
         }
     }
 
@@ -263,14 +248,10 @@ public final class ContextHandler implements Comparable<ContextHandler>
      */
     public void addListener(@Nonnull final HttpSessionAttributeListenerInfo info)
     {
-        final ServiceObjects<HttpSessionAttributeListener> so =  bundle.getBundleContext().getServiceObjects(info.getServiceReference());
-        if ( so != null )
+        final  HttpSessionAttributeListener service = info.getService(bundle);
+        if ( service != null )
         {
-            final  HttpSessionAttributeListener service = bundle.getBundleContext().getServiceObjects(info.getServiceReference()).getService();
-            if ( service != null )
-            {
-                this.sessionAttributeListeners.put(info.getServiceReference(), service);
-            }
+            this.sessionAttributeListeners.put(info.getServiceReference(), service);
         }
     }
 
@@ -283,10 +264,7 @@ public final class ContextHandler implements Comparable<ContextHandler>
         final  HttpSessionAttributeListener service = this.sessionAttributeListeners.remove(info.getServiceReference());
         if ( service != null )
         {
-            final ServiceObjects<HttpSessionAttributeListener> so =  bundle.getBundleContext().getServiceObjects(info.getServiceReference());
-            if ( so != null ) {
-                so.ungetService(service);
-            }
+            info.ungetService(bundle, service);
         }
     }
 
@@ -296,14 +274,10 @@ public final class ContextHandler implements Comparable<ContextHandler>
      */
     public void addListener(@Nonnull final HttpSessionListenerInfo info)
     {
-        final ServiceObjects<HttpSessionListener> so =  bundle.getBundleContext().getServiceObjects(info.getServiceReference());
-        if ( so != null )
+        final  HttpSessionListener service = info.getService(bundle);
+        if ( service != null )
         {
-            final  HttpSessionListener service = bundle.getBundleContext().getServiceObjects(info.getServiceReference()).getService();
-            if ( service != null )
-            {
-                this.sessionListeners.put(info.getServiceReference(), service);
-            }
+            this.sessionListeners.put(info.getServiceReference(), service);
         }
     }
 
@@ -316,10 +290,7 @@ public final class ContextHandler implements Comparable<ContextHandler>
         final  HttpSessionListener service = this.sessionListeners.remove(info.getServiceReference());
         if ( service != null )
         {
-            final ServiceObjects<HttpSessionListener> so =  bundle.getBundleContext().getServiceObjects(info.getServiceReference());
-            if ( so != null ) {
-                so.ungetService(service);
-            }
+            info.ungetService(bundle, service);
         }
     }
 
@@ -329,14 +300,10 @@ public final class ContextHandler implements Comparable<ContextHandler>
      */
     public void addListener(@Nonnull final ServletRequestListenerInfo info)
     {
-        final ServiceObjects<ServletRequestListener> so =  bundle.getBundleContext().getServiceObjects(info.getServiceReference());
-        if ( so != null )
+        final  ServletRequestListener service = info.getService(bundle);
+        if ( service != null )
         {
-            final  ServletRequestListener service = bundle.getBundleContext().getServiceObjects(info.getServiceReference()).getService();
-            if ( service != null )
-            {
-                this.requestListeners.put(info.getServiceReference(), service);
-            }
+            this.requestListeners.put(info.getServiceReference(), service);
         }
     }
 
@@ -349,10 +316,7 @@ public final class ContextHandler implements Comparable<ContextHandler>
         final ServletRequestListener service = this.requestListeners.remove(info.getServiceReference());
         if ( service != null )
         {
-            final ServiceObjects<ServletRequestListener> so =  bundle.getBundleContext().getServiceObjects(info.getServiceReference());
-            if ( so != null ) {
-                so.ungetService(service);
-            }
+            info.ungetService(bundle, service);
         }
     }
 
@@ -362,14 +326,10 @@ public final class ContextHandler implements Comparable<ContextHandler>
      */
     public void addListener(@Nonnull final ServletRequestAttributeListenerInfo info)
     {
-        final ServiceObjects<ServletRequestAttributeListener> so =  bundle.getBundleContext().getServiceObjects(info.getServiceReference());
-        if ( so != null )
+        final  ServletRequestAttributeListener service = info.getService(bundle);
+        if ( service != null )
         {
-            final  ServletRequestAttributeListener service = bundle.getBundleContext().getServiceObjects(info.getServiceReference()).getService();
-            if ( service != null )
-            {
-                this.requestAttributeListeners.put(info.getServiceReference(), service);
-            }
+            this.requestAttributeListeners.put(info.getServiceReference(), service);
         }
     }
 
@@ -382,10 +342,7 @@ public final class ContextHandler implements Comparable<ContextHandler>
         final ServletRequestAttributeListener service = this.requestAttributeListeners.remove(info.getServiceReference());
         if ( service != null )
         {
-            final ServiceObjects<ServletRequestAttributeListener> so =  bundle.getBundleContext().getServiceObjects(info.getServiceReference());
-            if ( so != null ) {
-                so.ungetService(service);
-            }
+            info.ungetService(bundle, service);
         }
     }
 
