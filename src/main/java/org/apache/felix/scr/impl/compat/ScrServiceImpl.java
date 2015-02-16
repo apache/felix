@@ -199,7 +199,7 @@ public class ScrServiceImpl implements ScrService
 
         public boolean isServiceFactory()
         {
-            return false; // TODO
+            return !"singleton".equals(this.description.scope);
         }
 
         public String getClassName()
