@@ -358,18 +358,6 @@ public class ComponentRegistry implements ServiceListener
     }
 
     /**
-     * We only need this for the ScrService implementation
-     * @param componentId
-     * @return
-     */
-    public final AbstractComponentManager<?> getComponentManagerById(final long componentId)
-    {
-        synchronized ( m_componentsById )
-        {
-            return m_componentsById.get( componentId );
-        }
-    }
-    /**
      * Returns an array of all values currently stored in the component holders
      * map. The entries in the array are either String types for component
      * name reservations or {@link ComponentHolder} instances for actual
