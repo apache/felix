@@ -109,11 +109,6 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         }
     }
 
-    public ReferenceMetadata getReferenceMetadata()
-    {
-        return this.m_dependencyMetadata;
-    }
-
     private static int defaultMinimumCardinality(ReferenceMetadata dependency)
     {
         return dependency.isOptional()? 0: 1;

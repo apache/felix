@@ -33,7 +33,6 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 
-import org.apache.felix.scr.ScrInfo;
 import org.apache.felix.scr.impl.config.ScrConfiguration;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -53,14 +52,13 @@ import org.osgi.service.component.runtime.dto.UnsatisfiedReferenceDTO;
  * {@link #register(BundleContext, ScrService, ScrConfiguration)} method
  * instantiates and registers the Gogo and Shell commands as possible.
  */
-public class ScrCommand implements ScrInfo
+public class ScrCommand
 {
 
     private final BundleContext bundleContext;
     private final ServiceComponentRuntime scrService;
     private final ScrConfiguration scrConfiguration;
-    
-    private ServiceRegistration<ScrInfo> reg;
+
     private ServiceRegistration<?> gogoReg;
     private ServiceRegistration<?> shellReg;
 
@@ -130,8 +128,8 @@ public class ScrCommand implements ScrInfo
             // Ignore.
         }
     }
-    
-    void unregister() 
+
+    void unregister()
     {
         if (gogoReg != null)
         {
@@ -147,29 +145,7 @@ public class ScrCommand implements ScrInfo
 
     // ---------- Actual implementation
 
-    
-    public void update( boolean infoAsService )
-    {
-        if (infoAsService)
-        {
-            if ( reg == null )
-            {
-                final Hashtable<String, Object> props = new Hashtable<String, Object>();
-                props.put(Constants.SERVICE_DESCRIPTION, "SCR Info service");
-                props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-                reg = bundleContext.registerService( ScrInfo.class, this, props );
-            }
-        }
-        else
-        {
-            if ( reg != null )
-            {
-                reg.unregister();
-                reg = null;
-            }
-        }
-    }
-    
+
     /* (non-Javadoc)
      * @see org.apache.felix.scr.impl.ScrInfo#list(java.lang.String, java.io.PrintStream, java.io.PrintStream)
      */
@@ -228,16 +204,16 @@ public class ScrCommand implements ScrInfo
             }
         }
 
-        Collections.sort( components, new Comparator<ComponentDescriptionDTO>() 
+        Collections.sort( components, new Comparator<ComponentDescriptionDTO>()
                 {
 
                     public int compare(ComponentDescriptionDTO c1, ComponentDescriptionDTO c2)
                     {
                         return c1.name.compareTo(c2.name);
                     }
-            
+
                 });
-        
+
         out.println(" Name  BundleId DefaultEnabled");
         for ( ComponentDescriptionDTO component : components )
         {
@@ -257,7 +233,7 @@ public class ScrCommand implements ScrInfo
             return;
         }
 
-        Collections.sort( new ArrayList<ComponentDescriptionDTO>(components), new Comparator<ComponentDescriptionDTO>() 
+        Collections.sort( new ArrayList<ComponentDescriptionDTO>(components), new Comparator<ComponentDescriptionDTO>()
                 {
 
                     public int compare(ComponentDescriptionDTO c1, ComponentDescriptionDTO c2)
@@ -271,14 +247,14 @@ public class ScrCommand implements ScrInfo
                         }
                         return result;
                     }
-            
+
                 });
-        
+
         long bundleId = -1;
 
         for ( ComponentDescriptionDTO component : components )
         {
-            if ( component.bundle.id != bundleId ) 
+            if ( component.bundle.id != bundleId )
             {
                 if ( bundleId != -1 )
                 {
@@ -361,7 +337,7 @@ public class ScrCommand implements ScrInfo
                     out.println( ref.policyOption );
                     out.print( "    Reference Scope: ");
                     out.println( ref.scope);
-                    
+
                 }
             }
 
@@ -372,7 +348,7 @@ public class ScrCommand implements ScrInfo
                 info(cc, out);
             }
         }
-        
+
         out.flush();
     }
 
@@ -404,7 +380,7 @@ public class ScrCommand implements ScrInfo
                         }
                     }
                     out.println("]");
-                } 
+                }
                 else
                 {
                     out.println( prop );
@@ -420,7 +396,7 @@ public class ScrCommand implements ScrInfo
         out.println( cc.id );
         out.print("    State: ");
         out.println( toStateString(cc.state));
-        for ( SatisfiedReferenceDTO ref: cc.satisfiedReferences) 
+        for ( SatisfiedReferenceDTO ref: cc.satisfiedReferences)
         {
             out.print( "    SatisfiedReference: ");
             out.println( ref.name );
@@ -443,7 +419,7 @@ public class ScrCommand implements ScrInfo
           }
 
         }
-        for ( UnsatisfiedReferenceDTO ref: cc.unsatisfiedReferences) 
+        for ( UnsatisfiedReferenceDTO ref: cc.unsatisfiedReferences)
         {
             out.print( "    UnsatisfiedReference: ");
             out.println( ref.name );
@@ -529,10 +505,8 @@ public class ScrCommand implements ScrInfo
         out.println(scrConfiguration.stopTimeout());
         out.print("Global extender: ");
         out.println(scrConfiguration.globalExtender());
-        out.print("Info Service registered: ");
-        out.println(scrConfiguration.infoAsService() ? "Supported" : "Unsupported");
     }
-    
+
     private String toStateString(int state)
     {
         switch (state) {
