@@ -259,7 +259,7 @@ public class ScrServiceImpl implements ScrService
 
         public ComponentInstance getComponentInstance()
         {
-            // TODO - how do we want to enable this?
+            // returning null as we should have never returned this in the first place
             return null;
         }
 
@@ -306,12 +306,12 @@ public class ScrServiceImpl implements ScrService
 
         public void enable()
         {
-            this.runtime.enableComponent(this.description);
+            // noop as the old model was broken
         }
 
         public void disable()
         {
-            this.runtime.disableComponent(this.description);
+            // noop as the old model was broken
         }
     }
 
