@@ -19,6 +19,7 @@
 package org.apache.felix.scr.impl.compat;
 
 
+import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,6 +40,9 @@ public class Activator
     // tracker of the runtime service
     private volatile ServiceTracker<ServiceComponentRuntime, ServiceComponentRuntime> runtimeTracker;
 
+    // tracker of the new ScrInfoservice
+    private volatile ServiceTracker<org.apache.felix.scr.info.ScrInfo, org.apache.felix.scr.info.ScrInfo> infoTracker;
+
     // the service registrations
     private final Map<Long, ServiceRegistration<ScrService>> scrServiceRegMap = new ConcurrentHashMap<Long, ServiceRegistration<ScrService>>();
 
@@ -57,20 +61,13 @@ public class Activator
                         final ServiceComponentRuntime runtime = context.getService(reference);
                         if ( runtime != null )
                         {
-                            Hashtable props = new Hashtable();
+                            final Dictionary<String, Object> props = new Hashtable<String, Object>();
                             props.put(Constants.SERVICE_DESCRIPTION, "Apache Felix Compat ScrService");
                             props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
 
                             final ScrService service = new ScrServiceImpl(context, runtime);
                             scrServiceRegMap.put((Long)reference.getProperty(Constants.SERVICE_ID),
                                     context.registerService(ScrService.class, service, props));
-
-                            props = new Hashtable();
-                            props.put(Constants.SERVICE_DESCRIPTION, "Apache Felix Compat SCR Info service");
-                            props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-                            final ScrInfo info = new ScrCommand(context, service);
-                            scrCommandRegMap.put((Long)reference.getProperty(Constants.SERVICE_ID),
-                                    context.registerService(ScrInfo.class, info, props));
                         }
                         return runtime;
                     }
@@ -89,19 +86,62 @@ public class Activator
                         {
                             reg.unregister();
                         }
-                        final ServiceRegistration<ScrInfo> reg2 =  scrCommandRegMap.remove(reference.getProperty(Constants.SERVICE_ID));
-                        if ( reg2 != null )
-                        {
-                            reg2.unregister();
-                        }
                         context.ungetService(reference);
                     }
         });
         this.runtimeTracker.open();
+        this.infoTracker = new ServiceTracker<org.apache.felix.scr.info.ScrInfo, org.apache.felix.scr.info.ScrInfo>(context, org.apache.felix.scr.info.ScrInfo.class,
+                new ServiceTrackerCustomizer<org.apache.felix.scr.info.ScrInfo, org.apache.felix.scr.info.ScrInfo>()
+                {
+
+                    public org.apache.felix.scr.info.ScrInfo addingService(
+                            final ServiceReference<org.apache.felix.scr.info.ScrInfo> reference)
+                    {
+                        final org.apache.felix.scr.info.ScrInfo runtime = context.getService(reference);
+                        if ( runtime != null )
+                        {
+                            final Dictionary<String, Object> props = new Hashtable<String, Object>();
+                            props.put(Constants.SERVICE_DESCRIPTION, "Apache Felix Compat SCR Info service");
+                            props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+
+                            final ScrInfo info = new ScrCommand(runtime);
+                            scrCommandRegMap.put((Long)reference.getProperty(Constants.SERVICE_ID),
+                                    context.registerService(ScrInfo.class, info, props));
+                        }
+                        return runtime;
+                    }
+
+                    public void modifiedService(
+                            final ServiceReference<org.apache.felix.scr.info.ScrInfo> reference,
+                            final org.apache.felix.scr.info.ScrInfo service) {
+                        // nothing to do
+                    }
+
+                    public void removedService(
+                            final ServiceReference<org.apache.felix.scr.info.ScrInfo> reference,
+                            final org.apache.felix.scr.info.ScrInfo service) {
+                        final ServiceRegistration<ScrInfo> reg =  scrCommandRegMap.remove(reference.getProperty(Constants.SERVICE_ID));
+                        if ( reg != null )
+                        {
+                            reg.unregister();
+                        }
+                        context.ungetService(reference);
+                    }
+        });
+        this.infoTracker.open();
     }
 
     public void stop(final BundleContext context) throws Exception
     {
-        this.runtimeTracker.close();
+        if ( this.infoTracker != null )
+        {
+            this.infoTracker.close();
+            this.infoTracker = null;
+        }
+        if ( this.runtimeTracker != null )
+        {
+            this.runtimeTracker.close();
+            this.runtimeTracker = null;
+        }
     }
 }
