@@ -62,16 +62,19 @@ public class ServletContextImplTest
 
         private Object value;
 
+        @Override
         public void attributeAdded(ServletContextAttributeEvent scab)
         {
             setData(1, scab);
         }
 
+        @Override
         public void attributeRemoved(ServletContextAttributeEvent scab)
         {
             setData(2, scab);
         }
 
+        @Override
         public void attributeReplaced(ServletContextAttributeEvent scab)
         {
             setData(3, scab);
@@ -125,243 +128,293 @@ public class ServletContextImplTest
 
         private Dictionary attributes = new Hashtable();
 
+        @Override
         public FilterRegistration.Dynamic addFilter(String name, Class<? extends Filter> type)
         {
             return null;
         }
 
+        @Override
         public FilterRegistration.Dynamic addFilter(String name, Filter filter)
         {
             return null;
         }
 
+        @Override
         public FilterRegistration.Dynamic addFilter(String name, String className)
         {
             return null;
         }
 
+        @Override
         public void addListener(Class<? extends EventListener> listener)
         {
         }
 
+        @Override
         public void addListener(String className)
         {
         }
 
+        @Override
         public <T extends EventListener> void addListener(T listener)
         {
         }
 
+        @Override
         public ServletRegistration.Dynamic addServlet(String name, Class<? extends Servlet> type)
         {
             return null;
         }
 
+        @Override
         public ServletRegistration.Dynamic addServlet(String name, Servlet servlet)
         {
             return null;
         }
 
+        @Override
         public ServletRegistration.Dynamic addServlet(String name, String className)
         {
             return null;
         }
 
+        @Override
         public <T extends Filter> T createFilter(Class<T> type) throws ServletException
         {
             return null;
         }
 
+        @Override
         public <T extends EventListener> T createListener(Class<T> type) throws ServletException
         {
             return null;
         }
 
+        @Override
         public <T extends Servlet> T createServlet(Class<T> type) throws ServletException
         {
             return null;
         }
 
+        @Override
         public void declareRoles(String... roleNames)
         {
         }
 
+        @Override
         public String getVirtualServerName() {
             return null;
         }
 
+        @Override
         public Object getAttribute(String name)
         {
             return attributes.get(name);
         }
 
+        @Override
         public Enumeration getAttributeNames()
         {
             return attributes.keys();
         }
 
+        @Override
         public ClassLoader getClassLoader()
         {
             return ServletContextImplTest.class.getClassLoader();
         }
 
+        @Override
         public ServletContext getContext(String uripath)
         {
             return null;
         }
 
+        @Override
         public String getContextPath()
         {
             return null;
         }
 
+        @Override
         public Set<SessionTrackingMode> getDefaultSessionTrackingModes()
         {
             return null;
         }
 
+        @Override
         public int getEffectiveMajorVersion()
         {
             return 0;
         }
 
+        @Override
         public int getEffectiveMinorVersion()
         {
             return 0;
         }
 
+        @Override
         public Set<SessionTrackingMode> getEffectiveSessionTrackingModes()
         {
             return null;
         }
 
+        @Override
         public FilterRegistration getFilterRegistration(String name)
         {
             return null;
         }
 
+        @Override
         public Map<String, ? extends FilterRegistration> getFilterRegistrations()
         {
             return null;
         }
 
+        @Override
         public String getInitParameter(String name)
         {
             return null;
         }
 
+        @Override
         public Enumeration getInitParameterNames()
         {
             return Collections.enumeration(Collections.emptyList());
         }
 
+        @Override
         public JspConfigDescriptor getJspConfigDescriptor()
         {
             return null;
         }
 
+        @Override
         public int getMajorVersion()
         {
             return 0;
         }
 
+        @Override
         public String getMimeType(String file)
         {
             return null;
         }
 
+        @Override
         public int getMinorVersion()
         {
             return 0;
         }
 
+        @Override
         public RequestDispatcher getNamedDispatcher(String name)
         {
             return null;
         }
 
+        @Override
         public String getRealPath(String path)
         {
             return null;
         }
 
+        @Override
         public RequestDispatcher getRequestDispatcher(String path)
         {
             return null;
         }
 
+        @Override
         public URL getResource(String path)
         {
             return null;
         }
 
+        @Override
         public InputStream getResourceAsStream(String path)
         {
             return null;
         }
 
+        @Override
         public Set getResourcePaths(String path)
         {
             return null;
         }
 
+        @Override
         public String getServerInfo()
         {
             return null;
         }
 
+        @Override
         public Servlet getServlet(String name)
         {
             return null;
         }
 
+        @Override
         public String getServletContextName()
         {
             return null;
         }
 
+        @Override
         public Enumeration getServletNames()
         {
             return Collections.enumeration(Collections.emptyList());
         }
 
+        @Override
         public ServletRegistration getServletRegistration(String name)
         {
             return null;
         }
 
+        @Override
         public Map<String, ? extends ServletRegistration> getServletRegistrations()
         {
             return null;
         }
 
+        @Override
         public Enumeration getServlets()
         {
             return Collections.enumeration(Collections.emptyList());
         }
 
+        @Override
         public SessionCookieConfig getSessionCookieConfig()
         {
             return null;
         }
 
+        @Override
         public void log(Exception exception, String msg)
         {
         }
 
+        @Override
         public void log(String msg)
         {
         }
 
+        @Override
         public void log(String message, Throwable throwable)
         {
         }
 
+        @Override
         public void removeAttribute(String name)
         {
             attributes.remove(name);
         }
 
+        @Override
         public void setAttribute(String name, Object object)
         {
             if (object != null)
@@ -374,11 +427,13 @@ public class ServletContextImplTest
             }
         }
 
+        @Override
         public boolean setInitParameter(String name, String value)
         {
             return false;
         }
 
+        @Override
         public void setSessionTrackingModes(Set<SessionTrackingMode> modes)
         {
         }
@@ -396,7 +451,8 @@ public class ServletContextImplTest
         ServletContext globalContext = new MockServletContext();
         this.httpContext = Mockito.mock(HttpContext.class);
         this.listener = new AttributeListener();
-        this.context = new ServletContextImpl(this.bundle, globalContext, this.httpContext, this.listener, false);
+        this.context = new ServletContextImpl(this.bundle, globalContext, this.httpContext, this.listener, false,
+                null, null, null, null);
     }
 
     @Test
@@ -530,8 +586,10 @@ public class ServletContextImplTest
     public void testGetSharedAttribute()
     {
         ServletContext globalContext = new MockServletContext();
-        ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, httpContext, listener, true);
-        ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, httpContext, listener, true);
+        ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, httpContext, listener, true,
+                null, null, null, null);
+        ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, httpContext, listener, true,
+                null, null, null, null);
 
         Assert.assertNull(ctx1.getAttribute("key1"));
         Assert.assertNull(ctx2.getAttribute("key1"));
@@ -639,8 +697,10 @@ public class ServletContextImplTest
     public void testGetSharedAttributeNames()
     {
         ServletContext globalContext = new MockServletContext();
-        ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, httpContext, listener, true);
-        ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, httpContext, listener, true);
+        ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, httpContext, listener, true,
+                null, null, null, null);
+        ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, httpContext, listener, true,
+                null, null, null, null);
 
         Enumeration e = ctx1.getAttributeNames();
         Assert.assertNotNull(e);
@@ -675,8 +735,10 @@ public class ServletContextImplTest
     public void testGetUnsharedAttribute()
     {
         ServletContext globalContext = new MockServletContext();
-        ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, httpContext, listener, false);
-        ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, httpContext, listener, false);
+        ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, httpContext, listener, false,
+                null, null, null, null);
+        ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, httpContext, listener, false,
+                null, null, null, null);
 
         Assert.assertNull(ctx1.getAttribute("key1"));
         Assert.assertNull(ctx2.getAttribute("key1"));
@@ -721,8 +783,10 @@ public class ServletContextImplTest
     public void testGetUnsharedAttributeNames()
     {
         ServletContext globalContext = new MockServletContext();
-        ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, httpContext, listener, false);
-        ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, httpContext, listener, false);
+        ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, httpContext, listener, false,
+                null, null, null, null);
+        ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, httpContext, listener, false,
+                null, null, null, null);
 
         Enumeration e = ctx1.getAttributeNames();
         Assert.assertNotNull(e);
