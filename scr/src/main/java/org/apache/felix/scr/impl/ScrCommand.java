@@ -33,6 +33,7 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 
+import org.apache.felix.scr.info.ScrInfo;
 import org.apache.felix.scr.impl.config.ScrConfiguration;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -52,13 +53,14 @@ import org.osgi.service.component.runtime.dto.UnsatisfiedReferenceDTO;
  * {@link #register(BundleContext, ScrService, ScrConfiguration)} method
  * instantiates and registers the Gogo and Shell commands as possible.
  */
-public class ScrCommand
+public class ScrCommand implements ScrInfo
 {
 
     private final BundleContext bundleContext;
     private final ServiceComponentRuntime scrService;
     private final ScrConfiguration scrConfiguration;
-
+    
+    private ServiceRegistration<ScrInfo> reg;
     private ServiceRegistration<?> gogoReg;
     private ServiceRegistration<?> shellReg;
 
@@ -145,7 +147,29 @@ public class ScrCommand
 
     // ---------- Actual implementation
 
-
+    
+    public void update( boolean infoAsService )
+    {
+        if (infoAsService)
+        {
+            if ( reg == null )
+            {
+                final Hashtable<String, Object> props = new Hashtable<String, Object>();
+                props.put(Constants.SERVICE_DESCRIPTION, "SCR Info service");
+                props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+                reg = bundleContext.registerService( ScrInfo.class, this, props );
+            }
+        }
+        else
+        {
+            if ( reg != null )
+            {
+                reg.unregister();
+                reg = null;
+            }
+        }
+    }
+    
     /* (non-Javadoc)
      * @see org.apache.felix.scr.impl.ScrInfo#list(java.lang.String, java.io.PrintStream, java.io.PrintStream)
      */
@@ -505,6 +529,8 @@ public class ScrCommand
         out.println(scrConfiguration.stopTimeout());
         out.print("Global extender: ");
         out.println(scrConfiguration.globalExtender());
+        out.print("Info Service registered: ");
+        out.println(scrConfiguration.infoAsService() ? "Supported" : "Unsupported");
     }
 
     private String toStateString(int state)
