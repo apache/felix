@@ -25,7 +25,7 @@ import javax.servlet.ServletException;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 
-public abstract class AbstractHandler<T extends AbstractHandler> implements Comparable<T>
+public abstract class AbstractHandler<T extends AbstractHandler<?>> implements Comparable<T>
 {
     private final String name;
     private final ExtServletContext context;
