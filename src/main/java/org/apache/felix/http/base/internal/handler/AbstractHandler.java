@@ -27,14 +27,16 @@ import org.apache.felix.http.base.internal.context.ExtServletContext;
 
 public abstract class AbstractHandler<T extends AbstractHandler> implements Comparable<T>
 {
-    private final String baseName;
+    private final String name;
     private final ExtServletContext context;
     private final Map<String, String> initParams;
 
-    public AbstractHandler(ExtServletContext context, final Map<String, String> initParams, String baseName)
+    public AbstractHandler(final ExtServletContext context,
+            final Map<String, String> initParams,
+            final String name)
     {
         this.context = context;
-        this.baseName = baseName;
+        this.name = name;
         this.initParams = initParams;
     }
 
@@ -45,10 +47,10 @@ public abstract class AbstractHandler<T extends AbstractHandler> implements Comp
 
     public final String getName()
     {
-        String name = this.baseName;
+        String name = this.name;
         if (name == null)
         {
-            name = String.format("%s_%d", getSubject().getClass(), this.hashCode());
+            name = getSubject().getClass().getName();
         }
         return name;
     }

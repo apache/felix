@@ -102,7 +102,8 @@ public final class HttpServiceImpl implements ExtHttpService
             }
         }
 
-        final FilterInfo filterInfo = new FilterInfo(null, pattern, ranking, paramMap);
+        final FilterInfo filterInfo = new FilterInfo(String.format("%s_%d", filter.getClass(), this.hashCode()),
+                pattern, ranking, paramMap);
         if ( !filterInfo.isValid() )
         {
             throw new ServletException("Invalid registration information for filter.");
@@ -175,7 +176,8 @@ public final class HttpServiceImpl implements ExtHttpService
             }
         }
 
-        final ServletInfo servletInfo = new ServletInfo(null, alias, 0, paramMap);
+        final ServletInfo servletInfo = new ServletInfo(String.format("%s_%d",servlet.getClass(), this.hashCode()),
+                alias, 0, paramMap);
         final ExtServletContext httpContext = getServletContext(context);
 
         final ServletHandler handler = new ServletHandler(null,
