@@ -165,6 +165,7 @@ public class Activator extends AbstractExtender
         super.doStart();
 
         m_scrCommand = ScrCommand.register(m_context, runtime, m_configuration);
+        m_configuration.setScrCommand( m_scrCommand );
     }
 
     @Override

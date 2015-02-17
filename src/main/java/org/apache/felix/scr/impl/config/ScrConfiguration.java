@@ -23,6 +23,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.felix.scr.impl.Activator;
+import org.apache.felix.scr.impl.ScrCommand;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -63,6 +64,8 @@ public class ScrConfiguration
 
     public static final String PROP_DELAYED_KEEP_INSTANCES = "ds.delayed.keepInstances";
 
+    public static final String PROP_INFO_SERVICE = "ds.info.service";
+
     public static final String PROP_LOCK_TIMEOUT = "ds.lock.timeout.milliseconds";
 
     public static final String PROP_STOP_TIMEOUT = "ds.stop.timeout.milliseconds";
@@ -94,7 +97,9 @@ public class ScrConfiguration
     private boolean factoryEnabled;
 
     private boolean keepInstances;
-
+    
+    private boolean infoAsService;
+    
     private long lockTimeout = DEFAULT_LOCK_TIMEOUT_MILLISECONDS;
 
     private long stopTimeout = DEFAULT_STOP_TIMEOUT_MILLISECONDS;
@@ -104,6 +109,8 @@ public class ScrConfiguration
     private BundleContext bundleContext;
 
     private ServiceRegistration<ManagedService> managedService;
+    
+    private ScrCommand scrCommand;
 
     public ScrConfiguration( Activator activator )
     {
@@ -140,6 +147,12 @@ public class ScrConfiguration
 
         this.bundleContext = null;
     }
+    
+    public void setScrCommand(ScrCommand scrCommand)
+    {
+        this.scrCommand = scrCommand;
+        scrCommand.update(infoAsService());
+    }
 
     // Called from the ScrManagedService.updated method to reconfigure
     void configure( Dictionary<String, ?> config, boolean fromConfig )
@@ -157,6 +170,7 @@ public class ScrConfiguration
                         logLevel = LogService.LOG_ERROR;
                         factoryEnabled = false;
                         keepInstances = false;
+                        infoAsService = false;
                         lockTimeout = DEFAULT_LOCK_TIMEOUT_MILLISECONDS;
                         stopTimeout = DEFAULT_STOP_TIMEOUT_MILLISECONDS;
                         newGlobalExtender = false;
@@ -166,6 +180,7 @@ public class ScrConfiguration
                         logLevel = getDefaultLogLevel();
                         factoryEnabled = getDefaultFactoryEnabled();
                         keepInstances = getDefaultKeepInstances();
+                        infoAsService = getDefaultInfoAsService();
                         lockTimeout = getDefaultLockTimeout();
                         stopTimeout = getDefaultStopTimeout();
                         newGlobalExtender = getDefaultGlobalExtender();
@@ -181,11 +196,16 @@ public class ScrConfiguration
                 logLevel = getLogLevel( config.get( PROP_LOGLEVEL ) );
                 factoryEnabled = VALUE_TRUE.equalsIgnoreCase( String.valueOf( config.get( PROP_FACTORY_ENABLED ) ) );
                 keepInstances = VALUE_TRUE.equalsIgnoreCase( String.valueOf( config.get( PROP_DELAYED_KEEP_INSTANCES ) ) );
+                infoAsService = VALUE_TRUE.equalsIgnoreCase( String.valueOf( config.get( PROP_INFO_SERVICE) ) );
                 Long timeout = ( Long ) config.get( PROP_LOCK_TIMEOUT );
                 lockTimeout = timeout == null? DEFAULT_LOCK_TIMEOUT_MILLISECONDS: timeout;
                 timeout = ( Long ) config.get( PROP_STOP_TIMEOUT );
                 stopTimeout = timeout == null? DEFAULT_STOP_TIMEOUT_MILLISECONDS: timeout;
                 newGlobalExtender = VALUE_TRUE.equalsIgnoreCase( String.valueOf( config.get( PROP_GLOBAL_EXTENDER) ) );
+            }
+            if ( scrCommand != null )
+            {
+                scrCommand.update( infoAsService() );
             }
             oldGlobalExtender = this.globalExtender;
             this.globalExtender = newGlobalExtender;
@@ -215,6 +235,11 @@ public class ScrConfiguration
     public boolean keepInstances()
     {
         return keepInstances;
+    }
+    
+    public boolean infoAsService()
+    {
+        return infoAsService;
     }
 
     public long lockTimeout()
@@ -247,6 +272,11 @@ public class ScrConfiguration
     private int getDefaultLogLevel()
     {
         return getLogLevel( bundleContext.getProperty( PROP_LOGLEVEL ) );
+    }
+    
+    private boolean getDefaultInfoAsService()
+    {
+        return VALUE_TRUE.equalsIgnoreCase( bundleContext.getProperty( PROP_INFO_SERVICE) );
     }
 
     private long getDefaultLockTimeout()
