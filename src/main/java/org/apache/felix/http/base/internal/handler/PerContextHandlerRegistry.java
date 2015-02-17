@@ -46,7 +46,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     private final int ranking;
 
     private final String path;
-    
+
     private final String prefix;
 
     public PerContextHandlerRegistry() {
@@ -61,7 +61,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
         this.serviceId = info.getServiceId();
         this.ranking = info.getRanking();
         this.path = info.getPath();
-        if ( this.path.equals("/") ) 
+        if ( this.path.equals("/") )
         {
         	prefix = null;
         }
@@ -87,7 +87,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     @Override
     public int compareTo(final PerContextHandlerRegistry other)
     {
-        final int result = other.path.compareTo(this.path);
+        final int result = ((Integer)other.path.length()).compareTo(this.path.length());
         if ( result == 0 ) {
             if (other.ranking == this.ranking)
             {
