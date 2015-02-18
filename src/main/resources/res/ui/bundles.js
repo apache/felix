@@ -60,7 +60,7 @@ function renderData( eventData, filter )  {
     initStaticWidgets();
 
 	var cv = getCookie("bundlelist");
-	if (cv) {
+	if (cv && bundlesTable.find("tr").size() > 1) {
 	    bundlesTable.trigger('sorton', [cv]);
 	}
 
