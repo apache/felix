@@ -20,9 +20,11 @@ package org.apache.felix.metatype;
 
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
@@ -52,8 +54,8 @@ public class DefaultMetaTypeProvider implements MetaTypeProvider
     private final Bundle bundle;
     private final String localePrefix;
 
-    private Map objectClassDefinitions;
-    private Map designates;
+    private Map /* <String, OCD> */ objectClassDefinitions;
+    private List /* <Designate> */ designates;
     private String[] locales;
 
 
@@ -73,12 +75,12 @@ public class DefaultMetaTypeProvider implements MetaTypeProvider
         }
         if ( metadata.getDesignates() == null )
         {
-            designates = Collections.EMPTY_MAP;
+            designates = Collections.EMPTY_LIST;
         }
         else
         {
-            Map copy = new HashMap( metadata.getDesignates() );
-            designates = Collections.unmodifiableMap( copy );
+            List copy = new ArrayList( metadata.getDesignates() );
+            designates = Collections.unmodifiableList( copy );
         }
 
         String metaDataLocalePrefix = metadata.getLocalePrefix();
@@ -175,22 +177,32 @@ public class DefaultMetaTypeProvider implements MetaTypeProvider
         return new LocalizedObjectClassDefinition( bundle, ocd, resources );
     }
 
-
-    public Designate getDesignate( String pid )
+    public Designate getDesignate(String pid)
     {
-        return ( Designate ) designates.get( pid );
+        int size = this.designates.size();
+        for (int i = 0; i < size; i++)
+        {
+            Designate designate = (Designate) this.designates.get(i);
+            String factoryPid = designate.getFactoryPid();
+            if (factoryPid != null && pid.equals(factoryPid))
+            {
+                return designate;
+            }
+            else if (factoryPid == null && pid.equals(designate.getPid()))
+            {
+                return designate;
+            }
+        }
+        return null;
     }
 
-
-    protected Map getObjectClassDefinitions()
+    protected Map /* <String, OCD> */ getObjectClassDefinitions()
     {
         return objectClassDefinitions;
     }
 
-
-    protected Map getDesignates()
+    protected List /* <Designate> */ getDesignates()
     {
         return designates;
     }
-
 }

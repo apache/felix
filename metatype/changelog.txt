@@ -2,86 +2,91 @@ Changes from 1.0.10 to 1.0.12
 -----------------------------
 
 ** Improvement
-    * [FELIX-4649] - Get MetaTypeInformation while bundle is starting
+	* [FELIX-4649] - Get MetaTypeInformation while bundle is starting
+
+** Bug
+	* [FELIX-4644] - Designates with multiple Objects
+	* [FELIX-4665] - Metatype service does not allow a default empty string in XML resource
+	* [FELIX-4771] - Possible NPE when accessing content of attribute
 
 
 Changes from 1.0.8 to 1.0.10
 ----------------------------
 
 ** Bug
-    * [FELIX-4289] - Spaces within values are removed for default values
+	* [FELIX-4289] - Spaces within values are removed for default values
 
- 
+
 Changes from 1.0.6 to 1.0.8
 ---------------------------
 
 ** Bug
-    * [FELIX-3756] - Optional attributes validated invalid data as correct;
-    * [FELIX-3757] - If an AttributeDefinition did not specify a minimum, maximum or option values, it did not detect missing values;
-    * [FELIX-3758] - AttributeDefinition.validate() did not take non-zero cardinality into consideration.
-    * [FELIX-4214] - Cache in BundleResources works only for a single metatype properties file per bundle
-    * [FELIX-3884] - Default value and options 
+	* [FELIX-3756] - Optional attributes validated invalid data as correct;
+	* [FELIX-3757] - If an AttributeDefinition did not specify a minimum, maximum or option values, it did not detect missing values;
+	* [FELIX-3758] - AttributeDefinition.validate() did not take non-zero cardinality into consideration.
+	* [FELIX-4214] - Cache in BundleResources works only for a single metatype properties file per bundle
+	* [FELIX-3884] - Default value and options 
 
 
 Changes from 1.0.4 to 1.0.6
 ---------------------------
 
 ** Bug
-    * [FELIX-2094] - AttributeDefinition with an empty default value must attribute must result in a single (empty string) entry string array
-    * [FELIX-2097] - DefaultMetaTypeProvider.getLocales() must not reuturn an empty string entry
-    * [FELIX-2860] - getLocales() in DefaultMetaTypeProvider needs to check return of findEntries
-    * [FELIX-2867] - getIcon() in LocalizedObjectClassDefinition keyset iteration incorrect
-    * [FELIX-2868] - Icon only works if absolute path specified, but specification allows for relative urls
-    * [FELIX-3183] - Attribute requirement is not validated
-    * [FELIX-3364] - MetaDataReader exposes a private exception class on the public API
-    * [FELIX-3720] - Designate's pid attribute is optional and not mandatory
-    * [FELIX-3730] - AD.validate of string attributes must validate the string length
-    * [FELIX-3732] - service.pid properties of ManagedServiceFactory services must be used as factory PIDs
-    * [FELIX-3734] - MetaType: NPE in ServiceTracker for fragment bundle
+	* [FELIX-2094] - AttributeDefinition with an empty default value must attribute must result in a single (empty string) entry string array
+	* [FELIX-2097] - DefaultMetaTypeProvider.getLocales() must not reuturn an empty string entry
+	* [FELIX-2860] - getLocales() in DefaultMetaTypeProvider needs to check return of findEntries
+	* [FELIX-2867] - getIcon() in LocalizedObjectClassDefinition keyset iteration incorrect
+	* [FELIX-2868] - Icon only works if absolute path specified, but specification allows for relative urls
+	* [FELIX-3183] - Attribute requirement is not validated
+	* [FELIX-3364] - MetaDataReader exposes a private exception class on the public API
+	* [FELIX-3720] - Designate's pid attribute is optional and not mandatory
+	* [FELIX-3730] - AD.validate of string attributes must validate the string length
+	* [FELIX-3732] - service.pid properties of ManagedServiceFactory services must be used as factory PIDs
+	* [FELIX-3734] - MetaType: NPE in ServiceTracker for fragment bundle
 
 ** Improvement
-    * [FELIX-3167] - Add support for new PASSWORD attribute type
-    * [FELIX-3338] - Add support for optional attributes in the MetaDataReader as defined in the XML schema for metatype
-    * [FELIX-3736] - Add support for MetaTypeProvider service modifications
-    * [FELIX-3740] - Maintain the MetaTypeProvider service tracker on the MetaTypeService
+	* [FELIX-3167] - Add support for new PASSWORD attribute type
+	* [FELIX-3338] - Add support for optional attributes in the MetaDataReader as defined in the XML schema for metatype
+	* [FELIX-3736] - Add support for MetaTypeProvider service modifications
+	* [FELIX-3740] - Maintain the MetaTypeProvider service tracker on the MetaTypeService
 
 ** New Feature
-    * [FELIX-2719] - Add name space support to the meta type implementation
+	* [FELIX-2719] - Add name space support to the meta type implementation
 
 ** Task
-    * [FELIX-2096] - Check MetaTypeProvider.getObjectClassDefinition(String, String) specification compliance
-    * [FELIX-3182] - Update to use parent POM 2.1
-    * [FELIX-3184] - Add support for metatype extension by MetatypeProvider services
-    * [FELIX-3731] - Multi-Value service.pid service properties must be supported
-    * [FELIX-3733] - Clarify icon location
+	* [FELIX-2096] - Check MetaTypeProvider.getObjectClassDefinition(String, String) specification compliance
+	* [FELIX-3182] - Update to use parent POM 2.1
+	* [FELIX-3184] - Add support for metatype extension by MetatypeProvider services
+	* [FELIX-3731] - Multi-Value service.pid service properties must be supported
+	* [FELIX-3733] - Clarify icon location
 
 
 Changes from 1.0.2 to 1.0.4
 ---------------------------
 ** Bug
-    * [FELIX-1226] - The MetaType service should ignore the pid attribute of Designate elements if factoryPid is set.
+	* [FELIX-1226] - The MetaType service should ignore the pid attribute of Designate elements if factoryPid is set.
 
 ** Improvement
-    * [FELIX-718] - Update NOTICE file to new format
-    * [FELIX-1227] - Project Descriptor Enhancement
-    * [FELIX-1434] - Include service tracker in bundle instead of importing it
+	* [FELIX-718] - Update NOTICE file to new format
+	* [FELIX-1227] - Project Descriptor Enhancement
+	* [FELIX-1434] - Include service tracker in bundle instead of importing it
 
 
 Changes from 1.0.0 to 1.0.2
 ---------------------------
 
 ** Bug
-    * [FELIX-520] - MetaDataReader - ad.setMax
-    * [FELIX-521] - MetaType - optionValues check
-    * [FELIX-597] - Meta type service incorrectly parses attribute element content when the content is specified in value child tags
-    * [FELIX-607] - Meta type localization incorrectly resolved in the meta type folder
+	* [FELIX-520] - MetaDataReader - ad.setMax
+	* [FELIX-521] - MetaType - optionValues check
+	* [FELIX-597] - Meta type service incorrectly parses attribute element content when the content is specified in value child tags
+	* [FELIX-607] - Meta type localization incorrectly resolved in the meta type folder
 
 ** Improvement
-    * [FELIX-666] - Metatype OBR description
+	* [FELIX-666] - Metatype OBR description
 
 
 Initial Release 1.0.0
 ---------------------
 
 ** New Feature
-    * [FELIX-20] - Implement Metatype Service
+	* [FELIX-20] - Implement Metatype Service
