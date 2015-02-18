@@ -192,17 +192,20 @@ public class ComponentDescriptorIO {
         contentHandler.startDocument();
         contentHandler.startPrefixMapping(PREFIX, namespace);
 
-        // wrapper element to generate well formed xml
-        contentHandler.startElement("", ComponentDescriptorIO.COMPONENTS, ComponentDescriptorIO.COMPONENTS, new AttributesImpl());
-        IOUtils.newline(contentHandler);
-
+        // wrapper element to generate well formed xml if 0 or more than 1 component
+        if ( components.size() != 1 ) {
+            contentHandler.startElement("", ComponentDescriptorIO.COMPONENTS, ComponentDescriptorIO.COMPONENTS, new AttributesImpl());
+            IOUtils.newline(contentHandler);
+        }
         for (final ComponentContainer component : components) {
             generateXML(namespace, module, component, contentHandler);
         }
 
         // end wrapper element
-        contentHandler.endElement("", ComponentDescriptorIO.COMPONENTS, ComponentDescriptorIO.COMPONENTS);
-        IOUtils.newline(contentHandler);
+        if ( components.size() != 1 ) {
+            contentHandler.endElement("", ComponentDescriptorIO.COMPONENTS, ComponentDescriptorIO.COMPONENTS);
+            IOUtils.newline(contentHandler);
+        }
         contentHandler.endPrefixMapping(PREFIX);
         contentHandler.endDocument();
     }
