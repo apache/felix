@@ -22,7 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
-import java.util.Map;
+import java.util.List;
 
 import junit.framework.TestCase;
 
@@ -317,10 +317,10 @@ public class MetaDataReaderTest extends TestCase
 
         assertNotNull(ocd.getAttributeDefinitions());
 
-        Map designates = ocd.getMetadata().getDesignates();
+        List designates = ocd.getMetadata().getDesignates();
         assertEquals(1, designates.size());
 
-        Designate designate = (Designate) designates.get(pid);
+        Designate designate = (Designate) designates.get(0);
         assertEquals(pid, designate.getPid());
         assertNotNull(designate.getObject());
     }
@@ -347,6 +347,38 @@ public class MetaDataReaderTest extends TestCase
         {
             assertTrue(e.getMessage().contains("Unexpected element Object"));
         }
+    }
+
+    /**
+     * FELIX-4799 - tests that we can have multiple designates for the same factory PID in one MetaData configuration. 
+     */
+    public void testMultipleFactoryDesignatesWithSamePidOk() throws IOException, XmlPullParserException
+    {
+        String xml = "<MetaData><OCD id=\"ocd\" name=\"ocd\"><AD id=\"attr\" type=\"String\" required=\"false\" /></OCD>"
+            + "<Designate factoryPid=\"factoryA\" pid=\"A\" bundle=\"*\"><Object ocdref=\"ocd\"><Attribute adref=\"attr\" value=\"foo\" /></Object></Designate>"
+            + "<Designate factoryPid=\"factoryA\" pid=\"B\" bundle=\"*\"><Object ocdref=\"ocd\"><Attribute adref=\"attr\" value=\"bar\" /></Object></Designate>" + "</MetaData>";
+
+        MetaData metadata = read(xml);
+        assertNotNull(metadata);
+
+        assertEquals(1, metadata.getObjectClassDefinitions().size());
+        assertEquals(2, metadata.getDesignates().size());
+    }
+
+    /**
+     * FELIX-4799 - tests that we can have multiple designates for the same factory PID in one MetaData configuration. 
+     */
+    public void testMultipleFactoryDesignatesWithDifferentPidsOk() throws IOException, XmlPullParserException
+    {
+        String xml = "<MetaData><OCD id=\"ocd\" name=\"ocd\"><AD id=\"attr\" type=\"String\" required=\"false\" /></OCD>"
+            + "<Designate factoryPid=\"factoryA\" pid=\"A\" bundle=\"*\"><Object ocdref=\"ocd\"><Attribute adref=\"attr\" value=\"foo\" /></Object></Designate>"
+            + "<Designate factoryPid=\"factoryB\" pid=\"A\" bundle=\"*\"><Object ocdref=\"ocd\"><Attribute adref=\"attr\" value=\"bar\" /></Object></Designate>" + "</MetaData>";
+
+        MetaData metadata = read(xml);
+        assertNotNull(metadata);
+
+        assertEquals(1, metadata.getObjectClassDefinitions().size());
+        assertEquals(2, metadata.getDesignates().size());
     }
 
     public void testSingleOCDSingleRequiredAttr() throws IOException, XmlPullParserException

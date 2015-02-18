@@ -18,7 +18,6 @@
  */
 package org.apache.felix.metatype.internal;
 
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -37,7 +36,6 @@ import org.osgi.service.metatype.MetaTypeInformation;
 import org.osgi.service.metatype.MetaTypeProvider;
 import org.osgi.service.metatype.ObjectClassDefinition;
 
-
 /**
  * The <code>MetaTypeInformationImpl</code> class implements the
  * <code>MetaTypeInformation</code> interface returned from the
@@ -47,26 +45,20 @@ import org.osgi.service.metatype.ObjectClassDefinition;
  */
 public class MetaTypeInformationImpl implements MetaTypeInformation
 {
-
     private final Bundle bundle;
-
     private final Set pids;
-
     private final Set factoryPids;
-
     private final Map metaTypeProviders;
 
     private Set locales;
 
-
-    protected MetaTypeInformationImpl( Bundle bundle )
+    protected MetaTypeInformationImpl(Bundle bundle)
     {
         this.bundle = bundle;
         this.pids = new HashSet();
         this.factoryPids = new HashSet();
         this.metaTypeProviders = new HashMap();
     }
-
 
     void dispose()
     {
@@ -75,7 +67,6 @@ public class MetaTypeInformationImpl implements MetaTypeInformation
         this.locales = null;
         this.metaTypeProviders.clear();
     }
-
 
     /*
      * (non-Javadoc)
@@ -87,7 +78,6 @@ public class MetaTypeInformationImpl implements MetaTypeInformation
         return this.bundle;
     }
 
-
     /*
      * (non-Javadoc)
      *
@@ -95,9 +85,8 @@ public class MetaTypeInformationImpl implements MetaTypeInformation
      */
     public String[] getFactoryPids()
     {
-        return ( String[] ) this.factoryPids.toArray( new String[this.factoryPids.size()] );
+        return (String[]) this.factoryPids.toArray(new String[this.factoryPids.size()]);
     }
-
 
     /*
      * (non-Javadoc)
@@ -106,9 +95,8 @@ public class MetaTypeInformationImpl implements MetaTypeInformation
      */
     public String[] getPids()
     {
-        return ( String[] ) this.pids.toArray( new String[this.pids.size()] );
+        return (String[]) this.pids.toArray(new String[this.pids.size()]);
     }
-
 
     /*
      * (non-Javadoc)
@@ -117,23 +105,22 @@ public class MetaTypeInformationImpl implements MetaTypeInformation
      */
     public String[] getLocales()
     {
-        if ( this.locales == null )
+        if (this.locales == null)
         {
-            synchronized ( this )
+            synchronized (this)
             {
                 Set newLocales = new HashSet();
-                for ( Iterator mi = this.metaTypeProviders.values().iterator(); mi.hasNext(); )
+                for (Iterator mi = this.metaTypeProviders.values().iterator(); mi.hasNext();)
                 {
-                    MetaTypeProvider mtp = ( MetaTypeProvider ) mi.next();
-                    this.addValues( newLocales, mtp.getLocales() );
+                    MetaTypeProvider mtp = (MetaTypeProvider) mi.next();
+                    this.addValues(newLocales, mtp.getLocales());
                 }
                 this.locales = newLocales;
             }
         }
 
-        return ( String[] ) this.locales.toArray( new String[this.locales.size()] );
+        return (String[]) this.locales.toArray(new String[this.locales.size()]);
     }
-
 
     /*
      * (non-Javadoc)
@@ -141,24 +128,24 @@ public class MetaTypeInformationImpl implements MetaTypeInformation
      * @see org.osgi.service.metatype.MetaTypeProvider#getObjectClassDefinition(java.lang.String,
      *      java.lang.String)
      */
-    public ObjectClassDefinition getObjectClassDefinition( String id, String locale )
+    public ObjectClassDefinition getObjectClassDefinition(String id, String locale)
     {
 
-        if ( id == null || id.length() == 0 )
+        if (id == null || id.length() == 0)
         {
-            throw new IllegalArgumentException( "ObjectClassDefinition ID must not be null or empty" );
+            throw new IllegalArgumentException("ObjectClassDefinition ID must not be null or empty");
         }
 
-        MetaTypeProvider mtp = ( MetaTypeProvider ) this.metaTypeProviders.get( id );
-        if ( mtp == null )
+        MetaTypeProvider mtp = (MetaTypeProvider) this.metaTypeProviders.get(id);
+        if (mtp == null)
         {
-            throw new IllegalArgumentException( "No ObjectClassDefinition for id=" + id );
+            throw new IllegalArgumentException("No ObjectClassDefinition for id=" + id);
         }
 
-        ObjectClassDefinition ocd = mtp.getObjectClassDefinition( id, locale );
-        if ( ocd == null )
+        ObjectClassDefinition ocd = mtp.getObjectClassDefinition(id, locale);
+        if (ocd == null)
         {
-            throw new IllegalArgumentException( "No localized ObjectClassDefinition for id=" + id );
+            throw new IllegalArgumentException("No localized ObjectClassDefinition for id=" + id);
         }
 
         return ocd;
@@ -181,130 +168,121 @@ public class MetaTypeInformationImpl implements MetaTypeInformation
 
     // ---------- setters to fill the values -----------------------------------
 
-    protected void addMetaData( MetaData md )
+    protected void addMetaData(MetaData md)
     {
-        if ( md.getDesignates() != null )
+        if (md.getDesignates() != null)
         {
             // meta type provide to register by PID
-            DefaultMetaTypeProvider dmtp = new DefaultMetaTypeProvider( this.bundle, md );
+            DefaultMetaTypeProvider dmtp = new DefaultMetaTypeProvider(this.bundle, md);
 
-            Iterator designates = md.getDesignates().values().iterator();
-            while ( designates.hasNext() )
+            Iterator designates = md.getDesignates().iterator();
+            while (designates.hasNext())
             {
-                Designate designate = ( Designate ) designates.next();
+                Designate designate = (Designate) designates.next();
 
                 // get the OCD reference, ignore the designate if none
                 DesignateObject object = designate.getObject();
-                String ocdRef = ( object == null ) ? null : object.getOcdRef();
-                if ( ocdRef == null )
+                String ocdRef = (object == null) ? null : object.getOcdRef();
+                if (ocdRef == null)
                 {
                     continue;
                 }
 
                 // get ocd for the reference, ignore designate if none
-                OCD ocd = ( OCD ) md.getObjectClassDefinitions().get( ocdRef );
-                if ( ocd == null )
+                OCD ocd = (OCD) md.getObjectClassDefinitions().get(ocdRef);
+                if (ocd == null)
                 {
                     continue;
                 }
 
                 // gather pids and factory pids and register provider
-                if ( designate.getFactoryPid() != null )
+                if (designate.getFactoryPid() != null)
                 {
-                    this.factoryPids.add( designate.getFactoryPid() );
-                    this.addMetaTypeProvider( designate.getFactoryPid(), dmtp );
+                    this.factoryPids.add(designate.getFactoryPid());
+                    this.addMetaTypeProvider(designate.getFactoryPid(), dmtp);
                 }
                 else
                 {
-                    this.pids.add( designate.getPid() );
-                    this.addMetaTypeProvider( designate.getPid(), dmtp );
+                    this.pids.add(designate.getPid());
+                    this.addMetaTypeProvider(designate.getPid(), dmtp);
                 }
             }
         }
     }
 
-
-    protected void addMetaTypeProvider( String key, MetaTypeProvider mtp )
+    protected void addMetaTypeProvider(String key, MetaTypeProvider mtp)
     {
-        if ( key != null && mtp != null )
+        if (key != null && mtp != null)
         {
-            this.metaTypeProviders.put( key, mtp );
+            this.metaTypeProviders.put(key, mtp);
             this.locales = null;
         }
     }
 
-
-    protected MetaTypeProvider removeMetaTypeProvider( String key )
+    protected MetaTypeProvider removeMetaTypeProvider(String key)
     {
-        if ( key != null )
+        if (key != null)
         {
             this.locales = null;
-            return ( MetaTypeProvider ) this.metaTypeProviders.remove( key );
+            return (MetaTypeProvider) this.metaTypeProviders.remove(key);
         }
 
         return null;
     }
 
-
-    protected void addSingletonMetaTypeProvider( String[] pids, MetaTypeProvider mtp )
+    protected void addSingletonMetaTypeProvider(String[] pids, MetaTypeProvider mtp)
     {
-        this.addValues( this.pids, pids );
-        for ( int i = 0; i < pids.length; i++ )
+        this.addValues(this.pids, pids);
+        for (int i = 0; i < pids.length; i++)
         {
-            addMetaTypeProvider( pids[i], mtp );
+            addMetaTypeProvider(pids[i], mtp);
         }
     }
 
-
-    protected void addFactoryMetaTypeProvider( String[] factoryPids, MetaTypeProvider mtp )
+    protected void addFactoryMetaTypeProvider(String[] factoryPids, MetaTypeProvider mtp)
     {
-        this.addValues( this.factoryPids, factoryPids );
-        for ( int i = 0; i < factoryPids.length; i++ )
+        this.addValues(this.factoryPids, factoryPids);
+        for (int i = 0; i < factoryPids.length; i++)
         {
-            addMetaTypeProvider( factoryPids[i], mtp );
+            addMetaTypeProvider(factoryPids[i], mtp);
         }
     }
 
-
-    protected boolean removeSingletonMetaTypeProvider( String[] pids )
+    protected boolean removeSingletonMetaTypeProvider(String[] pids)
     {
         boolean wasRegistered = false;
-        for ( int i = 0; i < pids.length; i++ )
+        for (int i = 0; i < pids.length; i++)
         {
-            wasRegistered |= ( removeMetaTypeProvider( pids[i] ) != null );
-            this.pids.remove( pids[i] );
+            wasRegistered |= (removeMetaTypeProvider(pids[i]) != null);
+            this.pids.remove(pids[i]);
         }
         return wasRegistered;
     }
 
-
-    protected boolean removeFactoryMetaTypeProvider( String[] factoryPids )
+    protected boolean removeFactoryMetaTypeProvider(String[] factoryPids)
     {
         boolean wasRegistered = false;
-        for ( int i = 0; i < factoryPids.length; i++ )
+        for (int i = 0; i < factoryPids.length; i++)
         {
-            wasRegistered |= ( removeMetaTypeProvider( factoryPids[i] ) != null );
-            this.factoryPids.remove( factoryPids[i] );
+            wasRegistered |= (removeMetaTypeProvider(factoryPids[i]) != null);
+            this.factoryPids.remove(factoryPids[i]);
         }
         return wasRegistered;
     }
 
-
-    protected void addService( String[] pids, boolean isSingleton, boolean isFactory, final MetaTypeProvider mtp )
+    protected void addService(String[] pids, boolean isSingleton, boolean isFactory, final MetaTypeProvider mtp)
     {
     }
 
-
-    protected void removeService( String[] pids, boolean isSingleton, boolean isFactory )
+    protected void removeService(String[] pids, boolean isSingleton, boolean isFactory)
     {
     }
 
-
-    private void addValues( Collection dest, Object[] values )
+    private void addValues(Collection dest, Object[] values)
     {
-        if ( values != null && values.length > 0 )
+        if (values != null && values.length > 0)
         {
-            dest.addAll( Arrays.asList( values ) );
+            dest.addAll(Arrays.asList(values));
         }
     }
 }

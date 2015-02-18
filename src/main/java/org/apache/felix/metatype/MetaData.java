@@ -19,8 +19,9 @@
 package org.apache.felix.metatype;
 
 import java.net.URL;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -33,8 +34,8 @@ public class MetaData extends OptionalAttributes
 {
     private String namespace;
     private String localePrefix;
-    private Map objectClassDefinitions;
-    private Map designates;
+    private Map /* String -> OCD */ objectClassDefinitions;
+    private List /* Designate */ designates;
     private URL source;
 
     public String getLocalePrefix()
@@ -47,7 +48,7 @@ public class MetaData extends OptionalAttributes
         this.localePrefix = localePrefix;
     }
 
-    public Map getObjectClassDefinitions()
+    public Map /* <String, OCD> */ getObjectClassDefinitions()
     {
         return objectClassDefinitions;
     }
@@ -66,7 +67,7 @@ public class MetaData extends OptionalAttributes
         }
     }
 
-    public Map getDesignates()
+    public List /* <Designate> */ getDesignates()
     {
         return designates;
     }
@@ -77,17 +78,10 @@ public class MetaData extends OptionalAttributes
         {
             if (designates == null)
             {
-                designates = new HashMap();
+                designates = new ArrayList();
             }
 
-            if (designate.getFactoryPid() != null)
-            {
-                designates.put(designate.getFactoryPid(), designate);
-            }
-            else
-            {
-                designates.put(designate.getPid(), designate);
-            }
+            designates.add(designate);
         }
     }
 
