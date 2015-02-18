@@ -40,3 +40,5 @@ Bundle-Category: osgi
 Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.txt
 Bundle-Vendor: The Apache Software Foundation
 Bundle-ContactAddress: http://felix.apache.org/documentation/subprojects/apache-felix-dependency-manager.html
+# Work around used to make sure DM api is imported using proper version range (can be removed with bndtools 3)
+Import-Package: org.apache.felix.dm;org.apache.felix.dm.context;version="[4, 5)", *
