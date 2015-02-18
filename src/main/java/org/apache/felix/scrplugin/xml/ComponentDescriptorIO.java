@@ -179,7 +179,7 @@ public class ComponentDescriptorIO {
      * @param contentHandler
      * @throws SAXException
      */
-    protected static void generateXML(final DescriptionContainer module,
+    private static void generateXML(final DescriptionContainer module,
             final List<ComponentContainer> components,
             final File descriptorFile,
             final Log logger) throws SAXException, IOException, TransformerException {
@@ -192,13 +192,16 @@ public class ComponentDescriptorIO {
         contentHandler.startDocument();
         contentHandler.startPrefixMapping(PREFIX, namespace);
 
+        IOUtils.newline(contentHandler);
         // wrapper element to generate well formed xml if 0 or more than 1 component
+        int startIndent = 0;
         if ( components.size() != 1 ) {
             contentHandler.startElement("", ComponentDescriptorIO.COMPONENTS, ComponentDescriptorIO.COMPONENTS, new AttributesImpl());
             IOUtils.newline(contentHandler);
+            startIndent = 1;
         }
         for (final ComponentContainer component : components) {
-            generateXML(namespace, module, component, contentHandler);
+            generateXML(namespace, module, component, contentHandler, startIndent);
         }
 
         // end wrapper element
@@ -217,11 +220,12 @@ public class ComponentDescriptorIO {
      * @param contentHandler
      * @throws SAXException
      */
-    protected static void generateXML(final String namespace,
+    private static void generateXML(final String namespace,
             final DescriptionContainer module,
             final ComponentContainer container,
-            final ContentHandler contentHandler)
-                    throws SAXException {
+            final ContentHandler contentHandler,
+            final int indent)
+    throws SAXException {
         final ComponentDescription component = container.getComponentDescription();
 
         final AttributesImpl ai = new AttributesImpl();
@@ -246,22 +250,22 @@ public class ComponentDescriptorIO {
                 IOUtils.addAttribute(ai, COMPONENT_ATTR_CONFIGURATION_PID, component.getConfigurationPid());
             }
         }
-        IOUtils.indent(contentHandler, 1);
+        IOUtils.indent(contentHandler, indent);
         contentHandler.startElement(namespace, ComponentDescriptorIO.COMPONENT, ComponentDescriptorIO.COMPONENT_QNAME, ai);
         IOUtils.newline(contentHandler);
-        generateImplementationXML(container, contentHandler);
+        generateImplementationXML(container, contentHandler, indent+1);
         if (container.getServiceDescription() != null) {
-            generateServiceXML(container.getServiceDescription(), contentHandler);
+            generateServiceXML(container.getServiceDescription(), contentHandler, indent+1);
         }
         for (final PropertyDescription property : container.getProperties().values()) {
-            generatePropertyXML(property, contentHandler);
+            generatePropertyXML(property, contentHandler, indent+1);
         }
 
         for (final ReferenceDescription reference : container.getReferences().values()) {
-            generateReferenceXML(component, module, reference, contentHandler);
+            generateReferenceXML(component, module, reference, contentHandler, indent+1);
         }
 
-        IOUtils.indent(contentHandler, 1);
+        IOUtils.indent(contentHandler, indent);
         contentHandler.endElement(namespace, ComponentDescriptorIO.COMPONENT, ComponentDescriptorIO.COMPONENT_QNAME);
         IOUtils.newline(contentHandler);
     }
@@ -273,10 +277,13 @@ public class ComponentDescriptorIO {
      * @param contentHandler
      * @throws SAXException
      */
-    protected static void generateImplementationXML(ComponentContainer component, ContentHandler contentHandler) throws SAXException {
+    private static void generateImplementationXML(final ComponentContainer component,
+            final ContentHandler contentHandler,
+            final int indent)
+    throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, IMPLEMENTATION_ATTR_CLASS, component.getClassDescription().getDescribedClass().getName());
-        IOUtils.indent(contentHandler, 2);
+        IOUtils.indent(contentHandler, indent);
         contentHandler.startElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.IMPLEMENTATION,
                 ComponentDescriptorIO.IMPLEMENTATION_QNAME, ai);
         contentHandler.endElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.IMPLEMENTATION,
@@ -291,20 +298,21 @@ public class ComponentDescriptorIO {
      * @param contentHandler
      * @throws SAXException
      */
-    protected static void generateServiceXML(
+    private static void generateServiceXML(
             final ServiceDescription service,
-            final ContentHandler contentHandler)
-                    throws SAXException {
+            final ContentHandler contentHandler,
+            final int indent)
+    throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, SERVICE_ATTR_FACTORY, String.valueOf(service.isServiceFactory()));
-        IOUtils.indent(contentHandler, 2);
+        IOUtils.indent(contentHandler, indent);
         contentHandler.startElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.SERVICE, ComponentDescriptorIO.SERVICE_QNAME, ai);
         if (service.getInterfaces() != null && service.getInterfaces().size() > 0) {
             IOUtils.newline(contentHandler);
             for (final String interf : service.getInterfaces()) {
-                generateServiceXML(interf, contentHandler);
+                generateServiceXML(interf, contentHandler, indent+1);
             }
-            IOUtils.indent(contentHandler, 2);
+            IOUtils.indent(contentHandler, indent);
         }
         contentHandler.endElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.SERVICE, ComponentDescriptorIO.SERVICE_QNAME);
         IOUtils.newline(contentHandler);
@@ -317,11 +325,13 @@ public class ComponentDescriptorIO {
      * @param contentHandler
      * @throws SAXException
      */
-    private static void generateServiceXML(final String interfaceName, final ContentHandler contentHandler)
-            throws SAXException {
+    private static void generateServiceXML(final String interfaceName,
+            final ContentHandler contentHandler,
+            final int indent)
+    throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, INTERFACE_ATTR_NAME, interfaceName);
-        IOUtils.indent(contentHandler, 3);
+        IOUtils.indent(contentHandler, indent);
         contentHandler.startElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.INTERFACE, ComponentDescriptorIO.INTERFACE_QNAME,
                 ai);
         contentHandler.endElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.INTERFACE, ComponentDescriptorIO.INTERFACE_QNAME);
@@ -335,7 +345,10 @@ public class ComponentDescriptorIO {
      * @param contentHandler
      * @throws SAXException
      */
-    protected static void generatePropertyXML(PropertyDescription property, ContentHandler contentHandler) throws SAXException {
+    private static void generatePropertyXML(final PropertyDescription property,
+            final ContentHandler contentHandler,
+            final int indent)
+    throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, ATTR_NAME, property.getName());
         if ( property.getType() != PropertyType.String && property.getType() != PropertyType.Password) {
@@ -349,13 +362,13 @@ public class ComponentDescriptorIO {
             IOUtils.addAttribute(ai, PROPERTY_ATTR_VALUE, value);
         }
 
-        IOUtils.indent(contentHandler, 2);
+        IOUtils.indent(contentHandler, indent);
         contentHandler.startElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.PROPERTY, ComponentDescriptorIO.PROPERTY_QNAME, ai);
         if (property.getMultiValue() != null && property.getMultiValue().length > 0) {
             // generate a new line first
             IOUtils.text(contentHandler, "\n");
             for (int i = 0; i < property.getMultiValue().length; i++) {
-                IOUtils.indent(contentHandler, 3);
+                IOUtils.indent(contentHandler, indent + 1);
                 value = property.getMultiValue()[i];
                 if ( property.getType() == PropertyType.Character || property.getType() == PropertyType.Char ) {
                     value = String.valueOf((int)value.charAt(0));
@@ -363,7 +376,7 @@ public class ComponentDescriptorIO {
                 IOUtils.text(contentHandler, value);
                 IOUtils.newline(contentHandler);
             }
-            IOUtils.indent(contentHandler, 2);
+            IOUtils.indent(contentHandler, indent);
         }
         contentHandler.endElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.PROPERTY, ComponentDescriptorIO.PROPERTY_QNAME);
         IOUtils.newline(contentHandler);
@@ -376,11 +389,12 @@ public class ComponentDescriptorIO {
      * @param contentHandler
      * @throws SAXException
      */
-    protected static void generateReferenceXML(final ComponentDescription component,
+    private static void generateReferenceXML(final ComponentDescription component,
             final DescriptionContainer module,
             final ReferenceDescription reference,
-            final ContentHandler contentHandler)
-                    throws SAXException {
+            final ContentHandler contentHandler,
+            final int indent)
+    throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, ATTR_NAME, reference.getName());
         IOUtils.addAttribute(ai, INTERFACE_ATTR_NAME, reference.getInterfaceName());
@@ -402,7 +416,7 @@ public class ComponentDescriptorIO {
             }
         }
 
-        IOUtils.indent(contentHandler, 2);
+        IOUtils.indent(contentHandler, indent);
         contentHandler.startElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.REFERENCE, ComponentDescriptorIO.REFERENCE_QNAME,
                 ai);
         contentHandler.endElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.REFERENCE, ComponentDescriptorIO.REFERENCE_QNAME);
