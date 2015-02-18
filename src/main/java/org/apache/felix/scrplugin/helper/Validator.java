@@ -486,7 +486,12 @@ public class Validator {
                     bindName = "bind" + Character.toUpperCase(ref.getName().charAt(0)) + ref.getName().substring(1);
                 }
                 if ( unbindName != null ) {
-                    unbindName = this.validateMethod(ref, unbindName, componentIsAbstract);
+                    if ( "-".equals(unbindName) )
+                    {
+                        unbindName = null;
+                    } else {
+                        unbindName = this.validateMethod(ref, unbindName, componentIsAbstract);
+                    }
                 } else {
                     unbindName = "unbind" + Character.toUpperCase(ref.getName().charAt(0)) + ref.getName().substring(1);
                 }
@@ -589,6 +594,10 @@ public class Validator {
                     final ReferenceDescription ref,
                     final String methodName)
     throws SCRDescriptorException {
+        if ( "-".equals(methodName) ) {
+            return null;
+        }
+
         SpecVersion requiredVersion = SpecVersion.VERSION_1_0;
         try {
             final Class<?>[] sig = new Class<?>[] { project.getClassLoader().loadClass(TYPE_SERVICE_REFERENCE) };
