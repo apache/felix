@@ -327,12 +327,16 @@ public final class WhiteboardHttpService implements HttpServiceRuntime
     {
         for(final Long contextId : contextIds)
         {
-            final ContextHandler handler = this.contextManager.getContextHandler(contextId);
-            if ( handler != null )
+            // TODO - on shutdown context manager is already NULL which shouldn't be the case
+            if ( this.contextManager != null )
             {
-                final ExtServletContext context = handler.getServletContext(this.bundleContext.getBundle());
-                new HttpSessionWrapper(contextId, session, context, true).invalidate();
-                handler.ungetServletContext(this.bundleContext.getBundle());
+                final ContextHandler handler = this.contextManager.getContextHandler(contextId);
+                if ( handler != null )
+                {
+                    final ExtServletContext context = handler.getServletContext(this.bundleContext.getBundle());
+                    new HttpSessionWrapper(contextId, session, context, true).invalidate();
+                    handler.ungetServletContext(this.bundleContext.getBundle());
+                }
             }
         }
     }

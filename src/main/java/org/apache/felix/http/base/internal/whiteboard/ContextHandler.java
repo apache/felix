@@ -203,13 +203,23 @@ public final class ContextHandler implements Comparable<ContextHandler>
             if ( holder != null )
             {
                 holder.counter--;
-                if ( holder.counter <= 0 )
+                if ( holder.counter == 0 )
                 {
                     this.perBundleContextMap.remove(key);
-                    final ServiceObjects<ServletContextHelper> so = bundle.getBundleContext().getServiceObjects(this.info.getServiceReference());
-                    if ( so != null )
+                    if ( holder.servletContextHelper != null )
                     {
-                        so.ungetService(holder.servletContextHelper);
+                        final ServiceObjects<ServletContextHelper> so = bundle.getBundleContext().getServiceObjects(this.info.getServiceReference());
+                        if ( so != null )
+                        {
+                            try
+                            {
+                                so.ungetService(holder.servletContextHelper);
+                            }
+                            catch ( final IllegalArgumentException iae)
+                            {
+                                // this seems to be thrown sometimes on shutdown; we have to evaluate
+                            }
+                        }
                     }
                 }
             }
