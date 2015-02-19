@@ -568,6 +568,10 @@ public final class Dispatcher implements RequestDispatcherProvider
             this.whiteboardService.sessionDestroyed(session, ids);
         }
         String requestURI = getRequestURI(req);
+        if ( requestURI == null )
+        {
+            requestURI = "";
+        }
 
         // Determine which servlets we should forward the request to...
         final ServletHandler servletHandler = this.handlerRegistry.getServletHander(requestURI);
@@ -641,6 +645,10 @@ public final class Dispatcher implements RequestDispatcherProvider
         }
         // TODO remove path parameters...
         String requestURI = decodePath(removeDotSegments(path));
+        if ( requestURI == null )
+        {
+            requestURI = "";
+        }
 
         ServletHandler handler = this.handlerRegistry.getServletHander(requestURI);
         if (handler == null)
