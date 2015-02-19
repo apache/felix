@@ -189,6 +189,7 @@ public class HttpServicePlugin extends HttpServlet
         if (this.serviceReg != null)
         {
             this.serviceReg.unregister();
+            this.serviceReg = null;
         }
     }
 
