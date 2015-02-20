@@ -27,24 +27,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import javax.annotation.Nonnull;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextListener;
 
+import org.apache.felix.http.base.internal.handler.HandlerRegistry;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.AbstractInfo;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
-import org.apache.felix.http.base.internal.runtime.HttpSessionAttributeListenerInfo;
-import org.apache.felix.http.base.internal.runtime.HttpSessionListenerInfo;
+import org.apache.felix.http.base.internal.runtime.HandlerRuntime;
+import org.apache.felix.http.base.internal.runtime.ListenerInfo;
+import org.apache.felix.http.base.internal.runtime.RegistryRuntime;
 import org.apache.felix.http.base.internal.runtime.ResourceInfo;
-import org.apache.felix.http.base.internal.runtime.ServletContextAttributeListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
-import org.apache.felix.http.base.internal.runtime.ServletRequestAttributeListenerInfo;
-import org.apache.felix.http.base.internal.runtime.ServletRequestListenerInfo;
 import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
 import org.apache.felix.http.base.internal.util.MimeTypes;
 import org.osgi.framework.Bundle;
@@ -56,6 +56,7 @@ import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.context.ServletContextHelper;
+import org.osgi.service.http.runtime.HttpServiceRuntime;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 public final class ServletContextHelperManager
@@ -68,42 +69,57 @@ public final class ServletContextHelperManager
 
     private final WhiteboardHttpService httpService;
 
-    private final ServiceRegistration<ServletContextHelper> defaultContextRegistration;
+    private final ListenerRegistry listenerRegistry;
 
-    private final ServletContext webContext;
-
-    private final Bundle bundle;
+    private final BundleContext bundleContext;
 
     private final Set<AbstractInfo<?>> invalidRegistrations = new ConcurrentSkipListSet<AbstractInfo<?>>();
+
+    private volatile ServletContext webContext;
+
+    private volatile ServiceReference<HttpServiceRuntime> httpServiceRuntime;
+
+    private volatile ServiceRegistration<ServletContextHelper> defaultContextRegistration;
 
     /**
      * Create a new servlet context helper manager
      * and the default context
      */
     public ServletContextHelperManager(final BundleContext bundleContext,
-            final ServletContext webContext,
-            final WhiteboardHttpService httpService)
+            final WhiteboardHttpService httpService,
+            final ListenerRegistry listenerRegistry)
     {
+        this.bundleContext = bundleContext;
         this.httpService = httpService;
+        this.listenerRegistry = listenerRegistry;
+    }
+
+    public void start(ServletContext webContext, ServiceReference<HttpServiceRuntime> httpServiceRuntime)
+    {
         this.webContext = webContext;
-        this.bundle = bundleContext.getBundle();
+        this.httpServiceRuntime = httpServiceRuntime;
 
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, HttpWhiteboardConstants.HTTP_WHITEBOARD_DEFAULT_CONTEXT_NAME);
         props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, "/");
         props.put(Constants.SERVICE_RANKING, Integer.MIN_VALUE);
 
-        this.defaultContextRegistration = bundleContext.registerService(ServletContextHelper.class,
-                new ServiceFactory<ServletContextHelper>() {
+        this.defaultContextRegistration = bundleContext.registerService(
+                ServletContextHelper.class,
+                new ServiceFactory<ServletContextHelper>()
+                {
 
                     @Override
                     public ServletContextHelper getService(
                             final Bundle bundle,
-                            final ServiceRegistration<ServletContextHelper> registration) {
-                        return new ServletContextHelper(bundle) {
+                            final ServiceRegistration<ServletContextHelper> registration)
+                    {
+                        return new ServletContextHelper(bundle)
+                        {
 
                             @Override
-                            public String getMimeType(final String file) {
+                            public String getMimeType(final String file)
+                            {
                                 return MimeTypes.get().getByFile(file);
                             }
                         };
@@ -113,11 +129,11 @@ public final class ServletContextHelperManager
                     public void ungetService(
                             final Bundle bundle,
                             final ServiceRegistration<ServletContextHelper> registration,
-                            final ServletContextHelper service) {
+                            final ServletContextHelper service)
+                    {
                         // nothing to do
                     }
-                },
-                props);
+                }, props);
     }
 
     /**
@@ -126,8 +142,11 @@ public final class ServletContextHelperManager
     public void close()
     {
         // TODO cleanup
-
-        this.defaultContextRegistration.unregister();
+        if (this.defaultContextRegistration != null)
+        {
+            this.defaultContextRegistration.unregister();
+            this.defaultContextRegistration = null;
+        }
     }
 
     /**
@@ -162,7 +181,7 @@ public final class ServletContextHelperManager
         // context listeners first
         for(final ServletContextListenerInfo info : listeners.values())
         {
-            handler.initialized(info);
+            this.listenerRegistry.initialized(info, handler);
         }
         // now register services
         for(final WhiteboardServiceInfo<?> info : services)
@@ -198,7 +217,7 @@ public final class ServletContextHelperManager
         }
         for(final ServletContextListenerInfo info : listeners.values())
         {
-            handler.destroyed(info);
+            this.listenerRegistry.destroyed(info, handler);
         }
         handler.deactivate();
 
@@ -216,9 +235,14 @@ public final class ServletContextHelperManager
         {
             if ( info.isValid() )
             {
-                final ContextHandler handler = new ContextHandler(info, this.webContext, this.bundle);
                 synchronized ( this.contextMap )
                 {
+                    PerContextEventListener contextEventListener = listenerRegistry.addContext(info);
+                    ContextHandler handler = new ContextHandler(info,
+                            this.webContext,
+                            contextEventListener,
+                            this.bundleContext.getBundle());
+
                     List<ContextHandler> handlerList = this.contextMap.get(info.getName());
                     if ( handlerList == null )
                     {
@@ -290,6 +314,7 @@ public final class ServletContextHelperManager
                         {
                             this.activate(handlerList.get(0));
                         }
+                        listenerRegistry.removeContext(info);
                     }
                 }
             }
@@ -394,28 +419,9 @@ public final class ServletContextHelperManager
         {
             this.httpService.registerResource(handler, (ResourceInfo)info);
         }
-
-        else if ( info instanceof ServletContextAttributeListenerInfo )
+        else if ( info instanceof ListenerInfo )
         {
-            handler.addListener((ServletContextAttributeListenerInfo)info );
-        }
-
-        else if ( info instanceof HttpSessionListenerInfo )
-        {
-            handler.addListener((HttpSessionListenerInfo)info );
-        }
-        else if ( info instanceof HttpSessionAttributeListenerInfo )
-        {
-            handler.addListener((HttpSessionAttributeListenerInfo)info );
-        }
-
-        else if ( info instanceof ServletRequestListenerInfo )
-        {
-            handler.addListener((ServletRequestListenerInfo)info );
-        }
-        else if ( info instanceof ServletRequestAttributeListenerInfo )
-        {
-            handler.addListener((ServletRequestAttributeListenerInfo)info );
+            this.listenerRegistry.addListener((ListenerInfo<?>)info, handler);
         }
     }
 
@@ -438,28 +444,9 @@ public final class ServletContextHelperManager
         {
             this.httpService.unregisterResource(handler, (ResourceInfo)info);
         }
-
-        else if ( info instanceof ServletContextAttributeListenerInfo )
+        else if ( info instanceof ListenerInfo )
         {
-            handler.removeListener((ServletContextAttributeListenerInfo)info );
-        }
-
-        else if ( info instanceof HttpSessionListenerInfo )
-        {
-            handler.removeListener((HttpSessionListenerInfo)info );
-        }
-        else if ( info instanceof HttpSessionAttributeListenerInfo )
-        {
-            handler.removeListener((HttpSessionAttributeListenerInfo)info );
-        }
-
-        else if ( info instanceof ServletRequestListenerInfo )
-        {
-            handler.removeListener((ServletRequestListenerInfo)info );
-        }
-        else if ( info instanceof ServletRequestAttributeListenerInfo )
-        {
-            handler.removeListener((ServletRequestAttributeListenerInfo)info );
+            this.listenerRegistry.removeListener((ListenerInfo<?>)info, handler);
         }
     }
 
@@ -474,8 +461,8 @@ public final class ServletContextHelperManager
         {
             try
             {
-                final Filter f = this.bundle.getBundleContext().createFilter(target);
-                return f.match(this.httpService.getServiceReference());
+                final Filter f = this.bundleContext.createFilter(target);
+                return f.match(this.httpServiceRuntime);
             }
             catch ( final InvalidSyntaxException ise)
             {
@@ -515,5 +502,22 @@ public final class ServletContextHelperManager
              }
          }
          return handlers;
+    }
+
+    public RegistryRuntime getRuntime(HandlerRegistry registry)
+    {
+        List<HandlerRuntime> handlerRuntimes;
+        Map<Long, Collection<ServiceReference<?>>> listenerRuntimes;
+        Set<ContextHandler> contextHandlers = new TreeSet<ContextHandler>();
+        synchronized ( this.contextMap )
+        {
+            for (List<ContextHandler> contextHandlerList : this.contextMap.values())
+            {
+                contextHandlers.addAll(contextHandlerList);
+            }
+            handlerRuntimes = registry.getRuntime();
+            listenerRuntimes = listenerRegistry.getContextRuntimes();
+        }
+        return new RegistryRuntime(contextHandlers, handlerRuntimes, listenerRuntimes);
     }
 }

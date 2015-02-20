@@ -137,6 +137,26 @@ public final class FilterInfo extends WhiteboardServiceInfo<Filter>
         this.dispatcher = new DispatcherType[] {DispatcherType.REQUEST};
     }
 
+    FilterInfo(int serviceRanking,
+            long serviceId,
+            String name,
+            String[] patterns,
+            String[] servletNames,
+            String[] regexs,
+            boolean asyncSupported,
+            DispatcherType[] dispatcher,
+            Map<String, String> initParams)
+    {
+        super(serviceRanking, serviceId);
+        this.name = name;
+        this.patterns = patterns;
+        this.servletNames = servletNames;
+        this.regexs = regexs;
+        this.asyncSupported = asyncSupported;
+        this.dispatcher = dispatcher;
+        this.initParams = initParams;
+    }
+
     @Override
     public boolean isValid()
     {

@@ -18,8 +18,7 @@
  */
 package org.apache.felix.http.base.internal.runtime;
 
-import java.util.concurrent.atomic.AtomicLong;
-
+import org.apache.felix.http.base.internal.util.InternalIdFactory;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
@@ -31,9 +30,6 @@ import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
  */
 public abstract class WhiteboardServiceInfo<T> extends AbstractInfo<T>
 {
-    /** Service id for services not provided through the service registry. */
-    private static final AtomicLong serviceIdCounter = new AtomicLong(-1);
-
     /** The context selection. */
     private final String contextSelection;
 
@@ -67,7 +63,7 @@ public abstract class WhiteboardServiceInfo<T> extends AbstractInfo<T>
 
     public WhiteboardServiceInfo(final int ranking)
     {
-        this(ranking, serviceIdCounter.getAndDecrement());
+        this(ranking, InternalIdFactory.INSTANCE.next());
 
     }
 

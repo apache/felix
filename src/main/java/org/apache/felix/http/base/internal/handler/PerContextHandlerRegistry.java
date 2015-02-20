@@ -18,6 +18,7 @@ package org.apache.felix.http.base.internal.handler;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -29,8 +30,11 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
+import org.apache.felix.http.base.internal.runtime.HandlerRuntime;
+import org.apache.felix.http.base.internal.runtime.HandlerRuntime.ErrorPage;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.util.InternalIdFactory;
 
 public final class PerContextHandlerRegistry implements Comparable<PerContextHandlerRegistry>
 {
@@ -39,7 +43,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     private final Map<String, Servlet> servletPatternMap = new HashMap<String, Servlet>();
     private volatile HandlerMapping<ServletHandler> servletMapping = new HandlerMapping<ServletHandler>();
     private volatile HandlerMapping<FilterHandler> filterMapping = new HandlerMapping<FilterHandler>();
-    private volatile ErrorsMapping errorsMapping = new ErrorsMapping();
+    private final ErrorsMapping errorsMapping = new ErrorsMapping();
 
     private final long serviceId;
 
@@ -363,5 +367,20 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     public long getContextServiceId()
     {
         return this.serviceId;
+    }
+
+    public synchronized HandlerRuntime getRuntime() {
+        List<ServletHandler> servletHandlers = new ArrayList<ServletHandler>(servletMap.values());
+        List<FilterHandler> filterHandlers = new ArrayList<FilterHandler>(filterMap.values());
+
+        Collection<ErrorPage> errorPages = new ArrayList<HandlerRuntime.ErrorPage>();
+        Collection<ServletHandler> errorHandlers = errorsMapping.getMappedHandlers();
+        for (ServletHandler servletHandler : errorHandlers)
+        {
+            errorPages.add(errorsMapping.getErrorPage(servletHandler));
+        }
+        servletHandlers.removeAll(errorHandlers);
+
+        return new HandlerRuntime(servletHandlers, filterHandlers, errorPages, serviceId);
     }
 }

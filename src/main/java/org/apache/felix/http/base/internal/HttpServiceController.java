@@ -29,7 +29,7 @@ import org.apache.felix.http.base.internal.handler.HandlerRegistry;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.apache.felix.http.base.internal.service.listener.ServletContextAttributeListenerManager;
-import org.apache.felix.http.base.internal.whiteboard.WhiteboardHttpService;
+import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
 import org.osgi.framework.BundleContext;
 
 public final class HttpServiceController
@@ -39,7 +39,7 @@ public final class HttpServiceController
     private final Dispatcher dispatcher;
     private final HttpServicePlugin plugin;
     private final HttpServiceFactory httpServiceFactory;
-    private final WhiteboardHttpService whiteboardHttpService;
+    private final WhiteboardManager whiteboardManager;
 
     public HttpServiceController(final BundleContext bundleContext)
     {
@@ -48,7 +48,7 @@ public final class HttpServiceController
         this.dispatcher = new Dispatcher(this.registry);
         this.plugin = new HttpServicePlugin(bundleContext, registry);
         this.httpServiceFactory = new HttpServiceFactory(this.bundleContext, this.registry);
-        this.whiteboardHttpService = new WhiteboardHttpService(this.bundleContext, this.registry, this.httpServiceFactory);
+        this.whiteboardManager = new WhiteboardManager(bundleContext, this.httpServiceFactory, this.registry);
     }
 
     Dispatcher getDispatcher()
@@ -68,7 +68,7 @@ public final class HttpServiceController
             @Override
             public void sessionDestroyed(final HttpSessionEvent se) {
                 httpServiceFactory.getSessionListener().sessionDestroyed(se);
-                whiteboardHttpService.sessionDestroyed(se.getSession(), HttpSessionWrapper.getSessionContextIds(se.getSession()));
+                whiteboardManager.sessionDestroyed(se.getSession(), HttpSessionWrapper.getSessionContextIds(se.getSession()));
             }
 
             @Override
@@ -86,7 +86,7 @@ public final class HttpServiceController
     public void setProperties(final Hashtable<String, Object> props)
     {
         this.httpServiceFactory.setProperties(props);
-        this.whiteboardHttpService.setProperties(props);
+        this.whiteboardManager.setProperties(props);
     }
 
     public void register(final ServletContext servletContext)
@@ -94,20 +94,20 @@ public final class HttpServiceController
         this.plugin.register();
 
         this.httpServiceFactory.start(servletContext);
-        this.whiteboardHttpService.start(servletContext);
+        this.whiteboardManager.start(servletContext);
 
-        this.dispatcher.setWhiteboardHttpService(this.whiteboardHttpService);
+        this.dispatcher.setWhiteboardManager(this.whiteboardManager);
     }
 
     public void unregister()
     {
         this.plugin.unregister();
 
-        this.dispatcher.setWhiteboardHttpService(null);
+        this.dispatcher.setWhiteboardManager(null);
 
-        if ( this.whiteboardHttpService != null )
+        if ( this.whiteboardManager != null )
         {
-            this.whiteboardHttpService.stop();
+            this.whiteboardManager.stop();
         }
 
         if ( this.httpServiceFactory != null )
