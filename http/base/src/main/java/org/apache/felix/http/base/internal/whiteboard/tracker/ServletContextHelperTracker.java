@@ -24,7 +24,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.context.ServletContextHelper;
-import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 import org.osgi.util.tracker.ServiceTracker;
 
 /**
@@ -40,10 +39,8 @@ public final class ServletContextHelperTracker extends ServiceTracker<ServletCon
     {
         try
         {
-            return btx.createFilter(String.format("(&(objectClass=%s)(%s=*)(%s=*))",
-                    ServletContextHelper.class.getName(),
-                    HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME,
-                    HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH));
+            return btx.createFilter(String.format("(objectClass=%s)",
+                    ServletContextHelper.class.getName()));
         }
         catch ( final InvalidSyntaxException ise)
         {
