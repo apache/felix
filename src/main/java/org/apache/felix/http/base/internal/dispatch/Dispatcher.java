@@ -339,12 +339,11 @@ public final class Dispatcher implements RequestDispatcherProvider
         @Override
         public String getPathInfo()
         {
-            String pathInfo = super.getPathInfo();
-            if (isForwardingDispatcher() || !isWrapperFor(ServletRequestWrapper.class))
+            if ( this.isInclusionDispatcher() )
             {
-                pathInfo = this.requestInfo.pathInfo;
+                return super.getPathInfo();
             }
-            return pathInfo;
+            return this.requestInfo.pathInfo;
         }
 
         @Override
@@ -391,12 +390,11 @@ public final class Dispatcher implements RequestDispatcherProvider
         @Override
         public String getRequestURI()
         {
-            String requestURI = super.getRequestURI();
-            if (isForwardingDispatcher() || !isWrapperFor(ServletRequestWrapper.class))
+            if ( isInclusionDispatcher() )
             {
-                requestURI = concat(getContextPath(), this.requestInfo.requestURI);
+                return super.getRequestURI();
             }
-            return requestURI;
+            return concat(getContextPath(), this.requestInfo.requestURI);
         }
 
         @Override
@@ -408,16 +406,11 @@ public final class Dispatcher implements RequestDispatcherProvider
         @Override
         public String getServletPath()
         {
-            String servletPath = super.getServletPath();
-            if (isForwardingDispatcher() || !isWrapperFor(ServletRequestWrapper.class))
+            if ( isInclusionDispatcher() )
             {
-                servletPath = this.requestInfo.servletPath;
+                return super.getServletPath();
             }
-            if ("/".equals(servletPath))
-            {
-                return ""; // XXX still necessary?
-            }
-            return servletPath;
+            return this.requestInfo.servletPath;
         }
 
         @Override
@@ -584,14 +577,14 @@ public final class Dispatcher implements RequestDispatcherProvider
         }
 
         // strip of context path
-        requestURI = requestURI.substring(servletHandler.getContext().getContextPath().length());
+        requestURI = requestURI.substring(servletHandler.getContext().getContextPath().length() - req.getContextPath().length());
 
         final String servletPath = servletHandler.determineServletPath(requestURI);
         String pathInfo = UriUtils.compactPath(UriUtils.relativePath(servletPath, requestURI));
         String queryString = null; // XXX
 
         ExtServletContext servletContext = (servletHandler != null) ? servletHandler.getContext() : null;
-        RequestInfo requestInfo = new RequestInfo(servletPath, pathInfo, queryString);
+        final RequestInfo requestInfo = new RequestInfo(servletPath, pathInfo, queryString);
 
         final HttpServletRequest wrappedRequest = new ServletRequestWrapper(req, servletContext, requestInfo, servletHandler.getContextServiceId());
         final FilterHandler[] filterHandlers = this.handlerRegistry.getFilterHandlers(servletHandler, req.getDispatcherType(), requestURI);
