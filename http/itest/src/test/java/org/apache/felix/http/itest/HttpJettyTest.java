@@ -249,7 +249,7 @@ public class HttpJettyTest extends BaseIntegrationTest
         assertContent("2.4", createURL("/test/2"));
         assertContent("1.3", createURL("/test/1"));
 
-        assertResponseCode(SC_FORBIDDEN, createURL("/test?param=forbidden"));
+        assertResponseCode(SC_NOT_FOUND, createURL("/test?param=forbidden"));
 
         unregister(servlet1);
         unregister(servlet2);
