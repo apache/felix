@@ -41,10 +41,9 @@ public final class HandlerRegistry
     private volatile List<PerContextHandlerRegistry> registrations = Collections.emptyList();
 
     /**
-     * Create a new registry.
      * Register default context registry for Http Service
      */
-    public HandlerRegistry()
+    public void init()
     {
         this.add(new PerContextHandlerRegistry());
     }
