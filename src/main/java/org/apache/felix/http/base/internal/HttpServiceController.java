@@ -91,6 +91,8 @@ public final class HttpServiceController
 
     public void register(final ServletContext servletContext)
     {
+        this.registry.init();
+
         this.plugin.register();
 
         this.httpServiceFactory.start(servletContext);
