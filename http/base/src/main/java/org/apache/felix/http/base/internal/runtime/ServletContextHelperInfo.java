@@ -52,6 +52,18 @@ public final class ServletContextHelperInfo extends AbstractInfo<ServletContextH
         this.initParams = getInitParams(ref, CONTEXT_INIT_PREFIX);
     }
 
+    ServletContextHelperInfo(int serviceRanking,
+            long serviceId,
+            String name,
+            String path,
+            Map<String, String> initParams)
+    {
+        super(serviceRanking, serviceId);
+        this.name = name;
+        this.path = path;
+        this.initParams = initParams;
+    }
+
     private boolean isValidPath()
     {
         if ( !this.isEmpty(path) )

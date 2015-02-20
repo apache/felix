@@ -16,14 +16,21 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
+import static org.apache.felix.http.base.internal.util.CollectionUtils.union;
+
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
+
+import org.apache.felix.http.base.internal.runtime.HandlerRuntime;
 
 public final class ErrorsMapping
 {
@@ -116,4 +123,27 @@ public final class ErrorsMapping
         this.exceptionsMap.clear();
     }
 
+    @SuppressWarnings("unchecked")
+    public Collection<ServletHandler> getMappedHandlers()
+    {
+        return union(errorCodesMap.values(), exceptionsMap.values());
+    }
+
+    public HandlerRuntime.ErrorPage getErrorPage(ServletHandler servletHandler)
+    {
+        Collection<Integer> errorCodes = getCopy(servletHandler, invertedErrorCodesMap);
+        Collection<String> exceptions = getCopy(servletHandler, invertedExceptionsMap);
+        return new HandlerRuntime.ErrorPage(servletHandler, errorCodes, exceptions);
+    }
+
+    private static <T> List<T> getCopy(ServletHandler key, Map<Servlet, Collection<T>> map)
+    {
+        Collection<T> result = map.get(key.getServlet());
+        if (result != null)
+        {
+            return new ArrayList<T>(result);
+        }
+
+        return Collections.emptyList();
+    }
 }

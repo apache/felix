@@ -93,7 +93,7 @@ public final class ServletInfo extends WhiteboardServiceInfo<Servlet>
         this.initParams = Collections.emptyMap();
     }
 
-    private static ServiceReference getRef(final ServiceReference ref)
+    private static ServiceReference getRef(ServiceReference ref)
     {
         return ref;
     }
@@ -112,6 +112,22 @@ public final class ServletInfo extends WhiteboardServiceInfo<Servlet>
         this.initParams = initParams;
         this.asyncSupported = false;
         this.errorPage = null;
+    }
+
+    ServletInfo(int serviceRanking,
+            long serviceId,
+            String name,
+            String[] patterns,
+            String[] errorPage,
+            boolean asyncSupported,
+            Map<String, String> initParams)
+    {
+        super(serviceRanking, serviceId);
+        this.name = name;
+        this.patterns = patterns;
+        this.errorPage = errorPage;
+        this.asyncSupported = asyncSupported;
+        this.initParams = initParams;
     }
 
     @Override

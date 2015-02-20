@@ -45,7 +45,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
-import org.osgi.service.cm.Configuration;
 import org.osgi.service.http.NamespaceException;
 
 /**
@@ -152,7 +151,7 @@ public class RequestDispatchTest extends BaseIntegrationTest
                 {
                     assertEquals("", req.getContextPath());
                     assertEquals("/test", req.getServletPath());
-                    assertEquals("/test/forward", req.getPathInfo()); // XXX ?
+                    assertEquals("/forward", req.getPathInfo());
                     assertEquals("/test/forward", req.getRequestURI());
                     assertEquals("bar=qux&quu", req.getQueryString());
 
@@ -349,7 +348,7 @@ public class RequestDispatchTest extends BaseIntegrationTest
     public void testDispatchOnNonRootContextPathOk() throws Exception
     {
         // Configure HTTP on a different context path...
-        Configuration config = configureHttpService(createDictionary("org.apache.felix.http.context_path", "/context", "org.osgi.service.http.port", "8080"));
+        configureHttpService(createDictionary("org.apache.felix.http.context_path", "/context", "org.osgi.service.http.port", "8080"));
 
         try
         {
@@ -359,7 +358,7 @@ public class RequestDispatchTest extends BaseIntegrationTest
         }
         finally
         {
-            config.delete();
+            configureHttpService(null);
         }
     }
 

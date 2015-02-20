@@ -20,7 +20,7 @@ package org.apache.felix.http.itest;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.ops4j.pax.exam.Constants.START_LEVEL_SYSTEM_BUNDLES;
 import static org.ops4j.pax.exam.Constants.START_LEVEL_TEST_BUNDLE;
 import static org.ops4j.pax.exam.CoreOptions.bootDelegationPackage;
@@ -38,11 +38,11 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.servlet.Filter;
@@ -64,10 +64,10 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.Configuration;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.cm.ConfigurationEvent;
-import org.osgi.service.cm.ConfigurationListener;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.cm.ConfigurationException;
+import org.osgi.service.cm.ManagedService;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
 import org.osgi.service.http.NamespaceException;
@@ -89,7 +89,7 @@ public abstract class BaseIntegrationTest
         {
             this(null, null);
         }
-        
+
         public TestFilter(CountDownLatch initLatch, CountDownLatch destroyLatch)
         {
             m_initLatch = initLatch;
@@ -134,7 +134,7 @@ public abstract class BaseIntegrationTest
         {
             this(null, null);
         }
-        
+
         public TestServlet(CountDownLatch initLatch, CountDownLatch destroyLatch)
         {
             m_initLatch = initLatch;
@@ -308,7 +308,7 @@ public abstract class BaseIntegrationTest
             bootDelegationPackage("sun.*"),
             cleanCaches(),
             CoreOptions.systemProperty("logback.configurationFile").value("file:src/test/resources/logback.xml"), //
-//            CoreOptions.vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8787"),
+            //            CoreOptions.vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8787"),
 
             mavenBundle("org.slf4j", "slf4j-api").version("1.6.5").startLevel(START_LEVEL_SYSTEM_BUNDLES),
             mavenBundle("ch.qos.logback", "logback-core").version("1.0.6").startLevel(START_LEVEL_SYSTEM_BUNDLES),
@@ -372,61 +372,28 @@ public abstract class BaseIntegrationTest
         return result;
     }
 
-    protected org.osgi.service.cm.Configuration configureHttpService(Dictionary<?, ?> props) throws Exception
+    protected void configureHttpService(Dictionary<?, ?> props) throws Exception
     {
         final String pid = "org.apache.felix.http";
-        ServiceTracker tracker = new ServiceTracker(m_context, ConfigurationAdmin.class.getName(), null);
-        tracker.open();
 
-        ServiceRegistration reg = null;
-        org.osgi.service.cm.Configuration config = null;
+        Collection<ServiceReference<ManagedService>> serviceRefs = m_context.getServiceReferences(ManagedService.class, String.format("(%s=%s)", Constants.SERVICE_PID, pid));
+        assertNotNull("Unable to obtain managed configuration for " + pid, serviceRefs);
 
-        try
+        for (ServiceReference<ManagedService> serviceRef : serviceRefs)
         {
-            ConfigurationAdmin configAdmin = (ConfigurationAdmin) tracker.waitForService(TimeUnit.SECONDS.toMillis(5));
-            assertNotNull("No configuration admin service found?!", configAdmin);
-
-            final CountDownLatch latch = new CountDownLatch(1);
-            final int configEvent = (props != null) ? ConfigurationEvent.CM_UPDATED : ConfigurationEvent.CM_DELETED;
-
-            config = configAdmin.getConfiguration(pid, null);
-
-            reg = m_context.registerService(ConfigurationListener.class.getName(), new ConfigurationListener()
+            ManagedService service = m_context.getService(serviceRef);
+            try
             {
-                @Override
-                public void configurationEvent(ConfigurationEvent event)
-                {
-                    if (pid.equals(event.getPid()) && event.getType() == configEvent)
-                    {
-                        latch.countDown();
-                    }
-                }
-            }, null);
-
-            if (props != null)
-            {
-                config.update(props);
+                service.updated(props);
             }
-            else
+            catch (ConfigurationException ex)
             {
-                config.delete();
+                fail("Invalid configuration provisioned: " + ex.getMessage());
             }
-
-            assertTrue("Configuration not provisioned in time!", latch.await(5, TimeUnit.SECONDS));
-
-            // Needed to get Jetty restarted...
-            TimeUnit.MILLISECONDS.sleep(150);
-
-            return config;
-        }
-        finally
-        {
-            if (reg != null)
+            finally
             {
-                reg.unregister();
+                m_context.ungetService(serviceRef);
             }
-
-            tracker.close();
         }
     }
 

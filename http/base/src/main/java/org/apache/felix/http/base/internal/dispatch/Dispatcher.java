@@ -56,7 +56,7 @@ import org.apache.felix.http.base.internal.handler.HandlerRegistry;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.util.UriUtils;
-import org.apache.felix.http.base.internal.whiteboard.WhiteboardHttpService;
+import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.useradmin.Authorization;
 
@@ -538,16 +538,16 @@ public final class Dispatcher implements RequestDispatcherProvider
 
     private final HandlerRegistry handlerRegistry;
 
-    private WhiteboardHttpService whiteboardService;
+    private WhiteboardManager whiteboardManager;
 
     public Dispatcher(final HandlerRegistry handlerRegistry)
     {
         this.handlerRegistry = handlerRegistry;
     }
 
-    public void setWhiteboardHttpService(final WhiteboardHttpService service)
+    public void setWhiteboardManager(final WhiteboardManager service)
     {
-        this.whiteboardService = service;
+        this.whiteboardManager = service;
     }
 
     /**
@@ -565,7 +565,7 @@ public final class Dispatcher implements RequestDispatcherProvider
         if ( session != null )
         {
             final Set<Long> ids = HttpSessionWrapper.getExpiredSessionContextIds(session);
-            this.whiteboardService.sessionDestroyed(session, ids);
+            this.whiteboardManager.sessionDestroyed(session, ids);
         }
         String requestURI = getRequestURI(req);
         if ( requestURI == null )

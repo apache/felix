@@ -24,6 +24,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.servlet.DispatcherType;
 
+import org.apache.felix.http.base.internal.runtime.HandlerRuntime;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 
 /**
@@ -216,5 +217,15 @@ public final class HandlerRegistry
             }
         }
         return null;
+    }
+
+    public synchronized List<HandlerRuntime> getRuntime()
+    {
+        List<HandlerRuntime> handlerRuntimes = new ArrayList<HandlerRuntime>();
+        for (PerContextHandlerRegistry contextRegistry : this.registrations)
+        {
+            handlerRuntimes.add(contextRegistry.getRuntime());
+        }
+        return handlerRuntimes;
     }
 }
