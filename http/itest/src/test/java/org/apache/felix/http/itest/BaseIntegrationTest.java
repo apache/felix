@@ -40,7 +40,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
 
@@ -96,6 +98,7 @@ public abstract class BaseIntegrationTest
             m_destroyLatch = destroyLatch;
         }
 
+        @Override
         public void destroy()
         {
             if (m_destroyLatch != null)
@@ -104,11 +107,13 @@ public abstract class BaseIntegrationTest
             }
         }
 
+        @Override
         public final void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain) throws IOException, ServletException
         {
             filter((HttpServletRequest) req, (HttpServletResponse) resp, chain);
         }
 
+        @Override
         public void init(FilterConfig config) throws ServletException
         {
             if (m_initLatch != null)
@@ -119,7 +124,7 @@ public abstract class BaseIntegrationTest
 
         protected void filter(HttpServletRequest req, HttpServletResponse resp, FilterChain chain) throws IOException, ServletException
         {
-            ((HttpServletResponse) resp).setStatus(HttpServletResponse.SC_OK);
+            resp.setStatus(HttpServletResponse.SC_OK);
         }
     }
 
@@ -332,6 +337,8 @@ public abstract class BaseIntegrationTest
             junitBundles(), frameworkStartLevel(START_LEVEL_TEST_BUNDLE), felix());
     }
 
+    private final Map<String, ServiceTracker<?, ?>> trackers = new HashMap<String, ServiceTracker<?, ?>>();
+
     @Before
     public void setUp() throws Exception
     {
@@ -341,6 +348,14 @@ public abstract class BaseIntegrationTest
     @After
     public void tearDown() throws Exception
     {
+        synchronized ( trackers )
+        {
+            for(final Map.Entry<String, ServiceTracker<?, ?>> entry : trackers.entrySet())
+            {
+                entry.getValue().close();
+            }
+            trackers.clear();
+        }
         Bundle bundle = getHttpJettyBundle();
         // Restart the HTTP-service to clean all registrations...
         if (bundle.getState() == Bundle.ACTIVE)
@@ -358,18 +373,18 @@ public abstract class BaseIntegrationTest
      */
     protected <T> T awaitService(String serviceName) throws Exception
     {
-        ServiceTracker tracker = new ServiceTracker(m_context, serviceName, null);
-        tracker.open();
-        T result;
-        try
+        ServiceTracker<?, ?> tracker = null;
+        synchronized ( this.trackers )
         {
-            result = (T) tracker.waitForService(DEFAULT_TIMEOUT);
+            tracker = trackers.get(serviceName);
+            if ( tracker == null )
+            {
+                tracker = new ServiceTracker(m_context, serviceName, null);
+                trackers.put(serviceName, tracker);
+                tracker.open();
+            }
         }
-        finally
-        {
-            tracker.close();
-        }
-        return result;
+        return (T) tracker.waitForService(DEFAULT_TIMEOUT);
     }
 
     protected void configureHttpService(Dictionary<?, ?> props) throws Exception
@@ -435,20 +450,20 @@ public abstract class BaseIntegrationTest
      * @param serviceName
      * @return
      */
-    protected <T> T getService(String serviceName)
+    protected <T> T getService(final String serviceName)
     {
-        ServiceTracker tracker = new ServiceTracker(m_context, serviceName, null);
-        tracker.open();
-        T result;
-        try
+        ServiceTracker<?, ?> tracker = null;
+        synchronized ( this.trackers )
         {
-            result = (T) tracker.getService();
+            tracker = trackers.get(serviceName);
+            if ( tracker == null )
+            {
+                tracker = new ServiceTracker(m_context, serviceName, null);
+                trackers.put(serviceName, tracker);
+                tracker.open();
+            }
         }
-        finally
-        {
-            tracker.close();
-        }
-        return result;
+        return (T) tracker.getService();
     }
 
     protected void register(String pattern, Filter filter) throws ServletException, NamespaceException
