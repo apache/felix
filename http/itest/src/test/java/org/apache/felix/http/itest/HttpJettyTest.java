@@ -23,6 +23,7 @@ import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static javax.servlet.http.HttpServletResponse.SC_PAYMENT_REQUIRED;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -95,7 +96,8 @@ public class HttpJettyTest extends BaseIntegrationTest
 
         bundle.stop();
 
-        assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
+        // destroy should not be called as the bundle stopped
+        assertFalse(destroyLatch.await(5, TimeUnit.SECONDS));
 
         try
         {
@@ -122,16 +124,19 @@ public class HttpJettyTest extends BaseIntegrationTest
 
         HttpContext context = new HttpContext()
         {
+            @Override
             public String getMimeType(String name)
             {
                 return null;
             }
 
+            @Override
             public URL getResource(String name)
             {
                 return null;
             }
 
+            @Override
             public boolean handleSecurity(HttpServletRequest request, HttpServletResponse response) throws IOException
             {
                 try
@@ -264,16 +269,19 @@ public class HttpJettyTest extends BaseIntegrationTest
 
         HttpContext context = new HttpContext()
         {
+            @Override
             public String getMimeType(String name)
             {
                 return null;
             }
 
+            @Override
             public URL getResource(String name)
             {
                 return null;
             }
 
+            @Override
             public boolean handleSecurity(HttpServletRequest request, HttpServletResponse response) throws IOException
             {
                 if (request.getParameter("setStatus") != null)
@@ -442,11 +450,13 @@ public class HttpJettyTest extends BaseIntegrationTest
 
         HttpContext context = new HttpContext()
         {
+            @Override
             public String getMimeType(String name)
             {
                 return null;
             }
 
+            @Override
             public URL getResource(String name)
             {
                 try
@@ -464,6 +474,7 @@ public class HttpJettyTest extends BaseIntegrationTest
                 return null;
             }
 
+            @Override
             public boolean handleSecurity(HttpServletRequest request, HttpServletResponse response) throws IOException
             {
                 return true;
