@@ -20,6 +20,7 @@ package org.apache.felix.http.base.internal.runtime;
 
 import java.util.Map;
 
+import org.apache.felix.http.base.internal.util.PatternUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.context.ServletContextHelper;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
@@ -68,7 +69,7 @@ public final class ServletContextHelperInfo extends AbstractInfo<ServletContextH
     {
         if ( !this.isEmpty(path) )
         {
-        	if ( path.equals("/") ) 
+        	if ( path.equals("/") )
         	{
         		return true;
         	}
@@ -84,8 +85,9 @@ public final class ServletContextHelperInfo extends AbstractInfo<ServletContextH
     @Override
     public boolean isValid()
     {
-        // TODO - check if name has valid value
-        return super.isValid() && !this.isEmpty(this.name) && isValidPath();
+        return super.isValid()
+                && PatternUtil.isValidSymbolicName(this.name)
+                && isValidPath();
     }
 
     public String getName()

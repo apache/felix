@@ -513,7 +513,10 @@ public final class ServletContextHelperManager
         {
             for (List<ContextHandler> contextHandlerList : this.contextMap.values())
             {
-                contextHandlers.addAll(contextHandlerList);
+                if ( !contextHandlerList.isEmpty() )
+                {
+                    contextHandlers.add(contextHandlerList.get(0));
+                }
             }
             handlerRuntimes = registry.getRuntime();
             listenerRuntimes = listenerRegistry.getContextRuntimes();
