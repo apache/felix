@@ -64,7 +64,6 @@ public final class HttpServiceFactory
     private static final String OBSOLETE_REG_PROPERTY_ENDPOINTS = "osgi.http.service.endpoints";
 
     private final BundleContext bundleContext;
-    private final HandlerRegistry handlerRegistry;
     private final boolean sharedContextAttributes;
 
     private final ServletContextAttributeListenerManager contextAttributeListenerManager;
@@ -76,6 +75,9 @@ public final class HttpServiceFactory
     private final Hashtable<String, Object> httpServiceProps = new Hashtable<String, Object>();
     private volatile ServletContext context;
     private volatile ServiceRegistration<?> httpServiceReg;
+
+    private final HandlerRegistry handlerRegistry;
+    private volatile SharedHttpServiceImpl sharedHttpService;
 
     public HttpServiceFactory(final BundleContext bundleContext,
             final HandlerRegistry handlerRegistry)
@@ -100,6 +102,8 @@ public final class HttpServiceFactory
         this.sessionListenerManager.open();
         this.sessionAttributeListenerManager.open();
 
+        this.sharedHttpService = new SharedHttpServiceImpl(handlerRegistry.getRegistry(null));
+
         final String[] ifaces = new String[] { HttpService.class.getName(), ExtHttpService.class.getName() };
         this.httpServiceReg = bundleContext.registerService(ifaces, this, this.httpServiceProps);
     }
@@ -113,6 +117,8 @@ public final class HttpServiceFactory
             this.httpServiceReg = null;
         }
 
+        this.sharedHttpService = null;
+
         this.contextAttributeListenerManager.close();
         this.requestListenerManager.close();
         this.requestAttributeListenerManager.close();
@@ -123,8 +129,9 @@ public final class HttpServiceFactory
     @Override
     public HttpService getService(final Bundle bundle, final ServiceRegistration<HttpService> reg)
     {
-        return new HttpServiceImpl(bundle, this.context,
-                this.handlerRegistry.getRegistry(null),
+        return new PerBundleHttpServiceImpl(bundle,
+                this.sharedHttpService,
+                this.context,
                 this.contextAttributeListenerManager,
                 this.sharedContextAttributes,
                 this.requestListenerManager,
@@ -135,9 +142,9 @@ public final class HttpServiceFactory
     public void ungetService(final Bundle bundle, final ServiceRegistration<HttpService> reg,
             final HttpService service)
     {
-        if ( service instanceof HttpServiceImpl )
+        if ( service instanceof PerBundleHttpServiceImpl )
         {
-            ((HttpServiceImpl)service).unregisterAll();
+            ((PerBundleHttpServiceImpl)service).unregisterAll();
         }
     }
 

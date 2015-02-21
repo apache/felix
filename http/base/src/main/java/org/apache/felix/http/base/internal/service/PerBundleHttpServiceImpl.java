@@ -20,7 +20,6 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -34,9 +33,6 @@ import javax.servlet.ServletRequestListener;
 
 import org.apache.felix.http.api.ExtHttpService;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.apache.felix.http.base.internal.handler.FilterHandler;
-import org.apache.felix.http.base.internal.handler.PerContextHandlerRegistry;
-import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
@@ -44,16 +40,26 @@ import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.NamespaceException;
 
-public final class HttpServiceImpl implements ExtHttpService
+/**
+ * This implementation of the {@link ExtHttpService} implements the front end
+ * used by client bundles. It performs the validity checks and passes the
+ * real operation to the shared http service.
+ */
+public final class PerBundleHttpServiceImpl implements ExtHttpService
 {
     private final Bundle bundle;
-    private final PerContextHandlerRegistry handlerRegistry;
     private final Set<Servlet> localServlets = new HashSet<Servlet>();
     private final Set<Filter> localFilters = new HashSet<Filter>();
     private final ServletContextManager contextManager;
-    private final Map<String, ServletHandler> aliasMap = new HashMap<String, ServletHandler>();
+    private final SharedHttpServiceImpl sharedHttpService;
 
-    public HttpServiceImpl(Bundle bundle, ServletContext context, PerContextHandlerRegistry handlerRegistry, ServletContextAttributeListener servletAttributeListener, boolean sharedContextAttributes, ServletRequestListener reqListener, ServletRequestAttributeListener reqAttrListener)
+    public PerBundleHttpServiceImpl(final Bundle bundle,
+            final SharedHttpServiceImpl sharedHttpService,
+            final ServletContext context,
+            final ServletContextAttributeListener servletAttributeListener,
+            final boolean sharedContextAttributes,
+            final ServletRequestListener reqListener,
+            final ServletRequestAttributeListener reqAttrListener)
     {
         if (bundle == null)
         {
@@ -63,14 +69,10 @@ public final class HttpServiceImpl implements ExtHttpService
         {
             throw new IllegalArgumentException("Context cannot be null!");
         }
-        if (handlerRegistry == null)
-        {
-            throw new IllegalArgumentException("HandlerRegistry cannot be null!");
-        }
 
         this.bundle = bundle;
-        this.handlerRegistry = handlerRegistry;
         this.contextManager = new ServletContextManager(this.bundle, context, servletAttributeListener, sharedContextAttributes, reqListener, reqAttrListener);
+        this.sharedHttpService = sharedHttpService;
     }
 
     @Override
@@ -83,7 +85,12 @@ public final class HttpServiceImpl implements ExtHttpService
      * @see org.apache.felix.http.api.ExtHttpService#registerFilter(javax.servlet.Filter, java.lang.String, java.util.Dictionary, int, org.osgi.service.http.HttpContext)
      */
     @Override
-    public void registerFilter(Filter filter, String pattern, Dictionary initParams, int ranking, HttpContext context) throws ServletException
+    public void registerFilter(final Filter filter,
+            final String pattern,
+            final Dictionary initParams,
+            final int ranking,
+            final HttpContext context)
+    throws ServletException
     {
         if (filter == null)
         {
@@ -114,16 +121,13 @@ public final class HttpServiceImpl implements ExtHttpService
 
         final ExtServletContext httpContext = getServletContext(context);
 
-        FilterHandler handler = new FilterHandler(null, httpContext, filter, filterInfo);
-        try
+        if ( this.sharedHttpService.registerFilter(httpContext, filter, filterInfo) )
         {
-            this.handlerRegistry.addFilter(handler);
+            synchronized ( this.localFilters )
+            {
+                this.localFilters.add(filter);
+            }
         }
-        catch (ServletException e)
-        {
-            // TODO create failure DTO
-        }
-        this.localFilters.add(filter);
     }
 
     /**
@@ -181,26 +185,33 @@ public final class HttpServiceImpl implements ExtHttpService
             }
         }
 
+        synchronized (this.localServlets)
+        {
+            if (this.localServlets.contains(servlet))
+            {
+                throw new ServletException("Servlet instance " + servlet + " already registered");
+            }
+            this.localServlets.add(servlet);
+        }
+
         final ServletInfo servletInfo = new ServletInfo(String.format("%s_%d", servlet.getClass(), this.hashCode()), alias, 0, paramMap);
         final ExtServletContext httpContext = getServletContext(context);
 
-        final ServletHandler handler = new ServletHandler(null, httpContext, servletInfo, servlet);
-
-        synchronized (this.aliasMap)
+        boolean success = false;
+        try
         {
-            if (this.aliasMap.containsKey(alias))
+            this.sharedHttpService.registerServlet(alias, httpContext,  servlet,  servletInfo);
+            success = true;
+        }
+        finally
+        {
+            if ( !success )
             {
-                throw new NamespaceException("Alias " + alias + " is already in use.");
+                synchronized ( this.localServlets )
+                {
+                    this.localServlets.remove(servlet);
+                }
             }
-            if (this.localServlets.contains(servlet))
-            {
-                throw new ServletException("Servlet instance " + handler.getName() + " already registered");
-            }
-
-            this.handlerRegistry.addServlet(handler);
-
-            this.aliasMap.put(alias, handler);
-            this.localServlets.add(servlet);
         }
     }
 
@@ -210,15 +221,10 @@ public final class HttpServiceImpl implements ExtHttpService
     @Override
     public void unregister(final String alias)
     {
-        synchronized (this.aliasMap)
+        final Servlet servlet = this.sharedHttpService.unregister(alias);
+        if ( servlet != null )
         {
-            final ServletHandler handler = this.aliasMap.remove(alias);
-            if (handler == null)
-            {
-                throw new IllegalArgumentException("Nothing registered at " + alias);
-            }
-            final Servlet servlet = this.handlerRegistry.removeServlet(handler.getServletInfo(), true);
-            if (servlet != null)
+            synchronized ( this.localServlets )
             {
                 this.localServlets.remove(servlet);
             }
@@ -245,9 +251,9 @@ public final class HttpServiceImpl implements ExtHttpService
      * @see org.apache.felix.http.api.ExtHttpService#unregisterFilter(javax.servlet.Filter)
      */
     @Override
-    public void unregisterFilter(Filter filter)
+    public void unregisterFilter(final Filter filter)
     {
-        unregisterFilter(filter, true);
+        this.unregisterFilter(filter, true);
     }
 
     /**
@@ -264,22 +270,11 @@ public final class HttpServiceImpl implements ExtHttpService
     {
         if (servlet != null)
         {
-            this.handlerRegistry.removeServlet(servlet, destroy);
-            synchronized (this.aliasMap)
+            synchronized ( this.localServlets )
             {
-                final Iterator<Map.Entry<String, ServletHandler>> i = this.aliasMap.entrySet().iterator();
-                while (i.hasNext())
-                {
-                    final Map.Entry<String, ServletHandler> entry = i.next();
-                    if (entry.getValue().getServlet() == servlet)
-                    {
-                        i.remove();
-                        break;
-                    }
-
-                }
                 this.localServlets.remove(servlet);
             }
+            this.sharedHttpService.unregisterServlet(servlet, destroy);
         }
     }
 
@@ -293,7 +288,19 @@ public final class HttpServiceImpl implements ExtHttpService
         return this.contextManager.getServletContext(context);
     }
 
-    private boolean isNameValid(String name)
+    private void unregisterFilter(Filter filter, final boolean destroy)
+    {
+        if (filter != null)
+        {
+            synchronized ( this.localFilters )
+            {
+                this.localFilters.remove(filter);
+            }
+            this.sharedHttpService.unregisterFilter(filter, destroy);
+        }
+    }
+
+    private boolean isNameValid(final String name)
     {
         if (name == null)
         {
@@ -306,15 +313,6 @@ public final class HttpServiceImpl implements ExtHttpService
         }
 
         return true;
-    }
-
-    private void unregisterFilter(Filter filter, final boolean destroy)
-    {
-        if (filter != null)
-        {
-            this.handlerRegistry.removeFilter(filter, destroy);
-            this.localFilters.remove(filter);
-        }
     }
 
     private boolean isAliasValid(final String alias)
