@@ -33,6 +33,12 @@ import org.apache.felix.http.base.internal.runtime.RegistryRuntime;
 import org.apache.felix.http.base.internal.whiteboard.ContextHandler;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.runtime.dto.ErrorPageDTO;
+import org.osgi.service.http.runtime.dto.FailedErrorPageDTO;
+import org.osgi.service.http.runtime.dto.FailedFilterDTO;
+import org.osgi.service.http.runtime.dto.FailedListenerDTO;
+import org.osgi.service.http.runtime.dto.FailedResourceDTO;
+import org.osgi.service.http.runtime.dto.FailedServletContextDTO;
+import org.osgi.service.http.runtime.dto.FailedServletDTO;
 import org.osgi.service.http.runtime.dto.FilterDTO;
 import org.osgi.service.http.runtime.dto.ListenerDTO;
 import org.osgi.service.http.runtime.dto.ResourceDTO;
@@ -64,12 +70,12 @@ public final class RuntimeDTOBuilder
         RuntimeDTO runtimeDTO = new RuntimeDTO();
         runtimeDTO.attributes = createAttributes();
         //TODO <**
-        runtimeDTO.failedErrorPageDTOs = null;
-        runtimeDTO.failedFilterDTOs = null;
-        runtimeDTO.failedListenerDTOs = null;
-        runtimeDTO.failedResourceDTOs = null;
-        runtimeDTO.failedServletContextDTOs = null;
-        runtimeDTO.failedServletDTOs = null;
+        runtimeDTO.failedErrorPageDTOs = new FailedErrorPageDTO[0];
+        runtimeDTO.failedFilterDTOs = new FailedFilterDTO[0];
+        runtimeDTO.failedListenerDTOs = new FailedListenerDTO[0];
+        runtimeDTO.failedResourceDTOs = new FailedResourceDTO[0];
+        runtimeDTO.failedServletContextDTOs = new FailedServletContextDTO[0];
+        runtimeDTO.failedServletDTOs = new FailedServletDTO[0];
         //**>
         runtimeDTO.servletContextDTOs = createContextDTOs();
         return runtimeDTO;

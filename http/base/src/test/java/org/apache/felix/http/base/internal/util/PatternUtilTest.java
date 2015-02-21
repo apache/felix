@@ -29,7 +29,7 @@ import org.junit.Test;
 
 /**
  * Test cases for {@link PatternUtil}.
- * 
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class PatternUtilTest
@@ -71,4 +71,13 @@ public class PatternUtilTest
         assertFalse(p6.matcher("/index.gz").matches());
     }
 
+    @Test
+    public void testSymbolicName()
+    {
+        assertTrue(PatternUtil.isValidSymbolicName("default"));
+        assertFalse(PatternUtil.isValidSymbolicName("$bad#"));
+        assertTrue(PatternUtil.isValidSymbolicName("abcdefghijklmnopqrstuvwyz"));
+        assertTrue(PatternUtil.isValidSymbolicName("ABCDEFGHIJKLMNOPQRSTUVWXYZ"));
+        assertTrue(PatternUtil.isValidSymbolicName("0123456789-_"));
+    }
 }

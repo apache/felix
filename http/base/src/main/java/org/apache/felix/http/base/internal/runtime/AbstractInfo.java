@@ -119,7 +119,7 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
     protected String getStringProperty(final ServiceReference<T> ref, final String key)
     {
         final Object value = ref.getProperty(key);
-        return (value instanceof String) ? (String) value : null;
+        return (value instanceof String) ? ((String) value).trim(): null;
     }
 
     protected String[] getStringArrayProperty(ServiceReference<T> ref, String key)
@@ -128,11 +128,18 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
 
         if (value instanceof String)
         {
-            return new String[] { (String) value };
+            return new String[] { ((String) value).trim() };
         }
         else if (value instanceof String[])
         {
-            return (String[]) value;
+            final String[] arr = (String[]) value;
+            for(int i=0; i<arr.length; i++)
+            {
+                if ( arr[i] != null )
+                {
+                    arr[i] = arr[i].trim();
+                }
+            }
         }
         else if (value instanceof Collection<?>)
         {
@@ -142,7 +149,7 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
             int i = 0;
             for (Object current : collectionValues)
             {
-                values[i++] = current != null ? String.valueOf(current) : null;
+                values[i++] = current != null ? String.valueOf(current).trim() : null;
             }
 
             return values;
