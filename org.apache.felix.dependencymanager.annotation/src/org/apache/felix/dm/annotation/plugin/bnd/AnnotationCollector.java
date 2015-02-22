@@ -532,9 +532,16 @@ public class AnnotationCollector extends ClassDataCollector
         EntryWriter writer = new EntryWriter(EntryType.ConfigurationDependency);
         m_writers.add(writer);
 
-        // pid attribute
-        writer.putString(annotation, EntryParam.pid, m_className);
-
+        // pid attribute (can be specified using the pid attribute, or using the classPid attribute)
+        String  pid = annotation.get(EntryParam.pidClass.toString());
+        if (pid != null)
+        {
+            pid = Patterns.parseClass(pid, Patterns.CLASS, 1);
+        } else {
+            pid = get(annotation, EntryParam.pid.toString(), m_className);
+        }
+        writer.put(EntryParam.pid, pid);
+        
         // the method on which the annotation is applied
         writer.put(EntryParam.updated, m_method);
 
@@ -542,8 +549,10 @@ public class AnnotationCollector extends ClassDataCollector
         writer.putString(annotation, EntryParam.propagate, null);
 
         // Property Meta Types
-        String pid = get(annotation, EntryParam.pid.toString(), m_className);
         parseMetaTypes(annotation, pid, false);
+        
+        // name attribute
+        parseDependencyName(writer, annotation);
     }
 
     /**
@@ -775,7 +784,16 @@ public class AnnotationCollector extends ClassDataCollector
         // Generate Adapter Implementation
         writer.put(EntryParam.impl, m_className);
 
-        // Parse factory Pid
+        // factory pid attribute (can be specified using the factoryPid attribute, or using the factoryPidClass attribute)
+        String  factoryPid = annotation.get(EntryParam.factoryPidClass.toString());
+        if (factoryPid != null)
+        {
+            factoryPid = Patterns.parseClass(factoryPid, Patterns.CLASS, 1);
+        } else {
+            factoryPid = get(annotation, EntryParam.factoryPid.toString(), m_className);
+        }
+        writer.put(EntryParam.factoryPid, factoryPid);
+
         writer.putString(annotation, EntryParam.factoryPid, m_className);
 
         // Parse updated callback
@@ -794,7 +812,6 @@ public class AnnotationCollector extends ClassDataCollector
         parseProperties(annotation, EntryParam.properties, writer);
 
         // Parse optional meta types for configuration description.
-        String factoryPid = get(annotation, EntryParam.factoryPid.toString(), m_className);
         parseMetaTypes(annotation, factoryPid, true);
         
         // Parse factoryMethod attribute

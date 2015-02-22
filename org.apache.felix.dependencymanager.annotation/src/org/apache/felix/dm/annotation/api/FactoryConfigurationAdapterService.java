@@ -25,114 +25,55 @@ import java.lang.annotation.Target;
 
 
 /**
- * Annotates a class that acts as a Factory Configuration Adapter Service. For each new <code>Config Admin</code> factory configuration matching
- * the specified factoryPid, an instance of this service will be created.
+ * Annotates a class that acts as a Factory Configuration Adapter Service. For each new <code>Config Admin</code> 
+ * factory configuration matching the specified factoryPid, an instance of this service will be created.
  * The adapter will be registered with the specified interface, and with the specified adapter service properties.
  * Depending on the <code>propagate</code> parameter, every public factory configuration properties 
  * (which don't start with ".") will be propagated along with the adapter service properties. <p>
  * 
- * Like in &#64;{@link ConfigurationDependency}, you can optionally specify the meta types of your
- * configurations for Web Console GUI customization (configuration heading/descriptions/default values/etc ...).
- *
  * <h3>Usage Examples</h3>
- * Here, a "Dictionary" service instance is instantiated for each existing factory configuration
- * instances matching the factory pid "DictionaryServiceFactory".
+ * Here, a "Dictionary" service instance is created for each existing "sample.DictionaryConfiguration" factory pids.
+ * 
+ * First, we declare our factory configuration metadata using standard bndtools metatatype annotations 
+ * (see http://www.aqute.biz/Bnd/MetaType):
+ * 
  * <blockquote>
  * <pre>
- * &#64;FactoryConfigurationAdapterService(factoryPid="DictionaryServiceFactory", updated="updated")
- * public class DictionaryImpl implements DictionaryService
- * {
- *     &#47;**
- *      * The key of our config admin dictionary language.
- *      *&#47;
- *     final static String LANG = "lang";
- *     
- *     &#47;**
- *      * The key of our config admin dictionary values.
- *      *&#47;
- *     final static String WORDS = "words";
- *     
- *     &#47;**
- *      * We store all configured words in a thread-safe data structure, because ConfigAdmin
- *      * may invoke our updated method at any time.
- *      *&#47;
- *     private CopyOnWriteArrayList&#60;String&#62; m_words = new CopyOnWriteArrayList&#60;String&#62;();
- *     
- *     &#47;**
- *      * Our Dictionary language.
- *      *&#47;
- *     private String m_lang;
- * 
- *     protected void updated(Dictionary&#60;String, ?&#62; config) {
- *         m_lang = (String) config.get(LANG);
- *         m_words.clear();
- *         String[] words = (String[]) config.get(WORDS);
- *         for (String word : words) {
- *             m_words.add(word);
- *         }
- *     }   
- *     ...
+ * package sample;
+ * import java.util.List;
+ * import aQute.bnd.annotation.metatype.Meta.AD;
+ * import aQute.bnd.annotation.metatype.Meta.OCD;
+ *
+ * &#64;OCD(factory = true, description = "Declare here some Dictionary instances.")
+ * public interface DictionaryConfiguration {
+ *   &#64;AD(description = "Describes the dictionary language.", deflt = "en")
+ *   String lang();
+ *
+ *   &#64;AD(description = "Declare here the list of words supported by this dictionary.")
+ *   List<String> words();
  * }
  * </pre>
  * </blockquote>
- * Here, this is the same example as above, but using meta types:
- * 
+ *
+ * And here is the Dictionary service:
+ *
  * <blockquote>
  * <pre>
- * &#64;FactoryConfigurationAdapterService(
- *     factoryPid="DictionaryServiceFactory", 
- *     propagate=true, 
- *     updated="updated",
- *     heading="Dictionary Services",
- *     description="Declare here some Dictionary instances, allowing to instantiates some DictionaryService services for a given dictionary language",
- *     metadata={
- *         &#64;PropertyMetaData(
- *             heading="Dictionary Language",
- *             description="Declare here the language supported by this dictionary. " +
- *                 "This property will be propagated with the Dictionary Service properties.",
- *             defaults={"en"},
- *             id=DictionaryImpl.LANG,
- *             cardinality=0),
- *         &#64;PropertyMetaData(
- *             heading="Dictionary words",
- *             description="Declare here the list of words supported by this dictionary. This properties starts with a Dot and won't be propagated with Dictionary OSGi service properties.",
- *             defaults={"hello", "world"},
- *             id=DictionaryImpl.WORDS,
- *             cardinality=Integer.MAX_VALUE)
- *     }
- * )  
- * public class DictionaryImpl implements DictionaryService
- * {
- *     &#47;**
- *      * The key of our config admin dictionary language.
- *      *&#47;
- *     final static String LANG = "lang";
- *     
- *     &#47;**
- *      * The key of our config admin dictionary values.
- *      *&#47;
- *     final static String WORDS = "words";
- *     
- *     &#47;**
- *      * We store all configured words in a thread-safe data structure, because ConfigAdmin
- *      * may invoke our updated method at any time.
- *      *&#47;
- *     private CopyOnWriteArrayList&#60;String&#62; m_words = new CopyOnWriteArrayList&#60;String&#62;();
- *     
- *     &#47;**
- *      * Our Dictionary language.
- *      *&#47;
- *     private String m_lang;
+ * import java.util.List;
+ * import aQute.bnd.annotation.metatype.Configurable;
+ *
+ * &#64;FactoryConfigurationAdapterService(factoryPidClass=DictionaryConfiguration.class)  
+ * public class DictionaryImpl implements DictionaryService {
+ *     protected void updated(Dictionary&#60;String, ?&#62; props) {
+ *         // load configuration from the provided dictionary, or throw an exception of any configuration error.
+ *         DictionaryConfiguration cnf = Configurable.createConfigurable(DictionaryConfiguration.class, props);
  * 
- *     protected void updated(Dictionary&#60;String, ?&#62; config) {
- *         m_lang = (String) config.get(LANG);
+ *         m_lang = config.lang();
  *         m_words.clear();
- *         String[] words = (String[]) config.get(WORDS);
- *         for (String word : words) {
+ *         for (String word : conf.words()) {
  *             m_words.add(word);
  *         }
  *     }
- *     
  *     ...
  * }
  * </pre>
@@ -161,6 +102,13 @@ public @interface FactoryConfigurationAdapterService
      * service class name).
      */
     String factoryPid() default "";
+    
+    /**
+     * Returns the factory pid from a class name. The full class name will be used as the configuration PID.
+     * You can use this method when you use an interface annoted with standard bndtols metatype annotations.
+     * (see http://www.aqute.biz/Bnd/MetaType).
+     */
+    Class<?> factoryPidClass() default Object.class;
 
     /**
      * The Update method to invoke (defaulting to "updated"), when a factory configuration is created or updated
@@ -177,18 +125,21 @@ public @interface FactoryConfigurationAdapterService
     /**
      * The label used to display the tab name (or section) where the properties are displayed. Example: "Printer Service".
      * @return The label used to display the tab name where the properties are displayed.
+     * @deprecated use standard bndtools metatype annotations instead (see http://www.aqute.biz/Bnd/MetaType)
      */
     String heading() default "";
 
     /**
      * A human readable description of the PID this annotation is associated with. Example: "Configuration for the PrinterService bundle".
      * @return A human readable description of the PID this annotation is associated with.
+     * @deprecated use standard bndtools metatype annotations instead (see http://www.aqute.biz/Bnd/MetaType)
      */
     String description() default "";
 
     /**
      * The list of properties types used to expose properties in web console. 
-     * @return The list of properties types used to expose properties in web console. 
+     * @return The list of properties types used to expose properties in web console.
+     * @deprecated use standard bndtools metatype annotations instead (see http://www.aqute.biz/Bnd/MetaType)
      */
     PropertyMetaData[] metadata() default {};
     

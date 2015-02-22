@@ -204,14 +204,17 @@ public class ServiceLifecycleHandler
         {
             // Check if this dependency has a name, and if we find the name from the 
             // customization map, then apply filters and required flag from the map into it.
+            // Also parse optional pid/propagate flags for named Configuration dependencies
 
             String name = dependency.getString(Params.name, null);
             if (name != null)
             {
                 String filter = customization.get(name + ".filter");
                 String required = customization.get(name + ".required");
+                String pid = customization.get(name + ".pid");
+                String propagate = customization.get(name + ".propagate");
 
-                if (filter != null || required != null)
+                if (filter != null || required != null || pid != null || propagate != null)
                 {
                     dependency = (MetaData) dependency.clone();
                     if (filter != null)
@@ -221,6 +224,14 @@ public class ServiceLifecycleHandler
                     if (required != null)
                     {
                         dependency.setString(Params.required, required);
+                    }
+                    if (pid != null)
+                    {
+                        dependency.setString(Params.pid, pid);
+                    }
+                    if (propagate != null)
+                    {
+                        dependency.setString(Params.propagate, propagate);
                     }
                 }
 

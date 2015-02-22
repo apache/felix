@@ -32,55 +32,44 @@ import java.lang.annotation.Target;
  * <h3>Usage Examples</h3>
  * 
  * <p> In the following example, the "Printer" component depends on a configuration
- * whose PID name is "org.apache.felix.sample.Printer". This service will initialize
- * its ip/port number from the provided configuration:
- * <p>
+ * whose PID name is "sample.PrinterConfiguration". This service will initialize
+ * its ip/port number from the provided configuration.
+ * <p> First, we define the configuration metadata, using standard bndtools metatatype annotations 
+ * (see http://www.aqute.biz/Bnd/MetaType):
+ * 
  * <blockquote>
  * <pre>
- * package org.apache.felix.sample;
- * 
- * &#64;Component
- * public class Printer {
- *     &#64;ConfigurationDependency
- *     void updated(Dictionary config) {
- *         // load printer ip/port from the provided dictionary.
- *     }
+ * package sample;
+ * import aQute.bnd.annotation.metatype.Meta.AD;
+ * import aQute.bnd.annotation.metatype.Meta.OCD;
+ *
+ * &#64;OCD(description = "Declare here the Printer Configuration.")
+ * public interface PrinterConfiguration {
+ *     &#64;AD(description = "Enter the printer ip address")
+ *     String ipAddress();
+ *
+ *     &#64;AD(description = "Enter the printer address port number.")
+ *     int portNumber();
  * }
  * </pre>
  * </blockquote>
  * 
- * <p> This other example shows how to specify a configuration dependency, as well as meta data
- * used to customize the WebConsole GUI. Using these meta data, you can specify for example the
- * default value for your configurations data, some descriptions, the cardinality of configuration 
- * values, etc ... 
- * <p>
+ * Next, we define our Printer service which depends on the PrinterConfiguration:
+ * 
  * <blockquote>
  * <pre>
- * package org.apache.felix.sample;
- * 
+ * package sample;
+ * import aQute.bnd.annotation.metatype.*;
+ *
  * &#64;Component
  * public class Printer {
- *     &#64;ConfigurationDependency(
- *         heading = "Printer Service",
- *         description = "Declare here parameters used to configure the Printer service", 
- *         metadata = { 
- *             &#64;PropertyMetaData(heading = "Ip Address", 
- *                               description = "Enter the ip address for the Printer service",
- *                               defaults = { "127.0.0.1" }, 
- *                               type = String.class,
- *                               id = "IPADDR", 
- *                               cardinality = 0),
- *             &#64;PropertyMetaData(heading = "Port Number", 
- *                               description = "Enter the port number for the Printer service",
- *                               defaults = { "4444" }, 
- *                               type = Integer.class,
- *                               id = "PORTNUM", 
- *                               cardinality = 0) 
-
- *         }
- *     )
- *     void updated(Dictionary config) {
- *         // load configuration from the provided dictionary.
+ *     &#64;ConfigurationDependency(pidClass = PrinterConfiguration.class) // Will use pid "sample.PrinterConfiguration"
+ *     void updated(Dictionary props) {
+ *         // load configuration from the provided dictionary, or throw an exception of any configuration error.
+ *         PrinterConfig cnf = Configurable.createConfigurable(PrinterConfig.class, props);
+ *         String ip = cnf.ipAddress();
+ *         int port = cnf.portNumber();
+ *         ...
  *     }
  * }
  * </pre>
@@ -97,6 +86,13 @@ public @interface ConfigurationDependency
      * @return the pid for a given service (default = Service class name)
      */
     String pid() default "";
+    
+    /**
+     * Returns the pid from a class name. The full class name will be used as the configuration PID.
+     * You can use this method when you use an interface annoted with standard bndtols metatype annotations.
+     * (see http://www.aqute.biz/Bnd/MetaType).
+     */
+    Class<?> pidClass() default Object.class;
 
     /**
      * Returns true if the configuration properties must be published along with the service. 
@@ -106,20 +102,75 @@ public @interface ConfigurationDependency
     boolean propagate() default false;
     
     /**
+     * The name for this configuration dependency. When you give a name a dependency, it won't be evaluated
+     * immediately, but after the component's init method has been called, and from the init method, you can then return 
+     * a map in order to dynamically configure the configuration dependency (the map has to contain a "pid" and/or "propagate" 
+     * flag, prefixed with the dependency name). Then the dependency will be evaluated after the component init method, and will
+     * be injected before the start method.
+     * 
+     * <p> Usage example of a Configuration dependency whose pid and propagate flag is configured dynamically from init method:
+     * 
+     * <blockquote><pre>
+     *  &#47;**
+     *    * A Service that dynamically defines an extra dynamic configuration dependency from its init method. 
+     *    *&#47;
+     *  &#64;Component
+     *  class X {
+     *      private Dictionary m_config;
+     *      
+     *      // Inject initial Configuration (injected before any other required dependencies)
+     *      &#64;ConfigurationDependency
+     *      void componentConfiguration(Dictionary config) {
+     *           // you must throw an exception if the configuration is not valid
+     *           m_config = config;
+     *      }
+     *      
+     *      &#47;**
+     *       * All unnamed dependencies are injected: we can now configure our dynamic configuration whose dependency name is "global".
+     *       *&#47;
+     *      &#64;Init
+     *      Map init() {
+     *          return new HashMap() {{
+     *              put("global.pid", m_config.get("globalConfig.pid"));
+     *              put("global.propagate", m_config.get("globalConfig.propagate"));
+     *          }};
+     *      } 
+     * 
+     *      // Injected after init, and dynamically configured by the init method.
+     *      &#64;ConfigurationDependency(name="global")
+     *      void globalConfiguration(Dictionary globalConfig) {
+     *           // you must throw an exception if the configuration is not valid
+     *      }
+     * 
+     *      &#47;**
+     *       * All dependencies are injected and our service is now ready to be published.
+     *       *&#47;
+     *      &#64;Start
+     *      void start() {
+     *      }
+     *  }
+     *  </pre></blockquote>
+     */
+    String name() default "";
+    
+   /**
      * The label used to display the tab name (or section) where the properties are displayed. Example: "Printer Service".
      * @return The label used to display the tab name where the properties are displayed.
+     * @deprecated use standard bndtools metatype annotations instead (see http://www.aqute.biz/Bnd/MetaType)
      */
     String heading() default "";
 
     /**
      * A human readable description of the PID this annotation is associated with. Example: "Configuration for the PrinterService bundle".
      * @return A human readable description of the PID this annotation is associated with.
+     * @deprecated use standard bndtools metatype annotations instead (see http://www.aqute.biz/Bnd/MetaType)
      */
     String description() default "";
 
     /**
      * The list of properties types used to expose properties in web console. 
-     * @return The list of properties types used to expose properties in web console. 
+     * @return The list of properties types used to expose properties in web console.
+     * @deprecated use standard bndtools metatype annotations instead (see http://www.aqute.biz/Bnd/MetaType)
      */
     PropertyMetaData[] metadata() default {};
 }
