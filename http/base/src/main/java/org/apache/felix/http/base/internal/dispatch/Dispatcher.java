@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.servlet.AsyncContext;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterChain;
 import javax.servlet.RequestDispatcher;
@@ -91,7 +92,8 @@ public final class Dispatcher implements RequestDispatcherProvider
 
             try
             {
-                ServletRequestWrapper req = new ServletRequestWrapper((HttpServletRequest) request, this.handler.getContext(), this.requestInfo, DispatcherType.FORWARD, this.handler.getContextServiceId());
+                ServletRequestWrapper req = new ServletRequestWrapper((HttpServletRequest) request, this.handler.getContext(), this.requestInfo, DispatcherType.FORWARD, this.handler.getContextServiceId(),
+                        handler.getServletInfo().isAsyncSupported());
                 Dispatcher.this.forward(this.handler, req, (HttpServletResponse) response);
             }
             finally
@@ -109,7 +111,8 @@ public final class Dispatcher implements RequestDispatcherProvider
         @Override
         public void include(ServletRequest request, ServletResponse response) throws ServletException, IOException
         {
-            ServletRequestWrapper req = new ServletRequestWrapper((HttpServletRequest) request, this.handler.getContext(), this.requestInfo, DispatcherType.INCLUDE, this.handler.getContextServiceId());
+            ServletRequestWrapper req = new ServletRequestWrapper((HttpServletRequest) request, this.handler.getContext(), this.requestInfo, DispatcherType.INCLUDE,
+                    this.handler.getContextServiceId(), handler.getServletInfo().isAsyncSupported());
             Dispatcher.this.include(this.handler, req, (HttpServletResponse) response);
         }
     }
@@ -205,7 +208,8 @@ public final class Dispatcher implements RequestDispatcherProvider
 
                                 final FilterHandler[] filterHandlers = handlerRegistry.getFilterHandlers(errorHandler, DispatcherType.ERROR, request.getRequestURI());
 
-                                invokeChain(filterHandlers, errorHandler, new ServletRequestWrapper(request, errorHandler.getContext(), requestInfo, this.serviceId), this);
+                                // TODO - is async = false correct?
+                                invokeChain(filterHandlers, errorHandler, new ServletRequestWrapper(request, errorHandler.getContext(), requestInfo, this.serviceId, false), this);
 
                                 invokeSuper = false;
                             }
@@ -239,17 +243,20 @@ public final class Dispatcher implements RequestDispatcherProvider
         private final RequestInfo requestInfo;
         private final ExtServletContext servletContext;
         private final Long contextId;
+        private final boolean asyncSupported;
 
-        public ServletRequestWrapper(HttpServletRequest req, ExtServletContext servletContext, RequestInfo requestInfo, final Long contextId)
+        public ServletRequestWrapper(HttpServletRequest req, ExtServletContext servletContext, RequestInfo requestInfo, final Long contextId,
+                final boolean asyncSupported)
         {
-            this(req, servletContext, requestInfo, null /* type */, contextId);
+            this(req, servletContext, requestInfo, null /* type */, contextId, asyncSupported);
         }
 
         public ServletRequestWrapper(HttpServletRequest req, ExtServletContext servletContext, RequestInfo requestInfo,
-                DispatcherType type, final Long contextId)
+                DispatcherType type, final Long contextId, final boolean asyncSupported)
         {
             super(req);
 
+            this.asyncSupported = asyncSupported;
             this.servletContext = servletContext;
             this.requestInfo = requestInfo;
             this.type = type;
@@ -497,6 +504,33 @@ public final class Dispatcher implements RequestDispatcherProvider
         {
             return (DispatcherType.INCLUDE == this.type) && (this.requestInfo != null);
         }
+
+        @Override
+        public AsyncContext startAsync() throws IllegalStateException
+        {
+            if ( !this.asyncSupported )
+            {
+                throw new IllegalStateException();
+            }
+            return super.startAsync();
+        }
+
+        @Override
+        public AsyncContext startAsync(final ServletRequest servletRequest,
+                final ServletResponse servletResponse) throws IllegalStateException
+        {
+            if ( !this.asyncSupported )
+            {
+                throw new IllegalStateException();
+            }
+            return super.startAsync(servletRequest, servletResponse);
+        }
+
+        @Override
+        public boolean isAsyncSupported()
+        {
+            return this.asyncSupported;
+        }
     }
 
     private static class RequestInfo
@@ -586,7 +620,8 @@ public final class Dispatcher implements RequestDispatcherProvider
         ExtServletContext servletContext = (servletHandler != null) ? servletHandler.getContext() : null;
         final RequestInfo requestInfo = new RequestInfo(servletPath, pathInfo, queryString);
 
-        final HttpServletRequest wrappedRequest = new ServletRequestWrapper(req, servletContext, requestInfo, servletHandler.getContextServiceId());
+        final HttpServletRequest wrappedRequest = new ServletRequestWrapper(req, servletContext, requestInfo, servletHandler.getContextServiceId(),
+                servletHandler.getServletInfo().isAsyncSupported());
         final FilterHandler[] filterHandlers = this.handlerRegistry.getFilterHandlers(servletHandler, req.getDispatcherType(), requestURI);
 
         try
