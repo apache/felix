@@ -281,13 +281,15 @@ public class ServiceRegistry
     }
 
     @SuppressWarnings("unchecked")
-    public <S> S getService(Bundle bundle, ServiceReference<S> ref, boolean isPrototype)
+    public <S> S getService(final Bundle bundle, final ServiceReference<S> ref, final boolean isServiceObjects)
     {
+    	// prototype scope is only possible if called from ServiceObjects
+    	final boolean isPrototype = isServiceObjects && ref.getProperty(Constants.SERVICE_SCOPE) == Constants.SCOPE_PROTOTYPE;
         UsageCount usage = null;
         Object svcObj = null;
 
         // Get the service registration.
-        ServiceRegistrationImpl reg =
+        final ServiceRegistrationImpl reg =
             ((ServiceRegistrationImpl.ServiceReferenceImpl) ref).getRegistration();
 
         synchronized (this)
@@ -312,6 +314,7 @@ public class ServiceRegistry
                 }
                 catch (InterruptedException ex)
                 {
+                	Thread.currentThread().interrupt();
                 }
             }
 
@@ -337,6 +340,10 @@ public class ServiceRegistry
                 // service object, if one exists.
                 usage.m_count++;
                 svcObj = usage.m_svcObj;
+                if ( isServiceObjects )
+                {
+                	usage.m_serviceObjectsCount++;
+                }
             }
         }
 
@@ -380,7 +387,10 @@ public class ServiceRegistry
 
     public boolean ungetService(Bundle bundle, ServiceReference<?> ref, Object svcObj)
     {
-        UsageCount usage = null;
+    	// prototype scope is only possible if called from ServiceObjects
+    	final boolean isPrototype = svcObj != null && ref.getProperty(Constants.SERVICE_SCOPE) == Constants.SCOPE_PROTOTYPE;
+
+    	UsageCount usage = null;
         ServiceRegistrationImpl reg =
             ((ServiceRegistrationImpl.ServiceReferenceImpl) ref).getRegistration();
 
@@ -414,7 +424,19 @@ public class ServiceRegistry
             {
                 return false;
             }
-
+            // if this is a call from service objects and the service was not fetched from
+            // there, return false
+            if ( svcObj != null )
+            {
+            	if ( usage.m_serviceObjectsCount > 0 )
+            	{
+            		usage.m_serviceObjectsCount--;
+            	}
+            	else
+            	{
+            		return false;
+            	}
+            }
             // Lock the service registration.
             m_lockedRegsMap.put(reg, Thread.currentThread());
         }
@@ -601,8 +623,7 @@ public class ServiceRegistry
         for (int i = 0; (usages != null) && (i < usages.length); i++)
         {
             if (usages[i].m_ref.equals(ref) 
-               && ((svcObj == null && !usages[i].m_prototype) 
-            		|| (usages[i].m_svcObj == svcObj && usages[i].m_prototype)))
+               && ((svcObj == null && !usages[i].m_prototype) || usages[i].m_svcObj == svcObj))
             {
                 return usages[i];
             }
@@ -838,6 +859,7 @@ public class ServiceRegistry
         public ServiceReference<?> m_ref;
         public Object m_svcObj;
         public boolean m_prototype;
+        public int m_serviceObjectsCount;
     }
 
     public interface ServiceRegistryCallbacks

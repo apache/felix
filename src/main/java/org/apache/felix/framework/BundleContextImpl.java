@@ -20,12 +20,10 @@ package org.apache.felix.framework;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
-import java.util.List;
 
 import org.apache.felix.framework.ext.FelixBundleContext;
 import org.osgi.framework.AdminPermission;
@@ -553,88 +551,37 @@ class BundleContextImpl implements FelixBundleContext
     {
         private final ServiceReference<S> m_ref;
 
-        private final List<S> srvObjects = new ArrayList<S>();
-
         public ServiceObjectsImpl(final ServiceReference<S> ref)
         {
             this.m_ref = ref;
         }
 
         public S getService() {
-        	S srvObj = null;
-            // special handling for prototype scope
-            if ( m_ref.getProperty(Constants.SERVICE_SCOPE) == Constants.SCOPE_PROTOTYPE )
+            checkValidity();
+
+            // CONCURRENCY NOTE: This is a check-then-act situation,
+            // but we ignore it since the time window is small and
+            // the result is the same as if the calling thread had
+            // won the race condition.
+
+            final Object sm = System.getSecurityManager();
+
+            if (sm != null)
             {
-                checkValidity();
-
-                // CONCURRENCY NOTE: This is a check-then-act situation,
-                // but we ignore it since the time window is small and
-                // the result is the same as if the calling thread had
-                // won the race condition.
-
-                Object sm = System.getSecurityManager();
-
-                if (sm != null)
-                {
-                   ((SecurityManager) sm).checkPermission(new ServicePermission(m_ref, ServicePermission.GET));
-                }
-
-                srvObj = m_felix.getService(m_bundle, m_ref, true);
-            }
-            else
-            {
-            	// getService handles singleton and bundle scope
-            	srvObj = BundleContextImpl.this.getService(m_ref);
+               ((SecurityManager) sm).checkPermission(new ServicePermission(m_ref, ServicePermission.GET));
             }
 
-            if ( srvObj != null )
-            {
-            	synchronized ( srvObjects )
-            	{
-            		srvObjects.add(srvObj);
-            	}
-            }
-
-            return srvObj;
+            return m_felix.getService(m_bundle, m_ref, true);
         }
 
         public void ungetService(final S srvObj)
         {
-        	if ( srvObj != null )
-        	{
-                // check if this object was returned by this service objects
-                synchronized ( srvObjects )
-                {
-	                boolean found = false;
-	                int i = 0;
-	                while ( !found && i < srvObjects.size() )
-	                {
-	                	found = srvObjects.get(i) == srvObj;
-	                	i++;
-	                }
-	                if ( !found )
-	                {
-	                	throw new IllegalArgumentException();
-	                }
-	                srvObjects.remove(i-1);
-                }
+            checkValidity();
 
-        	}
-            // special handling for prototype scope
-            if ( m_ref.getProperty(Constants.SERVICE_SCOPE) == Constants.SCOPE_PROTOTYPE )
+            // Unget the specified service.
+            if ( !m_felix.ungetService(m_bundle, m_ref, srvObj) )
             {
-                checkValidity();
-
-                // Unget the specified service.
-                if ( !m_felix.ungetService(m_bundle, m_ref, srvObj) )
-                {
-                	throw new IllegalArgumentException();
-                }
-            }
-            else
-            {
-                // ungetService handles singleton and bundle scope
-                BundleContextImpl.this.ungetService(m_ref);
+            	throw new IllegalArgumentException();
             }
         }
 

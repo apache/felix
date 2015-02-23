@@ -3664,11 +3664,11 @@ public class Felix extends BundleImpl implements Framework
 
     }
 
-    <S> S getService(Bundle bundle, ServiceReference<S> ref, boolean isPrototype)
+    <S> S getService(Bundle bundle, ServiceReference<S> ref, boolean isServiceObjetcs)
     {
         try
         {
-            return m_registry.getService(bundle, ref, isPrototype);
+            return m_registry.getService(bundle, ref, isServiceObjetcs);
         }
         catch (ServiceException ex)
         {
