@@ -17,19 +17,14 @@
 package org.apache.felix.http.base.internal.handler;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
+import org.apache.felix.http.base.internal.runtime.WhiteboardServiceHelper;
 import org.junit.Test;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.context.ServletContextHelper;
-import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 /**
  * Test for the ordering of servlet contexts
@@ -69,15 +64,51 @@ public class PerContextHandlerRegistryTest
         assertEquals(3L, list.get(3).getContextServiceId());
     }
 
+    @Test public void testOrderingSymetry()
+    {
+        testSymetry("/", "/foo", 1L, 2L, 0, 0);
+        testSymetry("/", "/", 1L, 2L, 0, 10);
+        testSymetry("/", "/", 1L, 2L, 0, 0);
+        testSymetry("/", "/", 1L, -2L, 0, 0);
+        testSymetry("/", "/", -1L, -2L, 0, 0);
+        testSymetry("/", "/", 0L, -1L, 0, 0);
+        testSymetry("/", "/", 0L, 1L, 0, 0);
+    }
+
+    private void testSymetry(String path, String otherPath, long id, long otherId, int ranking, int otherRanking)
+    {
+        PerContextHandlerRegistry handlerRegistry = new PerContextHandlerRegistry(createServletContextHelperInfo(path, id, ranking));
+        PerContextHandlerRegistry other = new PerContextHandlerRegistry(createServletContextHelperInfo(otherPath, otherId, otherRanking));
+
+        assertEquals(handlerRegistry.compareTo(other), -other.compareTo(handlerRegistry));
+    }
+
+    @Test public void testOrderingTransitivity()
+    {
+        testTransitivity("/", "/foo", "/barrr", 1L, 2L, 3L, 0, 0, 0);
+        testTransitivity("/", "/", "/", 0L, 1L, 2L, 1, 2, 3);
+        testTransitivity("/", "/", "/", 2L, 1L, 0L, 0, 0, 0);
+        testTransitivity("/", "/", "/", -1L, 1L, 0L, 0, 0, 0);
+        testTransitivity("/", "/", "/", -2L, -1L, 0L, 0, 0, 0);
+    }
+
+    private void testTransitivity(String highPath, String midPath, String lowPath,
+            long highId, long midId, long lowId,
+            int highRanking, int midRanking, int lowRanking)
+    {
+        PerContextHandlerRegistry high = new PerContextHandlerRegistry(createServletContextHelperInfo(highPath, highId, highRanking));
+        PerContextHandlerRegistry mid = new PerContextHandlerRegistry(createServletContextHelperInfo(midPath, midId, midRanking));
+        PerContextHandlerRegistry low = new PerContextHandlerRegistry(createServletContextHelperInfo(lowPath, lowId, lowRanking));
+
+        assertEquals(1, high.compareTo(mid));
+        assertEquals(1, mid.compareTo(low));
+        assertEquals(1, high.compareTo(low));
+    }
+
     private ServletContextHelperInfo createServletContextHelperInfo(final String path,
             final long serviceId,
             final int ranking)
     {
-        final ServiceReference<ServletContextHelper> ref = mock(ServiceReference.class);
-        when(ref.getProperty(Constants.SERVICE_ID)).thenReturn(serviceId);
-        when(ref.getProperty(Constants.SERVICE_RANKING)).thenReturn(ranking);
-        when(ref.getProperty(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH)).thenReturn(path);
-        when(ref.getPropertyKeys()).thenReturn(new String[0]);
-        return new ServletContextHelperInfo(ref);
+        return WhiteboardServiceHelper.createContextInfo(ranking, serviceId, "", path, null);
     }
 }
