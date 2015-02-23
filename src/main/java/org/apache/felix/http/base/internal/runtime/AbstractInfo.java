@@ -76,34 +76,19 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
     }
 
     /**
-     * Compare two info objects based on their ranking (aka ServiceReference ordering)
+     * Compare two info objects based on their ranking (aka reverse ServiceReference ordering)
      */
     @Override
     public int compareTo(final AbstractInfo<T> other)
     {
-        if (other.ranking == this.ranking)
+        if (this.ranking == other.ranking)
         {
-            if (other.serviceId == this.serviceId)
-            {
-                return 0;
-            }
-            // service id might be negative, we have to change the behavior in that case
-            if ( this.serviceId < 0 )
-            {
-                if ( other.serviceId > 0 )
-                {
-                    return -1;
-                }
-                return other.serviceId < this.serviceId ? -1 : 1;
-            }
-            if ( other.serviceId < 0 )
-            {
-                return -1;
-            }
-            return other.serviceId > this.serviceId ? -1 : 1;
+            // Service id's can be negative. Negative id's follow the reverse natural ordering of integers.
+            int reverseOrder = ( this.serviceId >= 0 && other.serviceId >= 0 ) ? 1 : -1;
+            return reverseOrder * Long.compare(this.serviceId, other.serviceId);
         }
 
-        return (other.ranking > this.ranking) ? 1 : -1;
+        return Integer.compare(other.ranking, this.ranking);
     }
 
     protected boolean isEmpty(final String value)
