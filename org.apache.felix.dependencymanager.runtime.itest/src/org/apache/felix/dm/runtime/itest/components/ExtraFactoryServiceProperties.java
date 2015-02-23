@@ -30,6 +30,9 @@ import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.itest.util.Ensure;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 @SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class ExtraFactoryServiceProperties {
     public final static String FACTORYSET = "ExtraFactoryServiceProperties.FACTORYSET";

@@ -25,7 +25,9 @@ import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.itest.util.TestBase;
 import org.osgi.framework.Bundle;
 
-// TODO add more tests
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class BundleAdapterTest extends TestBase {    
     public void testBundleAdapter() {
         DependencyManager m = getDM();

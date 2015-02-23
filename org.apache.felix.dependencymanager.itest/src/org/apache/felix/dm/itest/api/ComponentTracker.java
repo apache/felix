@@ -27,6 +27,8 @@ import org.apache.felix.dm.ComponentStateListener;
 
 /**
  * Helper class used to wait for a group of components to be started and stopped.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ComponentTracker implements ComponentStateListener {
     

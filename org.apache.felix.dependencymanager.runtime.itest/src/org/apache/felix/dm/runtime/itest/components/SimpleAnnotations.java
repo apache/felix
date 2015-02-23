@@ -34,6 +34,9 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class SimpleAnnotations {
     /**
      * Provides a <code>Runnable</code> service, which is required by the

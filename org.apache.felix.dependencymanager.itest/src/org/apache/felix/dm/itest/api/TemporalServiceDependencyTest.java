@@ -28,6 +28,9 @@ import org.apache.felix.dm.ServiceDependency;
 import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 @SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class TemporalServiceDependencyTest extends TestBase {
     public void testServiceConsumptionAndIntermittentAvailability() {

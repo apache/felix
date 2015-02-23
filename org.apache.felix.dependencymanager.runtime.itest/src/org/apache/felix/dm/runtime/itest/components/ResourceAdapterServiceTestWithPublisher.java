@@ -43,6 +43,8 @@ import org.osgi.framework.InvalidSyntaxException;
 
 /**
  * Test a ResourceAdapterService which provides its interface using a @ServiceLifecycle.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @SuppressWarnings({"deprecation", "unchecked", "rawtypes", "serial"})
 public class ResourceAdapterServiceTestWithPublisher {

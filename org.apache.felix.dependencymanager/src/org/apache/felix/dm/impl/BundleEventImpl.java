@@ -24,6 +24,9 @@ import org.apache.felix.dm.context.Event;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class BundleEventImpl extends Event {
     final BundleEvent m_event;
     

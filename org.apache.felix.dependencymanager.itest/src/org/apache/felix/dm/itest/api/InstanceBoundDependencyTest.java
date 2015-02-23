@@ -33,6 +33,8 @@ import org.osgi.framework.ServiceReference;
 
 /**
  * This test does some injection tests on components being in INSTANTIATED_AND_WAITING_FOR_REQUIRED state.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class InstanceBoundDependencyTest extends TestBase {

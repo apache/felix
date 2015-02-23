@@ -27,6 +27,8 @@ import org.apache.felix.dm.itest.util.TestBase;
 
 /**
  * Test which validates multi-dependencies combination.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class MultipleExtraDependencyTest extends TestBase {

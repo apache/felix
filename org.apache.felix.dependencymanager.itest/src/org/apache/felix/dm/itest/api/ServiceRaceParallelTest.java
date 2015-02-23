@@ -18,6 +18,9 @@
  */
 package org.apache.felix.dm.itest.api;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class ServiceRaceParallelTest extends ServiceRaceTest {
     public ServiceRaceParallelTest() {
         setParallel(); // Configure DM to use a threadpool

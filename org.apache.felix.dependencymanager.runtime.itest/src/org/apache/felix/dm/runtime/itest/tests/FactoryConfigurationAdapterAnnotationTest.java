@@ -32,6 +32,8 @@ import org.osgi.service.cm.ConfigurationAdmin;
 /**
  * Use case: Verify that an annotated Configuration Factory Adapter Service is properly created when a factory configuration
  * is created from Config Admin.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class FactoryConfigurationAdapterAnnotationTest extends TestBase {

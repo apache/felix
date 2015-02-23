@@ -39,6 +39,8 @@ import org.osgi.service.metatype.ObjectClassDefinition;
 /**
  * Tests an Adapter which adapts A To B interface.
  * And the Adapter also depends on a Configuration Dependency with MetaType support.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class AdapterWithConfigurationAndMetaType extends TestBase {
     final static String PID = "AdapterWithConfigurationAndMetaType";

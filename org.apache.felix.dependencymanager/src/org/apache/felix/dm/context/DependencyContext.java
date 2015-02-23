@@ -28,6 +28,7 @@ import org.apache.felix.dm.Dependency;
  * Every DependencyManager Dependency implementations must implement this interface.
  * 
  * @see {@link AbstractDependency} which already implements most of the methods from this interface.
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public interface DependencyContext extends Dependency {
     /**

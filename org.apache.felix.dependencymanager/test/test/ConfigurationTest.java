@@ -27,6 +27,9 @@ import org.apache.felix.dm.impl.ConfigurationDependencyImpl;
 import org.junit.Test;
 import org.osgi.service.cm.ConfigurationException;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 @SuppressWarnings({"unchecked", "rawtypes", "unused"})
 public class ConfigurationTest extends TestBase {
     @Test

@@ -33,6 +33,9 @@ import org.apache.felix.dm.annotation.api.Stop;
 import org.apache.felix.dm.itest.util.Ensure;
 import org.osgi.framework.ServiceRegistration;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class CompositeAnnotations {
     public interface C1Service {
     }

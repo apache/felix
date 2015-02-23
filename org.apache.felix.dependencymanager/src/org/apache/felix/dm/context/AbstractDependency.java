@@ -33,6 +33,7 @@ import org.apache.felix.dm.ServiceDependency;
  * You can extends this class in order to supply your own custom dependencies to any Dependency Manager Component.
  *
  * @param <T> The type of the interface representing a Dependency Manager Dependency (must extends the Dependency interface).
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public abstract class AbstractDependency<T extends Dependency> implements
     Dependency, DependencyContext, ComponentDependencyDeclaration {

@@ -26,6 +26,9 @@ import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
 
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 @SuppressWarnings("unused")
 public class FELIX2344_ExtraDependencyWithAutoConfigTest extends TestBase {
     /**

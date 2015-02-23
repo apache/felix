@@ -26,6 +26,8 @@ import org.junit.Assert;
  * Helper class to make sure that steps in a test happen in the correct order. Instantiate
  * this class and subsequently invoke <code>step(nr)</code> with steps starting at 1. You
  * can also have threads wait until you arrive at a certain step.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class Ensure {
     private final boolean DEBUG;

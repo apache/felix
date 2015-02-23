@@ -27,6 +27,9 @@ import org.apache.felix.dm.annotation.api.Stop;
 import org.apache.felix.dm.itest.util.Ensure;
 
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class MultipleAnnotations {
     public final static String ENSURE = "MultipleAnnotations";
     

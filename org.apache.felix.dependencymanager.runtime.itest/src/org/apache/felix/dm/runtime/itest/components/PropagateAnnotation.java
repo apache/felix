@@ -28,6 +28,8 @@ import org.apache.felix.dm.itest.util.Ensure;
 
 /**
  * Verifies ServiceDependencyservice properties propagation.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @SuppressWarnings({"rawtypes"})
 public class PropagateAnnotation {

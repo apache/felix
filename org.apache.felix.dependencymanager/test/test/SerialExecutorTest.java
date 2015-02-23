@@ -32,6 +32,8 @@ import org.junit.Test;
 
 /**
  * Validates SerialExecutor used by DM implementation.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class SerialExecutorTest extends TestBase {
     final Random m_rnd = new Random();

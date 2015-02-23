@@ -18,6 +18,9 @@
  */
 package org.apache.felix.dm.runtime.itest.tests;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class AspectLifecycleWithDynamicProxyAnnotationParallelTest extends AspectLifecycleWithDynamicProxyAnnotationTest {
     public AspectLifecycleWithDynamicProxyAnnotationParallelTest() {
         setParallel();

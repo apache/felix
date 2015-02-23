@@ -25,6 +25,8 @@ import org.osgi.framework.ServiceRegistration;
 
 /**
  * Use case: Verify complex Annotation usage.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class MultipleAnnotationsTest extends TestBase {
     

@@ -23,6 +23,9 @@ import java.util.Dictionary;
 
 import org.apache.felix.dm.context.Event;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class ResourceEventImpl extends Event {
     final Dictionary<Object, Object> m_resourceProperties;
     

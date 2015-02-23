@@ -34,6 +34,9 @@ import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 @SuppressWarnings("rawtypes")
 public class FELIX2696_ConfigurationAndServiceDependencyTest extends TestBase {
     final static String PID = "FELIX2696_ConfigurationAndServiceDependencyTest.pid";

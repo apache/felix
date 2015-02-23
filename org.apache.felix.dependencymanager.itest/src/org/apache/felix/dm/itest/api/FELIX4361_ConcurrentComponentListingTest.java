@@ -36,6 +36,8 @@ import org.apache.felix.dm.itest.util.TestBase;
 /**
  * Test for FELIX-4361 The DependencyManager.getComponents method failed in a concurrent situation on iterating the
  * result of the method.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class FELIX4361_ConcurrentComponentListingTest extends TestBase {
 

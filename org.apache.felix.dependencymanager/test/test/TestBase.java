@@ -26,6 +26,8 @@ import java.io.StringWriter;
 /**
  * Base class for all tests.
  * For now, this class provides logging support.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class TestBase {
     final int WARN = 1;

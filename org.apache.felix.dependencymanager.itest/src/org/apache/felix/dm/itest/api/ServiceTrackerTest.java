@@ -29,6 +29,9 @@ import org.apache.felix.dm.tracker.ServiceTracker;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 @SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class ServiceTrackerTest extends TestBase {
     public void testPlainServiceTracker() {

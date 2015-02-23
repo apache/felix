@@ -18,9 +18,6 @@
  */
 package org.apache.felix.dm.itest.api;
 
-//import static org.ops4j.pax.exam.CoreOptions.waitForFrameworkStartupFor;
-//import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.vmOption;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,6 +29,9 @@ import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
 import org.junit.Assert;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class FilterIndexResourceAdapterTest extends TestBase {
   public void testBasicResourceAdapter() throws Exception {
       System.setProperty("org.apache.felix.dependencymanager.filterindex", "objectClass");

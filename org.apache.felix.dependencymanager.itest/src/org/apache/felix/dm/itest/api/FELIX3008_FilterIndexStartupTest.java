@@ -28,6 +28,9 @@ import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
 import org.osgi.framework.Bundle;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class FELIX3008_FilterIndexStartupTest extends TestBase {
     public void testNormalStart() throws Exception {
         System.setProperty("org.apache.felix.dependencymanager.filterindex", "objectClass");

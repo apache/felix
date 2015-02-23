@@ -24,6 +24,8 @@ import java.util.Dictionary;
  * When a Component is annotated with a DM "Component" annotation with a "factoryName" attribute, a corresponding
  * ComponentFactory is registered in the OSGi service registry with a @link {@link ComponentFactory#FACTORY_NAME} 
  * servie property with the Component "factoryName" value.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public interface ComponentFactory {
     /**

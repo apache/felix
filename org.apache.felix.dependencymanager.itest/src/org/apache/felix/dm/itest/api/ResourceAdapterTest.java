@@ -28,6 +28,9 @@ import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
 import org.junit.Assert;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class ResourceAdapterTest extends TestBase {
     public void testBasicResourceAdapter() throws Exception {
         DependencyManager m = getDM();

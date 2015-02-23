@@ -24,6 +24,9 @@ import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.Event;
 import org.apache.felix.dm.context.EventType;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class SimpleServiceDependency extends AbstractDependency<Dependency> {
     @Override
     public String getType() {

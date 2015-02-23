@@ -30,6 +30,8 @@ import org.osgi.framework.ServiceRegistration;
 
 /**
  * Checks support of primitive types for @Property annotation.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @Component(properties={
         @Property(name="v1", value="s"),

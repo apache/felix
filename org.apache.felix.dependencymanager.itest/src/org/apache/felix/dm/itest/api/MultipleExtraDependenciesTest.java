@@ -29,6 +29,9 @@ import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
 
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class MultipleExtraDependenciesTest extends TestBase {
     /**

@@ -27,6 +27,8 @@ import org.osgi.framework.ServiceRegistration;
 
 /**
  * Use case: Verify Composite annotated services.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class CompositeAnnotationsTest extends TestBase {
     

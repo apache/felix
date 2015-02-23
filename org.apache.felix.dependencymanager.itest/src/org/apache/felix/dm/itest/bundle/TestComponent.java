@@ -20,6 +20,8 @@ package org.apache.felix.dm.itest.bundle;
 
 /**
  * Test Component used by the FELIX2955_ShellCommandTest test.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class TestComponent implements TestService {
 

@@ -34,6 +34,8 @@ import org.apache.felix.dm.runtime.api.ComponentFactory;
 /**
  * A Service instantiated from a DM ComponentFactory, and which registers/unregisters its service,
  * using the @ServiceLifecycle annotation.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class ComponentFactoryServiceTestWthPublisher {

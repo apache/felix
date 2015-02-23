@@ -18,6 +18,9 @@
  */
 package org.apache.felix.dm.runtime.itest.components;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class Utils {
     public static final String DM_BSN = "org.apache.felix.dependencymanager"; 
 

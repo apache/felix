@@ -29,6 +29,9 @@ import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
 import org.osgi.framework.ServiceRegistration;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class AdapterWithCallbackInstanceTest extends TestBase {
     
     public void testServiceWithAdapterAndConsumer() {

@@ -30,6 +30,8 @@ import org.osgi.framework.ServiceReference;
 
 /**
  * Validates ServiceDependency service properties propagation.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class ServiceDependencyPropagateTest extends TestBase {

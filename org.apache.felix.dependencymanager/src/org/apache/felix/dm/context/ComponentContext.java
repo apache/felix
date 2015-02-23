@@ -32,6 +32,7 @@ import org.osgi.framework.BundleContext;
  * It is used by all DependencyManager Dependency implementations.
  * 
  * @see DependencyContext interface
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public interface ComponentContext extends Component {
     /**

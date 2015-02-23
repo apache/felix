@@ -32,6 +32,9 @@ import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
 import org.osgi.framework.Constants;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class AutoConfigTest extends TestBase {
     private final Ensure m_ensure = new Ensure();

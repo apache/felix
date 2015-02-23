@@ -24,6 +24,9 @@ import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
 
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class CompositionTest extends TestBase {
     public void testComposition() {
         DependencyManager m = getDM();

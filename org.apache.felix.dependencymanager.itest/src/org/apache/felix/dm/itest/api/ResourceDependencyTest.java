@@ -31,6 +31,9 @@ import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
 import org.junit.Assert;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class ResourceDependencyTest extends TestBase {
     public void testResourceDependency() throws MalformedURLException {
         DependencyManager m = getDM();

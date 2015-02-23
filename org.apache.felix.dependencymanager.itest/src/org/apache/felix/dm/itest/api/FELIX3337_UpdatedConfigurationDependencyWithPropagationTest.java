@@ -42,6 +42,8 @@ import org.osgi.service.cm.ManagedService;
  * - then the S1 PID is updated from ConfigAdmin
  * - S1 is then called in its updated callback
  * - S2 is called in its "change" callback.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class FELIX3337_UpdatedConfigurationDependencyWithPropagationTest extends TestBase {    

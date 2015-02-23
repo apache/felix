@@ -24,6 +24,8 @@ import java.util.Hashtable;
 /** 
  * An event holds all data that belongs to some external event as it comes in via
  * the 'changed' callback of a dependency.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class Event implements Comparable<Event> {
     protected final static Dictionary<Object, Object> EMPTY_PROPERTIES = new Hashtable<>();

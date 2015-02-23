@@ -33,6 +33,9 @@ import org.apache.felix.dm.annotation.api.Stop;
 import org.apache.felix.dm.itest.util.Ensure;
 import org.osgi.framework.BundleContext;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class Felix4050 {
     public final static String ENSURE = "Felix4050";
     

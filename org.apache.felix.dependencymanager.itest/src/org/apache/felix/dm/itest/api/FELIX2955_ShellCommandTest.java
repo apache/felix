@@ -31,6 +31,9 @@ import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
 import org.osgi.framework.Bundle;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class FELIX2955_ShellCommandTest extends TestBase {
     private long m_myBundleId;
     private Bundle m_testBundle;

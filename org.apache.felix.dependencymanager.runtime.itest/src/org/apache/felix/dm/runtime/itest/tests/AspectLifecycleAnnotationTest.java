@@ -27,6 +27,8 @@ import org.osgi.framework.ServiceRegistration;
 /**
  * Use case: Tests an aspect service, and ensure that its lifecycle methods are properly invoked 
  * (init/start/stop/destroy methods).
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class AspectLifecycleAnnotationTest extends TestBase {
     

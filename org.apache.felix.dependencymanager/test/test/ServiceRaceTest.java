@@ -36,6 +36,8 @@ import org.osgi.service.cm.ConfigurationException;
 
 /**
  * This test class simulates a client having many dependencies being registered/unregistered concurrently.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class ServiceRaceTest extends TestBase {

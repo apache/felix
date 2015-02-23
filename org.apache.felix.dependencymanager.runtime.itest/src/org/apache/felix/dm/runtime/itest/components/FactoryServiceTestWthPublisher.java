@@ -35,6 +35,8 @@ import org.apache.felix.dm.itest.util.Ensure;
 /**
  * A Service instantiated from a FactorySet, and which registers/unregisters its service,
  * using the @ServiceLifecycle annotation.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class FactoryServiceTestWthPublisher {

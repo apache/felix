@@ -38,6 +38,8 @@ import org.osgi.service.cm.ConfigurationAdmin;
 
 /**
  * Test a FactoryConfigurationAdapterService which provides its interface using a @ServiceLifecycle.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class FactoryConfigurationAdapterServiceTestWithPublisher {

@@ -26,6 +26,8 @@ import org.apache.felix.dm.itest.util.Ensure;
 
 /**
  * Service using an annotated Temporal Service dependency.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @Component(provides = {})
 public class TemporalAnnotations implements Runnable {

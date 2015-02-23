@@ -31,6 +31,9 @@ import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
 import org.osgi.service.cm.ConfigurationAdmin;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 @SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class FactoryConfigurationAdapterTest extends TestBase
 {

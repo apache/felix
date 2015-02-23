@@ -32,6 +32,9 @@ import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.annotation.api.Stop;
 import org.apache.felix.dm.itest.util.Ensure;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class ComponentFactoryAnnotation {
     public final static String FACTORY = "ComponentFactoryAnnotation.Factory";

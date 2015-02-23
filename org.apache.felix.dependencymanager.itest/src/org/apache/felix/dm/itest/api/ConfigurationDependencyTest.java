@@ -35,6 +35,9 @@ import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class ConfigurationDependencyTest extends TestBase {
     final static String PID = "ConfigurationDependencyTest.pid";

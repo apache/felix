@@ -31,6 +31,9 @@ import org.apache.felix.dm.itest.util.TestBase;
 import org.osgi.framework.Bundle;
 import org.osgi.service.log.LogService;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class FELIX4158_DependencyDeclarationTest extends TestBase {
     public void testServiceDependencyDeclaration() {
         DependencyManager m = getDM();

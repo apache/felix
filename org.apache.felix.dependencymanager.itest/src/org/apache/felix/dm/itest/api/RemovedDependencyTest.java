@@ -41,6 +41,8 @@ import org.osgi.framework.ServiceReference;
  * This test asserts the following correct behaviors:
  *   - when we remove the dependency on provider2, then the consumer is not stopped.
  *   - when we remove the (instance-bound) dependency on provider3, then the consumer os not stopped.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @SuppressWarnings({"unchecked", "rawtypes", "unused"})
 public class RemovedDependencyTest extends TestBase {

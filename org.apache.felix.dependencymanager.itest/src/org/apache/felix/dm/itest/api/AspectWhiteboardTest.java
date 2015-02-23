@@ -30,6 +30,9 @@ import org.apache.felix.dm.itest.util.TestBase;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 @SuppressWarnings({"rawtypes", "unchecked", "unused"})
 public class AspectWhiteboardTest extends TestBase {
 

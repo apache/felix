@@ -27,6 +27,8 @@ import org.osgi.framework.ServiceRegistration;
 /**
  * Use case: Tests an aspect service implemented as a dynamic proxy, and ensure that its lifecycle methods are properly invoked 
  * (init/start/stop/destroy methods).
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class AspectLifecycleWithDynamicProxyAnnotationTest extends TestBase {    
     public void testAnnotatedAspect() {

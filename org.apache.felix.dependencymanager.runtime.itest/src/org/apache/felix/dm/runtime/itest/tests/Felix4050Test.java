@@ -27,6 +27,8 @@ import org.osgi.framework.ServiceRegistration;
  * Test for FELIX-4050 issue: It validates that component state calculation does not mess up
  * when an @Init method adds an available dependency using the API, and also returns a Map for
  * configuring a named dependency.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class Felix4050Test extends TestBase {
     public void testFelix4050() {

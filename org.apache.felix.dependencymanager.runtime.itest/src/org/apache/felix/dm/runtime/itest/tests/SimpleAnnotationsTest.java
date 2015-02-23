@@ -26,6 +26,8 @@ import org.osgi.framework.ServiceRegistration;
 
 /**
  * Use case: Ensure that a Provider can be injected into a Consumer, using simple DM annotations.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class SimpleAnnotationsTest extends TestBase {
     

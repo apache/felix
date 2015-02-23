@@ -27,6 +27,9 @@ import org.apache.felix.dm.itest.util.TestBase;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class FELIX3057_EmptyServiceReferenceArray extends TestBase {
     public void testWithoutIndex() throws Exception {
         executeTest(context);

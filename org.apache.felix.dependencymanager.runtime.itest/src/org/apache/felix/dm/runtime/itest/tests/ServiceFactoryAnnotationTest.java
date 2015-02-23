@@ -30,6 +30,9 @@ import org.apache.felix.dm.itest.util.TestBase;
 import org.apache.felix.dm.runtime.itest.components.ServiceFactoryAnnotation;
 import org.osgi.framework.ServiceRegistration;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class ServiceFactoryAnnotationTest extends TestBase {
     

@@ -18,6 +18,9 @@
  */
 package org.apache.felix.dm.itest.bundle;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public interface TestService {
 
 }

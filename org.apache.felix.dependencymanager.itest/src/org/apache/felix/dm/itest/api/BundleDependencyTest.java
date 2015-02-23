@@ -26,6 +26,9 @@ import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
 import org.osgi.framework.Bundle;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class BundleDependencyTest extends TestBase {
     private final static String BSN = "org.apache.felix.metatype";
     

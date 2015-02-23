@@ -31,6 +31,9 @@ import org.apache.felix.dm.itest.util.Ensure;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class BundleDependencyAnnotation {
     public static final String ENSURE_CONSUMER = "BundleDependencyAnnotation.consumer";
     public static final String ENSURE_ADAPTER = "BundleDependencyAnnotation.adapter";

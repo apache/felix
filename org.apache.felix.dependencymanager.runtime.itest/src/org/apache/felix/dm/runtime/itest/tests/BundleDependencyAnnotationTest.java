@@ -26,6 +26,8 @@ import org.osgi.framework.ServiceRegistration;
 
 /**
  * Use case: Verify Bundle Dependency annotations usage.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class BundleDependencyAnnotationTest extends TestBase {
     

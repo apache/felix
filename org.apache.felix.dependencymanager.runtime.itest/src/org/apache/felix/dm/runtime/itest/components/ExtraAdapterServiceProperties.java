@@ -30,7 +30,9 @@ import org.apache.felix.dm.itest.util.Ensure;
 
 /**
  * This test validates that an adapter Service may specify some extra service properties
- * from it's start callback
+ * from it's start callback.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @SuppressWarnings({"rawtypes", "serial"})
 public class ExtraAdapterServiceProperties {

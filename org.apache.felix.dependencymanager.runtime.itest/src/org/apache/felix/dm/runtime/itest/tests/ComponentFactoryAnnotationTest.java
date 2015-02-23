@@ -29,6 +29,9 @@ import org.apache.felix.dm.runtime.api.ComponentInstance;
 import org.apache.felix.dm.runtime.itest.components.ComponentFactoryAnnotation;
 import org.osgi.framework.ServiceRegistration;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class ComponentFactoryAnnotationTest extends TestBase {
     

@@ -28,6 +28,8 @@ import org.osgi.framework.ServiceRegistration;
 
 /**
  * Use case: Verify the a Service may provide its service properties dynamically from its start method.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ExtraServicePropertiesTest extends TestBase {
     

@@ -32,6 +32,8 @@ import org.apache.felix.dm.itest.util.Ensure;
 
 /**
  * Test an AdapterService which provides its interface using a @ServiceLifecycle.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class AdapterServiceTestWithPublisher {

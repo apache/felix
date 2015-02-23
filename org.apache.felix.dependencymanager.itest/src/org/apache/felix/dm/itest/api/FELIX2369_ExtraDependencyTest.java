@@ -29,8 +29,9 @@ import org.apache.felix.dm.itest.util.TestBase;
 /**
  * This testcase verify that a Service is not started if one of its extra required dependencies
  * is unavailable.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-
 public class FELIX2369_ExtraDependencyTest extends TestBase
 {
     public void testExtraDependencies() {

@@ -27,6 +27,8 @@ import org.apache.felix.dm.itest.util.TestBase;
 
 /**
  * Tests for extra dependencies which are declared from service's init method.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class FELIX2344_ExtraDependencyWithCallbackTest extends TestBase {
     /**

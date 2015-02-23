@@ -25,6 +25,8 @@ import org.osgi.framework.ServiceRegistration;
 
 /**
  * Use case: Verify that dependency "propagate" option is properly propagating properties to provided service.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class PropagateAnnotationTest extends TestBase {
     

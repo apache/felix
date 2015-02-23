@@ -24,6 +24,9 @@ import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.itest.util.TestBase;
 import org.osgi.framework.BundleContext;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class ServiceDependencyThroughCallbackInstanceTest extends TestBase {
     public void testServiceWithCallbacksAndOneDependency() {
         invokeTest(context, 1);

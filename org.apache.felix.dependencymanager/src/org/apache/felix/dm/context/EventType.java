@@ -20,6 +20,8 @@ package org.apache.felix.dm.context;
 
 /**
  * Types of dependency events
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public enum EventType {
     /**

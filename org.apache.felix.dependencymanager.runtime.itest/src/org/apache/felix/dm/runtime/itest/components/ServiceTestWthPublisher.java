@@ -31,6 +31,8 @@ import org.apache.felix.dm.itest.util.Ensure;
 
 /**
  * A Service that just registers/unregisters its service, using the @ServiceLifecycle annotation.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class ServiceTestWthPublisher {

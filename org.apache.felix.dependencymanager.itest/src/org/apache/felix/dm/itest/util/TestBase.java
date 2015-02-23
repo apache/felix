@@ -45,6 +45,8 @@ import org.osgi.service.log.LogService;
 
 /**
  * Base class for all integration tests.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public abstract class TestBase extends TestCase implements LogService, FrameworkListener {
     // Default OSGI log service level.

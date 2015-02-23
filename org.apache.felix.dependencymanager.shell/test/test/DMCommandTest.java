@@ -45,6 +45,9 @@ import org.mockito.Spy;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class DMCommandTest {
     /** System output just used to debug **/
     private final static PrintStream OUT =

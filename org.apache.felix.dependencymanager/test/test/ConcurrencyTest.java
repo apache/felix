@@ -30,6 +30,9 @@ import org.apache.felix.dm.impl.ComponentImpl;
 import org.junit.Assert;
 import org.junit.Test;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class ConcurrencyTest {
 	
 	/**

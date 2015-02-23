@@ -43,6 +43,9 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 @SuppressWarnings({"rawtypes"})
 public class ResourceAnnotation {
     public final static String ENSURE_RESOURCE = "ResourceAnnotation.resource";

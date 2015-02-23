@@ -32,6 +32,9 @@ import org.apache.felix.dm.annotation.api.Stop;
 import org.apache.felix.dm.itest.util.Ensure;
 import org.osgi.framework.BundleContext;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 @SuppressWarnings({"rawtypes"})
 public class FactoryConfigurationAdapterAnnotation {
     public interface ServiceInterface {

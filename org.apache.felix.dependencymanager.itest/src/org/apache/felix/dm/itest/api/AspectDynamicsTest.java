@@ -22,6 +22,9 @@ import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class AspectDynamicsTest extends TestBase {
 
 	public void testDynamicallyAddAndRemoveAspect() {

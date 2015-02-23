@@ -29,6 +29,8 @@ import org.osgi.framework.ServiceRegistration;
 
 /**
  * Use case: Verify Aspect Annotations usage.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class AdapterAnnotationTest extends TestBase {
     /**

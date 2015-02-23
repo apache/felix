@@ -28,6 +28,8 @@ import org.osgi.framework.ServiceRegistration;
 
 /**
  * Use case: Verify Temporal Service dependency Annotations usage.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class TemporalAnnotationsTest extends TestBase {

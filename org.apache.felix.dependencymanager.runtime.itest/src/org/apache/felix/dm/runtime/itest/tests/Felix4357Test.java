@@ -26,6 +26,8 @@ import org.osgi.framework.ServiceRegistration;
 /**
  * Test for FELIX-4357 issue: It validates the types of some service component properties
  * defined with @Property annotation.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class Felix4357Test extends TestBase {
     

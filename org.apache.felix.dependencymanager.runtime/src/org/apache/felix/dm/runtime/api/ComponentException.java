@@ -21,7 +21,8 @@ package org.apache.felix.dm.runtime.api;
 /**
  * Exception thrown when a Component can't be instantiated using a {@link ComponentFactory#newInstance(java.util.Dictionary)} 
  * service.
- *
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @SuppressWarnings("serial")
 public class ComponentException extends RuntimeException {

@@ -29,6 +29,9 @@ import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.runtime.api.ComponentFactory;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 @SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class ExtraComponentFactoryServiceProperties {
     public final static String FACTORYNAME = "ExtraComponentFactoryServiceProperties.FACTORYSET";

@@ -42,6 +42,7 @@ import org.osgi.framework.ServiceReference;
  * this case we won't use any threadpool, since calling setParallel() method means we are using a parallel Dependency Manager.
  * 
  * @see AspectRaceParallelTest
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class AspectRaceTest extends TestBase {
     final static int SERVICES = 3;

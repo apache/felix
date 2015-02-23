@@ -27,6 +27,9 @@ import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class FELIX2875_ServiceDependencyWithoutServiceNameTest extends TestBase {
     Ensure m_e;
     

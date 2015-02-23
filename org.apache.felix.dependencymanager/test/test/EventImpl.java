@@ -20,8 +20,10 @@ package test;
 
 import org.apache.felix.dm.context.Event;
 
-/* in real life, this event might contain a service reference and service instance
+/** in real life, this event might contain a service reference and service instance
  * or something similar
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class EventImpl extends Event { // the actual event object (a Service, a Bundle, a Configuration, etc ...)
 	private final int m_id;

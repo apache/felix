@@ -18,6 +18,9 @@
  */
 package org.apache.felix.dm.runtime.itest.tests;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class Felix4357ParallelTest extends Felix4357Test {
     public Felix4357ParallelTest() {
         setParallel();

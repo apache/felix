@@ -30,6 +30,9 @@ import org.apache.felix.dm.ResourceHandler;
 import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class ResourceAdapterDependencyAddAndRemoveTest2 extends TestBase {
     public void testBasicResourceAdapter() throws Exception {
         DependencyManager m = getDM();

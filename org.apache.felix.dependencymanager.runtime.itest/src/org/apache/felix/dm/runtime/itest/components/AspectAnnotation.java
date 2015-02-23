@@ -30,6 +30,9 @@ import org.apache.felix.dm.itest.util.Ensure;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class AspectAnnotation {
     public interface ServiceInterface {
         public void invoke(Runnable run);

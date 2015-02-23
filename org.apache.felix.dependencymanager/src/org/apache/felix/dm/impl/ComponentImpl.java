@@ -60,6 +60,11 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
 
+/**
+ * Dependency Manager Component implementation.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class ComponentImpl implements Component, ComponentContext, ComponentDeclaration {
 	private static final ServiceRegistration NULL_REGISTRATION = (ServiceRegistration) Proxy
 			.newProxyInstance(ComponentImpl.class.getClassLoader(),

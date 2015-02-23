@@ -30,6 +30,9 @@ import org.apache.felix.dm.ResourceHandler;
 import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class ServiceUpdateTest extends TestBase {
     public void testServiceUpdate() throws Exception {
         final DependencyManager m = getDM();

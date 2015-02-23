@@ -34,6 +34,9 @@ import org.apache.felix.dm.context.DependencyContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class AspectServiceImpl extends FilterComponent {
 	
 	private final String m_add;

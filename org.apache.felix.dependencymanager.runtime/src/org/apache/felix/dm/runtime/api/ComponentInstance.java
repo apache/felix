@@ -22,6 +22,8 @@ import java.util.Dictionary;
 
 /**
  * A Component instance created using a {@link ComponentFactory} service
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public interface ComponentInstance {
     /**
