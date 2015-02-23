@@ -117,7 +117,7 @@ public final class ServletInfo extends WhiteboardServiceInfo<Servlet>
             this.patterns = new String[] {pattern, pattern + "/*"};
         }
         this.initParams = initParams;
-        this.asyncSupported = false;
+        this.asyncSupported = true;
         this.errorPage = null;
     }
 
