@@ -64,7 +64,9 @@ rat {
     '**/generated/**',
     'doc/**',
     '**/packageinfo',
-    '**/*.txt'
+    '**/*.txt',
+    'docs/**',
+    '.metadata/**'
   ]
 }
 
@@ -77,7 +79,6 @@ task makeStaging << {
 
     // Package source and source bin dependencies distributions.
     logger.lifecycle("    Packaging source distributions.")
-
     def topdir="apache-felix-dependencymanager-" + dmRelease
     ant.zip(destfile: "staging/"+topdir+'-src.zip') {
 		zipfileset(dir: '../cnf', prefix: topdir+"-src/cnf", includes: ".project,.classpath,src/**,*.bnd,ext/**")
@@ -95,6 +96,7 @@ task makeStaging << {
     }
 
     // Package binary dependencies, needed to build the source distributions.
+    logger.lifecycle("    Packaging binary dependencies.")    
     ant.zip(destfile: "staging/"+topdir+"-deps.zip") {
 		ant.zipfileset(dir: 'resources/deps', prefix: topdir+"-deps", includes: '*')
 		ant.zipfileset(dir: '../cnf', prefix: topdir+"-deps/cnf",
@@ -102,6 +104,7 @@ task makeStaging << {
     }
 
     // Package binaries as a simple collection of bundles. We use same license files as for src distrib.
+    logger.lifecycle("    Packaging binary distribution.")    
     ant.zip(destfile: "staging/"+topdir+"-bin.zip") {
         ant.mappedresources() {
         	ant.fileset(dir: '..', includes: '*/generated/*.jar', excludes: '*.itest/generated/*.jar')
