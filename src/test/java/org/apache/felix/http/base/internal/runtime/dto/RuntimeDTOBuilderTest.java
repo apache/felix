@@ -34,7 +34,6 @@ import static org.apache.felix.http.base.internal.runtime.WhiteboardServiceHelpe
 import static org.apache.felix.http.base.internal.runtime.WhiteboardServiceHelper.createTestServletWithServiceId;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -59,9 +58,9 @@ import javax.servlet.ServletContext;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.HandlerRuntime;
 import org.apache.felix.http.base.internal.runtime.HandlerRuntime.ErrorPage;
-import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.RegistryRuntime;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
@@ -233,12 +232,10 @@ public class RuntimeDTOBuilderTest
 
         for (ServletContextDTO servletContextDTO : runtimeDTO.servletContextDTOs)
         {
-            String contextName = servletContextDTO.contextName;
+            String contextName = servletContextDTO.name;
             assertTrue(CONTEXT_NAMES.contains(contextName));
             if (contextName.equals("0"))
             {
-                assertNull(contextName,
-                        servletContextDTO.name);
                 assertTrue(contextName,
                         servletContextDTO.serviceId < 0);
                 assertEquals(contextName,
@@ -252,9 +249,6 @@ public class RuntimeDTOBuilderTest
             }
             else
             {
-                assertEquals(contextName,
-                        contextName, servletContextDTO.name);
-
                 int expectedId = CONTEXT_NAMES.indexOf(contextName) + 1;
                 assertEquals(contextName,
                         expectedId, servletContextDTO.serviceId);

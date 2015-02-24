@@ -79,13 +79,12 @@ final class ServletContextDTOBuilder
 
         ServletContextDTO contextDTO = new ServletContextDTO();
         contextDTO.attributes = getAttributes(context);
-        contextDTO.contextName = context.getServletContextName();
         contextDTO.contextPath = context.getContextPath();
         contextDTO.errorPageDTOs = errorPageDTOs;
         contextDTO.filterDTOs = filterDTOs;
         contextDTO.initParams = getInitParameters(context);
         contextDTO.listenerDTOs = listenerDTOs;
-        contextDTO.name = contextId >= 0 ? contextInfo.getName() : null;
+        contextDTO.name = context.getServletContextName();
         contextDTO.resourceDTOs = resourceDTOs;
         contextDTO.servletDTOs = servletDTOs;
         contextDTO.serviceId = contextId;
