@@ -24,6 +24,7 @@ import java.util.Map;
 import javax.servlet.Servlet;
 
 import org.osgi.dto.DTO;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.runtime.dto.ServletDTO;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
@@ -36,7 +37,7 @@ import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public final class ServletInfo extends WhiteboardServiceInfo<Servlet>
+public class ServletInfo extends WhiteboardServiceInfo<Servlet>
 {
     /**
      * Properties starting with this prefix are passed as servlet init parameters to the
@@ -68,9 +69,16 @@ public final class ServletInfo extends WhiteboardServiceInfo<Servlet>
     private final boolean asyncSupported;
 
     /**
+     * Specifies whether the info represents a resource.
+     */
+    private final boolean isResource;
+
+    /**
      * The servlet initialization parameters as provided during registration of the servlet.
      */
     private final Map<String, String> initParams;
+
+    private final String prefix;
 
     public ServletInfo(final ServiceReference<Servlet> ref)
     {
@@ -80,6 +88,8 @@ public final class ServletInfo extends WhiteboardServiceInfo<Servlet>
         this.patterns = getStringArrayProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN);
         this.asyncSupported = getBooleanProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_ASYNC_SUPPORTED);
         this.initParams = getInitParams(ref, SERVLET_INIT_PREFIX);
+        this.isResource = false;
+        this.prefix = null;
     }
 
     @SuppressWarnings("unchecked")
@@ -91,8 +101,11 @@ public final class ServletInfo extends WhiteboardServiceInfo<Servlet>
         this.errorPage = null;
         this.asyncSupported = false;
         this.initParams = Collections.emptyMap();
+        this.isResource = true;
+        this.prefix = resource.getPrefix();
     }
 
+    @SuppressWarnings("rawtypes")
     private static ServiceReference getRef(ServiceReference ref)
     {
         return ref;
@@ -119,6 +132,8 @@ public final class ServletInfo extends WhiteboardServiceInfo<Servlet>
         this.initParams = initParams;
         this.asyncSupported = true;
         this.errorPage = null;
+        this.isResource = false;
+        this.prefix = null;
     }
 
     ServletInfo(int serviceRanking,
@@ -135,6 +150,8 @@ public final class ServletInfo extends WhiteboardServiceInfo<Servlet>
         this.errorPage = errorPage;
         this.asyncSupported = asyncSupported;
         this.initParams = initParams;
+        this.isResource = false;
+        this.prefix = null;
     }
 
     @Override
@@ -166,5 +183,42 @@ public final class ServletInfo extends WhiteboardServiceInfo<Servlet>
     public Map<String, String> getInitParameters()
     {
         return initParams;
+    }
+
+    public boolean isResource()
+    {
+        return isResource;
+    }
+
+    public String getPrefix()
+    {
+        return prefix;
+    }
+
+    @Override
+    public ServiceReference<Servlet> getServiceReference()
+    {
+        // TODO This method returns a ServiceReference<Object> in case of a resource
+        return super.getServiceReference();
+    }
+
+    @Override
+    public Servlet getService(Bundle bundle)
+    {
+        if (isResource)
+        {
+            throw new UnsupportedOperationException();
+        };
+        return super.getService(bundle);
+    }
+
+    @Override
+    public void ungetService(Bundle bundle, Servlet service)
+    {
+        if (isResource)
+        {
+            throw new UnsupportedOperationException();
+        };
+        super.ungetService(bundle, service);
     }
 }

@@ -354,17 +354,29 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     }
 
     public synchronized HandlerRuntime getRuntime() {
-        List<ServletHandler> servletHandlers = new ArrayList<ServletHandler>(servletMap.values());
-        List<FilterHandler> filterHandlers = new ArrayList<FilterHandler>(filterMap.values());
-
         Collection<ErrorPage> errorPages = new ArrayList<HandlerRuntime.ErrorPage>();
         Collection<ServletHandler> errorHandlers = errorsMapping.getMappedHandlers();
         for (ServletHandler servletHandler : errorHandlers)
         {
             errorPages.add(errorsMapping.getErrorPage(servletHandler));
         }
-        servletHandlers.removeAll(errorHandlers);
 
-        return new HandlerRuntime(servletHandlers, filterHandlers, errorPages, serviceId);
+        List<FilterHandler> filterHandlers = new ArrayList<FilterHandler>(filterMap.values());
+
+        List<ServletHandler> servletHandlers = new ArrayList<ServletHandler>();
+        List<ServletHandler> resourceHandlers = new ArrayList<ServletHandler>();
+        for (ServletHandler servletHandler : servletMap.values())
+        {
+            if (servletHandler.getServletInfo().isResource())
+            {
+                resourceHandlers.add(servletHandler);
+            }
+            else if (!errorHandlers.contains(servletHandler))
+            {
+                servletHandlers.add(servletHandler);
+            }
+        }
+
+        return new HandlerRuntime(servletHandlers, filterHandlers, resourceHandlers, errorPages, serviceId);
     }
 }

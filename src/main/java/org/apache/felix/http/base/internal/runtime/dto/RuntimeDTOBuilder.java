@@ -20,7 +20,6 @@ package org.apache.felix.http.base.internal.runtime.dto;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -108,8 +107,7 @@ public final class RuntimeDTOBuilder
             Collection<ServiceReference<?>> listenerRefs)
     {
         Collection<ServletHandler> servletHandlers = handlerRuntime.getServletHandlers();
-        //TODO missing functionality
-        Collection<ServletHandler> resourceHandlers = Collections.emptyList();
+        Collection<ServletHandler> resourceHandlers = handlerRuntime.getResourceHandlers();
         Collection<FilterHandler> filterHandlers = handlerRuntime.getFilterHandlers();
         Collection<ErrorPage> errorPages = handlerRuntime.getErrorPages();
         long servletContextId = handlerRuntime.getServiceId();
