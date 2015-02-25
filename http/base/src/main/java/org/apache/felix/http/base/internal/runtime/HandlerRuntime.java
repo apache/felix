@@ -28,16 +28,19 @@ public final class HandlerRuntime
 {
     private final Collection<ServletHandler> servletHandlers;
     private final Collection<FilterHandler> filterHandlers;
+    private final Collection<ServletHandler> resourceHandlers;
     private final Collection<ErrorPage> errorPages;
     private final long serviceId;
 
     public HandlerRuntime(Collection<ServletHandler> servletHandlers,
             Collection<FilterHandler> filterHandlers,
+            Collection<ServletHandler> resourceHandlers,
             Collection<ErrorPage> errorPages,
             long serviceId)
     {
         this.servletHandlers = servletHandlers;
         this.filterHandlers = filterHandlers;
+        this.resourceHandlers = resourceHandlers;
         this.errorPages = errorPages;
         this.serviceId = serviceId;
     }
@@ -46,6 +49,7 @@ public final class HandlerRuntime
     {
         return new HandlerRuntime(Collections.<ServletHandler>emptyList(),
                 Collections.<FilterHandler>emptyList(),
+                Collections.<ServletHandler>emptyList(),
                 Collections.<ErrorPage> emptyList(),
                 serviceId);
     }
@@ -58,6 +62,11 @@ public final class HandlerRuntime
     public Collection<FilterHandler> getFilterHandlers()
     {
         return filterHandlers;
+    }
+
+    public Collection<ServletHandler> getResourceHandlers()
+    {
+        return resourceHandlers;
     }
 
     public Collection<ErrorPage> getErrorPages()

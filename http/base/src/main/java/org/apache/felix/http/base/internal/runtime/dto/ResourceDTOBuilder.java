@@ -19,18 +19,22 @@
 package org.apache.felix.http.base.internal.runtime.dto;
 
 import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.osgi.service.http.runtime.dto.ResourceDTO;
 
-//TODO
 final class ResourceDTOBuilder extends BaseDTOBuilder<ServletHandler, ResourceDTO>
 {
+    private static final String[] STRING_ARRAY = new String[0];
+
     @Override
     ResourceDTO buildDTO(ServletHandler handler, long servletContextId)
     {
+        ServletInfo servletInfo = handler.getServletInfo();
+
         ResourceDTO resourceDTO = new ResourceDTO();
-        resourceDTO.patterns = null;
-        resourceDTO.prefix = null;
-        resourceDTO.serviceId = handler.getServletInfo().getServiceId();
+        resourceDTO.patterns = copyWithDefault(servletInfo.getPatterns(), STRING_ARRAY);
+        resourceDTO.prefix = servletInfo.getPrefix();
+        resourceDTO.serviceId = servletInfo.getServiceId();
         resourceDTO.servletContextId = servletContextId;
         return resourceDTO;
     }
