@@ -69,7 +69,7 @@ checkSum() {
 }
 
 KEYS_URL="http://www.apache.org/dist/felix/KEYS"
-REL_URL="https://dist.apache.org/repos/dist/dev/felix/apache-felix-dependencymanager-${version}/"
+REL_URL="https://dist.apache.org/repos/dist/dev/felix/org.apache.felix.dependencymanager-${version}/"
 PWD=`pwd`
 
 echo "################################################################################"
@@ -80,7 +80,7 @@ if [ ! -e "${tmpDir}/KEYS" ]; then
 fi
 gpg --import "${tmpDir}/KEYS" 
 
-if [ ! -e "${tmpDir}/apache-felix-dependencymanager-${version}" ]
+if [ ! -e "${tmpDir}/org.apache.felix.dependencymanager-${version}" ]
 then
     echo "################################################################################"
     echo "                           DOWNLOAD STAGED REPOSITORY                           "
@@ -88,20 +88,20 @@ then
 
     wget \
       -e "robots=off" --wait 1 -r -np "--reject=html,txt" "--follow-tags=" \
-      -P "${tmpDir}/apache-felix-dependencymanager-${version}" -nH "--cut-dirs=5" --ignore-length --no-check-certificate \
+      -P "${tmpDir}/org.apache.felix.dependencymanager-${version}" -nH "--cut-dirs=5" --ignore-length --no-check-certificate \
       $REL_URL
 else
     echo "################################################################################"
     echo "                       USING EXISTING STAGED REPOSITORY                         "
     echo "################################################################################"
-    echo "${tmpDir}/apache-felix-dependencymanager-${version}"
+    echo "${tmpDir}/org.apache.felix.dependencymanager-${version}"
 fi
 
 echo "################################################################################"
 echo "                          CHECK SIGNATURES AND DIGESTS                          "
 echo "################################################################################"
 
-cd ${tmpDir}/apache-felix-dependencymanager-${version}
+cd ${tmpDir}/org.apache.felix.dependencymanager-${version}
 for f in `find . -type f | grep -v '\.\(asc\|sha\?\|md5\)$'`; do
     echo "checking $f" 
 
