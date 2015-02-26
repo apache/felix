@@ -23,9 +23,5 @@ register, acquire, and manage dynamic OSGi services.
 
 This archive contains all the binary dependencies that are needed to build
 Apache Felix Dependency Manager. 
-To build the source, you have to copy the ./cnf directory into the apache-felix-dependencymanager-r<n>-src directory.
-
-$ cp -r ./cnf ../apache-felix-dependencymanager-r<n>-src/
-
-(it is assumed that the source distribution is located in ..).
+To build the source, you have to unfold this archive on the same directory where you have unfolded the org.apache.felix.dependencymanager-r<n>-src.zip archive.
 
