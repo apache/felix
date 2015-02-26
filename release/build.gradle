@@ -79,7 +79,7 @@ task makeStaging << {
 
     // Package source and source bin dependencies distributions.
     logger.lifecycle("    Packaging source distributions.")
-    def topdir="apache-felix-dependencymanager-" + dmRelease
+    def topdir="org.apache.felix.dependencymanager-" + dmRelease
     ant.zip(destfile: "staging/"+topdir+'-src.zip') {
 		zipfileset(dir: '../cnf', prefix: topdir+"-src/cnf", includes: ".project,.classpath,src/**,*.bnd,ext/**")
 		zipfileset(dir: '..', prefix: topdir+"-src", includes: '*.gradle,*.properties')
@@ -98,8 +98,10 @@ task makeStaging << {
     // Package binary dependencies, needed to build the source distributions.
     logger.lifecycle("    Packaging binary dependencies.")    
     ant.zip(destfile: "staging/"+topdir+"-deps.zip") {
-		ant.zipfileset(dir: 'resources/deps', prefix: topdir+"-deps", includes: '*')
-		ant.zipfileset(dir: '../cnf', prefix: topdir+"-deps/cnf",
+    	ant.zipfileset(dir: '..', prefix: topdir+"-src", includes: 'gradlew')
+    	ant.zipfileset(dir: '../gradle', prefix: topdir+"-src/gradle", includes: '*')    	
+		ant.zipfileset(dir: 'resources/deps', prefix: topdir+"-src", includes: '*')
+		ant.zipfileset(dir: '../cnf', prefix: topdir+"-src/cnf",
 		    		   includes: 'buildrepo/**,localrepo/**,releaserepo/**,plugins/**,gradle/**')
     }
 
@@ -151,32 +153,29 @@ task signStaging << {
 
 
 // Moves the source and binary distributions to staging.
-// (you can provide svn user/password using gradle "-PsvnUser=xxx -PsvnPassword=xxx" options)
 task commitToStaging << {
     getProject().exec { 
-    	commandLine 'svn', '--username', svnUser, '--password', svnPassword, 
-		'import', 'staging', svnStagingPath + "/apache-felix-dependencymanager-" + dmRelease + "/", 
-		'-m', "Staging Apache Felix Dependency Manager version " + dmRelease + "."
+    	commandLine 'svn', 
+		'import', 'staging', svnStagingPath + "/org.apache.felix.dependencymanager-" + dmRelease + "/", 
+		'-m', "Staging Apache Felix Dependency Manager release " + dmRelease + "."
     }
 }
 
 // Promotes the staged distributions to release
-// (you can provide svn user/password using gradle "-PsvnUser=xxx -PsvnPassword=xxx" options)
 task promoteToRelease << { 
     getProject().exec { 
-    	commandLine 'svn', '--username', svnUser, '--password', svnPassword, 
-		'move', svnStagingPath+"/apache-felix-dependencymanager-" + dmRelease , svnReleasePath, 
-		'-m', "Releasing Apache Felix Dependency Manager version " + dmRelease + "."
+    	commandLine 'svn',
+		'move', svnStagingPath+"/org.apache.felix.dependencymanager-" + dmRelease , svnReleasePath, 
+		'-m', "Releasing Apache Felix Dependency Manager release " + dmRelease + "."
     }
 }
 
 // Removes the staged distributions from staging
-// (you can provide svn user/password using gradle "-PsvnUser=xxx -PsvnPassword=xxx" options)
 task deleteFromStaging << { 
     getProject().exec { 
-    	commandLine 'svn', '--username', svnUser, '--password', svnPassword, 
-		'delete', svnStagingPath+"/apache-felix-dependencymanager-" + dmRelease + "/",
-		"-m", "Removing Apache Felix Dependency Manager version " + dmRelease + " from staging."
+    	commandLine 'svn',
+		'delete', svnStagingPath+"/org.apache.felix.dependencymanager-" + dmRelease + "/",
+		"-m", "Removing Apache Felix Dependency Manager release " + dmRelease + " from staging."
     }
 }
 
