@@ -38,7 +38,7 @@ getting started guide for users:
 
 Many examples are also available from the dependency manager examples:
 
-  http://svn.apache.org/viewvc/felix/trunk/examples/dependencymanager-samples
+  http://svn.apache.org/repos/asf/felix/trunk/examples/dependencymanager-samples
 
 Many thanks for using Apache Felix Dependency Manager.
 
