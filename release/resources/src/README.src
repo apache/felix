@@ -31,9 +31,8 @@ Building and testing Apache Felix Dependency Manager
 
   export GRADLE_OPTS="-Dhttps.proxyHost=www.somehost.org -Dhttps.proxyPort=8080"
   
-- If you are building a released apache-felix-dependencymanager-r<n>-src.zip artifact, then 
-  copy the binary dependencies from the apache-felix-dependencymanager-r<n>-deps.zip distrib
-  (see README from apache-felix-dependencymanager-deps-r<n>.zip distribution).
+- If you are building a released org.apache.felix.dependencymanager-r<n>-src.zip artifact, then 
+  you also have to unfold the org.apache.felix.dependencymanager-r<n>-deps.zip on the same directory where you have unfolded the source archive.
   (no need to do this if you have checked out from the felix-trunk).
 
 - Compile Dependendency Manager annotations bndtools plugin:
@@ -73,7 +72,7 @@ getting started guide for users:
 
 Many examples are also available from the dependency manager examples:
 
-  http://svn.apache.org/viewvc/felix/trunk/examples/dependencymanager-samples
+  http://svn.apache.org/repos/asf/felix/trunk/examples/dependencymanager-samples
 
 Many thanks for using Apache Felix Dependency Manager.
 
