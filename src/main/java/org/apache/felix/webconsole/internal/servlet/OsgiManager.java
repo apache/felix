@@ -53,6 +53,8 @@ import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.BrandingPlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.felix.webconsole.WebConsoleSecurityProvider;
+import org.apache.felix.webconsole.WebConsoleSecurityProvider2;
+import org.apache.felix.webconsole.WebConsoleSecurityProvider3;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
 import org.apache.felix.webconsole.internal.Util;
 import org.apache.felix.webconsole.internal.core.BundlesServlet;
@@ -167,6 +169,10 @@ public class OsgiManager extends GenericServlet
     static final String DEFAULT_CATEGORY = "Main"; //$NON-NLS-1$
 
     static final String DEFAULT_HTTP_SERVICE_SELECTOR = ""; //$NON-NLS-1$
+
+    private static final String HEADER_AUTHORIZATION = "Authorization"; //$NON-NLS-1$
+
+    private static final String HEADER_WWW_AUTHENTICATE = "WWW-Authenticate"; //$NON-NLS-1$
 
     /**
      * The default value for the {@link #PROP_MANAGER_ROOT} configuration
@@ -514,10 +520,16 @@ public class OsgiManager extends GenericServlet
             }
             path = path.concat(holder.getDefaultPluginLabel());
             response.sendRedirect(path);
+            response.setContentLength(0);
             return;
         }
 
-        int slash = pathInfo.indexOf("/", 1);
+        if (pathInfo.equals("/logout")) { //$NON-NLS-1$
+            logout(request, response);
+            return;
+        }
+
+        int slash = pathInfo.indexOf("/", 1); //$NON-NLS-1$
         if (slash < 2)
         {
             slash = pathInfo.length();
@@ -566,6 +578,63 @@ public class OsgiManager extends GenericServlet
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             response.getWriter().println(body404);
         }
+    }
+
+    private final void logout(HttpServletRequest request, HttpServletResponse response)
+        throws IOException
+    {
+        // check if special logout cookie is set, this is used to prevent
+        // from an endless loop with basic auth
+        Cookie[] cookies = request.getCookies();
+        boolean found = false;
+        if ( cookies != null )
+        {
+            for(int i=0;i<cookies.length;i++)
+            {
+                if ( cookies[i].getName().equals("logout") ) //$NON-NLS-1$
+                {
+                    found = true;
+                    break;
+                }
+            }
+        }
+        if ( found )
+        {
+            // redirect to main page
+            String url = request.getRequestURI();
+            final int lastSlash = url.lastIndexOf('/');
+            final Cookie c = new Cookie("logout", "true"); //$NON-NLS-1$ //$NON-NLS-2$
+            c.setMaxAge(0);
+            response.addCookie(c);
+            response.sendRedirect(url.substring(0, lastSlash));
+            return;
+        }
+        Object securityProvider = securityProviderTracker.getService();
+        if (securityProvider instanceof WebConsoleSecurityProvider3)
+        {
+            ((WebConsoleSecurityProvider3) securityProvider).logout(request, response);
+        }
+        else
+        {
+            // if the security provider doesn't support logout, we try to
+            // logout the default basic authentication mechanism
+            // See https://issues.apache.org/jira/browse/FELIX-3006
+
+            // check for basic authentication
+            String auth = request.getHeader(HEADER_AUTHORIZATION); //$NON-NLS-1$
+            if (null != auth && auth.toLowerCase().startsWith("basic ")) { //$NON-NLS-1$
+                Map config = getConfiguration();
+                String realm = ConfigurationUtil.getProperty(config, PROP_REALM, DEFAULT_REALM);
+                response.setHeader(HEADER_WWW_AUTHENTICATE, "Basic realm=\"" +  realm + "\""); //$NON-NLS-1$ //$NON-NLS-2$
+                response.addCookie(new Cookie("logout", "true")); //$NON-NLS-1$ //$NON-NLS-2$
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            }
+        }
+
+        // clean-up
+        request.removeAttribute(HttpContext.REMOTE_USER);
+        request.removeAttribute(HttpContext.AUTHORIZATION);
+        request.removeAttribute(WebConsoleSecurityProvider2.USER_ATTRIBUTE);
     }
 
     private final AbstractWebConsolePlugin getConsolePlugin(final String label)
