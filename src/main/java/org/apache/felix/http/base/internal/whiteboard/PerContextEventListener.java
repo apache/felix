@@ -17,7 +17,6 @@
 package org.apache.felix.http.base.internal.whiteboard;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentSkipListMap;
 
@@ -55,7 +54,7 @@ public final class PerContextEventListener implements
         ServletRequestAttributeListener
 {
     /** Servlet context listeners. */
-    private final Map<ServiceReference<ServletContextListener>, ServletContextListener> listeners = new HashMap<ServiceReference<ServletContextListener>, ServletContextListener>();
+    private final Map<ServiceReference<ServletContextListener>, ServletContextListener> contextListeners = new ConcurrentSkipListMap<ServiceReference<ServletContextListener>, ServletContextListener>();
 
     /** Servlet context attribute listeners. */
     private final Map<ServiceReference<ServletContextAttributeListener>, ServletContextAttributeListener> contextAttributeListeners = new ConcurrentSkipListMap<ServiceReference<ServletContextAttributeListener>, ServletContextAttributeListener>();
@@ -80,13 +79,12 @@ public final class PerContextEventListener implements
     }
 
     void initialized(@Nonnull final ServletContextListenerInfo listenerInfo,
-            ContextHandler contextHandler)
+            @Nonnull ContextHandler contextHandler)
     {
         final ServletContextListener listener = listenerInfo.getService(bundle);
         if (listener != null)
         {
-            // no need to sync map - initialized is called in sync
-            this.listeners.put(listenerInfo.getServiceReference(), listener);
+            this.contextListeners.put(listenerInfo.getServiceReference(), listener);
 
             final ServletContext context = contextHandler
                     .getServletContext(listenerInfo.getServiceReference()
@@ -97,11 +95,11 @@ public final class PerContextEventListener implements
     }
 
     void destroyed(@Nonnull final ServletContextListenerInfo listenerInfo,
-            ContextHandler contextHandler)
+            @Nonnull ContextHandler contextHandler)
     {
         final ServiceReference<ServletContextListener> listenerRef = listenerInfo
                 .getServiceReference();
-        final ServletContextListener listener = this.listeners
+        final ServletContextListener listener = this.contextListeners
                 .remove(listenerRef);
         if (listener != null)
         {
@@ -118,7 +116,7 @@ public final class PerContextEventListener implements
 
     /**
      * Add servlet context attribute listener
-     * 
+     *
      * @param info
      */
     void addListener(@Nonnull final ServletContextAttributeListenerInfo info)
@@ -133,7 +131,7 @@ public final class PerContextEventListener implements
 
     /**
      * Remove servlet context attribute listener
-     * 
+     *
      * @param info
      */
     void removeListener(@Nonnull final ServletContextAttributeListenerInfo info)
@@ -148,7 +146,7 @@ public final class PerContextEventListener implements
 
     /**
      * Add session attribute listener
-     * 
+     *
      * @param info
      */
     void addListener(@Nonnull final HttpSessionAttributeListenerInfo info)
@@ -163,7 +161,7 @@ public final class PerContextEventListener implements
 
     /**
      * Remove session attribute listener
-     * 
+     *
      * @param info
      */
     void removeListener(@Nonnull final HttpSessionAttributeListenerInfo info)
@@ -178,7 +176,7 @@ public final class PerContextEventListener implements
 
     /**
      * Add session listener
-     * 
+     *
      * @param info
      */
     void addListener(@Nonnull final HttpSessionListenerInfo info)
@@ -192,7 +190,7 @@ public final class PerContextEventListener implements
 
     /**
      * Remove session listener
-     * 
+     *
      * @param info
      */
     void removeListener(@Nonnull final HttpSessionListenerInfo info)
@@ -207,7 +205,7 @@ public final class PerContextEventListener implements
 
     /**
      * Add request listener
-     * 
+     *
      * @param info
      */
     void addListener(@Nonnull final ServletRequestListenerInfo info)
@@ -221,7 +219,7 @@ public final class PerContextEventListener implements
 
     /**
      * Remove request listener
-     * 
+     *
      * @param info
      */
     void removeListener(@Nonnull final ServletRequestListenerInfo info)
@@ -236,7 +234,7 @@ public final class PerContextEventListener implements
 
     /**
      * Add request attribute listener
-     * 
+     *
      * @param info
      */
     void addListener(@Nonnull final ServletRequestAttributeListenerInfo info)
@@ -251,7 +249,7 @@ public final class PerContextEventListener implements
 
     /**
      * Remove request attribute listener
-     * 
+     *
      * @param info
      */
     void removeListener(@Nonnull final ServletRequestAttributeListenerInfo info)
@@ -407,6 +405,7 @@ public final class PerContextEventListener implements
     Collection<ServiceReference<?>> getRuntime()
     {
         return CollectionUtils.<ServiceReference<?>> union(
+                contextListeners.keySet(),
                 contextAttributeListeners.keySet(),
                 sessionAttributeListeners.keySet(),
                 sessionListeners.keySet(),

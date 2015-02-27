@@ -21,11 +21,6 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 import javax.servlet.ServletContext;
-import javax.servlet.ServletContextAttributeListener;
-import javax.servlet.ServletRequestAttributeListener;
-import javax.servlet.ServletRequestListener;
-import javax.servlet.http.HttpSessionAttributeListener;
-import javax.servlet.http.HttpSessionListener;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
@@ -47,39 +42,21 @@ public final class ContextHandler implements Comparable<ContextHandler>
     /** A map of all created servlet contexts. Each bundle gets it's own instance. */
     private final Map<Long, ContextHolder> perBundleContextMap = new HashMap<Long, ContextHolder>();
 
-    private final HttpSessionListener sessionListener;
-    private final HttpSessionAttributeListener sessionAttributeListener;
-    private final ServletRequestListener requestListener;
-    private final ServletRequestAttributeListener requestAttributeListener;
+    private final PerContextEventListener eventListener;
 
-    public ContextHandler(ServletContextHelperInfo info,
-            ServletContext webContext,
-            PerContextEventListener eventListener,
-            Bundle bundle)
-    {
-        this(info, webContext, eventListener, eventListener, eventListener, eventListener, eventListener, bundle);
-    }
-
-    public ContextHandler(ServletContextHelperInfo info,
-            ServletContext webContext,
-            ServletContextAttributeListener servletContextAttributeListener,
-            HttpSessionListener sessionListener,
-            HttpSessionAttributeListener sessionAttributeListener,
-            ServletRequestListener requestListener,
-            ServletRequestAttributeListener requestAttributeListener,
-            Bundle bundle)
+    public ContextHandler(final ServletContextHelperInfo info,
+            final ServletContext webContext,
+            final PerContextEventListener eventListener,
+            final Bundle bundle)
     {
         this.info = info;
-        this.sessionListener = sessionListener;
-        this.sessionAttributeListener = sessionAttributeListener;
-        this.requestListener = requestListener;
-        this.requestAttributeListener = requestAttributeListener;
+        this.eventListener = eventListener;
         this.bundle = bundle;
         this.sharedContext = new SharedServletContextImpl(webContext,
                 info.getName(),
                 info.getPath(),
                 info.getInitParameters(),
-                servletContextAttributeListener);
+                eventListener);
     }
 
     public ServletContextHelperInfo getContextInfo()
@@ -125,10 +102,7 @@ public final class ContextHandler implements Comparable<ContextHandler>
                     holder.servletContext = new PerBundleServletContextImpl(bundle,
                             this.sharedContext,
                             holder.servletContextHelper,
-                            this.sessionListener,
-                            this.sessionAttributeListener,
-                            this.requestListener,
-                            this.requestAttributeListener);
+                            this.eventListener);
                     this.perBundleContextMap.put(key, holder);
                 }
                 // TODO - check null for so
@@ -156,14 +130,7 @@ public final class ContextHandler implements Comparable<ContextHandler>
                         final ServiceObjects<ServletContextHelper> so = bundle.getBundleContext().getServiceObjects(this.info.getServiceReference());
                         if ( so != null )
                         {
-                            try
-                            {
-                                so.ungetService(holder.servletContextHelper);
-                            }
-                            catch ( final IllegalArgumentException iae)
-                            {
-                                // this seems to be thrown sometimes on shutdown; we have to evaluate
-                            }
+                            so.ungetService(holder.servletContextHelper);
                         }
                     }
                 }

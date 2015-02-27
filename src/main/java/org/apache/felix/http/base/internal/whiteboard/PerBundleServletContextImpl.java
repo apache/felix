@@ -58,26 +58,17 @@ public class PerBundleServletContextImpl implements ExtServletContext {
     private final Bundle bundle;
     private final ServletContext delegatee;
     private final ServletContextHelper contextHelper;
-    private final HttpSessionListener sessionListener;
-    private final HttpSessionAttributeListener sessionAttributeListener;
-    private final ServletRequestListener requestListener;
-    private final ServletRequestAttributeListener requestAttributeListener;
+    private final PerContextEventListener eventListener;
 
     public PerBundleServletContextImpl(final Bundle bundle,
             final ServletContext sharedContext,
             final ServletContextHelper delegatee,
-            final HttpSessionListener sessionListener,
-            final HttpSessionAttributeListener sessionAttributeListener,
-            final ServletRequestListener requestListener,
-            final ServletRequestAttributeListener requestAttributeListener)
+            final PerContextEventListener eventListener)
     {
         this.bundle = bundle;
         this.delegatee = sharedContext;
         this.contextHelper = delegatee;
-        this.sessionListener = sessionListener;
-        this.sessionAttributeListener = sessionAttributeListener;
-        this.requestListener = requestListener;
-        this.requestAttributeListener = requestAttributeListener;
+        this.eventListener = eventListener;
     }
 
     @Override
@@ -91,25 +82,25 @@ public class PerBundleServletContextImpl implements ExtServletContext {
     @Override
     public HttpSessionListener getHttpSessionListener()
     {
-        return this.sessionListener;
+        return this.eventListener;
     }
 
     @Override
     public HttpSessionAttributeListener getHttpSessionAttributeListener()
     {
-        return this.sessionAttributeListener;
+        return this.eventListener;
     }
 
     @Override
     public ServletRequestListener getServletRequestListener()
     {
-        return this.requestListener;
+        return this.eventListener;
     }
 
     @Override
     public ServletRequestAttributeListener getServletRequestAttributeListener()
     {
-        return this.requestAttributeListener;
+        return this.eventListener;
     }
 
     @Override
