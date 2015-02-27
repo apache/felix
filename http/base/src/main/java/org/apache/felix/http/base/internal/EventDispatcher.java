@@ -21,6 +21,7 @@ package org.apache.felix.http.base.internal;
 import javax.servlet.http.HttpSessionAttributeListener;
 import javax.servlet.http.HttpSessionBindingEvent;
 import javax.servlet.http.HttpSessionEvent;
+import javax.servlet.http.HttpSessionIdListener;
 import javax.servlet.http.HttpSessionListener;
 
 /**
@@ -28,8 +29,12 @@ import javax.servlet.http.HttpSessionListener;
  * container (embedded Jetty or container in which the framework is running
  * in bridged mode) to any {@link HttpSessionAttributeListener} or
  * {@link HttpSessionListener} services.
+ *
+ * TODO - only HttpSessionIdListener and HttpSessionListener should be
+ *        required; HttpSessionListener only for getting notified of
+ *        terminated session.
  */
-public class EventDispatcher implements HttpSessionAttributeListener, HttpSessionListener
+public class EventDispatcher implements HttpSessionAttributeListener, HttpSessionListener, HttpSessionIdListener
 {
 
     private final HttpServiceController controller;
@@ -39,28 +44,38 @@ public class EventDispatcher implements HttpSessionAttributeListener, HttpSessio
         this.controller = controller;
     }
 
-    public void sessionCreated(HttpSessionEvent se)
+    @Override
+    public void sessionCreated(final HttpSessionEvent se)
     {
         controller.getSessionListener().sessionCreated(se);
     }
 
-    public void sessionDestroyed(HttpSessionEvent se)
+    @Override
+    public void sessionDestroyed(final HttpSessionEvent se)
     {
         controller.getSessionListener().sessionDestroyed(se);
     }
 
-    public void attributeAdded(HttpSessionBindingEvent se)
+    @Override
+    public void attributeAdded(final HttpSessionBindingEvent se)
     {
         controller.getSessionAttributeListener().attributeAdded(se);
     }
 
-    public void attributeRemoved(HttpSessionBindingEvent se)
+    @Override
+    public void attributeRemoved(final HttpSessionBindingEvent se)
     {
         controller.getSessionAttributeListener().attributeRemoved(se);
     }
 
-    public void attributeReplaced(HttpSessionBindingEvent se)
+    @Override
+    public void attributeReplaced(final HttpSessionBindingEvent se)
     {
         controller.getSessionAttributeListener().attributeReplaced(se);
+    }
+
+    @Override
+    public void sessionIdChanged(final HttpSessionEvent event, final String oldSessionId) {
+        controller.getSessionIdListener().sessionIdChanged(event, oldSessionId);
     }
 }
