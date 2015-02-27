@@ -737,6 +737,9 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
             SortedMap categoryMap = sortMenuCategoryMap( menuMap, appRoot );
             pw.println( "<ul id=\"navmenu\">" );
             renderSubmenu( categoryMap, appRoot, pw, 0 );
+            pw.println("<li class=\"logoutButton navMenuItem-0\">");
+            pw.println("<a href=\"" + appRoot + "/logout\">${logout}</a>");
+            pw.println("</li>");
             pw.println( "</ul>" );
         }
     }

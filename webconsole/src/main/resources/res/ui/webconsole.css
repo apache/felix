@@ -189,8 +189,11 @@ ul.icons li {
 	list-style: none
 }
 /* language selection element */
-#langSelect { position: absolute;	top: 5px; right: 5px }
+#langSelect { position: absolute; top: 5px; right: 5px }
 #langSelect img   { display: block; padding: 2px 0 }
+/* logout element */
+.logoutButton { float: right; text-decoration: none }
+
 
 .filterBox      { float: left; margin-left: 1em }
 .servicesFilter { width: 400px; }
