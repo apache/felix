@@ -127,6 +127,9 @@ public final class JettyConfig
     /** Felix specific property to configure the excluded protocols */
     public static final String FELIX_JETTY_EXCLUDED_PROTOCOLS = "org.apache.felix.https.jetty.protocols.excluded";
 
+    /** Felix specific property to configure the cookie httpOnly flag */
+    public static final String FELIX_JETTY_COOKIE_HTTP_ONLY = "org.apache.felix.https.jetty.cookie.httpOnly";
+
     private static String validateContextPath(String ctxPath)
     {
         // undefined, empty, or root context path

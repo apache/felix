@@ -447,6 +447,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         cookieConfig.setDomain(this.config.getProperty(SessionManager.__SessionDomainProperty, SessionManager.__DefaultSessionDomain));
         cookieConfig.setPath(this.config.getProperty(SessionManager.__SessionPathProperty, context.getContextPath()));
         cookieConfig.setMaxAge(this.config.getIntProperty(SessionManager.__MaxAgeProperty, -1));
+        cookieConfig.setHttpOnly(this.config.getBooleanProperty(JettyConfig.FELIX_JETTY_COOKIE_HTTP_ONLY, false));
     }
 
     private boolean startConnector(Connector connector)
