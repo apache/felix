@@ -36,21 +36,12 @@ Building and testing Apache Felix Dependency Manager
 
 - Install java7.
 
-Every Dependency Manager modules are java7 compatible, except the org.apache.felix.benchmark module, which requires java8.
-If you want to play with the benchmark bundle, then install java8.
-
 - Compile Dependendency Manager annotations bndtools plugin:
   
 $ ./gradlew org.apache.felix.dependencymanager.annotation:jar
 
 - Compile all other bundles:
-
-if you have installed java7, compile everything, except the benchmark module:
  
-$ ./gradlew jar -x org.apache.felix.dependencymanager.benchmark:jar
-
-else you can compile every modules:
-
 $ ./gradlew jar
 
 - run junit tests:
@@ -63,18 +54,20 @@ $ ./gradlew check
 
 ** Compilation Using Eclipse:
 
-- Install either Eclipse Kepler SR2 or Eclipse Luna:
-if using Kepler SR2, then configure two JREs for both java7 and java8:
+- Install either Eclipse Kepler SR2 or Eclipse Luna and configure two JREs for both java7 and java8:
 
 * go to Windows -> Preferences -> Java -> Installed JREs
-* Then add two JREs: one for java7, and the other for java8. 
+* Then add two JREs: one for java7, and the other for java8.
 * Declare the java7 JRE as the default one.
 
-- Install BndTools 2.4.1 + subclipse for svn
-- Open BndTools perpective
+Java8 is only used to build and run the org.apache.felix.dependencymanager.benchmark module, which is used to perform
+DM performance tests within eclipse bndtools.
+
+- Install BndTools 2.4.1, and a subversion plugin for eclipse.
+- Open BndTools perspective
 - Import Dependency Manager into Eclipse, and compile everything
 - if it's the first time you import the project into eclipse, it may happen that some modules that requires the 
-Dependency Manager Annotations bnd plugin does not compile: It's a know issue. To work around, restart eclipse, then 
+Dependency Manager Annotations bnd plugin don't compile: It's a know issue. To work around, restart eclipse and 
 rebuild every modules. 
 - Click on org.apache.felix.dependencymanager project and run it as "JUnit test".
 - Click on org.apache.felix.dependencymanager.shell and run it as "JUnit test"

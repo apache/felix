@@ -100,10 +100,13 @@ if (projectNames.remove('')) {
 
 /* Add each project and its dependencies to the graph */
 projectNames.each { projectName ->
-  include projectName
-  def project = getBndProject(workspace, projectName)
-  project?.dependson.each {
-    include it.name
+  // Don't build the org.apache.felix.dependencymanager.benchmark, which requires java8 (build the benchmark bundle only makes sense within eclipse
+  if (! projectName.equals("org.apache.felix.dependencymanager.benchmark")) {
+    include projectName
+    def project = getBndProject(workspace, projectName)
+    project?.dependson.each {
+      include it.name
+    }
   }
 }
 

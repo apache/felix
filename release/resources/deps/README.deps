@@ -21,7 +21,6 @@ Welcome to Apache Felix Dependency Manager
 Apache Felix Dependency Manager is a versatile java API, allowing to declaratively 
 register, acquire, and manage dynamic OSGi services.
 
-This archive contains all the binary dependencies that are needed to build
-Apache Felix Dependency Manager. 
-To build the source, you have to unfold this archive on the same directory where you have unfolded the org.apache.felix.dependencymanager-r<n>-src.zip archive.
+Before compiling a released version of Dependency Manager, you have to unfold the org.apache.felix.dependencymanager-r<n>-deps.zip on the same 
+directory where you have unfolded the org.apache.felix.dependencymanager-r<n>-src.zip archive.
 

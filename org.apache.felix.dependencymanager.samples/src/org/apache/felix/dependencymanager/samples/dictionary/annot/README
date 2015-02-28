@@ -16,7 +16,7 @@
  */
 
 This sample shows a "SpellChecker" application (using DM Annotations) which provides a
-"dictionary:spellcheck" GOGO shell command. The GOGO "dictionary:spellcheck" command accepts a
+"dictionary.annotation:spellcheck" GOGO shell command. The GOGO "dictionary.annotation:spellcheck" command accepts a
 string as parameter, which is checked for proper existence. The SpellChecker class has a
 required/multiple (1..N) dependency over every available "DictionaryService" services, which are
 internally used by the SpellChecker command, when checking word existence.

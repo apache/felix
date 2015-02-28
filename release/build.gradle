@@ -87,7 +87,7 @@ task makeStaging << {
 		new File('.').eachFile { 
 	    	if(new File(it, 'bnd.bnd').exists()) {	    		
     			def bndProject = workspace.getProject(it.name)
-    			if (! bndProject.isNoBundles()) {
+    			if (! bndProject.isNoBundles() && ! bndProject.getName().endsWith(".benchmark")) {
     		    	zipfileset(dir: "../${bndProject.name}", prefix: topdir+"-src/${bndProject.name}",
     			       		   includes: "*.gradle,.project,.classpath,.settings/**,src/**,test/**,*.bnd,*.bndrun,run-*/conf/**,resources/**")
     			}
@@ -129,7 +129,7 @@ task makeStaging << {
 // Sign staging directory 
 task signStaging << {
     description = 'Signs the local staging distribution.'
-    fileTree("staging").visit { FileVisitDetails details -> 
+	fileTree("staging").visit { FileVisitDetails details -> 
 		logger.lifecycle("    Signing " + details.file.path)
 		ant.exec(executable: 'gpg', dir: 'staging') { 
 	    	ant.arg(line: '--armor')
