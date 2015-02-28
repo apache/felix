@@ -29,7 +29,8 @@ public class CompositionManager {
     private ProviderParticipant1 m_participant1;
     private ProviderParticipant2 m_participant2;
     private ProviderImpl m_providerImpl;
-    private Dictionary<String, String> m_conf;
+    @SuppressWarnings("unused")
+	private Dictionary<String, String> m_conf;
 
     public void updated(Dictionary<String, String> conf) throws Exception {
         // validate configuration and throw an exception if the properties are invalid
