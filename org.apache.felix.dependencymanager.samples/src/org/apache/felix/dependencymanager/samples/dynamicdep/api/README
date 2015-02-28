@@ -1,0 +1,13 @@
+This sample shows how to define a dynamic dependency from a Component's init method.
+
+When you declare a Component:
+
+- the configuration (if any) is first injected (updated callback).
+- then all required dependencies are injected.
+- then the init(Component c) method is invoked; And from there you are then able to add dynamic dependencies using any previously
+injected services (either configuration injected in update method, or other injected services declared from the Activator).
+- then the start callback is invoked when all required dependencies declared from the init method are injected.
+
+In this sample, the "DynamicDependency" Components defines in its "init" method a dynamic dependency on a Storage service. 
+But it first loads the "storage type" and "storage required" dependency informations from a Configuration PID 
+(see the "Dynamic Dependency Configuration (api)" PID from webconsole), which is defined using Bnd MetaType Annotations.

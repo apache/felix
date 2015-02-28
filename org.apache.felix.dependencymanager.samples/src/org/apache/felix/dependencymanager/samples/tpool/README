@@ -1,0 +1,13 @@
+The Activator you will find in this bundle registers a ComponentExecutorFactory in the OSGi service
+registry to enable parallelism. DependencyManager core will use the Executor returned by the
+ComponentExecutorFactory in order to handle components dependencies/lifecycle callbacks
+concurrently.
+
+Important note: since we are using the DM API to declare our threadpool, we have to disable
+parallelism for our "org.apache.felix.dependencymanager.samples.tpool.ThreadPool" component. 
+To do so, we define the following OSGi service property (see the bnd.bnd configuration file):
+
+->
+
+org.apache.felix.dependencymanager.parallelism=!org.apache.felix.dependencymanager.samples.tpool,*
+

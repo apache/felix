@@ -1,0 +1,16 @@
+This sample shows a "SpellChecker" application (using DM API) which provides a
+"dictionary:spellcheck" GOGO shell command. The GOGO "dictionary:spellcheck" command accepts a
+string as parameter, which is checked for proper existence. The SpellChecker class has a
+required/multiple (1..N) dependency over every available "DictionaryService" services, which are
+internally used by the SpellChecker command, when checking word existence.
+
+A DictionaryService is defined using a FactoryConfigurationAdapterService , allowing to instantiate
+many "DictionaryService" instances when some configurations are added to the
+"Spell Checker Configuration (api)" factory pid from web
+console. The factory pid configuration metatypes are defined using the bnd "metatype" annotations
+(see DictionaryConfiguration.java).
+
+The DictionaryService is decorated with a DictionaryAspect, which you can instantiate by adding a
+configuration to the "Spell Checker Aspect Dictionary (api)" pid from web console. The
+aspect configuration metatype is also declared using the bnd metatype annotations (see
+DictionaryAspectConfiguration.java). 

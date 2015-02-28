@@ -26,7 +26,7 @@ Please refer to release/resources/src/README
 Building and testing Apache Felix Dependency Manager
 ====================================================
 
-The build instructions can be found from release/resources/src/README
+The build instructions can be found from release/resources/src/README.src
 
 Getting Started
 ===============
@@ -36,9 +36,8 @@ getting started guide for users:
 
   http://felix.apache.org/documentation/subprojects/apache-felix-dependency-manager.html
 
-Many examples are also available from the dependency manager examples:
-
-  http://svn.apache.org/repos/asf/felix/trunk/examples/dependencymanager-samples
+Many examples are also available from the dependency manager examples, in the org.apache.felix.dependencymanager.samples module
+See org.apache.felix.dependencymanager.samples/README.samples
 
 Many thanks for using Apache Felix Dependency Manager.
 

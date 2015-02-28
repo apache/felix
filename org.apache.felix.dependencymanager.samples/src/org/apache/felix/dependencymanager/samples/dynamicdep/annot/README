@@ -1,0 +1,16 @@
+This sample shows how to define a dynamic dependency using annotations.
+
+When you declare a Component:
+
+- the configuration (if any) is first injected (updated callback).
+- then all required dependencies are injected, except "named" dependencies whose required flag and filter can be configured
+dynamically from the init method.
+- then the init method (annotated with @Init) is invoked; And from there you are then able return a Map that will be used
+to configure the required flag and the filter of all named dependencies.
+- then the start callback (annotated with @Start) is invoked when all required dependencies are injected, including named 
+dependencies that have been configured from the init method.
+
+In this sample, the "DynamicDependency" Components configures in its "init" method the dependency having a "storage" name. 
+the dependency "required" flag and filter string are loaded from a Configuration PID 
+(see the "Dynamic Dependency Configuration (annotation)" PID, from webconsole), which is defined using 
+Bnd MetaType Annotations.

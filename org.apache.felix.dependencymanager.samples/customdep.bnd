@@ -1,0 +1,3 @@
+Private-Package:  \
+	org.apache.felix.dependencymanager.samples.customdep
+Bundle-Activator: org.apache.felix.dependencymanager.samples.customdep.Activator

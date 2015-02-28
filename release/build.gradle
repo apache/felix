@@ -75,7 +75,7 @@ Workspace workspace
 workspace = Workspace.getWorkspace(".")
 
 task makeStaging << {
-    description = 'Package the source and binary distributions.'
+    description = 'Packages the source and binary distributions.'
 
     // Package source and source bin dependencies distributions.
     logger.lifecycle("    Packaging source distributions.")
@@ -85,7 +85,7 @@ task makeStaging << {
 		zipfileset(dir: '..', prefix: topdir+"-src", includes: '*.gradle,*.properties')
 		zipfileset(dir: 'resources/src', prefix: topdir+"-src", includes: '*')
 		new File('.').eachFile { 
-	    	if(new File(it, 'bnd.bnd').exists()) {
+	    	if(new File(it, 'bnd.bnd').exists()) {	    		
     			def bndProject = workspace.getProject(it.name)
     			if (! bndProject.isNoBundles()) {
     		    	zipfileset(dir: "../${bndProject.name}", prefix: topdir+"-src/${bndProject.name}",
@@ -109,7 +109,8 @@ task makeStaging << {
     logger.lifecycle("    Packaging binary distribution.")    
     ant.zip(destfile: "staging/"+topdir+"-bin.zip") {
         ant.mappedresources() {
-        	ant.fileset(dir: '..', includes: '*/generated/*.jar', excludes: '*.itest/generated/*.jar')
+            // don't include itests, samples, and benchmark in the convenience binary release.
+        	ant.fileset(dir: '..', includes: '*/generated/*.jar', excludes: '*.itest/generated/*.jar,*.benchmark/generated/*.jar,*.samples/generated/*.jar')
             ant.chainedmapper() {
                 ant.flattenmapper()
                 ant.globmapper(from: '*', to: topdir+'-bin/*')
@@ -126,7 +127,8 @@ task makeStaging << {
 }
 
 // Sign staging directory 
-task signStaging << { 
+task signStaging << {
+    description = 'Signs the local staging distribution.'
     fileTree("staging").visit { FileVisitDetails details -> 
 		logger.lifecycle("    Signing " + details.file.path)
 		ant.exec(executable: 'gpg', dir: 'staging') { 
@@ -154,6 +156,7 @@ task signStaging << {
 
 // Moves the source and binary distributions to staging.
 task commitToStaging << {
+    description = 'Commits the local staging to the Apache svn staging repository.'
     getProject().exec { 
     	commandLine 'svn', 
 		'import', 'staging', svnStagingPath + "/org.apache.felix.dependencymanager-" + dmRelease + "/", 
@@ -162,7 +165,8 @@ task commitToStaging << {
 }
 
 // Promotes the staged distributions to release
-task promoteToRelease << { 
+task promoteToRelease << {
+    description = 'Moves the staging repository to the Apache release repository.'
     getProject().exec { 
     	commandLine 'svn',
 		'move', svnStagingPath+"/org.apache.felix.dependencymanager-" + dmRelease , svnReleasePath, 
@@ -171,7 +175,8 @@ task promoteToRelease << {
 }
 
 // Removes the staged distributions from staging
-task deleteFromStaging << { 
+task deleteFromStaging << {
+    description = 'Cancels the staged distribution from the Apache staging repository.'
     getProject().exec { 
     	commandLine 'svn',
 		'delete', svnStagingPath+"/org.apache.felix.dependencymanager-" + dmRelease + "/",
@@ -186,6 +191,7 @@ task clean(overwrite: true) << {
 }
 
 // Only clean the staging directory
-task cleanStaging << { 
+task cleanStaging << {
+    description = 'Clean the local staging directory.'
     new File("release/staging").deleteDir()
 }

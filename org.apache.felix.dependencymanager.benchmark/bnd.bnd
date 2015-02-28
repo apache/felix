@@ -1,0 +1,11 @@
+javac.source:          1.8
+javac.target:          1.8
+-buildpath:  \
+	org.apache.felix.dependencymanager;version=latest,\
+	osgi.core;version=4.2,\
+	osgi.cmpn;version=4.2
+
+-sub:  \
+	*.bnd
+Export-Package:  \
+	org.apache.felix.dm.benchmark.scenario.impl

@@ -1,0 +1,2 @@
+Private-Package:  \
+	org.apache.felix.dependencymanager.samples.dynamicdep.annot

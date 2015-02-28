@@ -26,7 +26,6 @@ Building and testing Apache Felix Dependency Manager
 
 ** Compilation Using gradle:
 
-- Install Jdk1.7
 - If necessary, configure your https proxy settings:
 
   export GRADLE_OPTS="-Dhttps.proxyHost=www.somehost.org -Dhttps.proxyPort=8080"
@@ -35,12 +34,23 @@ Building and testing Apache Felix Dependency Manager
   you also have to unfold the org.apache.felix.dependencymanager-r<n>-deps.zip on the same directory where you have unfolded the source archive.
   (no need to do this if you have checked out from the felix-trunk).
 
+- Install java7.
+
+Every Dependency Manager modules are java7 compatible, except the org.apache.felix.benchmark module, which requires java8.
+If you want to play with the benchmark bundle, then install java8.
+
 - Compile Dependendency Manager annotations bndtools plugin:
   
 $ ./gradlew org.apache.felix.dependencymanager.annotation:jar
 
-- Then compile all other bundles:
+- Compile all other bundles:
+
+if you have installed java7, compile everything, except the benchmark module:
  
+$ ./gradlew jar -x org.apache.felix.dependencymanager.benchmark:jar
+
+else you can compile every modules:
+
 $ ./gradlew jar
 
 - run junit tests:
@@ -53,10 +63,19 @@ $ ./gradlew check
 
 ** Compilation Using Eclipse:
 
-- Install either Eclipse Kepler SR2 or Eclipse Luna
-- Install BndTools 2.4.1
+- Install either Eclipse Kepler SR2 or Eclipse Luna:
+if using Kepler SR2, then configure two JREs for both java7 and java8:
+
+* go to Windows -> Preferences -> Java -> Installed JREs
+* Then add two JREs: one for java7, and the other for java8. 
+* Declare the java7 JRE as the default one.
+
+- Install BndTools 2.4.1 + subclipse for svn
 - Open BndTools perpective
 - Import Dependency Manager into Eclipse, and compile everything
+- if it's the first time you import the project into eclipse, it may happen that some modules that requires the 
+Dependency Manager Annotations bnd plugin does not compile: It's a know issue. To work around, restart eclipse, then 
+rebuild every modules. 
 - Click on org.apache.felix.dependencymanager project and run it as "JUnit test".
 - Click on org.apache.felix.dependencymanager.shell and run it as "JUnit test"
 - Click on org.apache.felix.dependencymanager.itest and run it as "Bnd OSGi Test Launcer (Junit)".
@@ -70,9 +89,8 @@ getting started guide for users:
 
   http://felix.apache.org/documentation/subprojects/apache-felix-dependency-manager.html
 
-Many examples are also available from the dependency manager examples:
-
-  http://svn.apache.org/repos/asf/felix/trunk/examples/dependencymanager-samples
+Many examples are also available from the dependency manager samples module.
+See ./org.apache.felix.dependencymanager.samples/README.samples
 
 Many thanks for using Apache Felix Dependency Manager.
 

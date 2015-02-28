@@ -1,0 +1,4 @@
+This directory contains an example of a custom dependency (PathDependency).
+This dependency tracks all created files in /tmp and injects them in the PathTracker.add(String path) method ...
+
+The PathDependendency is a low level DM example, but shows how to create any custom dependencies. 

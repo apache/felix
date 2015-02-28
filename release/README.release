@@ -32,10 +32,12 @@ svn co https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.dependen
 The next step is to build/test the software and create the release/staging/ directory (where the source/jars will be packaged):
 (replace r<n> by the actual release number, like "r1")
 
+(use a Java7 JDK)
+
 $ cd org.apache.felix.dependencymanager-r<n>
 $ ./gradlew rat 
 $ ./gradlew org.apache.felix.dependencymanager.annotation:jar
-$ ./gradlew jar
+$ ./gradlew jar -x org.apache.felix.dependencymanager.benchmark:jar
 $ ./gradlew test
 $ ./gradlew check
 

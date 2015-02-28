@@ -1,0 +1,2 @@
+This sample defines a component that is used to inject configuration into the Configuration Admin
+service, in order to configure other components declared in the various samples.
