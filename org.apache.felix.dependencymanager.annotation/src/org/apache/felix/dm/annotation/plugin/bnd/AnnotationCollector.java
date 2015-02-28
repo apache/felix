@@ -794,8 +794,6 @@ public class AnnotationCollector extends ClassDataCollector
         }
         writer.put(EntryParam.factoryPid, factoryPid);
 
-        writer.putString(annotation, EntryParam.factoryPid, m_className);
-
         // Parse updated callback
         writer.putString(annotation, EntryParam.updated, "updated");
 
