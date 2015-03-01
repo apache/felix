@@ -1,0 +1,14 @@
+# Migrating from earlier versions
+
+DependencyManager 4.0 has some API changes that need to be taken into account when migrating from DependencyManager 3. 
+
+* A dependency can no longer be shared accross components. 
+* You no longer have to call setInstanceBound() when adding a dependency from within the init() method of a component. Therefore the setInstanceBound() method has been removed from all Dependency interfaces.
+* in the Dependency interface, the following method have been removed: isInstanceBound, invokeAdded, invokeRemoved, createCopy.
+* In the Component interface, the "Object Component.getService()" method has been replaced by the "<T> T getInstance()" method.
+* In the Component interface, the "void addStateListener(ComponentStateListener listener) method" has been replaced by the "add(ComponentStateListener listener)" method.
+* In the Component interface, the "start", "stop", "getDependencies" methods have been removed.
+* In the Component interface and in the DependencyManager class, the createTemporalServiceDependency() method is now taking a timeout parameter: createTemporalServiceDependency(long timeout).
+* The ComponentStateListener interface has changed: it is now providing a single "changed(Component c, ComponentState state)" method.
+* The DependencyManager 4 Shell commands are no longer available for framework specific shell implementations, and support the gogo shell only.
+* The TemporalServiceDependency interface has been removed.

@@ -1,0 +1,30 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+The Activator you will find in this bundle registers a ComponentExecutorFactory in the OSGi service
+registry to enable parallelism. DependencyManager core will use the Executor returned by the
+ComponentExecutorFactory in order to handle components dependencies/lifecycle callbacks
+concurrently.
+
+Important note: since we are using the DM API to declare our threadpool, we have to disable
+parallelism for our "org.apache.felix.dependencymanager.samples.tpool.ThreadPool" component. 
+To do so, we define the following OSGi service property (see the bnd.bnd configuration file):
+
+->
+
+org.apache.felix.dependencymanager.parallelism=!org.apache.felix.dependencymanager.samples.tpool,*
+

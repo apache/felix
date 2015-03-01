@@ -1,0 +1,73 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+########################
+## BND BUILD SETTINGS ##
+########################
+
+
+## Global defaults are loaded from the bnd library (as shown below), place your
+## specific settings here. Additional settings are inherited from ext/*.bnd and
+## they will be overridden by anything you specify in this file.
+
+## General Options
+#project.dependson:     ${p-dependson;:}
+#project.bootclasspath: ${p-bootclasspath;:}
+#project.buildpath:     ${p-buildpath;:}
+#project.sourcepath:    ${p-sourcepath;:}
+#project.allsourcepath: ${p-allsourcepath;:}
+#project.output:        ${p-output}
+#project.testpath:      ${p-testpath;:}
+
+#-verbose:              false
+#project:               ${basedir}
+#src:                   src
+#bin:                   bin
+#testsrc:               test
+#testbin:               bin_test
+#target-dir:            generated
+#target:                ${project}/${target-dir}
+#build:                 ${workspace}/cnf
+#p:                     ${basename;${project}}
+#project.name:          ${p}
+#plugin-dir:            ${build}/plugins
+
+## Java Compiler Options
+#java:                  java
+#javac:                 javac
+javac.source:          1.7
+javac.target:          1.7
+#javac.debug:           on
+
+## Bnd Options
+-sources:               false
+#-sourcepath:           ${project}/src
+
+
+## Properties from ext/*.bnd can be referenced in order to extend them. For
+## example, to add one additional plugin to the list defined in
+## ext/repositories.bnd:
+# -plugin: ${ext.repositories.-plugin}, org.example.MyPlugin
+
+
+## To enable baselining, uncomment the following lines:
+-baseline: *
+
+## If you use git, you might want to uncomment the following lines:
+# Git-Descriptor:       ${system-allow-fail;git describe --dirty --always}
+# Git-SHA:              ${system-allow-fail;git rev-list -1 HEAD}
+# -diffignore:          Git-Descriptor,Git-SHA

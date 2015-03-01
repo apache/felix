@@ -1,0 +1,44 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Welcome to Apache Felix Dependency Manager
+==========================================
+
+Apache Felix Dependency Manager is a versatile java API, allowing to declaratively
+register, acquire, and manage dynamic OSGi services.
+
+Please refer to release/resources/src/README
+
+Building and testing Apache Felix Dependency Manager
+====================================================
+
+The build instructions can be found from release/resources/src/README.src
+
+Getting Started
+===============
+
+To start using Apache Felix Dependency Manager, please go to our website and read the
+getting started guide for users:
+
+  http://felix.apache.org/documentation/subprojects/apache-felix-dependency-manager.html
+
+Many examples are also available from the dependency manager examples, in the org.apache.felix.dependencymanager.samples module
+See org.apache.felix.dependencymanager.samples/README.samples
+
+Many thanks for using Apache Felix Dependency Manager.
+
+The Felix Team

@@ -1,0 +1,90 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Welcome to Apache Felix Dependency Manager
+==========================================
+
+Apache Felix Dependency Manager is a versatile java API, allowing to declaratively
+register, acquire, and manage dynamic OSGi services.
+
+Building and testing Apache Felix Dependency Manager
+====================================================
+
+** Compilation Using gradle:
+
+- If necessary, configure your https proxy settings:
+
+  export GRADLE_OPTS="-Dhttps.proxyHost=www.somehost.org -Dhttps.proxyPort=8080"
+  
+- If you are building a released org.apache.felix.dependencymanager-r<n>-src.zip artifact, then 
+  you also have to unfold the org.apache.felix.dependencymanager-r<n>-deps.zip on the same directory where you have unfolded the source archive.
+  (no need to do this if you have checked out from the felix-trunk).
+
+- Install java7.
+
+- Compile Dependendency Manager annotations bndtools plugin:
+  
+$ ./gradlew org.apache.felix.dependencymanager.annotation:jar
+
+- Compile all other bundles:
+ 
+$ ./gradlew jar
+
+- run junit tests:
+
+$ ./gradlew test
+
+- run integration tests:
+
+$ ./gradlew check
+
+** Compilation Using Eclipse:
+
+- Install either Eclipse Kepler SR2 or Eclipse Luna and configure two JREs for both java7 and java8:
+
+* go to Windows -> Preferences -> Java -> Installed JREs
+* Then add two JREs: one for java7, and the other for java8.
+* Declare the java7 JRE as the default one.
+
+Java8 is only used to build and run the org.apache.felix.dependencymanager.benchmark module, which is used to perform
+DM performance tests within eclipse bndtools.
+
+- Install BndTools 2.4.1, and a subversion plugin for eclipse.
+- Open BndTools perspective
+- Import Dependency Manager into Eclipse, and compile everything
+- if it's the first time you import the project into eclipse, it may happen that some modules that requires the 
+Dependency Manager Annotations bnd plugin don't compile: It's a know issue. To work around, restart eclipse and 
+rebuild every modules. 
+- Click on org.apache.felix.dependencymanager project and run it as "JUnit test".
+- Click on org.apache.felix.dependencymanager.shell and run it as "JUnit test"
+- Click on org.apache.felix.dependencymanager.itest and run it as "Bnd OSGi Test Launcer (Junit)".
+- Click on org.apache.felix.dependencymanager.runtime.itest and run it as ""Bnd OSGi Test Launcer (Junit)".
+
+Getting Started
+===============
+
+To start using Apache Felix Dependency Manager, please go to our website and read the
+getting started guide for users:
+
+  http://felix.apache.org/documentation/subprojects/apache-felix-dependency-manager.html
+
+Many examples are also available from the dependency manager samples module.
+See ./org.apache.felix.dependencymanager.samples/README.samples
+
+Many thanks for using Apache Felix Dependency Manager.
+
+The Felix Team
