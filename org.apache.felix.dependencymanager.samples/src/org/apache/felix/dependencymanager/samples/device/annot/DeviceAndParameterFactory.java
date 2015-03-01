@@ -28,7 +28,8 @@ import org.apache.felix.dm.runtime.api.ComponentFactory;
 import org.osgi.service.log.LogService;
 
 /**
- * Component used to instantiate Device and DeviceParameter services, using DM annotation "factory set".
+ * Component used to instantiate Device and DeviceParameter services, using DM component factory annotation.
+ * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @Component

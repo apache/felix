@@ -18,4 +18,17 @@
 This directory contains an example of a custom dependency (PathDependency).
 This dependency tracks all created files in /tmp and injects them in the PathTracker.add(String path) method ...
 
-The PathDependendency is a low level DM example, but shows how to create any custom dependencies. 
+The PathDependendency is a low level DM example, but shows how to create any custom dependencies.
+
+To test this sample, start the samples under bndtools, then type:
+
+   g! log info|grep customdep
+
+Then create a "test" file under /tmp:
+
+   $ echo "test" > /tmp/test
+
+Then redisplay logs (your Tracker component has normally been injected with the added file and has been started):
+
+   g! log info|grep customdep
+

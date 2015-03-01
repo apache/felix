@@ -23,6 +23,8 @@ import org.apache.felix.dm.benchmark.scenario.Track;
 
 /**
  * One single music.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class TrackImpl implements Track {
     final ScenarioController m_controller;

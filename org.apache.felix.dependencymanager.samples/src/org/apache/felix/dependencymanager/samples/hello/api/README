@@ -16,6 +16,8 @@
  */
 
 This sample provides a DM Activator declaring one service consumer and a service provider. The
-ServiceConsumer is also depending on a configuration pid  (see
-org.apache.felix.dependencymanager.samples.conf.Configurator).
+ServiceConsumer is also depending on a configuration pid  (see org.apache.felix.dependencymanager.samples.conf.Configurator).
+To see logs, just type this under gogo shell:
+
+g! log info|grep hello.annot
 

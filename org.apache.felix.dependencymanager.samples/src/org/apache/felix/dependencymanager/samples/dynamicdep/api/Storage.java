@@ -20,6 +20,9 @@ package org.apache.felix.dependencymanager.samples.dynamicdep.api;
 
 import java.io.Serializable;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public interface Storage {
 	Serializable get(String key);
 	void store(String key, Serializable data);

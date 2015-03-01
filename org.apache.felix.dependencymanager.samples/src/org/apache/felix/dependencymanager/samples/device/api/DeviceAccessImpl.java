@@ -23,6 +23,9 @@ import java.util.Hashtable;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class DeviceAccessImpl implements DeviceAccess {
     volatile Device device;
     volatile DeviceParameter deviceParameter;

@@ -23,6 +23,9 @@ import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class Activator extends DependencyActivatorBase {    
     PathDependency createPathDependency(String path) {
         return new PathDependencyImpl(path);
@@ -33,6 +36,6 @@ public class Activator extends DependencyActivatorBase {
         m.add(createComponent()
             .setImplementation(PathTracker.class)
             .add(createServiceDependency().setService(LogService.class).setRequired(true))
-            .add(createPathDependency("/tmp").setCallbacks("add", "change", "remove").setRequired(true)));
+            .add(createPathDependency("/tmp").setCallbacks("add", "remove").setRequired(true)));
     }
 }

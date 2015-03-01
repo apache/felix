@@ -26,6 +26,8 @@ import org.osgi.framework.BundleContext;
 /**
  * Activator for a scenario based on Dependency Manager 4.0
  * We'll create many Artists, each one is depending on many Albums, and each Album depends on many Tracks.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class Activator extends DependencyActivatorBase {
     @Override

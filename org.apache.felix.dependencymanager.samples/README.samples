@@ -31,15 +31,5 @@ To see a log for a given sample (for example org.apache.felix.dependencymanager.
 
 For more informations on each sample, please refer to each README files in the sample source directories:
 
-  ./src/org/apache/felix/dependencymanager/samples/composite/README
-  ./src/org/apache/felix/dependencymanager/samples/tpool/README
-  ./src/org/apache/felix/dependencymanager/samples/customdep/README
-  ./src/org/apache/felix/dependencymanager/samples/device/api/README
-  ./src/org/apache/felix/dependencymanager/samples/device/annot/README
-  ./src/org/apache/felix/dependencymanager/samples/hello/api/README
-  ./src/org/apache/felix/dependencymanager/samples/hello/annot/README
-  ./src/org/apache/felix/dependencymanager/samples/conf/README
-  ./src/org/apache/felix/dependencymanager/samples/compositefactory/README
-  ./src/org/apache/felix/dependencymanager/samples/dictionary/api/README
-  ./src/org/apache/felix/dependencymanager/samples/dictionary/annot/README
+  ./src/org/apache/felix/dependencymanager/samples/*/README
 

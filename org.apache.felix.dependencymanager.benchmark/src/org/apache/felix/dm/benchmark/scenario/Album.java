@@ -22,6 +22,8 @@ import java.util.List;
 
 /**
  * A single release of musics, comprising some music tracks.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public interface Album {
     /**

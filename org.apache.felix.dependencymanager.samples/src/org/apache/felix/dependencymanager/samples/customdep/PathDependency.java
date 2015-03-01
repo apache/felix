@@ -24,8 +24,10 @@ import org.apache.felix.dm.Dependency;
  * A custom Dependency Manager Path Dependency that can track a path directory.
  * When a file is added or removed from the path dir, then the component is called
  * in the corresponding add/remove callback.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public interface PathDependency extends Dependency {
     PathDependency setRequired(boolean required);
-    PathDependency setCallbacks(String add, String change, String remove);
+    PathDependency setCallbacks(String add, String remove);
 }

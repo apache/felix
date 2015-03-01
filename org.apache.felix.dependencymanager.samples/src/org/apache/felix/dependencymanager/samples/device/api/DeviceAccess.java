@@ -18,6 +18,11 @@
  */
 package org.apache.felix.dependencymanager.samples.device.api;
 
+/**
+ * Provides unified access to a pair of Device/DeviceParameter services having the same device ID.
+
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public interface DeviceAccess {
     Device getDevice();
 

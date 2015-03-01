@@ -22,6 +22,9 @@ import java.util.Map;
 
 import org.osgi.service.log.LogService;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class DeviceAccessConsumer {
     volatile LogService log;
 

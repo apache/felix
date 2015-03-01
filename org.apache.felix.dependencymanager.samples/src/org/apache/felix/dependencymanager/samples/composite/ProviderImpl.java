@@ -26,6 +26,8 @@ import org.osgi.service.log.LogService;
  * This is the main implementation for our "Provider" service.
  * This service is using a composition of two participants, which are used to provide the service
  * (ProviderParticipant1, and ProviderParticipant2).
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ProviderImpl implements Provider {
     private final ProviderParticipant1 m_participant1 = new ProviderParticipant1();

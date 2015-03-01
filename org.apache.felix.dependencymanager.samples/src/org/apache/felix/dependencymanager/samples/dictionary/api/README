@@ -31,3 +31,11 @@ The DictionaryService is decorated with a DictionaryAspect, which you can instan
 configuration to the "Spell Checker Aspect Dictionary (api)" pid from web console. The
 aspect configuration metatype is also declared using the bnd metatype annotations (see
 DictionaryAspectConfiguration.java). 
+
+Before running this sample, go to webconsole, and add some words in the Spell Checker Configuration (api) factory PID, and
+in the Spell Checker Aspect Dictionary (api) PID.
+
+Then go to gogo shell, and type dm help. You will normally see the dictionary:spellcheck command.
+Type dictionary:spellcheck <some words configured either in the spell checker configuration, or in the spell checker aspect configuration, 
+and the dictionary will check for proper word existance in the configuration.
+

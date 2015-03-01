@@ -18,6 +18,9 @@
  */
 package org.apache.felix.dependencymanager.samples.device.api;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class DeviceParameterImpl implements DeviceParameter {
     final int id;
 

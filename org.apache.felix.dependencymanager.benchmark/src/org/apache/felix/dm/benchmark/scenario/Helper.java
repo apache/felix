@@ -24,6 +24,8 @@ import java.util.function.Supplier;
 
 /**
  * Helper class containing misc functions, and constants.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class Helper {
     /**

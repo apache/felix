@@ -21,3 +21,7 @@ service. Here, we define a "Provider" service, which is implemented by three obj
 ProviderImpl, ProviderParticipant1, ProviderParticipant2.
 
 Dependencies are injected in all objects being part of the composition.
+
+To see logs, type this command under the gogo shell:
+
+g! log info|grep compositefactory

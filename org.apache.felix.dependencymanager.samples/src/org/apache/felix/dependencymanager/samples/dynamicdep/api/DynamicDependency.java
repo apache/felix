@@ -35,6 +35,8 @@ import aQute.bnd.annotation.metatype.Configurable;
  * 
  * We the define a dynamic dependency on a Storage Service from our init method and we configure the dependency filter and
  * required from using the injected configuration in our updated method.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class DynamicDependency {
 
@@ -49,9 +51,11 @@ public class DynamicDependency {
 	 */
 	public void updated(Dictionary<String, Object> properties) throws ConfigurationException {
         // We use the bnd "Configurable" helper in order to get an implementation for our DictionaryConfiguration interface.
-		DynamicDependencyConfiguration cnf = Configurable.createConfigurable(DynamicDependencyConfiguration.class, properties);
-		storageType = cnf.storageType();
-		storageRequired = cnf.storageRequired();
+		if (properties != null) {
+		    DynamicDependencyConfiguration cnf = Configurable.createConfigurable(DynamicDependencyConfiguration.class, properties);
+		    storageType = cnf.storageType();
+		    storageRequired = cnf.storageRequired();
+		}
 	}
 
 	/**

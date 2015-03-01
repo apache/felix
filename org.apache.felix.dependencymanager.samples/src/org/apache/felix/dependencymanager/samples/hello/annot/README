@@ -18,4 +18,7 @@
 This sample provides an example with one service consumer and a service provider, both declared
 using DM Annotations. The ServiceConsumer is also depending on a configuration pid  (see
 org.apache.felix.dependencymanager.samples.conf.Configurator).
+To see logs, just type this under gogo shell:
+
+g! log info|grep hello.annot
 

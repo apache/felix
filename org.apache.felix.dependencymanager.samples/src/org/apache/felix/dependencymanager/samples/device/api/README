@@ -23,3 +23,8 @@ Then a "DeviceAccessImpl" adapter service is defined: it is used to "adapt" the 
 a "DeviceAccess" service, which provides the union of each pair of Device/DeviceParameter having the
 same device.id . The adapter also dynamically propagate the service properties of the adapted Device
 service.
+
+So see logs, just type this command under gogo shell:
+
+g! log info|grep device.api
+

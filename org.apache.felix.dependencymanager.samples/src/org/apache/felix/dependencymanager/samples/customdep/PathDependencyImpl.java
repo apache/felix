@@ -37,6 +37,7 @@ import org.apache.felix.dm.context.EventType;
  * Every DM custom dependency must implement the DependencyContext interface, but we extends the AbstractDependency 
  * which already implements most of the DependencyContext methods.
  * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class PathDependencyImpl extends AbstractDependency<PathDependencyImpl> implements PathDependency, Runnable {
     private final String m_path;
@@ -93,11 +94,6 @@ public class PathDependencyImpl extends AbstractDependency<PathDependencyImpl> i
                 invoke(m_add, events[0], getInstances());
             }
             break;
-        case CHANGED:
-            if (m_change != null) {
-                invoke(m_change, events[0], getInstances());
-            }
-            break;
         case REMOVED:
             if (m_remove != null) {
                 invoke(m_remove, events[0], getInstances());
@@ -128,6 +124,8 @@ public class PathDependencyImpl extends AbstractDependency<PathDependencyImpl> i
         return "path";
     }
 
+    // ---------- other methods -----------
+    
     /**
      * Our start method fires a thread and this is our run method, which is watching for a given directory path
      */    
@@ -153,10 +151,6 @@ public class PathDependencyImpl extends AbstractDependency<PathDependencyImpl> i
 					    // Later, the component will call our invokeAdd method in order to inject the file
 					    // in the component instance
 				        m_component.handleEvent(this, EventType.ADDED, new Event(event.context().toString()));
-					} else if (StandardWatchEventKinds.ENTRY_MODIFY == kind) {
-					    // Notify the component implementation context that a file has changed.
-                        // Later, the component will call our invokeChange method in order to call our component "change" callback
-                        m_component.handleEvent(this, EventType.CHANGED, new Event(event.context().toString()));
                     } else if (StandardWatchEventKinds.ENTRY_DELETE == kind) {
 					    // Notify the component implementation context that a file has been removed.
 					    // Later, the component will call our invokeRemove method in order to call our component "remove" callback

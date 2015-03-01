@@ -51,6 +51,8 @@ import org.osgi.framework.BundleContext;
 
 /**
  * The controller which perform microbenchmarks on some scenario bundles.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ScenarioControllerImpl implements Runnable, ScenarioController {
     /**

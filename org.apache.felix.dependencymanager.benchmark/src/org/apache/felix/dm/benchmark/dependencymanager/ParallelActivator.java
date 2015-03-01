@@ -28,6 +28,8 @@ import org.osgi.framework.BundleContext;
 
 /**
  * Parallel version of our default Activator.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ParallelActivator extends Activator {
     public void init(BundleContext context, DependencyManager mgr) throws Exception {

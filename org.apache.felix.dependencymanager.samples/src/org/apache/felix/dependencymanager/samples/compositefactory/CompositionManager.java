@@ -24,6 +24,8 @@ import java.util.Dictionary;
  * Pojo used to create all the objects composition used to implements the "Provider" Service.
  * The manager is using a Configuration injected by Config Admin, in order to configure the 
  * various objects being part of the "Provider" service implementation.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class CompositionManager {
     private ProviderParticipant1 m_participant1;

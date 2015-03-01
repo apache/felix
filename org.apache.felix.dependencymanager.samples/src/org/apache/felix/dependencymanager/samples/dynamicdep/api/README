@@ -28,3 +28,5 @@ injected services (either configuration injected in update method, or other inje
 In this sample, the "DynamicDependency" Components defines in its "init" method a dynamic dependency on a Storage service. 
 But it first loads the "storage type" and "storage required" dependency informations from a Configuration PID 
 (see the "Dynamic Dependency Configuration (api)" PID from webconsole), which is defined using Bnd MetaType Annotations.
+So, you have configure the "Dynamic Dependency Configuration (api)" PID from web console before playing with this sample; then
+just type "log info|grep dynamicdep.api" under the gogo shell.

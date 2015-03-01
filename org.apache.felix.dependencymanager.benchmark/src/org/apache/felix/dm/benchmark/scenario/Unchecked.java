@@ -24,6 +24,8 @@ import java.util.function.Function;
 /**
  * Helper functions used to work around the java.util.function.* functions, which don't support 
  * methods throwing a checked exception.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class Unchecked {
     /**

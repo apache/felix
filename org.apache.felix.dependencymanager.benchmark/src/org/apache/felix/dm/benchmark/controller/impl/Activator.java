@@ -25,6 +25,8 @@ import org.osgi.framework.BundleContext;
 /**
  * This activator triggers the scenario controller thread, which will do some microbenchmarks for a given
  * set of scenario bundles. The controller thread is fired only once the framework is started.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class Activator extends DependencyActivatorBase {
     @Override

@@ -20,6 +20,8 @@ package org.apache.felix.dm.benchmark.scenario;
 
 /**
  * A piece of music
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public interface Track {
     /**

@@ -25,6 +25,9 @@ import org.apache.felix.dm.annotation.api.Property;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.osgi.service.log.LogService;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 @Component(properties={@Property(name="type", value="mapdb")})
 public class MapDBStorage implements Storage {
 	@ServiceDependency

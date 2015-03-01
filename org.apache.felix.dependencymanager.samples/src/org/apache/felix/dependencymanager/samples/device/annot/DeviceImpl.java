@@ -22,6 +22,9 @@ import java.util.Dictionary;
 
 import org.apache.felix.dm.annotation.api.Component;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 @Component(factoryName = "Device", factoryConfigure = "configure")
 public class DeviceImpl implements Device {
     int id;

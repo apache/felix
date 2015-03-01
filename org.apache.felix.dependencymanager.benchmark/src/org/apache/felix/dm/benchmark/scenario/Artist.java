@@ -22,6 +22,8 @@ import java.util.List;
 
 /**
  * An individual who creates musical Albums
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public interface Artist {
     /**

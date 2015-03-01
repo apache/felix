@@ -28,6 +28,8 @@ import org.apache.felix.dm.benchmark.scenario.Track;
  * the xxRemoved() method when the component is stopped.
  * This benchmark expect scenario bundles to register some "Artists" components. Each "Artist" component is
  * then expected to depend on many "Albums", and each "Album" then depends on many music "Tracks".
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public interface ScenarioController {
     /**

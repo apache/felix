@@ -31,3 +31,6 @@ In this sample, the "DynamicDependency" Components configures in its "init" meth
 the dependency "required" flag and filter string are loaded from a Configuration PID 
 (see the "Dynamic Dependency Configuration (annotation)" PID, from webconsole), which is defined using 
 Bnd MetaType Annotations.
+So, you have configure the "Dynamic Dependency Configuration (annotation)" PID from web console before playing with this sample; then
+just type "log info|grep dynamicdep.annot" under the gogo shell.
+

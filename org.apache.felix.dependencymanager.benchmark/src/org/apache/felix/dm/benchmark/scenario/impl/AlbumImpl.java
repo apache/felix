@@ -27,6 +27,8 @@ import org.apache.felix.dm.benchmark.scenario.Track;
 
 /**
  * An album comprising several music tracks.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class AlbumImpl implements Album {
     final List<Track> m_musicTracks = new ArrayList<>();

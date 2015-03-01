@@ -28,6 +28,9 @@ import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.osgi.service.log.LogService;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 @AdapterService(adapteeService = Device.class)
 public class DeviceAccessImpl implements DeviceAccess {
     volatile Device device;

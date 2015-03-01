@@ -22,6 +22,9 @@ import java.io.Serializable;
 
 import org.osgi.service.log.LogService;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class MapDBStorage implements Storage {
 	volatile LogService log; // injected
 

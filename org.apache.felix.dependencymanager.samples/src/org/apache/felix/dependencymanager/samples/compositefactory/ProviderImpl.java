@@ -26,6 +26,8 @@ import org.osgi.service.log.LogService;
  * (ProviderParticipant1, and ProviderParticipant2).
  * 
  * This class is instantiated by the CompositionManager class.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ProviderImpl implements Provider {
     private final ProviderParticipant1 m_participant1;

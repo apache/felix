@@ -27,6 +27,8 @@ import org.apache.felix.dm.benchmark.scenario.Artist;
 
 /**
  * One artist who depends on multiple Albums.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ArtistImpl implements Artist {
     final List<Album> m_albums = new ArrayList<>();

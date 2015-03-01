@@ -35,10 +35,6 @@ public class PathTracker {
         logService.log(LogService.LOG_INFO, "PathTracker.add: " + path);
     }
     
-    void change(String path) {
-        logService.log(LogService.LOG_INFO, "PathTracker.change: " + path);
-    }
-
     void remove(String path) {
         logService.log(LogService.LOG_INFO, "PathTracker.remove: " + path);
     }

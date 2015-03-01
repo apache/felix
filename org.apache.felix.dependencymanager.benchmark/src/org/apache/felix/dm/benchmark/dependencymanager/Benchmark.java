@@ -39,6 +39,9 @@ import org.apache.felix.dm.benchmark.scenario.impl.AlbumImpl;
 import org.apache.felix.dm.benchmark.scenario.impl.ArtistImpl;
 import org.apache.felix.dm.benchmark.scenario.impl.TrackImpl;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class Benchmark {
     volatile DependencyManager m_dm;
     volatile ScenarioController m_controller;

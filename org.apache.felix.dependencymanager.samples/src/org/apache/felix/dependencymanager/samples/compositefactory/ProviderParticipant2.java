@@ -20,6 +20,9 @@ package org.apache.felix.dependencymanager.samples.compositefactory;
 
 import org.osgi.service.log.LogService;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class ProviderParticipant2 {
     private volatile LogService m_log; // Injected
 
