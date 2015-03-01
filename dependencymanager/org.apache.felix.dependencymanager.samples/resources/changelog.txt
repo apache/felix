@@ -1,6 +1,4 @@
 Release org.apache.felix.dependencymanager.r1:
 ---------------------------------------------
 
-FELIX-4667: "top" command for the Dependency Manager Shell
-FELIX-4683: Allow to configure the DependencyManager shell scope
 FELIX-4816: bndtools-ify Dependency Manager

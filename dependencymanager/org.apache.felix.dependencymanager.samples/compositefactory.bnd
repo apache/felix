@@ -17,3 +17,5 @@
 Private-Package:  \
 	org.apache.felix.dependencymanager.samples.compositefactory
 Bundle-Activator: org.apache.felix.dependencymanager.samples.compositefactory.Activator
+Bundle-Description: Dependency Manager composite factory example
+Bundle-Name: Dependency Manager Composite Factory Example

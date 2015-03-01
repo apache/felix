@@ -17,3 +17,5 @@
 Bundle-Activator: org.apache.felix.dependencymanager.samples.dynamicdep.api.Activator
 Private-Package:  \
 	org.apache.felix.dependencymanager.samples.dynamicdep.api
+Bundle-Description: Dependency Manager dynamic dependency example with api
+Bundle-Name: Dependency Manager Dynamic Dependency Example

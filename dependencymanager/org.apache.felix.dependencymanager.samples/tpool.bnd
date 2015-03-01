@@ -17,3 +17,5 @@
 Private-Package:  \
 	org.apache.felix.dependencymanager.samples.tpool
 Bundle-Activator: org.apache.felix.dependencymanager.samples.tpool.Activator
+Bundle-Description: Dependency Manager threadpool used by examples 
+Bundle-Name: Dependency Manager Examples ThreadPool

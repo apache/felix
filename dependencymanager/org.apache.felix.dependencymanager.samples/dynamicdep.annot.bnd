@@ -16,3 +16,5 @@
 #
 Private-Package:  \
 	org.apache.felix.dependencymanager.samples.dynamicdep.annot
+Bundle-Description: Dependency Manager dynamic dependency example with annotations
+Bundle-Name: Dependency Manager Dynamic Dependency Example With Annotations

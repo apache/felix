@@ -17,3 +17,5 @@
 Private-Package:  \
 	org.apache.felix.dependencymanager.samples.dictionary.api
 Bundle-Activator: org.apache.felix.dependencymanager.samples.dictionary.api.Activator
+Bundle-Description: Dependency Manager dictionary example with api
+Bundle-Name: Dependency Manager Dictionary Example

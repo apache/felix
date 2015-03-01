@@ -20,3 +20,18 @@ See also the following property in the org.apache.felix.dependencymanager.sample
 		'!org.apache.felix.dependencymanager.samples.tpool, *',\
 
 Here, all components will be handled by Executors provided by the ComponentExecutorFactory, except those having a package starting with "org.apache.felix.dependencymanager.samples.tpool" (because the threadpool is itself defined using the Dependency Manager API).
+
+In addition, some new features have been implemented in dependency manager:
+
+* Auto Config Iterable fields: AutoConfig dependencies can be applied on Iterable<Service> fields in order to be able to traverse currently injected services safely. The Iterable must be parameterized with the Service type. See org.apache.felix.dependencymanager.samples/src/org/apache/felix/dependencymanager/samples/dictionary/api/Spellcheck.java for an example.
+
+* AutoConfig Map field: AutoConfig dependencies can be applied on a field with a Map<Service, Dictionary> type, allowing to traverse currently injected services safely, including service properties. The Map must be traversed using the Map.Entry iterator. See javadoc for DependencyManager.setAutoConfig().
+
+* Inject Configuration on separate callback instance: Configuration can be injected on a separate callback instance, like a CompositionManager for example. See an example in the samples, in org.apache.felix.dependencymanager.samples/src/org/apache/felix/dependencymanager/samples/compositefactory/Activator.java.
+
+* Added propagate flag for Service Adapters: you can now choose to propagate or not adaptee service properties.
+
+* "Top" command in the shell: a "top" command is now available from the shell and can be used to display all top components sorted by their init/start elapsed time.
+
+* Added a benchmark tool for dependency manager (not released, only available from the trunk, see dependencymanager/org.apache.felix.dependencymanager.benchmark/README
+

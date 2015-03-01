@@ -17,3 +17,5 @@
 Private-Package:  \
 	org.apache.felix.dependencymanager.samples.hello.api
 Bundle-Activator: org.apache.felix.dependencymanager.samples.hello.api.Activator
+Bundle-Description: Dependency Manager hello example with API
+Bundle-Name: Dependency Manager Hello Example
