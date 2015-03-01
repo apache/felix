@@ -1,0 +1,32 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+This sample shows how to define a dynamic dependency from a Component's init method.
+
+When you declare a Component:
+
+- the configuration (if any) is first injected (updated callback).
+- then all required dependencies are injected.
+- then the init(Component c) method is invoked; And from there you are then able to add dynamic dependencies using any previously
+injected services (either configuration injected in update method, or other injected services declared from the Activator).
+- then the start callback is invoked when all required dependencies declared from the init method are injected.
+
+In this sample, the "DynamicDependency" Components defines in its "init" method a dynamic dependency on a Storage service. 
+But it first loads the "storage type" and "storage required" dependency informations from a Configuration PID 
+(see the "Dynamic Dependency Configuration (api)" PID from webconsole), which is defined using Bnd MetaType Annotations.
+So, you have configure the "Dynamic Dependency Configuration (api)" PID from web console before playing with this sample; then
+just type "log info|grep dynamicdep.api" under the gogo shell.
