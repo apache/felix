@@ -70,6 +70,7 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ManagedService;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
+import org.osgi.service.http.runtime.HttpServiceRuntimeConstants;
 import org.osgi.util.tracker.BundleTracker;
 import org.osgi.util.tracker.BundleTrackerCustomizer;
 import org.osgi.util.tracker.ServiceTracker;
@@ -79,8 +80,6 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 {
     /** PID for configuration of the HTTP service. */
     public static final String PID = "org.apache.felix.http";
-    /** Endpoint service registration property from RFC 189 */
-    private static final String REG_PROPERTY_ENDPOINTS = "osgi.http.service.endpoints";
 
     private static final String HEADER_WEB_CONTEXT_PATH = "Web-ContextPath";
     private static final String HEADER_ACTIVATION_POLICY = "Bundle-ActivationPolicy";
@@ -599,7 +598,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
                 }
             }
         }
-        props.put(REG_PROPERTY_ENDPOINTS,
+        props.put(HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT_ATTRIBUTE,
                 endpoints.toArray(new String[endpoints.size()]));
     }
 
