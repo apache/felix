@@ -16,3 +16,5 @@
 #
 Private-Package:  \
 	org.apache.felix.dependencymanager.samples.dictionary.annot
+Bundle-Description: Dependency Manager dictionary example with annotations
+Bundle-Name: Dependency Manager Dictionary Example With Annotations

@@ -1,5 +1,5 @@
-Release 4.0.0:
--------------
+Release org.apache.felix.dependencymanager.r1:
+---------------------------------------------
 
 FELIX-2706: Support callback delegation for Configuration Dependencies
 FELIX-3914: Log unsuccessful field injections
@@ -17,6 +17,7 @@ FELIX-4672: Allow callbacks to third party instance for adapters
 FELIX-4673: Log any error thrown when trying to create a null object
 FELIX-4680: Add more DM ServiceDependency callback signatures
 FELIX-4807: New thread model for Dependency Manager
+FELIX-4816: bndtools-ify Dependency Manager
 
 Release 3.2.0:
 --------------
