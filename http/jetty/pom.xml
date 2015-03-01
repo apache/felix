@@ -74,6 +74,8 @@
                             *
                         </Import-Package>
                     </instructions>
+                <!-- Skip Baselining due to Jetty API -->
+	                <skip>true</skip>
                 </configuration>
             </plugin>
         </plugins>
