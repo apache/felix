@@ -1,0 +1,59 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+Bundle-Version: 1.0.0
+-buildpath:  \
+	org.apache.felix.dependencymanager;version=latest,\
+	osgi.core;version=4.2,\
+	osgi.cmpn;version=4.2,\
+	org.apache.felix.gogo.runtime;version=latest,\
+	org.apache.felix.dependencymanager.runtime;version=latest,\
+	org.apache.felix.dependencymanager.annotation;version=latest,\
+	biz.aQute.bnd.annotation
+-runfw: org.apache.felix.framework;version='[4.4.0,4.4.0]'
+-runee: JavaSE-1.7
+-runbundles:  \
+	org.apache.felix.dependencymanager;version=latest,\
+	org.apache.felix.metatype;version=1.0.4,\
+	org.apache.felix.log;version=1.0.1,\
+	org.apache.felix.gogo.command;version=0.14.0,\
+	org.apache.felix.gogo.runtime;version=0.12.0,\
+	org.apache.felix.gogo.shell;version=0.10.0,\
+	org.apache.felix.dependencymanager.shell;version=latest,\
+	org.apache.felix.dependencymanager.runtime;version=latest,\
+	org.apache.felix.configadmin;version=1.8.0,\
+	org.apache.felix.eventadmin;version=1.4.3,\
+	biz.aQute.bndlib;version=2.3.0,\
+	org.apache.felix.webconsole;version=4.2.2,\
+	org.apache.felix.http.api;version=2.3.0,\
+	org.apache.felix.http.servlet-api;version=1.0.0,\
+	org.apache.felix.http.jetty;version=2.3.0,\
+	org.apache.felix.dependencymanager.samples.hello.api;version=latest,\
+	org.apache.felix.dependencymanager.samples.tpool;version=latest,\
+	org.apache.felix.dependencymanager.samples.conf;version=latest,\
+	org.apache.felix.dependencymanager.samples.device.api;version=latest
+-runproperties:  \
+	org.apache.felix.dependencymanager.parallel='!org.apache.felix.dependencymanager.samples.tpool, *',\
+	org.apache.felix.dependencymanager.runtime.log=warn,\
+	org.apache.felix.dependencymanager.loglevel=2,\
+	org.apache.felix.log.maxSize=100000,\
+	org.apache.felix.log.storeDebug=true
+-plugin: org.apache.felix.dm.annotation.plugin.bnd.AnnotationPlugin;log=debug;\
+		 path:=${workspace}/org.apache.felix.dependencymanager.annotation/generated/org.apache.felix.dependencymanager.annotation.jar
+
+-sub:  \
+	*.bnd
+-metatype: *

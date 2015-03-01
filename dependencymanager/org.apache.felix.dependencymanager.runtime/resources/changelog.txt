@@ -1,0 +1,8 @@
+Release 4.0.0:
+-------------
+
+FELIX-4777: Dynamic initialization time configuration of @ConfigurationDependency
+FELIX-4676: Add Provide-Capability for DependencyManager Runtime bundle
+FELIX-4600: Cherrypicking of propagated properties
+FELIX-4684: Replace DependencyManager Runtime "factorySet" by a cleaner API
+FELIX-4709: Incorrect Named Dependencies are binded to the Service Instance

@@ -1,0 +1,47 @@
+7 feb 2014 (marrs & uiterlix):
+
+This prototype demonstrates the new concurrency principles that form the basis for the DM:
+
+ * All external events that influence the state of dependencies are recorded and given 
+   to the serial executor of the component. We record whatever data comes in, so when the
+   actual job is run by the serial executor, we still have access to the original data
+   without having to access other sources whose state might have changed since.
+ * The serial executor of a component will execute a job immediately if it is being called
+   by the thread that is already executing jobs.
+ * If the serial executor of a component had not yet started a job, it will queue and start
+   it on the current thread.
+ * If the serial executor gets invoked from a different thread than the one currently
+   executing jobs, the job will be put at the end of the queue. As mentioned before, any
+   data associated with the event will also be recorded so it is available when the job
+   executes.
+ * State in the component and dependency can only be modified via the serial executor
+   thread. This means we don't need explicit synchronization anywhere.
+
+20 sept 2014 (pderop):
+
+ * Added support for parallelism: To allow components to be started and handled in parallel, you can
+   now register in the OSGi service registry a ComponentExecutorFactory service that is used to get
+   an Executor for the management of all components dependencies/lifecycle callbacks. See javadoc
+   from the org.apache.felix.dm.ComponentExecutorFactory interface for more informations.
+   
+   You can also take a look at the the org.apache.felix.dependencymanager.samples project, which is
+   registering a ComponentExecutorFactory from org.apache.felix.dependencymanager.samples.tpool
+   bundle.
+  
+   See also the following property in the org.apache.felix.dependencymanager.samples/bnd.bnd 
+
+	org.apache.felix.dependencymanager.parallel=\
+		'!org.apache.felix.dependencymanager.samples.tpool, *',\
+
+  Here, all components will be handled by Executors provided by the ComponentExecutorFactory,
+  except those having a package starting with "org.apache.felix.dependencymanager.samples.tpool"
+  (because the threadpool is itself defined using the Dependency Manager API).
+
+
+
+
+
+
+
+
+

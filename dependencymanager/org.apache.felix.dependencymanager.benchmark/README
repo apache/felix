@@ -1,0 +1,182 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Installation:
+============
+
+- see toplevel README on how to import dependencymanager into bndtools
+
+How to launch the stress test under bndtools:
+============================================
+
+The stress test performs two kind of tests on DM and parallel DM.
+
+1) first kind of tests: starts/stops several times each tested bundle (DM/Parallel DM). When
+started, the test bundle is expected to register/unregister several services. And no processing is
+done at all in each component start methods).
+
+2) second kind of tests: same as before, but some processing is done in each component start methods.
+
+To launch the stress test under BndTools, click on the noindex.bndrun file of the
+"org.apache.felix.dm.benchmark" project, then click on "Run", then in "Run OSGi". 
+
+You should see something like that in the eclipse console:
+
+>> --------------------------------------------------------------------------------------------------------------
+g! Starting benchmarks (each tested bundle will add/remove 630 components during bundle activation).
+
+	[Starting benchmarks with no processing done in components start methods]
+
+Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager ....................
+-> results in nanos: [189,130,687 | 205,730,144 | 312,092,102 | 357,470,857 | 871,419,487]
+
+Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel ....................
+-> results in nanos: [85,158,366 | 103,439,337 | 122,633,515 | 157,082,407 | 284,332,202]
+
+	[Starting benchmarks with processing done in components start methods]
+
+Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager .....
+-> results in nanos: [2,748,431,149 | 2,750,475,610 | 2,756,254,193 | 2,772,447,115 | 2,774,345,245]
+
+Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel .....
+-> results in nanos: [687,259,058 | 696,725,568 | 700,220,615 | 704,310,739 | 740,325,481]
+-----------------------------------------------------------------------------------------------------------------
+
+You can also possibly run the same test using optimized DM filter indices.
+To do so, run "index.bndrun"
+but using DM filter indices has a CPU cost and are useful if you have many service dependencies.
+To test filter indices, first increase the number of components created/removed during bundle
+startup. To do so, edit the Artist.java and change the "Artists" when is by default set to 30, and set it to 300.
+
+You should then observe some significant performance improvements:
+
+for example, with Artist.ARTISTS=300, you should observe the following:
+
+noindex.bndrun (no filter indices used):
+
+>> --------------------------------------------------------------------------------------------------------------
+ g! Starting benchmarks (each tested bundle will add/remove 6300 components during bundle activation).
+
+        [Starting benchmarks with no processing done in components start methods]
+
+Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager .....
+-> results in nanos: [17,436,869,644 | 17,525,534,346 | 18,080,624,001 | 18,246,597,908 | 20,715,696,669]
+
+Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel .....
+-> results in nanos: [9,660,520,501 | 9,810,057,488 | 9,870,295,166 | 10,014,334,906 | 10,628,193,815]
+
+        [Starting benchmarks with processing done in components start methods]
+
+Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager .....
+-> results in nanos: [42,700,651,438 | 43,207,156,615 | 43,653,372,523 | 43,869,438,994 | 44,715,701,457]
+
+Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel .....
+-> results in nanos: [15,021,876,153 | 15,091,340,552 | 15,202,305,936 | 15,248,728,826 | 15,398,221,492]
+-----------------------------------------------------------------------------------------------------------------
+ 
+and with index.bndrun (using DM filter indices):
+
+>> --------------------------------------------------------------------------------------------------------------
+g! Starting benchmarks (each tested bundle will add/remove 6300 components during bundle activation).
+
+        [Starting benchmarks with no processing done in components start methods]
+
+Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager .....
+-> results in nanos: [3,142,869,517 | 3,564,970,695 | 4,023,603,870 | 6,206,640,362 | 6,918,113,818]
+
+Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel .....
+-> results in nanos: [2,868,554,914 | 2,873,491,201 | 2,897,439,973 | 2,913,317,331 | 3,890,123,728]
+
+        [Starting benchmarks with processing done in components start methods]
+
+Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager .....
+-> results in nanos: [28,515,623,505 | 28,558,774,886 | 28,661,315,061 | 28,808,682,302 | 28,915,519,208]
+
+Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel .....
+-> results in nanos: [7,702,400,991 | 7,749,145,806 | 7,760,650,323 | 7,832,386,237 | 7,854,739,136]
+-----------------------------------------------------------------------------------------------------------------
+ 
+
+How to interpret results:
+========================
+
+for each tested bundle, the time spent is displayed in nanos.
+for example: 
+
+	-> results in nanos: [85,158,366 | 103,439,337 | 122,633,515 | 157,082,407 | 284,332,202]
+
+Here is how to interpret the results: when testing a bundle, the benchmark controller starts/stops
+it many times, then the elapsed time used to start the bundle, activate/deactivate all services, and
+stop the bundle is recorded in a list. Then this list is sorted: the first entry is the fastest
+execution time, the last entry is the slowest. the middle one is the average. We display the first
+entry (fastest), the entry at 1/4 of the list, the middle of the list, the entry at 3/4 of the list,
+and the last entry (slowest time).
+
+We don't do an average, because usually, when running benchmark, some measurements don't reflect
+reality, especially, when there is a full GC or when the JVM is warming up. (we actually do the same
+as in Java Chronicle: https://github.com/peter-lawrey/Java-Chronicle). 
+
+Stress test scenario description
+--------------------------------
+
+For sake of simplicity, a simple scenario domain is used (actually, this example domain has been
+inspired from the "Java8 Lambdas" book, O'reilly): We have the following services: 
+
+"Artist" service: An Artist is an individual or group of musicians, who creates some "Albums". One
+Artist service depends on several Album services. 
+
+"Album" service: is a single release of musics, comprising several music Tracks. One Album depends
+on several Track services. 
+
+"Track" service: A piece of music.
+
+The scenario is implemented in the following bundles
+
+- org.apache.felix.dm.benchmark.scenario: defines the interfaces.
+- org.apache.felix.dm.benchmark.scenario.impl: defines the basic implementations for the services.
+
+The Scenario Controller (see
+org.apache.felix.dm.benchmark.scenario/org.apache.felix.dm.benchmark.scenario.impl) is in charge of
+starting/stopping many times some specific bundles (DM, Parallel DM).
+
+By default, when a tested bundle is started, it will create several Artists (see Artists.ARTISTS
+constant). each Artist depends on several Albums (see Artists.ALBUMS constant), and each Album
+depends on several music Tracks (see Artists.TRACKS constants).
+
+Test bundles (DM, parallel DM)
+==============================
+
+- org.apache.felix.dm.benchmark.dependencymanager: 
+It contains a simple activator, which creates the various services using dependency manager API.
+
+- org.apache.felix.dm.benchmark.dependencymanager.parallel: 
+same as above, but using parallel dependency manager where components dependency management and
+components activation processing is performed concurrently, using a fixed thread pool.
+
+The org.apache.felix.dm.benchmark.controller bundle, when started, first stops all tested bundles.
+Then for each one, it performs the following test (multiple times):
+
+- start the tested bundle
+- wait for all expected services to be registered (Artists/Albums/Tracks)
+- stop the tested bundle.
+- wait for all expected services to be unregistered
+
+All the elapsed time (nanoseconds) used to execute each iteration is then recorded in a list.
+When enough iterations are done, the list is sorted (that is : the first entry in the list
+corresponds to the fastest execution time, and the last entry corresponds to the slowest execution
+time). Then, we display some meaningful entries in the list (like the first entry, the entry in the
+middle of the list (average), and the last entry (slowest).

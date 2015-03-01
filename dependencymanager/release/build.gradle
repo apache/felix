@@ -1,0 +1,197 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/**
+ * Gradle script used to perform DM releases (really similar to Apache ACE build.xml)
+ */
+import aQute.bnd.build.Workspace
+
+// Our release number, which has to be monotonically incremented each time we make a new release.
+ext.dmRelease = "r1"
+
+// Our Apache svn Staging repo
+ext.svnStagingPath = "https://dist.apache.org/repos/dist/dev/felix"
+
+// Our Apache svn Release repo
+ext.svnReleasePath = "https://dist.apache.org/repos/dist/release/felix"
+
+apply plugin: 'java'
+apply from: file("rat.gradle")
+
+// Add bnd as a build dependency
+buildscript {
+    dependencies {
+        classpath files('cnf/gradle/biz.aQute.bnd.gradle.jar')
+    }
+}
+
+// Configure RAT plugin to ignore some files
+rat {
+  excludes = [
+    'rat-report.xml',
+    '**/.git/**',
+    '**/.gradle/**',
+    '**/.project',
+    '**/.settings/**',
+    '**/*.iml',
+    '**/*.iws',
+    '**/*.ipr',
+    '**/.classpath',
+    'cnf/**',
+    'gradle/wrapper/**',
+    'release/**',
+    'gradlew',
+    'README',
+    '**/DEPENDENCIES',
+    '**/README',
+    '**/.gitignore',
+    '**/generated/**',
+    'doc/**',
+    '**/packageinfo',
+    '**/*.txt',
+    'docs/**',
+    '.metadata/**'
+  ]
+}
+
+// Setup the workspace
+Workspace workspace
+workspace = Workspace.getWorkspace(".")
+
+task makeStaging << {
+    description = 'Packages the source and binary distributions.'
+
+    // Package source and source bin dependencies distributions.
+    logger.lifecycle("    Packaging source distributions.")
+    def topdir="org.apache.felix.dependencymanager-" + dmRelease
+    ant.zip(destfile: "staging/"+topdir+'-src.zip') {
+		zipfileset(dir: '../cnf', prefix: topdir+"-src/cnf", includes: ".project,.classpath,src/**,*.bnd,ext/**")
+		zipfileset(dir: '..', prefix: topdir+"-src", includes: '*.gradle,*.properties')
+		zipfileset(dir: 'resources/src', prefix: topdir+"-src", includes: '*')
+		new File('.').eachFile { 
+	    	if(new File(it, 'bnd.bnd').exists()) {	    		
+    			def bndProject = workspace.getProject(it.name)
+    			if (! bndProject.isNoBundles() && ! bndProject.getName().endsWith(".benchmark")) {
+    		    	zipfileset(dir: "../${bndProject.name}", prefix: topdir+"-src/${bndProject.name}",
+    			       		   includes: "*.gradle,.project,.classpath,.settings/**,src/**,test/**,*.bnd,*.bndrun,run-*/conf/**,resources/**,README*")
+    			}
+	   		}
+		}
+    }
+
+    // Package binary dependencies, needed to build the source distributions.
+    logger.lifecycle("    Packaging binary dependencies.")    
+    ant.zip(destfile: "staging/"+topdir+"-deps.zip") {
+    	ant.zipfileset(dir: '..', prefix: topdir+"-src", includes: 'gradlew')
+    	ant.zipfileset(dir: '../gradle', prefix: topdir+"-src/gradle", includes: '*')    	
+		ant.zipfileset(dir: 'resources/deps', prefix: topdir+"-src", includes: '*')
+		ant.zipfileset(dir: '../cnf', prefix: topdir+"-src/cnf",
+		    		   includes: 'buildrepo/**,localrepo/**,releaserepo/**,plugins/**,gradle/**')
+    }
+
+    // Package binaries as a simple collection of bundles. We use same license files as for src distrib.
+    logger.lifecycle("    Packaging binary distribution.")    
+    ant.zip(destfile: "staging/"+topdir+"-bin.zip") {
+        ant.mappedresources() {
+            // don't include itests, samples, and benchmark in the convenience binary release.
+        	ant.fileset(dir: '..', includes: '*/generated/*.jar', excludes: '*.itest/generated/*.jar,*.benchmark/generated/*.jar,*.samples/generated/*.jar')
+            ant.chainedmapper() {
+                ant.flattenmapper()
+                ant.globmapper(from: '*', to: topdir+'-bin/*')
+            }
+        }
+        ant.mappedresources() {
+        	ant.fileset(dir: 'resources/bin', includes: '*')
+            ant.chainedmapper() {
+                ant.flattenmapper()
+                ant.globmapper(from: '*', to: topdir+'-bin/*')
+            }
+        }
+    }
+}
+
+// Sign staging directory 
+task signStaging << {
+    description = 'Signs the local staging distribution.'
+	fileTree("staging").visit { FileVisitDetails details -> 
+		logger.lifecycle("    Signing " + details.file.path)
+		ant.exec(executable: 'gpg', dir: 'staging') { 
+	    	ant.arg(line: '--armor')
+	    	ant.arg(line: '--output')
+	    	ant.arg(line: details.file.name + ".asc")
+	    	ant.arg(line: "--detach-sig")
+	    	ant.arg(line: details.file.name)
+		}
+
+		ant.exec(executable: 'gpg', dir: 'staging', output: "staging/" + details.file.name + ".md5") { 
+	    	ant.arg(line: '--print-md')
+	    	ant.arg(line: 'MD5')
+	    	ant.arg(line: details.file.name)
+		}
+
+		ant.exec(executable: 'gpg', dir: 'staging', output: "staging/" + details.file.name + ".sha") {
+	    	ant.arg(line: '--print-md')
+	    	ant.arg(line: 'SHA512')
+	    	ant.arg(line: details.file.name)
+		}
+    }
+}
+
+
+// Moves the source and binary distributions to staging.
+task commitToStaging << {
+    description = 'Commits the local staging to the Apache svn staging repository.'
+    getProject().exec { 
+    	commandLine 'svn', 
+		'import', 'staging', svnStagingPath + "/org.apache.felix.dependencymanager-" + dmRelease + "/", 
+		'-m', "Staging Apache Felix Dependency Manager release " + dmRelease + "."
+    }
+}
+
+// Promotes the staged distributions to release
+task promoteToRelease << {
+    description = 'Moves the staging repository to the Apache release repository.'
+    getProject().exec { 
+    	commandLine 'svn',
+		'move', svnStagingPath+"/org.apache.felix.dependencymanager-" + dmRelease , svnReleasePath, 
+		'-m', "Releasing Apache Felix Dependency Manager release " + dmRelease + "."
+    }
+}
+
+// Removes the staged distributions from staging
+task deleteFromStaging << {
+    description = 'Cancels the staged distribution from the Apache staging repository.'
+    getProject().exec { 
+    	commandLine 'svn',
+		'delete', svnStagingPath+"/org.apache.felix.dependencymanager-" + dmRelease + "/",
+		"-m", "Removing Apache Felix Dependency Manager release " + dmRelease + " from staging."
+    }
+}
+
+// Clean staging directory
+task clean(overwrite: true) << { 
+    new File("release/staging").deleteDir()
+    new File("rat-report.xml").delete()
+}
+
+// Only clean the staging directory
+task cleanStaging << {
+    description = 'Clean the local staging directory.'
+    new File("release/staging").deleteDir()
+}

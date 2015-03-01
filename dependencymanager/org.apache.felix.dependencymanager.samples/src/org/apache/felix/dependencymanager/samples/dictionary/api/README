@@ -1,0 +1,41 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+This sample shows a "SpellChecker" application (using DM API) which provides a
+"dictionary:spellcheck" GOGO shell command. The GOGO "dictionary:spellcheck" command accepts a
+string as parameter, which is checked for proper existence. The SpellChecker class has a
+required/multiple (1..N) dependency over every available "DictionaryService" services, which are
+internally used by the SpellChecker command, when checking word existence.
+
+A DictionaryService is defined using a FactoryConfigurationAdapterService , allowing to instantiate
+many "DictionaryService" instances when some configurations are added to the
+"Spell Checker Configuration (api)" factory pid from web
+console. The factory pid configuration metatypes are defined using the bnd "metatype" annotations
+(see DictionaryConfiguration.java).
+
+The DictionaryService is decorated with a DictionaryAspect, which you can instantiate by adding a
+configuration to the "Spell Checker Aspect Dictionary (api)" pid from web console. The
+aspect configuration metatype is also declared using the bnd metatype annotations (see
+DictionaryAspectConfiguration.java). 
+
+Before running this sample, go to webconsole, and add some words in the Spell Checker Configuration (api) factory PID, and
+in the Spell Checker Aspect Dictionary (api) PID.
+
+Then go to gogo shell, and type dm help. You will normally see the dictionary:spellcheck command.
+Type dictionary:spellcheck <some words configured either in the spell checker configuration, or in the spell checker aspect configuration, 
+and the dictionary will check for proper word existance in the configuration.
+

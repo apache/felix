@@ -1,0 +1,85 @@
+Release 4.0.0:
+-------------
+
+FELIX-2706: Support callback delegation for Configuration Dependencies
+FELIX-3914: Log unsuccessful field injections
+FELIX-4158: ComponentDeclaration should give access to component information
+FELIX-4304: DependencyManager ComponentImpl should not assume all service properties are stored in a Hashtable
+FELIX-4394: Race problems in DependencyManager Configuration Dependency
+FELIX-4426: Allow DM to manage collections of services
+FELIX-4588: createCopy method ConfigurationDependency produces a malfunctioning clone
+FELIX-4594: Propagation from dependencies overwrites service properties
+FELIX-4598: BundleDependency can effectively track only one bundle
+FELIX-4600: Cherrypicking of propagated properties
+FELIX-4602: TemporalServiceDependency does not properly propagate RuntimeExceptions
+FELIX-4667: "top" command for the Dependency Manager Shell
+FELIX-4672: Allow callbacks to third party instance for adapters
+FELIX-4673: Log any error thrown when trying to create a null object
+FELIX-4680: Add more DM ServiceDependency callback signatures
+FELIX-4807: New thread model for Dependency Manager
+
+Release 3.2.0:
+--------------
+
+FELIX-3910: Race conditions in DependencyManager
+FELIX-4334: ServiceDependency properties change callback issue
+FELIX-4285: Remove abstract modifier from DependencyActivatorBase.destroy()
+FELIX-4294: Dependency Manager Shell improvements
+FELIX-4305: DependencyMananer Adapters - service properties propagation
+FELIX-4002: ComponentStateListener.started is invoked twice when the listener is added in the start method.
+FELIX-4395: DependencyManager Configuration Dependency does not clone some class fields.
+FELIX-4014: handleAspectAwareRemoved in ServiceDependencyImpl can cause a possible deadlock
+FELIX-4097: Allow debug logging for specific instances of service dependencies to debug wiring issues.
+FELIX-4098: Aspect swap sometimes invokes the callbacks in the wrong order in a multithreaded application.
+FELIX-4099: Add support for negations in the multi property filter index.
+FELIX-4186: NPE in DependencyManager Logger
+FELIX-4226: Add option to have the dependency manager log against a single BundleContext's LogService.
+FELIX-4361: Possible ConcurrentModificationException in DependencyManager.getComponents()
+
+Release 3.1.0
+-------------
+
+FELIX-303 - Support for compositions
+FELIX-1201 - Issue with DM and CM
+FELIX-1278 - DM/ AutoConfig is active event if setCallbacks method has been invoked
+FELIX-1464 - issue when using a negation in ldap service dependency filter
+FELIX-1546 - DM/Temporal Dependency/Bound Service Replacement features
+FELIX-2078 - Not all callbacks invoked when declaring a service as required and starting it after dependencies
+FELIX-2344 - DM / callback method is not invoked when an extra dependency is defined within an "init" component method.
+FELIX-2348 - DM/ ResourceAdapter NPE
+FELIX-2369 - DM/ Service start method is invoked even if an extra required dependency is unavailable
+FELIX-2816 - dependency manager calls init() twice
+FELIX-2947 - Filter indices must use service trackers that track all services and aspects.
+FELIX-2953 - Make the cache that InvocationUtil uses configurable.
+FELIX-2954 - DM/ annotated component factory does not allow to provide a component instance explicitly
+FELIX-2955 - IllegalStateException when doing a 'dm notavail' shell command.
+FELIX-2956 - DM/ json should be embedded in the annotation scanner plugin
+FELIX-2964 - DM/ NPE on some dependency manager adapters, when "auto-configuration" mode is disabled.
+FELIX-2970 - DM/ Factory Configuration Adapter Service does not copy adapter dependencies
+FELIX-2976 - InvocationUtil cache is not used properly for determining that methods do not exist in a class
+FELIX-2987 - DependencyManager ConfigurationDependency update isn't propagated to super classes
+FELIX-3008 - NPE in ServiceRegistryCache when dependency manager bundle is not started first
+FELIX-3042 - [PATCH] Add a convenience clear() method on DependencyManager
+FELIX-3057 - getServiceReferences() should not return an empty array
+FELIX-3186 - Adapter services do not get their adapted services transparently replaced when an aspect is added to them.
+FELIX-3201 - Offer more functional callback methods for services that have aspects on them.
+FELIX-3218 - ServiceTracker performance is not optimal with a service dependency that results in n-thousands of injected services.
+FELIX-3264 - Dependency manager shell should not print the state of optional dependencies when not all required ones are available
+FELIX-3292 - Allow passing of resource properties to a resource handler for use with resource adapters.
+FELIX-3337 - DependencyManager/Updated configuration dependency does not propagate to provided service properties
+FELIX-3402 - DependencyManager stop can trigger IndexOutOfBoundsException
+FELIX-3423 - AdapterImpl copies the DependencyManager.ASPECT service property when adapting an aspect.
+FELIX-3424 - Add support for changed callbacks on Aspect services.
+FELIX-3425 - Provide a filter index for adapter services.
+FELIX-3475 - DependencyManager compatibility bundle - ServiceDependencyImpl does not override toString
+FELIX-3564 - Memory leak in Filterindex / ServiceRegistryCache
+FELIX-3592 - ServiceDependencyImpl does not copy the swapped callback in it's constructor.
+FELIX-3617 - Missing toString methods in DependencyManager compat bundle
+FELIX-3682 - Dependency Manager Annotation-3.0.0 module doesn't expose OSGI meta information in MANIFEST.MF
+FELIX-3828 - Aspect and Adapter filter indices to not handle components that have been bound with multiple interfaces correctly.
+
+
+Release 3.0.0
+-------------
+
+Major, backward incompatible release. Start of recorded changes.

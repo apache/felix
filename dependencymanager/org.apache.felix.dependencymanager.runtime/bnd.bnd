@@ -1,0 +1,44 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+Bundle-Version: 4.0.0
+-buildpath: \
+	osgi.core;version=4.2,\
+	osgi.cmpn;version=4.2,\
+	org.apache.felix.dependencymanager;version=latest,\
+	de.twentyeleven.skysail.org.json-osgi;version=20080701.0
+Bundle-Activator:org.apache.felix.dm.runtime.Activator
+Private-Package: \
+	org.apache.felix.dm.runtime,\
+	org.json
+Export-Package:  \
+	org.apache.felix.dm.runtime.api
+Provide-Capability: osgi.extender; osgi.extender="org.apache.felix.dependencymanager.runtime";\
+	uses:="org.apache.felix.dm";version:Version="4.0.0"
+Include-Resource: META-INF/=resources/LICENSE,\
+	META-INF/=resources/NOTICE,\
+	META-INF/=resources/DEPENDENCIES,\
+	META-INF/=resources/changelog.txt
+
+Bundle-Name: Apache Felix Dependency Manager Runtime
+Bundle-Description: Loads Apache Felix Dependency Manager component descriptors from active \
+	annoted bundles
+Bundle-Category: osgi
+Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.txt
+Bundle-Vendor: The Apache Software Foundation
+Bundle-ContactAddress: http://felix.apache.org/documentation/subprojects/apache-felix-dependency-manager.html
+# Work around used to make sure DM api is imported using proper version range (can be removed with bndtools 3)
+Import-Package: org.apache.felix.dm;org.apache.felix.dm.context;version="[4, 5)", *

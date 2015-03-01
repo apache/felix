@@ -1,0 +1,5 @@
+Release 4.0.0:
+-------------
+
+FELIX-4667: "top" command for the Dependency Manager Shell
+FELIX-4683: Allow to configure the DependencyManager shell scope

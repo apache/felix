@@ -1,0 +1,112 @@
+
+
+
+Apache Felix Dependency Manager Release Guide 
+This document describes how to do a source release. It is based on the Release FAQ [1]
+
+Prerequisites
+=============
+
+To create a release you must:
+
+* Have Subversion installed on your system;
+* Have gpg installed on your system;
+* Have a public key added to the keys file, and committed to [2] 
+* If you are using an http proxy, configure the following:
+
+  export GRADLE_OPTS="-Dhttps.proxyHost=www.somehost.org -Dhttps.proxyPort=8080"
+
+Before you can start staging a release candidate, you must:
+
+* make sure there are no dependencies on snapshots/unreleased versions;
+* create a tagged version of the sources in preparation of the release candidate.
+
+Creating a tagged version of the sources can be done directly through svn (replace r<n> by the actual release number, like "r1"):
+
+svn copy https://svn.apache.org/repos/asf/felix/trunk/dependencymanager https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.dependencymanager-r<n> -m "Release of Apache Felix Dependency Manager r<n>"
+
+Staging a release candidate
+===========================
+
+Staging a release starts by checking out a tagged version of the sources (replace r<n> by the actual release number, like "r1"):
+
+svn co https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.dependencymanager-r<n>
+
+The next step is to build/test the software and create the release/staging/ directory (where the source/jars will be packaged):
+(replace r<n> by the actual release number, like "r1")
+
+Use a Java7 JDK
+
+$ cd org.apache.felix.dependencymanager-r<n>
+$ ./gradlew rat 
+$ ./gradlew org.apache.felix.dependencymanager.annotation:jar
+$ ./gradlew jar
+$ ./gradlew test
+$ ./gradlew check
+
+Then Edit the ./release/build.gradle script, increment the "ext.dmRelease" property, and create the staging:
+
+$ ./gradlew makeStaging (this will create ./release/staging/ directory)
+
+Then you sign archives by invoking the following task:
+
+$ ./gradlew signStaging
+
+You can upload the archives and the signatures to our development area, which we use to stage this release candidate. This development area can be found at 
+https://dist.apache.org/repos/dist/dev/felix and adding files to it can be done using "svnpubsub" which is taken care of by the following target:
+
+$ ./gradlew commitToStaging
+
+Voting on the release
+=====================
+
+Start a vote on the dev@felix.apache.org list, for example (be sure to replace r<n> with the correct release number, like "r1"):
+
+>>>
+To: "Felix Developers List" <dev@felix.apache.org>
+Subject: [VOTE] Release of Apache Felix Dependency Manager release r<n>
+
+Hi,
+
+We solved N issues in this release:
+http://issues.apache.org/jira/...
+
+There are still some outstanding issues:
+http://issues.apache.org/jira/...
+
+Staging repository:
+https://dist.apache.org/repos/dist/dev/felix/apache-felix-dependencymanager-r<n>/
+
+You can use this UNIX script to download the release and verify the signatures:
+http://svn.apache.org/repos/asf/felix/trunk/dependencymanager/release/check_staged_release.sh
+
+Usage:
+sh check_staged_release.sh r<n> /tmp/felix-staging
+
+This script, unlike the original Felix check_stage_release.sh, will download staging from https://dist.apache.org/repos/dist/dev/felix instead of 
+http://repository.apache.org/content/repositories.
+
+
+Please vote to approve this release:
+
+[ ] +1 Approve the release
+[ ] -1 Veto the release (please provide specific comments)
+
+This vote will be open for 72 hours.
+<<<
+
+Promoting the release:
+=====================
+
+Move the artifacts from the development area to the final release location at 
+https://dist.apache.org/repos/dist/release/felix by invoking the following target:
+
+$ ./gradlew promoteToRelease
+
+Cancelling the release
+======================
+
+$ ./gradlew deleteFromStaging
+
+[1] http://www.apache.org/dev/release.html
+[2] http://www.apache.org/dist/felix/KEYS

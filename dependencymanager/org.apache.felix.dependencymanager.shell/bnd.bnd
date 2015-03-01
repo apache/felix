@@ -1,0 +1,38 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+-buildpath:  \
+	osgi.core;version=4.2,\
+	osgi.cmpn;version=4.2,\
+	org.apache.felix.gogo.runtime;version=0.10,\
+	org.mockito.mockito-all;version=1.9,\
+	org.apache.felix.dependencymanager;version=latest,\
+	${junit}
+Private-Package: \
+	org.apache.felix.dm.shell
+Bundle-Activator:org.apache.felix.dm.shell.Activator
+Bundle-Version: 4.0.0
+Include-Resource: META-INF/=resources/LICENSE,\
+	META-INF/=resources/NOTICE,\
+	META-INF/=resources/DEPENDENCIES,\
+	META-INF/=resources/changelog.txt
+Bundle-Name: Apache Felix Dependency Manager Shell
+Bundle-Description: Gogo Shell commands for Apache Felix Dependency Manager
+Bundle-Category: osgi
+Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.txt
+Bundle-Vendor: The Apache Software Foundation
+# Work around used to make sure DM api is imported using proper version range (can be removed with bndtools 3)
+Import-Package: org.apache.felix.dm;version="[4.0, 5)", *
