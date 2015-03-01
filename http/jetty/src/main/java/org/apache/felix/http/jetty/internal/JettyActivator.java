@@ -16,22 +16,59 @@
  */
 package org.apache.felix.http.jetty.internal;
 
+import java.util.Dictionary;
+import java.util.Hashtable;
+
 import org.apache.felix.http.base.internal.AbstractHttpActivator;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceRegistration;
 
 public final class JettyActivator extends AbstractHttpActivator
 {
     private JettyService jetty;
 
+    private ServiceRegistration<?> metatypeReg;
+
+    @Override
     protected void doStart() throws Exception
     {
         super.doStart();
+        final Dictionary<String, Object> properties = new Hashtable<String, Object>();
+        properties.put(Constants.SERVICE_DESCRIPTION, "Metatype provider for Jetty Http Service");
+        properties.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+        properties.put("metatype.pid", JettyService.PID);
+
+        metatypeReg = this.getBundleContext().registerService("org.osgi.service.metatype.MetaTypeProvider",
+                new ServiceFactory()
+                {
+
+                    @Override
+                    public Object getService(final Bundle bundle, final ServiceRegistration registration)
+                    {
+                        return new ConfigMetaTypeProvider(getBundleContext().getBundle());
+                    }
+
+                    @Override
+                    public void ungetService(Bundle bundle, ServiceRegistration registration, Object service)
+                    {
+                        // nothing to do
+                    }
+                }, properties);
         this.jetty = new JettyService(getBundleContext(), getDispatcherServlet(), getEventDispatcher(), getHttpServiceController());
         this.jetty.start();
     }
 
+    @Override
     protected void doStop() throws Exception
     {
         this.jetty.stop();
+        if ( metatypeReg != null )
+        {
+            metatypeReg.unregister();
+            metatypeReg = null;
+        }
         super.doStop();
     }
 }

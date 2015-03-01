@@ -33,54 +33,54 @@ import org.osgi.framework.BundleContext;
 public final class JettyConfig
 {
     /** Felix specific property to set the interface to listen on. Applies to both HTTP and HTTP */
-    private static final String FELIX_HOST = "org.apache.felix.http.host";
+    public static final String FELIX_HOST = "org.apache.felix.http.host";
 
     /** Standard OSGi port property for HTTP service */
-    private static final String HTTP_PORT = "org.osgi.service.http.port";
+    public static final String HTTP_PORT = "org.osgi.service.http.port";
 
     /** Standard OSGi port property for HTTPS service */
-    private static final String HTTPS_PORT = "org.osgi.service.http.port.secure";
+    public static final String HTTPS_PORT = "org.osgi.service.http.port.secure";
 
     /** Felix specific property to set http reaching timeout limit */
     public static final String HTTP_TIMEOUT = "org.apache.felix.http.timeout";
 
     /** Felix specific property to enable debug messages */
-    private static final String FELIX_HTTP_DEBUG = "org.apache.felix.http.debug";
-    private static final String HTTP_DEBUG = "org.apache.felix.http.jetty.debug";
+    public static final String FELIX_HTTP_DEBUG = "org.apache.felix.http.debug";
+    public static final String HTTP_DEBUG = "org.apache.felix.http.jetty.debug";
 
     /** Felix specific property to override the keystore file location. */
-    private static final String FELIX_KEYSTORE = "org.apache.felix.https.keystore";
+    public static final String FELIX_KEYSTORE = "org.apache.felix.https.keystore";
     private static final String OSCAR_KEYSTORE = "org.ungoverned.osgi.bundle.https.keystore";
 
     /** Felix specific property to override the keystore password. */
-    private static final String FELIX_KEYSTORE_PASSWORD = "org.apache.felix.https.keystore.password";
+    public static final String FELIX_KEYSTORE_PASSWORD = "org.apache.felix.https.keystore.password";
     private static final String OSCAR_KEYSTORE_PASSWORD = "org.ungoverned.osgi.bundle.https.password";
 
     /** Felix specific property to override the keystore key password. */
-    private static final String FELIX_KEYSTORE_KEY_PASSWORD = "org.apache.felix.https.keystore.key.password";
+    public static final String FELIX_KEYSTORE_KEY_PASSWORD = "org.apache.felix.https.keystore.key.password";
     private static final String OSCAR_KEYSTORE_KEY_PASSWORD = "org.ungoverned.osgi.bundle.https.key.password";
 
     /** Felix specific property to override the type of keystore (JKS). */
-    private static final String FELIX_KEYSTORE_TYPE = "org.apache.felix.https.keystore.type";
+    public static final String FELIX_KEYSTORE_TYPE = "org.apache.felix.https.keystore.type";
 
     /** Felix specific property to control whether to enable HTTPS. */
-    private static final String FELIX_HTTPS_ENABLE = "org.apache.felix.https.enable";
+    public static final String FELIX_HTTPS_ENABLE = "org.apache.felix.https.enable";
     private static final String OSCAR_HTTPS_ENABLE = "org.ungoverned.osgi.bundle.https.enable";
 
     /** Felix specific property to control whether to enable HTTP. */
-    private static final String FELIX_HTTP_ENABLE = "org.apache.felix.http.enable";
+    public static final String FELIX_HTTP_ENABLE = "org.apache.felix.http.enable";
 
     /** Felix specific property to override the truststore file location. */
-    private static final String FELIX_TRUSTSTORE = "org.apache.felix.https.truststore";
+    public static final String FELIX_TRUSTSTORE = "org.apache.felix.https.truststore";
 
     /** Felix specific property to override the truststore password. */
-    private static final String FELIX_TRUSTSTORE_PASSWORD = "org.apache.felix.https.truststore.password";
+    public static final String FELIX_TRUSTSTORE_PASSWORD = "org.apache.felix.https.truststore.password";
 
     /** Felix specific property to override the type of truststore (JKS). */
-    private static final String FELIX_TRUSTSTORE_TYPE = "org.apache.felix.https.truststore.type";
+    public static final String FELIX_TRUSTSTORE_TYPE = "org.apache.felix.https.truststore.type";
 
     /** Felix specific property to control whether to want or require HTTPS client certificates. Valid values are "none", "wants", "needs". Default is "none". */
-    private static final String FELIX_HTTPS_CLIENT_CERT = "org.apache.felix.https.clientcertificate";
+    public static final String FELIX_HTTPS_CLIENT_CERT = "org.apache.felix.https.clientcertificate";
 
     /** Felix specific property to configure the session timeout in minutes (same session-timout in web.xml). Default is servlet container specific */
     public static final String FELIX_SESSION_TIMEOUT = "org.apache.felix.http.session.timeout";

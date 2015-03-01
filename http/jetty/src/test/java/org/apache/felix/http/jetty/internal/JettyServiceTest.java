@@ -48,16 +48,9 @@ import org.apache.felix.http.base.internal.HttpServiceController;
 import org.apache.felix.http.jetty.internal.JettyService.Deployment;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.mockito.Matchers;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceFactory;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.Version;
-import org.osgi.service.http.context.ServletContextHelper;
-import org.osgi.service.http.runtime.HttpServiceRuntime;
 
 public class JettyServiceTest extends TestCase
 {
@@ -92,19 +85,6 @@ public class JettyServiceTest extends TestCase
         when(mockBundle.getSymbolicName()).thenReturn("main");
         when(mockBundle.getVersion()).thenReturn(new Version("1.0.0"));
         when(mockBundle.getHeaders()).thenReturn(new Hashtable<String, String>());
-        final ServiceReference ref = mock(ServiceReference.class);
-        when(ref.getProperty(Constants.SERVICE_ID)).thenReturn(1L);
-        final ServiceRegistration reg = mock(ServiceRegistration.class);
-        when(reg.getReference()).thenReturn(ref);
-        when(mockBundleContext.registerService((Class<ServletContextHelper>)Matchers.isNotNull(),
-                (ServiceFactory<ServletContextHelper>)Matchers.any(ServiceFactory.class),
-                Matchers.any(Dictionary.class))).thenReturn(reg);
-        when(mockBundleContext.registerService(Matchers.<String[]>any(),
-                Matchers.any(ServiceFactory.class),
-                Matchers.any(Dictionary.class))).thenReturn(reg);
-        when(mockBundleContext.registerService((Class<HttpServiceRuntime>)Matchers.isNotNull(),
-                Matchers.any(HttpServiceRuntime.class),
-                Matchers.any(Dictionary.class))).thenReturn(reg);
 
         httpServiceController = new HttpServiceController(mockBundleContext);
         dispatcherServlet = new DispatcherServlet(httpServiceController);
@@ -158,13 +138,11 @@ public class JettyServiceTest extends TestCase
         //Add a Filter to test whether the osgi-bundlecontext is available at init
         webAppBundleContext.addServlet(new ServletHolder(new Servlet()
         {
-            @Override
             public void service(ServletRequest request, ServletResponse response) throws ServletException, IOException
             {
                 // Do Nothing
             }
 
-            @Override
             public void init(ServletConfig config) throws ServletException
             {
                 ServletContext context = config.getServletContext();
@@ -174,19 +152,16 @@ public class JettyServiceTest extends TestCase
                 testLatch.countDown();
             }
 
-            @Override
             public String getServletInfo()
             {
                 return null;
             }
 
-            @Override
             public ServletConfig getServletConfig()
             {
                 return null;
             }
 
-            @Override
             public void destroy()
             {
                 // Do Nothing
@@ -195,7 +170,6 @@ public class JettyServiceTest extends TestCase
 
         webAppBundleContext.addFilter(new FilterHolder(new Filter()
         {
-            @Override
             public void init(FilterConfig filterConfig) throws ServletException
             {
                 ServletContext context = filterConfig.getServletContext();
@@ -205,13 +179,11 @@ public class JettyServiceTest extends TestCase
                 testLatch.countDown();
             }
 
-            @Override
             public void doFilter(ServletRequest arg0, ServletResponse response, FilterChain chain) throws IOException, ServletException
             {
                 // Do Nothing
             }
 
-            @Override
             public void destroy()
             {
                 // Do Nothing
