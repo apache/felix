@@ -16,3 +16,5 @@
 #
 Private-Package:  \
 	org.apache.felix.dependencymanager.samples.hello.annot
+Bundle-Description: Dependency Manager hello example with annotations
+Bundle-Name: Dependency Manager Hello Example With Annotations

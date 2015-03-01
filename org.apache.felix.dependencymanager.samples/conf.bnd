@@ -17,3 +17,5 @@
 Private-Package:  \
 	org.apache.felix.dependencymanager.samples.conf
 Bundle-Activator: org.apache.felix.dependencymanager.samples.conf.Activator
+Bundle-Description: Dependency Manager examples configurations
+Bundle-Name: Dependency Manager Examples Configurations

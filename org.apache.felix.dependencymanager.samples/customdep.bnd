@@ -17,3 +17,5 @@
 Private-Package:  \
 	org.apache.felix.dependencymanager.samples.customdep
 Bundle-Activator: org.apache.felix.dependencymanager.samples.customdep.Activator
+Bundle-Description: Dependency Manager custom dependencies example
+Bundle-Name: Dependency Manager Custom Dependencies Example

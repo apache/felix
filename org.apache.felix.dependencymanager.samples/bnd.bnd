@@ -57,3 +57,10 @@ Bundle-Version: 1.0.0
 -sub:  \
 	*.bnd
 -metatype: *
+Include-Resource: META-INF/=resources/LICENSE,\
+	META-INF/=resources/NOTICE,\
+	META-INF/=resources/DEPENDENCIES,\
+	META-INF/=resources/changelog.txt
+Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.txt
+Bundle-DocURL: http://felix.apache.org/documentation/subprojects/apache-felix-dependency-manager.html
+Bundle-Vendor: The Apache Software Foundation

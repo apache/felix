@@ -128,7 +128,7 @@ public class AnnotationPlugin implements AnalyzerPlugin, Plugin {
     private void init(Analyzer analyzer) {
         m_logger.setLevel(parseOption(m_properties, LOGLEVEL, BndLogger.Level.Warn.toString()));
         m_buildImportExportService = parseOption(m_properties, BUILD_IMPEXT, false);
-        m_addRequireCapability = parseOption(m_properties, ADD_REQUIRE_CAPABILITY, true);
+        m_addRequireCapability = parseOption(m_properties, ADD_REQUIRE_CAPABILITY, false);
         analyzer.setExceptions(true);
         m_logger.info("Initialized Bnd DependencyManager plugin: buildImportExport=%b", m_buildImportExportService);
     }
