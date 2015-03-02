@@ -53,16 +53,18 @@ public final class BaselineReport
      */
     private File outputDirectory;
 
-    private Sink sink;
+    private static final class Context {
+        public Sink sink;
 
-    private Locale locale;
+        public Locale locale;
 
-    private int currentDepth = 0;
+        public int currentDepth = 0;
+    }
 
     // AbstractBaselinePlugin events
 
     @Override
-    protected void init()
+    protected Object init(final Object context)
     {
         failOnError = false;
         failOnWarning = false;
@@ -109,14 +111,25 @@ public final class BaselineReport
                 IOUtil.close( target );
             }
         }
+        return context;
     }
 
-    protected void startBaseline( String generationDate, String bundleName, String currentVersion, String previousVersion )
+    @Override
+    protected void close(final Object context)
     {
+        // nothing to do
+    }
+
+    @Override
+    protected void startBaseline( final Object context, String generationDate, String bundleName, String currentVersion, String previousVersion )
+    {
+        final Context ctx = (Context)context;
+        final Sink sink = ctx.sink;
+
         sink.head();
         sink.title();
 
-        String title = getBundle( locale ).getString( "report.baseline.title" );
+        String title = getBundle( ctx.locale ).getString( "report.baseline.title" );
         sink.text( title );
         sink.title_();
         sink.head_();
@@ -129,7 +142,7 @@ public final class BaselineReport
         sink.sectionTitle1_();
 
         sink.paragraph();
-        sink.text( getBundle( locale ).getString( "report.baseline.bndlink" ) + " " );
+        sink.text( getBundle( ctx.locale ).getString( "report.baseline.bndlink" ) + " " );
         sink.link( "http://www.aqute.biz/Bnd/Bnd" );
         sink.text( "Bnd" );
         sink.link_();
@@ -137,7 +150,7 @@ public final class BaselineReport
         sink.paragraph_();
 
         sink.paragraph();
-        sink.text( getBundle( locale ).getString( "report.baseline.bundle" ) + " " );
+        sink.text( getBundle( ctx.locale ).getString( "report.baseline.bundle" ) + " " );
         sink.figure();
         sink.figureGraphics( "images/baseline/bundle.gif" );
         sink.figure_();
@@ -148,21 +161,21 @@ public final class BaselineReport
         sink.listItem_();
 
         sink.paragraph();
-        sink.text( getBundle( locale ).getString( "report.baseline.version.current" ) + " " );
+        sink.text( getBundle( ctx.locale ).getString( "report.baseline.version.current" ) + " " );
         sink.bold();
         sink.text( currentVersion );
         sink.bold_();
         sink.paragraph_();
 
         sink.paragraph();
-        sink.text( getBundle( locale ).getString( "report.baseline.version.comparison" ) + " " );
+        sink.text( getBundle( ctx.locale ).getString( "report.baseline.version.comparison" ) + " " );
         sink.bold();
         sink.text( comparisonVersion );
         sink.bold_();
         sink.paragraph_();
 
         sink.paragraph();
-        sink.text( getBundle( locale ).getString( "report.baseline.generationdate" ) + " " );
+        sink.text( getBundle( ctx.locale ).getString( "report.baseline.generationdate" ) + " " );
         sink.bold();
         sink.text( generationDate );
         sink.bold_();
@@ -171,7 +184,9 @@ public final class BaselineReport
         sink.section1_();
     }
 
-    protected void startPackage( boolean mismatch,
+    @Override
+    protected void startPackage( final Object context,
+                                 boolean mismatch,
                                  String packageName,
                                  String shortDelta,
                                  String delta,
@@ -181,6 +196,9 @@ public final class BaselineReport
                                  DiffMessage diffMessage,
                                  Map<String,String> attributes )
     {
+        final Context ctx = (Context)context;
+        final Sink sink = ctx.sink;
+
         sink.list();
 
         sink.listItem();
@@ -219,18 +237,23 @@ public final class BaselineReport
         }
     }
 
-    protected void startDiff( int depth,
+    @Override
+    protected void startDiff( final Object context,
+                              int depth,
                               String type,
                               String name,
                               String delta,
                               String shortDelta )
     {
-        if ( currentDepth < depth )
+        final Context ctx = (Context)context;
+        final Sink sink = ctx.sink;
+
+        if ( ctx.currentDepth < depth )
         {
             sink.list();
         }
 
-        currentDepth = depth;
+        ctx.currentDepth = depth;
 
         sink.listItem();
         sink.figure();
@@ -249,35 +272,44 @@ public final class BaselineReport
         sink.italic_();
     }
 
-    protected void endDiff( int depth )
+    @Override
+    protected void endDiff( final Object context, int depth )
     {
+        final Context ctx = (Context)context;
+        final Sink sink = ctx.sink;
+
         sink.listItem_();
 
-        if ( currentDepth > depth )
+        if ( ctx.currentDepth > depth )
         {
             sink.list_();
         }
 
-        currentDepth = depth;
+        ctx.currentDepth = depth;
     }
 
-    protected void endPackage()
+    @Override
+    protected void endPackage(final Object context)
     {
-        if ( currentDepth > 0 )
+        final Context ctx = (Context)context;
+        final Sink sink = ctx.sink;
+        if ( ctx.currentDepth > 0 )
         {
             sink.list_();
-            currentDepth = 0;
+            ctx.currentDepth = 0;
         }
 
         sink.listItem_();
         sink.list_();
     }
 
-    protected void endBaseline()
+    @Override
+    protected void endBaseline(final Object context)
     {
-        sink.body_();
-        sink.flush();
-        sink.close();
+        final Context ctx = (Context)context;
+        ctx.sink.body_();
+        ctx.sink.flush();
+        ctx.sink.close();
     }
 
     // MavenReport methods
@@ -290,12 +322,13 @@ public final class BaselineReport
     public void generate( @SuppressWarnings( "deprecation" ) org.codehaus.doxia.sink.Sink sink, Locale locale )
         throws MavenReportException
     {
-        this.sink = sink;
-        this.locale = locale;
+        final Context ctx = new Context();
+        ctx.sink = sink;
+        ctx.locale = locale;
 
         try
         {
-            execute();
+            execute(ctx);
         }
         catch ( Exception e )
         {
