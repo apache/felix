@@ -46,7 +46,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
 import org.osgi.framework.Constants;
-import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -163,7 +162,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
      * {@link #persistenceManagerMap}, which is ordered according to the
      * {@link RankingComparator}.
      */
-    private PersistenceManager[] persistenceManagers;
+    private CachingPersistenceManagerProxy[] persistenceManagers;
 
     // the persistenceManagerTracker.getTrackingCount when the
     // persistenceManagers were last got
@@ -642,10 +641,10 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     ConfigurationImpl[] listConfigurations( ConfigurationAdminImpl configurationAdmin, String filterString )
         throws IOException, InvalidSyntaxException
     {
-        Filter filter = null;
+        SimpleFilter filter = null;
         if ( filterString != null )
         {
-            filter = bundleContext.createFilter( filterString );
+            filter = SimpleFilter.parse( filterString );
         }
 
         log( LogService.LOG_DEBUG, "Listing configurations matching {0}", new Object[]
@@ -653,10 +652,10 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
         List configList = new ArrayList();
 
-        PersistenceManager[] pmList = getPersistenceManagers();
+        CachingPersistenceManagerProxy[] pmList = getPersistenceManagers();
         for ( int i = 0; i < pmList.length; i++ )
         {
-            Enumeration configs = pmList[i].getDictionaries();
+            Enumeration configs = pmList[i].getDictionaries( filter );
             while ( configs.hasMoreElements() )
             {
                 final Dictionary config = ( Dictionary ) configs.nextElement();
@@ -681,30 +680,23 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     continue;
                 }
 
-                // check filter
-                if ( filter == null || filter.match( config ) )
+                // ensure the service.pid and returned a cached config if available
+                ConfigurationImpl cfg = getCachedConfiguration( pid );
+                if ( cfg == null )
                 {
-                    // ensure the service.pid and returned a cached config if available
-                    ConfigurationImpl cfg = getCachedConfiguration( pid );
-                    if ( cfg == null )
-                    {
-                        cfg = new ConfigurationImpl( this, pmList[i], config );
-                    }
+                    cfg = new ConfigurationImpl( this, pmList[i], config );
+                }
 
-                    // FELIX-611: Ignore configuration objects without props
-                    if ( !cfg.isNew() )
-                    {
-                        log( LogService.LOG_DEBUG, "Adding configuration {0}", new Object[]
-                            { pid } );
-                        configList.add( cfg );
-                    }
-                    else
-                    {
-                        log( LogService.LOG_DEBUG, "Omitting configuration {0}: Is new", new Object[]
-                            { pid } );
-                    }
-                } else {
-                    log( LogService.LOG_DEBUG, "Omitting configuration {0}: Does not match filter", new Object[]
+                // FELIX-611: Ignore configuration objects without props
+                if ( !cfg.isNew() )
+                {
+                    log( LogService.LOG_DEBUG, "Adding configuration {0}", new Object[]
+                        { pid } );
+                    configList.add( cfg );
+                }
+                else
+                {
+                    log( LogService.LOG_DEBUG, "Omitting configuration {0}: Is new", new Object[]
                         { pid } );
                 }
             }
@@ -813,19 +805,19 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
     // ---------- internal -----------------------------------------------------
 
-    private PersistenceManager[] getPersistenceManagers()
+    private CachingPersistenceManagerProxy[] getPersistenceManagers()
     {
         int currentPmtCount = persistenceManagerTracker.getTrackingCount();
         if ( persistenceManagers == null || currentPmtCount > pmtCount )
         {
 
             List pmList = new ArrayList();
-            PersistenceManager[] pm;
+            CachingPersistenceManagerProxy[] pm;
 
             ServiceReference[] refs = persistenceManagerTracker.getServiceReferences();
             if ( refs == null || refs.length == 0 )
             {
-                pm = new PersistenceManager[0];
+                pm = new CachingPersistenceManagerProxy[0];
             }
             else
             {
@@ -845,7 +837,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     }
                 }
 
-                pm = ( PersistenceManager[] ) pmList.toArray( new PersistenceManager[pmList.size()] );
+                pm = ( CachingPersistenceManagerProxy[] ) pmList.toArray( new CachingPersistenceManagerProxy[pmList.size()] );
             }
 
             pmtCount = currentPmtCount;

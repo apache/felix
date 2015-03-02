@@ -21,14 +21,17 @@ package org.apache.felix.cm.impl;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Dictionary;
 import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.Locale;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.Vector;
 
 
@@ -38,45 +41,39 @@ import java.util.Vector;
  * out by the Configuration Admin Service Specification requiring the property
  * names to keep case but to ignore case when accessing the properties.
  */
-public class CaseInsensitiveDictionary extends Dictionary
+public class CaseInsensitiveDictionary extends Dictionary<String, Object>
 {
 
     /**
      * The backend dictionary with lower case keys.
      */
-    private Hashtable internalMap;
-
-    /**
-     * Mapping of lower case keys to original case keys as last used to set a
-     * property value.
-     */
-    private Hashtable originalKeys;
-
+    private SortedMap<String, Object> internalMap;
 
     public CaseInsensitiveDictionary()
     {
-        internalMap = new Hashtable();
-        originalKeys = new Hashtable();
+        internalMap = new TreeMap<String, Object>( CASE_INSENSITIVE_ORDER );
     }
 
 
     public CaseInsensitiveDictionary( Dictionary props )
     {
-        this();
-
-        if ( props != null )
+        if ( props instanceof CaseInsensitiveDictionary)
         {
+            internalMap = new TreeMap<String, Object>( ((CaseInsensitiveDictionary) props).internalMap );
+        }
+        else if ( props != null )
+        {
+            internalMap = new TreeMap<String, Object>( CASE_INSENSITIVE_ORDER );
             Enumeration keys = props.keys();
             while ( keys.hasMoreElements() )
             {
                 Object key = keys.nextElement();
 
                 // check the correct syntax of the key
-                checkKey( key );
+                String k = checkKey( key );
 
                 // check uniqueness of key
-                String lowerCase = toLowerCase( key );
-                if ( internalMap.containsKey( lowerCase ) )
+                if ( internalMap.containsKey( k ) )
                 {
                     throw new IllegalArgumentException( "Key [" + key + "] already present in different case" );
                 }
@@ -86,22 +83,23 @@ public class CaseInsensitiveDictionary extends Dictionary
                 value = checkValue( value );
 
                 // add the key/value pair
-                internalMap.put( lowerCase, value );
-                originalKeys.put( lowerCase, key );
+                internalMap.put( k, value );
             }
+        }
+        else
+        {
+            internalMap = new TreeMap<String, Object>( CASE_INSENSITIVE_ORDER );
         }
     }
 
 
     CaseInsensitiveDictionary( CaseInsensitiveDictionary props, boolean deepCopy )
     {
-        Hashtable tmp = new Hashtable( Math.max( 2 * props.internalMap.size(), 11 ), 0.75f );
         if ( deepCopy )
         {
-            Iterator entries = props.internalMap.entrySet().iterator();
-            while ( entries.hasNext() )
+            internalMap = new TreeMap<String, Object>( CASE_INSENSITIVE_ORDER );
+            for( Map.Entry<String, Object> entry : props.internalMap.entrySet() )
             {
-                Map.Entry entry = ( Map.Entry ) entries.next();
                 Object value = entry.getValue();
                 if ( value.getClass().isArray() )
                 {
@@ -119,18 +117,15 @@ public class CaseInsensitiveDictionary extends Dictionary
                     // Vector. And even though we accept Collection nowadays
                     // there might be clients out there still written against
                     // R4 and R4.1 spec expecting Vector
-                    value = new Vector( ( Collection ) value );
+                    value = new Vector<Object>( ( Collection ) value );
                 }
-                tmp.put( entry.getKey(), value );
+                internalMap.put( entry.getKey(), value );
             }
         }
         else
         {
-            tmp.putAll( props.internalMap );
+            internalMap = new TreeMap<String, Object>( props.internalMap );
         }
-
-        internalMap = tmp;
-        originalKeys = new Hashtable( props.originalKeys );
     }
 
 
@@ -139,7 +134,7 @@ public class CaseInsensitiveDictionary extends Dictionary
      *
      * @see java.util.Dictionary#elements()
      */
-    public Enumeration elements()
+    public Enumeration<Object> elements()
     {
         return Collections.enumeration( internalMap.values() );
     }
@@ -157,7 +152,7 @@ public class CaseInsensitiveDictionary extends Dictionary
             throw new NullPointerException( "key" );
         }
 
-        return internalMap.get( toLowerCase( key ) );
+        return internalMap.get( key );
     }
 
 
@@ -177,18 +172,18 @@ public class CaseInsensitiveDictionary extends Dictionary
      *
      * @see java.util.Dictionary#keys()
      */
-    public Enumeration keys()
+    public Enumeration<String> keys()
     {
-        return Collections.enumeration( originalKeys.values() );
+        return Collections.enumeration( internalMap.keySet() );
     }
 
 
     /*
      * (non-Javadoc)
      *
-     * @see java.util.Dictionary#put(java.lang.Object, java.lang.Object)
+     * @see java.util.Dictionary#put(java.lang.String, java.lang.Object)
      */
-    public Object put( Object key, Object value )
+    public Object put( String key, Object value )
     {
         if ( key == null || value == null )
         {
@@ -198,9 +193,7 @@ public class CaseInsensitiveDictionary extends Dictionary
         checkKey( key );
         value = checkValue( value );
 
-        String lowerCase = toLowerCase( key );
-        originalKeys.put( lowerCase, key );
-        return internalMap.put( lowerCase, value );
+        return internalMap.put( key, value );
     }
 
 
@@ -216,9 +209,7 @@ public class CaseInsensitiveDictionary extends Dictionary
             throw new NullPointerException( "key" );
         }
 
-        String lowerCase = toLowerCase( key );
-        originalKeys.remove( lowerCase );
-        return internalMap.remove( lowerCase );
+        return internalMap.remove( key );
     }
 
 
@@ -250,12 +241,12 @@ public class CaseInsensitiveDictionary extends Dictionary
      * If the key does not comply an <code>IllegalArgumentException</code> is
      * thrown.
      *
-     * @param key
+     * @param keyObject
      *            The configuration property key to check.
      * @throws IllegalArgumentException
      *             if the key does not comply with the symbolic-name production.
      */
-    static void checkKey( Object keyObject )
+    static String checkKey( Object keyObject )
     {
         // check for wrong type or null key
         if ( !( keyObject instanceof String ) )
@@ -270,26 +261,32 @@ public class CaseInsensitiveDictionary extends Dictionary
         {
             throw new IllegalArgumentException( "Key [" + key + "] must not be an empty string" );
         }
+
+        return key;
     }
 
 
-    static final String toLowerCase( Object keyObject )
-    {
-        final String key = ( String ) keyObject;
-        return key.toLowerCase( Locale.ENGLISH );
-    }
-
+    private static final Set<Class> KNOWN = new HashSet<Class>(Arrays.<Class>asList(
+            String.class, Integer.class, Long.class, Float.class,
+            Double.class, Byte.class, Short.class, Character.class,
+            Boolean.class));
 
     static Object checkValue( Object value )
     {
-        Class type;
         if ( value == null )
         {
             // null is illegal
             throw new IllegalArgumentException( "Value must not be null" );
 
         }
-        else if ( value.getClass().isArray() )
+
+        Class type = value.getClass();
+        // Fast check for simple types
+        if ( KNOWN.contains( type ) )
+        {
+            return value;
+        }
+        else if ( type.isArray() )
         {
             // check simple or primitive
             type = value.getClass().getComponentType();
@@ -312,11 +309,10 @@ public class CaseInsensitiveDictionary extends Dictionary
             }
 
             // ensure all elements have the same type and to internal list
-            Collection internalValue = new ArrayList( collection.size() );
+            Collection<Object> internalValue = new ArrayList<Object>( collection.size() );
             type = null;
-            for ( Iterator ci = collection.iterator(); ci.hasNext(); )
+            for ( Object el : collection )
             {
-                Object el = ci.next();
                 if ( el == null )
                 {
                     throw new IllegalArgumentException( "Collection must not contain null elements" );
@@ -341,9 +337,7 @@ public class CaseInsensitiveDictionary extends Dictionary
         }
 
         // check for simple type
-        if ( type == String.class || type == Integer.class || type == Long.class || type == Float.class
-            || type == Double.class || type == Byte.class || type == Short.class || type == Character.class
-            || type == Boolean.class )
+        if ( KNOWN.contains( type ) )
         {
             return value;
         }
@@ -358,6 +352,58 @@ public class CaseInsensitiveDictionary extends Dictionary
     public String toString()
     {
         return internalMap.toString();
+    }
+
+    public static final Comparator<String> CASE_INSENSITIVE_ORDER = new CaseInsensitiveComparator();
+
+    private static class CaseInsensitiveComparator implements Comparator<String>
+    {
+
+        public int compare(String s1, String s2)
+        {
+            int n1 = s1.length();
+            int n2 = s2.length();
+            int min = n1 < n2 ? n1 : n2;
+            for ( int i = 0; i < min; i++ )
+            {
+                char c1 = s1.charAt( i );
+                char c2 = s2.charAt( i );
+                if ( c1 != c2 )
+                {
+                    // Fast check for simple ascii codes
+                    if ( c1 <= 128 && c2 <= 128 )
+                    {
+                        c1 = toLowerCaseFast(c1);
+                        c2 = toLowerCaseFast(c2);
+                        if ( c1 != c2 )
+                        {
+                            return c1 - c2;
+                        }
+                    }
+                    else
+                    {
+                        c1 = Character.toUpperCase( c1 );
+                        c2 = Character.toUpperCase( c2 );
+                        if ( c1 != c2 )
+                        {
+                            c1 = Character.toLowerCase( c1 );
+                            c2 = Character.toLowerCase( c2 );
+                            if ( c1 != c2 )
+                            {
+                                // No overflow because of numeric promotion
+                                return c1 - c2;
+                            }
+                        }
+                    }
+                }
+            }
+            return n1 - n2;
+        }
+    }
+
+    private static char toLowerCaseFast( char ch )
+    {
+        return ( ch >= 'A' && ch <= 'Z' ) ? ( char ) ( ch + 'a' - 'A' ) : ch;
     }
 
 }
