@@ -28,8 +28,6 @@ import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * Tracks all {@link ServletContextHelper} services.
- * Only services with the required properties are tracker, services missing these
- * properties are ignored.
  */
 public final class ServletContextHelperTracker extends ServiceTracker<ServletContextHelper, ServiceReference<ServletContextHelper>>
 {

@@ -18,6 +18,7 @@
  */
 package org.apache.felix.http.base.internal.runtime;
 
+import java.util.Collections;
 import java.util.Map;
 
 import javax.servlet.DispatcherType;
@@ -132,7 +133,7 @@ public final class FilterInfo extends WhiteboardServiceInfo<Filter>
         this.patterns = null;
         this.servletNames = null;
         this.regexs = new String[] {regex};
-        this.initParams = initParams;
+        this.initParams = Collections.unmodifiableMap(initParams);
         this.asyncSupported = false;
         this.dispatcher = new DispatcherType[] {DispatcherType.REQUEST};
     }
@@ -154,7 +155,7 @@ public final class FilterInfo extends WhiteboardServiceInfo<Filter>
         this.regexs = regexs;
         this.asyncSupported = asyncSupported;
         this.dispatcher = dispatcher;
-        this.initParams = initParams;
+        this.initParams = Collections.unmodifiableMap(initParams);
     }
 
     @Override
@@ -193,6 +194,9 @@ public final class FilterInfo extends WhiteboardServiceInfo<Filter>
         return dispatcher;
     }
 
+    /**
+     * Returns an immutable map of the init parameters.
+     */
     public Map<String, String> getInitParameters()
     {
         return initParams;

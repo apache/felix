@@ -521,6 +521,6 @@ public final class ServletContextHelperManager
             handlerRuntimes = registry.getRuntime();
             listenerRuntimes = listenerRegistry.getContextRuntimes();
         }
-        return new RegistryRuntime(contextHandlers, handlerRuntimes, listenerRuntimes);
+        return new RegistryRuntime(contextHandlers, handlerRuntimes, listenerRuntimes, this.invalidRegistrations);
     }
 }
