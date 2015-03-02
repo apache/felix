@@ -96,6 +96,8 @@ public final class RuntimeDTOBuilder
                 dto.resourceDTOs = new ResourceDTO[0];
                 dto.serviceId = sch.getServiceId();
                 dto.servletDTOs = new ServletDTO[0];
+
+                failedServletContextDTOs.add(dto);
             }
         }
         //TODO <**
