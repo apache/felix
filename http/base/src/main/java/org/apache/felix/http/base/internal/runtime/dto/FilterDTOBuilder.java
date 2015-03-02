@@ -26,8 +26,6 @@ import org.osgi.service.http.runtime.dto.FilterDTO;
 
 final class FilterDTOBuilder extends BaseDTOBuilder<FilterHandler, FilterDTO>
 {
-    private static final String[] STRING_ARRAY = new String[0];
-
     @Override
     FilterDTO buildDTO(FilterHandler filterHandler, long servletContextId)
     {
@@ -36,13 +34,13 @@ final class FilterDTOBuilder extends BaseDTOBuilder<FilterHandler, FilterDTO>
         FilterDTO filterDTO = new FilterDTO();
         filterDTO.asyncSupported = info.isAsyncSupported();
         filterDTO.dispatcher = getNames(info.getDispatcher());
-        filterDTO.initParams = copyWithDefault(info.getInitParameters());
+        filterDTO.initParams = info.getInitParameters();
         filterDTO.name = info.getName();
-        filterDTO.patterns = copyWithDefault(info.getPatterns(), STRING_ARRAY);
-        filterDTO.regexs = copyWithDefault(info.getRegexs(), STRING_ARRAY);
+        filterDTO.patterns = copyWithDefault(info.getPatterns(), BuilderConstants.STRING_ARRAY);
+        filterDTO.regexs = copyWithDefault(info.getRegexs(), BuilderConstants.STRING_ARRAY);
         filterDTO.serviceId = filterHandler.getFilterInfo().getServiceId();
         filterDTO.servletContextId = servletContextId;
-        filterDTO.servletNames = copyWithDefault(info.getServletNames(), STRING_ARRAY);
+        filterDTO.servletNames = copyWithDefault(info.getServletNames(), BuilderConstants.STRING_ARRAY);
 
         return filterDTO;
     }
@@ -51,7 +49,7 @@ final class FilterDTOBuilder extends BaseDTOBuilder<FilterHandler, FilterDTO>
     {
         if (dispatcher == null)
         {
-            return STRING_ARRAY;
+            return BuilderConstants.STRING_ARRAY;
         }
 
         String[] names = new String[dispatcher.length];
