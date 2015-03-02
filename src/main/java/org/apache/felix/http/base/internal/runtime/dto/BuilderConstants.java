@@ -18,22 +18,23 @@
  */
 package org.apache.felix.http.base.internal.runtime.dto;
 
-import org.apache.felix.http.base.internal.handler.ServletHandler;
-import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.osgi.service.http.runtime.dto.ErrorPageDTO;
+import org.osgi.service.http.runtime.dto.FilterDTO;
+import org.osgi.service.http.runtime.dto.ListenerDTO;
 import org.osgi.service.http.runtime.dto.ResourceDTO;
+import org.osgi.service.http.runtime.dto.ServletContextDTO;
+import org.osgi.service.http.runtime.dto.ServletDTO;
 
-final class ResourceDTOBuilder extends BaseDTOBuilder<ServletHandler, ResourceDTO>
+public abstract class BuilderConstants
 {
-    @Override
-    ResourceDTO buildDTO(ServletHandler handler, long servletContextId)
-    {
-        ServletInfo servletInfo = handler.getServletInfo();
 
-        ResourceDTO resourceDTO = new ResourceDTO();
-        resourceDTO.patterns = copyWithDefault(servletInfo.getPatterns(), BuilderConstants.STRING_ARRAY);
-        resourceDTO.prefix = servletInfo.getPrefix();
-        resourceDTO.serviceId = servletInfo.getServiceId();
-        resourceDTO.servletContextId = servletContextId;
-        return resourceDTO;
-    }
+    public static final String[] STRING_ARRAY = new String[0];
+
+    public static final ServletContextDTO[] CONTEXT_DTO_ARRAY = new ServletContextDTO[0];
+
+    public static final ServletDTO[] SERVLET_DTO_ARRAY = new ServletDTO[0];
+    public static final ResourceDTO[] RESOURCE_DTO_ARRAY = new ResourceDTO[0];
+    public static final FilterDTO[] FILTER_DTO_ARRAY = new FilterDTO[0];
+    public static final ErrorPageDTO[] ERROR_PAGE_DTO_ARRAY = new ErrorPageDTO[0];
+    public static final ListenerDTO[] LISTENER_DTO_ARRAY = new ListenerDTO[0];
 }

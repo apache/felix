@@ -51,7 +51,6 @@ import org.osgi.service.http.runtime.dto.ServletDTO;
 
 public final class RuntimeDTOBuilder
 {
-    private static final ServletContextDTO[] CONTEXT_DTO_ARRAY = new ServletContextDTO[0];
 
     private static final ServletDTOBuilder SERVLET_DTO_BUILDER = new ServletDTOBuilder();
     private static final ResourceDTOBuilder RESOURCE_DTO_BUILDER = new ResourceDTOBuilder();
@@ -87,15 +86,15 @@ public final class RuntimeDTOBuilder
                 final FailedServletContextDTO dto = new FailedServletContextDTO();
                 dto.attributes = Collections.emptyMap();
                 dto.contextPath = sch.getPath();
-                dto.errorPageDTOs = new ErrorPageDTO[0];
+                dto.errorPageDTOs = BuilderConstants.ERROR_PAGE_DTO_ARRAY;
                 dto.failureReason = DTOConstants.FAILURE_REASON_VALIDATION_FAILED;
-                dto.filterDTOs = new FilterDTO[0];
+                dto.filterDTOs = BuilderConstants.FILTER_DTO_ARRAY;
                 dto.initParams = sch.getInitParameters();
-                dto.listenerDTOs = new ListenerDTO[0];
+                dto.listenerDTOs = BuilderConstants.LISTENER_DTO_ARRAY;
                 dto.name = sch.getName();
-                dto.resourceDTOs = new ResourceDTO[0];
+                dto.resourceDTOs = BuilderConstants.RESOURCE_DTO_ARRAY;
                 dto.serviceId = sch.getServiceId();
-                dto.servletDTOs = new ServletDTO[0];
+                dto.servletDTOs = BuilderConstants.SERVLET_DTO_ARRAY;
 
                 failedServletContextDTOs.add(dto);
             }
@@ -131,7 +130,7 @@ public final class RuntimeDTOBuilder
                     registry.getHandlerRuntime(context),
                     registry.getListenerRuntime(context)));
         }
-        return contextDTOs.toArray(CONTEXT_DTO_ARRAY);
+        return contextDTOs.toArray(BuilderConstants.CONTEXT_DTO_ARRAY);
     }
 
     private ServletContextDTO createContextDTO(ContextHandler context,

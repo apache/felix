@@ -22,10 +22,7 @@ import static java.util.Arrays.copyOf;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.osgi.dto.DTO;
 
@@ -43,11 +40,6 @@ abstract class BaseDTOBuilder<T, U extends DTO>
     }
 
     abstract U buildDTO(T whiteboardService, long servletContextId);
-
-    protected <K, V> Map<K, V> copyWithDefault(Map<K, V> map)
-    {
-        return map == null ? Collections.<K, V>emptyMap() : new HashMap<K, V>(map);
-    }
 
     protected <V> V[] copyWithDefault(V[] array, V[] defaultArray)
     {

@@ -38,11 +38,6 @@ import org.osgi.service.http.runtime.dto.ServletDTO;
 
 final class ServletContextDTOBuilder
 {
-    private static final ServletDTO[] SERVLET_DTO_ARRAY = new ServletDTO[0];
-    private static final ResourceDTO[] RESOURCE_DTO_ARRAY = new ResourceDTO[0];
-    private static final FilterDTO[] FILTER_DTO_ARRAY = new FilterDTO[0];
-    private static final ErrorPageDTO[] ERROR_PAGE_DTO_ARRAY = new ErrorPageDTO[0];
-    private static final ListenerDTO[] LISTENER_DTO_ARRAY = new ListenerDTO[0];
 
     private final ContextHandler contextHandler;
     private final ServletDTO[] servletDTOs;
@@ -60,15 +55,15 @@ final class ServletContextDTOBuilder
     {
         this.contextHandler = contextHandler;
         this.servletDTOs = servletDTOs != null ?
-                servletDTOs.toArray(SERVLET_DTO_ARRAY) : SERVLET_DTO_ARRAY;
+                servletDTOs.toArray(BuilderConstants.SERVLET_DTO_ARRAY) : BuilderConstants.SERVLET_DTO_ARRAY;
         this.resourceDTOs = resourceDTOs != null ?
-                resourceDTOs.toArray(RESOURCE_DTO_ARRAY) : RESOURCE_DTO_ARRAY;
+                resourceDTOs.toArray(BuilderConstants.RESOURCE_DTO_ARRAY) : BuilderConstants.RESOURCE_DTO_ARRAY;
         this.filterDTOs = filterDTOs != null ?
-                filterDTOs.toArray(FILTER_DTO_ARRAY) : FILTER_DTO_ARRAY;
+                filterDTOs.toArray(BuilderConstants.FILTER_DTO_ARRAY) : BuilderConstants.FILTER_DTO_ARRAY;
         this.errorPageDTOs = errorPageDTOs != null ?
-                errorPageDTOs.toArray(ERROR_PAGE_DTO_ARRAY) : ERROR_PAGE_DTO_ARRAY;
+                errorPageDTOs.toArray(BuilderConstants.ERROR_PAGE_DTO_ARRAY) : BuilderConstants.ERROR_PAGE_DTO_ARRAY;
         this.listenerDTOs = listenerDTOs != null ?
-                listenerDTOs.toArray(LISTENER_DTO_ARRAY) : LISTENER_DTO_ARRAY;
+                listenerDTOs.toArray(BuilderConstants.LISTENER_DTO_ARRAY) : BuilderConstants.LISTENER_DTO_ARRAY;
     }
 
     ServletContextDTO build()
@@ -82,12 +77,13 @@ final class ServletContextDTOBuilder
         contextDTO.contextPath = context.getContextPath();
         contextDTO.errorPageDTOs = errorPageDTOs;
         contextDTO.filterDTOs = filterDTOs;
-        contextDTO.initParams = getInitParameters(context);
+        contextDTO.initParams = contextInfo.getInitParameters();
         contextDTO.listenerDTOs = listenerDTOs;
         contextDTO.name = context.getServletContextName();
         contextDTO.resourceDTOs = resourceDTOs;
         contextDTO.servletDTOs = servletDTOs;
         contextDTO.serviceId = contextId;
+
         return contextDTO;
     }
 
@@ -123,15 +119,5 @@ final class ServletContextDTOBuilder
                 short.class.isAssignableFrom(type) ||
                 byte.class.isAssignableFrom(type) ||
                 char.class.isAssignableFrom(type);
-    }
-
-    private Map<String, String> getInitParameters(ServletContext context)
-    {
-        Map<String, String> initParameters = new HashMap<String, String>();
-        for (String name : list(context.getInitParameterNames()))
-        {
-            initParameters.put(name, context.getInitParameter(name));
-        }
-        return initParameters;
     }
 }
