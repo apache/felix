@@ -27,11 +27,32 @@ In addition, some new features have been implemented in dependency manager:
 
 * AutoConfig Map field: AutoConfig dependencies can be applied on a field with a Map<Service, Dictionary> type, allowing to traverse currently injected services safely, including service properties. The Map must be traversed using the Map.Entry iterator. See javadoc for DependencyManager.setAutoConfig().
 
-* Inject Configuration on separate callback instance: Configuration can be injected on a separate callback instance, like a CompositionManager for example. See an example in the samples, in org.apache.felix.dependencymanager.samples/src/org/apache/felix/dependencymanager/samples/compositefactory/Activator.java.
+* Inject Configuration on separate callback instance: Configuration can be injected on a separate callback instance, like a CompositionManager for example. See an example in the samples, in org.apache.felix.dependencymanager.samples/src/org/apache/felix/dependencymanager/samples/compositefactory/Activator.java. 
+See FELIX-2706
 
-* Added propagate flag for Service Adapters: you can now choose to propagate or not adaptee service properties.
+* Added propagate flag for Service Adapters: you can now choose to propagate or not adaptee service properties. See FELIX-4600
 
 * "Top" command in the shell: a "top" command is now available from the shell and can be used to display all top components sorted by their init/start elapsed time.
 
+* The Annotations plugin can now automatically generate a Require-Capability header on the Dependency Manager Runtime bundle. 
+Use "add-require-capability=true" option in the plugin declaration property to enable this new feature (see FELIX-4676):
+**  -plugin: org.apache.felix.dm.annotation.plugin.bnd.AnnotationPlugin; add-require-capability=true
+
+* The Configuration Dependency Configuration dependency now supports a "name" attribute, allowing to dynamically configure configuration pids from the @Init method. see FELIX-4777
+
 * Added a benchmark tool for dependency manager (not released, only available from the trunk, see dependencymanager/org.apache.felix.dependencymanager.benchmark/README
+
+* The Annotations "Factory Sets" are deprecated and have been replaced by a nice api exported by the runtime bundle. See FELIX-4684
+
+# What's changed in DependencyManager 4.0
+
+* The Annotations processor is not generating anymore the Import-Service/Export Service by default (no need to specify the "build-import-export-service=false" option in the
+annotations plugin if you don't need to generate automatically the deprecated headers.
+
+* The Dependency Manager metatype Annotations are now deprecated and it is encouraged to use standard bndtools metatypes.
+See org.apache.felix.dependencymanager.samples/src/org/apache/felix/dependencymanager/samples/dictionary/annot/DictionaryConfiguration.java for an example.
+You can also check http://www.aqute.biz/Bnd/MetaType for more information about the bnd metatypes annotations.
+
+
+
 
