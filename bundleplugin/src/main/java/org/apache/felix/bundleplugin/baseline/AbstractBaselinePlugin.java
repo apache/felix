@@ -162,6 +162,12 @@ abstract class AbstractBaselinePlugin
     public final void execute()
         throws MojoExecutionException, MojoFailureException
     {
+        this.execute(null);
+    }
+
+    protected void execute( Object context)
+            throws MojoExecutionException, MojoFailureException
+    {
         if ( skip )
         {
             getLog().info( "Skipping Baseline execution" );
@@ -204,8 +210,7 @@ abstract class AbstractBaselinePlugin
         }
 
         // go!
-
-        init();
+        context = this.init(context);
 
         String generationDate = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm'Z'" ).format( new Date() );
         Reporter reporter = new Processor();
@@ -215,7 +220,7 @@ abstract class AbstractBaselinePlugin
             Set<Info> infoSet = new Baseline( reporter, new DiffPluginImpl() )
                                 .baseline( currentBundle, previousBundle, packageFilters );
 
-            startBaseline( generationDate, project.getArtifactId(), project.getVersion(), previousArtifact.getVersion() );
+            startBaseline( context, generationDate, project.getArtifactId(), project.getVersion(), previousArtifact.getVersion() );
 
             final Info[] infos = infoSet.toArray( new Info[infoSet.size()] );
             Arrays.sort( infos, new InfoComparator() );
@@ -283,7 +288,7 @@ abstract class AbstractBaselinePlugin
                 String suggestedVersionString = String.valueOf( ( info.suggestedVersion == null ) ? "-" : info.suggestedVersion );
                 Map<String,String> attributes = info.attributes;
 
-                startPackage( mismatch,
+                startPackage( context, mismatch,
                               packageName,
                               shortDelta,
                               deltaString,
@@ -295,13 +300,13 @@ abstract class AbstractBaselinePlugin
 
                 if ( Delta.REMOVED != delta )
                 {
-                    doPackageDiff( packageDiff );
+                    doPackageDiff( context, packageDiff );
                 }
 
-                endPackage();
+                endPackage(context);
             }
 
-            endBaseline();
+            endBaseline(context);
         }
         catch ( Exception e )
         {
@@ -310,6 +315,7 @@ abstract class AbstractBaselinePlugin
         finally
         {
             closeJars( currentBundle, previousBundle );
+            this.close(context);
         }
 
         // check if it has to fail if some error has been detected
@@ -354,7 +360,7 @@ abstract class AbstractBaselinePlugin
         }
     }
 
-    private void doPackageDiff( Diff diff )
+    private void doPackageDiff( Object context, Diff diff )
     {
         int depth = 1;
 
@@ -362,38 +368,41 @@ abstract class AbstractBaselinePlugin
         {
             if ( Delta.UNCHANGED != curDiff.getDelta() )
             {
-                doDiff( curDiff, depth );
+                doDiff( context, curDiff, depth );
             }
         }
     }
 
-    private void doDiff( Diff diff, int depth )
+    private void doDiff( Object context, Diff diff, int depth )
     {
         String type = StringUtils.lowerCase( String.valueOf( diff.getType() ) );
         String shortDelta = getShortDelta( diff.getDelta() );
         String delta = StringUtils.lowerCase( String.valueOf( diff.getDelta() ) );
         String name = diff.getName();
 
-        startDiff( depth, type, name, delta, shortDelta );
+        startDiff( context, depth, type, name, delta, shortDelta );
 
         for ( Diff curDiff : diff.getChildren() )
         {
             if ( Delta.UNCHANGED != curDiff.getDelta() )
             {
-                doDiff( curDiff, depth + 1 );
+                doDiff( context, curDiff, depth + 1 );
             }
         }
 
-        endDiff( depth );
+        endDiff( context, depth );
     }
 
     // extensions APIs
 
-    protected abstract void init();
+    protected abstract Object init(final Object initialContext);
 
-    protected abstract void startBaseline( String generationDate, String bundleName, String currentVersion, String previousVersion );
+    protected abstract void close(final Object context);
 
-    protected abstract void startPackage( boolean mismatch,
+    protected abstract void startBaseline( final Object context, String generationDate, String bundleName, String currentVersion, String previousVersion );
+
+    protected abstract void startPackage( final Object context,
+            boolean mismatch,
                                           String name,
                                           String shortDelta,
                                           String delta,
@@ -403,17 +412,18 @@ abstract class AbstractBaselinePlugin
                                           DiffMessage diffMessage,
                                           Map<String,String> attributes );
 
-    protected abstract void startDiff( int depth,
+    protected abstract void startDiff( final Object context,
+                                       int depth,
                                        String type,
                                        String name,
                                        String delta,
                                        String shortDelta );
 
-    protected abstract void endDiff( int depth );
+    protected abstract void endDiff( final Object context, int depth );
 
-    protected abstract void endPackage();
+    protected abstract void endPackage(final Object context);
 
-    protected abstract void endBaseline();
+    protected abstract void endBaseline(final Object context);
 
     // internals
 
