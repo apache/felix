@@ -186,7 +186,7 @@ public class RuntimeDTOBuilderTest
             List<HandlerRuntime> contextRuntimes,
             Map<Long, Collection<ServiceReference<?>>> listenerRuntimes)
     {
-        registry = new RegistryRuntime(contexts, contextRuntimes, listenerRuntimes);
+        registry = new RegistryRuntime(contexts, contextRuntimes, listenerRuntimes, Collections.EMPTY_SET);
     }
 
     @Test

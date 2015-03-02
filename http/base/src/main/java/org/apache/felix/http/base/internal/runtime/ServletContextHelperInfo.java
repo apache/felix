@@ -18,6 +18,7 @@
  */
 package org.apache.felix.http.base.internal.runtime;
 
+import java.util.Collections;
 import java.util.Map;
 
 import org.apache.felix.http.base.internal.util.PatternUtil;
@@ -53,6 +54,7 @@ public final class ServletContextHelperInfo extends AbstractInfo<ServletContextH
         this.initParams = getInitParams(ref, CONTEXT_INIT_PREFIX);
     }
 
+    @SuppressWarnings("unchecked")
     ServletContextHelperInfo(int serviceRanking,
             long serviceId,
             String name,
@@ -62,7 +64,7 @@ public final class ServletContextHelperInfo extends AbstractInfo<ServletContextH
         super(serviceRanking, serviceId);
         this.name = name;
         this.path = path;
-        this.initParams = initParams;
+        this.initParams = initParams == null ? (Map<String, String>)Collections.EMPTY_MAP : Collections.unmodifiableMap(initParams);
     }
 
     private boolean isValidPath()
@@ -100,6 +102,10 @@ public final class ServletContextHelperInfo extends AbstractInfo<ServletContextH
         return this.path;
     }
 
+    /**
+     * Returns an unmodifiable map of the parameters.
+     * @return
+     */
     public Map<String, String> getInitParameters()
     {
         return initParams;

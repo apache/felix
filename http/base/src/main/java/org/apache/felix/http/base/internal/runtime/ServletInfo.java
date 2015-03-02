@@ -129,7 +129,7 @@ public class ServletInfo extends WhiteboardServiceInfo<Servlet>
         {
             this.patterns = new String[] {pattern, pattern + "/*"};
         }
-        this.initParams = initParams;
+        this.initParams = Collections.unmodifiableMap(initParams);
         this.asyncSupported = true;
         this.errorPage = null;
         this.isResource = false;
@@ -149,7 +149,7 @@ public class ServletInfo extends WhiteboardServiceInfo<Servlet>
         this.patterns = patterns;
         this.errorPage = errorPage;
         this.asyncSupported = asyncSupported;
-        this.initParams = initParams;
+        this.initParams = Collections.unmodifiableMap(initParams);
         this.isResource = false;
         this.prefix = null;
     }
@@ -180,6 +180,10 @@ public class ServletInfo extends WhiteboardServiceInfo<Servlet>
         return asyncSupported;
     }
 
+    /**
+     * Returns an unmodifiable map of the init parameters.
+     * @return
+     */
     public Map<String, String> getInitParameters()
     {
         return initParams;

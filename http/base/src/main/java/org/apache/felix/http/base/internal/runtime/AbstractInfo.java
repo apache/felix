@@ -19,6 +19,7 @@
 package org.apache.felix.http.base.internal.runtime;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -176,7 +177,7 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
                 }
             }
         }
-        return result;
+        return Collections.unmodifiableMap(result);
     }
 
     public int getRanking()
