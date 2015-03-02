@@ -133,7 +133,7 @@ class Factory extends ConfigurationBase
         }
         else
         {
-            props.put( FACTORY_PID, this.getFactoryPid() );
+            props.put( FACTORY_PID, this.getFactoryPid().toString() );
             getPersistenceManager().store( id, props );
         }
     }
