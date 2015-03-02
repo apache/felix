@@ -21,6 +21,7 @@ package org.apache.felix.framework.util;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -172,6 +173,7 @@ public class WeakZipFileFactory
         private ZipFile m_zipFile;
         private int m_status = OPEN;
         private long m_timestamp;
+        private volatile SoftReference<List<ZipEntry>> m_entries;
 
         /**
          * Constructor is private since instances need to be centrally
@@ -229,17 +231,36 @@ public class WeakZipFileFactory
 
             try
             {
-                // We need to suck in all of the entries since the zip
-                // file may get weakly closed during iteration. Technically,
-                // this may not be 100% correct either since if the zip file
-                // gets weakly closed and reopened, then the zip entries
-                // will be from a different zip file. It is not clear if this
-                // will cause any issues.
-                Enumeration<? extends ZipEntry> e = m_zipFile.entries();
-                List<ZipEntry> entries = new ArrayList<ZipEntry>();
-                while (e.hasMoreElements())
+                List<ZipEntry> entries = null;
+                if (m_entries != null)
                 {
-                    entries.add(e.nextElement());
+                    entries = m_entries.get();
+                }
+                if (entries == null)
+                {
+                    synchronized (this)
+                    {
+                        if (m_entries != null)
+                        {
+                            entries = m_entries.get();
+                        }
+                        if (entries == null)
+                        {
+                            // We need to suck in all of the entries since the zip
+                            // file may get weakly closed during iteration. Technically,
+                            // this may not be 100% correct either since if the zip file
+                            // gets weakly closed and reopened, then the zip entries
+                            // will be from a different zip file. It is not clear if this
+                            // will cause any issues.
+                            Enumeration<? extends ZipEntry> e = m_zipFile.entries();
+                            entries = new ArrayList<ZipEntry>();
+                            while (e.hasMoreElements())
+                            {
+                                entries.add(e.nextElement());
+                            }
+                            m_entries = new SoftReference<List<ZipEntry>>(entries);
+                        }
+                    }
                 }
                 return Collections.enumeration(entries);
             }
