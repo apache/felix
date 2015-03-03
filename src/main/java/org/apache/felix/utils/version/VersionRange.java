@@ -101,8 +101,7 @@ public class VersionRange implements Serializable
 
     public VersionRange( String val, boolean exact, boolean clean ) throws IllegalArgumentException, NumberFormatException
     {
-        val = val.replaceAll( "\\s", "" );
-        val = val.replaceAll( "\"", "" );
+        val = removeQuotesAndWhitespaces(val);
         int fst = val.charAt( 0 );
         if ( fst == '[' )
         {
@@ -136,15 +135,51 @@ public class VersionRange implements Serializable
                 + ": range must end in ')' or ']'" );
         }
 
-        String inner = val.substring( 1, val.length() - 1 );
-        String[] floorCeiling = inner.split( "," );
-        if ( floorCeiling.length != 2 )
+        int comma = val.indexOf( ',' );
+        if ( comma < 0 )
+        {
+            throw new IllegalArgumentException( "illegal version range syntax " + "no comma" );
+        }
+        if ( val.indexOf( ',', comma + 1 ) > 0 )
         {
             throw new IllegalArgumentException( "illegal version range syntax " + "too many commas" );
         }
-        floor = VersionTable.getVersion( floorCeiling[0], clean );
-        ceiling = "*".equals( floorCeiling[1] ) ? INFINITE_VERSION : VersionTable.getVersion( floorCeiling[1], clean );
+        String strFloor = val.substring( 1, comma );
+        String strCeil = val.substring( comma + 1, val.length() - 1 );
+        floor = VersionTable.getVersion( strFloor, clean );
+        ceiling = "*".equals( strCeil ) ? INFINITE_VERSION : VersionTable.getVersion( strCeil, clean );
         checkRange();
+    }
+
+    private String removeQuotesAndWhitespaces(String val) {
+        for (int i = 0, l = val.length(); i < l; i++) {
+            char ch = val.charAt(i);
+            if (isRemoveable(ch)) {
+                StringBuilder sb = new StringBuilder(l);
+                sb.append(val, 0, i);
+                for (i++; i < l; i++) {
+                    ch = val.charAt(i);
+                    if (!isRemoveable(ch)) {
+                        sb.append(ch);
+                    }
+                }
+                return sb.toString();
+            }
+        }
+        return val;
+    }
+
+    private static boolean[] removeable;
+    static {
+        removeable = new boolean[256];
+        for (int i = 0; i < 256; i++) {
+            removeable[i] = Character.isWhitespace(i);
+        }
+        removeable['"'] = true;
+    }
+
+    private boolean isRemoveable(char ch) {
+        return ch < 256 ? removeable[ch] : Character.isWhitespace(ch);
     }
 
     public static VersionRange parseVersionRange( String val ) throws IllegalArgumentException, NumberFormatException
