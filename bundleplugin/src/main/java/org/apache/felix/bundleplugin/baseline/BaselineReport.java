@@ -32,6 +32,8 @@ import org.apache.maven.reporting.MavenReport;
 import org.apache.maven.reporting.MavenReportException;
 import org.codehaus.plexus.util.IOUtil;
 
+import aQute.bnd.version.Version;
+
 /**
  * BND Baseline report.
  *
@@ -121,7 +123,8 @@ public final class BaselineReport
     }
 
     @Override
-    protected void startBaseline( final Object context, String generationDate, String bundleName, String currentVersion, String previousVersion )
+    protected void startBaseline( final Object context, String generationDate, String bundleName,
+            String currentVersion, String previousVersion )
     {
         final Context ctx = (Context)context;
         final Sink sink = ctx.sink;
@@ -190,9 +193,9 @@ public final class BaselineReport
                                  String packageName,
                                  String shortDelta,
                                  String delta,
-                                 String newerVersion,
-                                 String olderVersion,
-                                 String suggestedVersion,
+                                 Version newerVersion,
+                                 Version olderVersion,
+                                 Version suggestedVersion,
                                  DiffMessage diffMessage,
                                  Map<String,String> attributes )
     {
@@ -223,15 +226,18 @@ public final class BaselineReport
             sink.italic_();
             sink.text( " (newer version: " );
             sink.monospaced();
-            sink.text( newerVersion );
+            sink.text( newerVersion.toString() );
             sink.monospaced_();
             sink.text( ", older version: " );
             sink.monospaced();
-            sink.text( olderVersion );
-            sink.monospaced_();
-            sink.text( ", suggested version: " );
-            sink.monospaced();
-            sink.text( suggestedVersion );
+            sink.text( olderVersion.toString() );
+            if ( suggestedVersion != null )
+            {
+                sink.monospaced_();
+                sink.text( ", suggested version: " );
+                sink.monospaced();
+                sink.text( suggestedVersion.toString() );
+            }
             sink.monospaced_();
             sink.text( ")" );
         }
