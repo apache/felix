@@ -43,11 +43,11 @@
   <properties>
     <log.level>4</log.level>
     <dollar>$</dollar>
-    <framework.version>4.7.0-SNAPSHOT</framework.version>
+    <framework.version>4.6.1</framework.version>
     <gogo.runtime.version>0.12.1</gogo.runtime.version>
     <gogo.shell.version>0.10.0</gogo.shell.version>
     <gogo.command.version>0.14.0</gogo.command.version>
-    <obr.version>2.0.3-SNAPSHOT</obr.version>
+    <obr.version>2.0.2</obr.version>
   </properties>
   <profiles>
     <profile>
