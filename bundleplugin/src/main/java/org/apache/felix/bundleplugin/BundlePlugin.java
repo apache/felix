@@ -87,7 +87,7 @@ import aQute.lib.spring.SpringXMLType;
  *
  * @goal bundle
  * @phase package
- * @requiresDependencyResolution compile
+ * @requiresDependencyResolution test
  * @description build an OSGi bundle jar
  * @threadSafe
  */
