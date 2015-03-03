@@ -27,15 +27,15 @@
   <packaging>bundle</packaging>
   <name>Apache Felix Framework</name>
   <artifactId>org.apache.felix.framework</artifactId>
-  <version>4.6.1</version>
+  <version>4.7.0-SNAPSHOT</version>
 
   <properties>
     <dollar>$</dollar>
   </properties>
   <scm>
-      <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.framework-4.6.1</connection>
-      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.framework-4.6.1</developerConnection>
-      <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.framework-4.6.1</url>
+      <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/framework</connection>
+      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/framework</developerConnection>
+      <url>http://svn.apache.org/repos/asf/felix/framework</url>
   </scm>
 
   <build>
