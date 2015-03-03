@@ -1,10 +1,18 @@
+Changes from 4.6.0 to 4.6.1
+---------------------------
+
+** Improvement
+    * Update to framework and main 4.6.1
+
 Changes from 4.4.1 to 4.6.0
 ---------------------------
+
 ** Improvement
     * Update to framework and main 4.6.0
 
 Changes from 4.4.0 to 4.4.1
 ---------------------------
+
 ** Improvement
     * Update to latest framework and main version 4.4.1
     * Update to latest obr version 2.0.2
@@ -12,6 +20,7 @@ Changes from 4.4.0 to 4.4.1
 
 Changes from 4.2.1 to 4.4.0
 ---------------------------
+
 ** Improvement
     * Update to framework and main 4.4.0
 
