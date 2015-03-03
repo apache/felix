@@ -32,7 +32,6 @@ import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.metadata.ArtifactMetadataRetrievalException;
 import org.apache.maven.artifact.metadata.ArtifactMetadataSource;
-import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
 import org.apache.maven.artifact.resolver.ArtifactResolutionException;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
@@ -40,6 +39,7 @@ import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.InvalidVersionSpecificationException;
 import org.apache.maven.artifact.versioning.OverConstrainedVersionException;
 import org.apache.maven.artifact.versioning.VersionRange;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -93,6 +93,13 @@ abstract class AbstractBaselinePlugin
     protected MavenProject project;
 
     /**
+     * @parameter expression="${session}"
+     * @required
+     * @readonly
+     */
+    protected MavenSession session;
+
+    /**
      * @parameter expression="${project.build.directory}"
      * @required
      * @readonly
@@ -115,13 +122,6 @@ abstract class AbstractBaselinePlugin
      * @component
      */
     protected ArtifactFactory factory;
-
-    /**
-     * @parameter default-value="${localRepository}"
-     * @required
-     * @readonly
-     */
-    protected ArtifactRepository localRepository;
 
     /**
      * @component
@@ -157,7 +157,7 @@ abstract class AbstractBaselinePlugin
      *
      * @parameter
      */
-    protected List supportedProjectTypes = Arrays.asList( new String[] { "jar", "bundle" } );
+    protected List<String> supportedProjectTypes = Arrays.asList( new String[] { "jar", "bundle" } );
 
     public final void execute()
         throws MojoExecutionException, MojoFailureException
@@ -209,37 +209,55 @@ abstract class AbstractBaselinePlugin
             packageFilters = new Instructions( Arrays.asList( filters ) );
         }
 
-        // go!
-        context = this.init(context);
 
         String generationDate = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm'Z'" ).format( new Date() );
-        Reporter reporter = new Processor();
+        final Reporter reporter = new Processor();
+
+        final Info[] infos;
+        try
+        {
+            final Set<Info> infoSet = new Baseline( reporter, new DiffPluginImpl() )
+                                .baseline( currentBundle, previousBundle, packageFilters );
+            infos = infoSet.toArray( new Info[infoSet.size()] );
+            Arrays.sort( infos, new InfoComparator() );
+        }
+        catch ( final Exception e )
+        {
+            throw new MojoExecutionException( "Impossible to calculate the baseline", e );
+        }
+        finally
+        {
+            closeJars( currentBundle, previousBundle );
+        }
 
         try
         {
-            Set<Info> infoSet = new Baseline( reporter, new DiffPluginImpl() )
-                                .baseline( currentBundle, previousBundle, packageFilters );
+            this.reportErrors(infos);
+        }
+        catch ( final IOException ioe )
+        {
+            throw new MojoExecutionException("Unable to parse baselining information.", ioe);
+        }
 
+        try
+        {
+            // go!
+            context = this.init(context);
             startBaseline( context, generationDate, project.getArtifactId(), project.getVersion(), previousArtifact.getVersion() );
 
-            final Info[] infos = infoSet.toArray( new Info[infoSet.size()] );
-            Arrays.sort( infos, new InfoComparator() );
-
-            for ( Info info : infos )
+            for ( final Info info : infos )
             {
                 DiffMessage diffMessage = null;
-                Version newerVersion = info.newerVersion;
-                Version suggestedVersion = info.suggestedVersion;
 
-                if ( suggestedVersion != null )
+                if ( info.suggestedVersion != null )
                 {
-                    if ( newerVersion.compareTo( suggestedVersion ) > 0 )
+                    if ( info.newerVersion.compareTo( info.suggestedVersion ) > 0 )
                     {
                         diffMessage = new DiffMessage( "Excessive version increase", DiffMessage.Type.warning );
                         reporter.warning( "%s: %s; detected %s, suggested %s",
                                           info.packageName, diffMessage, info.newerVersion, info.suggestedVersion );
                     }
-                    else if ( newerVersion.compareTo( suggestedVersion ) < 0 )
+                    else if ( info.newerVersion.compareTo( info.suggestedVersion ) < 0 )
                     {
                         diffMessage = new DiffMessage( "Version increase required", DiffMessage.Type.error );
                         reporter.error( "%s: %s; detected %s, suggested %s",
@@ -247,16 +265,10 @@ abstract class AbstractBaselinePlugin
                     }
                 }
 
-                Diff packageDiff = info.packageDiff;
-
-                Delta delta = packageDiff.getDelta();
-
-                switch ( delta )
+                switch ( info.packageDiff.getDelta() )
                 {
                     case UNCHANGED:
-                        if ( ( suggestedVersion.getMajor() != newerVersion.getMajor() )
-                            || ( suggestedVersion.getMicro() != newerVersion.getMicro() )
-                            || ( suggestedVersion.getMinor() != newerVersion.getMinor() ) )
+                        if ( info.newerVersion.compareTo( info.suggestedVersion ) != 0 )
                         {
                             diffMessage = new DiffMessage( "Version has been increased but analysis detected no changes", DiffMessage.Type.warning );
                             reporter.warning( "%s: %s; detected %s, suggested %s",
@@ -279,28 +291,20 @@ abstract class AbstractBaselinePlugin
                         break;
                 }
 
-                boolean mismatch = info.mismatch;
-                String packageName = info.packageName;
-                String shortDelta = getShortDelta( info.packageDiff.getDelta() );
-                String deltaString = StringUtils.lowerCase( String.valueOf( info.packageDiff.getDelta() ) );
-                String newerVersionString = String.valueOf( info.newerVersion );
-                String olderVersionString = String.valueOf( info.olderVersion );
-                String suggestedVersionString = String.valueOf( ( info.suggestedVersion == null ) ? "-" : info.suggestedVersion );
-                Map<String,String> attributes = info.attributes;
-
-                startPackage( context, mismatch,
-                              packageName,
-                              shortDelta,
-                              deltaString,
-                              newerVersionString,
-                              olderVersionString,
-                              suggestedVersionString,
+                startPackage( context,
+                              info.mismatch,
+                              info.packageName,
+                              getShortDelta( info.packageDiff.getDelta() ),
+                              StringUtils.lowerCase( String.valueOf( info.packageDiff.getDelta() ) ),
+                              info.newerVersion,
+                              info.olderVersion,
+                              info.suggestedVersion,
                               diffMessage,
-                              attributes );
+                              info.attributes );
 
-                if ( Delta.REMOVED != delta )
+                if ( Delta.REMOVED != info.packageDiff.getDelta() )
                 {
-                    doPackageDiff( context, packageDiff );
+                    doPackageDiff( context, info.packageDiff );
                 }
 
                 endPackage(context);
@@ -308,13 +312,8 @@ abstract class AbstractBaselinePlugin
 
             endBaseline(context);
         }
-        catch ( Exception e )
-        {
-            throw new MojoExecutionException( "Impossible to calculate the baseline", e );
-        }
         finally
         {
-            closeJars( currentBundle, previousBundle );
             this.close(context);
         }
 
@@ -406,9 +405,9 @@ abstract class AbstractBaselinePlugin
                                           String name,
                                           String shortDelta,
                                           String delta,
-                                          String newerVersion,
-                                          String olderVersion,
-                                          String suggestedVersion,
+                                          Version newerVersion,
+                                          Version olderVersion,
+                                          Version suggestedVersion,
                                           DiffMessage diffMessage,
                                           Map<String,String> attributes );
 
@@ -424,6 +423,12 @@ abstract class AbstractBaselinePlugin
     protected abstract void endPackage(final Object context);
 
     protected abstract void endBaseline(final Object context);
+
+    protected void reportErrors(final Info[] infos)
+    throws IOException
+    {
+        // nothing to do, will be overridden by baseline plugin
+    }
 
     // internals
 
@@ -476,7 +481,7 @@ abstract class AbstractBaselinePlugin
                 @SuppressWarnings( "unchecked" )
                 // type is konwn
                 List<ArtifactVersion> availableVersions =
-                    metadataSource.retrieveAvailableVersions( previousArtifact, localRepository,
+                    metadataSource.retrieveAvailableVersions( previousArtifact, session.getLocalRepository(),
                                                               project.getRemoteArtifactRepositories() );
                 filterSnapshots( availableVersions );
                 ArtifactVersion version = range.matchVersion( availableVersions );
@@ -503,11 +508,11 @@ abstract class AbstractBaselinePlugin
 
         try
         {
-            resolver.resolve( previousArtifact, project.getRemoteArtifactRepositories(), localRepository );
+            resolver.resolve( previousArtifact, project.getRemoteArtifactRepositories(), session.getLocalRepository() );
         }
         catch ( ArtifactResolutionException are )
         {
-            throw new MojoExecutionException( "Artifact " + previousArtifact + " cannot be resolved", are );
+            throw new MojoExecutionException( "Artifact " + previousArtifact + " cannot be resolved : " + are.getMessage(), are );
         }
         catch ( ArtifactNotFoundException anfe )
         {
@@ -530,20 +535,20 @@ abstract class AbstractBaselinePlugin
         }
     }
 
-    private static Jar openJar( File file )
+    private static Jar openJar( final File file )
         throws MojoExecutionException
     {
         try
         {
             return new Jar( file );
         }
-        catch ( IOException e )
+        catch ( final IOException e )
         {
             throw new MojoExecutionException( "An error occurred while opening JAR directory: " + file, e );
         }
     }
 
-    private static void closeJars( Jar...jars )
+    private static void closeJars( final Jar...jars )
     {
         for ( Jar jar : jars )
         {
@@ -607,5 +612,4 @@ abstract class AbstractBaselinePlugin
                 return String.valueOf( deltaString.charAt( 0 ) );
         }
     }
-
 }

@@ -21,18 +21,29 @@ package org.apache.felix.bundleplugin.baseline;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.LineNumberReader;
+import java.io.StringReader;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.codehaus.plexus.util.FileUtils;
+import org.codehaus.plexus.util.IOUtil;
 import org.codehaus.plexus.util.xml.PrettyPrintXMLWriter;
 import org.codehaus.plexus.util.xml.XMLWriter;
 import org.sonatype.plexus.build.incremental.BuildContext;
+
+import aQute.bnd.differ.Baseline.Info;
+import aQute.bnd.service.diff.Delta;
+import aQute.bnd.service.diff.Diff;
+import aQute.bnd.service.diff.Type;
+import aQute.bnd.version.Version;
 
 /**
  * BND Baseline check between two bundles.
  *
  * @goal baseline
  * @phase verify
+ * @requiresDependencyResolution test
  * @threadSafe true
  * @since 2.4.1
  */
@@ -159,9 +170,9 @@ public final class BaselinePlugin
                                  String name,
                                  String shortDelta,
                                  String delta,
-                                 String newerVersion,
-                                 String olderVersion,
-                                 String suggestedVersion,
+                                 Version newerVersion,
+                                 Version olderVersion,
+                                 Version suggestedVersion,
                                  DiffMessage diffMessage,
                                  Map<String,String> attributes )
     {
@@ -185,9 +196,12 @@ public final class BaselinePlugin
             xmlWriter.addAttribute( "name", name );
             xmlWriter.addAttribute( "delta", delta );
             simpleElement( xmlWriter, "mismatch", String.valueOf( mismatch ) );
-            simpleElement( xmlWriter, "newerVersion", newerVersion );
-            simpleElement( xmlWriter, "olderVersion", olderVersion );
-            simpleElement( xmlWriter, "suggestedVersion", suggestedVersion );
+            simpleElement( xmlWriter, "newerVersion", newerVersion.toString() );
+            simpleElement( xmlWriter, "olderVersion", olderVersion.toString() );
+            if ( suggestedVersion != null )
+            {
+                simpleElement( xmlWriter, "suggestedVersion", suggestedVersion.toString() );
+            }
 
             if ( diffMessage != null )
             {
@@ -288,4 +302,224 @@ public final class BaselinePlugin
         xmlWriter.endElement();
     }
 
+    @Override
+    protected void reportErrors(final Info[] infos)
+    throws IOException
+    {
+        for ( final Info info : infos )
+        {
+            // clear previous messages
+            final FileMarker packageMarker = findMarkerLocationForPackage(info.packageName);
+
+            if ( info.suggestedVersion != null )
+            {
+                if ( info.newerVersion.compareTo( info.suggestedVersion ) > 0 )
+                {
+                    final String msg = "Excessive version increase: detected " + info.newerVersion + ", suggested " + info.suggestedVersion;
+
+                    this.buildContext.addMessage(packageMarker.file, packageMarker.line, packageMarker.col, msg, BuildContext.SEVERITY_WARNING, null);
+                }
+                else if ( info.newerVersion.compareTo( info.suggestedVersion ) < 0 )
+                {
+                    final String msg = "Version increase required: detected " + info.newerVersion + ", suggested " + info.suggestedVersion;
+
+                    this.buildContext.addMessage(packageMarker.file, packageMarker.line, packageMarker.col, msg, BuildContext.SEVERITY_ERROR, null);
+                }
+            }
+
+            if ( info.packageDiff.getDelta() == Delta.UNCHANGED && info.newerVersion.compareTo( info.suggestedVersion ) != 0 )
+            {
+                final String msg = "Version has been increased but analysis detected no changes: detected " + info.newerVersion + ", suggested " + info.suggestedVersion;
+                this.buildContext.addMessage(packageMarker.file, packageMarker.line, packageMarker.col, msg, BuildContext.SEVERITY_WARNING, null);
+            }
+            generateStructuralChangeMarkers(info);
+        }
+    }
+
+    private File getPackageFile(final String packageName)
+    {
+        final String sourceDir = this.project.getBuild().getSourceDirectory();
+        final File packageDir = new File((sourceDir + '/' + packageName.replace('.', '/')).replace('/', File.separatorChar));
+
+        return packageDir;
+    }
+
+    private File getSourceFile(final String className)
+    {
+        final String sourceDir = this.project.getBuild().getSourceDirectory();
+        final File packageDir = new File((sourceDir + '/' + className.replace('.', '/') + ".java").replace('/', File.separatorChar));
+
+        return packageDir;
+    }
+
+    private static final class FileMarker
+    {
+        public File file;
+        public int  line;
+        public int  col;
+    }
+
+    /**
+     * Find marker location for a package
+     * and clear old markers.
+     */
+    private FileMarker findMarkerLocationForPackage(final String packageName)
+    throws IOException
+    {
+        final File packageDir = getPackageFile(packageName);
+        this.buildContext.removeMessages(packageDir);
+
+        final File packageInfoFile = new File(packageDir, "packageinfo");
+        this.buildContext.removeMessages(packageInfoFile);
+
+        final File packageInfoJavaFile = new File(packageDir, "package-info.java");
+        this.buildContext.removeMessages(packageInfoJavaFile);
+
+        // package-info.java has precedence
+        if ( packageInfoJavaFile != null && packageInfoJavaFile.exists() )
+        {
+            return findVersionLocationInPackageInfoJava(packageInfoJavaFile);
+        }
+        // packageinfo next
+        if ( packageInfoFile != null && packageInfoFile.exists() )
+        {
+            return findVersionLocationInPackageInfo(packageInfoFile);
+        }
+
+        final FileMarker defaultMarker = new FileMarker();
+        defaultMarker.file = packageDir;
+
+        return defaultMarker;
+    }
+
+    private FileMarker findVersionLocationInPackageInfo(final File file)
+    throws IOException
+    {
+        final FileMarker marker = new FileMarker();
+        marker.file = file;
+        final String contents = FileUtils.fileRead(file);
+        final LineNumberReader reader = new LineNumberReader(new StringReader(contents));
+        try
+        {
+            String line;
+            while ( (line = reader.readLine()) != null )
+            {
+                final int pos = line.indexOf("version ");
+                if ( pos > -1 )
+                {
+                    marker.col = pos;
+                    marker.line = reader.getLineNumber();
+
+                    break;
+                }
+            }
+        }
+        finally
+        {
+            IOUtil.close(reader);
+        }
+        return marker;
+    }
+
+    private FileMarker findVersionLocationInPackageInfoJava(final File file)
+    throws IOException
+    {
+        final FileMarker marker = new FileMarker();
+        marker.file = file;
+        final String contents = FileUtils.fileRead(file);
+        final LineNumberReader reader = new LineNumberReader(new StringReader(contents));
+        try
+        {
+            String line;
+            while ( (line = reader.readLine()) != null )
+            {
+                final int pos = line.indexOf("@Version");
+                if ( pos > -1 )
+                {
+                    marker.col = pos;
+                    marker.line = reader.getLineNumber();
+
+                    break;
+                }
+            }
+        }
+        finally
+        {
+            IOUtil.close(reader);
+        }
+        return marker;
+    }
+
+   private void generateStructuralChangeMarkers(final Info baselineInfo)
+   {
+        final Delta packageDelta = baselineInfo.packageDiff.getDelta();
+
+        // Iterate into the package member diffs
+        for (final Diff pkgMemberDiff : baselineInfo.packageDiff.getChildren())
+        {
+            // only deal with interfaces and classes
+            if ( pkgMemberDiff.getType() != Type.INTERFACE && pkgMemberDiff.getType() != Type.CLASS )
+            {
+                continue;
+            }
+
+            // clear old marker
+            final String className = pkgMemberDiff.getName();
+            final File classFile = this.getSourceFile(className);
+            this.buildContext.removeMessages(classFile);
+
+            // Skip deltas that have lesser significance than the overall package delta
+            if (pkgMemberDiff.getDelta().ordinal() < packageDelta.ordinal())
+            {
+                continue;
+            }
+
+            if (Delta.ADDED == pkgMemberDiff.getDelta())
+            {
+                // TODO
+            }
+            else if (Delta.REMOVED == pkgMemberDiff.getDelta())
+            {
+                // TODO
+            }
+            else
+            {
+                // Iterate into the class member diffs
+                for (final Diff classMemberDiff : pkgMemberDiff.getChildren())
+                {
+                    // Skip deltas that have lesser significance than the overall package delta (again)
+                    if (classMemberDiff.getDelta().ordinal() < packageDelta.ordinal())
+                        continue;
+
+                    if (Delta.ADDED == classMemberDiff.getDelta())
+                    {
+                        addAddedMarker(classFile, classMemberDiff);
+                    }
+                    else if (Delta.REMOVED == classMemberDiff.getDelta())
+                    {
+                        addRemovedMarker(classFile, classMemberDiff);
+                    }
+                    else if (Delta.CHANGED == classMemberDiff.getDelta())
+                    {
+                        addChangedMarker(classFile, classMemberDiff);
+                    }
+                }
+            }
+        }
+    }
+
+   private void addAddedMarker(final File classFile, final Diff diff)
+   {
+       this.buildContext.addMessage(classFile, 0, 0, diff.getType() + " " + diff.getName() + " has been added.", BuildContext.SEVERITY_ERROR, null);
+   }
+
+   private void addRemovedMarker(final File classFile, final Diff diff)
+   {
+       this.buildContext.addMessage(classFile, 0, 0, diff.getType() + " " + diff.getName() + " has been removed.", BuildContext.SEVERITY_ERROR, null);
+   }
+
+   private void addChangedMarker(final File classFile, final Diff diff)
+   {
+       this.buildContext.addMessage(classFile, 0, 0, diff.getType() + " " + diff.getName() + " has been changed.", BuildContext.SEVERITY_ERROR, null);
+   }
 }
