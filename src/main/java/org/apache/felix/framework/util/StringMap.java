@@ -18,7 +18,9 @@
  */
 package org.apache.felix.framework.util;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Simple utility class that creates a map for string-based keys.
@@ -28,190 +30,72 @@ import java.util.*;
  * <tt>toString()</tt> method, since it is only intended to
  * compare strings.
  **/
-public class StringMap extends AbstractMap<String, Object>
+public class StringMap extends TreeMap<String, Object>
 {
-    private static final CharArrayComparator COMPARATOR = new CharArrayComparator();
-
-    private final TreeMap<char[], KeyValueEntry> m_map = new TreeMap<char[], KeyValueEntry>(COMPARATOR);
+    private static final CaseInsensitiveComparator COMPARATOR = new CaseInsensitiveComparator();
 
     public StringMap()
     {
+        super(COMPARATOR);
     }
 
-    public StringMap(Map<? extends Object, ? extends Object> map)
+    public StringMap(Map<?, ?> map)
     {
-        for (Map.Entry<? extends Object, ? extends Object> e : map.entrySet())
-        {
-            KeyValueEntry kve = (KeyValueEntry) m_map.put(
-                toUpperCase(e.getKey().toString()),
-                new KeyValueEntry(e.getKey().toString(), e.getValue()));
-        }
-    }
-
-    @Override
-    public int size()
-    {
-        return m_map.size();
-    }
-
-    @Override
-    public boolean isEmpty()
-    {
-        return m_map.isEmpty();
-    }
-
-    @Override
-    public boolean containsKey(Object arg0)
-    {
-        return m_map.containsKey(toUpperCase(arg0.toString()));
-    }
-
-    @Override
-    public boolean containsValue(Object arg0)
-    {
-        return m_map.containsValue(arg0);
-    }
-
-    @Override
-    public Object get(Object arg0)
-    {
-        KeyValueEntry kve = m_map.get(toUpperCase(arg0.toString()));
-        return (kve != null) ? kve.value : null;
-    }
-
-    @Override
-    public Object put(String key, Object value)
-    {
-        KeyValueEntry kve = (KeyValueEntry) m_map.put(toUpperCase(key), new KeyValueEntry(key, value));
-        return (kve != null) ? kve.value : null;
-    }
-
-    @Override
-    public void putAll(Map<? extends String, ? extends Object> map)
-    {
-        for (Map.Entry<? extends String, ? extends Object> e : map.entrySet())
+        super(COMPARATOR);
+        for (Map.Entry<?, ?> e : map.entrySet())
         {
             put(e.getKey().toString(), e.getValue());
         }
     }
 
-    @Override
-    public Object remove(Object arg0)
+    private static class CaseInsensitiveComparator implements Comparator<String>
     {
-        KeyValueEntry kve = m_map.remove(toUpperCase(arg0.toString()));
-        return (kve != null) ? kve.value : null;
-    }
 
-    @Override
-    public void clear()
-    {
-        m_map.clear();
-    }
-
-    public Set<Entry<String, Object>> entrySet()
-    {
-        return new AbstractSet<Entry<String, Object>>()
+        public int compare(String s1, String s2)
         {
-            @Override
-            public Iterator<Entry<String, Object>> iterator()
+            int n1 = s1.length();
+            int n2 = s2.length();
+            int min = n1 < n2 ? n1 : n2;
+            for ( int i = 0; i < min; i++ )
             {
-                return new Iterator<Entry<String, Object>>()
+                char c1 = s1.charAt( i );
+                char c2 = s2.charAt( i );
+                if ( c1 != c2 )
                 {
-                    Iterator<Entry<char[], KeyValueEntry>> it = m_map.entrySet().iterator();
-
-                    public boolean hasNext()
+                    // Fast check for simple ascii codes
+                    if ( c1 <= 128 && c2 <= 128 )
                     {
-                        return it.hasNext();
+                        c1 = toLowerCaseFast(c1);
+                        c2 = toLowerCaseFast(c2);
+                        if ( c1 != c2 )
+                        {
+                            return c1 - c2;
+                        }
                     }
-
-                    public Entry<String, Object> next()
+                    else
                     {
-                        return it.next().getValue();
+                        c1 = Character.toUpperCase( c1 );
+                        c2 = Character.toUpperCase( c2 );
+                        if ( c1 != c2 )
+                        {
+                            c1 = Character.toLowerCase( c1 );
+                            c2 = Character.toLowerCase( c2 );
+                            if ( c1 != c2 )
+                            {
+                                // No overflow because of numeric promotion
+                                return c1 - c2;
+                            }
+                        }
                     }
-
-                    public void remove()
-                    {
-                        throw new UnsupportedOperationException();
-                    }
-                };
-            }
-
-            @Override
-            public int size()
-            {
-                return m_map.size();
-            }
-        };
-    }
-
-    private static char[] toUpperCase(String str)
-    {
-        char[] ch = str.toCharArray();
-        for (int i = 0; i < ch.length; i++)
-        {
-            char c = ch[i];
-            if (c < 128)
-            {
-                if ('a' <= c && c <= 'z')
-                {
-                    ch[i] = (char)(c - ('a' - 'A'));
                 }
             }
-            else
-            {
-                ch[i] = Character.toUpperCase(c);
-            }
+            return n1 - n2;
         }
-        return ch;
     }
 
-    private static class CharArrayComparator implements Comparator<char[]>
+    private static char toLowerCaseFast( char ch )
     {
-        public int compare(char[] v1, char[] v2)
-        {
-            int len1 = v1.length;
-            int len2 = v2.length;
-            int n = Math.min(len1, len2);
-            int k = 0;
-            while (k < n)
-            {
-                char c1 = v1[k];
-                char c2 = v2[k];
-                if (c1 != c2)
-                {
-                    return c1 - c2;
-                }
-                k++;
-            }
-            return len1 - len2;
-        }
+        return ( ch >= 'A' && ch <= 'Z' ) ? ( char ) ( ch + 'a' - 'A' ) : ch;
     }
 
-    private static class KeyValueEntry implements Map.Entry<String, Object>
-    {
-        private KeyValueEntry(String key, Object value)
-        {
-            this.key = key;
-            this.value = value;
-        }
-
-        public String getKey()
-        {
-            return key;
-        }
-
-        public Object getValue()
-        {
-            return value;
-        }
-
-        public Object setValue(Object value)
-        {
-            Object v = this.value;
-            this.value = value;
-            return v;
-        }
-        String key;
-        Object value;
-    }
 }
