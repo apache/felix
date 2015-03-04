@@ -524,7 +524,7 @@ public class BundlePlugin extends AbstractMojo
                 {
                     sb.append(",");
                 }
-                sb.append(sb);
+                sb.append(s);
             }
             properties.setProperty(Analyzer.PLUGIN, sb.toString());
         }

@@ -232,15 +232,6 @@ abstract class AbstractBaselinePlugin
 
         try
         {
-            this.reportErrors(infos);
-        }
-        catch ( final IOException ioe )
-        {
-            throw new MojoExecutionException("Unable to parse baselining information.", ioe);
-        }
-
-        try
-        {
             // go!
             context = this.init(context);
             startBaseline( context, generationDate, project.getArtifactId(), project.getVersion(), previousArtifact.getVersion() );
@@ -423,12 +414,6 @@ abstract class AbstractBaselinePlugin
     protected abstract void endPackage(final Object context);
 
     protected abstract void endBaseline(final Object context);
-
-    protected void reportErrors(final Info[] infos)
-    throws IOException
-    {
-        // nothing to do, will be overridden by baseline plugin
-    }
 
     // internals
 
