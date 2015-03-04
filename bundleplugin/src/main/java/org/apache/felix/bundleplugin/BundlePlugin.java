@@ -239,6 +239,7 @@ public class BundlePlugin extends AbstractMojo
     private static final String MAVEN_SOURCES = "{maven-sources}";
     private static final String MAVEN_TEST_SOURCES = "{maven-test-sources}";
     private static final String BUNDLE_PLUGIN_EXTENSION = "BNDExtension-";
+    private static final String BUNDLE_PLUGIN_PREPEND_EXTENSION = "BNDPrependExtension-";
 
     private static final String[] EMPTY_STRING_ARRAY =
         {};
@@ -481,12 +482,27 @@ public class BundlePlugin extends AbstractMojo
                     addProps.put(oKey, currentValue + ',' + entry.getValue());
                 }
             }
+            if ( key.startsWith(BUNDLE_PLUGIN_PREPEND_EXTENSION) )
+            {
+                final String oKey = key.substring(BUNDLE_PLUGIN_PREPEND_EXTENSION.length());
+                final String currentValue = properties.getProperty(oKey);
+                if ( currentValue == null )
+                {
+                    addProps.put(oKey, entry.getValue());
+                }
+                else
+                {
+                    addProps.put(oKey, entry.getValue() + "," + currentValue);
+                }
+            }
         }
         properties.putAll( addProps );
         final Iterator keyIter = addProps.keySet().iterator();
         while ( keyIter.hasNext() )
         {
-            properties.remove(BUNDLE_PLUGIN_EXTENSION + keyIter.next());
+            Object key = keyIter.next();
+            properties.remove(BUNDLE_PLUGIN_EXTENSION + key);
+            properties.remove(BUNDLE_PLUGIN_PREPEND_EXTENSION + key);
         }
 
         if (properties.getProperty("Bundle-Activator") != null
