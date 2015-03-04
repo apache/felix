@@ -22,12 +22,13 @@ package org.apache.felix.bundleplugin;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
 
 
 /**
  * Exclude selected dependencies from the classpath passed to BND.
- * 
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public final class DependencyExcluder extends AbstractDependencyFilter
@@ -35,14 +36,14 @@ public final class DependencyExcluder extends AbstractDependencyFilter
     /**
      * Excluded artifacts.
      */
-    private final Collection m_excludedArtifacts;
+    private final Collection<Artifact> m_excludedArtifacts;
 
 
-    public DependencyExcluder( Collection dependencyArtifacts )
+    public DependencyExcluder( Collection<Artifact> dependencyArtifacts )
     {
         super( dependencyArtifacts );
 
-        m_excludedArtifacts = new HashSet();
+        m_excludedArtifacts = new HashSet<Artifact>();
     }
 
 
@@ -58,13 +59,13 @@ public final class DependencyExcluder extends AbstractDependencyFilter
 
 
     @Override
-    protected void processDependencies( Collection dependencies, String inline )
+    protected void processDependencies( Collection<Artifact> dependencies, String inline )
     {
         m_excludedArtifacts.addAll( dependencies );
     }
 
 
-    public Collection getExcludedArtifacts()
+    public Collection<Artifact> getExcludedArtifacts()
     {
         return m_excludedArtifacts;
     }

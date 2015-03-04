@@ -43,7 +43,7 @@ import aQute.bnd.osgi.Resource;
 
 /**
  * Generate an OSGi manifest for this project
- * 
+ *
  * @goal manifest
  * @phase process-classes
  * @requiresDependencyResolution test
@@ -52,7 +52,7 @@ import aQute.bnd.osgi.Resource;
 public class ManifestPlugin extends BundlePlugin
 {
     /**
-     * When true, generate the manifest by rebuilding the full bundle in memory 
+     * When true, generate the manifest by rebuilding the full bundle in memory
      *
      * @parameter expression="${rebuildBundle}"
      */
@@ -60,7 +60,7 @@ public class ManifestPlugin extends BundlePlugin
 
 
     @Override
-    protected void execute( MavenProject project, Map instructions, Properties properties, Jar[] classpath )
+    protected void execute( MavenProject project, Map<String, String> instructions, Properties properties, Jar[] classpath )
         throws MojoExecutionException
     {
         Manifest manifest;
@@ -104,11 +104,11 @@ public class ManifestPlugin extends BundlePlugin
     public Manifest getManifest( MavenProject project, Jar[] classpath ) throws IOException, MojoFailureException,
         MojoExecutionException, Exception
     {
-        return getManifest( project, new LinkedHashMap(), new Properties(), classpath );
+        return getManifest( project, new LinkedHashMap<String, String>(), new Properties(), classpath );
     }
 
 
-    public Manifest getManifest( MavenProject project, Map instructions, Properties properties, Jar[] classpath )
+    public Manifest getManifest( MavenProject project, Map<String, String> instructions, Properties properties, Jar[] classpath )
         throws IOException, MojoFailureException, MojoExecutionException, Exception
     {
         Analyzer analyzer = getAnalyzer( project, instructions, properties, classpath );
@@ -152,11 +152,11 @@ public class ManifestPlugin extends BundlePlugin
     protected Analyzer getAnalyzer( MavenProject project, Jar[] classpath ) throws IOException, MojoExecutionException,
         Exception
     {
-        return getAnalyzer( project, new LinkedHashMap(), new Properties(), classpath );
+        return getAnalyzer( project, new LinkedHashMap<String, String>(), new Properties(), classpath );
     }
 
 
-    protected Analyzer getAnalyzer( MavenProject project, Map instructions, Properties properties, Jar[] classpath )
+    protected Analyzer getAnalyzer( MavenProject project, Map<String, String> instructions, Properties properties, Jar[] classpath )
         throws IOException, MojoExecutionException, Exception
     {
         if ( rebuildBundle && supportedProjectTypes.contains( project.getArtifact().getType() ) )

@@ -34,14 +34,15 @@ import aQute.bnd.osgi.Jar;
 
 /**
  * Generate BND instructions for this project
- * 
+ *
  * @goal instructions
  * @requiresDependencyResolution test
  * @threadSafe
  */
 public class InstructionsPlugin extends BundlePlugin
 {
-    protected void execute( MavenProject project, Map instructions, Properties properties, Jar[] classpath )
+    @Override
+    protected void execute( MavenProject project, Map<String, String> instructions, Properties properties, Jar[] classpath )
         throws MojoExecutionException
     {
         if ( dumpInstructions == null )

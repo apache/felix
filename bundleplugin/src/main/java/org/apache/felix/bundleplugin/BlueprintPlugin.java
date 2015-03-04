@@ -19,6 +19,8 @@
 package org.apache.felix.bundleplugin;
 
 
+import static org.apache.felix.utils.manifest.Parser.parseHeader;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -26,15 +28,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 import javax.xml.transform.Transformer;
@@ -42,22 +39,18 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
+import org.apache.felix.utils.manifest.Attribute;
+import org.apache.felix.utils.manifest.Clause;
+import org.osgi.framework.Constants;
+
 import aQute.bnd.header.Attrs;
-import aQute.bnd.service.AnalyzerPlugin;
 import aQute.bnd.osgi.Analyzer;
 import aQute.bnd.osgi.Descriptors.PackageRef;
 import aQute.bnd.osgi.Jar;
 import aQute.bnd.osgi.Processor;
 import aQute.bnd.osgi.Resource;
+import aQute.bnd.service.AnalyzerPlugin;
 import aQute.libg.generics.Create;
-import aQute.libg.qtokens.QuotedTokenizer;
-import aQute.service.reporter.Reporter;
-import org.apache.felix.utils.manifest.Attribute;
-import org.apache.felix.utils.manifest.Clause;
-import org.apache.felix.utils.manifest.Directive;
-import org.osgi.framework.Constants;
-
-import static org.apache.felix.utils.manifest.Parser.parseHeader;
 
 
 public class BlueprintPlugin implements AnalyzerPlugin
@@ -99,7 +92,7 @@ public class BlueprintPlugin implements AnalyzerPlugin
             if ( dir == null || dir.isEmpty() )
             {
                 Resource resource = jar.getResource( root );
-                if ( resource != null ) 
+                if ( resource != null )
 				{
                     process( analyzer, root, resource, headers );
 					if (bpHeader.length() > 0) {
@@ -113,7 +106,7 @@ public class BlueprintPlugin implements AnalyzerPlugin
             {
                 String path = entry.getKey();
                 Resource resource = entry.getValue();
-                if ( PATHS.matcher( path ).matches() ) 
+                if ( PATHS.matcher( path ).matches() )
 				{
                     process( analyzer, path, resource, headers );
 					if (bpHeader.length() > 0) {
@@ -123,7 +116,7 @@ public class BlueprintPlugin implements AnalyzerPlugin
 				}
             }
         }
-		if( !map.isEmpty() ) 
+		if( !map.isEmpty() )
 		{
 			analyzer.setProperty("Bundle-Blueprint", bpHeader);
 		}

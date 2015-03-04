@@ -45,7 +45,7 @@ public class VersionCleanerPlugin extends AbstractMojo
      *
      * @parameter
      */
-    private Map versions = new LinkedHashMap();
+    private Map<String, String> versions = new LinkedHashMap<String, String>();
 
     /**
      * The Maven project.
@@ -73,10 +73,9 @@ public class VersionCleanerPlugin extends AbstractMojo
 
     public void execute() throws MojoExecutionException, MojoFailureException
     {
-        for ( Object key : versions.keySet() )
+        for ( String name : versions.keySet() )
         {
-            String name = ( String ) key;
-            String version = ( String ) versions.get( key );
+            String version = versions.get( name );
             String osgi = maven2OsgiConverter.getVersion( version );
             project.getProperties().put( name, osgi );
         }
