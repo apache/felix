@@ -48,7 +48,8 @@ public class AntPlugin extends BundlePlugin
     static final String BUILD_BND = "/maven-build.bnd";
 
 
-    protected void execute( MavenProject currentProject, Map originalInstructions, Properties properties,
+    @Override
+    protected void execute( MavenProject currentProject, Map<String, String> originalInstructions, Properties properties,
         Jar[] classpath ) throws MojoExecutionException
     {
         final String artifactId = getProject().getArtifactId();

@@ -4,9 +4,9 @@
  * copyright ownership. The ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the License. You may obtain a
  * copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
@@ -15,7 +15,6 @@
 package org.apache.felix.bundleplugin;
 
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -26,8 +25,8 @@ import org.apache.maven.artifact.Artifact;
 
 
 /**
- * Information result of the bundling process 
- * 
+ * Information result of the bundling process
+ *
  * @author <a href="mailto:carlos@apache.org">Carlos Sanchez</a>
  * @version $Id$
  */
@@ -37,22 +36,22 @@ public class BundleInfo
      * {@link Map} &lt; {@link String}, {@link Set} &lt; {@link Artifact} > >
      * Used to check for duplicated exports. Key is package name and value list of artifacts where it's exported.
      */
-    private Map m_exportedPackages = new HashMap();
+    private Map<String, Set<Artifact>> m_exportedPackages = new HashMap<String, Set<Artifact>>();
 
 
     public void addExportedPackage( String packageName, Artifact artifact )
     {
-        Set artifacts = ( Set ) getExportedPackages().get( packageName );
+        Set<Artifact> artifacts = getExportedPackages().get( packageName );
         if ( artifacts == null )
         {
-            artifacts = new HashSet();
+            artifacts = new HashSet<Artifact>();
             m_exportedPackages.put( packageName, artifacts );
         }
         artifacts.add( artifact );
     }
 
 
-    protected Map getExportedPackages()
+    protected Map<String, Set<Artifact>> getExportedPackages()
     {
         return m_exportedPackages;
     }
@@ -63,23 +62,23 @@ public class BundleInfo
      * Key is package name and value list of artifacts where it's exported.
      * @return {@link Map} &lt; {@link String}, {@link Set} &lt; {@link Artifact} > >
      */
-    public Map getDuplicatedExports()
+    public Map<String, Set<Artifact>> getDuplicatedExports()
     {
-        Map duplicatedExports = new HashMap();
+        Map<String, Set<Artifact>> duplicatedExports = new HashMap<String, Set<Artifact>>();
 
-        for ( Iterator it = getExportedPackages().entrySet().iterator(); it.hasNext(); )
+        for ( Iterator<Map.Entry<String, Set<Artifact>>> it = getExportedPackages().entrySet().iterator(); it.hasNext(); )
         {
-            Map.Entry entry = ( Map.Entry ) it.next();
-            Set artifacts = ( Set ) entry.getValue();
+            Map.Entry<String, Set<Artifact>> entry = it.next();
+            Set<Artifact> artifacts = entry.getValue();
             if ( artifacts.size() > 1 )
             {
                 /* remove warnings caused by different versions of same artifact */
-                Set artifactKeys = new HashSet();
+                Set<String> artifactKeys = new HashSet<String>();
 
-                String packageName = ( String ) entry.getKey();
-                for ( Iterator it2 = artifacts.iterator(); it2.hasNext(); )
+                String packageName = entry.getKey();
+                for ( Iterator<Artifact> it2 = artifacts.iterator(); it2.hasNext(); )
                 {
-                    Artifact artifact = ( Artifact ) it2.next();
+                    Artifact artifact = it2.next();
                     artifactKeys.add( artifact.getGroupId() + "." + artifact.getArtifactId() );
                 }
 
@@ -96,16 +95,16 @@ public class BundleInfo
 
     public void merge( BundleInfo bundleInfo )
     {
-        for ( Iterator it = bundleInfo.getExportedPackages().entrySet().iterator(); it.hasNext(); )
+        for ( Iterator<Map.Entry<String, Set<Artifact>>> it = bundleInfo.getExportedPackages().entrySet().iterator(); it.hasNext(); )
         {
-            Map.Entry entry = ( Map.Entry ) it.next();
-            String packageName = ( String ) entry.getKey();
-            Collection artifacts = ( Collection ) entry.getValue();
+            Map.Entry<String, Set<Artifact>> entry = it.next();
+            String packageName = entry.getKey();
+            Set<Artifact> artifacts = entry.getValue();
 
-            Collection artifactsWithPackage = ( Collection ) getExportedPackages().get( packageName );
+            Set<Artifact> artifactsWithPackage = getExportedPackages().get( packageName );
             if ( artifactsWithPackage == null )
             {
-                artifactsWithPackage = new HashSet();
+                artifactsWithPackage = new HashSet<Artifact>();
                 getExportedPackages().put( packageName, artifactsWithPackage );
             }
             artifactsWithPackage.addAll( artifacts );
