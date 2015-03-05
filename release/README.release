@@ -44,7 +44,7 @@ $ ./gradlew jar
 $ ./gradlew test
 $ ./gradlew check
 
-Then Edit the ./release/build.gradle script, increment the "ext.dmRelease" property, and create the staging:
+create the staging:
 
 $ ./gradlew makeStaging (this will create ./release/staging/ directory)
 
@@ -102,6 +102,8 @@ Move the artifacts from the development area to the final release location at
 https://dist.apache.org/repos/dist/release/felix by invoking the following target:
 
 $ ./gradlew promoteToRelease
+
+Then Edit the ./release/build.gradle script, increment the "ext.dmRelease" property, and commit.
 
 Cancelling the release
 ======================
