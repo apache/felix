@@ -1,3 +1,19 @@
+Changes from 1.8.0 to 1.8.2
+----------------------------
+
+** Bug
+    * [FELIX-4302] - Config Admin can create illegal names on windows
+    * [FELIX-4360] - Ensure ordered property values in configurations
+    * [FELIX-4362] - Security ConfigAdmin permissions are inherited on the stack
+    * [FELIX-4385] - NPE in Configuration Admin Service when deleting configuration
+    * [FELIX-4408] - CaseInsensitiveDictionary is platform/locale dependant
+    * [FELIX-4566] - Consistency in PersistenceManager and Cache is not guaranteed
+
+** Improvement
+    * [FELIX-4316] - Packages imported dynamically should also be imported statically with an optional flag
+    * [FELIX-4811] - Optimize ConfigurationManager#listConfigurations
+
+
 Changes from 1.6.0 to 1.8.0
 ----------------------------
 
