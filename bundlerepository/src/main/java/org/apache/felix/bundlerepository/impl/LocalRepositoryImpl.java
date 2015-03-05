@@ -46,7 +46,7 @@ public class LocalRepositoryImpl implements Repository, SynchronousBundleListene
 
     public void bundleChanged(BundleEvent event)
     {
-        if (event.getType() == BundleEvent.INSTALLED)
+        if (event.getType() == BundleEvent.INSTALLED || event.getType() == BundleEvent.UPDATED)
         {
             synchronized (this)
             {
