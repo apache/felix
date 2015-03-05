@@ -1,3 +1,12 @@
+Changes 0.14.0 to 0.16.0
+------------------------
+
+** Bug
+    * [FELIX-4783] - ConcurrentModificationException when stopping
+
+** New Feature
+    * [FELIX-4671] - Provide an expression parser
+
 Changes 0.12.1 to 0.14.0
 ------------------------
 
