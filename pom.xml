@@ -27,7 +27,7 @@
     <packaging>bundle</packaging>
     <name>Apache Felix Gogo Runtime</name>
     <artifactId>org.apache.felix.gogo.runtime</artifactId>
-    <version>0.16.1-SNAPSHOT</version>
+    <version>0.16.2</version>
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
@@ -83,4 +83,10 @@
             </plugin>
         </plugins>
     </build>
+
+  <scm>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.gogo.runtime-0.16.2</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.gogo.runtime-0.16.2</developerConnection>
+    <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.gogo.runtime-0.16.2</url>
+  </scm>
 </project>
