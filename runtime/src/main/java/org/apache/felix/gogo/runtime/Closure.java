@@ -431,7 +431,7 @@ public class Closure implements Function, Evaluate
 
     private boolean bareword(Token t, Object v) throws Exception
     {
-        return ((t.type == Type.WORD) && t.value.equals(v));
+        return ((t.type == Type.WORD) && t.value.toString().equals(v));
     }
 
     private Object executeCmd(String scmd, List<Object> values) throws Exception
