@@ -336,6 +336,13 @@ public class ServiceRegistry
                     usage = addUsageCount(bundle, ref, isPrototype);
                 }
 
+                if (usage.m_count == Integer.MAX_VALUE) {
+                    throw new ServiceException(
+                            "The use count for the service overflowed.",
+                            ServiceException.FACTORY_ERROR,
+                            null);
+                }
+
                 // Increment the usage count and grab the already retrieved
                 // service object, if one exists.
                 usage.m_count++;
