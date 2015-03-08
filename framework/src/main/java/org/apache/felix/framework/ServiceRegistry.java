@@ -336,7 +336,11 @@ public class ServiceRegistry
                     usage = addUsageCount(bundle, ref, isPrototype);
                 }
 
+                // Checks the service usage count to avoid overflow.
                 if (usage.m_count == Integer.MAX_VALUE) {
+                    // We need to unlock the service registration
+                    // so that any threads waiting for it can continue.
+                    m_lockedRegsMap.remove(reg);
                     throw new ServiceException(
                             "The use count for the service overflowed.",
                             ServiceException.FACTORY_ERROR,
