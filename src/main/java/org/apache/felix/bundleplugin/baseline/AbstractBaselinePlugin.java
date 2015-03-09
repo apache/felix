@@ -43,6 +43,8 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.StringUtils;
 
@@ -66,97 +68,66 @@ abstract class AbstractBaselinePlugin
 
     /**
      * Flag to easily skip execution.
-     *
-     * @parameter expression="${baseline.skip}" default-value="false"
      */
+    @Parameter( property = "baseline.skip", defaultValue = "false" )
     protected boolean skip;
 
     /**
      * Whether to fail on errors.
-     *
-     * @parameter expression="${baseline.failOnError}" default-value="true"
      */
+    @Parameter( property = "baseline.failOnError", defaultValue = "true" )
     protected boolean failOnError;
 
     /**
      * Whether to fail on warnings.
-     *
-     * @parameter expression="${baseline.failOnWarning}" default-value="false"
      */
+    @Parameter( property = "baseline.failOnWarning", defaultValue = "false" )
     protected boolean failOnWarning;
 
-    /**
-     * @parameter expression="${project}"
-     * @required
-     * @readonly
-     */
+    @Parameter( defaultValue = "${project}", readonly = true, required = true )
     protected MavenProject project;
 
-    /**
-     * @parameter expression="${session}"
-     * @required
-     * @readonly
-     */
+    @Parameter( defaultValue = "${session}", readonly = true, required = true )
     protected MavenSession session;
 
-    /**
-     * @parameter expression="${project.build.directory}"
-     * @required
-     * @readonly
-     */
+    @Parameter( defaultValue = "${project.build.directory}", readonly = true, required = true )
     private File buildDirectory;
 
-    /**
-     * @parameter expression="${project.build.finalName}"
-     * @required
-     * @readonly
-     */
+    @Parameter( defaultValue = "${project.build.finalName}", readonly = true, required = true )
     private String finalName;
 
-    /**
-     * @component
-     */
+    @Component
     protected ArtifactResolver resolver;
 
-    /**
-     * @component
-     */
+    @Component
     protected ArtifactFactory factory;
 
-    /**
-     * @component
-     */
+    @Component
     private ArtifactMetadataSource metadataSource;
 
     /**
      * Version to compare the current code against.
-     *
-     * @parameter expression="${comparisonVersion}" default-value="(,${project.version})"
-     * @required
-     * @readonly
      */
+    @Parameter( defaultValue = "(,${project.version})", property="comparisonVersion" )
     protected String comparisonVersion;
 
     /**
      * Classifier for the artifact to compare the current code against.
-     *
-     * @parameter expression="${comparisonClassifier}"
      */
+    @Parameter( property="comparisonClassifier" )
     protected String comparisonClassifier;
 
     /**
      * A list of packages filter, if empty the whole bundle will be traversed. Values are specified in OSGi package
      * instructions notation, e.g. <code>!org.apache.felix.bundleplugin</code>.
-     *
-     * @parameter
      */
+    @Parameter
     private String[] filters;
 
     /**
      * Project types which this plugin supports.
-     *
-     * @parameter
      */
+    @Parameter
     protected List<String> supportedProjectTypes = Arrays.asList( new String[] { "jar", "bundle" } );
 
     public final void execute()

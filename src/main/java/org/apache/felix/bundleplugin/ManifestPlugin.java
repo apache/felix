@@ -33,6 +33,11 @@ import java.util.jar.Manifest;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Execute;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
 import aQute.bnd.osgi.Analyzer;
@@ -43,19 +48,15 @@ import aQute.bnd.osgi.Resource;
 
 /**
  * Generate an OSGi manifest for this project
- *
- * @goal manifest
- * @phase process-classes
- * @requiresDependencyResolution test
- * @threadSafe
  */
+@Mojo( name = "manifest", requiresDependencyResolution = ResolutionScope.TEST, threadSafe = true )
+@Execute( phase = LifecyclePhase.PROCESS_CLASSES )
 public class ManifestPlugin extends BundlePlugin
 {
     /**
      * When true, generate the manifest by rebuilding the full bundle in memory
-     *
-     * @parameter expression="${rebuildBundle}"
      */
+    @Parameter( property = "rebuildBundle" )
     protected boolean rebuildBundle;
 
 

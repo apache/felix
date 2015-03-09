@@ -20,18 +20,19 @@ package org.apache.felix.bundleplugin;
 
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Execute;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 
 
 /**
- * Create OSGi bundles from the direct dependencies of the Maven project.
- *
- * @goal wrap
- * @phase package
- * @requiresDependencyResolution test
- * @description build an OSGi bundle jar for direct dependencies
+ * Build an OSGi bundle jar for direct dependencies.
  * @deprecated The wrap goal is no longer supported and may be removed in a future release
  */
 @Deprecated
+@Mojo( name = "wrap", requiresDependencyResolution = ResolutionScope.TEST )
+@Execute( phase = LifecyclePhase.PACKAGE )
 public final class WrapPlugin extends BundleAllPlugin
 {
     public void execute() throws MojoExecutionException

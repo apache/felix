@@ -29,58 +29,48 @@ import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.plugins.annotations.Execute;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
 
 /**
  * Installs bundle details in the local OBR repository (life-cycle goal)
  * 
- * @goal install
- * @phase install
- * @threadSafe
- * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+@Mojo( name = "install", threadSafe = true )
+@Execute( phase = LifecyclePhase.INSTALL )
 public final class ObrInstall extends AbstractMojo
 {
     /**
      * OBR Repository.
-     * 
-     * @parameter expression="${obrRepository}"
      */
+    @Parameter( property = "obrRepository" )
     private String obrRepository;
 
     /**
      * Project types which this plugin supports.
-     *
-     * @parameter
      */
+    @Parameter
     private List supportedProjectTypes = Arrays.asList( new String[]
         { "jar", "bundle" } );
 
     /**
      * Local Repository.
-     * 
-     * @parameter expression="${localRepository}"
-     * @required
-     * @readonly
      */
+    @Parameter( defaultValue = "${localRepository}", readonly = true, required = true )
     private ArtifactRepository localRepository;
 
     /**
      * The Maven project.
-     * 
-     * @parameter expression="${project}"
-     * @required
-     * @readonly
      */
+    @Parameter( defaultValue = "${project}", readonly = true, required = true )
     private MavenProject project;
 
-    /**
-     * @parameter expression="${project.attachedArtifacts}
-     * @required
-     * @readonly
-     */
+    @Parameter( defaultValue = "${project.attachedArtifacts}", readonly = true, required = true )
     private List attachedArtifacts;
 
     /**

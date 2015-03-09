@@ -44,6 +44,12 @@ import org.apache.maven.artifact.resolver.ArtifactResolutionException;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.artifact.versioning.VersionRange;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Execute;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectBuilder;
 import org.apache.maven.project.ProjectBuildingException;
@@ -58,15 +64,13 @@ import aQute.bnd.osgi.Jar;
 
 
 /**
- * Create OSGi bundles from all dependencies in the Maven project
+ * Build an OSGi bundle jar for all transitive dependencies.
  * 
- * @goal bundleall
- * @phase package
- * @requiresDependencyResolution test
- * @description build an OSGi bundle jar for all transitive dependencies
  * @deprecated The bundleall goal is no longer supported and may be removed in a future release
  */
 @Deprecated
+@Mojo( name = "bundleall", requiresDependencyResolution = ResolutionScope.TEST )
+@Execute( phase = LifecyclePhase.PACKAGE )
 public class BundleAllPlugin extends ManifestPlugin
 {
     private static final String LS = System.getProperty( "line.separator" );
@@ -75,76 +79,56 @@ public class BundleAllPlugin extends ManifestPlugin
 
     /**
      * Local repository.
-     *
-     * @parameter expression="${localRepository}"
-     * @required
-     * @readonly
      */
+    @Parameter( defaultValue = "${localRepository}", readonly = true, required = true )
     private ArtifactRepository localRepository;
 
     /**
      * Remote repositories.
-     * 
-     * @parameter expression="${project.remoteArtifactRepositories}"
-     * @required
-     * @readonly
      */
+    @Parameter( defaultValue = "${project.remoteArtifactRepositories}", readonly = true, required = true )
     private List remoteRepositories;
 
     /**
      * Import-Package to be used when wrapping dependencies.
-     *
-     * @parameter expression="${wrapImportPackage}" default-value="*"
      */
+    @Parameter( property = "wrapImportPackage", defaultValue = "*" )
     private String wrapImportPackage;
 
-    /**
-     * @component
-     */
+    @Component
     private ArtifactFactory m_factory;
 
-    /**
-     * @component
-     */
+    @Component
     private ArtifactMetadataSource m_artifactMetadataSource;
 
-    /**
-     * @component
-     */
+    @Component
     private ArtifactCollector m_collector;
 
     /**
      * Artifact resolver, needed to download jars.
-     * 
-     * @component
      */
+    @Component
     private ArtifactResolver m_artifactResolver;
 
-    /**
-     * @component
-     */
+    @Component
     private DependencyTreeBuilder m_dependencyTreeBuilder;
 
-    /**
-     * @component
-     */
+    @Component
     private MavenProjectBuilder m_mavenProjectBuilder;
 
     /**
      * Ignore missing artifacts that are not required by current project but are required by the
      * transitive dependencies.
-     * 
-     * @parameter
      */
+    @Parameter
     private boolean ignoreMissingArtifacts;
 
     private Set m_artifactsBeingProcessed = new HashSet();
 
     /**
      * Process up to some depth 
-     * 
-     * @parameter
      */
+    @Parameter
     private int depth = Integer.MAX_VALUE;
 
 

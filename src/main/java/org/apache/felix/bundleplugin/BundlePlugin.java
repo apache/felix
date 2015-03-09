@@ -57,6 +57,12 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Execute;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.apache.maven.shared.osgi.DefaultMaven2OsgiConverter;
@@ -84,132 +90,105 @@ import aQute.lib.spring.SpringXMLType;
 /**
  * Create an OSGi bundle from Maven project
  *
- * @goal bundle
- * @phase package
- * @requiresDependencyResolution test
- * @description build an OSGi bundle jar
- * @threadSafe
  */
+@Mojo( name = "bundle", requiresDependencyResolution = ResolutionScope.TEST, threadSafe = true )
+@Execute( phase = LifecyclePhase.PACKAGE )
 public class BundlePlugin extends AbstractMojo
 {
     /**
      * Directory where the manifest will be written
-     *
-     * @parameter expression="${manifestLocation}" default-value="${project.build.outputDirectory}/META-INF"
      */
+    @Parameter( property = "manifestLocation", defaultValue = "${project.build.outputDirectory}/META-INF" )
     protected File manifestLocation;
 
     /**
      * Output a nicely formatted manifest that still respects the 72 character line limit.
-     *
-     * @parameter expression="${niceManifest}" default-value="false"
      */
+    @Parameter( property = "niceManifest", defaultValue = "false" )
     protected boolean niceManifest;
 
     /**
      * File where the BND instructions will be dumped
-     *
-     * @parameter expression="${dumpInstructions}"
      */
+    @Parameter( property = "dumpInstructions" )
     protected File dumpInstructions;
 
     /**
      * File where the BND class-path will be dumped
-     *
-     * @parameter expression="${dumpClasspath}"
      */
+    @Parameter( property = "dumpClasspath" )
     protected File dumpClasspath;
 
     /**
      * When true, unpack the bundle contents to the outputDirectory
-     *
-     * @parameter expression="${unpackBundle}"
      */
+    @Parameter( property = "unpackBundle" )
     protected boolean unpackBundle;
 
     /**
      * Comma separated list of artifactIds to exclude from the dependency classpath passed to BND (use "true" to exclude everything)
-     *
-     * @parameter expression="${excludeDependencies}"
      */
+    @Parameter( property = "excludeDependencies" )
     protected String excludeDependencies;
 
     /**
      * Final name of the bundle (without classifier or extension)
-     *
-     * @parameter expression="${project.build.finalName}"
      */
+    @Parameter( defaultValue = "${project.build.finalName}")
     private String finalName;
 
     /**
      * Classifier type of the bundle to be installed.  For example, "jdk14".
      * Defaults to none which means this is the project's main bundle.
-     *
-     * @parameter
      */
+    @Parameter
     protected String classifier;
 
     /**
      * Packaging type of the bundle to be installed.  For example, "jar".
      * Defaults to none which means use the same packaging as the project.
-     *
-     * @parameter
      */
+    @Parameter
     protected String packaging;
 
-    /**
-     * @component
-     */
+    @Component
     private MavenProjectHelper m_projectHelper;
 
-    /**
-     * @component
-     */
+    @Component
     private ArchiverManager m_archiverManager;
 
-    /**
-     * @component
-     */
+    @Component
     private ArtifactHandlerManager m_artifactHandlerManager;
 
     /**
      * Project types which this plugin supports.
-     *
-     * @parameter
      */
+    @Parameter
     protected List<String> supportedProjectTypes = Arrays.asList( new String[]
         { "jar", "bundle" } );
 
     /**
      * The directory for the generated bundles.
-     *
-     * @parameter expression="${project.build.outputDirectory}"
-     * @required
      */
+    @Parameter( defaultValue = "${project.build.outputDirectory}" )
     private File outputDirectory;
 
     /**
      * The directory for the generated JAR.
-     *
-     * @parameter expression="${project.build.directory}"
-     * @required
      */
+    @Parameter( defaultValue = "${project.build.directory}" )
     private String buildDirectory;
 
     /**
      * The Maven project.
-     *
-     * @parameter expression="${project}"
-     * @required
-     * @readonly
      */
+    @Parameter( defaultValue = "${project}", readonly = true, required = true )
     private MavenProject project;
 
     /**
      * The BND instructions for the bundle.
-     *
-     * @parameter
      */
+    @Parameter
     private Map<String, String> instructions = new LinkedHashMap<String, String>();
 
     /**
@@ -219,16 +198,11 @@ public class BundlePlugin extends AbstractMojo
 
     /**
      * The archive configuration to use.
-     *
-     * @parameter
      */
+    @Parameter
     private MavenArchiveConfiguration archive; // accessed indirectly in JarPluginConfiguration
 
-    /**
-     * @parameter default-value="${session}"
-     * @required
-     * @readonly
-     */
+    @Parameter( defaultValue = "${session}", readonly = true, required = true )
     private MavenSession m_mavenSession;
 
     private static final String MAVEN_SYMBOLICNAME = "maven-symbolicname";

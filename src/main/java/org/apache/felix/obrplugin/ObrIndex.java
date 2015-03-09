@@ -38,47 +38,41 @@ import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 
 
 /**
  * Index the content of a maven repository using OBR
  *
- * @goal index
- * @requiresProject false
- *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+@Mojo( name = "index", requiresProject = false )
 public final class ObrIndex extends AbstractMojo
 {
 
     /**
      * OBR Repository.
-     *
-     * @parameter expression="${obrRepository}"
      */
+    @Parameter( property = "obrRepository" )
     private String obrRepository;
 
     /**
      * Template for urls
-     *
-     * @parameter expression="${urlTemplate}"
      */
+    @Parameter( property = "urlTemplate" )
     private String urlTemplate;
 
     /**
      * The repository to index
-     *
-     * @parameter expression="${mavenRepository}
      */
+    @Parameter( property = "mavenRepository" )
     private String mavenRepository;
 
     /**
      * Local Repository.
-     *
-     * @parameter expression="${localRepository}"
-     * @required
-     * @readonly
      */
+    @Parameter( defaultValue = "${localRepository}", readonly = true, required = true )
     private ArtifactRepository localRepository;
 
 

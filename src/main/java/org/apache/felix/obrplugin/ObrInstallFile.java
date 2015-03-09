@@ -26,42 +26,39 @@ import java.util.List;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.plugins.annotations.Execute;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
 
 /**
  * Installs bundle details in the local OBR repository (command-line goal)
  * 
- * @requiresProject false
- * @goal install-file
- * @phase install
- * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+@Mojo( name = "install-file", requiresProject = false )
+@Execute( phase = LifecyclePhase.INSTALL )
 public final class ObrInstallFile extends AbstractFileMojo
 {
     /**
      * OBR Repository.
-     * 
-     * @parameter expression="${obrRepository}"
      */
+    @Parameter( property = "obrRepository" )
     private String obrRepository;
 
     /**
      * Project types which this plugin supports.
-     *
-     * @parameter
      */
+    @Parameter
     private List supportedProjectTypes = Arrays.asList( new String[]
         { "jar", "bundle" } );
 
     /**
      * Local Repository.
-     * 
-     * @parameter expression="${localRepository}"
-     * @required
-     * @readonly
      */
+    @Parameter( defaultValue = "${localRepository}", readonly = true, required = true )
     private ArtifactRepository localRepository;
 
 

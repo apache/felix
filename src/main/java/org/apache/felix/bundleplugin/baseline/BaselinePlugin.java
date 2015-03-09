@@ -24,6 +24,11 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.maven.plugins.annotations.Execute;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.codehaus.plexus.util.xml.PrettyPrintXMLWriter;
 import org.codehaus.plexus.util.xml.XMLWriter;
 
@@ -31,13 +36,10 @@ import aQute.bnd.version.Version;
 
 /**
  * BND Baseline check between two bundles.
- *
- * @goal baseline
- * @phase verify
- * @requiresDependencyResolution test
- * @threadSafe true
  * @since 2.4.1
  */
+@Mojo( name = "baseline", threadSafe = true, requiresDependencyResolution = ResolutionScope.TEST )
+@Execute( phase = LifecyclePhase.VERIFY )
 public final class BaselinePlugin
     extends AbstractBaselinePlugin
 {
@@ -46,16 +48,14 @@ public final class BaselinePlugin
 
     /**
      * An XML output file to render to <code>${project.build.directory}/baseline.xml</code>.
-     *
-     * @parameter expression="${project.build.directory}/baseline.xml"
      */
+    @Parameter(defaultValue="${project.build.directory}/baseline.xml")
     private File xmlOutputFile;
 
     /**
      * Whether to log the results to the console or not, true by default.
-     *
-     * @parameter expression="${logResults}" default-value="true"
      */
+    @Parameter(defaultValue="true", property="logResults" )
     private boolean logResults;
 
     private static final class Context {

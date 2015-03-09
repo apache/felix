@@ -25,35 +25,30 @@ import java.util.Map;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.osgi.DefaultMaven2OsgiConverter;
 import org.apache.maven.shared.osgi.Maven2OsgiConverter;
 
 
 /**
- * Convert a group of versions to OSGi format.
- *
- * @goal cleanVersions
- * @description clean OSGi versions
- * @threadSafe
+ * Clean OSGi versions, ie convert a group of versions to OSGi format.
  */
+@Mojo( name = "cleanVersions", threadSafe = true )
 public class VersionCleanerPlugin extends AbstractMojo
 {
 
     /**
      * The BND instructions for the bundle.
-     *
-     * @parameter
      */
+    @Parameter
     private Map<String, String> versions = new LinkedHashMap<String, String>();
 
     /**
      * The Maven project.
-     *
-     * @parameter expression="${project}"
-     * @required
-     * @readonly
      */
+    @Parameter( defaultValue = "${project}", readonly = true, required = true )
     private MavenProject project;
 
     private Maven2OsgiConverter maven2OsgiConverter = new DefaultMaven2OsgiConverter();
