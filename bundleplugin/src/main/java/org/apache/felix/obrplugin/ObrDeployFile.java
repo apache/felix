@@ -28,6 +28,11 @@ import org.apache.maven.artifact.manager.WagonManager;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Execute;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
 
@@ -35,89 +40,71 @@ import org.apache.maven.settings.Settings;
 /**
  * Deploys bundle details to a remote OBR repository (command-line goal)
  * 
- * @requiresProject false
- * @goal deploy-file
- * @phase deploy
- * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+@Mojo( name = "deploy-file", requiresProject = false )
+@Execute( phase = LifecyclePhase.DEPLOY )
 public final class ObrDeployFile extends AbstractFileMojo
 {
     /**
      * When true, ignore remote locking.
-     * 
-     * @parameter expression="${ignoreLock}"
      */
+    @Parameter( property = "ignoreLock" )
     private boolean ignoreLock;
 
     /**
      * Remote OBR Repository.
-     * 
-     * @parameter expression="${remoteOBR}"
      */
+    @Parameter( property = "remoteOBR" )
     private String remoteOBR;
 
     /**
      * Local OBR Repository.
-     * 
-     * @parameter expression="${obrRepository}"
      */
+    @Parameter( property = "obrRepository" )
     private String obrRepository;
 
     /**
      * Project types which this plugin supports.
-     *
-     * @parameter
      */
+    @Parameter
     private List supportedProjectTypes = Arrays.asList( new String[]
         { "jar", "bundle" } );
 
     /**
      * Remote repository id, used to lookup authentication settings.
-     *
-     * @parameter expression="${repositoryId}" default-value="remote-repository"
-     * @required
      */
+    @Parameter( property = "repositoryId", defaultValue = "remote-repository", required = true )
     private String repositoryId;
 
     /**
      * Remote OBR repository URL, where the bundle details are to be uploaded.
-     *
-     * @parameter expression="${url}"
-     * @required
      */
+    @Parameter( property = "url", required = true )
     private String url;
 
     /**
      * Optional public URL where the bundle has been deployed.
-     *
-     * @parameter expression="${bundleUrl}"
      */
+    @Parameter( property = "bundleUrl" )
     private String bundleUrl;
 
     /**
      * Local Repository.
-     * 
-     * @parameter expression="${localRepository}"
-     * @required
-     * @readonly
      */
+    @Parameter( defaultValue = "${localRepository}", readonly = true, required = true )
     private ArtifactRepository localRepository;
 
     /**
      * Local Maven settings.
-     * 
-     * @parameter expression="${settings}"
-     * @required
-     * @readonly
      */
+    @Parameter( defaultValue = "${settings}", readonly = true, required = true )
     private Settings settings;
 
     /**
      * The Wagon manager.
-     * 
-     * @component
      */
+    @Component
     private WagonManager m_wagonManager;
 
 

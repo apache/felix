@@ -43,6 +43,10 @@ import javax.xml.transform.stream.StreamResult;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Execute;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.FileUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -54,28 +58,22 @@ import org.xml.sax.SAXException;
 /**
  * Clean an OBR repository by finding and removing missing resources.
  * 
- * @requiresProject false
- * @goal clean
- * @phase clean
- * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+@Mojo( name = "clean", requiresProject = false )
+@Execute( phase = LifecyclePhase.CLEAN )
 public class ObrCleanRepo extends AbstractMojo
 {
     /**
      * OBR Repository.
-     * 
-     * @parameter expression="${obrRepository}"
      */
+    @Parameter( property = "obrRepository" )
     private String obrRepository;
 
     /**
      * Local Repository.
-     * 
-     * @parameter expression="${localRepository}"
-     * @required
-     * @readonly
      */
+    @Parameter( defaultValue = "${localRepository}", readonly = true, required = true )
     private ArtifactRepository localRepository;
 
 
