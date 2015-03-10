@@ -64,6 +64,10 @@ function renderData( eventData, filter )  {
 	    bundlesTable.trigger('sorton', [cv]);
 	}
 
+	if (bundlesBody.find('tr').size() == 0) {
+		bundlesBody.html('<tr><td colspan="6">' + i18n.filterNoMatch + '</td></tr>');
+	}
+
 	// show dialog on error
 	if (eventData.error) bundleOpError.dialog('open').find('pre').text(eventData.error)
 }
