@@ -28,7 +28,7 @@
 
 	<artifactId>org.apache.felix.webconsole.plugins.useradmin</artifactId>
 	<packaging>bundle</packaging>
-	<version>1.0.2</version>
+	<version>1.0.3-SNAPSHOT</version>
 
 	<name>Apache Felix Web Console User Admin Plugin</name>
 	<description>
@@ -36,9 +36,9 @@
     </description>
 
 	<scm>
-		<connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.webconsole.plugins.useradmin-1.0.2</connection>
-		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.webconsole.plugins.useradmin-1.0.2</developerConnection>
-		<url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.webconsole.plugins.useradmin-1.0.2</url>
+		<connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/useradmin</connection>
+		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/useradmin</developerConnection>
+		<url>http://svn.apache.org/viewvc/felix/trunk/webconsole-plugins/useradmin</url>
 	</scm>
 
 	<build>
