@@ -36,24 +36,37 @@ import org.apache.felix.http.base.internal.util.PatternUtil;
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public final class ServletHandler extends AbstractHandler<ServletHandler>
+public class ServletHandler extends AbstractHandler<ServletHandler>
 {
     private final ServletInfo servletInfo;
 
-    private final Servlet servlet;
+    private Servlet servlet;
 
     private final Pattern[] patterns;
 
     private final long contextServiceId;
+    
+    private final boolean isWhiteboardService;
 
     public ServletHandler(final ServletContextHelperInfo contextInfo,
                           final ExtServletContext context,
                           final ServletInfo servletInfo,
                           final Servlet servlet)
     {
-        super(context, servletInfo.getInitParameters(), servletInfo.getName());
+    	this(contextInfo, context, servletInfo, servlet, false);
+    }
+    
+    public ServletHandler(final ServletContextHelperInfo contextInfo,
+            final ExtServletContext context,
+            final ServletInfo servletInfo,
+            final Servlet servlet, 
+            final boolean isWhiteboardService)
+    {
+    	super(context, servletInfo.getInitParameters(), servletInfo.getName());
+    	
         this.servlet = servlet;
         this.servletInfo = servletInfo;
+        this.isWhiteboardService = isWhiteboardService;
 
         // Can be null in case of error-handling servlets...
         String[] patterns = this.servletInfo.getPatterns();
@@ -74,6 +87,7 @@ public final class ServletHandler extends AbstractHandler<ServletHandler>
             this.contextServiceId = 0;
         }
     }
+    
 
     @Override
     public int compareTo(final ServletHandler other)
@@ -110,6 +124,16 @@ public final class ServletHandler extends AbstractHandler<ServletHandler>
     public Servlet getServlet()
     {
         return this.servlet;
+    }
+    
+    void setServlet(Servlet servlet)
+    {
+    	this.servlet = servlet;
+    }
+    
+    public boolean isWhiteboardService()
+    {
+    	return this.isWhiteboardService;
     }
 
     @Override

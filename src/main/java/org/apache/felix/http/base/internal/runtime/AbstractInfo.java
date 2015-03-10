@@ -118,14 +118,17 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
         }
         else if (value instanceof String[])
         {
-            final String[] arr = (String[]) value;
-            for(int i=0; i<arr.length; i++)
+        	final String[] arr = (String[]) value;
+        	String[] values = new String[arr.length];
+        	
+            for(int i=0, j=0; i<arr.length; i++)
             {
                 if ( arr[i] != null )
                 {
-                    arr[i] = arr[i].trim();
+                    values[j++] = arr[i].trim();
                 }
             }
+            return values;
         }
         else if (value instanceof Collection<?>)
         {

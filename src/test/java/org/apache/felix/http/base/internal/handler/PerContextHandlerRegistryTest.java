@@ -35,10 +35,10 @@ public class PerContextHandlerRegistryTest
     @Test public void testPathOrdering()
     {
         final List<PerContextHandlerRegistry> list = new ArrayList<PerContextHandlerRegistry>();
-        list.add(new PerContextHandlerRegistry(createServletContextHelperInfo("/", 1L, 0)));
-        list.add(new PerContextHandlerRegistry(createServletContextHelperInfo("/foo", 2L, 0)));
-        list.add(new PerContextHandlerRegistry(createServletContextHelperInfo("/", 3L, 0)));
-        list.add(new PerContextHandlerRegistry(createServletContextHelperInfo("/bar", 4L, 0)));
+        list.add(new PerContextHandlerRegistry(createServletContextHelperInfo("/", 1L, 0), null));
+        list.add(new PerContextHandlerRegistry(createServletContextHelperInfo("/foo", 2L, 0), null));
+        list.add(new PerContextHandlerRegistry(createServletContextHelperInfo("/", 3L, 0), null));
+        list.add(new PerContextHandlerRegistry(createServletContextHelperInfo("/bar", 4L, 0), null));
 
         Collections.sort(list);
 
@@ -51,10 +51,10 @@ public class PerContextHandlerRegistryTest
     @Test public void testRankingOrdering()
     {
         final List<PerContextHandlerRegistry> list = new ArrayList<PerContextHandlerRegistry>();
-        list.add(new PerContextHandlerRegistry(createServletContextHelperInfo("/", 1L, 0)));
-        list.add(new PerContextHandlerRegistry(createServletContextHelperInfo("/", 2L, 0)));
-        list.add(new PerContextHandlerRegistry(createServletContextHelperInfo("/", 3L, -30)));
-        list.add(new PerContextHandlerRegistry(createServletContextHelperInfo("/", 4L, 50)));
+        list.add(new PerContextHandlerRegistry(createServletContextHelperInfo("/", 1L, 0), null));
+        list.add(new PerContextHandlerRegistry(createServletContextHelperInfo("/", 2L, 0), null));
+        list.add(new PerContextHandlerRegistry(createServletContextHelperInfo("/", 3L, -30), null));
+        list.add(new PerContextHandlerRegistry(createServletContextHelperInfo("/", 4L, 50), null));
 
         Collections.sort(list);
 
@@ -77,8 +77,8 @@ public class PerContextHandlerRegistryTest
 
     private void testSymetry(String path, String otherPath, long id, long otherId, int ranking, int otherRanking)
     {
-        PerContextHandlerRegistry handlerRegistry = new PerContextHandlerRegistry(createServletContextHelperInfo(path, id, ranking));
-        PerContextHandlerRegistry other = new PerContextHandlerRegistry(createServletContextHelperInfo(otherPath, otherId, otherRanking));
+        PerContextHandlerRegistry handlerRegistry = new PerContextHandlerRegistry(createServletContextHelperInfo(path, id, ranking), null);
+        PerContextHandlerRegistry other = new PerContextHandlerRegistry(createServletContextHelperInfo(otherPath, otherId, otherRanking), null);
 
         assertEquals(handlerRegistry.compareTo(other), -other.compareTo(handlerRegistry));
     }
@@ -96,9 +96,9 @@ public class PerContextHandlerRegistryTest
             long highId, long midId, long lowId,
             int highRanking, int midRanking, int lowRanking)
     {
-        PerContextHandlerRegistry high = new PerContextHandlerRegistry(createServletContextHelperInfo(highPath, highId, highRanking));
-        PerContextHandlerRegistry mid = new PerContextHandlerRegistry(createServletContextHelperInfo(midPath, midId, midRanking));
-        PerContextHandlerRegistry low = new PerContextHandlerRegistry(createServletContextHelperInfo(lowPath, lowId, lowRanking));
+        PerContextHandlerRegistry high = new PerContextHandlerRegistry(createServletContextHelperInfo(highPath, highId, highRanking), null);
+        PerContextHandlerRegistry mid = new PerContextHandlerRegistry(createServletContextHelperInfo(midPath, midId, midRanking), null);
+        PerContextHandlerRegistry low = new PerContextHandlerRegistry(createServletContextHelperInfo(lowPath, lowId, lowRanking), null);
 
         assertEquals(1, high.compareTo(mid));
         assertEquals(1, mid.compareTo(low));
