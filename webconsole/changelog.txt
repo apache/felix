@@ -1,3 +1,27 @@
+Changes from 4.2.6 to 4.2.8
+---------------------------
+** Bug
+    * [FELIX-3695] - When bundle filter doesn't match, the tool bars are duplicated
+    * [FELIX-4800] - Bundle search in /system/console/bundles produces 405
+** Improvement
+    * [FELIX-3006] - Please create a logout button for the web console screen
+
+Changes from 4.2.4 to 4.2.6
+---------------------------
+** Bug
+    * [FELIX-4203] - ConfigAdmin plugin does not return json
+    * [FELIX-4734] - Web Console RESTful API should wait for asynchonous operations until they complete 
+    * [FELIX-4735] - Cannot create a new factory configuration from Web Admin Console
+** Improvement
+    * [FELIX-3849] - Support setting configuration binding
+    * [FELIX-4007] - enable multiline inputs in Web Console Configuration
+    * [FELIX-4704] - Show ranking in web console services plugin
+    * [FELIX-4710] - Web Console: Display templated name hint for factory configuration entries
+    * [FELIX-4737] - Provide an option to use system bundle context to get bundles/services (Support for subsystems)
+    * [FELIX-4746] - Escape outputting filter parameter in service servlet
+** Task
+    * [FELIX-4738] - Deprecate WebConsoleUtil#keyVal
+
 Changes from 4.2.0 to 4.2.4
 ---------------------------
 ** Bug
