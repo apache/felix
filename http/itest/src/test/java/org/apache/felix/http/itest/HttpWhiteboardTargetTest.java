@@ -47,7 +47,7 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 @RunWith(JUnit4TestRunner.class)
-public class HttpWhiteboardTest extends BaseIntegrationTest
+public class HttpWhiteboardTargetTest extends BaseIntegrationTest
 {
 	
 	private static final String SERVICE_HTTP_PORT = "org.osgi.service.http.port"; 
@@ -81,13 +81,13 @@ public class HttpWhiteboardTest extends BaseIntegrationTest
 		ServiceRegistration<?> reg = m_context.registerService(Servlet.class.getName(), servlet, props);
 
 		try {
-			assertTrue(initLatch.await(600, TimeUnit.SECONDS));
+			assertTrue(initLatch.await(5, TimeUnit.SECONDS));
 			URL testURL = createURL("/servletAlias");
             assertContent("It works!", testURL);            
 		} finally {
 				reg.unregister();	
 		}
-		assertTrue(destroyLatch.await(600, TimeUnit.SECONDS));
+		assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
 	}
 	
 	/**
