@@ -134,7 +134,7 @@
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.framework</artifactId>
-			<version>4.7.0-SNAPSHOT</version>
+			<version>4.6.1</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
