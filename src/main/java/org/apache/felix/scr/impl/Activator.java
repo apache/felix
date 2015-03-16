@@ -22,6 +22,7 @@ package org.apache.felix.scr.impl;
 import java.io.PrintStream;
 import java.text.MessageFormat;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -34,6 +35,10 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.framework.wiring.BundleWire;
+import org.osgi.framework.wiring.BundleWiring;
+import org.osgi.namespace.extender.ExtenderNamespace;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
 import org.osgi.service.log.LogService;
@@ -280,7 +285,7 @@ public class Activator extends AbstractExtender
      */
     private void loadComponents( Bundle bundle )
     {
-        if ( bundle.getHeaders().get( "Service-Component" ) == null )
+        if ( bundle.getHeaders().get( ComponentConstants.SERVICE_COMPONENT ) == null )
         {
             // no components in the bundle, abandon
             return;
@@ -293,6 +298,31 @@ public class Activator extends AbstractExtender
             log( LogService.LOG_ERROR, m_bundle, "Cannot get BundleContext of bundle {0}/{1}",
                 new Object[] {bundle.getSymbolicName(), bundle.getBundleId()}, null );
             return;
+        }
+        
+        //Examine bundle for extender requirement; if present check if bundle is wired to us.
+        BundleWiring wiring = bundle.adapt(BundleWiring.class);
+        List<BundleWire> extenderWires = wiring.getRequiredWires(ExtenderNamespace.EXTENDER_NAMESPACE);
+        try 
+        {
+            for (BundleWire wire: extenderWires) 
+            {
+                if (ComponentConstants.COMPONENT_CAPABILITY_NAME.equals(wire.getCapability().getAttributes().get(ExtenderNamespace.EXTENDER_NAMESPACE)))
+                {
+                    if (!m_bundle.adapt(BundleRevision.class).equals(wire.getProvider()))
+                    {
+                        log( LogService.LOG_DEBUG, m_bundle, "Bundle {0}/{1} wired to a different extender: {2}",
+                            new Object[] {bundle.getSymbolicName(), bundle.getBundleId(), wire.getProvider().getSymbolicName()}, null );
+                        return;
+                    }
+                    break;
+                }
+            }
+        } 
+        catch (NoSuchMethodError e) 
+        {
+            log( LogService.LOG_DEBUG, m_bundle, "Cannot determine bundle wiring on pre R6 framework",
+                null, null );
         }
 
         // FELIX-1666 method is called for the LAZY_ACTIVATION event and
