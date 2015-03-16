@@ -76,6 +76,7 @@ import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
+import org.osgi.namespace.extender.ExtenderNamespace;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentFactory;
@@ -686,6 +687,7 @@ public abstract class ComponentTestBase
                 .set(Constants.BUNDLE_VERSION, version)
                 .set(Constants.IMPORT_PACKAGE, componentPackage)
                 .set("Service-Component", "OSGI-INF/components.xml")
+                .set(Constants.REQUIRE_CAPABILITY, ExtenderNamespace.EXTENDER_NAMESPACE + ";filter:=\"(&(osgi.extender=osgi.component)(version>=1.3)(!(version>=2.0)))\"")
                 .build(withBnd());
 
         try
