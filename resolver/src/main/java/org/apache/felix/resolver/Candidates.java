@@ -72,6 +72,8 @@ class Candidates
 
     private final Map<Capability, Requirement> m_subtitutableMap;
 
+    private final OpenHashMapSet<Requirement, Capability> m_path;
+
     /**
      * Private copy constructor used by the copy() method.
      */
@@ -82,7 +84,8 @@ class Candidates
         Map<Resource, WrappedResource> wrappedHosts, Map<Resource, Object> populateResultCache,
         boolean fragmentsPresent,
         Map<Resource, Boolean> onDemandResources,
-        Map<Capability, Requirement> substitutableMap)
+        Map<Capability, Requirement> substitutableMap,
+        OpenHashMapSet<Requirement, Capability> path)
     {
         m_mandatoryResources = mandatoryResources;
         m_dependentMap = dependentMap;
@@ -92,6 +95,7 @@ class Candidates
         m_fragmentsPresent = fragmentsPresent;
         m_validOnDemandResources = onDemandResources;
         m_subtitutableMap = substitutableMap;
+        m_path = path;
     }
 
     /**
@@ -106,6 +110,11 @@ class Candidates
         m_populateResultCache = new HashMap<Resource, Object>();
         m_validOnDemandResources = validOnDemandResources;
         m_subtitutableMap = new HashMap<Capability, Requirement>();
+        m_path = new OpenHashMapSet<Requirement, Capability>(3);
+    }
+
+    public Object getPath() {
+        return m_path;
     }
 
     /**
@@ -803,17 +812,31 @@ class Candidates
     {
         List<Capability> candidates = m_candidateMap.get(req);
         // Remove the conflicting candidate.
-        candidates.remove(0);
+        Capability cap = candidates.remove(0);
         if (candidates.isEmpty())
         {
             m_candidateMap.remove(req);
         }
+        // Update resolution path
+        CopyOnWriteSet<Capability> capPath = m_path.get(req);
+        if (capPath == null) {
+            capPath = new CopyOnWriteSet<Capability>();
+            m_path.put(req, capPath);
+        }
+        capPath.add(cap);
     }
 
     public List<Capability> clearCandidates(Requirement req, Collection<Capability> caps)
     {
         List<Capability> l = m_candidateMap.get(req);
         l.removeAll(caps);
+        // Update resolution path
+        CopyOnWriteSet<Capability> capPath = m_path.get(req);
+        if (capPath == null) {
+            capPath = new CopyOnWriteSet<Capability>();
+            m_path.put(req, capPath);
+        }
+        capPath.addAll(caps);
         return l;
     }
 
@@ -1231,7 +1254,8 @@ class Candidates
                 m_populateResultCache,
                 m_fragmentsPresent,
                 m_validOnDemandResources,
-                m_subtitutableMap);
+                m_subtitutableMap,
+                m_path.deepClone());
     }
 
     public void dump(ResolveContext rc)
