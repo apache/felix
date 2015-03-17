@@ -1335,6 +1335,7 @@ class Candidates
                 if (existingPermCands != null && !existingPermCands.get(0).equals(candidates.get(0)))
                 {
                     permutated = true;
+                    break;
                 }
             }
             // If we haven't already permutated the existing
