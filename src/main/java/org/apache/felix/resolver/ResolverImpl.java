@@ -197,15 +197,14 @@ public class ResolverImpl implements Resolver
                 // If a populated resource is a fragment, then its host
                 // must ultimately be verified, so store its host requirement
                 // to use for package space calculation.
-                Map<Resource, List<Requirement>> hostReqs =
-                    new HashMap<Resource, List<Requirement>>();
+                Map<Resource, Requirement> hostReqs = new HashMap<Resource, Requirement>();
                 for (Resource resource : allResources)
                 {
                     if (Util.isFragment(resource))
                     {
                         hostReqs.put(
                             resource,
-                            resource.getRequirements(HostNamespace.HOST_NAMESPACE));
+                            resource.getRequirements(HostNamespace.HOST_NAMESPACE).get(0));
                     }
                 }
 
@@ -260,10 +259,18 @@ public class ResolverImpl implements Resolver
 
                         // If we are resolving a fragment, then get its
                         // host candidate and verify it instead.
-                        List<Requirement> hostReq = hostReqs.get(resource);
+                        Requirement hostReq = hostReqs.get(resource);
                         if (hostReq != null)
                         {
-                            target = allCandidates.getFirstCandidate(hostReq.get(0)).getResource();
+                            Capability hostCap = allCandidates.getFirstCandidate(hostReq);
+                            // If the resource is an already resolved fragment and can not
+                            // be attached to new hosts, there will be no matching host,
+                            // so ignore this resource
+                            if (hostCap == null)
+                            {
+                                continue;
+                            }
+                            target = hostCap.getResource();
                         }
 
                         calculatePackageSpaces(
@@ -366,10 +373,18 @@ public class ResolverImpl implements Resolver
 
                         // If we are resolving a fragment, then we
                         // actually want to populate its host's wires.
-                        List<Requirement> hostReq = hostReqs.get(resource);
+                        Requirement hostReq = hostReqs.get(resource);
                         if (hostReq != null)
                         {
-                            target = allCandidates.getFirstCandidate(hostReq.get(0)).getResource();
+                            Capability hostCap = allCandidates.getFirstCandidate(hostReq);
+                            // If the resource is an already resolved fragment and can not
+                            // be attached to new hosts, there will be no matching host,
+                            // so ignore this resource
+                            if (hostCap == null)
+                            {
+                                continue;
+                            }
+                            target = hostCap.getResource();
                         }
 
                         if (allCandidates.isPopulated(target))
