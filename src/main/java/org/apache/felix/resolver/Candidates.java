@@ -29,6 +29,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
+
+import org.apache.felix.resolver.util.CopyOnWriteSet;
+import org.apache.felix.resolver.util.CopyOnWriteList;
+import org.apache.felix.resolver.util.OpenHashMap;
+import org.apache.felix.resolver.util.OpenHashMapList;
+import org.apache.felix.resolver.util.OpenHashMapSet;
+import org.apache.felix.resolver.util.ShadowList;
 import org.osgi.framework.Version;
 import org.osgi.framework.namespace.HostNamespace;
 import org.osgi.framework.namespace.IdentityNamespace;
@@ -49,9 +56,9 @@ class Candidates
 
     private final Set<Resource> m_mandatoryResources;
     // Maps a capability to requirements that match it.
-    private final Map<Capability, Set<Requirement>> m_dependentMap;
+    private final OpenHashMapSet<Capability, Requirement> m_dependentMap;
     // Maps a requirement to the capability it matches.
-    private final Map<Requirement, List<Capability>> m_candidateMap;
+    private final OpenHashMapList<Requirement, Capability> m_candidateMap;
     // Maps a bundle revision to its associated wrapped revision; this only happens
     // when a revision being resolved has fragments to attach to it.
     private final Map<Resource, WrappedResource> m_allWrappedHosts;
@@ -70,8 +77,8 @@ class Candidates
      */
     private Candidates(
         Set<Resource> mandatoryResources,
-        Map<Capability, Set<Requirement>> dependentMap,
-        Map<Requirement, List<Capability>> candidateMap,
+        OpenHashMapSet<Capability, Requirement> dependentMap,
+        OpenHashMapList<Requirement, Capability> candidateMap,
         Map<Resource, WrappedResource> wrappedHosts, Map<Resource, Object> populateResultCache,
         boolean fragmentsPresent,
         Map<Resource, Boolean> onDemandResources,
@@ -93,8 +100,8 @@ class Candidates
     public Candidates(Map<Resource, Boolean> validOnDemandResources)
     {
         m_mandatoryResources = new HashSet<Resource>();
-        m_dependentMap = new HashMap<Capability, Set<Requirement>>();
-        m_candidateMap = new HashMap<Requirement, List<Capability>>();
+        m_dependentMap = new OpenHashMapSet<Capability, Requirement>();
+        m_candidateMap = new OpenHashMapList<Requirement, Capability>();
         m_allWrappedHosts = new HashMap<Resource, WrappedResource>();
         m_populateResultCache = new HashMap<Resource, Object>();
         m_validOnDemandResources = validOnDemandResources;
@@ -732,7 +739,7 @@ class Candidates
         }
 
         // Record the candidates.
-        m_candidateMap.put(req, candidates);
+        m_candidateMap.put(req, new CopyOnWriteList<Capability>(candidates));
     }
 
     /**
@@ -929,10 +936,10 @@ class Candidates
                     // from the dependent map, but you can't since it may come from
                     // a fragment that is attached to multiple hosts, so each host
                     // will need to make their own copy.
-                    Set<Requirement> dependents = m_dependentMap.get(origCap);
+                    CopyOnWriteSet<Requirement> dependents = m_dependentMap.get(origCap);
                     if (dependents != null)
                     {
-                        dependents = new HashSet<Requirement>(dependents);
+                        dependents = new CopyOnWriteSet<Requirement>(dependents);
                         m_dependentMap.put(c, dependents);
                         for (Requirement r : dependents)
                         {
@@ -966,8 +973,7 @@ class Candidates
                             List<Capability> cands = m_candidateMap.get(r);
                             if (!(cands instanceof ShadowList))
                             {
-                                ShadowList<Capability> shadow =
-                                    new ShadowList<Capability>(cands);
+                                ShadowList<Capability> shadow = new ShadowList<Capability>(cands);
                                 m_candidateMap.put(r, shadow);
                                 cands = shadow;
                             }
@@ -977,7 +983,7 @@ class Candidates
                             // shadow copy of the list accordingly.
                             if (!origCap.getResource().equals(hostResource.getDeclaredResource()))
                             {
-                                List<Capability> original = ((ShadowList) cands).getOriginal();
+                                List<Capability> original = ((ShadowList<Capability>) cands).getOriginal();
                                 int removeIdx = original.indexOf(origCap);
                                 if (removeIdx != -1)
                                 {
@@ -1010,7 +1016,7 @@ class Candidates
                 List<Capability> cands = m_candidateMap.get(origReq);
                 if (cands != null)
                 {
-                    m_candidateMap.put(r, new ArrayList<Capability>(cands));
+                    m_candidateMap.put(r, new CopyOnWriteList<Capability>(cands));
                     for (Capability cand : cands)
                     {
                         Set<Requirement> dependents = m_dependentMap.get(cand);
@@ -1033,6 +1039,9 @@ class Candidates
         }
 
         populateSubstitutables();
+
+        m_candidateMap.concat();
+        m_dependentMap.concat();
     }
 
     // Maps a host capability to a map containing its potential fragments;
@@ -1043,17 +1052,17 @@ class Candidates
     {
         Map<Capability, Map<String, Map<Version, List<Requirement>>>> hostFragments =
             new HashMap<Capability, Map<String, Map<Version, List<Requirement>>>>();
-        for (Entry<Requirement, List<Capability>> entry : m_candidateMap.entrySet())
+        for (Entry<Requirement, CopyOnWriteList<Capability>> entry : m_candidateMap.entrySet())
         {
             Requirement req = entry.getKey();
             List<Capability> caps = entry.getValue();
             for (Capability cap : caps)
             {
                 // Record the requirement as dependent on the capability.
-                Set<Requirement> dependents = m_dependentMap.get(cap);
+                CopyOnWriteSet<Requirement> dependents = m_dependentMap.get(cap);
                 if (dependents == null)
                 {
-                    dependents = new HashSet<Requirement>();
+                    dependents = new CopyOnWriteSet<Requirement>();
                     m_dependentMap.put(cap, dependents);
                 }
                 dependents.add(req);
@@ -1214,35 +1223,22 @@ class Candidates
      */
     public Candidates copy()
     {
-        Map<Capability, Set<Requirement>> dependentMap =
-            new HashMap<Capability, Set<Requirement>>();
-        for (Entry<Capability, Set<Requirement>> entry : m_dependentMap.entrySet())
-        {
-            Set<Requirement> dependents = new HashSet<Requirement>(entry.getValue());
-            dependentMap.put(entry.getKey(), dependents);
-        }
-
-        Map<Requirement, List<Capability>> candidateMap =
-            new HashMap<Requirement, List<Capability>>();
-        for (Entry<Requirement, List<Capability>> entry
-            : m_candidateMap.entrySet())
-        {
-            List<Capability> candidates =
-                new ArrayList<Capability>(entry.getValue());
-            candidateMap.put(entry.getKey(), candidates);
-        }
-
         return new Candidates(
-            m_mandatoryResources, dependentMap, candidateMap,
-            m_allWrappedHosts, m_populateResultCache, m_fragmentsPresent, m_validOnDemandResources,
-            m_subtitutableMap);
+                m_mandatoryResources,
+                m_dependentMap.deepClone(),
+                m_candidateMap.deepClone(),
+                m_allWrappedHosts,
+                m_populateResultCache,
+                m_fragmentsPresent,
+                m_validOnDemandResources,
+                m_subtitutableMap);
     }
 
     public void dump(ResolveContext rc)
     {
         // Create set of all revisions from requirements.
-        Set<Resource> resources = new HashSet<Resource>();
-        for (Entry<Requirement, List<Capability>> entry
+        Set<Resource> resources = new CopyOnWriteSet<Resource>();
+        for (Entry<Requirement, CopyOnWriteList<Capability>> entry
             : m_candidateMap.entrySet())
         {
             resources.add(entry.getKey().getResource());
