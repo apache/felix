@@ -19,6 +19,7 @@
 package org.apache.felix.resolver.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -32,7 +33,9 @@ import java.util.Map;
 
 import org.apache.felix.resolver.Logger;
 import org.apache.felix.resolver.ResolverImpl;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.osgi.framework.Constants;
 import org.osgi.framework.namespace.BundleNamespace;
 import org.osgi.framework.namespace.HostNamespace;
 import org.osgi.framework.namespace.IdentityNamespace;
@@ -355,6 +358,41 @@ public class ResolverTest
         assertEquals("(osgi.identity=F2)", bReq.getDirectives().get("filter"));
     }
 
+    @Test
+    public void testScenario8() throws Exception
+    {
+        Resolver resolver = new ResolverImpl(new Logger(Logger.LOG_DEBUG));
+
+        Map<Resource, Wiring> wirings = new HashMap<Resource, Wiring>();
+        Map<Requirement, List<Capability>> candMap = new HashMap<Requirement, List<Capability>>();
+        List<Resource> mandatory = populateScenario8(wirings, candMap);
+        ResolveContextImpl rci = new ResolveContextImpl(wirings, candMap, mandatory, Collections.<Resource> emptyList());
+
+        Map<Resource, List<Wire>> wireMap = resolver.resolve(rci);
+
+        Resource res2 = findResource("res2", wireMap.keySet());
+        Resource res4 = findResource("res4", wireMap.keySet());
+        Resource res5 = findResource("res5", wireMap.keySet());
+
+        assertNotNull(res2);
+        assertNotNull(res4);
+        assertNotNull(res5);
+
+        List<Wire> wires2 = wireMap.get(res2);
+        assertEquals(2, wires2.size());
+        // should be wired to res4 and res5
+
+        List<Wire> wires4 = wireMap.get(res4);
+        assertEquals(1, wires4.size());
+        // should be wired to res5
+
+        List<Wire> wires5 = wireMap.get(res5);
+        assertEquals(0, wires5.size());
+        // should not be wired to any of its optional requirements to res6
+
+        assertEquals(3, wireMap.size());
+    }
+
     private static String getResourceName(Resource r)
     {
         return r.getCapabilities(IdentityNamespace.IDENTITY_NAMESPACE).get(0).getAttributes()
@@ -637,5 +675,64 @@ public class ResolverTest
         resources.add(f2);
         resources.add(b1);
         return resources;
+    }
+
+    private static List<Resource> populateScenario8(Map<Resource, Wiring> wirings, Map<Requirement, List<Capability>> candMap)
+    {
+        ResourceImpl res2 = new ResourceImpl("res2");
+        Requirement req25 = addReq(res2, IdentityNamespace.IDENTITY_NAMESPACE, "res5");
+        Requirement req24 = addReq(res2, IdentityNamespace.IDENTITY_NAMESPACE, "res4");
+        Requirement req23 = addReq(res2, IdentityNamespace.IDENTITY_NAMESPACE, "res3", true);
+
+        ResourceImpl res3 = new ResourceImpl("res3");
+        Requirement req32 = addReq(res3, IdentityNamespace.IDENTITY_NAMESPACE, "res2");
+        Requirement req3x = addReq(res3, "foo", "bar");
+
+        ResourceImpl res4 = new ResourceImpl("res4");
+        Requirement req45 = addReq(res4, IdentityNamespace.IDENTITY_NAMESPACE, "res5");
+
+        ResourceImpl res5 = new ResourceImpl("res5");
+        Requirement req5x1 = addReq(res5, BundleNamespace.BUNDLE_NAMESPACE, "package1", true);
+        Requirement req5x2 = addReq(res5, BundleNamespace.BUNDLE_NAMESPACE, "package2", true);
+
+        ResourceImpl res6 = new ResourceImpl("res6");
+        Capability cap6x1 = addCap(res6, BundleNamespace.BUNDLE_NAMESPACE, "package1");
+        Capability cap6x2 = addCap(res6, BundleNamespace.BUNDLE_NAMESPACE, "package2");
+        Requirement req63 = addReq(res6, IdentityNamespace.IDENTITY_NAMESPACE, "res3");
+
+        candMap.put(req25, res5.getCapabilities(IdentityNamespace.IDENTITY_NAMESPACE));
+        candMap.put(req24, res4.getCapabilities(IdentityNamespace.IDENTITY_NAMESPACE));
+        candMap.put(req23, res3.getCapabilities(IdentityNamespace.IDENTITY_NAMESPACE));
+        candMap.put(req32, res2.getCapabilities(IdentityNamespace.IDENTITY_NAMESPACE));
+        candMap.put(req45, res5.getCapabilities(IdentityNamespace.IDENTITY_NAMESPACE));
+        candMap.put(req63, res3.getCapabilities(IdentityNamespace.IDENTITY_NAMESPACE));
+        candMap.put(req3x, Arrays.<Capability>asList());
+        candMap.put(req5x1, Arrays.<Capability>asList(cap6x1));
+        candMap.put(req5x2, Arrays.<Capability>asList(cap6x2));
+        return Arrays.<Resource>asList(res2);
+    }
+
+    private static Capability addCap(ResourceImpl res, String namespace, String value)
+    {
+        GenericCapability cap = new GenericCapability(res, namespace);
+        cap.addAttribute(namespace, value);
+        res.addCapability(cap);
+        return cap;
+    }
+
+    private static Requirement addReq(ResourceImpl res, String namespace, String value)
+    {
+        return addReq(res, namespace, value, false);
+    }
+
+    private static Requirement addReq(ResourceImpl res, String namespace, String value, boolean optional)
+    {
+        GenericRequirement req = new GenericRequirement(res, namespace);
+        req.addDirective(Namespace.REQUIREMENT_FILTER_DIRECTIVE, "(" + namespace + "=" + value + ")");
+        if (optional) {
+            req.addDirective(Constants.RESOLUTION_DIRECTIVE, Constants.RESOLUTION_OPTIONAL);
+        }
+        res.addRequirement(req);
+        return req;
     }
 }

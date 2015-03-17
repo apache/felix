@@ -328,6 +328,22 @@ class Candidates
         {
             // Record that the revision was successfully populated.
             m_populateResultCache.put(resource, Boolean.TRUE);
+            // FELIX-4825: Verify candidate map in case of cycles and optional requirements
+            for (Iterator<Map.Entry<Requirement, List<Capability>>> it = localCandidateMap.entrySet().iterator(); it.hasNext();)
+            {
+                Map.Entry<Requirement, List<Capability>> entry = it.next();
+                for (Iterator<Capability> it2 = entry.getValue().iterator(); it2.hasNext();)
+                {
+                    if (m_populateResultCache.get(it2.next().getResource()) instanceof ResolutionException)
+                    {
+                        it2.remove();
+                    }
+                }
+                if (entry.getValue().isEmpty())
+                {
+                    it.remove();
+                }
+            }
             // Merge local candidate map into global candidate map.
             if (localCandidateMap.size() > 0)
             {
