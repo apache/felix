@@ -48,6 +48,12 @@
       <version>4.11</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.utils</artifactId>
+      <version>1.8.0</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -99,6 +105,7 @@
           <excludes>
             <exclude>src/**/packageinfo</exclude>
             <exclude>src/main/appended-resources/**</exclude>
+			<exclude>src/test/resources/resolution.json</exclude>
           </excludes>
         </configuration>
       </plugin>
