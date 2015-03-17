@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -107,9 +108,9 @@ class Candidates
         m_dependentMap = new OpenHashMapSet<Capability, Requirement>();
         m_candidateMap = new OpenHashMapList<Requirement, Capability>();
         m_allWrappedHosts = new HashMap<Resource, WrappedResource>();
-        m_populateResultCache = new HashMap<Resource, Object>();
+        m_populateResultCache = new LinkedHashMap<Resource, Object>();
         m_validOnDemandResources = validOnDemandResources;
-        m_subtitutableMap = new HashMap<Capability, Requirement>();
+        m_subtitutableMap = new LinkedHashMap<Capability, Requirement>();
         m_path = new OpenHashMapSet<Requirement, Capability>(3);
     }
 
@@ -379,11 +380,11 @@ class Candidates
         {
             return;
         }
-        Map<String, Collection<Capability>> exportNames = new HashMap<String, Collection<Capability>>();
+        Map<String, List<Capability>> exportNames = new LinkedHashMap<String, List<Capability>>();
         for (Capability packageExport : packageExports)
         {
             String packageName = (String) packageExport.getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE);
-            Collection<Capability> caps = exportNames.get(packageName);
+            List<Capability> caps = exportNames.get(packageName);
             if (caps == null)
             {
                 caps = new ArrayList<Capability>(1);
@@ -398,7 +399,7 @@ class Candidates
             if (substitutes != null && !substitutes.isEmpty())
             {
                 String packageName = (String) substitutes.iterator().next().getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE);
-                Collection<Capability> exportedPackages = exportNames.get(packageName);
+                List<Capability> exportedPackages = exportNames.get(packageName);
                 if (exportedPackages != null)
                 {
                     // The package is exported;
@@ -427,7 +428,7 @@ class Candidates
 
     void checkSubstitutes(List<Candidates> importPermutations) throws ResolutionException
     {
-        Map<Capability, Integer> substituteStatuses = new HashMap<Capability, Integer>(m_subtitutableMap.size());
+        Map<Capability, Integer> substituteStatuses = new LinkedHashMap<Capability, Integer>(m_subtitutableMap.size());
         for (Capability substitutable : m_subtitutableMap.keySet())
         {
             // initialize with unprocessed
