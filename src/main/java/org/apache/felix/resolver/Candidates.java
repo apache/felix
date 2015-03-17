@@ -444,7 +444,7 @@ class Candidates
             Requirement substitutedReq = m_subtitutableMap.get(substituteStatus.getKey());
             if (substitutedReq != null)
             {
-                ResolverImpl.permutateIfNeeded(this, substitutedReq, importPermutations);
+                permutateIfNeeded(substitutedReq, importPermutations);
             }
             Set<Requirement> dependents = m_dependentMap.get(substituteStatus.getKey());
             if (dependents != null)
@@ -480,7 +480,7 @@ class Candidates
                         {
                             if (Util.isOptional(dependent))
                             {
-                                clearCandidates(dependent);
+                                m_candidateMap.remove(dependent);
                             }
                             else
                             {
@@ -781,12 +781,40 @@ class Candidates
      */
     public List<Capability> getCandidates(Requirement req)
     {
-        return m_candidateMap.get(req);
+        List<Capability> candidates = m_candidateMap.get(req);
+        if (candidates != null)
+        {
+            return Collections.unmodifiableList(candidates);
+        }
+        return null;
     }
 
-    public void clearCandidates(Requirement req)
+    public Capability getFirstCandidate(Requirement req)
     {
-        m_candidateMap.remove(req);
+        List<Capability> candidates = m_candidateMap.get(req);
+        if (candidates != null && !candidates.isEmpty())
+        {
+            return m_candidateMap.get(req).get(0);
+        }
+        return null;
+    }
+
+    public void removeFirstCandidate(Requirement req)
+    {
+        List<Capability> candidates = m_candidateMap.get(req);
+        // Remove the conflicting candidate.
+        candidates.remove(0);
+        if (candidates.isEmpty())
+        {
+            m_candidateMap.remove(req);
+        }
+    }
+
+    public List<Capability> clearCandidates(Requirement req, Collection<Capability> caps)
+    {
+        List<Capability> l = m_candidateMap.get(req);
+        l.removeAll(caps);
+        return l;
     }
 
     /**
@@ -1260,4 +1288,50 @@ class Candidates
         }
         System.out.println("=== END CANDIDATE MAP ===");
     }
+
+    public void permutate(Requirement req, List<Candidates> permutations)
+    {
+        if (!Util.isMultiple(req) && canRemoveCandidate(req))
+        {
+            Candidates perm = copy();
+            perm.removeFirstCandidate(req);
+            permutations.add(perm);
+        }
+    }
+
+    public boolean canRemoveCandidate(Requirement req)
+    {
+        List<Capability> candidates = m_candidateMap.get(req);
+        return ((candidates != null) && (candidates.size() > 1 || Util.isOptional(req)));
+    }
+
+    public void permutateIfNeeded(Requirement req, List<Candidates> permutations)
+    {
+        List<Capability> candidates = m_candidateMap.get(req);
+        if ((candidates != null) && (candidates.size() > 1))
+        {
+            // Check existing permutations to make sure we haven't
+            // already permutated this requirement. This check for
+            // duplicate permutations is simplistic. It assumes if
+            // there is any permutation that contains a different
+            // initial candidate for the requirement in question,
+            // then it has already been permutated.
+            boolean permutated = false;
+            for (Candidates existingPerm : permutations)
+            {
+                List<Capability> existingPermCands = existingPerm.m_candidateMap.get(req);
+                if (existingPermCands != null && !existingPermCands.get(0).equals(candidates.get(0)))
+                {
+                    permutated = true;
+                }
+            }
+            // If we haven't already permutated the existing
+            // import, do so now.
+            if (!permutated)
+            {
+                permutate(req, permutations);
+            }
+        }
+    }
+
 }
