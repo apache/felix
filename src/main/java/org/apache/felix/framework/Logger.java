@@ -20,7 +20,14 @@ package org.apache.felix.framework;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import org.osgi.framework.*;
+
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleException;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceListener;
+import org.osgi.framework.ServiceReference;
 
 /**
  * <p>
@@ -41,14 +48,9 @@ import org.osgi.framework.*;
  * the log service's method to avoid a dependency on the log interface.
  * </p>
 **/
-public class Logger implements ServiceListener
+public class Logger extends org.apache.felix.resolver.Logger implements ServiceListener
 {
-    public static final int LOG_ERROR = 1;
-    public static final int LOG_WARNING = 2;
-    public static final int LOG_INFO = 3;
-    public static final int LOG_DEBUG = 4;
-
-    private int m_logLevel = 1;
+    // TODO see if this class can be cleaned up a little more
     private BundleContext m_context = null;
 
     private final static int LOGGER_OBJECT_IDX = 0;
@@ -58,40 +60,21 @@ public class Logger implements ServiceListener
 
     public Logger()
     {
-    }
-
-    public final synchronized void setLogLevel(int i)
-    {
-        m_logLevel = i;
-    }
-
-    public final synchronized int getLogLevel()
-    {
-        return m_logLevel;
+        super(LOG_ERROR);
     }
 
     protected void setSystemBundleContext(BundleContext context)
     {
         // TODO: Find a way to log to a log service inside the framework.
         // The issue is that we log messages while holding framework
-        // internal locks -- hence, when a log service calls back into 
-        // the framework (e.g., by loading a class) we might deadlock. 
+        // internal locks -- hence, when a log service calls back into
+        // the framework (e.g., by loading a class) we might deadlock.
         // One instance of this problem is tracked in FELIX-536.
         // For now we just disable logging to log services inside the
-        // framework. 
+        // framework.
 
         // m_context = context;
         // startListeningForLogService();
-    }
-
-    public final void log(int level, String msg)
-    {
-        _log(null, null, level, msg, null);
-    }
-
-    public final void log(int level, String msg, Throwable throwable)
-    {
-        _log(null, null, level, msg, throwable);
     }
 
     public final void log(ServiceReference sr, int level, String msg)
@@ -168,7 +151,7 @@ public class Logger implements ServiceListener
         // more conservative locking here, but let's be optimistic.
         Object[] logger = m_logger;
 
-        if (m_logLevel >= level)
+        if (getLogLevel() >= level)
         {
             // Use the log service if available.
             if (logger != null)

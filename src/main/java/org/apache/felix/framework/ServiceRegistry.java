@@ -42,7 +42,6 @@ import org.osgi.framework.ServiceException;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.framework.wiring.BundleCapability;
 
 public class ServiceRegistry
 {

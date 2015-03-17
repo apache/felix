@@ -674,6 +674,6 @@ public class BundleRevisionImpl implements BundleRevision, Resource
     @Override
     public String toString()
     {
-        return m_id;
+        return m_bundle.toString() + "(R " + m_id + ")";
     }
 }
