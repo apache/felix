@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.osgi.dto.DTO;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
@@ -357,7 +357,7 @@ public class DTOFactory
     private static FrameworkDTO createFrameworkDTO(Felix framework)
     {
         FrameworkDTO dto = new FrameworkDTO();
-        dto.properties = framework.getConfig(); // This map is immutable, so it's fine to share
+        dto.properties = convertAttrsToDTO(framework.getConfig());
 
         dto.bundles = new ArrayList<BundleDTO>();
         for (Bundle b : framework.getBundleContext().getBundles())
@@ -424,13 +424,37 @@ public class DTOFactory
         Map<String, Object> m = new HashMap<String, Object>();
         for (Map.Entry<String, Object> entry : map.entrySet())
         {
-            if (entry.getValue() instanceof Version)
-                // DTOs don't support Version objects
-                m.put(entry.getKey(), entry.getValue().toString());
-            else
-                m.put(entry.getKey(), entry.getValue());
+            Object value = convertAttrToDTO(entry.getValue());
+            if (value != null)
+            {
+                m.put(entry.getKey(), value);
+            }
         }
         return m;
+    }
+
+    private static Object convertAttrToDTO(Object value)
+    {
+        if (value instanceof Version)
+        {
+            return value.toString();
+        }
+        else if (isPermissibleAttribute(value.getClass())
+                || (value.getClass().isArray()
+                && isPermissibleAttribute(value.getClass().getComponentType())))
+        {
+            return value;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    private static boolean isPermissibleAttribute(Class clazz)
+    {
+        return clazz == Boolean.class || clazz == String.class
+                || DTO.class.isAssignableFrom(clazz);
     }
 
     private static int getWiringID(Wiring bw)
