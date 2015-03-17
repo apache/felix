@@ -313,10 +313,6 @@ public class DTOFactory
 
     private static ServiceReferenceDTO[] createServiceReferenceDTOArray(Bundle bundle)
     {
-        BundleContext ctx = bundle.getBundleContext();
-        if (ctx == null)
-            return null;
-
         ServiceReference<?>[] svcs = bundle.getRegisteredServices();
         if (svcs == null)
             return new ServiceReferenceDTO[0];
