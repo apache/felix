@@ -67,12 +67,6 @@ class Candidates
 
     /**
      * Private copy constructor used by the copy() method.
-     *
-     * @param dependentMap the capability dependency map.
-     * @param candidateMap the requirement candidate map.
-     * @param hostFragments the fragment map.
-     * @param wrappedHosts the wrapped hosts map.
-     * @param substitutableMap
      */
     private Candidates(
         Set<Resource> mandatoryResources,
@@ -173,10 +167,11 @@ class Candidates
     /**
      * Populates candidates for the specified revision.
      *
-     * @param state the resolver state used for populating the candidates.
-     * @param revision the revision whose candidates should be populated.
+     * @param rc the resolver state used for populating the candidates.
+     * @param resource the revision whose candidates should be populated.
      */
 // TODO: FELIX3 - Modify to not be recursive.
+    @SuppressWarnings("unchecked")
     private void populateResource(ResolveContext rc, Resource resource) throws ResolutionException
     {
         // Determine if we've already calculated this revision's candidates.
@@ -222,8 +217,7 @@ class Candidates
         else if (cacheValue != null)
         {
             // Increment and get the cycle count.
-            cycleCount = (Integer) (((Object[]) cacheValue)[0] =
-                new Integer(((Integer) ((Object[]) cacheValue)[0]).intValue() + 1));
+            cycleCount = (Integer) (((Object[]) cacheValue)[0] = (Integer) ((Object[]) cacheValue)[0] + 1);
             // Get the already populated candidates.
             localCandidateMap = (Map) ((Object[]) cacheValue)[1];
             // Get the remaining requirements.
@@ -236,14 +230,14 @@ class Candidates
         if ((remainingReqs == null) && (localCandidateMap == null))
         {
             // Record cycle count.
-            cycleCount = new Integer(0);
+            cycleCount = 0;
 
             // Create a local map for populating candidates first, just in case
             // the revision is not resolvable.
-            localCandidateMap = new HashMap();
+            localCandidateMap = new HashMap<Requirement, List<Capability>>();
 
             // Create a modifiable list of the revision's requirements.
-            remainingReqs = new ArrayList(resource.getRequirements(null));
+            remainingReqs = new ArrayList<Requirement>(resource.getRequirements(null));
 
             // Add these value to the result cache so we know we are
             // in the middle of populating candidates for the current
@@ -309,11 +303,11 @@ class Candidates
 
         // If we are exiting from a cycle then decrement
         // cycle counter, otherwise record the result.
-        if (cycleCount.intValue() > 0)
+        if (cycleCount > 0)
         {
-            ((Object[]) cacheValue)[0] = new Integer(cycleCount.intValue() - 1);
+            ((Object[]) cacheValue)[0] = cycleCount - 1;
         }
-        else if (cycleCount.intValue() == 0)
+        else if (cycleCount == 0)
         {
             // Record that the revision was successfully populated.
             m_populateResultCache.put(resource, Boolean.TRUE);
@@ -503,7 +497,7 @@ class Candidates
             return false;
         }
 
-        switch (substituteState.intValue())
+        switch (substituteState)
         {
             case PROCESSING:
                 // found a cycle mark the initiator as not substituted
@@ -529,9 +523,8 @@ class Candidates
         List<Capability> substitutes = m_candidateMap.get(substitutableReq);
         if (substitutes != null)
         {
-            for (Iterator<Capability> iSubstitutes = substitutes.iterator(); iSubstitutes.hasNext();)
+            for (Capability substituteCandidate : substitutes)
             {
-                Capability substituteCandidate = iSubstitutes.next();
                 if (substituteCandidate.getResource().equals(substitutableCap.getResource()))
                 {
                     substituteStatuses.put(substitutableCap, EXPORTED);
@@ -585,8 +578,8 @@ class Candidates
      * fragments, since fragment capabilities only appear once, but technically
      * each host represents a unique capability.
      *
-     * @param state the resolver state.
-     * @param revision the revision being resolved.
+     * @param rc the resolver state.
+     * @param resource the revision being resolved.
      * @param candidates the candidates to process.
      * @return a resolve exception to be re-thrown, if any, or null.
      */
@@ -831,7 +824,7 @@ class Candidates
      * satisfied by the fragment will end up having the two hosts as potential
      * candidates, rather than the single fragment.
      *
-     * @throws ResolutionException if the removal of any unselected fragments
+     * @throws org.osgi.service.resolver.ResolutionException if the removal of any unselected fragments
      * result in the root module being unable to resolve.
      */
     public void prepare(ResolveContext rc) throws ResolutionException
@@ -840,7 +833,7 @@ class Candidates
         // the fragment map maps a fragment symbolic name to a map that maps
         // a version to a list of fragments requirements matching that symbolic
         // name and version.
-        Map<Capability, Map<String, Map<Version, List<Requirement>>>> hostFragments = Collections.EMPTY_MAP;
+        Map<Capability, Map<String, Map<Version, List<Requirement>>>> hostFragments = Collections.emptyMap();
         if (m_fragmentsPresent)
         {
             hostFragments = populateDependents();
@@ -1106,8 +1099,8 @@ class Candidates
      * become unresolved if they depended on the module's capabilities and there
      * is no other candidate.
      *
-     * @param revision the module to remove.
-     * @throws ResolveException if removing the module caused the resolve to
+     * @param resource the module to remove.
+     * @throws ResolutionException if removing the module caused the resolve to
      * fail.
      */
     private void removeResource(Resource resource, ResolutionException ex)
@@ -1133,11 +1126,11 @@ class Candidates
      * involves removing its requirements and its capabilities. This may cause
      * other modules to become unresolved as a result.
      *
-     * @param br the module to remove.
-     * @param unresolvedRevisions a list to containing any additional modules
+     * @param resource the module to remove.
+     * @param unresolvedResources a list to containing any additional modules
      * that that became unresolved as a result of removing this module and will
      * also need to be removed.
-     * @throws ResolveException if removing the module caused the resolve to
+     * @throws ResolutionException if removing the module caused the resolve to
      * fail.
      */
     private void remove(Resource resource, Set<Resource> unresolvedResources)
@@ -1161,8 +1154,6 @@ class Candidates
      */
     private void remove(Requirement req)
     {
-        boolean isFragment = req.getNamespace().equals(HostNamespace.HOST_NAMESPACE);
-
         List<Capability> candidates = m_candidateMap.remove(req);
         if (candidates != null)
         {
@@ -1182,10 +1173,10 @@ class Candidates
      * other modules to become unresolved as a result.
      *
      * @param c the capability to remove.
-     * @param unresolvedRevisions a list to containing any additional modules
+     * @param unresolvedResources a list to containing any additional modules
      * that that became unresolved as a result of removing this module and will
      * also need to be removed.
-     * @throws ResolveException if removing the module caused the resolve to
+     * @throws ResolutionException if removing the module caused the resolve to
      * fail.
      */
     private void remove(Capability c, Set<Resource> unresolvedResources)
