@@ -23,7 +23,7 @@
 import aQute.bnd.build.Workspace
 
 // Our release number, which has to be monotonically incremented each time we make a new release.
-ext.dmRelease = "r1"
+ext.dmRelease = "r2"
 
 // Our Apache svn Staging repo
 ext.svnStagingPath = "https://dist.apache.org/repos/dist/dev/felix"
@@ -167,11 +167,30 @@ task commitToStaging << {
 // Promotes the staged distributions to release
 task promoteToRelease << {
     description = 'Moves the staging repository to the Apache release repository.'
+    new File("staging-copy").deleteDir()    
+
     getProject().exec { 
     	commandLine 'svn',
-		'move', svnStagingPath+"/org.apache.felix.dependencymanager-" + dmRelease , svnReleasePath, 
-		'-m', "Releasing Apache Felix Dependency Manager release " + dmRelease + "."
+		'co', svnStagingPath+"/org.apache.felix.dependencymanager-" + dmRelease, "staging-copy"
     }
+
+    new File('release/staging-copy/.').eachFile {
+        if (it.name != ".svn") {
+        	def file=it.name    
+        	getProject().exec { 
+    	    	commandLine 'svn',
+		    	'cp', "staging-copy/" + file, svnReleasePath + "/", "-m", "Releasing Apache Felix Dependency Manager release " + dmRelease + "."
+			}
+    	}
+	}
+	
+	getProject().exec { 
+    	commandLine 'svn',
+		'rm', svnStagingPath+"/org.apache.felix.dependencymanager-" + dmRelease, "-m", 
+		"Releasing Apache Felix Dependency Manager release " + dmRelease + "."
+    }
+	
+    new File("release/staging-copy").deleteDir()
 }
 
 // Removes the staged distributions from staging
@@ -187,6 +206,7 @@ task deleteFromStaging << {
 // Clean staging directory
 task clean(overwrite: true) << { 
     new File("release/staging").deleteDir()
+    new File("release/staging-copy").deleteDir()
     new File("rat-report.xml").delete()
 }
 
@@ -194,4 +214,5 @@ task clean(overwrite: true) << {
 task cleanStaging << {
     description = 'Clean the local staging directory.'
     new File("release/staging").deleteDir()
+    new File("release/staging-copy").deleteDir()
 }
