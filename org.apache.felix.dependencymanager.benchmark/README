@@ -60,7 +60,7 @@ You can also possibly run the same test using optimized DM filter indices.
 To do so, run "index.bndrun"
 but using DM filter indices has a CPU cost and are useful if you have many service dependencies.
 To test filter indices, first increase the number of components created/removed during bundle
-startup. To do so, edit the Artist.java and change the "Artists" when is by default set to 30, and set it to 300.
+startup. To do so, edit the Artist.java and change the "Artists" from 30 to 300.
 
 You should then observe some significant performance improvements:
 
