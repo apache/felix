@@ -1,3 +1,8 @@
+Release org.apache.felix.dependencymanager.r2:
+---------------------------------------------
+
+FELIX-4833: Revisit some javadocs in the DM annotations.
+
 Release org.apache.felix.dependencymanager.r1:
 ---------------------------------------------
 
