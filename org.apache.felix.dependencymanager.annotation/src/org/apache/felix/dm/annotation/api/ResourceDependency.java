@@ -150,6 +150,8 @@ public @interface ResourceDependency
      * All unnamed dependencies will be injected before the init() method; so from the init() method, you can
      * then pick up whatever information needed from already injected (unnamed) dependencies, and configure dynamically
      * your named dependencies, which will then be calculated once the init() method returns.
+     * 
+     * <p> See {@link Init} annotation for an example usage of a dependency dynamically configured from the init method.
      */
     String name() default "";   
 }

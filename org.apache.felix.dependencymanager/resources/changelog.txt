@@ -1,3 +1,8 @@
+Release org.apache.felix.dependencymanager.r2:
+---------------------------------------------
+
+FELIX-4832: ClassCastException with autoconfig Iterable fields.
+
 Release org.apache.felix.dependencymanager.r1:
 ---------------------------------------------
 
