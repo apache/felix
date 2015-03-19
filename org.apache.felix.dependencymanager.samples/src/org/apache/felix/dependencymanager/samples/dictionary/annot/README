@@ -36,5 +36,8 @@ Before running this sample, go to webconsole, and add some words in the Spell Ch
 in the Spell Checker Aspect Dictionary (annotation) PID.
 
 Then go to gogo shell, and type dm help. You will normally see the dictionary.annotation:spellcheck command.
-Type dictionary.annotation:spellcheck <some words configured either in the spell checker annotation configuration, or in 
-the spell checker annotation aspect configuration, and the dictionary will check for proper word existance in the configuration.
+Type 
+ 
+   dictionary.annotation:spellcheck <some words>
+
+and the dictionary will check for proper word existence.
