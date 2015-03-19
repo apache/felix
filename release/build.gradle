@@ -167,30 +167,33 @@ task commitToStaging << {
 // Promotes the staged distributions to release
 task promoteToRelease << {
     description = 'Moves the staging repository to the Apache release repository.'
-    new File("staging-copy").deleteDir()    
 
-    getProject().exec { 
-    	commandLine 'svn',
-		'co', svnStagingPath+"/org.apache.felix.dependencymanager-" + dmRelease, "staging-copy"
+    // Move all artifacts from the staging repo to the release repo
+    new ByteArrayOutputStream().withStream { os ->
+		def result = exec {
+	    	executable = 'svn'
+	    	args = ['list', svnStagingPath+"/org.apache.felix.dependencymanager-" + dmRelease]
+	    	standardOutput = os
+		}
+		def outputAsString = os.toString()
+
+		outputAsString.split("\n").each { artifact -> 
+	    	logger.lifecycle("    Moving " + artifact + " to release repository ...")
+	    	getProject().exec { 
+				commandLine 'svn',
+				'move', svnStagingPath+"/org.apache.felix.dependencymanager-" + dmRelease + "/" + artifact , 
+				svnReleasePath, '-m', "Releasing Apache Felix Dependency Manager release " + dmRelease + "."
+	    	}
+		}
     }
 
-    new File('release/staging-copy/.').eachFile {
-        if (it.name != ".svn") {
-        	def file=it.name    
-        	getProject().exec { 
-    	    	commandLine 'svn',
-		    	'cp', "staging-copy/" + file, svnReleasePath + "/", "-m", "Releasing Apache Felix Dependency Manager release " + dmRelease + "."
-			}
-    	}
-	}
-	
-	getProject().exec { 
+    // And remove the toplevel release path from the staging repo
+    logger.lifecycle("    Removing org.apache.felix.dependencymanager-" + dmRelease + " from staging ...")    
+    getProject().exec { 
     	commandLine 'svn',
 		'rm', svnStagingPath+"/org.apache.felix.dependencymanager-" + dmRelease, "-m", 
 		"Releasing Apache Felix Dependency Manager release " + dmRelease + "."
     }
-	
-    new File("release/staging-copy").deleteDir()
 }
 
 // Removes the staged distributions from staging
@@ -206,7 +209,6 @@ task deleteFromStaging << {
 // Clean staging directory
 task clean(overwrite: true) << { 
     new File("release/staging").deleteDir()
-    new File("release/staging-copy").deleteDir()
     new File("rat-report.xml").delete()
 }
 
