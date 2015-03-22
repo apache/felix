@@ -313,7 +313,6 @@ public class ServiceRegistry
                 }
                 catch (InterruptedException ex)
                 {
-                	Thread.currentThread().interrupt();
                 }
             }
 
