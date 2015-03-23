@@ -81,7 +81,7 @@ public class CapabilitySet
         m_indices = (caseSensitive)
             ? new TreeMap<String, Map<Object, Set<BundleCapability>>>()
             : new TreeMap<String, Map<Object, Set<BundleCapability>>>(
-                new StringComparator(false));
+                StringComparator.COMPARATOR);
         for (int i = 0; (indexProps != null) && (i < indexProps.size()); i++)
         {
             m_indices.put(
