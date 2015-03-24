@@ -37,11 +37,11 @@ public class SCRCommandlTest extends TestCase
     public void testPropertyInfo()
     {
         ScrCommand scr = new ScrCommand(null, null, null);
-         check(scr, "  Properties:\n    key = [1, 2]\n", new int[] {1, 2});
-         check(scr, "  Properties:\n    key = [1, 2]\n", new String[] {"1", "2"});
-         check(scr, "  Properties:\n    key = [true, false]\n", new Boolean[] {true, false});
-         check(scr, "  Properties:\n    key = foo\n", "foo");
-         check(scr, "  Properties:\n    key = true\n", true);
+         check(scr, String.format("  Properties:%n    key = [1, 2]%n"), new int[] {1, 2});
+         check(scr, String.format("  Properties:%n    key = [1, 2]%n"), new String[] {"1", "2"});
+         check(scr, String.format("  Properties:%n    key = [true, false]%n"), new Boolean[] {true, false});
+         check(scr, String.format("  Properties:%n    key = foo%n"), "foo");
+         check(scr, String.format("  Properties:%n    key = true%n"), true);
     }
 
     private PrintWriter check(ScrCommand scr, String expected, Object o)
