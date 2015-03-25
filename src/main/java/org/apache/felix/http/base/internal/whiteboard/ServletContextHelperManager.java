@@ -16,6 +16,11 @@
  */
 package org.apache.felix.http.base.internal.whiteboard;
 
+import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING;
+import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE;
+import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_UNKNOWN;
+import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_VALIDATION_FAILED;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -25,10 +30,9 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 import javax.annotation.Nonnull;
 import javax.servlet.ServletContext;
@@ -38,14 +42,20 @@ import org.apache.felix.http.base.internal.handler.HandlerRegistry;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.AbstractInfo;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
-import org.apache.felix.http.base.internal.runtime.HandlerRuntime;
-import org.apache.felix.http.base.internal.runtime.ListenerInfo;
-import org.apache.felix.http.base.internal.runtime.RegistryRuntime;
+import org.apache.felix.http.base.internal.runtime.HttpSessionAttributeListenerInfo;
+import org.apache.felix.http.base.internal.runtime.HttpSessionListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ResourceInfo;
+import org.apache.felix.http.base.internal.runtime.ServletContextAttributeListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.runtime.ServletRequestAttributeListenerInfo;
+import org.apache.felix.http.base.internal.runtime.ServletRequestListenerInfo;
 import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
+import org.apache.felix.http.base.internal.runtime.dto.ContextRuntime;
+import org.apache.felix.http.base.internal.runtime.dto.FailureRuntime;
+import org.apache.felix.http.base.internal.runtime.dto.RegistryRuntime;
+import org.apache.felix.http.base.internal.runtime.dto.ServletContextHelperRuntime;
 import org.apache.felix.http.base.internal.util.MimeTypes;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -73,7 +83,7 @@ public final class ServletContextHelperManager
 
     private final BundleContext bundleContext;
 
-    private final Set<AbstractInfo<?>> invalidRegistrations = new ConcurrentSkipListSet<AbstractInfo<?>>();
+    private final Map<AbstractInfo<?>, Integer> serviceFailures = new ConcurrentSkipListMap<AbstractInfo<?>, Integer>();
 
     private volatile ServletContext webContext;
 
@@ -176,6 +186,7 @@ public final class ServletContextHelperManager
                 {
                     services.add(entry.getKey());
                 }
+                removeFailure(entry.getKey(), FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING);
             }
         }
         // context listeners first
@@ -222,7 +233,6 @@ public final class ServletContextHelperManager
         handler.deactivate();
 
         this.httpService.unregisterContext(handler);
-
     }
 
     /**
@@ -257,9 +267,16 @@ public final class ServletContextHelperManager
                         // check for deactivate
                         if ( handlerList.size() > 1 )
                         {
-                            this.deactivate(handlerList.get(1));
+                            ContextHandler oldHead = handlerList.get(1);
+                            this.deactivate(oldHead);
+                            this.serviceFailures.put(oldHead.getContextInfo(), FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
                         }
+                        removeFailure(handler.getContextInfo(), FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
                         this.activate(handler);
+                    }
+                    else
+                    {
+                        this.serviceFailures.put(handler.getContextInfo(), FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
                     }
                 }
             }
@@ -267,7 +284,7 @@ public final class ServletContextHelperManager
             {
                 final String type = info.getClass().getSimpleName().substring(0, info.getClass().getSimpleName().length() - 4);
                 SystemLogger.debug("Ignoring " + type + " service " + info.getServiceReference());
-                this.invalidRegistrations.add(info);
+                this.serviceFailures.put(info, FAILURE_REASON_VALIDATION_FAILED);
             }
         }
     }
@@ -312,16 +329,15 @@ public final class ServletContextHelperManager
                         }
                         else if ( activateNext )
                         {
-                            this.activate(handlerList.get(0));
+                            ContextHandler newHead = handlerList.get(0);
+                            this.activate(newHead);
+                            removeFailure(newHead.getContextInfo(), FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
                         }
                         listenerRegistry.removeContext(info);
                     }
                 }
             }
-            else
-            {
-                this.invalidRegistrations.remove(info);
-            }
+            this.serviceFailures.remove(info);
         }
     }
 
@@ -360,13 +376,17 @@ public final class ServletContextHelperManager
                     {
                         this.registerWhiteboardService(h, info);
                     }
+                    if (handlerList.isEmpty())
+                    {
+                        this.serviceFailures.put(info, FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING);
+                    }
                 }
             }
             else
             {
                 final String type = info.getClass().getSimpleName().substring(0, info.getClass().getSimpleName().length() - 4);
                 SystemLogger.debug("Ignoring " + type + " service " + info.getServiceReference());
-                this.invalidRegistrations.add(info);
+                this.serviceFailures.put(info, FAILURE_REASON_VALIDATION_FAILED);
             }
         }
     }
@@ -393,10 +413,7 @@ public final class ServletContextHelperManager
                     }
                 }
             }
-            else
-            {
-                this.invalidRegistrations.remove(info);
-            }
+            this.serviceFailures.remove(info);
         }
     }
 
@@ -407,21 +424,51 @@ public final class ServletContextHelperManager
      */
     private void registerWhiteboardService(final ContextHandler handler, final WhiteboardServiceInfo<?> info)
     {
-        if ( info instanceof ServletInfo )
+        try
         {
-            this.httpService.registerServlet(handler, (ServletInfo)info);
+            if ( info instanceof ServletInfo )
+            {
+                this.httpService.registerServlet(handler, (ServletInfo)info);
+            }
+            else if ( info instanceof FilterInfo )
+            {
+                this.httpService.registerFilter(handler, (FilterInfo)info);
+            }
+            else if ( info instanceof ResourceInfo )
+            {
+                this.httpService.registerResource(handler, (ResourceInfo)info);
+            }
+
+            else if ( info instanceof ServletContextAttributeListenerInfo )
+            {
+                this.listenerRegistry.addListener((ServletContextAttributeListenerInfo) info, handler);
+            }
+            else if ( info instanceof HttpSessionListenerInfo )
+            {
+                this.listenerRegistry.addListener((HttpSessionListenerInfo) info, handler);
+            }
+            else if ( info instanceof HttpSessionAttributeListenerInfo )
+            {
+                this.listenerRegistry.addListener((HttpSessionAttributeListenerInfo) info, handler);
+            }
+            else if ( info instanceof ServletRequestListenerInfo )
+            {
+                this.listenerRegistry.addListener((ServletRequestListenerInfo) info, handler);
+            }
+            else if ( info instanceof ServletRequestAttributeListenerInfo )
+            {
+                this.listenerRegistry.addListener((ServletRequestAttributeListenerInfo) info, handler);
+            }
         }
-        else if ( info instanceof FilterInfo )
+        catch (RegistrationFailureException e)
         {
-            this.httpService.registerFilter(handler, (FilterInfo)info);
+            serviceFailures.put(e.getInfo(), e.getErrorCode());
+            SystemLogger.error("Exception while adding servlet", e);
         }
-        else if ( info instanceof ResourceInfo )
+        catch (RuntimeException e)
         {
-            this.httpService.registerResource(handler, (ResourceInfo)info);
-        }
-        else if ( info instanceof ListenerInfo )
-        {
-            this.listenerRegistry.addListener((ListenerInfo<?>)info, handler);
+            serviceFailures.put(info, FAILURE_REASON_UNKNOWN);
+            throw e;
         }
     }
 
@@ -432,21 +479,56 @@ public final class ServletContextHelperManager
      */
     private void unregisterWhiteboardService(final ContextHandler handler, final WhiteboardServiceInfo<?> info)
     {
-        if ( info instanceof ServletInfo )
+        try
         {
-            this.httpService.unregisterServlet(handler, (ServletInfo)info);
+            if ( info instanceof ServletInfo )
+            {
+                this.httpService.unregisterServlet(handler, (ServletInfo)info);
+            }
+            else if ( info instanceof FilterInfo )
+            {
+                this.httpService.unregisterFilter(handler, (FilterInfo)info);
+            }
+            else if ( info instanceof ResourceInfo )
+            {
+                this.httpService.unregisterResource(handler, (ResourceInfo)info);
+            }
+
+            else if ( info instanceof ServletContextAttributeListenerInfo )
+            {
+                this.listenerRegistry.removeListener((ServletContextAttributeListenerInfo) info, handler);
+            }
+            else if ( info instanceof HttpSessionListenerInfo )
+            {
+                this.listenerRegistry.removeListener((HttpSessionListenerInfo) info, handler);
+            }
+            else if ( info instanceof HttpSessionAttributeListenerInfo )
+            {
+                this.listenerRegistry.removeListener((HttpSessionAttributeListenerInfo) info, handler);
+            }
+            else if ( info instanceof ServletRequestListenerInfo )
+            {
+                this.listenerRegistry.removeListener((ServletRequestListenerInfo) info, handler);
+            }
+            else if ( info instanceof ServletRequestAttributeListenerInfo )
+            {
+                this.listenerRegistry.removeListener((ServletRequestAttributeListenerInfo) info, handler);
+            }
         }
-        else if ( info instanceof FilterInfo )
+        catch (RegistrationFailureException e)
         {
-            this.httpService.unregisterFilter(handler, (FilterInfo)info);
+            serviceFailures.put(e.getInfo(), e.getErrorCode());
+            SystemLogger.error("Exception while removing servlet", e);
         }
-        else if ( info instanceof ResourceInfo )
+        serviceFailures.remove(info);
+    }
+
+    private void removeFailure(AbstractInfo<?> info, int failureCode)
+    {
+        Integer registeredFailureCode = this.serviceFailures.get(info);
+        if (registeredFailureCode != null && registeredFailureCode == failureCode)
         {
-            this.httpService.unregisterResource(handler, (ResourceInfo)info);
-        }
-        else if ( info instanceof ListenerInfo )
-        {
-            this.listenerRegistry.removeListener((ListenerInfo<?>)info, handler);
+            this.serviceFailures.remove(info);
         }
     }
 
@@ -506,21 +588,23 @@ public final class ServletContextHelperManager
 
     public RegistryRuntime getRuntime(HandlerRegistry registry)
     {
-        List<HandlerRuntime> handlerRuntimes;
+        Collection<ServletContextHelperRuntime> contextRuntimes = new TreeSet<ServletContextHelperRuntime>(ServletContextHelperRuntime.COMPARATOR);
+        List<ContextRuntime> handlerRuntimes;
         Map<Long, Collection<ServiceReference<?>>> listenerRuntimes;
-        Set<ContextHandler> contextHandlers = new TreeSet<ContextHandler>();
+        FailureRuntime.Builder failureRuntime = FailureRuntime.builder();
         synchronized ( this.contextMap )
         {
             for (List<ContextHandler> contextHandlerList : this.contextMap.values())
             {
                 if ( !contextHandlerList.isEmpty() )
                 {
-                    contextHandlers.add(contextHandlerList.get(0));
+                    contextRuntimes.add(contextHandlerList.get(0));
                 }
             }
-            handlerRuntimes = registry.getRuntime();
+            handlerRuntimes = registry.getRuntime(failureRuntime);
             listenerRuntimes = listenerRegistry.getContextRuntimes();
+            failureRuntime.add(serviceFailures);
         }
-        return new RegistryRuntime(contextHandlers, handlerRuntimes, listenerRuntimes, this.invalidRegistrations);
+        return new RegistryRuntime(contextRuntimes, handlerRuntimes, listenerRuntimes, failureRuntime.build());
     }
 }

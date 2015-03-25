@@ -49,11 +49,11 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
 
     public AbstractInfo(final ServiceReference<T> ref)
     {
-        this.serviceId = (Long)ref.getProperty(Constants.SERVICE_ID);
+        this.serviceId = (Long) ref.getProperty(Constants.SERVICE_ID);
         final Object rankingObj = ref.getProperty(Constants.SERVICE_RANKING);
-        if ( rankingObj instanceof Integer )
+        if (rankingObj instanceof Integer)
         {
-            this.ranking = (Integer)rankingObj;
+            this.ranking = (Integer) rankingObj;
         }
         else
         {
@@ -88,7 +88,7 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
             int reverseOrder = ( this.serviceId >= 0 && other.serviceId >= 0 ) ? 1 : -1;
             return reverseOrder * Long.compare(this.serviceId, other.serviceId);
         }
-
+        
         return Integer.compare(other.ranking, this.ranking);
     }
 
@@ -105,7 +105,7 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
     protected String getStringProperty(final ServiceReference<T> ref, final String key)
     {
         final Object value = ref.getProperty(key);
-        return (value instanceof String) ? ((String) value).trim(): null;
+        return (value instanceof String) ? ((String) value).trim() : null;
     }
 
     protected String[] getStringArrayProperty(ServiceReference<T> ref, String key)
@@ -118,12 +118,12 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
         }
         else if (value instanceof String[])
         {
-        	final String[] arr = (String[]) value;
-        	String[] values = new String[arr.length];
-        	
-            for(int i=0, j=0; i<arr.length; i++)
+            final String[] arr = (String[]) value;
+            String[] values = new String[arr.length];
+
+            for (int i = 0, j = 0; i < arr.length; i++)
             {
-                if ( arr[i] != null )
+                if (arr[i] != null)
                 {
                     values[j++] = arr[i].trim();
                 }
@@ -169,7 +169,7 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
         final Map<String, String> result = new HashMap<String, String>();
         for (final String key : ref.getPropertyKeys())
         {
-            if ( key.startsWith(prefix))
+            if (key.startsWith(prefix))
             {
                 final String paramKey = key.substring(prefix.length());
                 final String paramValue = getStringProperty(ref, key);
@@ -205,10 +205,10 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
 
     public T getService(final Bundle bundle)
     {
-        if ( this.serviceReference != null )
+        if (this.serviceReference != null)
         {
             final ServiceObjects<T> so = bundle.getBundleContext().getServiceObjects(this.serviceReference);
-            if ( so != null )
+            if (so != null)
             {
                 return so.getService();
             }
@@ -218,10 +218,10 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
 
     public void ungetService(final Bundle bundle, final T service)
     {
-        if ( this.serviceReference != null )
+        if (this.serviceReference != null)
         {
             final ServiceObjects<T> so = bundle.getBundleContext().getServiceObjects(this.serviceReference);
-            if ( so != null )
+            if (so != null)
             {
                 so.ungetService(service);
             }

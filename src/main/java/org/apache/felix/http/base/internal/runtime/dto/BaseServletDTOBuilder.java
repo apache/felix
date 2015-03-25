@@ -20,23 +20,45 @@ package org.apache.felix.http.base.internal.runtime.dto;
 
 import javax.servlet.Servlet;
 
-import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.osgi.service.http.runtime.dto.BaseServletDTO;
 
-abstract class BaseServletDTOBuilder<T, U extends BaseServletDTO> extends BaseDTOBuilder<T, U>
+abstract class BaseServletDTOBuilder<T extends ServletRuntime, U extends BaseServletDTO> extends BaseDTOBuilder<T, U>
 {
-    final U setBaseFields(U dto, ServletHandler servletHandler, long servletContextId)
+    BaseServletDTOBuilder(DTOFactory<U> servletDTOFactory)
     {
-        ServletInfo info = servletHandler.getServletInfo();
-        Servlet servlet = servletHandler.getServlet();
+        super(servletDTOFactory);
+    }
 
+    @Override
+    U buildDTO(T servletRuntime, long servletContextId)
+    {
+        ServletInfo info = servletRuntime.getServletInfo();
+        Servlet servlet = servletRuntime.getServlet();
+
+        U dto = getDTOFactory().get();
         dto.asyncSupported = info.isAsyncSupported();
         dto.initParams = info.getInitParameters();
-        dto.name = info.getName();
-        dto.serviceId = servletHandler.getServletInfo().getServiceId();
+        dto.name = getName(info, servlet);
+        dto.serviceId = servletRuntime.getServletInfo().getServiceId();
         dto.servletContextId = servletContextId;
-        dto.servletInfo = servlet.getServletInfo();
+        dto.servletInfo = servlet != null ? servlet.getServletInfo() : null;
         return dto;
+    }
+
+    private String getName(ServletInfo info, Servlet servlet)
+    {
+        String name = info.getName();
+        if (name != null)
+        {
+            return name;
+        }
+
+        if (servlet != null)
+        {
+            return servlet.getServletConfig().getServletName();
+        }
+
+        return null;
     }
 }

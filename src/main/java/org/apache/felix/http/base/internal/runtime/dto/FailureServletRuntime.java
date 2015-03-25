@@ -18,30 +18,36 @@
  */
 package org.apache.felix.http.base.internal.runtime.dto;
 
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.runtime.dto.ListenerDTO;
+import javax.servlet.Servlet;
 
-final class ListenerDTOBuilder<T extends ListenerDTO> extends BaseDTOBuilder<ServiceReference<?>, T>
+import org.apache.felix.http.base.internal.runtime.ServletInfo;
+
+
+
+public class FailureServletRuntime implements ServletRuntime
 {
-    static ListenerDTOBuilder<ListenerDTO> create()
-    {
-        return new ListenerDTOBuilder<ListenerDTO>(DTOFactories.LISTENER);
-    }
+    private final ServletInfo servletInfo;
 
-    ListenerDTOBuilder(DTOFactory<T> dtoFactory)
+    FailureServletRuntime(ServletInfo servletInfo)
     {
-        super(dtoFactory);
+        this.servletInfo = servletInfo;
     }
 
     @Override
-    T buildDTO(ServiceReference<?> listenerRef, long servletContextId)
+    public ServletInfo getServletInfo()
     {
-        T listenerDTO = getDTOFactory().get();
-        listenerDTO.serviceId = (Long) listenerRef.getProperty(Constants.SERVICE_ID);
-        listenerDTO.servletContextId = servletContextId;
-        // TODO Is this the desired value?
-        listenerDTO.types = (String[]) listenerRef.getProperty(Constants.OBJECTCLASS);
-        return listenerDTO;
+        return servletInfo;
+    }
+
+    @Override
+    public long getContextServiceId()
+    {
+        return 0L;
+    }
+
+    @Override
+    public Servlet getServlet()
+    {
+        return null;
     }
 }

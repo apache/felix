@@ -31,12 +31,13 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.runtime.dto.ServletRuntime;
 import org.apache.felix.http.base.internal.util.PatternUtil;
 
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ServletHandler extends AbstractHandler<ServletHandler>
+public final class ServletHandler extends AbstractHandler<ServletHandler> implements ServletRuntime
 {
     private final ServletInfo servletInfo;
 

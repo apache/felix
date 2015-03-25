@@ -19,6 +19,12 @@
 package org.apache.felix.http.base.internal.runtime.dto;
 
 import org.osgi.service.http.runtime.dto.ErrorPageDTO;
+import org.osgi.service.http.runtime.dto.FailedErrorPageDTO;
+import org.osgi.service.http.runtime.dto.FailedFilterDTO;
+import org.osgi.service.http.runtime.dto.FailedListenerDTO;
+import org.osgi.service.http.runtime.dto.FailedResourceDTO;
+import org.osgi.service.http.runtime.dto.FailedServletContextDTO;
+import org.osgi.service.http.runtime.dto.FailedServletDTO;
 import org.osgi.service.http.runtime.dto.FilterDTO;
 import org.osgi.service.http.runtime.dto.ListenerDTO;
 import org.osgi.service.http.runtime.dto.ResourceDTO;
@@ -37,4 +43,12 @@ public abstract class BuilderConstants
     public static final FilterDTO[] FILTER_DTO_ARRAY = new FilterDTO[0];
     public static final ErrorPageDTO[] ERROR_PAGE_DTO_ARRAY = new ErrorPageDTO[0];
     public static final ListenerDTO[] LISTENER_DTO_ARRAY = new ListenerDTO[0];
+
+    public static final FailedServletContextDTO[] CONTEXT_FAILURE_DTO_ARRAY = new FailedServletContextDTO[0];
+
+    public static final FailedServletDTO[] SERVLET_FAILURE_DTO_ARRAY = new FailedServletDTO[0];
+    public static final FailedFilterDTO[] FILTER_FAILURE_DTO_ARRAY = new FailedFilterDTO[0];
+    public static final FailedResourceDTO[] RESOURCE_FAILURE_DTO_ARRAY = new FailedResourceDTO[0];
+    public static final FailedErrorPageDTO[] ERROR_PAGE_FAILURE_DTO_ARRAY = new FailedErrorPageDTO[0];
+    public static final FailedListenerDTO[] LISTENER_FAILURE_DTO_ARRAY = new FailedListenerDTO[0];
 }

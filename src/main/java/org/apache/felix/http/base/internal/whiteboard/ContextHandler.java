@@ -24,11 +24,12 @@ import javax.servlet.ServletContext;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
+import org.apache.felix.http.base.internal.runtime.dto.ServletContextHelperRuntime;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceObjects;
 import org.osgi.service.http.context.ServletContextHelper;
 
-public final class ContextHandler implements Comparable<ContextHandler>
+public final class ContextHandler implements Comparable<ContextHandler>, ServletContextHelperRuntime
 {
     /** The info object for the context. */
     private final ServletContextHelperInfo info;
@@ -59,6 +60,7 @@ public final class ContextHandler implements Comparable<ContextHandler>
                 eventListener);
     }
 
+    @Override
     public ServletContextHelperInfo getContextInfo()
     {
         return this.info;
@@ -80,6 +82,7 @@ public final class ContextHandler implements Comparable<ContextHandler>
         this.ungetServletContext(bundle);
     }
 
+    @Override
     public ServletContext getSharedContext()
     {
         return sharedContext;

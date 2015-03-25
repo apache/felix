@@ -19,7 +19,7 @@ package org.apache.felix.http.base.internal.handler;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static javax.servlet.http.HttpServletResponse.SC_PAYMENT_REQUIRED;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -59,14 +59,14 @@ public class FilterHandlerTest extends AbstractHandlerTest
         FilterHandler h2 = createHandler(10, "b");
         FilterHandler h3 = createHandler(10, "c");
 
-        assertEquals(0, h1.compareTo(h1));
+        assertTrue(h1.compareTo(h1) == 0);
 
-        assertEquals(1, h1.compareTo(h2));
-        assertEquals(-1, h2.compareTo(h1));
+        assertTrue(h1.compareTo(h2) > 0);
+        assertTrue(h2.compareTo(h1) < 0);
 
         // h2 is actually registered first, so should be called first...
-        assertEquals(-1, h2.compareTo(h3));
-        assertEquals(1, h3.compareTo(h2));
+        assertTrue(h2.compareTo(h3) < 0);
+        assertTrue(h3.compareTo(h2) > 0);
     }
 
     @Test

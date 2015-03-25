@@ -29,7 +29,14 @@ import org.osgi.dto.DTO;
 
 abstract class BaseDTOBuilder<T, U extends DTO>
 {
-    public Collection<U> build(Collection<T> whiteboardServices, long servletContextId)
+    private DTOFactory<U> dtoFactory;
+
+    BaseDTOBuilder(DTOFactory<U> dtoFactory)
+    {
+        this.dtoFactory = dtoFactory;
+    }
+
+    Collection<U> build(Collection<T> whiteboardServices, long servletContextId)
     {
         List<U> dtoList = new ArrayList<U>();
         for (T whiteboardService : whiteboardServices)
@@ -41,7 +48,12 @@ abstract class BaseDTOBuilder<T, U extends DTO>
 
     abstract U buildDTO(T whiteboardService, long servletContextId);
 
-    protected <V> V[] copyWithDefault(V[] array, V[] defaultArray)
+    DTOFactory<U> getDTOFactory()
+    {
+        return dtoFactory;
+    }
+
+    <V> V[] copyWithDefault(V[] array, V[] defaultArray)
     {
         return array == null ? defaultArray : copyOf(array, array.length);
     }
