@@ -18,30 +18,34 @@
  */
 package org.apache.felix.http.base.internal.runtime.dto;
 
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.runtime.dto.ListenerDTO;
+import javax.servlet.ServletContext;
 
-final class ListenerDTOBuilder<T extends ListenerDTO> extends BaseDTOBuilder<ServiceReference<?>, T>
+import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
+
+public class FailureServletContextHelperRuntime implements ServletContextHelperRuntime, Comparable<FailureServletContextHelperRuntime>
 {
-    static ListenerDTOBuilder<ListenerDTO> create()
-    {
-        return new ListenerDTOBuilder<ListenerDTO>(DTOFactories.LISTENER);
-    }
+    private final ServletContextHelperInfo info;
 
-    ListenerDTOBuilder(DTOFactory<T> dtoFactory)
+    public FailureServletContextHelperRuntime(ServletContextHelperInfo info)
     {
-        super(dtoFactory);
+        this.info = info;
     }
 
     @Override
-    T buildDTO(ServiceReference<?> listenerRef, long servletContextId)
+    public ServletContext getSharedContext()
     {
-        T listenerDTO = getDTOFactory().get();
-        listenerDTO.serviceId = (Long) listenerRef.getProperty(Constants.SERVICE_ID);
-        listenerDTO.servletContextId = servletContextId;
-        // TODO Is this the desired value?
-        listenerDTO.types = (String[]) listenerRef.getProperty(Constants.OBJECTCLASS);
-        return listenerDTO;
+        return null;
+    }
+
+    @Override
+    public ServletContextHelperInfo getContextInfo()
+    {
+        return info;
+    }
+
+    @Override
+    public int compareTo(FailureServletContextHelperRuntime other)
+    {
+        return info.compareTo(other.info);
     }
 }

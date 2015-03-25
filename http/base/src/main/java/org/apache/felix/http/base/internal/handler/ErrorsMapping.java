@@ -16,7 +16,7 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
-import static org.apache.felix.http.base.internal.util.CollectionUtils.union;
+import static org.apache.felix.http.base.internal.util.CollectionUtils.sortedUnion;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 
-import org.apache.felix.http.base.internal.runtime.HandlerRuntime;
+import org.apache.felix.http.base.internal.runtime.dto.ErrorPageRuntime;
 
 public final class ErrorsMapping
 {
@@ -126,14 +126,14 @@ public final class ErrorsMapping
     @SuppressWarnings("unchecked")
     public Collection<ServletHandler> getMappedHandlers()
     {
-        return union(errorCodesMap.values(), exceptionsMap.values());
+        return sortedUnion(errorCodesMap.values(), exceptionsMap.values());
     }
 
-    public HandlerRuntime.ErrorPage getErrorPage(ServletHandler servletHandler)
+    public ErrorPageRuntime getErrorPage(ServletHandler servletHandler)
     {
         Collection<Integer> errorCodes = getCopy(servletHandler, invertedErrorCodesMap);
         Collection<String> exceptions = getCopy(servletHandler, invertedExceptionsMap);
-        return new HandlerRuntime.ErrorPage(servletHandler, errorCodes, exceptions);
+        return new ErrorPageRuntime(servletHandler, errorCodes, exceptions);
     }
 
     private static <T> List<T> getCopy(ServletHandler key, Map<Servlet, Collection<T>> map)

@@ -18,8 +18,9 @@
  */
 package org.apache.felix.http.itest;
 
-import static javax.servlet.http.HttpServletResponse.*;
-import static org.junit.Assert.*;
+import static javax.servlet.http.HttpServletResponse.SC_OK;
+import static javax.servlet.http.HttpServletResponse.SC_SERVICE_UNAVAILABLE;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.URL;

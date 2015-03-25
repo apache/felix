@@ -17,6 +17,7 @@
 package org.apache.felix.http.base.internal.handler;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,7 +33,8 @@ import org.junit.Test;
 public class PerContextHandlerRegistryTest
 {
 
-    @Test public void testPathOrdering()
+    @Test
+    public void testPathOrdering()
     {
         final List<PerContextHandlerRegistry> list = new ArrayList<PerContextHandlerRegistry>();
         list.add(new PerContextHandlerRegistry(createServletContextHelperInfo("/", 1L, 0), null));
@@ -48,7 +50,8 @@ public class PerContextHandlerRegistryTest
         assertEquals(3L, list.get(3).getContextServiceId());
     }
 
-    @Test public void testRankingOrdering()
+    @Test
+    public void testRankingOrdering()
     {
         final List<PerContextHandlerRegistry> list = new ArrayList<PerContextHandlerRegistry>();
         list.add(new PerContextHandlerRegistry(createServletContextHelperInfo("/", 1L, 0), null));
@@ -64,7 +67,8 @@ public class PerContextHandlerRegistryTest
         assertEquals(3L, list.get(3).getContextServiceId());
     }
 
-    @Test public void testOrderingSymetry()
+    @Test
+    public void testOrderingSymetry()
     {
         testSymetry("/", "/foo", 1L, 2L, 0, 0);
         testSymetry("/", "/", 1L, 2L, 0, 10);
@@ -83,7 +87,8 @@ public class PerContextHandlerRegistryTest
         assertEquals(handlerRegistry.compareTo(other), -other.compareTo(handlerRegistry));
     }
 
-    @Test public void testOrderingTransitivity()
+    @Test
+    public void testOrderingTransitivity()
     {
         testTransitivity("/", "/foo", "/barrr", 1L, 2L, 3L, 0, 0, 0);
         testTransitivity("/", "/", "/", 0L, 1L, 2L, 1, 2, 3);
@@ -92,22 +97,18 @@ public class PerContextHandlerRegistryTest
         testTransitivity("/", "/", "/", -2L, -1L, 0L, 0, 0, 0);
     }
 
-    private void testTransitivity(String highPath, String midPath, String lowPath,
-            long highId, long midId, long lowId,
-            int highRanking, int midRanking, int lowRanking)
+    private void testTransitivity(String highPath, String midPath, String lowPath, long highId, long midId, long lowId, int highRanking, int midRanking, int lowRanking)
     {
         PerContextHandlerRegistry high = new PerContextHandlerRegistry(createServletContextHelperInfo(highPath, highId, highRanking), null);
         PerContextHandlerRegistry mid = new PerContextHandlerRegistry(createServletContextHelperInfo(midPath, midId, midRanking), null);
         PerContextHandlerRegistry low = new PerContextHandlerRegistry(createServletContextHelperInfo(lowPath, lowId, lowRanking), null);
 
-        assertEquals(1, high.compareTo(mid));
-        assertEquals(1, mid.compareTo(low));
-        assertEquals(1, high.compareTo(low));
+        assertTrue(high.compareTo(mid) > 0);
+        assertTrue(mid.compareTo(low) > 0);
+        assertTrue(high.compareTo(low) > 0);
     }
 
-    private ServletContextHelperInfo createServletContextHelperInfo(final String path,
-            final long serviceId,
-            final int ranking)
+    private ServletContextHelperInfo createServletContextHelperInfo(final String path, final long serviceId, final int ranking)
     {
         return WhiteboardServiceHelper.createContextInfo(ranking, serviceId, "", path, null);
     }

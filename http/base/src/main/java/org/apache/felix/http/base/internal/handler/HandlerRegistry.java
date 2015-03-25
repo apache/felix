@@ -24,8 +24,9 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.servlet.DispatcherType;
 
-import org.apache.felix.http.base.internal.runtime.HandlerRuntime;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
+import org.apache.felix.http.base.internal.runtime.dto.ContextRuntime;
+import org.apache.felix.http.base.internal.runtime.dto.FailureRuntime;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -225,12 +226,12 @@ public final class HandlerRegistry
         return null;
     }
 
-    public synchronized List<HandlerRuntime> getRuntime()
+    public synchronized List<ContextRuntime> getRuntime(FailureRuntime.Builder failureRuntimeBuilder)
     {
-        List<HandlerRuntime> handlerRuntimes = new ArrayList<HandlerRuntime>();
+        List<ContextRuntime> handlerRuntimes = new ArrayList<ContextRuntime>();
         for (PerContextHandlerRegistry contextRegistry : this.registrations)
         {
-            handlerRuntimes.add(contextRegistry.getRuntime());
+            handlerRuntimes.add(contextRegistry.getRuntime(failureRuntimeBuilder));
         }
         return handlerRuntimes;
     }

@@ -33,9 +33,10 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
+import org.apache.felix.http.base.internal.runtime.dto.FilterRuntime;
 import org.apache.felix.http.base.internal.util.PatternUtil;
 
-public final class FilterHandler extends AbstractHandler<FilterHandler>
+public final class FilterHandler extends AbstractHandler<FilterHandler> implements FilterRuntime
 {
     private final Filter filter;
     private final FilterInfo filterInfo;

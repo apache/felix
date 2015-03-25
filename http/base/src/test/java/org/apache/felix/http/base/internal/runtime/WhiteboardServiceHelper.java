@@ -34,25 +34,28 @@ import javax.servlet.Servlet;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
-import org.apache.felix.http.base.internal.runtime.HandlerRuntime.ErrorPage;
+import org.apache.felix.http.base.internal.runtime.dto.ErrorPageRuntime;
+import org.apache.felix.http.base.internal.runtime.dto.FilterRuntime;
+import org.apache.felix.http.base.internal.runtime.dto.ServletRuntime;
+import org.osgi.framework.ServiceReference;
 
 public final class WhiteboardServiceHelper
 {
     public static final AtomicLong ID_COUNTER = new AtomicLong();
 
-    public static FilterHandler createTestFilterWithServiceId(String identifier,
+    public static FilterRuntime createTestFilterWithServiceId(String identifier,
             ExtServletContext context)
     {
         return createTestFilter(identifier, context, ID_COUNTER.incrementAndGet());
     }
 
-    public static FilterHandler createTestFilter(String identifier,
+    public static FilterRuntime createTestFilter(String identifier,
             ExtServletContext context)
     {
         return createTestFilter(identifier, context, -ID_COUNTER.incrementAndGet());
     }
 
-    private static FilterHandler createTestFilter(String identifier,
+    private static FilterRuntime createTestFilter(String identifier,
             ExtServletContext context,
             Long serviceId)
     {
@@ -94,18 +97,18 @@ public final class WhiteboardServiceHelper
         return info;
     }
 
-    public static ServletHandler createTestServletWithServiceId(String identifier,
+    public static ServletRuntime createTestServletWithServiceId(String identifier,
             ExtServletContext context)
     {
         return createTestServlet(identifier, context, ID_COUNTER.incrementAndGet());
     }
 
-    public static ServletHandler createTestServlet(String identifier, ExtServletContext context)
+    public static ServletRuntime createTestServlet(String identifier, ExtServletContext context)
     {
         return createTestServlet(identifier, context, -ID_COUNTER.incrementAndGet());
     }
 
-    private static ServletHandler createTestServlet(String identifier,
+    private static ServletRuntime createTestServlet(String identifier,
             ExtServletContext context,
             Long serviceId)
     {
@@ -136,7 +139,7 @@ public final class WhiteboardServiceHelper
                 serviceId,
                 name,
                 patterns,
-                null,
+                errorPages,
                 asyncSupported,
                 initParams);
     }
@@ -153,25 +156,25 @@ public final class WhiteboardServiceHelper
                 };
     }
 
-    public static ErrorPage createErrorPageWithServiceId(String identifier, ExtServletContext context)
+    public static ErrorPageRuntime createErrorPageWithServiceId(String identifier, ExtServletContext context)
     {
         return createErrorPage(identifier, context, ID_COUNTER.incrementAndGet());
     }
 
-    public static ErrorPage createErrorPage(String identifier, ExtServletContext context)
+    public static ErrorPageRuntime createErrorPage(String identifier, ExtServletContext context)
     {
         return createErrorPage(identifier, context, -ID_COUNTER.incrementAndGet());
     }
 
-    private static ErrorPage createErrorPage(String identifier,
+    private static ErrorPageRuntime createErrorPage(String identifier,
             ExtServletContext context,
             Long serviceId)
     {
-        ServletHandler servletHandler = createTestServlet(identifier, context, serviceId);
+        ServletRuntime servletHandler = createTestServlet(identifier, context, serviceId);
         Collection<Integer> errorCodes = Arrays.asList(400, 500);
         Collection<String> exceptions = Arrays.asList("Bad request", "Error");
 
-        return new ErrorPage(servletHandler, errorCodes, exceptions);
+        return new ErrorPageRuntime(servletHandler, errorCodes, exceptions);
     }
 
     public static ServletContextHelperInfo createContextInfo(int serviceRanking,
@@ -185,5 +188,10 @@ public final class WhiteboardServiceHelper
                 name,
                 path,
                 initParams);
+    }
+
+    public static ResourceInfo createContextInfo(ServiceReference<Object> ref)
+    {
+        return new ResourceInfo(ref);
     }
 }

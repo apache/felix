@@ -16,9 +16,11 @@
  */
 package org.apache.felix.http.base.internal.whiteboard;
 
+import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_EXCEPTION_ON_INIT;
+import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
+
 import javax.annotation.Nonnull;
 import javax.servlet.Filter;
-import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 
 import org.apache.felix.http.base.internal.handler.FilterHandler;
@@ -27,9 +29,9 @@ import org.apache.felix.http.base.internal.handler.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ResourceInfo;
+import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceObjects;
 
 public final class WhiteboardHttpService
 {
@@ -53,33 +55,47 @@ public final class WhiteboardHttpService
      * Register a servlet.
      * @param contextInfo The servlet context helper info
      * @param servletInfo The servlet info
+     * @throws RegistrationFailureException 
      */
     public void registerServlet(@Nonnull final ContextHandler contextHandler,
             @Nonnull final ServletInfo servletInfo)
+            throws RegistrationFailureException
     {
-    	final PerContextHandlerRegistry registry = this.handlerRegistry.getRegistry(contextHandler.getContextInfo());
-    	if (registry != null)
-    	{
-    		try {
-    			ServletHandler handler = new ServletHandler(contextHandler.getContextInfo(), 
-    					contextHandler.getServletContext(servletInfo.getServiceReference().getBundle()), 
-    					servletInfo, 
-    					null, 
-    					true);
-    			
-    			registry.addServlet(handler);
-			} catch (ServletException e) {
-				// TODO create failure DTO
-			}
-    	}
+        ServletContextHelperInfo contextInfo = contextHandler.getContextInfo();
+        final PerContextHandlerRegistry registry = this.handlerRegistry.getRegistry(contextInfo);
+        if (registry != null)
+        {
+            try
+            {
+                ServletHandler handler = new ServletHandler(contextHandler.getContextInfo(),
+                        contextHandler.getServletContext(servletInfo.getServiceReference().getBundle()),
+                        servletInfo,
+                        null,
+                        true);
+
+                registry.addServlet(handler);
+            }
+            catch (final RegistrationFailureException e)
+            {
+                throw e;
+            }
+            catch (final ServletException e)
+            {
+                throw new RegistrationFailureException(servletInfo, FAILURE_REASON_EXCEPTION_ON_INIT, e);
+            }
+        } else
+        {
+            throw new RegistrationFailureException(servletInfo, FAILURE_REASON_SERVICE_NOT_GETTABLE);
+        }
     }
 
     /**
      * Unregister a servlet
      * @param contextInfo The servlet context helper info
      * @param servletInfo The servlet info
+     * @throws RegistrationFailureException 
      */
-    public void unregisterServlet(@Nonnull final ContextHandler contextHandler, @Nonnull final ServletInfo servletInfo)
+    public void unregisterServlet(@Nonnull final ContextHandler contextHandler, @Nonnull final ServletInfo servletInfo) throws RegistrationFailureException
     {
         final PerContextHandlerRegistry registry = this.handlerRegistry.getRegistry(contextHandler.getContextInfo());
         if (registry != null )
@@ -93,12 +109,12 @@ public final class WhiteboardHttpService
      * Register a filter
      * @param contextInfo The servlet context helper info
      * @param filterInfo The filter info
+     * @throws RegistrationFailureException 
      */
     public void registerFilter(@Nonnull  final ContextHandler contextHandler,
-            @Nonnull final FilterInfo filterInfo)
+            @Nonnull final FilterInfo filterInfo) throws RegistrationFailureException
     {
         final Filter filter = this.bundleContext.getServiceObjects(filterInfo.getServiceReference()).getService();
-        // TODO create failure DTO if null
         if ( filter != null )
         {
             final FilterHandler handler = new FilterHandler(contextHandler.getContextInfo(),
@@ -111,9 +127,19 @@ public final class WhiteboardHttpService
                 {
                     registry.addFilter(handler);
                 }
-            } catch (final ServletException e) {
-                // TODO create failure DTO
             }
+            catch (final RegistrationFailureException e)
+            {
+                throw e;
+            }
+            catch (final ServletException e)
+            {
+                throw new RegistrationFailureException(filterInfo, FAILURE_REASON_EXCEPTION_ON_INIT, e);
+            }
+        }
+        else
+        {
+            throw new RegistrationFailureException(filterInfo, FAILURE_REASON_SERVICE_NOT_GETTABLE);
         }
     }
 
@@ -140,9 +166,10 @@ public final class WhiteboardHttpService
      * Register a resource.
      * @param contextInfo The servlet context helper info
      * @param resourceInfo The resource info
+     * @throws RegistrationFailureException 
      */
     public void registerResource(@Nonnull final ContextHandler contextHandler,
-            @Nonnull final ResourceInfo resourceInfo)
+            @Nonnull final ResourceInfo resourceInfo) throws RegistrationFailureException
     {
     	final ServletInfo servletInfo = new ServletInfo(resourceInfo);
     	
@@ -159,7 +186,7 @@ public final class WhiteboardHttpService
     				registry.addServlet(handler);
     		}
     	} catch (ServletException e) {
-    		// TODO create failure DTO
+            throw new RegistrationFailureException(resourceInfo, FAILURE_REASON_EXCEPTION_ON_INIT, e);
     	}
     }
 
@@ -167,8 +194,9 @@ public final class WhiteboardHttpService
      * Unregister a resource.
      * @param contextInfo The servlet context helper info
      * @param resourceInfo The resource info
+     * @throws RegistrationFailureException 
      */
-    public void unregisterResource(@Nonnull final ContextHandler contextHandler, @Nonnull final ResourceInfo resourceInfo)
+    public void unregisterResource(@Nonnull final ContextHandler contextHandler, @Nonnull final ResourceInfo resourceInfo) throws RegistrationFailureException
     {
         final ServletInfo servletInfo = new ServletInfo(resourceInfo);
         final PerContextHandlerRegistry registry = this.handlerRegistry.getRegistry(contextHandler.getContextInfo());

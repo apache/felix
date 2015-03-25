@@ -18,31 +18,26 @@
  */
 package org.apache.felix.http.base.internal.runtime.dto;
 
+import java.util.Comparator;
+
+import javax.servlet.Servlet;
+
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
-import org.osgi.service.http.runtime.dto.ResourceDTO;
 
-final class ResourceDTOBuilder<T extends ResourceDTO> extends BaseDTOBuilder<ServletRuntime, T>
+
+
+public interface ServletRuntime extends WhiteboardServiceRuntime
 {
-    static ResourceDTOBuilder<ResourceDTO> create()
+    static final Comparator<ServletRuntime> COMPARATOR = new Comparator<ServletRuntime>()
     {
-        return new ResourceDTOBuilder<ResourceDTO>(DTOFactories.RESOURCE);
-    }
+        @Override
+        public int compare(ServletRuntime o1, ServletRuntime o2)
+        {
+            return o1.getServletInfo().compareTo(o2.getServletInfo());
+        }
+    };
 
-    ResourceDTOBuilder(DTOFactory<T> dtoFactory)
-    {
-        super(dtoFactory);
-    }
+    Servlet getServlet();
 
-    @Override
-    T buildDTO(ServletRuntime runtime, long servletContextId)
-    {
-        ServletInfo servletInfo = runtime.getServletInfo();
-
-        T resourceDTO = getDTOFactory().get();
-        resourceDTO.patterns = copyWithDefault(servletInfo.getPatterns(), BuilderConstants.STRING_ARRAY);
-        resourceDTO.prefix = servletInfo.getPrefix();
-        resourceDTO.serviceId = servletInfo.getServiceId();
-        resourceDTO.servletContextId = servletContextId;
-        return resourceDTO;
-    }
+    ServletInfo getServletInfo();
 }

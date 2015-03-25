@@ -31,6 +31,7 @@ import org.apache.felix.http.base.internal.handler.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.whiteboard.RegistrationFailureException;
 import org.osgi.service.http.NamespaceException;
 
 public final class SharedHttpServiceImpl
@@ -103,7 +104,15 @@ public final class SharedHttpServiceImpl
             {
                 throw new IllegalArgumentException("Nothing registered at " + alias);
             }
-            return this.handlerRegistry.removeServlet(handler.getServletInfo(), true);
+
+            try
+            {
+                return this.handlerRegistry.removeServlet(handler.getServletInfo(), true);
+            } catch (RegistrationFailureException e)
+            {
+                // TODO create FailureDTO
+                return null;
+            }
         }
     }
 
@@ -111,7 +120,14 @@ public final class SharedHttpServiceImpl
     {
         if (servlet != null)
         {
-            this.handlerRegistry.removeServlet(servlet, destroy);
+            try
+            {
+                this.handlerRegistry.removeServlet(servlet, destroy);
+            } catch (RegistrationFailureException e)
+            {
+                // TODO create FailureDTO
+            }
+
             synchronized (this.aliasMap)
             {
                 final Iterator<Map.Entry<String, ServletHandler>> i = this.aliasMap.entrySet().iterator();
