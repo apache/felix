@@ -34,6 +34,7 @@ import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -108,6 +109,11 @@ public class DataModelHelperImpl implements DataModelHelper
                     entry = zin.getNextEntry();
                 }
             }
+            else 
+                if (url.getPath().endsWith(".gz"))
+                {
+                    is = new GZIPInputStream(FileUtil.openURL(url));                    
+                }
             else
             {
                 is = FileUtil.openURL(url);
