@@ -20,14 +20,14 @@ import javax.servlet.Filter;
 
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
-import org.apache.felix.http.base.internal.whiteboard.ServletContextHelperManager;
+import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 public final class FilterTracker extends WhiteboardServiceTracker<Filter>
 {
-    public FilterTracker(final BundleContext context, final ServletContextHelperManager manager)
+    public FilterTracker(final BundleContext context, final WhiteboardManager manager)
     {
         super(manager, context, String.format("(&(objectClass=%s)(|(%s=*)(%s=*)(%s=*)))",
                 Filter.class.getName(),

@@ -20,13 +20,13 @@ import javax.servlet.http.HttpSessionIdListener;
 
 import org.apache.felix.http.base.internal.runtime.HttpSessionIdListenerInfo;
 import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
-import org.apache.felix.http.base.internal.whiteboard.ServletContextHelperManager;
+import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
 public final class HttpSessionIdListenerTracker extends WhiteboardServiceTracker<HttpSessionIdListener>
 {
-    public HttpSessionIdListenerTracker(final BundleContext context, final ServletContextHelperManager manager)
+    public HttpSessionIdListenerTracker(final BundleContext context, final WhiteboardManager manager)
     {
         super(manager, context, createListenerFilterExpression(HttpSessionIdListener.class));
     }

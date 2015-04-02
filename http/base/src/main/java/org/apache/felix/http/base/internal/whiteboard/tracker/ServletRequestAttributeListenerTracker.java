@@ -20,13 +20,13 @@ import javax.servlet.ServletRequestAttributeListener;
 
 import org.apache.felix.http.base.internal.runtime.ServletRequestAttributeListenerInfo;
 import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
-import org.apache.felix.http.base.internal.whiteboard.ServletContextHelperManager;
+import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
 public final class ServletRequestAttributeListenerTracker extends WhiteboardServiceTracker<ServletRequestAttributeListener>
 {
-    public ServletRequestAttributeListenerTracker(final BundleContext context, final ServletContextHelperManager manager)
+    public ServletRequestAttributeListenerTracker(final BundleContext context, final WhiteboardManager manager)
     {
         super(manager, context, createListenerFilterExpression(ServletRequestAttributeListener.class));
     }
