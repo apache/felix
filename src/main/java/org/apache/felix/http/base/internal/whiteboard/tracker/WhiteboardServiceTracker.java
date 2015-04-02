@@ -17,7 +17,7 @@
 package org.apache.felix.http.base.internal.whiteboard.tracker;
 
 import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
-import org.apache.felix.http.base.internal.whiteboard.ServletContextHelperManager;
+import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
@@ -56,8 +56,8 @@ public abstract class WhiteboardServiceTracker<T> extends ServiceTracker<T, Serv
         return null; // we never get here - and if we get an NPE which is fine
     }
 
-    /** The context manager is called for each added/removed reference. */
-    private final ServletContextHelperManager contextManager;
+    /** The  manager is called for each added/removed reference. */
+    private final WhiteboardManager contextManager;
 
     /**
      * Create a new tracker
@@ -65,7 +65,7 @@ public abstract class WhiteboardServiceTracker<T> extends ServiceTracker<T, Serv
      * @param bundleContext The bundle context.
      * @param filterExpr The filter expression for the services to track
      */
-    public WhiteboardServiceTracker(final ServletContextHelperManager contextManager,
+    public WhiteboardServiceTracker(final WhiteboardManager contextManager,
             final BundleContext bundleContext, final String filterExpr)
     {
         super(bundleContext, createFilter(bundleContext, filterExpr), null);

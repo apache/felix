@@ -24,7 +24,7 @@ import java.util.Hashtable;
 import org.apache.felix.http.base.internal.handler.HandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.dto.RegistryRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.RuntimeDTOBuilder;
-import org.apache.felix.http.base.internal.whiteboard.ServletContextHelperManager;
+import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
 import org.osgi.service.http.runtime.HttpServiceRuntime;
 import org.osgi.service.http.runtime.dto.RequestInfoDTO;
 import org.osgi.service.http.runtime.dto.RuntimeDTO;
@@ -34,15 +34,16 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
     private final Hashtable<String, Object> attributes = new Hashtable<String, Object>();
 
     private final HandlerRegistry registry;
-    private final ServletContextHelperManager contextManager;
+    private final WhiteboardManager contextManager;
 
     public HttpServiceRuntimeImpl(HandlerRegistry registry,
-            ServletContextHelperManager contextManager)
+            WhiteboardManager contextManager)
     {
         this.registry = registry;
         this.contextManager = contextManager;
     }
 
+    @Override
     public synchronized RuntimeDTO getRuntimeDTO()
     {
         RegistryRuntime runtime = contextManager.getRuntime(registry);
