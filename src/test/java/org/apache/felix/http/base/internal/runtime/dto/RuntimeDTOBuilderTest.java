@@ -63,7 +63,6 @@ import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.whiteboard.ContextHandler;
-import org.apache.felix.http.base.internal.whiteboard.ListenerRegistry;
 import org.apache.felix.http.base.internal.whiteboard.PerContextEventListener;
 import org.junit.Before;
 import org.junit.Rule;
@@ -138,14 +137,12 @@ public class RuntimeDTOBuilderTest
 
     private RegistryRuntime registry;
     private Map<String, Object> runtimeAttributes;
-	private ListenerRegistry listenerRegistry;
 
     @Before
     public void setUp()
     {
         registry = null;
         runtimeAttributes = RUNTIME_ATTRIBUTES;
-        listenerRegistry = new ListenerRegistry(bundle);
     }
 
     public ServletContextHelperRuntime setupContext(ServletContext context, String name, long serviceId)
@@ -163,8 +160,8 @@ public class RuntimeDTOBuilderTest
         Map<String, String> initParameters = createInitParameterMap();
         ServletContextHelperInfo contextInfo = createContextInfo(0, serviceId, name, path, initParameters);
 
-        PerContextEventListener eventListener = listenerRegistry.addContext(contextInfo);
-        ServletContextHelperRuntime contextHandler = new ContextHandler(contextInfo, context, eventListener, bundle);
+        ContextHandler contextHandler = new ContextHandler(contextInfo, context, bundle);
+        PerContextEventListener eventListener = contextHandler.getListenerRegistry();
 
         ServletContext sharedContext = contextHandler.getSharedContext();
         sharedContext.setAttribute("intAttr", 1);

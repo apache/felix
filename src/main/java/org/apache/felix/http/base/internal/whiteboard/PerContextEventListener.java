@@ -78,13 +78,15 @@ public final class PerContextEventListener implements
 
     private final Bundle bundle;
 
-    PerContextEventListener(final Bundle bundle)
+    private final ContextHandler contextHandler;
+
+    PerContextEventListener(final Bundle bundle, final ContextHandler contextHandler)
     {
         this.bundle = bundle;
+        this.contextHandler = contextHandler;
     }
 
-    void initialized(@Nonnull final ServletContextListenerInfo listenerInfo,
-            @Nonnull ContextHandler contextHandler)
+    void initialized(@Nonnull final ServletContextListenerInfo listenerInfo)
     {
         final ServletContextListener listener = listenerInfo.getService(bundle);
         if (listener != null)
@@ -99,8 +101,7 @@ public final class PerContextEventListener implements
         }
     }
 
-    void destroyed(@Nonnull final ServletContextListenerInfo listenerInfo,
-            @Nonnull ContextHandler contextHandler)
+    void destroyed(@Nonnull final ServletContextListenerInfo listenerInfo)
     {
         final ServiceReference<ServletContextListener> listenerRef = listenerInfo
                 .getServiceReference();

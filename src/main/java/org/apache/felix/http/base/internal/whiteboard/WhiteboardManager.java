@@ -104,8 +104,6 @@ public final class WhiteboardManager
 
     private final WhiteboardHttpService httpService;
 
-    private final ListenerRegistry listenerRegistry;
-
     private final Map<AbstractInfo<?>, Integer> serviceFailures = new ConcurrentSkipListMap<AbstractInfo<?>, Integer>();
 
     private volatile ServletContext webContext;
@@ -131,7 +129,6 @@ public final class WhiteboardManager
         this.bundleContext = bundleContext;
         this.httpServiceFactory = httpServiceFactory;
         this.httpService = new WhiteboardHttpService(this.bundleContext, registry);
-        this.listenerRegistry = new ListenerRegistry(bundleContext.getBundle());
         this.serviceRuntime = new HttpServiceRuntimeImpl(registry, this);
     }
 
@@ -288,7 +285,7 @@ public final class WhiteboardManager
         // context listeners first
         for(final ServletContextListenerInfo info : listeners.values())
         {
-            this.listenerRegistry.initialized(info, handler);
+            handler.getListenerRegistry().initialized(info);
         }
         // now register services
         for(final WhiteboardServiceInfo<?> info : services)
@@ -324,7 +321,7 @@ public final class WhiteboardManager
         }
         for(final ServletContextListenerInfo info : listeners.values())
         {
-            this.listenerRegistry.destroyed(info, handler);
+            handler.getListenerRegistry().destroyed(info);
         }
         handler.deactivate();
 
@@ -343,10 +340,8 @@ public final class WhiteboardManager
             {
                 synchronized ( this.contextMap )
                 {
-                    PerContextEventListener contextEventListener = listenerRegistry.addContext(info);
-                    ContextHandler handler = new ContextHandler(info,
+                    final ContextHandler handler = new ContextHandler(info,
                             this.webContext,
-                            contextEventListener,
                             this.bundleContext.getBundle());
 
                     List<ContextHandler> handlerList = this.contextMap.get(info.getName());
@@ -429,7 +424,6 @@ public final class WhiteboardManager
                             this.activate(newHead);
                             removeFailure(newHead.getContextInfo(), FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
                         }
-                        listenerRegistry.removeContext(info);
                     }
                 }
             }
@@ -540,27 +534,27 @@ public final class WhiteboardManager
 
             else if ( info instanceof ServletContextAttributeListenerInfo )
             {
-                this.listenerRegistry.addListener((ServletContextAttributeListenerInfo) info, handler);
+                handler.getListenerRegistry().addListener((ServletContextAttributeListenerInfo) info);
             }
             else if ( info instanceof HttpSessionListenerInfo )
             {
-                this.listenerRegistry.addListener((HttpSessionListenerInfo) info, handler);
+                handler.getListenerRegistry().addListener((HttpSessionListenerInfo) info);
             }
             else if ( info instanceof HttpSessionAttributeListenerInfo )
             {
-                this.listenerRegistry.addListener((HttpSessionAttributeListenerInfo) info, handler);
+                handler.getListenerRegistry().addListener((HttpSessionAttributeListenerInfo) info);
             }
             else if ( info instanceof HttpSessionIdListenerInfo )
             {
-                this.listenerRegistry.addListener((HttpSessionIdListenerInfo) info, handler);
+                handler.getListenerRegistry().addListener((HttpSessionIdListenerInfo) info);
             }
             else if ( info instanceof ServletRequestListenerInfo )
             {
-                this.listenerRegistry.addListener((ServletRequestListenerInfo) info, handler);
+                handler.getListenerRegistry().addListener((ServletRequestListenerInfo) info);
             }
             else if ( info instanceof ServletRequestAttributeListenerInfo )
             {
-                this.listenerRegistry.addListener((ServletRequestAttributeListenerInfo) info, handler);
+                handler.getListenerRegistry().addListener((ServletRequestAttributeListenerInfo) info);
             }
         }
         catch (final RegistrationFailureException e)
@@ -599,27 +593,27 @@ public final class WhiteboardManager
 
             else if ( info instanceof ServletContextAttributeListenerInfo )
             {
-                this.listenerRegistry.removeListener((ServletContextAttributeListenerInfo) info, handler);
+                handler.getListenerRegistry().removeListener((ServletContextAttributeListenerInfo) info);
             }
             else if ( info instanceof HttpSessionListenerInfo )
             {
-                this.listenerRegistry.removeListener((HttpSessionListenerInfo) info, handler);
+                handler.getListenerRegistry().removeListener((HttpSessionListenerInfo) info);
             }
             else if ( info instanceof HttpSessionAttributeListenerInfo )
             {
-                this.listenerRegistry.removeListener((HttpSessionAttributeListenerInfo) info, handler);
+                handler.getListenerRegistry().removeListener((HttpSessionAttributeListenerInfo) info);
             }
             else if ( info instanceof HttpSessionIdListenerInfo )
             {
-                this.listenerRegistry.removeListener((HttpSessionIdListenerInfo) info, handler);
+                handler.getListenerRegistry().removeListener((HttpSessionIdListenerInfo) info);
             }
             else if ( info instanceof ServletRequestListenerInfo )
             {
-                this.listenerRegistry.removeListener((ServletRequestListenerInfo) info, handler);
+                handler.getListenerRegistry().removeListener((ServletRequestListenerInfo) info);
             }
             else if ( info instanceof ServletRequestAttributeListenerInfo )
             {
-                this.listenerRegistry.removeListener((ServletRequestAttributeListenerInfo) info, handler);
+                handler.getListenerRegistry().removeListener((ServletRequestAttributeListenerInfo) info);
             }
         }
         catch (final RegistrationFailureException e)
@@ -697,7 +691,7 @@ public final class WhiteboardManager
     {
         Collection<ServletContextHelperRuntime> contextRuntimes = new TreeSet<ServletContextHelperRuntime>(ServletContextHelperRuntime.COMPARATOR);
         List<ContextRuntime> handlerRuntimes;
-        Map<Long, Collection<ServiceReference<?>>> listenerRuntimes;
+        final Map<Long, Collection<ServiceReference<?>>> listenerRuntimes = new HashMap<Long, Collection<ServiceReference<?>>>();
         FailureRuntime.Builder failureRuntime = FailureRuntime.builder();
         synchronized ( this.contextMap )
         {
@@ -705,11 +699,14 @@ public final class WhiteboardManager
             {
                 if ( !contextHandlerList.isEmpty() )
                 {
-                    contextRuntimes.add(contextHandlerList.get(0));
+                    final ContextHandler handler = contextHandlerList.get(0);
+                    contextRuntimes.add(handler);
+
+                    final long serviceId = handler.getContextInfo().getServiceId();
+                    listenerRuntimes.put(serviceId, handler.getListenerRegistry().getRuntime());
                 }
             }
             handlerRuntimes = registry.getRuntime(failureRuntime);
-            listenerRuntimes = listenerRegistry.getContextRuntimes();
             failureRuntime.add(serviceFailures);
         }
         return new RegistryRuntime(contextRuntimes, handlerRuntimes, listenerRuntimes, failureRuntime.build());
