@@ -58,6 +58,16 @@ import org.apache.felix.http.base.internal.runtime.dto.FailureRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.RegistryRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.ServletContextHelperRuntime;
 import org.apache.felix.http.base.internal.util.MimeTypes;
+import org.apache.felix.http.base.internal.whiteboard.tracker.FilterTracker;
+import org.apache.felix.http.base.internal.whiteboard.tracker.HttpSessionAttributeListenerTracker;
+import org.apache.felix.http.base.internal.whiteboard.tracker.HttpSessionListenerTracker;
+import org.apache.felix.http.base.internal.whiteboard.tracker.ResourceTracker;
+import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextAttributeListenerTracker;
+import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextHelperTracker;
+import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextListenerTracker;
+import org.apache.felix.http.base.internal.whiteboard.tracker.ServletRequestAttributeListenerTracker;
+import org.apache.felix.http.base.internal.whiteboard.tracker.ServletRequestListenerTracker;
+import org.apache.felix.http.base.internal.whiteboard.tracker.ServletTracker;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -69,6 +79,7 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.context.ServletContextHelper;
 import org.osgi.service.http.runtime.HttpServiceRuntime;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
+import org.osgi.util.tracker.ServiceTracker;
 
 public final class ServletContextHelperManager
 {
@@ -92,17 +103,18 @@ public final class ServletContextHelperManager
 
     private volatile ServiceRegistration<ServletContextHelper> defaultContextRegistration;
 
+    private final List<ServiceTracker<?, ?>> trackers = new ArrayList<ServiceTracker<?, ?>>();
+
     /**
      * Create a new servlet context helper manager
      * and the default context
      */
     public ServletContextHelperManager(final BundleContext bundleContext,
-            final WhiteboardHttpService httpService,
-            final ListenerRegistry listenerRegistry)
+            final HandlerRegistry registry)
     {
         this.bundleContext = bundleContext;
-        this.httpService = httpService;
-        this.listenerRegistry = listenerRegistry;
+        this.httpService = new WhiteboardHttpService(this.bundleContext, registry);
+        this.listenerRegistry = new ListenerRegistry(bundleContext.getBundle());
     }
 
     public void start(ServletContext webContext, ServiceReference<HttpServiceRuntime> httpServiceRuntime)
@@ -145,13 +157,38 @@ public final class ServletContextHelperManager
                         // nothing to do
                     }
                 }, props);
+        addTracker(new FilterTracker(this.bundleContext, this));
+        addTracker(new ServletTracker(this.bundleContext, this));
+        addTracker(new ResourceTracker(this.bundleContext, this));
+
+        addTracker(new HttpSessionListenerTracker(this.bundleContext, this));
+        addTracker(new HttpSessionAttributeListenerTracker(this.bundleContext, this));
+
+        addTracker(new ServletContextHelperTracker(this.bundleContext, this));
+        addTracker(new ServletContextListenerTracker(this.bundleContext, this));
+        addTracker(new ServletContextAttributeListenerTracker(this.bundleContext, this));
+
+        addTracker(new ServletRequestListenerTracker(this.bundleContext, this));
+        addTracker(new ServletRequestAttributeListenerTracker(this.bundleContext, this));
+    }
+
+    private void addTracker(ServiceTracker<?, ?> tracker)
+    {
+        this.trackers.add(tracker);
+        tracker.open();
     }
 
     /**
-     * Clean up the instance
+     * Stop the instance
      */
-    public void close()
+    public void stop()
     {
+        for(final ServiceTracker<?, ?> t : this.trackers)
+        {
+            t.close();
+        }
+        this.trackers.clear();
+
         // TODO cleanup
         if (this.defaultContextRegistration != null)
         {

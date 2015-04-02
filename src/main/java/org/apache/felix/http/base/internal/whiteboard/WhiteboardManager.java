@@ -16,9 +16,7 @@
  */
 package org.apache.felix.http.base.internal.whiteboard;
 
-import java.util.ArrayList;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
@@ -30,27 +28,14 @@ import org.apache.felix.http.base.internal.handler.HandlerRegistry;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.apache.felix.http.base.internal.service.HttpServiceRuntimeImpl;
-import org.apache.felix.http.base.internal.whiteboard.tracker.FilterTracker;
-import org.apache.felix.http.base.internal.whiteboard.tracker.HttpSessionAttributeListenerTracker;
-import org.apache.felix.http.base.internal.whiteboard.tracker.HttpSessionListenerTracker;
-import org.apache.felix.http.base.internal.whiteboard.tracker.ResourceTracker;
-import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextAttributeListenerTracker;
-import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextHelperTracker;
-import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextListenerTracker;
-import org.apache.felix.http.base.internal.whiteboard.tracker.ServletRequestAttributeListenerTracker;
-import org.apache.felix.http.base.internal.whiteboard.tracker.ServletRequestListenerTracker;
-import org.apache.felix.http.base.internal.whiteboard.tracker.ServletTracker;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.runtime.HttpServiceRuntime;
 import org.osgi.service.http.runtime.HttpServiceRuntimeConstants;
-import org.osgi.util.tracker.ServiceTracker;
 
 public final class WhiteboardManager
 {
     private final BundleContext bundleContext;
-
-    private final List<ServiceTracker<?, ?>> trackers = new ArrayList<ServiceTracker<?, ?>>();
 
     private final HttpServiceFactory httpServiceFactory;
 
@@ -64,7 +49,7 @@ public final class WhiteboardManager
      * Create a new whiteboard http manager
      * @param bundleContext
      * @param httpServiceFactory
-     * @param registry 
+     * @param registry
      */
     public WhiteboardManager(final BundleContext bundleContext,
             final HttpServiceFactory httpServiceFactory,
@@ -72,9 +57,7 @@ public final class WhiteboardManager
     {
         this.bundleContext = bundleContext;
         this.httpServiceFactory = httpServiceFactory;
-        WhiteboardHttpService whiteboardHttpService = new WhiteboardHttpService(this.bundleContext, registry);
-        ListenerRegistry listenerRegistry = new ListenerRegistry(bundleContext.getBundle());
-        this.contextManager = new ServletContextHelperManager(bundleContext, whiteboardHttpService, listenerRegistry);
+        this.contextManager = new ServletContextHelperManager(bundleContext, registry);
         this.serviceRuntime = new HttpServiceRuntimeImpl(registry, this.contextManager);
     }
 
@@ -88,46 +71,17 @@ public final class WhiteboardManager
                 this.serviceRuntime.getAttributes());
 
         this.contextManager.start(context, this.runtimeServiceReg.getReference());
-
-        addTracker(new FilterTracker(this.bundleContext, contextManager));
-        addTracker(new ServletTracker(this.bundleContext, this.contextManager));
-        addTracker(new ResourceTracker(this.bundleContext, this.contextManager));
-
-        addTracker(new HttpSessionListenerTracker(this.bundleContext, this.contextManager));
-        addTracker(new HttpSessionAttributeListenerTracker(this.bundleContext, this.contextManager));
-
-        addTracker(new ServletContextHelperTracker(this.bundleContext, this.contextManager));
-        addTracker(new ServletContextListenerTracker(this.bundleContext, this.contextManager));
-        addTracker(new ServletContextAttributeListenerTracker(this.bundleContext, this.contextManager));
-
-        addTracker(new ServletRequestListenerTracker(this.bundleContext, this.contextManager));
-        addTracker(new ServletRequestAttributeListenerTracker(this.bundleContext, this.contextManager));
     }
 
     public void stop()
     {
-        for(final ServiceTracker<?, ?> t : this.trackers)
-        {
-            t.close();
-        }
-        this.trackers.clear();
-
-        if ( this.contextManager != null )
-        {
-            this.contextManager.close();
-        }
+        this.contextManager.stop();
 
         if ( this.runtimeServiceReg != null )
         {
             this.runtimeServiceReg.unregister();
             this.runtimeServiceReg = null;
         }
-    }
-
-    private void addTracker(ServiceTracker<?, ?> tracker)
-    {
-        this.trackers.add(tracker);
-        tracker.open();
     }
 
     public void setProperties(final Hashtable<String, Object> props)
