@@ -19,22 +19,56 @@ package org.apache.felix.http.base.internal.whiteboard.tracker;
 import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
 import org.apache.felix.http.base.internal.whiteboard.ServletContextHelperManager;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Filter;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 import org.osgi.util.tracker.ServiceTracker;
 
 /**
- * Service tracker that does not get/unget the service objects itself, but
- * just forwards the service reference.
+ * Service tracker for all whiteboard services except servlet context helper.
+ * This tracker does not get/unget the service objects itself, but just forwards the service reference
+ * by creating an info data object. Each sub class creates a different
+ * data object.
  */
-public abstract class AbstractReferenceTracker<T> extends ServiceTracker<T, ServiceReference<T>>
+public abstract class WhiteboardServiceTracker<T> extends ServiceTracker<T, ServiceReference<T>>
 {
+    /**
+     * Create a filter expression for the specific listener.
+     */
+    public static String createListenerFilterExpression(final Class<?> listenerClass)
+    {
+        return String.format("(&(objectClass=%s)(%s=*)(!(%s~=false)))",
+                listenerClass.getName(),
+                HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER,
+                HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER);
+    }
+
+    private static org.osgi.framework.Filter createFilter(final BundleContext btx, final String expr)
+    {
+        try
+        {
+            return btx.createFilter(expr);
+        }
+        catch ( final InvalidSyntaxException ise)
+        {
+            // we can safely ignore it as the filter is a constant
+        }
+        return null; // we never get here - and if we get an NPE which is fine
+    }
+
+    /** The context manager is called for each added/removed reference. */
     private final ServletContextHelperManager contextManager;
 
-    public AbstractReferenceTracker(final ServletContextHelperManager contextManager,
-            final BundleContext context, final Filter filter)
+    /**
+     * Create a new tracker
+     * @param contextManager The context manager
+     * @param bundleContext The bundle context.
+     * @param filterExpr The filter expression for the services to track
+     */
+    public WhiteboardServiceTracker(final ServletContextHelperManager contextManager,
+            final BundleContext bundleContext, final String filterExpr)
     {
-        super(context, filter, null);
+        super(bundleContext, createFilter(bundleContext, filterExpr), null);
         this.contextManager = contextManager;
     }
 
@@ -57,23 +91,28 @@ public abstract class AbstractReferenceTracker<T> extends ServiceTracker<T, Serv
         this.removed(ref);
     }
 
-    protected void modified(final ServiceReference<T> ref)
+    private void modified(final ServiceReference<T> ref)
     {
         removed(ref);
         added(ref);
     }
 
-    protected void added(final ServiceReference<T> ref)
+    private void added(final ServiceReference<T> ref)
     {
         final WhiteboardServiceInfo<T> info = this.getServiceInfo(ref);
         this.contextManager.addWhiteboardService(info);
     }
 
-    protected void removed(final ServiceReference<T> ref)
+    private void removed(final ServiceReference<T> ref)
     {
         final WhiteboardServiceInfo<T> info = this.getServiceInfo(ref);
         this.contextManager.removeWhiteboardService(info);
     }
 
+    /**
+     * Implemented by sub classes to create the correct whiteboard service info object.
+     * @param ref The service reference
+     * @return A whiteboard service info
+     */
     protected abstract WhiteboardServiceInfo<T> getServiceInfo(final ServiceReference<T> ref);
 }
