@@ -22,32 +22,13 @@ import org.apache.felix.http.base.internal.runtime.ServletContextAttributeListen
 import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
 import org.apache.felix.http.base.internal.whiteboard.ServletContextHelperManager;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
-public final class ServletContextAttributeListenerTracker extends AbstractReferenceTracker<ServletContextAttributeListener>
+public final class ServletContextAttributeListenerTracker extends WhiteboardServiceTracker<ServletContextAttributeListener>
 {
-
-    private static org.osgi.framework.Filter createFilter(final BundleContext btx)
-    {
-        try
-        {
-            return btx.createFilter(String.format("(&(objectClass=%s)(%s=*)(!(%s~=false)))",
-                    ServletContextAttributeListener.class.getName(),
-                    HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER,
-                    HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER));
-        }
-        catch ( final InvalidSyntaxException ise)
-        {
-            // we can safely ignore it as the above filter is a constant
-        }
-        return null; // we never get here - and if we get an NPE which is fine
-    }
-
     public ServletContextAttributeListenerTracker(final BundleContext context, final ServletContextHelperManager manager)
     {
-        super(manager, context, createFilter(context));
+        super(manager, context, createListenerFilterExpression(ServletContextAttributeListener.class));
     }
 
     @Override

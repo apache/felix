@@ -20,32 +20,16 @@ import org.apache.felix.http.base.internal.runtime.ResourceInfo;
 import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
 import org.apache.felix.http.base.internal.whiteboard.ServletContextHelperManager;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Filter;
-import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
-public final class ResourceTracker extends AbstractReferenceTracker<Object>
+public final class ResourceTracker extends WhiteboardServiceTracker<Object>
 {
-
-    private static Filter createFilter(final BundleContext btx)
-    {
-        try
-        {
-            return btx.createFilter(String.format("(&(%s=*)(%s=*))",
-                    HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PATTERN,
-                    HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PREFIX));
-        }
-        catch ( final InvalidSyntaxException ise)
-        {
-            // we can safely ignore it as the above filter is a constant
-        }
-        return null; // we never get here - and if we get an NPE which is fine
-    }
-
     public ResourceTracker(final BundleContext context, final ServletContextHelperManager manager)
     {
-        super(manager, context, createFilter(context));
+        super(manager, context, String.format("(&(%s=*)(%s=*))",
+                HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PATTERN,
+                HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PREFIX));
     }
 
     @Override
