@@ -24,6 +24,7 @@ import java.util.TreeMap;
 import javax.annotation.Nonnull;
 
 import org.apache.felix.http.base.internal.runtime.HttpSessionAttributeListenerInfo;
+import org.apache.felix.http.base.internal.runtime.HttpSessionIdListenerInfo;
 import org.apache.felix.http.base.internal.runtime.HttpSessionListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextAttributeListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
@@ -92,6 +93,18 @@ public final class ListenerRegistry
     }
 
     void removeListener(@Nonnull final HttpSessionAttributeListenerInfo info,
+            final ContextHandler contextHandler)
+    {
+        getRegistryForContext(contextHandler).removeListener(info);
+    }
+
+    void addListener(@Nonnull final HttpSessionIdListenerInfo info,
+            final ContextHandler contextHandler)
+    {
+        getRegistryForContext(contextHandler).addListener(info);
+    }
+
+    void removeListener(@Nonnull final HttpSessionIdListenerInfo info,
             final ContextHandler contextHandler)
     {
         getRegistryForContext(contextHandler).removeListener(info);

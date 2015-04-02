@@ -43,6 +43,7 @@ import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.AbstractInfo;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.HttpSessionAttributeListenerInfo;
+import org.apache.felix.http.base.internal.runtime.HttpSessionIdListenerInfo;
 import org.apache.felix.http.base.internal.runtime.HttpSessionListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ResourceInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextAttributeListenerInfo;
@@ -372,20 +373,23 @@ public final class ServletContextHelperManager
                 {
                     final List<ContextHandler> handlerList = this.getMatchingContexts(info);
                     this.servicesMap.put(info, handlerList);
-                    for(final ContextHandler h : handlerList)
-                    {
-                        this.registerWhiteboardService(h, info);
-                    }
                     if (handlerList.isEmpty())
                     {
                         this.serviceFailures.put(info, FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING);
+                    }
+                    else
+                    {
+                        for(final ContextHandler h : handlerList)
+                        {
+                            this.registerWhiteboardService(h, info);
+                        }
                     }
                 }
             }
             else
             {
                 final String type = info.getClass().getSimpleName().substring(0, info.getClass().getSimpleName().length() - 4);
-                SystemLogger.debug("Ignoring " + type + " service " + info.getServiceReference());
+                SystemLogger.debug("Ignoring invalid " + type + " service " + info.getServiceReference());
                 this.serviceFailures.put(info, FAILURE_REASON_VALIDATION_FAILED);
             }
         }
@@ -419,7 +423,7 @@ public final class ServletContextHelperManager
 
     /**
      * Register whiteboard service in the http service
-     * @param contextInfo Context info
+     * @param handler Context handler
      * @param info Whiteboard service info
      */
     private void registerWhiteboardService(final ContextHandler handler, final WhiteboardServiceInfo<?> info)
@@ -451,6 +455,10 @@ public final class ServletContextHelperManager
             {
                 this.listenerRegistry.addListener((HttpSessionAttributeListenerInfo) info, handler);
             }
+            else if ( info instanceof HttpSessionIdListenerInfo )
+            {
+                this.listenerRegistry.addListener((HttpSessionIdListenerInfo) info, handler);
+            }
             else if ( info instanceof ServletRequestListenerInfo )
             {
                 this.listenerRegistry.addListener((ServletRequestListenerInfo) info, handler);
@@ -460,21 +468,21 @@ public final class ServletContextHelperManager
                 this.listenerRegistry.addListener((ServletRequestAttributeListenerInfo) info, handler);
             }
         }
-        catch (RegistrationFailureException e)
+        catch (final RegistrationFailureException e)
         {
             serviceFailures.put(e.getInfo(), e.getErrorCode());
-            SystemLogger.error("Exception while adding servlet", e);
+            SystemLogger.error("Exception while registering whiteboard service " + info.getServiceReference(), e);
         }
-        catch (RuntimeException e)
+        catch (final RuntimeException e)
         {
             serviceFailures.put(info, FAILURE_REASON_UNKNOWN);
-            throw e;
+            SystemLogger.error("Exception while registering whiteboard service " + info.getServiceReference(), e);
         }
     }
 
     /**
      * Unregister whiteboard service from the http service
-     * @param contextInfo Context info
+     * @param handler Context handler
      * @param info Whiteboard service info
      */
     private void unregisterWhiteboardService(final ContextHandler handler, final WhiteboardServiceInfo<?> info)
@@ -506,6 +514,10 @@ public final class ServletContextHelperManager
             {
                 this.listenerRegistry.removeListener((HttpSessionAttributeListenerInfo) info, handler);
             }
+            else if ( info instanceof HttpSessionIdListenerInfo )
+            {
+                this.listenerRegistry.removeListener((HttpSessionIdListenerInfo) info, handler);
+            }
             else if ( info instanceof ServletRequestListenerInfo )
             {
                 this.listenerRegistry.removeListener((ServletRequestListenerInfo) info, handler);
@@ -515,7 +527,7 @@ public final class ServletContextHelperManager
                 this.listenerRegistry.removeListener((ServletRequestAttributeListenerInfo) info, handler);
             }
         }
-        catch (RegistrationFailureException e)
+        catch (final RegistrationFailureException e)
         {
             serviceFailures.put(e.getInfo(), e.getErrorCode());
             SystemLogger.error("Exception while removing servlet", e);

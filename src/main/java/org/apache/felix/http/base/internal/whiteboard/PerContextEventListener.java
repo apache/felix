@@ -34,9 +34,11 @@ import javax.servlet.ServletRequestListener;
 import javax.servlet.http.HttpSessionAttributeListener;
 import javax.servlet.http.HttpSessionBindingEvent;
 import javax.servlet.http.HttpSessionEvent;
+import javax.servlet.http.HttpSessionIdListener;
 import javax.servlet.http.HttpSessionListener;
 
 import org.apache.felix.http.base.internal.runtime.HttpSessionAttributeListenerInfo;
+import org.apache.felix.http.base.internal.runtime.HttpSessionIdListenerInfo;
 import org.apache.felix.http.base.internal.runtime.HttpSessionListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextAttributeListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextListenerInfo;
@@ -64,6 +66,9 @@ public final class PerContextEventListener implements
 
     /** Session listeners. */
     private final Map<ServiceReference<HttpSessionListener>, HttpSessionListener> sessionListeners = new ConcurrentSkipListMap<ServiceReference<HttpSessionListener>, HttpSessionListener>();
+
+    /** Session id listeners. */
+    private final Map<ServiceReference<HttpSessionIdListener>, HttpSessionIdListener> sessionIdListeners = new ConcurrentSkipListMap<ServiceReference<HttpSessionIdListener>, HttpSessionIdListener>();
 
     /** Request listeners. */
     private final Map<ServiceReference<ServletRequestListener>, ServletRequestListener> requestListeners = new ConcurrentSkipListMap<ServiceReference<ServletRequestListener>, ServletRequestListener>();
@@ -197,6 +202,35 @@ public final class PerContextEventListener implements
     {
         final HttpSessionListener service = this.sessionListeners.remove(info
                 .getServiceReference());
+        if (service != null)
+        {
+            info.ungetService(bundle, service);
+        }
+    }
+
+    /**
+     * Add session id listener
+     *
+     * @param info
+     */
+    void addListener(@Nonnull final HttpSessionIdListenerInfo info)
+    {
+        final HttpSessionIdListener service = info.getService(bundle);
+        if (service != null)
+        {
+            this.sessionIdListeners.put(info.getServiceReference(),
+                    service);
+        }
+    }
+
+    /**
+     * Remove session id listener
+     *
+     * @param info
+     */
+    void removeListener(@Nonnull final HttpSessionIdListenerInfo info)
+    {
+        final HttpSessionIdListener service = this.sessionIdListeners.remove(info.getServiceReference());
         if (service != null)
         {
             info.ungetService(bundle, service);
