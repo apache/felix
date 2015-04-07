@@ -849,10 +849,6 @@ public class Felix extends BundleImpl implements Framework
                     throw new RuntimeException("Unable to start system bundle.");
                 }
 
-                // Now that the system bundle is successfully created we can give
-                // its bundle context to the logger so that it can track log services.
-                m_logger.setSystemBundleContext(_getBundleContext());
-
                 // We have to check with the security provider (if there is one).
                 // This is to avoid having bundles in the cache that have been tampered with
                 SecurityProvider sp = getFramework().getSecurityProvider();
@@ -4603,7 +4599,7 @@ public class Felix extends BundleImpl implements Framework
             }
         }
     }
-    
+
     private void loadPrefixFromDefaultIfNotDefined(Map configMap, Properties defaultProperties, String prefix)
     {
         Map<String, String> defaultPropsWithPrefix = Util.getDefaultPropertiesWithPrefix(defaultProperties, prefix);
