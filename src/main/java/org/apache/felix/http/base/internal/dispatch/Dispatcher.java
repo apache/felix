@@ -166,8 +166,8 @@ public final class Dispatcher implements RequestDispatcherProvider
                     code != SC_PARTIAL_CONTENT &&
                     code >= SC_OK)
                 {
-                    final String exceptionType = (String)request.getAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE);
-                    final ServletHandler errorHandler = handlerRegistry.getErrorsHandler(request.getRequestURI(), this.serviceId, code, exceptionType);
+                    final Throwable exception = (Throwable)request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
+                    final ServletHandler errorHandler = handlerRegistry.getErrorsHandler(request.getRequestURI(), this.serviceId, code, exception);
 
                     if ( errorHandler != null )
                     {
