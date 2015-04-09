@@ -27,6 +27,7 @@ import java.util.Set;
 
 import org.osgi.dto.DTO;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
@@ -313,6 +314,10 @@ public class DTOFactory
 
     private static ServiceReferenceDTO[] createServiceReferenceDTOArray(Bundle bundle)
     {
+        BundleContext ctx = bundle.getBundleContext();
+        if (ctx == null)
+            return null;
+
         ServiceReference<?>[] svcs = bundle.getRegisteredServices();
         if (svcs == null)
             return new ServiceReferenceDTO[0];

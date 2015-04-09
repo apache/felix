@@ -19,6 +19,7 @@
 package org.apache.felix.framework;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
@@ -31,7 +32,6 @@ import java.util.Map;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
-import org.apache.felix.framework.Felix;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -127,6 +127,24 @@ public class DTOFactoryTest
             }
         }
         assertTrue(found);
+    }
+
+    @Test
+    public void testServiceReferenceDTOArrayStoppedBundle() throws Exception
+    {
+        String mf = "Bundle-SymbolicName: tb2\n"
+                + "Bundle-Version: 1.2.3\n"
+                + "Bundle-ManifestVersion: 2\n"
+                + "Import-Package: org.osgi.framework;version=\"[1.1,2)\"";
+        File bf = createBundle(mf);
+        Bundle bundle = framework.getBundleContext().installBundle(bf.toURI().toURL().toExternalForm());
+
+        assertNull("Precondition", bundle.getBundleContext());
+        ServiceReferenceDTO[] dtos = bundle.adapt(ServiceReferenceDTO[].class);
+
+        // Note this is incorrectly tested by the Core Framework R6 CT, which expects an
+        // empty array. However this is not correct and recorded as a deviation.
+        assertNull("As the bundle is not started, the dtos should be null", dtos);
     }
 
     @Test
