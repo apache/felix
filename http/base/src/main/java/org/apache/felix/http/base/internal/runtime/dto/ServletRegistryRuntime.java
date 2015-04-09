@@ -18,29 +18,34 @@
  */
 package org.apache.felix.http.base.internal.runtime.dto;
 
-import java.util.Comparator;
+import java.util.Collection;
+import java.util.Collections;
 
-import javax.servlet.Servlet;
-
-import org.apache.felix.http.base.internal.runtime.ServletInfo;
-
-
-
-public interface ServletRuntime extends WhiteboardServiceRuntime
+public final class ServletRegistryRuntime
 {
-    static final Comparator<ServletRuntime> COMPARATOR = new Comparator<ServletRuntime>()
+    private final Collection<ServletRuntime> servletRuntimes;
+    private final Collection<ServletRuntime> resourceRuntimes;
+
+    public ServletRegistryRuntime(Collection<ServletRuntime> servletRuntimes,
+            Collection<ServletRuntime> resourceRuntimes)
     {
-        @Override
-        public int compare(ServletRuntime o1, ServletRuntime o2)
-        {
-            return o1.getServletInfo().compareTo(o2.getServletInfo());
-        }
-    };
+        this.servletRuntimes = servletRuntimes;
+        this.resourceRuntimes = resourceRuntimes;
+    }
 
-    Servlet getServlet();
+    public static ServletRegistryRuntime empty()
+    {
+        return new ServletRegistryRuntime(Collections.<ServletRuntime>emptyList(),
+                Collections.<ServletRuntime>emptyList());
+    }
 
-    ServletInfo getServletInfo();
+    Collection<ServletRuntime> getServletRuntimes()
+    {
+        return servletRuntimes;
+    }
 
-    long getContextServiceId();
-
+    Collection<ServletRuntime> getResourceRuntimes()
+    {
+        return resourceRuntimes;
+    }
 }

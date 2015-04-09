@@ -27,20 +27,20 @@ import javax.servlet.ServletException;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
-import org.apache.felix.http.base.internal.handler.PerContextHandlerRegistry;
+import org.apache.felix.http.base.internal.handler.HandlerRegistry;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.handler.SimpleServletHandler;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
-import org.apache.felix.http.base.internal.whiteboard.RegistrationFailureException;
 import org.osgi.service.http.NamespaceException;
 
 public final class SharedHttpServiceImpl
 {
-    private final PerContextHandlerRegistry handlerRegistry;
+    private final HandlerRegistry handlerRegistry;
 
     private final Map<String, ServletHandler> aliasMap = new HashMap<String, ServletHandler>();
 
-    public SharedHttpServiceImpl(final PerContextHandlerRegistry handlerRegistry)
+    public SharedHttpServiceImpl(final HandlerRegistry handlerRegistry)
     {
         if (handlerRegistry == null)
         {
@@ -78,7 +78,7 @@ public final class SharedHttpServiceImpl
             @Nonnull final Servlet servlet,
             @Nonnull final ServletInfo servletInfo) throws ServletException, NamespaceException
     {
-        final ServletHandler handler = new ServletHandler(null, httpContext, servletInfo, servlet);
+        final ServletHandler handler = new SimpleServletHandler(httpContext, servletInfo, servlet);
 
         synchronized (this.aliasMap)
         {
@@ -105,14 +105,7 @@ public final class SharedHttpServiceImpl
                 throw new IllegalArgumentException("Nothing registered at " + alias);
             }
 
-            try
-            {
-                return this.handlerRegistry.removeServlet(handler.getServletInfo(), true);
-            } catch (RegistrationFailureException e)
-            {
-                // TODO create FailureDTO
-                return null;
-            }
+            return this.handlerRegistry.removeServlet(handler.getServletInfo());
         }
     }
 
@@ -120,13 +113,7 @@ public final class SharedHttpServiceImpl
     {
         if (servlet != null)
         {
-            try
-            {
-                this.handlerRegistry.removeServlet(servlet, destroy);
-            } catch (RegistrationFailureException e)
-            {
-                // TODO create FailureDTO
-            }
+            this.handlerRegistry.removeServlet(servlet, destroy);
 
             synchronized (this.aliasMap)
             {

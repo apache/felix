@@ -54,8 +54,7 @@ public final class ServletContextHelperInfo extends AbstractInfo<ServletContextH
         this.initParams = getInitParams(ref, CONTEXT_INIT_PREFIX);
     }
 
-    @SuppressWarnings("unchecked")
-    ServletContextHelperInfo(int serviceRanking,
+    public ServletContextHelperInfo(int serviceRanking,
             long serviceId,
             String name,
             String path,
@@ -64,19 +63,19 @@ public final class ServletContextHelperInfo extends AbstractInfo<ServletContextH
         super(serviceRanking, serviceId);
         this.name = name;
         this.path = path;
-        this.initParams = initParams == null ? (Map<String, String>)Collections.EMPTY_MAP : Collections.unmodifiableMap(initParams);
+        this.initParams = initParams == null ? Collections.<String, String>emptyMap(): Collections.unmodifiableMap(initParams);
     }
 
     private boolean isValidPath()
     {
-        if ( !this.isEmpty(path) )
+        if (!this.isEmpty(path))
         {
-        	if ( path.equals("/") )
-        	{
-        		return true;
-        	}
+            if (path.equals("/"))
+            {
+                return true;
+            }
             // TODO we need more validation
-            if ( path.startsWith("/") && !path.endsWith("/") )
+            if (path.startsWith("/") && !path.endsWith("/"))
             {
                 return true;
             }

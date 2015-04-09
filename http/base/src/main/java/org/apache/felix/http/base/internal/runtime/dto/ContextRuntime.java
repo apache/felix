@@ -23,55 +23,37 @@ import java.util.Collections;
 
 public final class ContextRuntime
 {
-    private final Collection<ServletRuntime> servletRuntimes;
     private final Collection<FilterRuntime> filterRuntimes;
-    private final Collection<ServletRuntime> resourceRuntimes;
     private final Collection<ErrorPageRuntime> errorPageRuntimes;
     private final long serviceId;
 
-    public ContextRuntime(Collection<ServletRuntime> servletRuntimes,
-            Collection<FilterRuntime> filterRuntimes,
-            Collection<ServletRuntime> resourceRuntimes,
+    public ContextRuntime(Collection<FilterRuntime> filterRuntimes,
             Collection<ErrorPageRuntime> errorPageRuntimes,
             long serviceId)
     {
-        this.servletRuntimes = servletRuntimes;
         this.filterRuntimes = filterRuntimes;
-        this.resourceRuntimes = resourceRuntimes;
         this.errorPageRuntimes = errorPageRuntimes;
         this.serviceId = serviceId;
     }
 
     public static ContextRuntime empty(long serviceId)
     {
-        return new ContextRuntime(Collections.<ServletRuntime>emptyList(),
-                Collections.<FilterRuntime>emptyList(),
-                Collections.<ServletRuntime>emptyList(),
+        return new ContextRuntime(Collections.<FilterRuntime>emptyList(),
                 Collections.<ErrorPageRuntime> emptyList(),
                 serviceId);
     }
 
-    public Collection<ServletRuntime> getServletRuntimes()
-    {
-        return servletRuntimes;
-    }
-
-    public Collection<FilterRuntime> getFilterRuntimes()
+    Collection<FilterRuntime> getFilterRuntimes()
     {
         return filterRuntimes;
     }
 
-    public Collection<ServletRuntime> getResourceRuntimes()
-    {
-        return resourceRuntimes;
-    }
-
-    public Collection<ErrorPageRuntime> getErrorPageRuntimes()
+    Collection<ErrorPageRuntime> getErrorPageRuntimes()
     {
         return errorPageRuntimes;
     }
 
-    public long getServiceId()
+    long getServiceId()
     {
         return serviceId;
     }

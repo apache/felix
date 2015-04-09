@@ -102,7 +102,7 @@ public final class HttpServiceFactory
         this.sessionListenerManager.open();
         this.sessionAttributeListenerManager.open();
 
-        this.sharedHttpService = new SharedHttpServiceImpl(handlerRegistry.getRegistry(null));
+        this.sharedHttpService = new SharedHttpServiceImpl(handlerRegistry);
 
         final String[] ifaces = new String[] { HttpService.class.getName(), ExtHttpService.class.getName() };
         this.httpServiceReg = bundleContext.registerService(ifaces, this, this.httpServiceProps);

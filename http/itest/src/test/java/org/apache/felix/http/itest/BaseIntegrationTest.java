@@ -313,7 +313,7 @@ public abstract class BaseIntegrationTest
             bootDelegationPackage("sun.*"),
             cleanCaches(),
             CoreOptions.systemProperty("logback.configurationFile").value("file:src/test/resources/logback.xml"), //
-            //            CoreOptions.vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8787"),
+//                        CoreOptions.vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8787"),
 
             mavenBundle("org.slf4j", "slf4j-api").version("1.6.5").startLevel(START_LEVEL_SYSTEM_BUNDLES),
             mavenBundle("ch.qos.logback", "logback-core").version("1.0.6").startLevel(START_LEVEL_SYSTEM_BUNDLES),

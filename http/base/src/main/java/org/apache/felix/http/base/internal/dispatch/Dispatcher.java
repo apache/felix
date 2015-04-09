@@ -51,7 +51,6 @@ import javax.servlet.http.HttpServletResponseWrapper;
 import javax.servlet.http.HttpSession;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.apache.felix.http.base.internal.handler.ErrorsMapping;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.HandlerRegistry;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
@@ -167,65 +166,49 @@ public final class Dispatcher implements RequestDispatcherProvider
                     code != SC_PARTIAL_CONTENT &&
                     code >= SC_OK)
                 {
+                    final String exceptionType = (String)request.getAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE);
+                    final ServletHandler errorHandler = handlerRegistry.getErrorsHandler(request.getRequestURI(), this.serviceId, code, exceptionType);
 
-                    final ErrorsMapping errorsMapping = handlerRegistry.getErrorsMapping(request.getRequestURI(), this.serviceId);
-                    if ( errorsMapping != null )
+                    if ( errorHandler != null )
                     {
-                        final String exceptionType = (String)request.getAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE);
-
-                        ServletHandler errorHandler = null;
-
-                        if (exceptionType != null)
+                        try
                         {
-                            errorHandler = errorsMapping.get(exceptionType);
+                            request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, new Integer(code));
+                            if ( message != null )
+                            {
+                                request.setAttribute(RequestDispatcher.ERROR_MESSAGE, message);
+                            }
+                            request.setAttribute(RequestDispatcher.ERROR_REQUEST_URI, request.getRequestURI());
+                            if ( this.servletName != null )
+                            {
+                                request.setAttribute(RequestDispatcher.ERROR_SERVLET_NAME, this.servletName);
+                            }
+
+                            final String servletPath = null;
+                            final String pathInfo = request.getRequestURI();
+                            final String queryString = null; // XXX
+
+                            final RequestInfo requestInfo = new RequestInfo(servletPath, pathInfo, queryString);
+
+                            final FilterHandler[] filterHandlers = handlerRegistry.getFilterHandlers(errorHandler, DispatcherType.ERROR, request.getRequestURI());
+
+                            // TODO - is async = false correct?
+                            invokeChain(filterHandlers, errorHandler, new ServletRequestWrapper(request, errorHandler.getContext(), requestInfo, this.serviceId, false), this);
+
+                            invokeSuper = false;
                         }
-
-                        if ( errorHandler == null )
+                        catch (final ServletException e)
                         {
-                            errorHandler = errorsMapping.get(code);
+                            // ignore
                         }
-
-                        if ( errorHandler != null )
+                        finally
                         {
-                            try
-                            {
-                                request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, new Integer(code));
-                                if ( message != null )
-                                {
-                                    request.setAttribute(RequestDispatcher.ERROR_MESSAGE, message);
-                                }
-                                request.setAttribute(RequestDispatcher.ERROR_REQUEST_URI, request.getRequestURI());
-                                if ( this.servletName != null )
-                                {
-                                    request.setAttribute(RequestDispatcher.ERROR_SERVLET_NAME, this.servletName);
-                                }
-
-                                final String servletPath = null;
-                                final String pathInfo = request.getRequestURI();
-                                final String queryString = null; // XXX
-
-                                final RequestInfo requestInfo = new RequestInfo(servletPath, pathInfo, queryString);
-
-                                final FilterHandler[] filterHandlers = handlerRegistry.getFilterHandlers(errorHandler, DispatcherType.ERROR, request.getRequestURI());
-
-                                // TODO - is async = false correct?
-                                invokeChain(filterHandlers, errorHandler, new ServletRequestWrapper(request, errorHandler.getContext(), requestInfo, this.serviceId, false), this);
-
-                                invokeSuper = false;
-                            }
-                            catch (final ServletException e)
-                            {
-                                // ignore
-                            }
-                            finally
-                            {
-                                request.removeAttribute(RequestDispatcher.ERROR_STATUS_CODE);
-                                request.removeAttribute(RequestDispatcher.ERROR_MESSAGE);
-                                request.removeAttribute(RequestDispatcher.ERROR_REQUEST_URI);
-                                request.removeAttribute(RequestDispatcher.ERROR_SERVLET_NAME);
-                                request.removeAttribute(RequestDispatcher.ERROR_EXCEPTION);
-                                request.removeAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE);
-                            }
+                            request.removeAttribute(RequestDispatcher.ERROR_STATUS_CODE);
+                            request.removeAttribute(RequestDispatcher.ERROR_MESSAGE);
+                            request.removeAttribute(RequestDispatcher.ERROR_REQUEST_URI);
+                            request.removeAttribute(RequestDispatcher.ERROR_SERVLET_NAME);
+                            request.removeAttribute(RequestDispatcher.ERROR_EXCEPTION);
+                            request.removeAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE);
                         }
                     }
                 }
@@ -601,7 +584,7 @@ public final class Dispatcher implements RequestDispatcherProvider
         }
 
         // Determine which servlets we should forward the request to...
-        final ServletHandler servletHandler = this.handlerRegistry.getServletHander(requestURI);
+        final ServletHandler servletHandler = this.handlerRegistry.getServletHandler(requestURI);
 
         final HttpServletResponse wrappedResponse = new ServletResponseWrapper(req, res, servletHandler);
         if ( servletHandler == null )
@@ -678,7 +661,7 @@ public final class Dispatcher implements RequestDispatcherProvider
             requestURI = "";
         }
 
-        ServletHandler handler = this.handlerRegistry.getServletHander(requestURI);
+        ServletHandler handler = this.handlerRegistry.getServletHandler(requestURI);
         if (handler == null)
         {
             return null;

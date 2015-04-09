@@ -22,11 +22,11 @@ import javax.servlet.ServletContext;
 
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 
-public class FailureServletContextHelperRuntime implements ServletContextHelperRuntime, Comparable<FailureServletContextHelperRuntime>
+public class InfoServletContextHelperRuntime implements ServletContextHelperRuntime, Comparable<InfoServletContextHelperRuntime>
 {
     private final ServletContextHelperInfo info;
 
-    public FailureServletContextHelperRuntime(ServletContextHelperInfo info)
+    public InfoServletContextHelperRuntime(ServletContextHelperInfo info)
     {
         this.info = info;
     }
@@ -44,7 +44,7 @@ public class FailureServletContextHelperRuntime implements ServletContextHelperR
     }
 
     @Override
-    public int compareTo(FailureServletContextHelperRuntime other)
+    public int compareTo(InfoServletContextHelperRuntime other)
     {
         return info.compareTo(other.info);
     }

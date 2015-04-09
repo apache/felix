@@ -1,5 +1,5 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
+ * Licensed to the Apaanche Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -16,18 +16,32 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
+import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
+import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_VALIDATION_FAILED;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
 import javax.servlet.DispatcherType;
+import javax.servlet.Filter;
+import javax.servlet.Servlet;
+import javax.servlet.ServletException;
 
+import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
+import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
 import org.apache.felix.http.base.internal.runtime.dto.ContextRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.FailureRuntime;
-import org.osgi.framework.BundleContext;
+import org.apache.felix.http.base.internal.runtime.dto.HandlerRegistryRuntime;
+import org.apache.felix.http.base.internal.runtime.dto.InfoServletContextHelperRuntime;
+import org.apache.felix.http.base.internal.runtime.dto.ServletContextHelperRuntime;
+import org.apache.felix.http.base.internal.runtime.dto.ServletRegistryRuntime;
+import org.apache.felix.http.base.internal.whiteboard.RegistrationFailureException;
 
 /**
  * Registry for all services.
@@ -37,23 +51,22 @@ import org.osgi.framework.BundleContext;
  */
 public final class HandlerRegistry
 {
+    private static final String HTTP_SERVICE_CONTEXT_NAME = "Http service context";
+
     private static FilterHandler[] EMPTY_FILTER_HANDLER = new FilterHandler[0];
-    private final BundleContext bundleContext;
 
     /** Current list of context registrations. */
     private volatile List<PerContextHandlerRegistry> registrations = Collections.emptyList();
 
-    public HandlerRegistry(BundleContext bundleContext)
-    {
-    	this.bundleContext = bundleContext;
-    }
-    
+    private final ServletHandlerRegistry servletRegistry = new ServletHandlerRegistry();
+
     /**
      * Register default context registry for Http Service
      */
     public void init()
     {
-        this.add(new PerContextHandlerRegistry(this.bundleContext));
+        this.add(new PerContextHandlerRegistry());
+        servletRegistry.init();
     }
 
     /**
@@ -70,6 +83,7 @@ public final class HandlerRegistry
 
         }
 
+        servletRegistry.shutdown();
         for(final PerContextHandlerRegistry r : list)
         {
             r.removeAll();
@@ -82,7 +96,11 @@ public final class HandlerRegistry
      */
     public void add(@Nonnull ServletContextHelperInfo info)
     {
-        this.add(new PerContextHandlerRegistry(info, this.bundleContext));
+        synchronized ( this )
+        {
+            this.add(new PerContextHandlerRegistry(info));
+            this.servletRegistry.add(info);
+        }
     }
 
     /**
@@ -93,6 +111,7 @@ public final class HandlerRegistry
     {
         synchronized ( this )
         {
+            this.servletRegistry.remove(info);
             final List<PerContextHandlerRegistry> updatedList = new ArrayList<PerContextHandlerRegistry>(this.registrations);
             final Iterator<PerContextHandlerRegistry> i = updatedList.iterator();
             while ( i.hasNext() )
@@ -124,15 +143,58 @@ public final class HandlerRegistry
         }
     }
 
+    public void addFilter(FilterHandler handler) throws ServletException
+    {
+        getRegistryChecked(null, null).addFilter(handler);
+    }
+
+    public void addFilter(ServletContextHelperInfo contextInfo, FilterHandler handler) throws ServletException
+    {
+        getRegistryChecked(contextInfo, handler.getFilterInfo()).addFilter(handler);
+    }
+
+    public void removeFilter(Filter filter, boolean destroy)
+    {
+        try
+        {
+            getRegistryChecked(null, null).removeFilter(filter, destroy);
+        }
+        catch (RegistrationFailureException e)
+        {
+            // TODO
+        }
+    }
+
+    public Filter removeFilter(ServletContextHelperInfo contextInfo, FilterInfo filterInfo)
+    {
+        return getRegistry(contextInfo).removeFilter(filterInfo, true);
+    }
+
+    private PerContextHandlerRegistry getRegistryChecked(ServletContextHelperInfo info, WhiteboardServiceInfo<?> serviceInfo)
+        throws RegistrationFailureException
+    {
+        PerContextHandlerRegistry registry = getRegistry(info);
+        if (registry == null)
+        {
+            throw new RegistrationFailureException(serviceInfo, FAILURE_REASON_SERVLET_CONTEXT_FAILURE);
+        }
+        return registry;
+    }
+
     /**
      * Get the per context registry.
      * @param info The servlet context helper info or {@code null} for the Http Service context.
      * @return A per context registry or {@code null}
      */
-    public PerContextHandlerRegistry getRegistry(final ServletContextHelperInfo info)
+    private PerContextHandlerRegistry getRegistry(final ServletContextHelperInfo info)
     {
         final long key = (info == null ? 0 : info.getServiceId());
 
+        return getRegistry(key);
+    }
+
+    private PerContextHandlerRegistry getRegistry(final long key)
+    {
         synchronized ( this )
         {
             for(final PerContextHandlerRegistry r : this.registrations)
@@ -143,11 +205,28 @@ public final class HandlerRegistry
                 }
             }
         }
-
         return null;
     }
 
-    public ErrorsMapping getErrorsMapping(final String requestURI, final Long serviceId)
+    public ServletHandler getErrorsHandler(String requestURI, Long serviceId, int code, String exceptionType)
+    {
+        ErrorsMapping errorsMapping = getErrorsMapping(requestURI, serviceId);
+        if (errorsMapping == null)
+        {
+            return null;
+        }
+
+        // TODO check exception hierarchy
+        ServletHandler errorHandler = errorsMapping.get(exceptionType);
+        if (errorHandler != null)
+        {
+            return errorHandler;
+        }
+
+        return errorsMapping.get(code);
+    }
+
+    private ErrorsMapping getErrorsMapping(final String requestURI, final Long serviceId)
     {
         final List<PerContextHandlerRegistry> regs = this.registrations;
         for(final PerContextHandlerRegistry r : regs)
@@ -181,6 +260,76 @@ public final class HandlerRegistry
         return EMPTY_FILTER_HANDLER;
     }
 
+    public ServletContextHelperRuntime getHttpServiceContextRuntime()
+    {
+        ServletContextHelperInfo info = new ServletContextHelperInfo(Integer.MAX_VALUE, 0, HTTP_SERVICE_CONTEXT_NAME, "/", null);
+        return new InfoServletContextHelperRuntime(info);
+    }
+
+    public synchronized void addServlet(ServletHandler handler) throws RegistrationFailureException
+    {
+        Pattern[] patterns = handler.getPatterns();
+        String[] errorPages = handler.getServletInfo().getErrorPage();
+        if (patterns != null && patterns.length > 0)
+        {
+            servletRegistry.addServlet(handler);
+        }
+        else if (errorPages != null && errorPages.length > 0)
+        {
+            getRegistry(handler.getContextServiceId()).addErrorPage(handler, errorPages);
+        }
+        else
+        {
+            throw new RegistrationFailureException(handler.getServletInfo(), FAILURE_REASON_VALIDATION_FAILED,
+                "Neither patterns nor errorPages specified for " + handler.getName());
+        }
+    }
+
+    public synchronized void removeServlet(Servlet servlet, boolean destroy)
+    {
+        try
+        {
+            servletRegistry.removeServlet(servlet, destroy);
+        }
+        catch (RegistrationFailureException e)
+        {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    public synchronized Servlet removeServlet(ServletInfo servletInfo)
+    {
+        try
+        {
+            return servletRegistry.removeServlet(servletInfo);
+        }
+        catch (RegistrationFailureException e)
+        {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public synchronized void removeServlet(long contextId, ServletInfo servletInfo) throws RegistrationFailureException
+    {
+        String[] patterns = servletInfo.getPatterns();
+        if (patterns != null && patterns.length > 0)
+        {
+            servletRegistry.removeServlet(contextId, servletInfo);
+        }
+        else
+        {
+            getRegistry(contextId).removeErrorPage(servletInfo);
+        }
+    }
+
+    public ServletHandler getServletHandler(String requestURI)
+    {
+        return servletRegistry.getServletHandler(requestURI);
+    }
+
     /**
      * Get the servlet handler for a servlet by name
      * @param contextId The context id or {@code null}
@@ -189,50 +338,17 @@ public final class HandlerRegistry
      */
     public ServletHandler getServletHandlerByName(final Long contextId, @Nonnull final String name)
     {
-        final long key = (contextId == null ? 0 : contextId);
-        final List<PerContextHandlerRegistry> regs = this.registrations;
-        for(final PerContextHandlerRegistry r : regs)
-        {
-            if ( key == r.getContextServiceId() )
-            {
-                return r.getServletHandlerByName(name);
-            }
-        }
-
-        return null;
+        return servletRegistry.getServletHandlerByName(contextId, name);
     }
 
-    /**
-     * Search the servlet handler for the request uri
-     * @param requestURI The request uri
-     * @return
-     */
-    public ServletHandler getServletHander(@Nonnull final String requestURI)
-    {
-        // search the first matching context registry
-        final List<PerContextHandlerRegistry> regs = this.registrations;
-        for(final PerContextHandlerRegistry r : regs)
-        {
-        	final String pathInContext = r.isMatching(requestURI);
-        	if ( pathInContext != null )
-        	{
-                final ServletHandler handler = r.getServletHander(pathInContext);
-                if ( handler != null )
-                {
-                    return handler;
-                }
-            }
-        }
-        return null;
-    }
-
-    public synchronized List<ContextRuntime> getRuntime(FailureRuntime.Builder failureRuntimeBuilder)
+    public synchronized HandlerRegistryRuntime getRuntime(FailureRuntime.Builder failureRuntimeBuilder)
     {
         List<ContextRuntime> handlerRuntimes = new ArrayList<ContextRuntime>();
         for (PerContextHandlerRegistry contextRegistry : this.registrations)
         {
             handlerRuntimes.add(contextRegistry.getRuntime(failureRuntimeBuilder));
         }
-        return handlerRuntimes;
+        ServletRegistryRuntime servletRegistryRuntime = servletRegistry.getRuntime(failureRuntimeBuilder);
+        return new HandlerRegistryRuntime(handlerRuntimes, servletRegistryRuntime);
     }
 }

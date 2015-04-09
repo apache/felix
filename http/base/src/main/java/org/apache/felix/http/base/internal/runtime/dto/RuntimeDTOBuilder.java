@@ -78,6 +78,8 @@ public final class RuntimeDTOBuilder
         {
             contextDTOs.add(createContextDTO(context,
                     registry.getHandlerRuntime(context),
+                    registry.getServletRuntimes(context),
+                    registry.getResourceRuntimes(context),
                     registry.getListenerRuntimes(context)));
         }
         return contextDTOs.toArray(BuilderConstants.CONTEXT_DTO_ARRAY);
@@ -85,10 +87,10 @@ public final class RuntimeDTOBuilder
 
     private ServletContextDTO createContextDTO(ServletContextHelperRuntime context,
             ContextRuntime contextRuntime,
+            Collection<ServletRuntime> servletRuntimes,
+            Collection<ServletRuntime> resourceRuntimes,
             Collection<ServiceReference<?>> listenerRuntimes)
     {
-        Collection<ServletRuntime> servletRuntimes = contextRuntime.getServletRuntimes();
-        Collection<ServletRuntime> resourceRuntimes = contextRuntime.getResourceRuntimes();
         Collection<FilterRuntime> filterRuntimes = contextRuntime.getFilterRuntimes();
         Collection<ErrorPageRuntime> errorPageRuntimes = contextRuntime.getErrorPageRuntimes();
         long servletContextId = contextRuntime.getServiceId();

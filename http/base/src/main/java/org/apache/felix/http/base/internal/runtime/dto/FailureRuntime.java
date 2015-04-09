@@ -227,13 +227,13 @@ public final class FailureRuntime
         {
             if (info instanceof ServletContextHelperInfo)
             {
-                ServletContextHelperRuntime servletRuntime = new FailureServletContextHelperRuntime((ServletContextHelperInfo) info);
+                ServletContextHelperRuntime servletRuntime = new InfoServletContextHelperRuntime((ServletContextHelperInfo) info);
                 contextRuntimes.add(new Failure<ServletContextHelperRuntime>(servletRuntime, failureCode));
             }
             else if (info instanceof ServletInfo && ((ServletInfo) info).getErrorPage() != null)
             {
                 FailureServletRuntime servletRuntime = new FailureServletRuntime((ServletInfo) info);
-                ErrorPageRuntime errorPageRuntime = ErrorPageRuntime.fromRuntime(servletRuntime);
+                ErrorPageRuntime errorPageRuntime = ErrorPageRuntime.fromServletRuntime(servletRuntime);
                 errorPageRuntimes.add(new Failure<ErrorPageRuntime>(errorPageRuntime, failureCode));
             }
             else if (info instanceof ServletInfo)

@@ -47,7 +47,7 @@ public final class HttpServiceController
     public HttpServiceController(final BundleContext bundleContext)
     {
         this.bundleContext = bundleContext;
-        this.registry = new HandlerRegistry(this.bundleContext);
+        this.registry = new HandlerRegistry();
         this.dispatcher = new Dispatcher(this.registry);
         this.plugin = new HttpServicePlugin(bundleContext, registry);
         this.httpServiceFactory = new HttpServiceFactory(this.bundleContext, this.registry);
