@@ -34,6 +34,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.felix.http.base.internal.util.PatternUtil;
+import org.apache.felix.http.base.internal.util.PatternUtil.PatternComparator;
 
 /**
  * Represents a Map-like structure that can map path-patterns to servlet/filter handlers, allowing
@@ -65,8 +66,8 @@ final class HandlerMapping<V extends AbstractHandler<V>>
      */
     private HandlerMapping(Map<Pattern, Collection<V>> mappings)
     {
-        this.exactMap = new TreeMap<Pattern, Set<V>>(PatternUtil.PatternComparator.INSTANCE);
-        this.wildcardMap = new TreeMap<Pattern, Set<V>>(PatternUtil.PatternComparator.INSTANCE);
+        this.exactMap = new TreeMap<Pattern, Set<V>>(PatternComparator.INSTANCE);
+        this.wildcardMap = new TreeMap<Pattern, Set<V>>(PatternComparator.INSTANCE);
         this.mappedHandlers = new TreeSet<V>();
 
         for (Map.Entry<Pattern, Collection<V>> mapping : mappings.entrySet())
@@ -109,7 +110,7 @@ final class HandlerMapping<V extends AbstractHandler<V>>
      */
     HandlerMapping<V> add(V handler)
     {
-        Map<Pattern, V> mappings = new TreeMap<Pattern, V>(PatternUtil.PatternComparator.INSTANCE);
+        Map<Pattern, V> mappings = new TreeMap<Pattern, V>(PatternComparator.INSTANCE);
         for (Pattern pattern : handler.getPatterns())
         {
             mappings.put(pattern, handler);
@@ -120,14 +121,7 @@ final class HandlerMapping<V extends AbstractHandler<V>>
     HandlerMapping<V> add(Map<Pattern, V> mappings)
     {
         Map<Pattern, Collection<V>> newMappings = getAllMappings();
-        for (Map.Entry<Pattern, V> mapping : mappings.entrySet())
-        {
-            if (!newMappings.containsKey(mapping.getKey()))
-            {
-                newMappings.put(mapping.getKey(), new TreeSet<V>());
-            }
-            newMappings.get(mapping.getKey()).add(mapping.getValue());
-        }
+        addMappings(mappings, newMappings);
         return new HandlerMapping<V>(newMappings);
     }
 
@@ -141,7 +135,7 @@ final class HandlerMapping<V extends AbstractHandler<V>>
      */
     HandlerMapping<V> remove(V handler)
     {
-        Map<Pattern, V> mappings = new TreeMap<Pattern, V>(PatternUtil.PatternComparator.INSTANCE);
+        Map<Pattern, V> mappings = new TreeMap<Pattern, V>(PatternComparator.INSTANCE);
         for (Pattern pattern : handler.getPatterns())
         {
             mappings.put(pattern, handler);
@@ -152,9 +146,35 @@ final class HandlerMapping<V extends AbstractHandler<V>>
     HandlerMapping<V> remove(Map<Pattern, V> mappings)
     {
         Map<Pattern, Collection<V>> newMappings = getAllMappings();
+        removeMappings(mappings, newMappings);
+        return new HandlerMapping<V>(newMappings);
+    }
+
+    HandlerMapping<V> update(Map<Pattern, V> add, Map<Pattern, V> remove)
+    {
+        Map<Pattern, Collection<V>> newMappings = getAllMappings();
+        removeMappings(remove, newMappings);
+        addMappings(add, newMappings);
+        return new HandlerMapping<V>(newMappings);
+    }
+
+    private void addMappings(Map<Pattern, V> mappings, Map<Pattern, Collection<V>> target)
+    {
         for (Map.Entry<Pattern, V> mapping : mappings.entrySet())
         {
-            Collection<V> mappedHandlers = newMappings.get(mapping.getKey());
+            if (!target.containsKey(mapping.getKey()))
+            {
+                target.put(mapping.getKey(), new TreeSet<V>());
+            }
+            target.get(mapping.getKey()).add(mapping.getValue());
+        }
+    }
+
+    private void removeMappings(Map<Pattern, V> mappings, Map<Pattern, Collection<V>> target)
+    {
+        for (Map.Entry<Pattern, V> mapping : mappings.entrySet())
+        {
+            Collection<V> mappedHandlers = target.get(mapping.getKey());
             if (mappedHandlers == null)
             {
                 continue;
@@ -162,15 +182,14 @@ final class HandlerMapping<V extends AbstractHandler<V>>
             mappedHandlers.remove(mapping.getValue());
             if (mappedHandlers.isEmpty())
             {
-                newMappings.remove(mapping.getKey());
+                target.remove(mapping.getKey());
             }
         }
-        return new HandlerMapping<V>(newMappings);
     }
 
     private Map<Pattern, Collection<V>> getAllMappings()
     {
-        Map<Pattern, Collection<V>> newMappings = new TreeMap<Pattern, Collection<V>>(PatternUtil.PatternComparator.INSTANCE);
+        Map<Pattern, Collection<V>> newMappings = new TreeMap<Pattern, Collection<V>>(PatternComparator.INSTANCE);
         newMappings.putAll(exactMap);
         newMappings.putAll(wildcardMap);
         return newMappings;

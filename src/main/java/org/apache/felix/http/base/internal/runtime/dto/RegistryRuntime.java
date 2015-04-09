@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeSet;
 
 import org.osgi.framework.ServiceReference;
 
@@ -32,16 +33,21 @@ public final class RegistryRuntime
     private final Collection<ServletContextHelperRuntime> contexts;
     private final Map<Long, Collection<ServiceReference<?>>> listenerRuntimes;
     private final Map<Long, ContextRuntime> handlerRuntimes;
+    private final Map<Long, Collection<ServletRuntime>> servletRuntimes;
+    private final Map<Long, Collection<ServletRuntime>> resourceRuntimes;
     private final FailureRuntime failureRuntime;
 
     public RegistryRuntime(Collection<ServletContextHelperRuntime> contexts,
             Collection<ContextRuntime> contextRuntimes,
+            ServletRegistryRuntime servletRegistryRuntime,
             Map<Long, Collection<ServiceReference<?>>> listenerRuntimes,
             FailureRuntime failureRuntime)
     {
         this.contexts = contexts;
         this.failureRuntime = failureRuntime;
         this.handlerRuntimes = createServiceIdMap(contextRuntimes);
+        this.servletRuntimes = createServletServiceIdMap(servletRegistryRuntime.getServletRuntimes());
+        this.resourceRuntimes = createServletServiceIdMap(servletRegistryRuntime.getResourceRuntimes());
         this.listenerRuntimes = listenerRuntimes;
     }
 
@@ -51,6 +57,21 @@ public final class RegistryRuntime
         for (ContextRuntime contextRuntime : contextRuntimes)
         {
             runtimesMap.put(contextRuntime.getServiceId(), contextRuntime);
+        }
+        return runtimesMap;
+    }
+
+    private static Map<Long, Collection<ServletRuntime>> createServletServiceIdMap(Collection<ServletRuntime> runtimes)
+    {
+        Map<Long, Collection<ServletRuntime>> runtimesMap = new HashMap<Long, Collection<ServletRuntime>>();
+        for (ServletRuntime runtime : runtimes)
+        {
+            long contextServiceId = runtime.getContextServiceId();
+            if (!runtimesMap.containsKey(contextServiceId))
+            {
+                runtimesMap.put(contextServiceId, new TreeSet<ServletRuntime>(ServletRuntime.COMPARATOR));
+            }
+            runtimesMap.get(contextServiceId).add(runtime);
         }
         return runtimesMap;
     }
@@ -69,6 +90,24 @@ public final class RegistryRuntime
             return handlerRuntimes.get(serviceId);
         }
         return ContextRuntime.empty(serviceId);
+    }
+
+    public Collection<ServletRuntime> getServletRuntimes(ServletContextHelperRuntime contextRuntime)
+    {
+        if (servletRuntimes.containsKey(contextRuntime.getContextInfo().getServiceId()))
+        {
+            return servletRuntimes.get(contextRuntime.getContextInfo().getServiceId());
+        }
+        return Collections.emptyList();
+    }
+
+    public Collection<ServletRuntime> getResourceRuntimes(ServletContextHelperRuntime contextRuntime)
+    {
+        if (resourceRuntimes.containsKey(contextRuntime.getContextInfo().getServiceId()))
+        {
+            return resourceRuntimes.get(contextRuntime.getContextInfo().getServiceId());
+        }
+        return Collections.emptyList();
     }
 
     private boolean isDefaultContext(ServletContextHelperRuntime contextRuntime)

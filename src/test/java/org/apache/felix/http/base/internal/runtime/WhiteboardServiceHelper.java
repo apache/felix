@@ -33,7 +33,7 @@ import javax.servlet.Servlet;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
-import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.handler.SimpleServletHandler;
 import org.apache.felix.http.base.internal.runtime.dto.ErrorPageRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.FilterRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.ServletRuntime;
@@ -98,24 +98,26 @@ public final class WhiteboardServiceHelper
     }
 
     public static ServletRuntime createTestServletWithServiceId(String identifier,
-            ExtServletContext context)
+            ExtServletContext context,
+            long contextServiceId)
     {
-        return createTestServlet(identifier, context, ID_COUNTER.incrementAndGet());
+        return createTestServlet(identifier, context, ID_COUNTER.incrementAndGet(), contextServiceId);
     }
 
-    public static ServletRuntime createTestServlet(String identifier, ExtServletContext context)
+    public static ServletRuntime createTestServlet(String identifier, ExtServletContext context, long contextServiceId)
     {
-        return createTestServlet(identifier, context, -ID_COUNTER.incrementAndGet());
+        return createTestServlet(identifier, context, -ID_COUNTER.incrementAndGet(), contextServiceId);
     }
 
     private static ServletRuntime createTestServlet(String identifier,
             ExtServletContext context,
-            Long serviceId)
+            Long serviceId,
+            Long contextServiceId)
     {
         ServletInfo servletInfo = createServletInfo(identifier, serviceId);
         Servlet servlet = mock(Servlet.class);
         when(servlet.getServletInfo()).thenReturn("info_" + identifier);
-        return new ServletHandler(null, context, servletInfo, servlet);
+        return new SimpleServletHandler(contextServiceId, context, servletInfo, servlet);
     }
 
     private static ServletInfo createServletInfo(String identifier, Long serviceId)
@@ -156,21 +158,22 @@ public final class WhiteboardServiceHelper
                 };
     }
 
-    public static ErrorPageRuntime createErrorPageWithServiceId(String identifier, ExtServletContext context)
+    public static ErrorPageRuntime createErrorPageWithServiceId(String identifier, ExtServletContext context, long contextServiceId)
     {
-        return createErrorPage(identifier, context, ID_COUNTER.incrementAndGet());
+        return createErrorPage(identifier, context, ID_COUNTER.incrementAndGet(), contextServiceId);
     }
 
-    public static ErrorPageRuntime createErrorPage(String identifier, ExtServletContext context)
+    public static ErrorPageRuntime createErrorPage(String identifier, ExtServletContext context, long contextServiceId)
     {
-        return createErrorPage(identifier, context, -ID_COUNTER.incrementAndGet());
+        return createErrorPage(identifier, context, -ID_COUNTER.incrementAndGet(), contextServiceId);
     }
 
     private static ErrorPageRuntime createErrorPage(String identifier,
             ExtServletContext context,
-            Long serviceId)
+            Long serviceId,
+            long contextServiceId)
     {
-        ServletRuntime servletHandler = createTestServlet(identifier, context, serviceId);
+        ServletRuntime servletHandler = createTestServlet(identifier, context, serviceId, contextServiceId);
         Collection<Integer> errorCodes = Arrays.asList(400, 500);
         Collection<String> exceptions = Arrays.asList("Bad request", "Error");
 

@@ -39,7 +39,7 @@ import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.junit.Before;
 import org.junit.Test;
 
-public class ServletHandlerTest extends AbstractHandlerTest
+public class SimpleServletHandlerTest extends AbstractHandlerTest
 {
     private Servlet servlet;
 
@@ -225,6 +225,6 @@ public class ServletHandlerTest extends AbstractHandlerTest
             map = Collections.emptyMap();
         }
         final ServletInfo info = new ServletInfo(null, alias, 0, map);
-        return new ServletHandler(null, this.context, info, this.servlet);
+        return new SimpleServletHandler(this.context, info, this.servlet);
     }
 }
