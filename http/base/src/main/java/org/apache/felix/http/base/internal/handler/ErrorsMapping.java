@@ -94,15 +94,51 @@ public final class ErrorsMapping
         this.exceptionsMap.clear();
     }
 
+    /**
+     * Get the servlet handling the error
+     * @param exception Optional exception
+     * @param errorCode Error code
+     * @return The servlet handling the error or {@code null}
+     */
+    public ServletHandler get(final Throwable exception, final int errorCode)
+    {
+        ServletHandler errorHandler = this.get(exception);
+        if (errorHandler != null)
+        {
+            return errorHandler;
+        }
 
-    public ServletHandler get(int errorCode)
+        return get(errorCode);
+    }
+
+    private ServletHandler get(final int errorCode)
     {
         return this.errorCodesMap.get(errorCode);
     }
 
-    public ServletHandler get(String exception)
+    private ServletHandler get(final Throwable exception)
     {
-        return this.exceptionsMap.get(exception);
+        if (exception == null)
+        {
+            return null;
+        }
+
+        ServletHandler servletHandler = null;
+        Class<?> throwableClass = exception.getClass();
+        while ( servletHandler == null && throwableClass != null )
+        {
+            servletHandler = this.exceptionsMap.get(throwableClass.getName());
+            if ( servletHandler == null )
+            {
+                throwableClass = throwableClass.getSuperclass();
+                if ( !Throwable.class.isAssignableFrom(throwableClass) )
+                {
+                    throwableClass = null;
+                }
+            }
+
+        }
+        return servletHandler;
     }
 
 
