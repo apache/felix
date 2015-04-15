@@ -19,17 +19,23 @@
 
 package org.apache.felix.http.itest;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.osgi.framework.Constants.SERVICE_RANKING;
 import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME;
 import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH;
 import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX;
+import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PATTERN;
+import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PREFIX;
+import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_NAME;
 import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -37,109 +43,107 @@ import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.http.itest.HttpServiceRuntimeTest.TestResource;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.junit.ExamReactorStrategy;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
-import org.osgi.framework.Constants;
+import org.ops4j.pax.exam.spi.reactors.EagerSingleStagedReactorFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.context.ServletContextHelper;
 
 @RunWith(JUnit4TestRunner.class)
+@ExamReactorStrategy( EagerSingleStagedReactorFactory.class )
 public class ServletPatternTest extends BaseIntegrationTest
 {
+    private List<ServiceRegistration<?>> registrations = new ArrayList<ServiceRegistration<?>>();
+
+    private CountDownLatch initLatch;
+    private CountDownLatch destroyLatch;
+
+    public void setupLatches(int count)
+    {
+        initLatch = new CountDownLatch(count);
+        destroyLatch = new CountDownLatch(count);
+    }
+
+    public void setupServlet(final String name, String[] path, int rank, String context) throws Exception
+    {
+        Dictionary<String, Object> servletProps = new Hashtable<String, Object>();
+        servletProps.put(HTTP_WHITEBOARD_SERVLET_NAME, name);
+        servletProps.put(HTTP_WHITEBOARD_SERVLET_PATTERN, path);
+        servletProps.put(SERVICE_RANKING, rank);
+        if (context != null)
+        {
+            servletProps.put(HTTP_WHITEBOARD_CONTEXT_SELECT, "(" + HTTP_WHITEBOARD_CONTEXT_NAME + "=" + context + ")");
+        }
+
+        TestServlet servletWithErrorCode = new TestServlet(initLatch, destroyLatch)
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+                throws IOException
+            {
+                resp.getWriter().print(name);
+                resp.flushBuffer();
+            }
+        };
+
+        registrations.add(m_context.registerService(Servlet.class.getName(), servletWithErrorCode, servletProps));
+    }
+
+    private void setupContext(String name, String path) throws InterruptedException
+    {
+        Dictionary<String, ?> properties = createDictionary(
+                HTTP_WHITEBOARD_CONTEXT_NAME, name,
+                HTTP_WHITEBOARD_CONTEXT_PATH, path);
+
+        ServletContextHelper servletContextHelper = new ServletContextHelper(m_context.getBundle()){
+            // test helper
+        };
+        registrations.add(m_context.registerService(ServletContextHelper.class.getName(), servletContextHelper, properties));
+
+        Thread.sleep(500);
+    }
+
+    @After
+    public void unregisterServices() throws InterruptedException
+    {
+        for (ServiceRegistration<?> serviceRegistration : registrations)
+        {
+            serviceRegistration.unregister();
+        }
+
+        assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
+
+        Thread.sleep(500);
+    }
 
     @Test
     public void testHighRankReplaces() throws Exception
     {
-        CountDownLatch initLatch = new CountDownLatch(2);
-        CountDownLatch destroyLatch = new CountDownLatch(2);
+        setupLatches(2);
 
-        TestServlet lowRankServlet = new TestServlet(initLatch, destroyLatch)
-        {
-            private static final long serialVersionUID = 1L;
+        setupServlet("lowRankServlet", new String[] { "/foo", "/bar" }, 1, null);
+        setupServlet("highRankServlet", new String[] { "/foo", "/baz" }, 2, null);
 
-            @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws IOException
-            {
-                resp.getWriter().print("lowRankServlet");
-                resp.flushBuffer();
-            }
-        };
+        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
 
-        TestServlet highRankServlet = new TestServlet(initLatch, destroyLatch)
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws IOException
-            {
-                resp.getWriter().print("highRankServlet");
-                resp.flushBuffer();
-            }
-        };
-
-        Dictionary<String, Object> lowRankProps = new Hashtable<String, Object>();
-        String lowRankPattern[] = { "/foo", "/bar" };
-        lowRankProps.put(HTTP_WHITEBOARD_SERVLET_PATTERN, lowRankPattern);
-        lowRankProps.put(HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "lowRankServlet");
-        lowRankProps.put(SERVICE_RANKING, 1);
-
-        ServiceRegistration<?> lowRankReg = m_context.registerService(Servlet.class.getName(),
-            lowRankServlet, lowRankProps);
-
-        Dictionary<String, Object> highRankProps = new Hashtable<String, Object>();
-        String highRankPattern[] = { "/foo", "/baz" };
-        highRankProps.put(HTTP_WHITEBOARD_SERVLET_PATTERN, highRankPattern);
-        highRankProps.put(HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "highRankServlet");
-        highRankProps.put(Constants.SERVICE_RANKING, 2);
-
-        ServiceRegistration<?> highRankReg = m_context.registerService(Servlet.class.getName(),
-            highRankServlet, highRankProps);
-
-        try
-        {
-            assertTrue(initLatch.await(5, TimeUnit.SECONDS));
-
-            assertContent("highRankServlet", createURL("/foo"));
-            assertContent("lowRankServlet", createURL("/bar"));
-            assertContent("highRankServlet", createURL("/baz"));
-
-        }
-        finally
-        {
-            lowRankReg.unregister();
-            highRankReg.unregister();
-        }
-
-        assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
+        assertContent("highRankServlet", createURL("/foo"));
+        assertContent("lowRankServlet", createURL("/bar"));
+        assertContent("highRankServlet", createURL("/baz"));
     }
 
     @Test
     public void testHttpServiceReplaces() throws Exception
     {
-        Dictionary<String, ?> properties = createDictionary(
-            HTTP_WHITEBOARD_CONTEXT_NAME, "test",
-            HTTP_WHITEBOARD_CONTEXT_PATH, "/test");
+        setupLatches(2);
 
-        ServletContextHelper servletContextHelper = new ServletContextHelper(m_context.getBundle()) {};
-        m_context.registerService(ServletContextHelper.class.getName(), servletContextHelper, properties);
-
-        CountDownLatch initLatch = new CountDownLatch(2);
-        CountDownLatch destroyLatch = new CountDownLatch(2);
-
-        TestServlet whiteboardServlet = new TestServlet(initLatch, destroyLatch)
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
-            {
-                resp.getWriter().print("whiteboardServlet");
-                resp.flushBuffer();
-            }
-        };
+        setupContext("contextA", "/test");
+        setupServlet("whiteboardServlet", new String[]{ "/foo", "/bar" }, Integer.MAX_VALUE, "contextA");
 
         TestServlet httpServiceServlet = new TestServlet(initLatch, destroyLatch)
         {
@@ -153,13 +157,6 @@ public class ServletPatternTest extends BaseIntegrationTest
             }
         };
 
-        String whiteboardPattern[] = { "/foo", "/bar" };
-        Dictionary<String, Object> whiteboardProps = new Hashtable<String, Object>();
-        whiteboardProps.put(HTTP_WHITEBOARD_CONTEXT_SELECT, "(" + HTTP_WHITEBOARD_CONTEXT_NAME + "=test)");
-        whiteboardProps.put(HTTP_WHITEBOARD_SERVLET_PATTERN, whiteboardPattern);
-        whiteboardProps.put(SERVICE_RANKING, Integer.MAX_VALUE);
-        ServiceRegistration<?> serviceRegistration = m_context.registerService(Servlet.class.getName(), whiteboardServlet, whiteboardProps);
-
         register("/test/foo", httpServiceServlet);
 
         try
@@ -171,7 +168,6 @@ public class ServletPatternTest extends BaseIntegrationTest
         }
         finally
         {
-            serviceRegistration.unregister();
             unregister(httpServiceServlet);
         }
     }
@@ -179,66 +175,86 @@ public class ServletPatternTest extends BaseIntegrationTest
     @Test
     public void testSameRankDoesNotReplace() throws Exception
     {
-        CountDownLatch initLatch = new CountDownLatch(2);
-        CountDownLatch destroyLatch = new CountDownLatch(2);
+        setupLatches(2);
 
-        TestServlet servlet1 = new TestServlet(initLatch, destroyLatch)
-        {
-            private static final long serialVersionUID = 1L;
+        setupServlet("servlet1", new String[]{ "/foo", "/bar" }, 2, null);
+        setupServlet("servlet2", new String[]{ "/foo", "/baz" }, 2, null);
 
-            @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
-            {
-                resp.getWriter().print("servlet1");
-                resp.flushBuffer();
-            }
-        };
+        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
 
-        TestServlet servlet2 = new TestServlet(initLatch, destroyLatch)
-        {
-            private static final long serialVersionUID = 1L;
+        assertContent("servlet1", createURL("/foo"));
+        assertContent("servlet1", createURL("/bar"));
+        assertContent("servlet2", createURL("/baz"));
+    }
 
-            @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
-            {
-                resp.getWriter().print("servlet2");
-                resp.flushBuffer();
-            }
-        };
+    @Test
+    public void testHighRankResourceReplaces() throws Exception
+    {
+        setupLatches(1);
 
-        Dictionary<String, Object> props1 = new Hashtable<String, Object>();
-        String lowRankPattern[] = { "/foo", "/bar" };
-        props1.put(HTTP_WHITEBOARD_SERVLET_PATTERN, lowRankPattern);
-        props1.put(HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "lowRankServlet");
-        props1.put(SERVICE_RANKING, 2);
+        setupServlet("lowRankServlet", new String[]{ "/foo" }, 1, null);
 
-        ServiceRegistration<?> reg1 = m_context.registerService(Servlet.class.getName(),
-            servlet1, props1);
+        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
+        assertContent("lowRankServlet", createURL("/foo"));
 
-        Dictionary<String, Object> props2 = new Hashtable<String, Object>();
-        String highRankPattern[] = { "/foo", "/baz" };
-        props2.put(HTTP_WHITEBOARD_SERVLET_PATTERN, highRankPattern);
-        props2.put(HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + ".myname", "highRankServlet");
-        props2.put(SERVICE_RANKING, 2);
+        Dictionary<String, Object> resourceProps = new Hashtable<String, Object>();
+        String highRankPattern[] = { "/foo" };
+        resourceProps.put(HTTP_WHITEBOARD_RESOURCE_PATTERN, highRankPattern);
+        resourceProps.put(HTTP_WHITEBOARD_RESOURCE_PREFIX, "/resource/test.html");
+        resourceProps.put(SERVICE_RANKING, 2);
 
-        ServiceRegistration<?> reg2 = m_context.registerService(Servlet.class.getName(),
-            servlet2, props2);
-
-        try
-        {
-            assertTrue(initLatch.await(5, TimeUnit.SECONDS));
-
-            assertContent("servlet1", createURL("/foo"));
-            assertContent("servlet1", createURL("/bar"));
-            assertContent("servlet2", createURL("/baz"));
-
-        }
-        finally
-        {
-            reg1.unregister();
-            reg2.unregister();
-        }
+        registrations.add(m_context.registerService(TestResource.class.getName(),
+            new TestResource(), resourceProps));
 
         assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
+        Thread.sleep(500);
+
+        assertContent(getTestHtmlContent(), createURL("/foo"));
+    }
+
+    private String getTestHtmlContent() throws IOException
+    {
+        InputStream resourceAsStream = this.getClass().getResourceAsStream("/resource/test.html");
+        return slurpAsString(resourceAsStream);
+    }
+
+    @Test
+    public void contextWithLongerPrefixIsChosen() throws Exception
+    {
+        setupLatches(2);
+
+        setupContext("contextA", "/a");
+        setupContext("contextB", "/a/b");
+
+        setupServlet("servlet1", new String[]{ "/b/test" }, 1, "contextA");
+
+        Thread.sleep(500);
+        assertEquals(1, initLatch.getCount());
+        assertContent("servlet1", createURL("/a/b/test"));
+
+        setupServlet("servlet2", new String[]{ "/test" }, 1, "contextB");
+
+        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
+        assertContent("servlet2", createURL("/a/b/test"));
+    }
+
+    @Test
+    public void contextWithLongerPrefixIsChosenWithWildcard() throws Exception
+    {
+        setupLatches(2);
+
+        setupContext("contextA", "/a");
+        setupContext("contextB", "/a/b");
+
+        setupServlet("servlet1", new String[]{ "/b/test/servlet" }, 1, "contextA");
+
+        Thread.sleep(500);
+        assertEquals(1, initLatch.getCount());
+        assertContent("servlet1", createURL("/a/b/test/servlet"));
+
+        setupServlet("servlet2", new String[]{ "/test/*" }, 1, "contextB");
+
+        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
+        assertContent("servlet2", createURL("/a/b/test/servlet"));
     }
 }
