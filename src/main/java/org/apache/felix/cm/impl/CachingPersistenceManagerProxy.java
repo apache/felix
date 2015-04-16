@@ -76,11 +76,14 @@ class CachingPersistenceManagerProxy implements PersistenceManager
     public void delete( String pid ) throws IOException
     {
         Lock lock = globalLock.writeLock();
-        try {
+        try
+        {
             lock.lock();
             cache.remove( pid );
             pm.delete(pid);
-        } finally {
+        }
+        finally
+        {
             lock.unlock();
         }
     }
@@ -94,10 +97,13 @@ class CachingPersistenceManagerProxy implements PersistenceManager
     public boolean exists( String pid )
     {
         Lock lock = globalLock.readLock();
-        try {
+        try
+        {
             lock.lock();
             return cache.containsKey( pid ) || ( !fullyLoaded && pm.exists( pid ) );
-        } finally {
+        }
+        finally
+        {
             lock.unlock();
         }
     }
@@ -121,7 +127,8 @@ class CachingPersistenceManagerProxy implements PersistenceManager
     public Enumeration getDictionaries( SimpleFilter filter ) throws IOException
     {
         Lock lock = globalLock.readLock();
-        try {
+        try
+        {
             lock.lock();
             // if not fully loaded, call back to the underlying persistence
             // manager and cach all dictionaries whose service.pid is set
@@ -133,13 +140,22 @@ class CachingPersistenceManagerProxy implements PersistenceManager
                 if ( !fullyLoaded )
                 {
                     Enumeration fromPm = pm.getDictionaries();
-                    while (fromPm.hasMoreElements())
+                    while ( fromPm.hasMoreElements() )
                     {
                         Dictionary next = (Dictionary) fromPm.nextElement();
-                        String pid = (String) next.get(Constants.SERVICE_PID);
-                        if (pid != null)
+                        String pid = (String) next.get( Constants.SERVICE_PID );
+                        if ( pid != null )
                         {
-                            cache.put(pid, copy( next ) );
+                            cache.put( pid, copy( next ) );
+                        }
+                        else
+                        {
+                            pid = (String) next.get( Factory.FACTORY_PID );
+                            if ( pid != null )
+                            {
+                                pid = Factory.factoryPidToIdentifier( pid );
+                                cache.put( pid, copy( next ) );
+                            }
                         }
                     }
                     fullyLoaded = true;
@@ -148,16 +164,17 @@ class CachingPersistenceManagerProxy implements PersistenceManager
 
             // Deep copy the configuration to avoid any threading issue
             Vector<Dictionary> configs = new Vector<Dictionary>();
-            for (Object o : cache.values())
+            for (Dictionary d : cache.values())
             {
-                Dictionary d = (Dictionary) o;
-                if ( filter == null || filter.matches( d ) )
+                if ( d.get( Constants.SERVICE_PID ) != null && ( filter == null || filter.matches( d ) ) )
                 {
                     configs.add( copy( d ) );
                 }
             }
             return configs.elements();
-        } finally {
+        }
+        finally
+        {
             lock.unlock();
         }
     }
@@ -176,7 +193,8 @@ class CachingPersistenceManagerProxy implements PersistenceManager
     public Dictionary load( String pid ) throws IOException
     {
         Lock lock = globalLock.readLock();
-        try {
+        try
+        {
             lock.lock();
             Dictionary loaded = cache.get( pid );
             if ( loaded == null && !fullyLoaded )
@@ -187,12 +205,14 @@ class CachingPersistenceManagerProxy implements PersistenceManager
                 loaded = cache.get( pid );
                 if ( loaded == null )
                 {
-                    loaded = pm.load(pid);
-                    cache.put(pid, copy( loaded ) );
+                    loaded = pm.load( pid );
+                    cache.put( pid, copy( loaded ) );
                 }
             }
             return copy( loaded );
-        } finally {
+        }
+        finally
+        {
             lock.unlock();
         }
     }
@@ -210,11 +230,14 @@ class CachingPersistenceManagerProxy implements PersistenceManager
     public void store( String pid, Dictionary properties ) throws IOException
     {
         Lock lock = globalLock.writeLock();
-        try {
+        try
+        {
             lock.lock();
             pm.store( pid, properties );
             cache.put( pid, copy( properties ) );
-        } finally {
+        }
+        finally
+        {
             lock.unlock();
         }
     }
