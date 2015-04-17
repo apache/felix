@@ -2025,7 +2025,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
         private void sendEvent( final int serviceIndex )
         {
-            if ( this.listeners[serviceIndex] != null )
+            if ( (listenerProvider[serviceIndex].getState() & (Bundle.ACTIVE | Bundle.STARTING)) > 0
+                    && this.listeners[serviceIndex] != null )
             {
                 log( LogService.LOG_DEBUG, "Sending {0} event for {1} to {2}", new Object[]
                     { getTypeName(), pid, ConfigurationManager.toString( listenerReferences[serviceIndex] ) } );

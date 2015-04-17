@@ -22,11 +22,25 @@ package org.apache.felix.cm.impl;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
+import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Set;
 
 import junit.framework.TestCase;
 
 import org.apache.felix.cm.MockBundleContext;
 import org.apache.felix.cm.MockLogService;
+import org.apache.felix.cm.MockPersistenceManager;
+import org.mockito.Mockito;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.ConfigurationEvent;
+import org.osgi.service.cm.SynchronousConfigurationListener;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -192,6 +206,82 @@ public class ConfigurationManagerTest extends TestCase
     }
 
 
+    public void testEventsStartingBundle() throws Exception
+    {
+        final Set<String> result = new HashSet<String>();
+
+        SynchronousConfigurationListener syncListener1 = new SynchronousConfigurationListener()
+        {
+            @Override
+            public void configurationEvent(ConfigurationEvent event)
+            {
+                result.add("L1");
+            }
+        };
+        SynchronousConfigurationListener syncListener2 = new SynchronousConfigurationListener()
+        {
+            @Override
+            public void configurationEvent(ConfigurationEvent event)
+            {
+                result.add("L2");
+            }
+        };
+        SynchronousConfigurationListener syncListener3 = new SynchronousConfigurationListener()
+        {
+            @Override
+            public void configurationEvent(ConfigurationEvent event)
+            {
+                result.add("L3");
+            }
+        };
+
+        ServiceReference mockRef = Mockito.mock( ServiceReference.class );
+        ServiceRegistration mockReg = Mockito.mock( ServiceRegistration.class );
+        Mockito.when( mockReg.getReference() ).thenReturn( mockRef );
+
+        ConfigurationManager configMgr = new ConfigurationManager();
+
+        setServiceTrackerField( configMgr, "logTracker" );
+        setServiceTrackerField( configMgr, "configurationListenerTracker" );
+        ServiceReference[] refs =
+                setServiceTrackerField( configMgr, "syncConfigurationListenerTracker",
+                        syncListener1, syncListener2, syncListener3 );
+        for ( int i=0; i < refs.length; i++)
+        {
+            Bundle mockBundle = Mockito.mock( Bundle.class );
+
+            switch (i)
+            {
+            case 0:
+                Mockito.when( mockBundle.getState() ).thenReturn( Bundle.ACTIVE );
+                break;
+            case 1:
+                Mockito.when( mockBundle.getState() ).thenReturn( Bundle.STARTING );
+                break;
+            case 2:
+                Mockito.when( mockBundle.getState() ).thenReturn( Bundle.STOPPING );
+                break;
+            }
+
+            Mockito.when( refs[i].getBundle() ).thenReturn( mockBundle );
+        }
+
+        Field srField = configMgr.getClass().getDeclaredField( "configurationAdminRegistration" );
+        srField.setAccessible( true );
+        srField.set( configMgr, mockReg );
+        Field utField = configMgr.getClass().getDeclaredField( "updateThread" );
+        utField.setAccessible( true );
+        utField.set( configMgr, new UpdateThread( configMgr, null, "Test updater" ));
+
+        Dictionary<String, String> props = new Hashtable<String, String>();
+        props.put( Constants.SERVICE_PID, "org.acme.testpid" );
+        ConfigurationImpl config = new ConfigurationImpl( configMgr, new MockPersistenceManager(), props );
+        configMgr.updated( config, true );
+
+        assertEquals("Both listeners should have been called, both in the STARTING and ACTIVE state, but not in the STOPPING state",
+                2, result.size());
+    }
+
     private void assertNoLog( ConfigurationManager configMgr, int level, String message, Throwable t )
     {
         try
@@ -284,5 +374,36 @@ public class ConfigurationManagerTest extends TestCase
         }
 
         return configMgr;
+    }
+
+    private static ServiceReference[] setServiceTrackerField( ConfigurationManager configMgr,
+            String fieldName, Object ... services ) throws Exception
+    {
+        final Map<ServiceReference, Object> refMap = new HashMap<ServiceReference, Object>();
+        for ( Object svc : services )
+        {
+            ServiceReference sref = Mockito.mock( ServiceReference.class );
+            Mockito.when( sref.getProperty( "objectClass" ) ).thenReturn(new String[] { "TestService" });
+            refMap.put( sref, svc );
+        }
+
+        Field field = configMgr.getClass().getDeclaredField( fieldName );
+        field.setAccessible( true );
+        field.set( configMgr, new ServiceTracker( new MockBundleContext(), "", null )
+        {
+            @Override
+            public ServiceReference[] getServiceReferences()
+            {
+                return refMap.keySet().toArray( new ServiceReference[0] );
+            }
+
+            @Override
+            public Object getService(ServiceReference reference)
+            {
+                return refMap.get( reference );
+            }
+        } );
+
+        return refMap.keySet().toArray(new ServiceReference[0]);
     }
 }
