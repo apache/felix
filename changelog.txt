@@ -1,3 +1,12 @@
+Changes from 1.8.2 to 1.8.4
+----------------------------
+
+** Bug
+    * [FELIX-4846] - Wrong exception type in list operation
+    * [FELIX-4851] - ConfigAdmin only forwards ConfigurationEvents to ConfigurationListeners which are provided by bundles that are in state ACTIVE
+    * [FELIX-4855] - ConfigAdmin does not update ManagedServiceFactory on framework restart
+
+
 Changes from 1.8.0 to 1.8.2
 ----------------------------
 
