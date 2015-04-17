@@ -73,7 +73,7 @@ class Candidates
 
     private final Map<Capability, Requirement> m_subtitutableMap;
 
-    private final OpenHashMapSet<Requirement, Capability> m_path;
+    private final OpenHashMapSet<Requirement, Capability> m_delta;
 
     /**
      * Private copy constructor used by the copy() method.
@@ -86,7 +86,7 @@ class Candidates
         boolean fragmentsPresent,
         Map<Resource, Boolean> onDemandResources,
         Map<Capability, Requirement> substitutableMap,
-        OpenHashMapSet<Requirement, Capability> path)
+        OpenHashMapSet<Requirement, Capability> delta)
     {
         m_mandatoryResources = mandatoryResources;
         m_dependentMap = dependentMap;
@@ -96,7 +96,7 @@ class Candidates
         m_fragmentsPresent = fragmentsPresent;
         m_validOnDemandResources = onDemandResources;
         m_subtitutableMap = substitutableMap;
-        m_path = path;
+        m_delta = delta;
     }
 
     /**
@@ -111,11 +111,16 @@ class Candidates
         m_populateResultCache = new LinkedHashMap<Resource, Object>();
         m_validOnDemandResources = validOnDemandResources;
         m_subtitutableMap = new LinkedHashMap<Capability, Requirement>();
-        m_path = new OpenHashMapSet<Requirement, Capability>(3);
+        m_delta = new OpenHashMapSet<Requirement, Capability>(3);
     }
 
-    public Object getPath() {
-        return m_path;
+    /**
+     * Returns the delta which is the differences in the candidates from the
+     * original Candidates permutation.
+     * @return the delta
+     */
+    public Object getDelta() {
+        return m_delta;
     }
 
     /**
@@ -834,11 +839,11 @@ class Candidates
         {
             m_candidateMap.remove(req);
         }
-        // Update resolution path
-        CopyOnWriteSet<Capability> capPath = m_path.get(req);
+        // Update the delta with the removed capability
+        CopyOnWriteSet<Capability> capPath = m_delta.get(req);
         if (capPath == null) {
             capPath = new CopyOnWriteSet<Capability>();
-            m_path.put(req, capPath);
+            m_delta.put(req, capPath);
         }
         capPath.add(cap);
     }
@@ -847,11 +852,11 @@ class Candidates
     {
         List<Capability> l = m_candidateMap.get(req);
         l.removeAll(caps);
-        // Update resolution path
-        CopyOnWriteSet<Capability> capPath = m_path.get(req);
+        // Update candidates delta with the removed capabilities.
+        CopyOnWriteSet<Capability> capPath = m_delta.get(req);
         if (capPath == null) {
             capPath = new CopyOnWriteSet<Capability>();
-            m_path.put(req, capPath);
+            m_delta.put(req, capPath);
         }
         capPath.addAll(caps);
         return l;
@@ -1272,7 +1277,7 @@ class Candidates
                 m_fragmentsPresent,
                 m_validOnDemandResources,
                 m_subtitutableMap,
-                m_path.deepClone());
+                m_delta.deepClone());
     }
 
     public void dump(ResolveContext rc)
