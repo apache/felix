@@ -208,7 +208,7 @@ public class ResolverImpl implements Resolver
                     }
                 }
 
-                Set<Object> donePaths = new HashSet<Object>();
+                Set<Object> processedDeltas = new HashSet<Object>();
                 Map<Resource, ResolutionException> faultyResources = null;
                 do
                 {
@@ -221,8 +221,11 @@ public class ResolverImpl implements Resolver
                     {
                         break;
                     }
-                    if (!donePaths.add(allCandidates.getPath()))
+                    // The delta is used to detect that we have already processed this particular permutation
+                    if (!processedDeltas.add(allCandidates.getDelta()))
                     {
+                        // This permutation has already been tried
+                        // Don't try it again
                         continue;
                     }
 
