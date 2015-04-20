@@ -49,9 +49,10 @@ public class ErrorPageRuntime implements ServletRuntime
 
         for (String string : servletRuntime.getServletInfo().getErrorPage())
         {
-            if (ErrorPageUtil.isErrorCode(string))
+            List<Integer> parsedErrorCodes = ErrorPageUtil.parseErrorCodes(string);
+            if (parsedErrorCodes != null)
             {
-                errorCodes.add(Integer.valueOf(string));
+                errorCodes.addAll(parsedErrorCodes);
             }
             else
             {

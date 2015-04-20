@@ -16,15 +16,46 @@
  */
 package org.apache.felix.http.base.internal.util;
 
+import static java.util.Arrays.asList;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.regex.Pattern;
 
 public final class ErrorPageUtil
 {
-    // TODO Handle special values 4xx and 5xx
-    public static final Pattern ERROR_CODE_PATTERN = Pattern.compile("\\d{3}");
+    private static final String CLIENT_ERROR = "4xx";
+    private static final String SERVER_ERROR = "5xx";
+    private static final Pattern ERROR_CODE_PATTERN = Pattern.compile("\\d{3}");
 
-    public static boolean isErrorCode(String string)
+    private static final List<Integer> CLIENT_ERROR_CODES = hundredOf(400);
+    private static final List<Integer> SERVER_ERROR_CODES = hundredOf(500);
+
+    private static List<Integer> hundredOf(int start)
     {
-        return ERROR_CODE_PATTERN.matcher(string).matches();
+        List<Integer> result = new ArrayList<Integer>();
+        for (int i = start; i < start + 100; i++)
+        {
+            result.add(i);
+        }
+        return Collections.unmodifiableList(result);
+    }
+
+    public static List<Integer> parseErrorCodes(String string)
+    {
+        if (CLIENT_ERROR.equalsIgnoreCase(string))
+        {
+            return CLIENT_ERROR_CODES;
+        }
+        else if (SERVER_ERROR.equalsIgnoreCase(string))
+        {
+            return SERVER_ERROR_CODES;
+        }
+        else if (ERROR_CODE_PATTERN.matcher(string).matches())
+        {
+            return asList(Integer.parseInt(string));
+        }
+        return null;
     }
 }

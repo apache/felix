@@ -17,12 +17,13 @@
 package org.apache.felix.http.base.internal.handler;
 
 import static org.apache.felix.http.base.internal.util.CollectionUtils.sortedUnion;
+import static org.apache.felix.http.base.internal.util.ErrorPageUtil.parseErrorCodes;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.http.base.internal.util.ErrorPageUtil;
 import org.apache.felix.http.base.internal.whiteboard.RegistrationFailureException;
 import org.osgi.service.http.runtime.dto.DTOConstants;
 
@@ -50,10 +51,10 @@ public final class ErrorsMapping
         for (Map.Entry<String, ServletHandler> errorPage : remove.entrySet())
         {
             String errorString = errorPage.getKey();
-            if (ErrorPageUtil.isErrorCode(errorString))
+            List<Integer> parsedErrorCodes = parseErrorCodes(errorString);
+            if (parsedErrorCodes != null)
             {
-                Integer errorCode = Integer.valueOf(errorString);
-                newErrorCodesMap.remove(errorCode);
+                removeAllMappings(parsedErrorCodes, newErrorCodesMap);
             }
             else
             {
@@ -64,10 +65,10 @@ public final class ErrorsMapping
         for (Map.Entry<String, ServletHandler> errorPage : add.entrySet())
         {
             String errorString = errorPage.getKey();
-            if (ErrorPageUtil.isErrorCode(errorString))
+            List<Integer> parsedErrorCodes = parseErrorCodes(errorString);
+            if (parsedErrorCodes != null)
             {
-                Integer errorCode = Integer.valueOf(errorString);
-                addErrorServlet(errorCode, errorPage.getValue(), newErrorCodesMap);
+                addErrorServlets(parsedErrorCodes, errorPage.getValue(), newErrorCodesMap);
             }
             else
             {
@@ -76,6 +77,22 @@ public final class ErrorsMapping
         }
 
         return new ErrorsMapping(newErrorCodesMap, newExceptionsMap);
+    }
+
+    private void removeAllMappings(List<Integer> parsedErrorCodes, Map<Integer, ServletHandler> newErrorCodesMap)
+    {
+        for (Integer errorCode : parsedErrorCodes)
+        {
+            newErrorCodesMap.remove(errorCode);
+        }
+    }
+
+    private <E> void addErrorServlets(List<E> errors, ServletHandler handler, Map<E, ServletHandler> index) throws RegistrationFailureException
+    {
+        for (E error : errors)
+        {
+            addErrorServlet(error, handler, index);
+        }
     }
 
     private <E> void addErrorServlet(E error, ServletHandler handler, Map<E, ServletHandler> index) throws RegistrationFailureException
