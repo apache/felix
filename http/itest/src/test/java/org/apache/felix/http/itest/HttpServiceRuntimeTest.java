@@ -1332,8 +1332,10 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
     @Test
     public void serviceEndpointPropertyIsSet()
     {
-        String[] endpoint = (String[]) m_context.getServiceReference(HttpServiceRuntime.class).getProperty(HTTP_SERVICE_ENDPOINT_ATTRIBUTE);
-        assertEquals(1, endpoint.length);
+        // if there is more than one network interface, there might be more than one endpoint!
+        final String[] endpoint = (String[]) m_context.getServiceReference(HttpServiceRuntime.class).getProperty(HTTP_SERVICE_ENDPOINT_ATTRIBUTE);
+        assertNotNull(endpoint);
+        assertTrue(endpoint.length > 1);
         assertTrue(endpoint[0].startsWith("http://"));
         assertTrue(endpoint[0].endsWith(":8080/"));
     }
