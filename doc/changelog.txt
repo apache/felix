@@ -1,3 +1,12 @@
+Changes from 4.6.1 to 5.0.0
+---------------------------
+
+** Improvement
+    * Update to framework and main 5.0.0
+    * Update to latest obr version 2.0.4
+    * Update to latest gogo runtime 0.16.2
+    * Update to latest gogo commands and shell ( 0.10.0/0.14.0)
+
 Changes from 4.6.0 to 4.6.1
 ---------------------------
 
