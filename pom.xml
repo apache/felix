@@ -61,10 +61,13 @@
             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
             <Export-Package>
                 org.osgi.framework.*;-split-package:=merge-first,
-                org.osgi.resource,
-                org.osgi.resource.dto,
-                org.osgi.service.*,
-                org.osgi.util.tracker,
+                org.osgi.resource;-split-package:=first,
+                org.osgi.resource.dto;-split-package:=first,                
+                org.osgi.service.packageadmin;-split-package:=first,
+                org.osgi.service.startlevel;-split-package:=first,
+	        org.osgi.service.url;-split-package:=first,
+                org.osgi.service.resolver,
+                org.osgi.util.tracker;-split-package:=first,
                 org.osgi.dto
             </Export-Package>
             <Private-Package>org.apache.felix.framework.*, org.apache.felix.resolver.*</Private-Package>
