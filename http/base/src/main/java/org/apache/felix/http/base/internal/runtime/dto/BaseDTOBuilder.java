@@ -36,7 +36,7 @@ abstract class BaseDTOBuilder<T, U extends DTO>
         this.dtoFactory = dtoFactory;
     }
 
-    Collection<U> build(Collection<T> whiteboardServices, long servletContextId)
+    Collection<U> build(Collection<? extends T> whiteboardServices, long servletContextId)
     {
         List<U> dtoList = new ArrayList<U>();
         for (T whiteboardService : whiteboardServices)

@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 
 import javax.servlet.DispatcherType;
@@ -52,6 +53,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     private volatile ErrorsMapping errorsMapping = new ErrorsMapping();
 
     private final HandlerRankingMultimap<String> registeredErrorPages = new HandlerRankingMultimap<String>();
+    private final Set<ServletHandler> initFailures = new TreeSet<ServletHandler>();
 
     private final long serviceId;
 
@@ -132,7 +134,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     void addErrorPage(ServletHandler handler, String[] errorPages) throws RegistrationFailureException
     {
         Update<String> update = this.registeredErrorPages.add(errorPages, handler);
-        initHandlers(update.getInit());
+        initFirstHandler(update.getInit());
         this.errorsMapping = this.errorsMapping.update(update.getActivated(), update.getDeactivated());
         destroyHandlers(update.getDestroy());
     }
@@ -195,7 +197,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
         return null;
     }
 
-    void removeErrorPage(ServletInfo info) throws RegistrationFailureException
+    void removeErrorPage(ServletInfo info)
     {
         ServletHandler handler = getServletHandler(info);
         if (handler == null)
@@ -204,9 +206,39 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
         }
         String[] errorPages = handler.getServletInfo().getErrorPage();
         Update<String> update = this.registeredErrorPages.remove(errorPages, handler);
-        initHandlers(update.getInit());
-        this.errorsMapping = this.errorsMapping.update(update.getActivated(), update.getDeactivated());
+        Set<ServletHandler> initializedHandlers = initHandlers(update.getInit());
+        Map<String, ServletHandler> activated = update.getActivated();
+        activated = removeFailures(activated, initializedHandlers);
+        try
+        {
+            this.errorsMapping = this.errorsMapping.update(activated, update.getDeactivated());
+        }
+        catch (RegistrationFailureException e)
+        {
+            //this should not happen
+            throw new RuntimeException("Exception on error page removal", e);
+        }
         destroyHandlers(update.getDestroy());
+        this.initFailures.remove(handler);
+    }
+
+    private Map<String, ServletHandler> removeFailures(Map<String, ServletHandler> activated,
+        Set<ServletHandler> initializedHandlers)
+    {
+        if (activated.size() == initializedHandlers.size())
+        {
+            return activated;
+        }
+
+        Map<String, ServletHandler> result = new HashMap<String, ServletHandler>();
+        for (Map.Entry<String, ServletHandler> entry : activated.entrySet())
+        {
+            if (initializedHandlers.contains(entry.getValue()))
+            {
+                result.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return result;
     }
 
     private ServletHandler getServletHandler(final ServletInfo servletInfo)
@@ -233,20 +265,44 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
         return null;
     }
 
-    private void initHandlers(Collection<ServletHandler> handlers) throws RegistrationFailureException
+    private void initFirstHandler(Collection<ServletHandler> handlers) throws RegistrationFailureException
     {
+        if (handlers.isEmpty())
+        {
+            return;
+        }
+
+        ServletHandler handler = handlers.iterator().next();
+        try
+        {
+            handler.init();
+        }
+        catch (ServletException e)
+        {
+            throw new RegistrationFailureException(handler.getServletInfo(), FAILURE_REASON_EXCEPTION_ON_INIT, e);
+        }
+    }
+
+    private Set<ServletHandler> initHandlers(Collection<ServletHandler> handlers)
+    {
+        Set<ServletHandler> success = new TreeSet<ServletHandler>();
+        List<ServletHandler> failure = new ArrayList<ServletHandler>();
         for (ServletHandler servletHandler : handlers)
         {
             try
             {
                 servletHandler.init();
+                success.add(servletHandler);
             }
             catch (ServletException e)
             {
-                // TODO we should collect this cases and not throw an exception immediately
-                throw new RegistrationFailureException(servletHandler.getServletInfo(), FAILURE_REASON_EXCEPTION_ON_INIT, e);
+                failure.add(servletHandler);
             }
         }
+
+        this.initFailures.addAll(failure);
+
+        return success;
     }
 
     private void destroyHandlers(Collection<? extends AbstractHandler<?>> servletHandlers)
@@ -298,6 +354,10 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
 
     private boolean referencesDispatcherType(FilterHandler handler, DispatcherType dispatcherType)
     {
+        if (dispatcherType == null)
+        {
+            return true;
+        }
         return Arrays.asList(handler.getFilterInfo().getDispatcher()).contains(dispatcherType);
     }
 
@@ -355,18 +415,18 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
             errorPages.add(ErrorPageRuntime.fromServletRuntime(servletHandler));
         }
 
-        addShadowedHandlers(failureRuntimeBuilder, this.registeredErrorPages.getShadowedValues());
+        addFailures(failureRuntimeBuilder, this.registeredErrorPages.getShadowedValues(), FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
+        addFailures(failureRuntimeBuilder, this.initFailures, FAILURE_REASON_EXCEPTION_ON_INIT);
 
-        return new ContextRuntime(filterRuntimes,
-                errorPages,
-                this.serviceId);
+        return new ContextRuntime(filterRuntimes, errorPages, this.serviceId);
     }
 
-    private void addShadowedHandlers(FailureRuntime.Builder failureRuntimeBuilder, Collection<ServletHandler> handlers)
+    private void addFailures(FailureRuntime.Builder failureRuntimeBuilder, Collection<ServletHandler> handlers, int failureCode)
     {
         for (ServletHandler handler : handlers)
         {
-            failureRuntimeBuilder.add(handler.getServletInfo(), FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
+            failureRuntimeBuilder.add(handler.getServletInfo(), failureCode);
         }
     }
+
 }
