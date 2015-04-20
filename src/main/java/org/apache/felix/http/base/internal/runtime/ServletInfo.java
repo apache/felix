@@ -157,7 +157,7 @@ public class ServletInfo extends WhiteboardServiceInfo<Servlet>
     @Override
     public boolean isValid()
     {
-        return super.isValid() && (isEmpty(this.patterns) ^ isEmpty(this.errorPage));
+        return super.isValid() && !(isEmpty(this.patterns) && isEmpty(this.errorPage));
     }
 
     public String getName()

@@ -74,10 +74,6 @@ public final class WhiteboardHttpService
         {
             throw e;
         }
-        catch (final ServletException e)
-        {
-            throw new RegistrationFailureException(servletInfo, FAILURE_REASON_EXCEPTION_ON_INIT, e);
-        }
     }
 
     /**

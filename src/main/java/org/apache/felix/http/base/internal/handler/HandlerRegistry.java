@@ -17,7 +17,6 @@
 package org.apache.felix.http.base.internal.handler;
 
 import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
-import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_VALIDATION_FAILED;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -267,45 +266,23 @@ public final class HandlerRegistry
         {
             servletRegistry.addServlet(handler);
         }
-        else if (errorPages != null && errorPages.length > 0)
+        if (errorPages != null && errorPages.length > 0)
         {
             getRegistry(handler.getContextServiceId()).addErrorPage(handler, errorPages);
-        }
-        else
-        {
-            throw new RegistrationFailureException(handler.getServletInfo(), FAILURE_REASON_VALIDATION_FAILED,
-                "Neither patterns nor errorPages specified for " + handler.getName());
         }
     }
 
     public synchronized void removeServlet(Servlet servlet, boolean destroy)
     {
-        try
-        {
-            servletRegistry.removeServlet(servlet, destroy);
-        }
-        catch (RegistrationFailureException e)
-        {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        servletRegistry.removeServlet(servlet, destroy);
     }
 
     public synchronized Servlet removeServlet(ServletInfo servletInfo)
     {
-        try
-        {
-            return servletRegistry.removeServlet(servletInfo);
-        }
-        catch (RegistrationFailureException e)
-        {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        return null;
+        return servletRegistry.removeServlet(servletInfo);
     }
 
-    public synchronized void removeServlet(long contextId, ServletInfo servletInfo) throws RegistrationFailureException
+    public synchronized void removeServlet(long contextId, ServletInfo servletInfo)
     {
         String[] patterns = servletInfo.getPatterns();
         if (patterns != null && patterns.length > 0)
