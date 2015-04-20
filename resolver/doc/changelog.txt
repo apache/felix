@@ -1,3 +1,24 @@
+1.2.0
+-----
+
+** Bug
+    * [FELIX-4182] - Issues with package space consistency check
+    * [FELIX-4428] - When inserting hosted capability from an already resolved fragment the real non-hosted capability is not removed as a candidate
+    * [FELIX-4494] - Fragment identity capabilities are incorrectly wrapped
+    * [FELIX-4495] - Candidates from already resolved fragments get ignored if no new hosts are available
+    * [FELIX-4497] - Invalid wirings may result from substitutable exports
+    * [FELIX-4524] - Substituted exports may cause IndexOutOfBoundsException
+    * [FELIX-4642] - NPE in the resolver when substituting
+    * [FELIX-4727] - WrappedResource.getCapabilities ignores the namespace param
+    * [FELIX-4762] -  OutOfMemoryError (Java Heap Space) when resolving bundles 
+    * [FELIX-4825] - The resolver may return wires to unresolved resources in some cases
+
+** Improvement
+    * [FELIX-4492] - Enhance resolver logging to get better uses diagnostics
+    * [FELIX-4493] - Allow ResolveContext to supply on demand resources
+    * [FELIX-4498] - Resolver does not allow optional reqs to resolve if they introduce class space inconsistencies
+    * [FELIX-4656] - Improve memory usage and speed of the resolver
+
 1.0.0
 -----
 
