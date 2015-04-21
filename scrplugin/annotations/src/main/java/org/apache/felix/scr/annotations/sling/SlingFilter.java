@@ -18,15 +18,19 @@
  */
 package org.apache.felix.scr.annotations.sling;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * Marks servlet classes as SCR component, and allows to add a
- * filter to Sling's processing.
- * This annotation generates to private properties for the
+ * filter to Apache Sling's request processing.
+ * This annotation generates two private properties for the
  * order and the scope.
  * By default it also generates a component and a service tag,
- * but this generation can be overriden.
+ * but this generation can be omitted.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)
@@ -35,9 +39,15 @@ public @interface SlingFilter {
 
     /**
      * The order of the filter.
-     * This value is used to sort the filters. Filters with a lower order
-     * are executed before a filter with a higher order. If two filters
-     * have the same order, they are executed in an undefined order.
+     * This value is used to sort the filters. Filters with a higher order
+     * are executed before a filter with a lower order. If two filters
+     * have the same order, the one with the lower service id is executed
+     * first.
+     * Please note that the ordering is actually depending on the used
+     * Apache Sling Engine bundle version. Version older than 2.3.4 of that
+     * bundle are sorting the filters in the wrong reverse order. Make
+     * sure to run a newer version of the Sling engine to get the
+     * correct ordering.
      */
     int order();
 
