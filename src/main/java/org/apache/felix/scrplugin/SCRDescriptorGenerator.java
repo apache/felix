@@ -292,7 +292,8 @@ public class SCRDescriptorGenerator {
      * Create the SCR objects based on the descriptions
      */
     private ComponentContainer createComponent(final ClassDescription desc,
-                    final IssueLog iLog) {
+                    final IssueLog iLog)
+    throws SCRDescriptorException {
         final ComponentDescription componentDesc = desc.getDescription(ComponentDescription.class);
 
         final SpecVersion intitialComponentSpecVersion = componentDesc.getSpecVersion();
@@ -438,6 +439,20 @@ public class SCRDescriptorGenerator {
             pid.setType(PropertyType.String);
 
             container.getProperties().put(org.osgi.framework.Constants.SERVICE_PID, pid);
+        }
+
+        // check lifecycle methods
+        if ( componentDesc.getActivate() == null ) {
+            final Validator.MethodResult result = Validator.findLifecycleMethod(project, container, "activate", true);
+            if ( result.method != null ) {
+                componentDesc.setSpecVersion(result.requiredSpecVersion);
+            }
+        }
+        if ( componentDesc.getDeactivate() == null ) {
+            final Validator.MethodResult result = Validator.findLifecycleMethod(project, container, "deactivate", false);
+            if ( result.method != null ) {
+                componentDesc.setSpecVersion(result.requiredSpecVersion);
+            }
         }
 
         // check if component has spec version configured but requires a higher one
