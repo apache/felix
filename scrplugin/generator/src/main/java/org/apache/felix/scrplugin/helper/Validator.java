@@ -205,7 +205,9 @@ public class Validator {
     private static final String TYPE_INT = "int";
     private static final String TYPE_INTEGER = "java.lang.Integer";
 
-    private Method getMethod(final String name, final String[] sig)
+    private static Method getMethod(final Project project,
+            final ComponentContainer container,
+            final String name, final String[] sig)
     throws SCRDescriptorException {
         Class<?>[] classSig = (sig == null ? null : new Class<?>[sig.length]);
         if ( sig != null ) {
@@ -214,14 +216,107 @@ public class Validator {
                     if ( sig[i].equals("int") ) {
                         classSig[i] = int.class;
                     } else {
-                        classSig[i] = this.project.getClassLoader().loadClass(sig[i]);
+                        classSig[i] = project.getClassLoader().loadClass(sig[i]);
                     }
                 } catch (final ClassNotFoundException e) {
                     throw new SCRDescriptorException("Unable to load class.", e);
                 }
             }
         }
-        return getMethod(this.container.getClassDescription(), name, classSig);
+        return getMethod(container.getClassDescription(), name, classSig);
+    }
+
+    /**
+     * Find a lifecycle methods.
+     *
+     * @param methodName
+     *            The method name.
+     * @param isActivate Whether this is the activate or deactivate method.
+     */
+    public static MethodResult findLifecycleMethod(
+                                      final Project project,
+                                      final ComponentContainer container,
+                                      final String methodName,
+                                      final boolean isActivate)
+    throws SCRDescriptorException {
+        final MethodResult result = new MethodResult();
+        result.requiredSpecVersion = SpecVersion.VERSION_1_0;
+
+        // first candidate is (de)activate(ComponentContext)
+        result.method = getMethod(project, container, methodName, new String[] { TYPE_COMPONENT_CONTEXT });
+        if (result.method == null) {
+            // Spec 1.1 or higher required
+            result.requiredSpecVersion = SpecVersion.VERSION_1_1;
+            // second candidate is (de)activate(BundleContext)
+            result.method = getMethod(project, container, methodName, new String[] { TYPE_BUNDLE_CONTEXT });
+            if (result.method == null) {
+                // third candidate is (de)activate(Map)
+                result.method = getMethod(project, container, methodName, new String[] { TYPE_MAP });
+
+                if (result.method == null) {
+                    // if this is a deactivate method, we have two
+                    // additional possibilities
+                    // a method with parameter of type int and one of type
+                    // Integer
+                    if (!isActivate) {
+                        result.method = getMethod(project, container, methodName, new String[] { TYPE_INT });
+                        if (result.method == null) {
+                            result.method = getMethod(project, container, methodName, new String[] { TYPE_INTEGER });
+                        }
+                    }
+                }
+
+                if (result.method == null) {
+                    // fourth candidate is (de)activate with two or three
+                    // arguments (type must be BundleContext, ComponentCtx
+                    // and Map)
+                    // as we have to iterate now and the fifth candidate is
+                    // zero arguments
+                    // we already store this option
+                    Method zeroArgMethod = null;
+                    Method found = result.method;
+                    final Method[] methods = container.getClassDescription().getDescribedClass().getDeclaredMethods();
+                    int i = 0;
+                    while (i < methods.length) {
+                        if (methodName.equals(methods[i].getName())) {
+
+                            if (methods[i].getParameterTypes() == null || methods[i].getParameterTypes().length == 0) {
+                                zeroArgMethod = methods[i];
+                            } else if (methods[i].getParameterTypes().length >= 2) {
+                                boolean valid = true;
+                                for (int m = 0; m < methods[i].getParameterTypes().length; m++) {
+                                    final String type = methods[i].getParameterTypes()[m].getName();
+                                    if (!type.equals(TYPE_BUNDLE_CONTEXT) && !type.equals(TYPE_COMPONENT_CONTEXT)
+                                        && !type.equals(TYPE_MAP)) {
+                                        // if this is deactivate, int and
+                                        // integer are possible as well
+                                        if (isActivate || (!type.equals(TYPE_INT) && !type.equals(TYPE_INTEGER))) {
+                                            valid = false;
+                                        }
+                                    }
+                                }
+                                if (valid) {
+                                    if (found == null) {
+                                        found = methods[i];
+                                    } else {
+                                        // print warning
+                                        result.additionalWarning = "Lifecycle method " + methods[i].getName()
+                                                  + " occurs several times with different matching signature.";
+                                    }
+                                }
+                            }
+                        }
+                        i++;
+                    }
+                    if (found != null) {
+                        result.method = found;
+                    } else {
+                        result.method = zeroArgMethod;
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     /**
@@ -237,82 +332,13 @@ public class Validator {
                                       final boolean isActivate,
                                       final boolean isSpecified)
     throws SCRDescriptorException {
-        // first candidate is (de)activate(ComponentContext)
-        Method method = this.getMethod(methodName, new String[] { TYPE_COMPONENT_CONTEXT });
-        if (method == null) {
-            if (this.options.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
-                // second candidate is (de)activate(BundleContext)
-                method = this.getMethod(methodName, new String[] { TYPE_BUNDLE_CONTEXT });
-                if (method == null) {
-                    // third candidate is (de)activate(Map)
-                    method = this.getMethod(methodName, new String[] { TYPE_MAP });
-
-                    if (method == null) {
-                        // if this is a deactivate method, we have two
-                        // additional possibilities
-                        // a method with parameter of type int and one of type
-                        // Integer
-                        if (!isActivate) {
-                            method = this.getMethod(methodName, new String[] { TYPE_INT });
-                            if (method == null) {
-                                method = this.getMethod(methodName, new String[] { TYPE_INTEGER });
-                            }
-                        }
-                    }
-
-                    if (method == null) {
-                        // fourth candidate is (de)activate with two or three
-                        // arguments (type must be BundleContext, ComponentCtx
-                        // and Map)
-                        // as we have to iterate now and the fifth candidate is
-                        // zero arguments
-                        // we already store this option
-                        Method zeroArgMethod = null;
-                        Method found = method;
-                        final Method[] methods = this.container.getClassDescription().getDescribedClass().getDeclaredMethods();
-                        int i = 0;
-                        while (i < methods.length) {
-                            if (methodName.equals(methods[i].getName())) {
-
-                                if (methods[i].getParameterTypes() == null || methods[i].getParameterTypes().length == 0) {
-                                    zeroArgMethod = methods[i];
-                                } else if (methods[i].getParameterTypes().length >= 2) {
-                                    boolean valid = true;
-                                    for (int m = 0; m < methods[i].getParameterTypes().length; m++) {
-                                        final String type = methods[i].getParameterTypes()[m].getName();
-                                        if (!type.equals(TYPE_BUNDLE_CONTEXT) && !type.equals(TYPE_COMPONENT_CONTEXT)
-                                            && !type.equals(TYPE_MAP)) {
-                                            // if this is deactivate, int and
-                                            // integer are possible as well
-                                            if (isActivate || (!type.equals(TYPE_INT) && !type.equals(TYPE_INTEGER))) {
-                                                valid = false;
-                                            }
-                                        }
-                                    }
-                                    if (valid) {
-                                        if (found == null) {
-                                            found = methods[i];
-                                        } else {
-                                            // print warning
-                                            this.logWarn(this.container.getComponentDescription(), "Lifecycle method " + methods[i].getName()
-                                                      + " occurs several times with different matching signature.");
-                                        }
-                                    }
-                                }
-                            }
-                            i++;
-                        }
-                        if (found != null) {
-                            method = found;
-                        } else {
-                            method = zeroArgMethod;
-                        }
-                    }
-                }
-            }
+        final MethodResult result = findLifecycleMethod(this.project, this.container, methodName, isActivate);
+        if ( result.additionalWarning != null ) {
+            this.logWarn(this.container.getComponentDescription(), result.additionalWarning);
         }
+
         // if no method is found, we check for any method with that name to print some warnings or errors!
-        if (method == null) {
+        if (result.method == null) {
            final Method[] methods = this.container.getClassDescription().getDescribedClass().getDeclaredMethods();
             for (int i = 0; i < methods.length; i++) {
                 if (methodName.equals(methods[i].getName())) {
@@ -337,12 +363,12 @@ public class Validator {
         }
 
         // method must be protected for version 1.0
-        if (method != null && options.getSpecVersion() == SpecVersion.VERSION_1_0) {
+        if (result.method != null && options.getSpecVersion() == SpecVersion.VERSION_1_0) {
             // check protected
-            if (Modifier.isPublic(method.getModifiers())) {
-                this.logWarn(container.getComponentDescription(), "Lifecycle method " + method.getName() + " should be declared protected");
-            } else if (!Modifier.isProtected(method.getModifiers())) {
-                this.logWarn(container.getComponentDescription(), "Lifecycle method " + method.getName() +
+            if (Modifier.isPublic(result.method.getModifiers())) {
+                this.logWarn(container.getComponentDescription(), "Lifecycle method " + result.method.getName() + " should be declared protected");
+            } else if (!Modifier.isProtected(result.method.getModifiers())) {
+                this.logWarn(container.getComponentDescription(), "Lifecycle method " + result.method.getName() +
                             " has wrong qualifier, public or protected required");
             }
         }
@@ -582,6 +608,7 @@ public class Validator {
     public static final class MethodResult {
         public Method method;
         public SpecVersion requiredSpecVersion;
+        public String additionalWarning;
     }
 
     /**
