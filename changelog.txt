@@ -1,3 +1,9 @@
+Changes from 1.9.12 to 1.9.10
+-----------------------------
+** Improvement
+    * [FELIX-4859] - Documentation inconsistency in filter.order vs service.ranking
+
+
 Changes from 1.9.10 to 1.9.8
 ----------------------------
 ** Bug
