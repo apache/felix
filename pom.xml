@@ -29,7 +29,7 @@
     <groupId>org.apache.felix</groupId>
     <artifactId>org.apache.felix.scr.annotations</artifactId>
 
-    <version>1.9.11-SNAPSHOT</version>
+    <version>1.9.12</version>
     <packaging>jar</packaging>
 
     <name>Annotations for SCR</name>
@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/scrplugin/annotations</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/scrplugin/annotations</developerConnection>
-        <url>http://svn.apache.org/repos/asf/felix/scrplugin/annotations</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.scr.annotations-1.9.12</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.scr.annotations-1.9.12</developerConnection>
+        <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.scr.annotations-1.9.12</url>
     </scm>
 
     <dependencies>
