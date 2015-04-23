@@ -36,7 +36,7 @@ import javax.annotation.Nonnull;
 /**
  * Just a simple DS Component
  */
-@Component(metatype=true)
+@Component
 @Service
 public class SimpleDSComponent implements Runnable {
     
