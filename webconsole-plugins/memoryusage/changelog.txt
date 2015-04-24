@@ -1,3 +1,10 @@
+Changes from 1.0.4 to 1.0.6
+---------------------------
+
+** Bug
+    * [FELIX-4862] - Correct version range for web console package import
+
+
 Changes from 1.0.2 to 1.0.4
 ---------------------------
 
