@@ -110,7 +110,7 @@
                             <!-- plug into the web console -->
                             javax.servlet;
                             javax.servlet.http;version="[2.3,4)",
-                            org.apache.felix.webconsole;version="[3.0,3.2)",
+                            org.apache.felix.webconsole;version="[3.0,4)",
 
                             <!-- plug into the traditional Felix shell -->
                             org.apache.felix.shell;version="[1.0,1.1)"
