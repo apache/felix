@@ -2675,7 +2675,7 @@ public class Felix extends BundleImpl implements Framework
     void uninstallBundle(BundleImpl bundle) throws BundleException
     {
         // Populate a set of refresh candidates. This also includes any bundles that this bundle
-        // is importing packages from but have previously been uninstalled.
+        // is wired to but have previously been uninstalled.
         List<Bundle> refreshCandidates = new ArrayList<Bundle>();
         refreshCandidates.add(bundle); // Add this bundle first, so that it gets refreshed first later on
         BundleRevisions bundleRevisions = bundle.adapt(BundleRevisions.class);
