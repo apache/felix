@@ -24,6 +24,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -31,7 +32,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeMap;
+import java.util.SortedMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 import org.apache.felix.framework.util.SecureAction;
 import org.apache.felix.framework.util.StringComparator;
@@ -43,8 +46,8 @@ import org.osgi.resource.Capability;
 
 public class CapabilitySet
 {
-    private final Map<String, Map<Object, Set<BundleCapability>>> m_indices;
-    private final Set<Capability> m_capSet = new HashSet<Capability>();
+    private final SortedMap<String, Map<Object, Set<BundleCapability>>> m_indices; // Should also be concurrent!
+    private final Set<Capability> m_capSet = Collections.newSetFromMap(new ConcurrentHashMap<Capability, Boolean>());
     private final static SecureAction m_secureAction = new SecureAction();
 
     public void dump()
@@ -76,11 +79,11 @@ public class CapabilitySet
         }
     }
 
-    public CapabilitySet(List<String> indexProps, boolean caseSensitive)
+    public CapabilitySet(final List<String> indexProps, final boolean caseSensitive)
     {
         m_indices = (caseSensitive)
-            ? new TreeMap<String, Map<Object, Set<BundleCapability>>>()
-            : new TreeMap<String, Map<Object, Set<BundleCapability>>>(
+            ? new ConcurrentSkipListMap<String, Map<Object, Set<BundleCapability>>>()
+            : new ConcurrentSkipListMap<String, Map<Object, Set<BundleCapability>>>(
                 StringComparator.COMPARATOR);
         for (int i = 0; (indexProps != null) && (i < indexProps.size()); i++)
         {
@@ -89,7 +92,7 @@ public class CapabilitySet
         }
     }
 
-    public void addCapability(BundleCapability cap)
+    public void addCapability(final BundleCapability cap)
     {
         m_capSet.add(cap);
 
@@ -134,7 +137,7 @@ public class CapabilitySet
         caps.add(cap);
     }
 
-    public void removeCapability(BundleCapability cap)
+    public void removeCapability(final BundleCapability cap)
     {
         if (m_capSet.remove(cap))
         {
@@ -181,15 +184,15 @@ public class CapabilitySet
         }
     }
 
-    public Set<Capability> match(SimpleFilter sf, boolean obeyMandatory)
+    public Set<Capability> match(final SimpleFilter sf, final boolean obeyMandatory)
     {
-        Set<Capability> matches = match(m_capSet, sf);
+        final Set<Capability> matches = match(m_capSet, sf);
         return (obeyMandatory)
             ? matchMandatory(matches, sf)
             : matches;
     }
 
-    private Set<Capability> match(Set<Capability> caps, SimpleFilter sf)
+    private Set<Capability> match(Set<Capability> caps, final SimpleFilter sf)
     {
         Set<Capability> matches = new HashSet<Capability>();
 
@@ -203,7 +206,7 @@ public class CapabilitySet
             // For AND we calculate the intersection of each subfilter.
             // We can short-circuit the AND operation if there are no
             // remaining capabilities.
-            List<SimpleFilter> sfs = (List<SimpleFilter>) sf.getValue();
+            final List<SimpleFilter> sfs = (List<SimpleFilter>) sf.getValue();
             for (int i = 0; (caps.size() > 0) && (i < sfs.size()); i++)
             {
                 matches = match(caps, sfs.get(i));
@@ -405,13 +408,13 @@ public class CapabilitySet
             {
                 //Do nothing will check later if rhs is null
             }
-            
+
             if(rhs != null && rhs instanceof VersionRange)
             {
                 return ((VersionRange)rhs).isInRange((Version)lhs);
             }
         }
-        
+
         // If the type is comparable, then we can just return the
         // result immediately.
         if (lhs instanceof Comparable)
