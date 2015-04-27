@@ -19,7 +19,7 @@ package org.osgi.service.http.context;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Enumeration;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -32,31 +32,33 @@ import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
  * to serve HTTP requests.
  *
  * <p>
- * This service defines methods that the Http Whiteboard Implementation may call
+ * This service defines methods that the Http Whiteboard implementation may call
  * to get information for a request when dealing with whiteboard services.
  * 
  * <p>
  * Each {@code ServletContextHelper} is registered with a
- * {@link HttpWhiteboardConstants#HTTP_WHITEBOARD_CONTEXT_NAME service property}
- * containing a name to reference by servlets, servlet filters, resources, and
- * listeners. If there is more than one {@code ServletContextHelper} registered
- * with the same context name, the one with the highest service ranking is
- * active, the others are inactive.
+ * {@link HttpWhiteboardConstants#HTTP_WHITEBOARD_CONTEXT_NAME
+ * "osgi.http.whiteboard.context.name"} service property containing a name to
+ * reference by servlets, servlet filters, resources, and listeners. If there is
+ * more than one {@code ServletContextHelper} registered with the same context
+ * name, the one with the highest service ranking is active, the others are
+ * inactive.
  * 
  * <p>
  * A context is registered with the
- * {@link HttpWhiteboardConstants#HTTP_WHITEBOARD_CONTEXT_PATH service property}
- * to define a path under which all services registered with this context are
- * reachable. If there is more than one {@code ServletContextHelper} registered
- * with the same path, each duplicate context path is searched by service
- * ranking order according to
+ * {@link HttpWhiteboardConstants#HTTP_WHITEBOARD_CONTEXT_PATH
+ * "osgi.http.whiteboard.context.path"} service property to define a path under
+ * which all services registered with this context are reachable. If there is
+ * more than one {@code ServletContextHelper} registered with the same path,
+ * each duplicate context path is searched by service ranking order according to
  * {@link org.osgi.framework.ServiceReference#compareTo(Object)} until a
  * matching servlet or resource is found.
  * 
  * <p>
  * Servlets, servlet filters, resources, and listeners services may be
- * {@link HttpWhiteboardConstants#HTTP_WHITEBOARD_CONTEXT_SELECT associated}
- * with a {@code ServletContextHelper} service. If the referenced
+ * associated with a {@code ServletContextHelper} service with the
+ * {@link HttpWhiteboardConstants#HTTP_WHITEBOARD_CONTEXT_SELECT
+ * "osgi.http.whiteboard.context.select"} service property. If the referenced
  * {@code ServletContextHelper} service does not exist or is currently not
  * active, the whiteboard services for that {@code ServletContextHelper} are not
  * active either.
@@ -64,11 +66,11 @@ import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
  * <p>
  * If no {@code ServletContextHelper} service is associated, that is no
  * {@link HttpWhiteboardConstants#HTTP_WHITEBOARD_CONTEXT_SELECT
- * HTTP_WHITEBOARD_CONTEXT_SELECT} is configured for a whiteboard service, a
- * default {@code ServletContextHelper} is used.
+ * "osgi.http.whiteboard.context.select"} service property is configured for a
+ * whiteboard service, a default {@code ServletContextHelper} is used.
  * 
  * <p>
- * Those whiteboard services that are associated using the same
+ * Those whiteboard services that are associated with the same
  * {@code ServletContextHelper} object will share the same
  * {@code ServletContext} object.
  * 
@@ -76,23 +78,22 @@ import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
  * The behavior of the methods on the default {@code ServletContextHelper} is
  * defined as follows:
  * <ul>
- * <li>{@code getMimeType} - Does not define any customized MIME types for the
- * {@code Content-Type} header in the response, and always returns {@code null}.
- * </li>
- * <li>{@code handleSecurity} - Performs implementation-defined authentication
- * on the request.</li>
- * <li>{@code getResource} - Assumes the named resource is in the bundle of the
- * whiteboard service, addressed from the root. This method calls the whiteboard
- * service bundle's {@code Bundle.getEntry} method, and returns the appropriate
- * URL to access the resource. On a Java runtime environment that supports
- * permissions, the Http Whiteboard Implementation needs to be granted
+ * <li>{@link #getMimeType(String) getMimeType} - Always returns {@code null}.</li>
+ * <li>{@link #handleSecurity(HttpServletRequest, HttpServletResponse)
+ * handleSecurity} - Always returns {@code true}.</li>
+ * <li>{@link #getResource(String) getResource} - Assumes the named resource is
+ * in the bundle of the whiteboard service, addressed from the root. This method
+ * calls the whiteboard service bundle's {@code Bundle.getEntry} method, and
+ * returns the appropriate URL to access the resource. On a Java runtime
+ * environment that supports permissions, the Http Whiteboard implementation
+ * needs to be granted {@code org.osgi.framework.AdminPermission[*,RESOURCE]}.</li>
+ * <li>{@link #getResourcePaths(String) getResourcePaths} - Assumes that the
+ * resources are in the bundle of the whiteboard service. This method calls
+ * {@code Bundle.findEntries} method, and returns the found entries. On a Java
+ * runtime environment that supports permissions, the Http Whiteboard
+ * implementation needs to be granted
  * {@code org.osgi.framework.AdminPermission[*,RESOURCE]}.</li>
- * <li>{@code getResourcePaths} - Assumes that the resources are in the bundle
- * of the whiteboard service. This method calls {@code Bundle.findEntries}
- * method, and returns the found entries. On a Java runtime environment that
- * supports permissions, the Http Whiteboard Implementation needs to be granted
- * {@code org.osgi.framework.AdminPermission[*,RESOURCE]}.</li>
- * <li>{@code getRealPath} - This method returns {@code null}.</li>
+ * <li>{@link #getRealPath(String) getRealPath} - Always returns {@code null}.</li>
  * </ul>
  * 
  * @ThreadSafe
@@ -105,23 +106,21 @@ public abstract class ServletContextHelper {
 	/**
 	 * {@code HttpServletRequest} attribute specifying the name of the
 	 * authenticated user. The value of the attribute can be retrieved by
-	 * {@code HttpServletRequest.getRemoteUser}. This attribute name is
-	 * {@code org.osgi.service.http.authentication.remote.user}.
+	 * {@code HttpServletRequest.getRemoteUser}.
 	 */
 	public static final String	REMOTE_USER			= "org.osgi.service.http.authentication.remote.user";
 	/**
 	 * {@code HttpServletRequest} attribute specifying the scheme used in
 	 * authentication. The value of the attribute can be retrieved by
-	 * {@code HttpServletRequest.getAuthType}. This attribute name is
-	 * {@code org.osgi.service.http.authentication.type}.
+	 * {@code HttpServletRequest.getAuthType}.
 	 */
 	public static final String	AUTHENTICATION_TYPE	= "org.osgi.service.http.authentication.type";
 	/**
 	 * {@code HttpServletRequest} attribute specifying the {@code Authorization}
 	 * object obtained from the {@code org.osgi.service.useradmin.UserAdmin}
 	 * service. The value of the attribute can be retrieved by
-	 * {@code HttpServletRequest.getAttribute(HttpContext.AUTHORIZATION)}. This
-	 * attribute name is {@code org.osgi.service.useradmin.authorization}.
+	 * {@code HttpServletRequest.getAttribute(ServletContextHelper.AUTHORIZATION)}
+	 * .
 	 */
 	public static final String	AUTHORIZATION		= "org.osgi.service.useradmin.authorization";
 
@@ -129,38 +128,40 @@ public abstract class ServletContextHelper {
 	private final Bundle		bundle;
 
 	/**
-	 * Default constructor
+	 * Construct a new context helper.
+	 * 
+	 * <p>
+	 * If needed, the subclass will have to handle the association with a
+	 * specific bundle.
 	 */
 	public ServletContextHelper() {
-		// default constructor
 		this(null);
 	}
 
 	/**
-	 * Construct a new context helper and set the bundle associated with this
-	 * context.
+	 * Construct a new context helper associated with the specified bundle.
 	 * 
-	 * @param b The bundle
+	 * @param bundle The bundle to be associated with this context helper.
 	 */
-	public ServletContextHelper(final Bundle b) {
-		this.bundle = b;
+	public ServletContextHelper(final Bundle bundle) {
+		this.bundle = bundle;
 	}
 
 	/**
 	 * Handles security for the specified request.
 	 * 
 	 * <p>
-	 * The Http Whiteboard Implementation calls this method prior to servicing
+	 * The Http Whiteboard implementation calls this method prior to servicing
 	 * the specified request. This method controls whether the request is
 	 * processed in the normal manner or an error is returned.
 	 * 
 	 * <p>
-	 * If the request requires authentication and the Authorization header in
-	 * the request is missing or not acceptable, then this method should set the
-	 * WWW-Authenticate header in the response object, set the status in the
-	 * response object to Unauthorized(401) and return {@code false}. See also
-	 * RFC 2617: <i>HTTP Authentication: Basic and Digest Access Authentication
-	 * </i> (available at http://www.ietf.org/rfc/rfc2617.txt).
+	 * If the request requires authentication and the {@code Authorization}
+	 * header in the request is missing or not acceptable, then this method
+	 * should set the {@code WWW-Authenticate} header in the response object,
+	 * set the status in the response object to Unauthorized(401) and return
+	 * {@code false}. See also <a href="http://www.ietf.org/rfc/rfc2617.txt">RFC
+	 * 2617: HTTP Authentication: Basic and Digest Access Authentication</a>.
 	 * 
 	 * <p>
 	 * If the request requires a secure connection and the {@code getScheme}
@@ -170,9 +171,9 @@ public abstract class ServletContextHelper {
 	 * 
 	 * <p>
 	 * When this method returns {@code false}, the Http Whiteboard
-	 * Implementation will send the response back to the client, thereby
+	 * implementation will send the response back to the client, thereby
 	 * completing the request. When this method returns {@code true}, the Http
-	 * Whitboard Implementation will proceed with servicing the request.
+	 * Whiteboard implementation will proceed with servicing the request.
 	 * 
 	 * <p>
 	 * If the specified request has been authenticated, this method must set the
@@ -198,13 +199,13 @@ public abstract class ServletContextHelper {
 	 * @param response The HTTP response.
 	 * @return {@code true} if the request should be serviced, {@code false} if
 	 *         the request should not be serviced and Http Whiteboard
-	 *         Implementation will send the response back to the client.
-	 * @throws java.io.IOException may be thrown by this method. If this occurs,
-	 *         the Http Whiteboard Implementation will terminate the request and
+	 *         implementation will send the response back to the client.
+	 * @throws java.io.IOException May be thrown by this method. If this occurs,
+	 *         the Http Whiteboard implementation will terminate the request and
 	 *         close the socket.
 	 */
 	public boolean handleSecurity(final HttpServletRequest request,
-			                      final HttpServletResponse response)
+			final HttpServletResponse response)
 			throws IOException {
 		return true;
 	}
@@ -213,31 +214,30 @@ public abstract class ServletContextHelper {
 	 * Maps a resource name to a URL.
 	 * 
 	 * <p>
-	 * Called by the Http Whiteboard Implementation to map the specified
-	 * resource name to a URL. For servlets, the Http Whiteboard Implementation
+	 * Called by the Http Whiteboard implementation to map the specified
+	 * resource name to a URL. For servlets, the Http Whiteboard implementation
 	 * will call this method to support the {@code ServletContext} methods
 	 * {@code getResource} and {@code getResourceAsStream}. For resources, the
-	 * Http Whiteboard Implementation will call this method to locate the named
+	 * Http Whiteboard implementation will call this method to locate the named
 	 * resource.
 	 * 
 	 * <p>
 	 * The context can control from where resources come. For example, the
 	 * resource can be mapped to a file in the bundle's persistent storage area
-	 * via {@code bundleContext.getDataFile(name).toURL()} or to a resource in
-	 * the context's bundle via {@code getClass().getResource(name)}
+	 * via {@code BundleContext.getDataFile(name).toURI().toURL()} or to a
+	 * resource in the context's bundle via {@code getClass().getResource(name)}
 	 * 
 	 * @param name The name of the requested resource.
-	 * @return A URL that a Http Whiteboard Implementation can use to read the
+	 * @return A URL that a Http Whiteboard implementation can use to read the
 	 *         resource or {@code null} if the resource does not exist.
 	 */
 	public URL getResource(String name) {
-		final Bundle localBundle = this.bundle;
-		if (name != null && localBundle != null) {
+		if ((name != null) && (bundle != null)) {
 			if (name.startsWith("/")) {
 				name = name.substring(1);
 			}
 
-			return this.bundle.getEntry(name);
+			return bundle.getEntry(name);
 		}
 		return null;
 	}
@@ -246,17 +246,17 @@ public abstract class ServletContextHelper {
 	 * Maps a name to a MIME type.
 	 * 
 	 * <p>
-	 * Called by the Http Whiteboard Implementation to determine the MIME type
+	 * Called by the Http Whiteboard implementation to determine the MIME type
 	 * for the specified name. For whiteboard services, the Http Whiteboard
-	 * Implementation will call this method to support the
+	 * implementation will call this method to support the
 	 * {@code ServletContext} method {@code getMimeType}. For resource servlets,
-	 * the Http Whiteboard Implementation will call this method to determine the
+	 * the Http Whiteboard implementation will call this method to determine the
 	 * MIME type for the {@code Content-Type} header in the response.
 	 *
 	 * @param name The name for which to determine the MIME type.
 	 * @return The MIME type (e.g. text/html) of the specified name or
-	 *         {@code null} to indicate that the Http Service should determine
-	 *         the MIME type itself.
+	 *         {@code null} to indicate that the Http Whiteboard implementation
+	 *         should determine the MIME type itself.
 	 */
 	public String getMimeType(final String name) {
 		return null;
@@ -268,22 +268,21 @@ public abstract class ServletContextHelper {
 	 * argument.
 	 * 
 	 * <p>
-	 * Called by the Http Whiteboard Implementation to support the
+	 * Called by the Http Whiteboard implementation to support the
 	 * {@code ServletContext} method {@code getResourcePaths} for whiteboard
 	 * services.
 	 * 
-	 * @param path the partial path used to match the resources, which must
-	 *        start with a /
-	 * @return a Set containing the directory listing, or null if there are no
-	 *         resources in the web application whose path begins with the
-	 *         supplied path.
+	 * @param path The partial path used to match the resources, which must
+	 *        start with a /.
+	 * @return A Set containing the directory listing, or {@code null} if there
+	 *         are no resources in the web application whose path begins with
+	 *         the supplied path.
 	 */
 	public Set<String> getResourcePaths(final String path) {
-		final Bundle localBundle = this.bundle;
-		if (path != null && localBundle != null) {
-			final Enumeration<URL> e = localBundle.findEntries(path, null, false);
+		if ((path != null) && (bundle != null)) {
+			final Enumeration<URL> e = bundle.findEntries(path, null, false);
 			if (e != null) {
-				final Set<String> result = new HashSet<String>();
+				final Set<String> result = new LinkedHashSet<String>();
 				while (e.hasMoreElements()) {
 					result.add(e.nextElement().getPath());
 				}
@@ -297,12 +296,13 @@ public abstract class ServletContextHelper {
 	 * Gets the real path corresponding to the given virtual path.
 	 * 
 	 * <p>
-	 * Called by the Http Whiteboard Implementation to support the
+	 * Called by the Http Whiteboard implementation to support the
 	 * {@code ServletContext} method {@code getRealPath} for whiteboard
 	 * services.
 	 * 
-	 * @param path the virtual path to be translated to a real path
-	 * @return the real path, or null if the translation cannot be performed
+	 * @param path The virtual path to be translated to a real path.
+	 * @return The real path, or {@code null} if the translation cannot be
+	 *         performed.
 	 */
 	public String getRealPath(final String path) {
 		return null;
