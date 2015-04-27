@@ -173,10 +173,10 @@ public final class HttpServiceFactory
         this.httpServiceProps.clear();
         this.httpServiceProps.putAll(props);
 
-        if ( this.httpServiceProps.get(HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT_ATTRIBUTE) != null )
+        if ( this.httpServiceProps.get(HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT) != null )
         {
             this.httpServiceProps.put(OBSOLETE_REG_PROPERTY_ENDPOINTS,
-                    this.httpServiceProps.get(HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT_ATTRIBUTE));
+                    this.httpServiceProps.get(HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT));
         }
 
         if (this.httpServiceReg != null)

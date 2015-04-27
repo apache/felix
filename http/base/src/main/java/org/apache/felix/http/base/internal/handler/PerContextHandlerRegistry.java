@@ -17,7 +17,7 @@
 package org.apache.felix.http.base.internal.handler;
 
 import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_EXCEPTION_ON_INIT;
-import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_SERVICE_ALREAY_USED;
+import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_SERVICE_IN_USE;
 import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE;
 
 import java.util.ArrayList;
@@ -113,7 +113,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     {
         if (this.filterMapping.contains(handler))
         {
-            throw new RegistrationFailureException(handler.getFilterInfo(), FAILURE_REASON_SERVICE_ALREAY_USED,
+            throw new RegistrationFailureException(handler.getFilterInfo(), FAILURE_REASON_SERVICE_IN_USE,
                 "Filter instance " + handler.getName() + " already registered");
         }
 
