@@ -57,8 +57,8 @@ import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
-import org.osgi.resource.Requirement;
 import org.osgi.resource.Capability;
+import org.osgi.resource.Requirement;
 import org.osgi.resource.Resource;
 import org.osgi.resource.Wire;
 import org.osgi.resource.Wiring;
@@ -121,7 +121,7 @@ class StatefulResolver
 
     void start()
     {
-        m_registry.registerService(m_felix._getBundleContext(),
+        m_registry.registerService(m_felix,
                 new String[] { Resolver.class.getName() },
                 m_resolver,
                 null);

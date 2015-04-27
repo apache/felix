@@ -66,6 +66,10 @@ class ServiceRegistrationImpl implements ServiceRegistration
     // Flag indicating that we are unregistering.
     private volatile boolean m_isUnregistering = false;
 
+    private volatile Thread lock;
+
+    private final Object syncObject = new Object();
+
     public ServiceRegistrationImpl(
         ServiceRegistry registry, Bundle bundle,
         String[] classes, Long serviceId,
@@ -751,6 +755,38 @@ class ServiceRegistrationImpl implements ServiceRegistration
         public Set<Entry<Object, Object>> entrySet()
         {
             return Collections.EMPTY_SET;
+        }
+    }
+
+    public boolean isLocked()
+    {
+        return this.lock == Thread.currentThread();
+    }
+
+    public void lock()
+    {
+        synchronized ( this.syncObject )
+        {
+            while ( this.lock != null )
+            {
+                try
+                {
+                    this.syncObject.wait();
+                }
+                catch ( final InterruptedException re) {
+                    // nothing to do
+                }
+            }
+            this.lock = Thread.currentThread();
+        }
+    }
+
+    public void unlock()
+    {
+        synchronized ( this.syncObject )
+        {
+            this.lock = null;
+            this.syncObject.notifyAll();
         }
     }
 }
