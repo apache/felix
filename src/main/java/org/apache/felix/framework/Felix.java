@@ -2674,6 +2674,28 @@ public class Felix extends BundleImpl implements Framework
 
     void uninstallBundle(BundleImpl bundle) throws BundleException
     {
+        // Populate a set of refresh candidates. This also includes any bundles that this bundle
+        // is importing packages from but have previously been uninstalled.
+        List<Bundle> refreshCandidates = new ArrayList<Bundle>();
+        refreshCandidates.add(bundle); // Add this bundle first, so that it gets refreshed first later on
+        BundleRevisions bundleRevisions = bundle.adapt(BundleRevisions.class);
+        if (bundleRevisions != null)
+        {
+            for (BundleRevision br : bundleRevisions.getRevisions())
+            {
+                BundleWiring bw = br.getWiring();
+                if (bw != null)
+                {
+                    for (BundleWire wire : bw.getRequiredWires(null))
+                    {
+                        Bundle b = wire.getProvider().getBundle();
+                        if (Bundle.UNINSTALLED == b.getState() && !refreshCandidates.contains(b))
+                            refreshCandidates.add(b);
+                    }
+                }
+            }
+        }
+
         // Acquire bundle lock.
         try
         {
@@ -2779,20 +2801,23 @@ public class Felix extends BundleImpl implements Framework
         {
             try
             {
-                // If the bundle is not used by anyone, then garbage
-                // collect it now.
-                if (!m_dependencies.hasDependents(bundle))
+                for (Bundle b : refreshCandidates)
                 {
-                    try
+                    // If the bundle is not used by anyone, then garbage
+                    // collect it now.
+                    if (!m_dependencies.hasDependents(b))
                     {
-                        List<Bundle> list = Collections.singletonList((Bundle) bundle);
-                        refreshPackages(list, null);
-                    }
-                    catch (Exception ex)
-                    {
-                        m_logger.log(bundle,
-                            Logger.LOG_ERROR,
-                            "Unable to immediately garbage collect the bundle.", ex);
+                        try
+                        {
+                            List<Bundle> list = Collections.singletonList(b);
+                            refreshPackages(list, null);
+                        }
+                        catch (Exception ex)
+                        {
+                            m_logger.log(b,
+                                Logger.LOG_ERROR,
+                                "Unable to immediately garbage collect the bundle.", ex);
+                        }
                     }
                 }
             }
