@@ -598,7 +598,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
                 }
             }
         }
-        props.put(HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT_ATTRIBUTE,
+        props.put(HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT,
                 endpoints.toArray(new String[endpoints.size()]));
     }
 
