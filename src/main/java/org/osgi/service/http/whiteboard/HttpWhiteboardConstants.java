@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2012, 2014). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2012, 2015). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import org.osgi.service.http.context.ServletContextHelper;
 import org.osgi.service.http.runtime.HttpServiceRuntimeConstants;
 
 /**
- * Defines standard constants for the whiteboard services.
+ * Defines standard constants for the Http Whiteboard services.
  * 
  * @author $Id$
  */
@@ -54,7 +54,7 @@ public final class HttpWhiteboardConstants {
 	 * @see #HTTP_WHITEBOARD_CONTEXT_SELECT
 	 * @see #HTTP_WHITEBOARD_DEFAULT_CONTEXT_NAME
 	 */
-	public static final String	HTTP_WHITEBOARD_CONTEXT_NAME			= "osgi.http.whiteboard.context.name";
+	public static final String	HTTP_WHITEBOARD_CONTEXT_NAME				= "osgi.http.whiteboard.context.name";
 
 	/**
 	 * The name of the default {@link ServletContextHelper}. If a service is
@@ -63,7 +63,7 @@ public final class HttpWhiteboardConstants {
 	 * 
 	 * @see #HTTP_WHITEBOARD_CONTEXT_NAME
 	 */
-	public static final String	HTTP_WHITEBOARD_DEFAULT_CONTEXT_NAME	= "default";
+	public static final String	HTTP_WHITEBOARD_DEFAULT_CONTEXT_NAME		= "default";
 
 	/**
 	 * Service property specifying the path of an {@link ServletContextHelper}
@@ -88,7 +88,7 @@ public final class HttpWhiteboardConstants {
 	 * @see #HTTP_WHITEBOARD_CONTEXT_NAME
 	 * @see #HTTP_WHITEBOARD_CONTEXT_SELECT
 	 */
-	public static final String	HTTP_WHITEBOARD_CONTEXT_PATH			= "osgi.http.whiteboard.context.path";
+	public static final String	HTTP_WHITEBOARD_CONTEXT_PATH				= "osgi.http.whiteboard.context.path";
 
 	/**
 	 * Service property prefix referencing a {@link ServletContextHelper}
@@ -132,7 +132,7 @@ public final class HttpWhiteboardConstants {
 	 * @see #HTTP_WHITEBOARD_CONTEXT_NAME
 	 * @see #HTTP_WHITEBOARD_CONTEXT_PATH
 	 */
-	public static final String	HTTP_WHITEBOARD_CONTEXT_SELECT			= "osgi.http.whiteboard.context.select";
+	public static final String	HTTP_WHITEBOARD_CONTEXT_SELECT				= "osgi.http.whiteboard.context.select";
 
 	/**
 	 * Service property specifying the servlet name of a {@code Servlet}
@@ -155,7 +155,7 @@ public final class HttpWhiteboardConstants {
 	 * <p>
 	 * The value of this service property must be of type {@code String}.
 	 */
-	public static final String	HTTP_WHITEBOARD_SERVLET_NAME			= "osgi.http.whiteboard.servlet.name";
+	public static final String	HTTP_WHITEBOARD_SERVLET_NAME				= "osgi.http.whiteboard.servlet.name";
 
 	/**
 	 * Service property specifying the request mappings for a {@code Servlet}
@@ -172,7 +172,7 @@ public final class HttpWhiteboardConstants {
 	 * 
 	 * @see "Java Servlet Specification Version 3.0, Section 12.2 Specification of Mappings"
 	 */
-	public static final String	HTTP_WHITEBOARD_SERVLET_PATTERN			= "osgi.http.whiteboard.servlet.pattern";
+	public static final String	HTTP_WHITEBOARD_SERVLET_PATTERN				= "osgi.http.whiteboard.servlet.pattern";
 
 	/**
 	 * Service property specifying whether a {@code Servlet} service acts as an
@@ -181,8 +181,8 @@ public final class HttpWhiteboardConstants {
 	 * <p>
 	 * The service property values may be the name of a fully qualified
 	 * exception class, a three digit HTTP status code, the value "4xx" for all
-	 * error codes in the 400 rage, or the value "5xx" for all error codes in
-	 * the 500 rage. Any value that is not a three digit number, or one of the
+	 * error codes in the 400 range, or the value "5xx" for all error codes in
+	 * the 500 range. Any value that is not a three digit number, or one of the
 	 * two special values is considered to be the name of a fully qualified
 	 * exception class.
 	 * 
@@ -190,7 +190,7 @@ public final class HttpWhiteboardConstants {
 	 * The value of this service property must be of type {@code String},
 	 * {@code String[]}, or {@code Collection<String>}.
 	 */
-	public static final String	HTTP_WHITEBOARD_SERVLET_ERROR_PAGE		= "osgi.http.whiteboard.servlet.errorPage";
+	public static final String	HTTP_WHITEBOARD_SERVLET_ERROR_PAGE			= "osgi.http.whiteboard.servlet.errorPage";
 
 	/**
 	 * Service property specifying whether a {@code Servlet} service supports
@@ -204,7 +204,7 @@ public final class HttpWhiteboardConstants {
 	 * 
 	 * @see "Java Servlet Specification Version 3.0, Section 2.3.3.3 Asynchronous Processing"
 	 */
-	public static final String	HTTP_WHITEBOARD_SERVLET_ASYNC_SUPPORTED	= "osgi.http.whiteboard.servlet.asyncSupported";
+	public static final String	HTTP_WHITEBOARD_SERVLET_ASYNC_SUPPORTED		= "osgi.http.whiteboard.servlet.asyncSupported";
 
 	/**
 	 * Service property prefix referencing a {@link Servlet} service.
@@ -242,7 +242,7 @@ public final class HttpWhiteboardConstants {
 	 * <p>
 	 * The value of this service property must be of type {@code String}.
 	 */
-	public static final String	HTTP_WHITEBOARD_FILTER_NAME				= "osgi.http.whiteboard.filter.name";
+	public static final String	HTTP_WHITEBOARD_FILTER_NAME					= "osgi.http.whiteboard.filter.name";
 
 	/**
 	 * Service property specifying the request mappings for a {@code Filter}
@@ -260,7 +260,7 @@ public final class HttpWhiteboardConstants {
 	 * 
 	 * @see "Java Servlet Specification Version 3.0, Section 12.2 Specification of Mappings"
 	 */
-	public static final String	HTTP_WHITEBOARD_FILTER_PATTERN			= "osgi.http.whiteboard.filter.pattern";
+	public static final String	HTTP_WHITEBOARD_FILTER_PATTERN				= "osgi.http.whiteboard.filter.pattern";
 
 	/**
 	 * Service property specifying the {@link #HTTP_WHITEBOARD_SERVLET_NAME
@@ -270,13 +270,13 @@ public final class HttpWhiteboardConstants {
 	 * The specified names are used to determine the servlets whose requests
 	 * should be mapped to the servlet filter. Servlet filter services without
 	 * this service property or the {@link #HTTP_WHITEBOARD_FILTER_PATTERN} or
-	 * the {@link #HTTP_WHITEBOARD_FILTER_REGEX} service propertyare ignored.
+	 * the {@link #HTTP_WHITEBOARD_FILTER_REGEX} service property are ignored.
 	 * 
 	 * <p>
 	 * The value of this service property must be of type {@code String},
 	 * {@code String[]}, or {@code Collection<String>}.
 	 */
-	public static final String	HTTP_WHITEBOARD_FILTER_SERVLET			= "osgi.http.whiteboard.filter.servlet";
+	public static final String	HTTP_WHITEBOARD_FILTER_SERVLET				= "osgi.http.whiteboard.filter.servlet";
 
 	/**
 	 * Service property specifying the request mappings for a servlet
@@ -296,7 +296,7 @@ public final class HttpWhiteboardConstants {
 	 * 
 	 * @see "java.util.regex.Pattern"
 	 */
-	public static final String	HTTP_WHITEBOARD_FILTER_REGEX			= "osgi.http.whiteboard.filter.regex";
+	public static final String	HTTP_WHITEBOARD_FILTER_REGEX				= "osgi.http.whiteboard.filter.regex";
 
 	/**
 	 * Service property specifying whether a servlet {@code Filter} service
@@ -311,7 +311,7 @@ public final class HttpWhiteboardConstants {
 	 * 
 	 * @see "Java Servlet Specification Version 3.0, Section 2.3.3.3 Asynchronous Processing"
 	 */
-	public static final String	HTTP_WHITEBOARD_FILTER_ASYNC_SUPPORTED	= "osgi.http.whiteboard.filter.asyncSupported";
+	public static final String	HTTP_WHITEBOARD_FILTER_ASYNC_SUPPORTED		= "osgi.http.whiteboard.filter.asyncSupported";
 
 	/**
 	 * Service property specifying the dispatcher handling of a servlet
@@ -330,7 +330,7 @@ public final class HttpWhiteboardConstants {
 	 * 
 	 * @see "Java Servlet Specification Version 3.0, Section 6.2.5 Filters and the RequestDispatcher"
 	 */
-	public static final String	HTTP_WHITEBOARD_FILTER_DISPATCHER		= "osgi.http.whiteboard.filter.dispatcher";
+	public static final String	HTTP_WHITEBOARD_FILTER_DISPATCHER			= "osgi.http.whiteboard.filter.dispatcher";
 
 	/**
 	 * Service property prefix referencing a {@link Filter} service.
@@ -369,7 +369,7 @@ public final class HttpWhiteboardConstants {
 	 * 
 	 * @see "Java Servlet Specification Version 3.0, Section 6.2.5 Filters and the RequestDispatcher"
 	 */
-	public static final String	DISPATCHER_REQUEST						= "REQUEST";
+	public static final String	DISPATCHER_REQUEST							= "REQUEST";
 
 	/**
 	 * Possible value for the {@link #HTTP_WHITEBOARD_FILTER_DISPATCHER}
@@ -378,7 +378,7 @@ public final class HttpWhiteboardConstants {
 	 * 
 	 * @see "Java Servlet Specification Version 3.0, Section 6.2.5 Filters and the RequestDispatcher"
 	 */
-	public static final String	DISPATCHER_INCLUDE						= "INCLUDE";
+	public static final String	DISPATCHER_INCLUDE							= "INCLUDE";
 
 	/**
 	 * Possible value for the {@link #HTTP_WHITEBOARD_FILTER_DISPATCHER}
@@ -387,7 +387,7 @@ public final class HttpWhiteboardConstants {
 	 * 
 	 * @see "Java Servlet Specification Version 3.0, Section 6.2.5 Filters and the RequestDispatcher"
 	 */
-	public static final String	DISPATCHER_FORWARD						= "FORWARD";
+	public static final String	DISPATCHER_FORWARD							= "FORWARD";
 
 	/**
 	 * Possible value for the {@link #HTTP_WHITEBOARD_FILTER_DISPATCHER}
@@ -396,7 +396,7 @@ public final class HttpWhiteboardConstants {
 	 * 
 	 * @see "Java Servlet Specification Version 3.0, Section 6.2.5 Filters and the RequestDispatcher"
 	 */
-	public static final String	DISPATCHER_ASYNC						= "ASYNC";
+	public static final String	DISPATCHER_ASYNC							= "ASYNC";
 
 	/**
 	 * Possible value for the {@link #HTTP_WHITEBOARD_FILTER_DISPATCHER}
@@ -405,7 +405,7 @@ public final class HttpWhiteboardConstants {
 	 * 
 	 * @see "Java Servlet Specification Version 3.0, Section 6.2.5 Filters and the RequestDispatcher"
 	 */
-	public static final String	DISPATCHER_ERROR						= "ERROR";
+	public static final String	DISPATCHER_ERROR							= "ERROR";
 
 	/**
 	 * Service property specifying the request mappings for resources.
@@ -422,7 +422,7 @@ public final class HttpWhiteboardConstants {
 	 * @see "Java Servlet Specification Version 3.0, Section 12.2 Specification of Mappings"
 	 * @see #HTTP_WHITEBOARD_RESOURCE_PREFIX
 	 */
-	public static final String	HTTP_WHITEBOARD_RESOURCE_PATTERN		= "osgi.http.whiteboard.resource.pattern";
+	public static final String	HTTP_WHITEBOARD_RESOURCE_PATTERN			= "osgi.http.whiteboard.resource.pattern";
 
 	/**
 	 * Service property specifying the resource entry prefix for a resource
@@ -444,26 +444,27 @@ public final class HttpWhiteboardConstants {
 	 * 
 	 * @see #HTTP_WHITEBOARD_RESOURCE_PATTERN
 	 */
-	public static final String	HTTP_WHITEBOARD_RESOURCE_PREFIX			= "osgi.http.whiteboard.resource.prefix";
+	public static final String	HTTP_WHITEBOARD_RESOURCE_PREFIX				= "osgi.http.whiteboard.resource.prefix";
 
 	/**
 	 * Service property specifying the target filter to select the Http
-	 * Whiteboard Implementation to process the service.
+	 * Whiteboard implementation to process the service.
 	 * 
 	 * <p>
-	 * An Http Whiteboard Implementation can define any number of attributes
-	 * which can be referenced by the target filter. The attributes should
-	 * always include the
-	 * {@link HttpServiceRuntimeConstants#HTTP_SERVICE_ENDPOINT_ATTRIBUTE
-	 * osgi.http.endpoint} attribute if the endpoint information is known.
+	 * An Http Whiteboard implementation can define any number of service
+	 * properties which can be referenced by the target filter. The service
+	 * properties should always include the
+	 * {@link HttpServiceRuntimeConstants#HTTP_SERVICE_ENDPOINT
+	 * osgi.http.endpoint} service property if the endpoint information is
+	 * known.
 	 * 
 	 * <p>
 	 * If this service property is not specified, then all Http Whiteboard
-	 * Implementations can process the service.
+	 * implementations can process the service.
 	 * 
 	 * <p>
 	 * The value of this service property must be of type {@code String} and be
 	 * a valid {@link Filter filter string}.
 	 */
-	public static final String	HTTP_WHITEBOARD_TARGET					= "osgi.http.whiteboard.target";
+	public static final String	HTTP_WHITEBOARD_TARGET						= "osgi.http.whiteboard.target";
 }
