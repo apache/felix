@@ -551,7 +551,7 @@ public class EventDispatcher
         ServiceEvent event, Framework felix, Map<BundleContext, List<ListenerInfo>> listeners)
     {
         Set<ServiceReference<org.osgi.framework.hooks.service.EventHook>> ehs =
-            m_registry.getHooks(org.osgi.framework.hooks.service.EventHook.class);
+            m_registry.getHookRegistry().getHooks(org.osgi.framework.hooks.service.EventHook.class);
         if ((ehs != null) && !ehs.isEmpty())
         {
             // Create a whitelist of bundle context for bundle listeners,
@@ -574,7 +574,7 @@ public class EventDispatcher
         }
 
         Set<ServiceReference<org.osgi.framework.hooks.service.EventListenerHook>> elhs =
-            m_registry.getHooks(org.osgi.framework.hooks.service.EventListenerHook.class);
+            m_registry.getHookRegistry().getHooks(org.osgi.framework.hooks.service.EventListenerHook.class);
         if ((elhs != null) && !elhs.isEmpty())
         {
             List<ListenerInfo> systemBundleListeners = null;
@@ -676,7 +676,7 @@ public class EventDispatcher
     {
         // Create a whitelist of bundle context, if we have hooks.
         Set<BundleContext> whitelist = null;
-        Set<ServiceReference<T>> hooks = m_registry.getHooks(hookClass);
+        Set<ServiceReference<T>> hooks = m_registry.getHookRegistry().getHooks(hookClass);
         if ((hooks != null) && !hooks.isEmpty())
         {
             boolean systemBundleListener = false;

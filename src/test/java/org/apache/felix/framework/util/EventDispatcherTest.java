@@ -80,8 +80,8 @@ public class EventDispatcherTest extends TestCase
 
         Logger logger = new Logger();
         ServiceRegistry registry = new ServiceRegistry(logger, null);
-        registry.registerService(b4.getBundleContext(), new String [] {EventHook.class.getName()}, eh1, new Hashtable());
-        registry.registerService(b4.getBundleContext(), new String [] {EventHook.class.getName()}, eh2, new Hashtable());
+        registry.registerService(b4, new String [] {EventHook.class.getName()}, eh1, new Hashtable());
+        registry.registerService(b4, new String [] {EventHook.class.getName()}, eh2, new Hashtable());
 
         // -- Set up event dispatcher
         EventDispatcher ed = new EventDispatcher(logger, registry);

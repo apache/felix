@@ -3330,7 +3330,7 @@ public class Felix extends BundleImpl implements Framework
 
         // Invoke ListenerHook.removed() if filter updated.
         Set<ServiceReference<org.osgi.framework.hooks.service.ListenerHook>> listenerHooks =
-            m_registry.getHooks(org.osgi.framework.hooks.service.ListenerHook.class);
+            m_registry.getHookRegistry().getHooks(org.osgi.framework.hooks.service.ListenerHook.class);
         if (oldFilter != null)
         {
             final Collection removed = Collections.singleton(
@@ -3401,7 +3401,7 @@ public class Felix extends BundleImpl implements Framework
         {
             // Invoke the ListenerHook.removed() on all hooks.
             Set<ServiceReference<org.osgi.framework.hooks.service.ListenerHook>> listenerHooks =
-                m_registry.getHooks(org.osgi.framework.hooks.service.ListenerHook.class);
+                m_registry.getHookRegistry().getHooks(org.osgi.framework.hooks.service.ListenerHook.class);
             Collection removed = Collections.singleton(listener);
             for (ServiceReference<org.osgi.framework.hooks.service.ListenerHook> sr : listenerHooks)
             {
@@ -3485,11 +3485,11 @@ public class Felix extends BundleImpl implements Framework
             }
         }
 
-        reg = m_registry.registerService(context, classNames, svcObj, dict);
+        reg = m_registry.registerService(context.getBundle(), classNames, svcObj, dict);
 
         // Check to see if this a listener hook; if so, then we need
         // to invoke the callback with all existing service listeners.
-        if (ServiceRegistry.isHook(
+        if (HookRegistry.isHook(
             classNames, org.osgi.framework.hooks.service.ListenerHook.class, svcObj))
         {
             org.osgi.framework.hooks.service.ListenerHook lh =
@@ -3509,13 +3509,12 @@ public class Felix extends BundleImpl implements Framework
                 }
                 finally
                 {
-                    m_registry.ungetService(this, reg.getReference(), null);
+                    this.ungetService(this, reg.getReference(), null);
                 }
             }
         }
 
-        // Fire service event.
-        fireServiceEvent(new ServiceEvent(ServiceEvent.REGISTERED, reg.getReference()), null);
+        this.fireServiceEvent(new ServiceEvent(ServiceEvent.REGISTERED, reg.getReference()), null);
 
         return reg;
     }
@@ -3573,7 +3572,7 @@ public class Felix extends BundleImpl implements Framework
 
         // activate findhooks
         Set<ServiceReference<org.osgi.framework.hooks.service.FindHook>> findHooks =
-            m_registry.getHooks(org.osgi.framework.hooks.service.FindHook.class);
+            m_registry.getHookRegistry().getHooks(org.osgi.framework.hooks.service.FindHook.class);
         for (ServiceReference<org.osgi.framework.hooks.service.FindHook> sr : findHooks)
         {
             org.osgi.framework.hooks.service.FindHook fh = getService(this, sr, false);
@@ -3710,19 +3709,19 @@ public class Felix extends BundleImpl implements Framework
     // Hook service management methods.
     //
 
-    boolean isHookBlackListed(ServiceReference sr)
+    boolean isHookBlackListed(final ServiceReference sr)
     {
-        return m_registry.isHookBlackListed(sr);
+        return m_registry.getHookRegistry().isHookBlackListed(sr);
     }
 
-    void blackListHook(ServiceReference sr)
+    void blackListHook(final ServiceReference sr)
     {
-        m_registry.blackListHook(sr);
+        m_registry.getHookRegistry().blackListHook(sr);
     }
 
-    public <S> Set<ServiceReference<S>> getHooks(Class<S> hookClass)
+    public <S> Set<ServiceReference<S>> getHooks(final Class<S> hookClass)
     {
-        return m_registry.getHooks(hookClass);
+        return m_registry.getHookRegistry().getHooks(hookClass);
     }
 
     //
