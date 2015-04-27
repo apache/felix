@@ -18,7 +18,7 @@ package org.apache.felix.http.base.internal.handler;
 
 import static java.util.Arrays.asList;
 import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_EXCEPTION_ON_INIT;
-import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_SERVICE_ALREAY_USED;
+import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_SERVICE_IN_USE;
 import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
 import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE;
 
@@ -90,7 +90,7 @@ final class ServletHandlerRegistry
     {
         if (this.allServletHandlers.contains(handler))
         {
-            throw new RegistrationFailureException(handler.getServletInfo(), FAILURE_REASON_SERVICE_ALREAY_USED,
+            throw new RegistrationFailureException(handler.getServletInfo(), FAILURE_REASON_SERVICE_IN_USE,
                 "Servlet instance " + handler.getName() + " already registered");
         }
 
