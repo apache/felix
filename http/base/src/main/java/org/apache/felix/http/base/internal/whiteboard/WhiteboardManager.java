@@ -138,6 +138,7 @@ public final class WhiteboardManager
         this.runtimeServiceReg = this.bundleContext.registerService(HttpServiceRuntime.class,
                 serviceRuntime,
                 this.serviceRuntime.getAttributes());
+        this.serviceRuntime.setServiceReference(this.runtimeServiceReg.getReference());
 
         this.webContext = context;
 
@@ -207,6 +208,8 @@ public final class WhiteboardManager
             t.close();
         }
         this.trackers.clear();
+
+        this.serviceRuntime.setServiceReference(null);
 
         // TODO cleanup
         if (this.defaultContextRegistration != null)

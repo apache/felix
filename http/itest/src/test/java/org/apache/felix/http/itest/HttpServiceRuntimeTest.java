@@ -52,7 +52,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -80,6 +79,7 @@ import org.ops4j.pax.exam.spi.reactors.EagerSingleStagedReactorFactory;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.dto.ServiceReferenceDTO;
 import org.osgi.service.http.HttpService;
 import org.osgi.service.http.context.ServletContextHelper;
 import org.osgi.service.http.runtime.HttpServiceRuntime;
@@ -253,14 +253,18 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
         assertNotNull("HttpServiceRuntime unavailable", serviceRuntime);
 
         RuntimeDTO runtimeDTO = serviceRuntime.getRuntimeDTO();
-        Map<String, String> runtimeDTOAttributes = runtimeDTO.attributes;
+        ServiceReferenceDTO serviceDTO = runtimeDTO.serviceDTO;
 
-        assertNotNull(runtimeDTOAttributes);
-        assertTrue(runtimeDTOAttributes.containsKey(HTTP_SERVICE_ID));
-        assertTrue(runtimeDTOAttributes.containsKey(HTTP_SERVICE_ENDPOINT));
-/** TODO */
-//        assertTrue(runtimeDTOAttributes.get(HTTP_SERVICE_ID) instanceof Collection);
-//        assertTrue(0 < Integer.valueOf(runtimeDTOAttributes.get(HTTP_SERVICE_ID_ATTRIBUTE)));
+        assertNotNull(serviceDTO);
+        assertNotNull(serviceDTO.properties);
+        assertTrue(serviceDTO.properties.containsKey(HTTP_SERVICE_ID));
+        assertTrue(serviceDTO.properties.containsKey(HTTP_SERVICE_ENDPOINT));
+
+        assertTrue(serviceDTO.properties.get(HTTP_SERVICE_ID) instanceof Collection);
+        final Collection ids = (Collection)serviceDTO.properties.get(HTTP_SERVICE_ID);
+        assertTrue(ids.size() == 1);
+        assertTrue(ids.iterator().next() instanceof Long);
+        assertTrue(0 < (Long)ids.iterator().next());
 
         assertEquals(0, runtimeDTO.failedErrorPageDTOs.length);
         assertEquals(0, runtimeDTO.failedFilterDTOs.length);
@@ -1218,12 +1222,11 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
         ServiceReference<?> httpServiceRef = m_context.getServiceReference(HttpService.class.getName());
         ServiceReference<?> httpServiceRuntimeRef = m_context.getServiceReference(HttpServiceRuntime.class.getName());
 
-        /** TODO
-        Long expectedId = (Long) httpServiceRef.getProperty(SERVICE_ID);
-        Long actualId = (Long) httpServiceRuntimeRef.getProperty(HTTP_SERVICE_ID_ATTRIBUTE);
+        Long expectedId = (Long) httpServiceRef.getProperty(Constants.SERVICE_ID);
+        Collection col = (Collection)httpServiceRuntimeRef.getProperty(HTTP_SERVICE_ID);
+        Long actualId = (Long) col.iterator().next();
 
         assertEquals(expectedId, actualId);
-        */
     }
 
     // As specified in OSGi Compendium Release 6, Chapter 140.9
@@ -1338,7 +1341,7 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
         // if there is more than one network interface, there might be more than one endpoint!
         final String[] endpoint = (String[]) m_context.getServiceReference(HttpServiceRuntime.class).getProperty(HTTP_SERVICE_ENDPOINT);
         assertNotNull(endpoint);
-        assertTrue(endpoint.length > 1);
+        assertTrue(Arrays.toString(endpoint), endpoint.length > 0);
         assertTrue(endpoint[0].startsWith("http://"));
         assertTrue(endpoint[0].endsWith(":8080/"));
     }

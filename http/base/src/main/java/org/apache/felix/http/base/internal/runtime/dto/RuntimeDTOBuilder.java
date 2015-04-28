@@ -24,7 +24,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.dto.ServiceReferenceDTO;
+import org.osgi.service.http.runtime.HttpServiceRuntime;
 import org.osgi.service.http.runtime.dto.ErrorPageDTO;
 import org.osgi.service.http.runtime.dto.FilterDTO;
 import org.osgi.service.http.runtime.dto.ListenerDTO;
@@ -37,20 +41,20 @@ public final class RuntimeDTOBuilder
 {
 
     private final RegistryRuntime registry;
-    private final Map<String, Object> serviceProperties;
+    private final ServiceReference<HttpServiceRuntime> serviceReference;
 
-    public RuntimeDTOBuilder(RegistryRuntime registry, Map<String, Object> serviceProperties)
+    public RuntimeDTOBuilder(final RegistryRuntime registry, final ServiceReference<HttpServiceRuntime> ref)
     {
         this.registry = registry;
-        this.serviceProperties = serviceProperties;
+        this.serviceReference = ref;
     }
 
     public RuntimeDTO build()
     {
-        FailureRuntime failureRuntime = registry.getFailureRuntime();
+        final FailureRuntime failureRuntime = registry.getFailureRuntime();
 
-        RuntimeDTO runtimeDTO = new RuntimeDTO();
-        runtimeDTO.attributes = createAttributes();
+        final RuntimeDTO runtimeDTO = new RuntimeDTO();
+        runtimeDTO.serviceDTO = createServiceDTO();
         runtimeDTO.failedErrorPageDTOs = failureRuntime.getErrorPageDTOs();
         runtimeDTO.failedFilterDTOs = failureRuntime.getFilterDTOs();
         runtimeDTO.failedListenerDTOs = failureRuntime.getListenerDTOs();
@@ -61,14 +65,33 @@ public final class RuntimeDTOBuilder
         return runtimeDTO;
     }
 
-    private Map<String, String> createAttributes()
+    private ServiceReferenceDTO createServiceDTO()
     {
-        Map<String, String> attributes = new HashMap<String, String>();
-        for (Map.Entry<String, Object> entry : this.serviceProperties.entrySet())
+        final ServiceReferenceDTO dto = new ServiceReferenceDTO();
+        dto.bundle = this.serviceReference.getBundle().getBundleId();
+        dto.id = (Long) this.serviceReference.getProperty(Constants.SERVICE_ID);
+        final Map<String, Object> props = new HashMap<String, Object>();
+        for (String key : this.serviceReference.getPropertyKeys())
         {
-            attributes.put(entry.getKey(), entry.getValue().toString());
+            props.put(key, this.serviceReference.getProperty(key));
         }
-        return attributes;
+        dto.properties = props;
+
+        final Bundle[] ubs = this.serviceReference.getUsingBundles();
+        if (ubs == null)
+        {
+            dto.usingBundles = new long[0];
+        }
+        else
+        {
+            dto.usingBundles = new long[ubs.length];
+            for (int j=0; j < ubs.length; j++)
+            {
+                dto.usingBundles[j] = ubs[j].getBundleId();
+            }
+        }
+
+        return dto;
     }
 
     private ServletContextDTO[] createContextDTOs()

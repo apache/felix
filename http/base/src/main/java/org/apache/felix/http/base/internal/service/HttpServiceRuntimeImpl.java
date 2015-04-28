@@ -26,6 +26,7 @@ import org.apache.felix.http.base.internal.runtime.dto.RegistryRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.RequestInfoDTOBuilder;
 import org.apache.felix.http.base.internal.runtime.dto.RuntimeDTOBuilder;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.runtime.HttpServiceRuntime;
 import org.osgi.service.http.runtime.dto.RequestInfoDTO;
 import org.osgi.service.http.runtime.dto.RuntimeDTO;
@@ -36,6 +37,8 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
 
     private final HandlerRegistry registry;
     private final WhiteboardManager contextManager;
+
+    private volatile ServiceReference<HttpServiceRuntime> serviceReference;
 
     public HttpServiceRuntimeImpl(HandlerRegistry registry,
             WhiteboardManager contextManager)
@@ -48,7 +51,7 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
     public RuntimeDTO getRuntimeDTO()
     {
         RegistryRuntime runtime = contextManager.getRuntime(registry);
-        RuntimeDTOBuilder runtimeDTOBuilder = new RuntimeDTOBuilder(runtime, attributes);
+        RuntimeDTOBuilder runtimeDTOBuilder = new RuntimeDTOBuilder(runtime, this.serviceReference);
         return runtimeDTOBuilder.build();
     }
 
@@ -77,6 +80,11 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
 
     public Dictionary<String, Object> getAttributes()
     {
-        return new Hashtable<String, Object>(attributes);
+        return attributes;
+    }
+
+    public void setServiceReference(
+            final ServiceReference<HttpServiceRuntime> reference) {
+        this.serviceReference = reference;
     }
 }
