@@ -2674,28 +2674,6 @@ public class Felix extends BundleImpl implements Framework
 
     void uninstallBundle(BundleImpl bundle) throws BundleException
     {
-        // Populate a set of refresh candidates. This also includes any bundles that this bundle
-        // is wired to but have previously been uninstalled.
-        List<Bundle> refreshCandidates = new ArrayList<Bundle>();
-        refreshCandidates.add(bundle); // Add this bundle first, so that it gets refreshed first later on
-        BundleRevisions bundleRevisions = bundle.adapt(BundleRevisions.class);
-        if (bundleRevisions != null)
-        {
-            for (BundleRevision br : bundleRevisions.getRevisions())
-            {
-                BundleWiring bw = br.getWiring();
-                if (bw != null)
-                {
-                    for (BundleWire wire : bw.getRequiredWires(null))
-                    {
-                        Bundle b = wire.getProvider().getBundle();
-                        if (Bundle.UNINSTALLED == b.getState() && !refreshCandidates.contains(b))
-                            refreshCandidates.add(b);
-                    }
-                }
-            }
-        }
-
         // Acquire bundle lock.
         try
         {
@@ -2799,6 +2777,28 @@ public class Felix extends BundleImpl implements Framework
         boolean locked = acquireGlobalLock();
         if (locked)
         {
+            // Populate a set of refresh candidates. This also includes any bundles that this bundle
+            // is wired to but have previously been uninstalled.
+            List<Bundle> refreshCandidates = new ArrayList<Bundle>();
+            refreshCandidates.add(bundle); // Add this bundle first, so that it gets refreshed first
+            BundleRevisions bundleRevisions = bundle.adapt(BundleRevisions.class);
+            if (bundleRevisions != null)
+            {
+                for (BundleRevision br : bundleRevisions.getRevisions())
+                {
+                    BundleWiring bw = br.getWiring();
+                    if (bw != null)
+                    {
+                        for (BundleWire wire : bw.getRequiredWires(null))
+                        {
+                            Bundle b = wire.getProvider().getBundle();
+                            if (Bundle.UNINSTALLED == b.getState() && !refreshCandidates.contains(b))
+                                refreshCandidates.add(b);
+                        }
+                    }
+                }
+            }
+
             try
             {
                 for (Bundle b : refreshCandidates)
