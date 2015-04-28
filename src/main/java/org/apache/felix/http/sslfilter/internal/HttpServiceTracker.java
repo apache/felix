@@ -18,12 +18,8 @@
  */
 package org.apache.felix.http.sslfilter.internal;
 
-import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import javax.servlet.ServletException;
 
@@ -44,37 +40,39 @@ import org.osgi.util.tracker.ServiceTracker;
  */
 public class HttpServiceTracker extends ServiceTracker
 {
-    private final ConcurrentMap<ServiceReference, SslFilter> filters;
+    /** Singleton filter to be registered with all http services. */
+    private final SslFilter filter = new SslFilter();
 
-    private ServiceRegistration configReceiver;
+    private volatile ServiceRegistration configReceiver;
 
     @SuppressWarnings("serial")
-    public HttpServiceTracker(BundleContext context)
+    public HttpServiceTracker(final BundleContext context)
     {
         super(context, ExtHttpService.class.getName(), null);
-
-        this.filters = new ConcurrentHashMap<ServiceReference, SslFilter>();
     }
 
     @Override
-    public void open(boolean trackAllServices)
+    public void open(final boolean trackAllServices)
     {
-        Dictionary<String, Object> props = new Hashtable<String, Object>();
+        final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(Constants.SERVICE_PID, SslFilter.PID);
 
         this.configReceiver = super.context.registerService(ManagedService.class.getName(), new ServiceFactory()
         {
+            @Override
             public Object getService(Bundle bundle, ServiceRegistration registration)
             {
                 return new ManagedService()
                 {
+                    @Override
                     public void updated(@SuppressWarnings("rawtypes") Dictionary properties) throws ConfigurationException
                     {
                         configureFilters(properties);
                     }
                 };
             }
-            
+
+            @Override
             public void ungetService(Bundle bundle, ServiceRegistration registration, Object service)
             {
                 // Nop
@@ -96,17 +94,15 @@ public class HttpServiceTracker extends ServiceTracker
         }
     }
 
-    public Object addingService(ServiceReference reference)
+    @Override
+    public Object addingService(final ServiceReference reference)
     {
-        ExtHttpService service = (ExtHttpService) super.addingService(reference);
+        final ExtHttpService service = (ExtHttpService) super.addingService(reference);
         if (service != null)
         {
-            SslFilter filter = new SslFilter();
             try
             {
                 service.registerFilter(filter, ".*", new Hashtable(), 0, null);
-
-                this.filters.putIfAbsent(reference, filter);
 
                 SystemLogger.log(LogService.LOG_DEBUG, "SSL filter registered...");
             }
@@ -119,25 +115,18 @@ public class HttpServiceTracker extends ServiceTracker
         return service;
     }
 
-    public void removedService(ServiceReference reference, Object service)
+    @Override
+    public void removedService(final ServiceReference reference, final Object service)
     {
-        SslFilter filter = this.filters.remove(reference);
-        if (filter != null)
-        {
-            ((ExtHttpService) service).unregisterFilter(filter);
+        ((ExtHttpService) service).unregisterFilter(filter);
 
-            SystemLogger.log(LogService.LOG_DEBUG, "SSL filter unregistered...");
-        }
+        SystemLogger.log(LogService.LOG_DEBUG, "SSL filter unregistered...");
 
         super.removedService(reference, service);
     }
 
     void configureFilters(@SuppressWarnings("rawtypes") final Dictionary properties) throws ConfigurationException
     {
-        List<SslFilter> filters = new ArrayList<SslFilter>(this.filters.values());
-        for (SslFilter sslFilter : filters)
-        {
-            sslFilter.configure(properties);
-        }
+        this.filter.configure(properties);
     }
 }

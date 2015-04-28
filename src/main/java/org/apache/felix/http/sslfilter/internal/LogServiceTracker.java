@@ -24,6 +24,8 @@ import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 
 /**
+ * TODO - this implementation assumes that there is exactly one LogService
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class LogServiceTracker extends ServiceTracker
