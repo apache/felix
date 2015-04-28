@@ -75,6 +75,7 @@ import org.osgi.dto.DTO;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.http.runtime.HttpServiceRuntime;
 import org.osgi.service.http.runtime.dto.ErrorPageDTO;
 import org.osgi.service.http.runtime.dto.FilterDTO;
 import org.osgi.service.http.runtime.dto.ListenerDTO;
@@ -135,6 +136,8 @@ public class RuntimeDTOBuilderTest
 
     @Mock private ServiceReference<Object> resource;
 
+    @Mock private ServiceReference<HttpServiceRuntime> runtimeReference;
+
     private RegistryRuntime registry;
     private Map<String, Object> runtimeAttributes;
 
@@ -143,6 +146,15 @@ public class RuntimeDTOBuilderTest
     {
         registry = null;
         runtimeAttributes = RUNTIME_ATTRIBUTES;
+        when(bundle.getBundleId()).thenReturn(47L);
+        when(runtimeReference.getBundle()).thenReturn(bundle);
+        when(runtimeReference.getUsingBundles()).thenReturn(null);
+        when(runtimeReference.getPropertyKeys()).thenReturn(runtimeAttributes.keySet().toArray(new String[5]));
+        for(final String key : runtimeAttributes.keySet())
+        {
+            when(runtimeReference.getProperty(key)).thenReturn(runtimeAttributes.get(key));
+        }
+        when(runtimeReference.getProperty(Constants.SERVICE_ID)).thenReturn(39L);
     }
 
     public ServletContextHelperRuntime setupContext(ServletContext context, String name, long serviceId)
@@ -259,7 +271,7 @@ public class RuntimeDTOBuilderTest
                 listenerRuntimes,
                 FailureRuntime.empty());
 
-        RuntimeDTO runtimeDTO = new RuntimeDTOBuilder(registry, runtimeAttributes).build();
+        RuntimeDTO runtimeDTO = new RuntimeDTOBuilder(registry, runtimeReference).build();
 
         assertEquals(0, runtimeDTO.failedErrorPageDTOs.length);
         assertEquals(0, runtimeDTO.failedFilterDTOs.length);
@@ -606,7 +618,7 @@ public class RuntimeDTOBuilderTest
                 Collections.<Long, Collection<ServiceReference<?>>>emptyMap(),
                 FailureRuntime.empty());
 
-        RuntimeDTO runtimeDTO = new RuntimeDTOBuilder(registry, runtimeAttributes).build();
+        RuntimeDTO runtimeDTO = new RuntimeDTOBuilder(registry, runtimeReference).build();
 
         assertEquals(1, runtimeDTO.servletContextDTOs.length);
         assertEquals(1, runtimeDTO.servletContextDTOs[0].servletDTOs.length);
@@ -630,7 +642,7 @@ public class RuntimeDTOBuilderTest
                 Collections.<Long, Collection<ServiceReference<?>>>emptyMap(),
                 FailureRuntime.empty());
 
-        RuntimeDTO runtimeDTO = new RuntimeDTOBuilder(registry, runtimeAttributes).build();
+        RuntimeDTO runtimeDTO = new RuntimeDTOBuilder(registry, runtimeReference).build();
 
         assertEquals(2, runtimeDTO.servletContextDTOs.length);
         assertEquals(0, runtimeDTO.servletContextDTOs[0].servletDTOs.length);
@@ -666,7 +678,7 @@ public class RuntimeDTOBuilderTest
                 Collections.<Long, Collection<ServiceReference<?>>>emptyMap(),
                 FailureRuntime.empty());
 
-        new RuntimeDTOBuilder(registry, runtimeAttributes).build();
+        new RuntimeDTOBuilder(registry, runtimeReference).build();
     }
 
     public FailureRuntime setupFailures()
@@ -744,7 +756,7 @@ public class RuntimeDTOBuilderTest
                 Collections.<Long, Collection<ServiceReference<?>>>emptyMap(),
                 setupFailures());
 
-        RuntimeDTO runtimeDTO = new RuntimeDTOBuilder(registry, runtimeAttributes).build();
+        RuntimeDTO runtimeDTO = new RuntimeDTOBuilder(registry, runtimeReference).build();
 
         assertEquals(0, runtimeDTO.servletContextDTOs.length);
 
