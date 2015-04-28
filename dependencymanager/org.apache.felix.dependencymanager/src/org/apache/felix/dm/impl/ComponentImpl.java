@@ -343,40 +343,44 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         dependencyEvents.add(e);        
         dc.setAvailable(true);
         
-        // Recalculate state changes. We only do this if the dependency is started. If the dependency is not started,
-        // it means it is actually starting. And in this case, we don't recalculate state changes now. We'll do it 
-        // once all currently available services are found, and then after, we'll recalculate state change 
-        // (see the startDependencies method).
+        // In the following switch block, we only recalculate state changes 
+        // if the dependency is fully started. If the dependency is not started,
+        // it means it is actually starting (the service tracker is executing the open method). 
+        // And in this case, we don't recalculate state changes now. We'll do it 
+        // once all currently available services are found, and then after, 
+        // we'll recalculate state change (see the startDependencies method). 
+        // 
         // All this is done for two reasons:
         // 1- optimization: it is preferable to recalculate state changes once we know about all currently available dependency services
         //    (after the tracker has returned from its open method).
         // 2- This also allows to determine the list of currently available dependency services from within the component start method callback
         //    (this will be extremely useful when porting the Felix SCR on top of DM4).
         
-        if (dc.isStarted()) {
-            switch (m_state) {
-            case WAITING_FOR_REQUIRED:
-                if (dc.isRequired())
-                    handleChange();
-                break;
-            case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
-                if (!dc.isInstanceBound()) {
-                    if (dc.isRequired()) {
-                        dc.invokeCallback(EventType.ADDED, e);
-                    }
-                    updateInstance(dc, e, false, true);
-                }
-                else {
-                    if (dc.isRequired())
-                        handleChange();
-                }
-                break;
-            case TRACKING_OPTIONAL:
-                dc.invokeCallback(EventType.ADDED, e);
-                updateInstance(dc, e, false, true);
-                break;
-            default:
+        switch (m_state) {
+        case WAITING_FOR_REQUIRED:            
+            if (dc.isStarted() && dc.isRequired()) {
+                // if dependency is starting, we'll handle change after the tracker has returned (see startDependencies method).
+                handleChange();
             }
+            break;
+        case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
+            if (!dc.isInstanceBound()) {
+                if (dc.isRequired()) {
+                    dc.invokeCallback(EventType.ADDED, e);
+                }
+                updateInstance(dc, e, false, true);
+            } else {
+                if (dc.isStarted() && dc.isRequired()) {
+                    // if dependency is starting, we'll handle change after the tracker has returned (see startDependencies method).
+                    handleChange();
+                }
+            }
+            break;
+        case TRACKING_OPTIONAL:
+            dc.invokeCallback(EventType.ADDED, e);
+            updateInstance(dc, e, false, true);
+            break;
+        default:
         }
     }
         
@@ -388,22 +392,20 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         dependencyEvents.remove(e);
         dependencyEvents.add(e);
         
-        if (dc.isStarted()) {
-            switch (m_state) {
-            case TRACKING_OPTIONAL:
+        switch (m_state) {
+        case TRACKING_OPTIONAL:
+            dc.invokeCallback(EventType.CHANGED, e);
+            updateInstance(dc, e, true, false);
+            break;
+
+        case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
+            if (!dc.isInstanceBound()) {
                 dc.invokeCallback(EventType.CHANGED, e);
                 updateInstance(dc, e, true, false);
-                break;
-
-            case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
-                if (!dc.isInstanceBound()) {
-                    dc.invokeCallback(EventType.CHANGED, e);
-                    updateInstance(dc, e, true, false);
-                }
-                break;
-            default:
-                // noop
             }
+            break;
+        default:
+            // noop
         }
     }
     
@@ -430,24 +432,21 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         // Now, really remove the dependency event.
         dependencyEvents.remove(e);    
         
-        // Only check if the component instance has to be updated if the dependency is really started.
-        if (dc.isStarted()) {
-            // Depending on the state, we possible have to invoke the callbacks and update the component instance.        
-            switch (m_state) {
-            case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
-                if (!dc.isInstanceBound()) {
-                    if (dc.isRequired()) {
-                        dc.invokeCallback(EventType.REMOVED, e);
-                    }
-                    updateInstance(dc, e, false, false);
+        // Depending on the state, we possible have to invoke the callbacks and update the component instance.        
+        switch (m_state) {
+        case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
+            if (!dc.isInstanceBound()) {
+                if (dc.isRequired()) {
+                    dc.invokeCallback(EventType.REMOVED, e);
                 }
-                break;
-            case TRACKING_OPTIONAL:
-                dc.invokeCallback(EventType.REMOVED, e);
                 updateInstance(dc, e, false, false);
-                break;
-            default:
             }
+            break;
+        case TRACKING_OPTIONAL:
+            dc.invokeCallback(EventType.REMOVED, e);
+            updateInstance(dc, e, false, false);
+            break;
+        default:
         }
     }
     
@@ -459,25 +458,23 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         dependencyEvents.remove(oldEvent);
         dependencyEvents.add(newEvent);
                 
-        if (dc.isStarted()) {
-            // Depending on the state, we possible have to invoke the callbacks and update the component instance.        
-            switch (m_state) {
-            case WAITING_FOR_REQUIRED:
-                // No need to swap, we don't have yet injected anything
-                break;
-            case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
-                // Only swap *non* instance-bound dependencies
-                if (!dc.isInstanceBound()) {
-                    if (dc.isRequired()) {
-                        dc.invokeCallback(EventType.SWAPPED, oldEvent, newEvent); 
-                    }
+        // Depending on the state, we possible have to invoke the callbacks and update the component instance.        
+        switch (m_state) {
+        case WAITING_FOR_REQUIRED:
+            // No need to swap, we don't have yet injected anything
+            break;
+        case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
+            // Only swap *non* instance-bound dependencies
+            if (!dc.isInstanceBound()) {
+                if (dc.isRequired()) {
+                    dc.invokeCallback(EventType.SWAPPED, oldEvent, newEvent);
                 }
-                break;
-            case TRACKING_OPTIONAL:
-                dc.invokeCallback(EventType.SWAPPED, oldEvent, newEvent);
-                break;
-            default:
             }
+            break;
+        case TRACKING_OPTIONAL:
+            dc.invokeCallback(EventType.SWAPPED, oldEvent, newEvent);
+            break;
+        default:
         }
     }
     
@@ -742,7 +739,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		}
 	}
 
-	private void instantiateComponent() {
+	void instantiateComponent() {
         m_logger.debug("instantiating component.");
 
 		// TODO add more complex factory instantiations of one or more components in a composition here
