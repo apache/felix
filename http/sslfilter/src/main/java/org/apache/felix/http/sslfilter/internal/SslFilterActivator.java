@@ -26,7 +26,8 @@ public class SslFilterActivator implements BundleActivator
     private HttpServiceTracker httpTracker;
     private LogServiceTracker logTracker;
 
-    public void start(BundleContext context)
+    @Override
+    public void start(final BundleContext context)
     {
         this.logTracker = new LogServiceTracker(context);
         this.logTracker.open();
@@ -35,7 +36,8 @@ public class SslFilterActivator implements BundleActivator
         this.httpTracker.open();
     }
 
-    public void stop(BundleContext context)
+    @Override
+    public void stop(final BundleContext context)
     {
         if (this.httpTracker != null)
         {
