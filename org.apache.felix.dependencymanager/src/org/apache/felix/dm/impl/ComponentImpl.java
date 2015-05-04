@@ -343,18 +343,19 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         dependencyEvents.add(e);        
         dc.setAvailable(true);
         
-        // In the following switch block, we only recalculate state changes 
+        // In the following switch block, we sometimes only recalculate state changes 
         // if the dependency is fully started. If the dependency is not started,
         // it means it is actually starting (the service tracker is executing the open method). 
-        // And in this case, we don't recalculate state changes now. We'll do it 
+        // And in this case, depending on the state, we don't recalculate state changes now. We'll do it 
         // once all currently available services are found, and then after, 
         // we'll recalculate state change (see the startDependencies method). 
         // 
         // All this is done for two reasons:
-        // 1- optimization: it is preferable to recalculate state changes once we know about all currently available dependency services
-        //    (after the tracker has returned from its open method).
-        // 2- This also allows to determine the list of currently available dependency services from within the component start method callback
-        //    (this will be extremely useful when porting the Felix SCR on top of DM4).
+        // 1- optimization: it is preferable to recalculate state changes once we know about all currently 
+        //    available dependency services (after the tracker has returned from its open method).
+        // 2- This also allows to determine the list of currently available dependency services from within 
+        //    the component start method callback (this will be extremely useful when porting the Felix SCR 
+        //    on top of DM4).
         
         switch (m_state) {
         case WAITING_FOR_REQUIRED:            
@@ -778,7 +779,9 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		        	}
 		        	else {
     		        	try {
-    		        		m_componentInstance = InvocationUtil.invokeMethod(factory, factory.getClass(), m_instanceFactoryCreateMethod, new Class[][] {{}}, new Object[][] {{}}, false);
+    		        		m_componentInstance = InvocationUtil.invokeMethod(factory, 
+    		        		    factory.getClass(), m_instanceFactoryCreateMethod, 
+    		        		    new Class[][] {{}, {Component.class}}, new Object[][] {{}, {this}}, false);
     					}
     		        	catch (Exception e) {
     	                    m_logger.log(Logger.LOG_ERROR, "Could not create service instance using factory " + factory + " method " + m_instanceFactoryCreateMethod + ".", e);

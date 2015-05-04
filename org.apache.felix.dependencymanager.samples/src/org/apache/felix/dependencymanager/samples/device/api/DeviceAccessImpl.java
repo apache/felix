@@ -30,19 +30,16 @@ public class DeviceAccessImpl implements DeviceAccess {
     volatile Device device;
     volatile DeviceParameter deviceParameter;
 
-    void init(Component c) {
+    void init(Component component) {
         // Dynamically add an extra dependency on a DeviceParameter.
-        DependencyManager dm = c.getDependencyManager();
-        c.add(dm.createServiceDependency().setService(DeviceParameter.class, "(device.id=" + device.getDeviceId() + ")").setRequired(
-            true));
-    }
-
-    void start(Component c) {
-        // Our service is starting: before being registered in the OSGi service registry,
-        // add here a service property, using the device.id.
+    	// We also add a "device.access.id" property dynamically.
         Hashtable<String, Object> props = new Hashtable<>();
         props.put("device.access.id", device.getDeviceId());
-        c.setServiceProperties(props);
+
+        DependencyManager dm = component.getDependencyManager();
+        component
+        	.setServiceProperties(props)
+        	.add(dm.createServiceDependency().setService(DeviceParameter.class, "(device.id=" + device.getDeviceId() + ")").setRequired(true));
     }
 
     @Override
