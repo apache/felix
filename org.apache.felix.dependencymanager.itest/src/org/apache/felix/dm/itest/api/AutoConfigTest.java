@@ -20,6 +20,7 @@ package org.apache.felix.dm.itest.api;
 
 import java.util.ArrayList;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -212,11 +213,13 @@ public class AutoConfigTest extends TestBase {
     
     public class ConsumerWithMapField {
         final Map<Provider, Dictionary> m_providers = new ConcurrentHashMap<>();
+        final Map m_notInjectMe = new HashMap<>();
         
         void start() {
             Assert.assertNotNull(m_providers);
             System.out.println("ConsumerMap.start: injected providers=" + m_providers);
             Assert.assertTrue(m_providers.size() == 2);
+            Assert.assertEquals(0, m_notInjectMe.size());
             for (Map.Entry<Provider, Dictionary> e : m_providers.entrySet()) {
                 Provider provider = e.getKey();
                 Dictionary props = e.getValue();

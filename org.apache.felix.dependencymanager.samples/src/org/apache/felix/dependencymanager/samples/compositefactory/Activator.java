@@ -29,13 +29,11 @@ import org.osgi.service.log.LogService;
 public class Activator extends DependencyActivatorBase {
     @Override
     public void init(BundleContext ctx, DependencyManager m) throws Exception {
-        CompositionManager compositionMngr = new CompositionManager();
+        CompositionManager factory = new CompositionManager();
         m.add(createComponent()
-            .setFactory(compositionMngr, "create")
-            .setComposition(compositionMngr, "getComposition")
-            .add(createConfigurationDependency()
-                .setPid(CompositionManager.class.getName())
-                .setCallback(compositionMngr, "updated"))
+            .setFactory(factory, "create")
+            .setComposition(factory, "getComposition")
+            .add(createConfigurationDependency().setPid(CompositionManager.class.getName()).setCallback(factory, "updated"))
             .add(createServiceDependency().setService(LogService.class).setRequired(true)));
     }
 }

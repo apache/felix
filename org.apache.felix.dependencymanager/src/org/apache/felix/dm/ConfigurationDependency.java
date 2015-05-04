@@ -34,6 +34,11 @@ package org.apache.felix.dm;
  * do not depend on these to parse your settings.</li>
  * </ul>
  * 
+ * The callback invoked when a configuration dependency is updated can supports the following signatures:<p>
+ * <ul><li> updated(Dictionary)
+ *     <li> updated(Component, Dictionary)
+ * </ul>
+ * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public interface ConfigurationDependency extends Dependency, ComponentDependencyDeclaration {

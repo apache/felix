@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<repository increment="1430261259438" name="Local" xmlns="http://www.osgi.org/xmlns/repository/v1.0.0">
+<repository increment="1430498223597" name="Local" xmlns="http://www.osgi.org/xmlns/repository/v1.0.0">
   <resource>
     <capability namespace="osgi.identity">
       <attribute name="osgi.identity" value="de.twentyeleven.skysail.org.json-osgi"/>
@@ -31,40 +31,40 @@
     <capability namespace="osgi.identity">
       <attribute name="osgi.identity" value="org.apache.felix.configadmin"/>
       <attribute name="type" value="osgi.bundle"/>
-      <attribute name="version" type="Version" value="1.8.1.SNAPSHOT"/>
+      <attribute name="version" type="Version" value="1.8.4"/>
     </capability>
     <capability namespace="osgi.content">
-      <attribute name="osgi.content" value="a55e3603a99d81086996622e03ed3cac324b5de469db681acef99ebcb0ab89c7"/>
-      <attribute name="url" value="org.apache.felix.configadmin/org.apache.felix.configadmin-1.8.1.jar"/>
-      <attribute name="size" type="Long" value="120333"/>
+      <attribute name="osgi.content" value="31f1a7d770288b798234ad1b3f2a4a8fcbf3095a513d8927a47516b96a8d4cf4"/>
+      <attribute name="url" value="org.apache.felix.configadmin/org.apache.felix.configadmin-1.8.4.jar"/>
+      <attribute name="size" type="Long" value="128897"/>
       <attribute name="mime" value="application/vnd.osgi.bundle"/>
     </capability>
     <capability namespace="osgi.wiring.bundle">
       <attribute name="osgi.wiring.bundle" value="org.apache.felix.configadmin"/>
-      <attribute name="bundle-version" type="Version" value="1.8.1.SNAPSHOT"/>
+      <attribute name="bundle-version" type="Version" value="1.8.4"/>
     </capability>
     <capability namespace="osgi.wiring.host">
       <attribute name="osgi.wiring.host" value="org.apache.felix.configadmin"/>
-      <attribute name="bundle-version" type="Version" value="1.8.1.SNAPSHOT"/>
+      <attribute name="bundle-version" type="Version" value="1.8.4"/>
     </capability>
     <capability namespace="osgi.wiring.package">
       <attribute name="osgi.wiring.package" value="org.apache.felix.cm"/>
       <attribute name="version" type="Version" value="1.0.0"/>
       <attribute name="bundle-symbolic-name" value="org.apache.felix.configadmin"/>
-      <attribute name="bundle-version" type="Version" value="1.8.1.SNAPSHOT"/>
+      <attribute name="bundle-version" type="Version" value="1.8.4"/>
     </capability>
     <capability namespace="osgi.wiring.package">
       <attribute name="osgi.wiring.package" value="org.apache.felix.cm.file"/>
       <attribute name="version" type="Version" value="1.0.0"/>
       <attribute name="bundle-symbolic-name" value="org.apache.felix.configadmin"/>
-      <attribute name="bundle-version" type="Version" value="1.8.1.SNAPSHOT"/>
+      <attribute name="bundle-version" type="Version" value="1.8.4"/>
       <directive name="uses" value="org.apache.felix.cm,org.osgi.framework"/>
     </capability>
     <capability namespace="osgi.wiring.package">
       <attribute name="osgi.wiring.package" value="org.osgi.service.cm"/>
       <attribute name="version" type="Version" value="1.5.0"/>
       <attribute name="bundle-symbolic-name" value="org.apache.felix.configadmin"/>
-      <attribute name="bundle-version" type="Version" value="1.8.1.SNAPSHOT"/>
+      <attribute name="bundle-version" type="Version" value="1.8.4"/>
       <directive name="uses" value="org.osgi.framework"/>
     </capability>
     <capability namespace="osgi.service">
