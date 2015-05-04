@@ -61,15 +61,44 @@ public class ConfigurationDependencyTest extends TestBase {
         e.step(6);
     }
     
-    public void testComponentWithRequiredConfigurationAndCallbackInstanceAndServicePropertyPropagation() {
+    public void testComponentWithRequiredConfigurationWithComponentArgAndServicePropertyPropagation() {
         DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // create a service provider and consumer
+        Component s1 = m.createComponent().setImplementation(new ConfigurationConsumerWithComponentArg(e)).setInterface(Runnable.class.getName(), null).add(m.createConfigurationDependency().setPid(PID).setPropagate(true));
+        Component s2 = m.createComponent().setImplementation(new ConfigurationCreator(e)).add(m.createServiceDependency().setService(ConfigurationAdmin.class).setRequired(true));
+        Component s3 = m.createComponent().setImplementation(new ConfiguredServiceConsumer(e)).add(m.createServiceDependency().setService(Runnable.class, ("(testkey=testvalue)")).setRequired(true));
+        m.add(s1);
+        m.add(s2);
+        m.add(s3);
+        e.waitForStep(4, 50000000);
+        m.remove(s1);
+        m.remove(s2);
+        m.remove(s3);
+        // ensure we executed all steps inside the component instance
+        e.step(6);
+    }
+    
+    public void testComponentWithRequiredConfigurationAndCallbackInstanceAndServicePropertyPropagation() {
+        Ensure e = new Ensure();
         ConfigurationConsumerCallbackInstance callbackInstance = new ConfigurationConsumerCallbackInstance(e);
+        testComponentWithRequiredConfigurationAndCallbackInstanceAndServicePropertyPropagation(callbackInstance, "updateConfiguration", e);
+    }
+    
+    public void testComponentWithRequiredConfigurationAndCallbackInstanceWithComponentArgAndServicePropertyPropagation() {
+        Ensure e = new Ensure();
+        ConfigurationConsumerCallbackInstanceWithComponentArg callbackInstance = new ConfigurationConsumerCallbackInstanceWithComponentArg(e);
+        testComponentWithRequiredConfigurationAndCallbackInstanceAndServicePropertyPropagation(callbackInstance, "updateConfiguration", e);
+    }
+    
+    public void testComponentWithRequiredConfigurationAndCallbackInstanceAndServicePropertyPropagation
+    	(Object callbackInstance, String updateMethod, Ensure e) {
+        DependencyManager m = getDM();
+        // create a service provider and consumer
         Component s1 = m.createComponent().setImplementation(new ConfigurationConsumerWithCallbackInstance(e))
             .setInterface(Runnable.class.getName(), null)
-            .add(m.createConfigurationDependency().setPid(PID).setPropagate(true).setCallback(callbackInstance, "updateConfiguration"));
+            .add(m.createConfigurationDependency().setPid(PID).setPropagate(true).setCallback(callbackInstance, updateMethod));
         Component s2 = m.createComponent().setImplementation(new ConfigurationCreator(e))
             .add(m.createServiceDependency().setService(ConfigurationAdmin.class).setRequired(true));
         Component s3 = m.createComponent().setImplementation(new ConfiguredServiceConsumer(e))
@@ -164,6 +193,17 @@ public class ConfigurationDependencyTest extends TestBase {
         }
     }
     
+    static class ConfigurationConsumerWithComponentArg extends ConfigurationConsumer {
+        public ConfigurationConsumerWithComponentArg(Ensure e) {
+            super(e);
+        }
+
+        public void updatedWithComponentArg(Component component, Dictionary props) throws ConfigurationException {
+        	Assert.assertNotNull(component);
+        	super.updated(props);
+        }
+    }
+    
     static class ConfigurationConsumerCallbackInstance {
         private final Ensure m_ensure;
 
@@ -178,6 +218,18 @@ public class ConfigurationDependencyTest extends TestBase {
                     Assert.fail("Could not find the configured property.");
                 }
             } 
+        }
+    }
+    
+    static class ConfigurationConsumerCallbackInstanceWithComponentArg extends ConfigurationConsumerCallbackInstance {
+    	
+        public ConfigurationConsumerCallbackInstanceWithComponentArg(Ensure e) {
+            super(e);
+        }
+        
+        public void updateConfigurationWithComponentArg(Component component, Dictionary props) throws Exception {
+        	Assert.assertNotNull(component);
+        	super.updateConfiguration(props);
         }
     }
     

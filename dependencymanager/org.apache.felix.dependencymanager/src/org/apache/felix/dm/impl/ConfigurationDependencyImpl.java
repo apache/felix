@@ -23,6 +23,7 @@ import java.util.Dictionary;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ConfigurationDependency;
 import org.apache.felix.dm.Logger;
 import org.apache.felix.dm.PropertyMetaData;
@@ -92,7 +93,10 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 
     @Override
     public boolean needsInstance() {
-        return m_callbackInstance == null;
+    	// we need the component instances even if there is a callback instance, which could need to access to
+    	// component instances while being invoked in the updated callback. So we return true here, even if there
+    	// is a configured callback instance.
+        return true; 
     }
 
     @Override
@@ -266,8 +270,13 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 					try {
 						InvocationUtil.invokeCallbackMethod(instances[i],
 								m_add, new Class[][] {
-										{ Dictionary.class }, {} },
-								new Object[][] { { settings }, {} });
+										{ Dictionary.class },
+										{ Component.class, Dictionary.class },
+										{} },
+								new Object[][] { 
+						            { settings }, 
+						            { m_component, settings },
+						            {} });
 					}
 
 					catch (InvocationTargetException e) {

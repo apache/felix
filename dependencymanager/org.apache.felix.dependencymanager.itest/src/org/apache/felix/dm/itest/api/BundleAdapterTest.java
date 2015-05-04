@@ -54,12 +54,68 @@ public class BundleAdapterTest extends TestBase {
         // remove the bundle adapter
         m.remove(adapter);
     }
+    
+    public void testBundleAdapterWithCallbackInstance() {
+        DependencyManager m = getDM();
+        // create a bundle adapter service (one is created for each bundle)
+        BundleAdapterWithCallback baWithCb = new BundleAdapterWithCallback();
+        BundleAdapterCallbackInstance cbInstance = new BundleAdapterCallbackInstance(baWithCb);
+        
+        Component adapter = m.createBundleAdapterService(Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE, null, false,
+        												 cbInstance, "add", null, "remove")
+                             .setImplementation(baWithCb)
+                             .setInterface(BundleAdapter.class.getName(), null);
+
+        // create a service provider and consumer
+        Consumer c = new Consumer();
+        Component consumer = m.createComponent().setImplementation(c)
+            .add(m.createServiceDependency().setService(BundleAdapter.class).setCallbacks("add", "remove"));
+        
+        // add the bundle adapter
+        m.add(adapter);
+        // add the service consumer
+        m.add(consumer);
+        // check if at least one bundle was found
+        c.check();
+        // remove the consumer again
+        m.remove(consumer);
+        // check if all bundles were removed correctly
+        c.doubleCheck();
+        // remove the bundle adapter
+        m.remove(adapter);
+    }
         
     public static class BundleAdapter {
         volatile Bundle m_bundle;
         
         Bundle getBundle() {
             return m_bundle;
+        }
+    }
+    
+    public static class BundleAdapterWithCallback extends BundleAdapter {
+        void add(Bundle b) {
+        	m_bundle = b;        	
+        }
+        
+        void remove(Bundle b) {
+        	m_bundle = null;
+        }
+    }
+    
+    public static class BundleAdapterCallbackInstance {
+    	final BundleAdapterWithCallback m_ba;
+    	
+    	BundleAdapterCallbackInstance(BundleAdapterWithCallback ba) {
+    		m_ba = ba;
+    	}
+    	
+        void add(Bundle b) {
+        	m_ba.add(b);	
+        }
+        
+        void remove(Bundle b) {
+        	m_ba.remove(b);
         }
     }
     

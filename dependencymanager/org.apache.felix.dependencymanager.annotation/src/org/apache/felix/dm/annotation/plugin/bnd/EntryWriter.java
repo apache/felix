@@ -169,42 +169,34 @@ public class EntryWriter
     /**
      * Get a class attribute value from an annotation and write it into this descriptor entry.
      */
-    public void putClass(Annotation annotation, EntryParam param, Object def)
+    public void putClass(Annotation annotation, EntryParam param)
     {
         checkType(param.toString());
-
-        Pattern pattern = Patterns.CLASS;
-        Object value = annotation.get(param.toString());
-        if (value == null && def != null)
-        {
-            value = def;
-            pattern = null;
-        }
+        String value = AnnotationCollector.parseClassAttrValue(annotation.get(param.toString()));
         if (value != null)
         {
-            if (pattern != null)
-            {
-                value = Patterns.parseClass(value.toString(), pattern, 1);
-            }
-            put(param, value.toString());
+            put(param, value);
         }
     }
 
     /**
      * Get a class array attribute value from an annotation and write it into this descriptor entry.
-     * Also collect classes found from the array into a given Set.
+     *
+     * @param annotation the annotation containing an array of classes
+     * @param param the attribute name corresponding to an array of classes
+     * @param def the default array of classes (String[]), if the attribute is not defined in the annotation
      * @return the class array size.
      */
     public int putClassArray(Annotation annotation, EntryParam param, Object def, Set<String> collect)
     {
         checkType(param.toString());
 
-        Pattern pattern = Patterns.CLASS;
+        boolean usingDefault = false;
         Object value = annotation.get(param.toString());
         if (value == null && def != null)
         {
             value = def;
-            pattern = null;
+            usingDefault = true;
         }
         if (value != null)
         {
@@ -216,9 +208,10 @@ public class EntryWriter
 
             for (Object v: ((Object[]) value))
             {
-                if (pattern != null)
+                if (! usingDefault)
                 {
-                    v = Patterns.parseClass(v.toString(), pattern, 1);
+                	// Parse the annotation attribute value.
+                    v = AnnotationCollector.parseClassAttrValue(v);
                 }
                 try
                 {

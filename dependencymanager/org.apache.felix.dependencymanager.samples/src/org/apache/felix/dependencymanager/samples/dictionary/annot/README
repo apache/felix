@@ -32,12 +32,12 @@ configuration to the "Spell Checker Aspect Dictionary (annotation)" factory pid 
 aspect configuration metatype is also declared using the bnd metatype annotations (see
 DictionaryAspectConfiguration.java). 
 
-Before running this sample, go to webconsole, and add some words in the Spell Checker Configuration (annotation) factory PID, and
-in the Spell Checker Aspect Dictionary (annotation) PID.
+Before running this sample, go to webconsole (http://localhost:8080/system/console/configMgr), and add some words in the 
+"Spell Checker Dictionary (annotation)" section, and in the "Spell Checker Aspect Dictionary (annotation)" configurations.
 
 Then go to gogo shell, and type dm help. You will normally see the dictionary.annotation:spellcheck command.
 Type 
  
-   dictionary.annotation:spellcheck <some words>
+   dictionary.annotation:spellcheck <some words that you have configured in webconsole>
 
-and the dictionary will check for proper word existence.
+and the command will check for proper word existence.
