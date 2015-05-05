@@ -1,3 +1,19 @@
+Release org.apache.felix.dependencymanager.r3:
+---------------------------------------------
+
+** Bug
+    * [FELIX-4858] - DependencyManager: missing createCopy method in timed service dependency
+    * [FELIX-4869] - Callbacks not invoked for dependencies that are added after the component is initialized
+
+** Improvement
+    * [FELIX-4614] - Factory create() method should have access to the component definition
+    * [FELIX-4878] - Support more signatures for Dependency callbacks
+    * [FELIX-4879] - ConfigurationDependency should always "need instance".
+    * [FELIX-4880] - Missing callback instance support for some adapters
+
+** Wish
+    * [FELIX-4875] - Update DM integration test with latest ConfigAdmin
+
 Release org.apache.felix.dependencymanager.r2:
 ---------------------------------------------
 
