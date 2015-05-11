@@ -702,6 +702,10 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             }
         }
 
+        if ( configList.size() == 0 )
+        {
+            return null;
+        }
         return ( ConfigurationImpl[] ) configList.toArray( new ConfigurationImpl[configList
             .size()] );
     }
@@ -1440,6 +1444,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             managedServiceTracker.provideConfiguration( sr, configPid, null, properties, revision, this.configs );
         }
 
+        @Override
         public String toString()
         {
             return "ManagedService Update: pid=" + Arrays.asList( pids );
@@ -1600,6 +1605,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         }
 
 
+        @Override
         public String toString()
         {
             return "ManagedServiceFactory Update: factoryPid=" + Arrays.asList( this.factoryPids );
@@ -1767,6 +1773,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         }
 
 
+        @Override
         public String toString()
         {
             return "Update: pid=" + config.getPid();
@@ -1851,6 +1858,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             }
         }
 
+        @Override
         public String toString()
         {
             return "Delete: pid=" + config.getPid();
@@ -1926,6 +1934,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         }
 
 
+        @Override
         public String toString()
         {
             return "Location Changed (pid=" + config.getPid() + "): " + oldLocation + " ==> "
@@ -2007,6 +2016,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         }
 
 
+        @Override
         public String toString()
         {
             return "Fire ConfigurationEvent: pid=" + pid;
