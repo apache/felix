@@ -29,7 +29,6 @@ import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Component;
-import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -39,11 +38,10 @@ import org.apache.maven.settings.Settings;
 
 /**
  * Deploys bundle details to a remote OBR repository (command-line goal)
- * 
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@Mojo( name = "deploy-file", requiresProject = false )
-@Execute( phase = LifecyclePhase.DEPLOY )
+@Mojo( name = "deploy-file", requiresProject = false, defaultPhase = LifecyclePhase.DEPLOY )
 public final class ObrDeployFile extends AbstractFileMojo
 {
     /**

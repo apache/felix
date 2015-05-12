@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -38,8 +37,9 @@ import aQute.bnd.version.Version;
  * BND Baseline check between two bundles.
  * @since 2.4.1
  */
-@Mojo( name = "baseline", threadSafe = true, requiresDependencyResolution = ResolutionScope.TEST )
-@Execute( phase = LifecyclePhase.VERIFY )
+@Mojo( name = "baseline", threadSafe = true,
+       requiresDependencyResolution = ResolutionScope.TEST,
+       defaultPhase = LifecyclePhase.VERIFY)
 public final class BaselinePlugin
     extends AbstractBaselinePlugin
 {

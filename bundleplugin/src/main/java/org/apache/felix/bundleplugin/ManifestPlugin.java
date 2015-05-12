@@ -33,7 +33,6 @@ import java.util.jar.Manifest;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -49,8 +48,9 @@ import aQute.bnd.osgi.Resource;
 /**
  * Generate an OSGi manifest for this project
  */
-@Mojo( name = "manifest", requiresDependencyResolution = ResolutionScope.TEST, threadSafe = true )
-@Execute( phase = LifecyclePhase.PROCESS_CLASSES )
+@Mojo( name = "manifest", requiresDependencyResolution = ResolutionScope.TEST,
+       threadSafe = true,
+       defaultPhase = LifecyclePhase.PROCESS_CLASSES)
 public class ManifestPlugin extends BundlePlugin
 {
     /**
