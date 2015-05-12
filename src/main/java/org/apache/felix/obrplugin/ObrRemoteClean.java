@@ -54,7 +54,6 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Component;
-import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -70,11 +69,10 @@ import org.xml.sax.SAXException;
 /**
  * Clean a remote repository file.
  * It just looks for every resources and check that pointed file exists.
- * 
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@Mojo( name = "remote-clean", requiresProject = false )
-@Execute( phase = LifecyclePhase.CLEAN )
+@Mojo( name = "remote-clean", requiresProject = false, defaultPhase = LifecyclePhase.CLEAN )
 public final class ObrRemoteClean extends AbstractMojo
 {
     /**
@@ -357,7 +355,7 @@ public final class ObrRemoteClean extends AbstractMojo
 
     /**
      * Initialize the document builder from Xerces.
-     * 
+     *
      * @return DocumentBuilder ready to create new document
      * @throws MojoExecutionException : occurs when the instantiation of the document builder fails
      */
@@ -380,7 +378,7 @@ public final class ObrRemoteClean extends AbstractMojo
 
     /**
      * Open an XML file.
-     * 
+     *
      * @param file : XML file
      * @param constructor DocumentBuilder get from xerces
      * @return Document which describes this file
@@ -416,7 +414,7 @@ public final class ObrRemoteClean extends AbstractMojo
 
     /**
      * write a Node in a xml file.
-     * 
+     *
      * @param outputFilename URI to the output file
      * @param treeToBeWrite Node root of the tree to be write in file
      * @throws MojoExecutionException if the plugin failed

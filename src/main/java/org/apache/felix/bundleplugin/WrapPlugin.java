@@ -20,7 +20,6 @@ package org.apache.felix.bundleplugin;
 
 
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
@@ -31,10 +30,11 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
  * @deprecated The wrap goal is no longer supported and may be removed in a future release
  */
 @Deprecated
-@Mojo( name = "wrap", requiresDependencyResolution = ResolutionScope.TEST )
-@Execute( phase = LifecyclePhase.PACKAGE )
+@Mojo( name = "wrap", requiresDependencyResolution = ResolutionScope.TEST,
+       defaultPhase = LifecyclePhase.PACKAGE)
 public final class WrapPlugin extends BundleAllPlugin
 {
+    @Override
     public void execute() throws MojoExecutionException
     {
         getLog().warn( "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );

@@ -58,7 +58,6 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Component;
-import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -91,8 +90,9 @@ import aQute.lib.spring.SpringXMLType;
  * Create an OSGi bundle from Maven project
  *
  */
-@Mojo( name = "bundle", requiresDependencyResolution = ResolutionScope.TEST, threadSafe = true )
-@Execute( phase = LifecyclePhase.PACKAGE )
+@Mojo( name = "bundle", requiresDependencyResolution = ResolutionScope.TEST,
+       threadSafe = true,
+       defaultPhase = LifecyclePhase.PACKAGE )
 public class BundlePlugin extends AbstractMojo
 {
     /**

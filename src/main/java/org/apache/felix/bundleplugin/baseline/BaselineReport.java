@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.ResourceBundle;
 
 import org.apache.maven.doxia.sink.Sink;
-import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -43,8 +42,8 @@ import aQute.bnd.version.Version;
  *
  * @since 2.4.1
  */
-@Mojo( name = "baseline-report", threadSafe = true )
-@Execute( phase = LifecyclePhase.SITE )
+@Mojo( name = "baseline-report", threadSafe = true,
+       defaultPhase = LifecyclePhase.SITE)
 public final class BaselineReport
     extends AbstractBaselinePlugin
     implements MavenReport
