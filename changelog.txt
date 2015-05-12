@@ -4,6 +4,9 @@ Changes from 1.8.4 to 1.8.6
 ** Bug
     * [FELIX-4884] - listConfigurations should return null if no configuration is found
 
+** Improvement
+    * [FELIX-4844] - Store configuration data in a diff-tool friendly way
+
 
 Changes from 1.8.2 to 1.8.4
 ---------------------------

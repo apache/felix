@@ -30,8 +30,10 @@ import java.io.PushbackReader;
 import java.io.Writer;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -95,6 +97,8 @@ public class ConfigurationHandler
     protected static final int TOKEN_PRIMITIVE_BOOLEAN = 'b';
 
     protected static final String CRLF = "\r\n";
+    protected static final String INDENT = "  ";
+    protected static final String COLLECTION_LINE_BREAK = " \\\r\n";
 
     protected static final Map code2Type;
     protected static final Map type2Code;
@@ -200,7 +204,7 @@ public class ConfigurationHandler
     {
         BufferedWriter bw = new BufferedWriter( new OutputStreamWriter( out, ENCODING ) );
 
-        for ( Enumeration ce = properties.keys(); ce.hasMoreElements(); )
+        for ( Enumeration ce = orderedKeys(properties); ce.hasMoreElements(); )
         {
             String key = ( String ) ce.nextElement();
 
@@ -212,6 +216,28 @@ public class ConfigurationHandler
         }
 
         bw.flush();
+    }
+
+    /**
+     * Generates an <code>Enumeration</code> for the given
+     * <code>Dictionary</code> where the keys of the <code>Dictionary</code>
+     * are provided in sorted order.
+     *
+     * @param properties
+     *                   The <code>Dictionary</code> that keys are sorted.
+     * @return An <code>Enumeration</code> that provides the keys of
+     *         properties in an ordered manner.
+     */
+    private static Enumeration orderedKeys(Dictionary properties) {
+        String[] keyArray = new String[properties.size()];
+        int i = 0;
+        for ( Enumeration ce = properties.keys(); ce.hasMoreElements(); )
+        {
+            keyArray[i] = ( String ) ce.nextElement();
+            i++;
+        }
+        Arrays.sort(keyArray);
+        return Collections.enumeration( Arrays.asList( keyArray ) );
     }
 
 
@@ -336,7 +362,7 @@ public class ConfigurationHandler
         List list = new ArrayList();
         for ( ;; )
         {
-            int c = read(pr);
+            int c = ignorablePageBreakAndWhiteSpace( pr );
             if ( c == TOKEN_VAL_OPEN )
             {
                 Object value = readSimple( typeCode, pr );
@@ -350,7 +376,7 @@ public class ConfigurationHandler
 
                 list.add( value );
 
-                c = read( pr );
+                c = ignorablePageBreakAndWhiteSpace( pr );
             }
 
             if ( c == TOKEN_ARR_CLOS )
@@ -380,7 +406,7 @@ public class ConfigurationHandler
         Collection collection = new ArrayList();
         for ( ;; )
         {
-            int c = read( pr );
+            int c = ignorablePageBreakAndWhiteSpace( pr );
             if ( c == TOKEN_VAL_OPEN )
             {
                 Object value = readSimple( typeCode, pr );
@@ -394,7 +420,7 @@ public class ConfigurationHandler
 
                 collection.add( value );
 
-                c = read( pr );
+                c = ignorablePageBreakAndWhiteSpace( pr );
             }
 
             if ( c == TOKEN_VEC_CLOS )
@@ -477,23 +503,6 @@ public class ConfigurationHandler
         {
             readFailure( next, expected );
         }
-    }
-
-
-    private boolean checkNext( PushbackReader pr, int expected ) throws IOException
-    {
-        int next = read( pr );
-        if ( next < 0 )
-        {
-            return false;
-        }
-
-        if ( next == expected )
-        {
-            return true;
-        }
-
-        return false;
     }
 
 
@@ -599,6 +608,28 @@ public class ConfigurationHandler
     }
 
 
+    private int ignorablePageBreakAndWhiteSpace( PushbackReader pr ) throws IOException
+    {
+        int c = ignorableWhiteSpace( pr );
+        for ( ;; )
+        {
+            if ( c != '\\' )
+            {
+                break;
+            }
+            int c1 = pr.read();
+            if ( c1 == '\r' || c1 == '\n' )
+            {
+                c = ignorableWhiteSpace( pr );
+            } else {
+                pr.unread(c1);
+                break;
+            }
+        }
+        return c;
+    }
+
+
     private int read( PushbackReader pr ) throws IOException
     {
         int c = pr.read();
@@ -678,12 +709,12 @@ public class ConfigurationHandler
         int size = Array.getLength( arrayValue );
         writeType( out, arrayValue.getClass().getComponentType() );
         out.write( TOKEN_ARR_OPEN );
+        out.write( COLLECTION_LINE_BREAK );
         for ( int i = 0; i < size; i++ )
         {
-            if ( i > 0 )
-                out.write( TOKEN_COMMA );
-            writeSimple( out, Array.get( arrayValue, i ) );
+            writeCollectionElement(out, Array.get( arrayValue, i ));
         }
+        out.write( INDENT );
         out.write( TOKEN_ARR_CLOS );
     }
 
@@ -693,6 +724,7 @@ public class ConfigurationHandler
         if ( collection.isEmpty() )
         {
             out.write( TOKEN_VEC_OPEN );
+            out.write( COLLECTION_LINE_BREAK );
             out.write( TOKEN_VEC_CLOS );
         }
         else
@@ -702,15 +734,24 @@ public class ConfigurationHandler
 
             writeType( out, firstElement.getClass() );
             out.write( TOKEN_VEC_OPEN );
-            writeSimple( out, firstElement );
+            out.write( COLLECTION_LINE_BREAK );
+
+            writeCollectionElement( out, firstElement );
 
             while ( ci.hasNext() )
             {
-                out.write( TOKEN_COMMA );
-                writeSimple( out, ci.next() );
+                writeCollectionElement( out, ci.next() );
             }
             out.write( TOKEN_VEC_CLOS );
         }
+    }
+
+
+    private static void writeCollectionElement(Writer out, Object element) throws IOException {
+        out.write( INDENT );
+        writeSimple( out, element );
+        out.write( TOKEN_COMMA );
+        out.write(COLLECTION_LINE_BREAK);
     }
 
 
