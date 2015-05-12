@@ -1,3 +1,7 @@
+Changes from 2.5.4 to 2.5.5
+---------------------------
+
+
 Changes from 2.5.3 to 2.5.4
 ---------------------------
 
@@ -5,6 +9,7 @@ Changes from 2.5.3 to 2.5.4
     * [FELIX-4556] - Maven Bundle Plugin fails with ArrayIndexOutOfBoundsException, "Invalid Class File" errors with Java 8 features
     * [FELIX-4659] - The maven bundle plugin incorrectly reports cardinality on service references in the generated generic requirements
     * [FELIX-4817] - Baseline plugin is not thread safe
+    * [FELIX-4679] - Import package not generated for the classes used in throw clause in a private method.
 
 ** Improvement
     * [FELIX-4666] - The baseline goal should print out the resolved version used for comparison
