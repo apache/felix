@@ -488,10 +488,8 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
         assertEquals(0, runtimeDTOWithFirstListener.failedListenerDTOs.length);
 
         ServletContextDTO contextDTO = assertDefaultContext(runtimeDTOWithFirstListener);
-        // TODO fix : servlet context listener is only added when registerd before context activation
-        assertEquals(0, contextDTO.listenerDTOs.length);
-        // TODO
-//        assertEquals(ServletContextListener.class.getName(), contextDTO.listenerDTOs[0].types[0]);
+        assertEquals(1, contextDTO.listenerDTOs.length);
+        assertEquals(ServletContextListener.class.getName(), contextDTO.listenerDTOs[0].types[0]);
 
         // register all other listener types
         registerListener(ServletContextAttributeListener.class, true);
@@ -511,14 +509,14 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
         assertEquals(0, runtimeDTOWithAllListeners.failedListenerDTOs.length);
 
         contextDTO = assertDefaultContext(runtimeDTOWithAllListeners);
-        // TODO
-        assertEquals(5, contextDTO.listenerDTOs.length);
-//        assertEquals(ServletContextListener.class.getName(), contextDTO.listenerDTOs[0].types[0]);
-        assertEquals(ServletContextAttributeListener.class.getName(), contextDTO.listenerDTOs[0].types[0]);
-        assertEquals(ServletRequestListener.class.getName(), contextDTO.listenerDTOs[1].types[0]);
-        assertEquals(ServletRequestAttributeListener.class.getName(), contextDTO.listenerDTOs[2].types[0]);
-        assertEquals(HttpSessionListener.class.getName(), contextDTO.listenerDTOs[3].types[0]);
-        assertEquals(HttpSessionAttributeListener.class.getName(), contextDTO.listenerDTOs[4].types[0]);
+
+        assertEquals(6, contextDTO.listenerDTOs.length);
+        assertEquals(ServletContextListener.class.getName(), contextDTO.listenerDTOs[0].types[0]);
+        assertEquals(ServletContextAttributeListener.class.getName(), contextDTO.listenerDTOs[1].types[0]);
+        assertEquals(ServletRequestListener.class.getName(), contextDTO.listenerDTOs[2].types[0]);
+        assertEquals(ServletRequestAttributeListener.class.getName(), contextDTO.listenerDTOs[3].types[0]);
+        assertEquals(HttpSessionListener.class.getName(), contextDTO.listenerDTOs[4].types[0]);
+        assertEquals(HttpSessionAttributeListener.class.getName(), contextDTO.listenerDTOs[5].types[0]);
     }
 
     @Test
