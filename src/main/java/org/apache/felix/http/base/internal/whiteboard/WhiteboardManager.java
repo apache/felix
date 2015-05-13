@@ -470,7 +470,14 @@ public final class WhiteboardManager
                     {
                         for(final ContextHandler h : handlerList)
                         {
-                            this.registerWhiteboardService(h, info);
+                            if ( info instanceof ServletContextListenerInfo )
+                            {
+                                h.getListenerRegistry().initialized((ServletContextListenerInfo)info);
+                            }
+                            else
+                            {
+                                this.registerWhiteboardService(h, info);
+                            }
                         }
                     }
                 }
@@ -501,7 +508,14 @@ public final class WhiteboardManager
                     {
                         for(final ContextHandler h : handlerList)
                         {
-                            this.unregisterWhiteboardService(h, info);
+                            if ( !(info instanceof ServletContextListenerInfo ) )
+                            {
+                                this.unregisterWhiteboardService(h, info);
+                            }
+                            else
+                            {
+                                h.getListenerRegistry().initialized((ServletContextListenerInfo)info);
+                            }
                         }
                     }
                 }
