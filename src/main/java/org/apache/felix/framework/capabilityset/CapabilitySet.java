@@ -25,8 +25,6 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -88,7 +86,7 @@ public class CapabilitySet
         for (int i = 0; (indexProps != null) && (i < indexProps.size()); i++)
         {
             m_indices.put(
-                indexProps.get(i), new HashMap<Object, Set<BundleCapability>>());
+                indexProps.get(i), new ConcurrentHashMap<Object, Set<BundleCapability>>());
         }
     }
 
@@ -131,7 +129,7 @@ public class CapabilitySet
         Set<BundleCapability> caps = index.get(capValue);
         if (caps == null)
         {
-            caps = new HashSet<BundleCapability>();
+            caps = Collections.newSetFromMap(new ConcurrentHashMap<BundleCapability, Boolean>());
             index.put(capValue, caps);
         }
         caps.add(cap);
@@ -194,7 +192,7 @@ public class CapabilitySet
 
     private Set<Capability> match(Set<Capability> caps, final SimpleFilter sf)
     {
-        Set<Capability> matches = new HashSet<Capability>();
+        Set<Capability> matches = Collections.newSetFromMap(new ConcurrentHashMap<Capability, Boolean>());
 
         if (sf.getOperation() == SimpleFilter.MATCH_ALL)
         {
