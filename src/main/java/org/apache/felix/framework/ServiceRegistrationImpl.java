@@ -65,8 +65,8 @@ class ServiceRegistrationImpl implements ServiceRegistration
     private final ServiceReferenceImpl m_ref;
     // Flag indicating that we are unregistering.
     private volatile boolean m_isUnregistering = false;
-
-    private volatile Thread lock;
+    // This threadlocal is used to detect cycles.
+    private final ThreadLocal<Boolean> m_threadLoopDetection = new ThreadLocal<Boolean>();
 
     private final Object syncObject = new Object();
 
@@ -90,7 +90,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
         m_ref = new ServiceReferenceImpl();
     }
 
-    protected synchronized boolean isValid()
+    protected boolean isValid()
     {
         return (m_svcObj != null);
     }
@@ -758,35 +758,18 @@ class ServiceRegistrationImpl implements ServiceRegistration
         }
     }
 
-    public boolean isLocked()
+    boolean currentThreadMarked()
     {
-        return this.lock == Thread.currentThread();
+        return m_threadLoopDetection.get() != null;
     }
 
-    public void lock()
+    void markCurrentThread()
     {
-        synchronized ( this.syncObject )
-        {
-            while ( this.lock != null )
-            {
-                try
-                {
-                    this.syncObject.wait();
-                }
-                catch ( final InterruptedException re) {
-                    // nothing to do
-                }
-            }
-            this.lock = Thread.currentThread();
-        }
+        m_threadLoopDetection.set(Boolean.TRUE);
     }
 
-    public void unlock()
+    void unmarkCurrentThread()
     {
-        synchronized ( this.syncObject )
-        {
-            this.lock = null;
-            this.syncObject.notifyAll();
-        }
+        m_threadLoopDetection.set(null);
     }
 }
