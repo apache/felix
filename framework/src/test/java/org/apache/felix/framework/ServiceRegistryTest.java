@@ -18,15 +18,30 @@
  */
 package org.apache.felix.framework;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Hashtable;
+import java.util.List;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import junit.framework.TestCase;
 
+import org.apache.felix.framework.ServiceRegistrationImpl.ServiceReferenceImpl;
+import org.apache.felix.framework.ServiceRegistry.ServiceHolder;
+import org.apache.felix.framework.ServiceRegistry.UsageCount;
 import org.easymock.MockControl;
+import org.mockito.AdditionalAnswers;
+import org.mockito.InOrder;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceException;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -330,5 +345,704 @@ public class ServiceRegistryTest extends TestCase
         assertEquals("Unregistration should have no effect", 0, sr.getHookRegistry().getHooks(EventHook.class).size());
         assertEquals("Unregistration should have no effect", 0, sr.getHookRegistry().getHooks(FindHook.class).size());
         assertEquals("Unregistration should have no effect", 0, sr.getHookRegistry().getHooks(ListenerHook.class).size());
+    }
+
+    @SuppressWarnings("unchecked")
+    public void testGetService()
+    {
+        ServiceRegistry sr = new ServiceRegistry(null, null);
+
+        String svc = "foo";
+
+        Bundle b = Mockito.mock(Bundle.class);
+        ServiceRegistrationImpl reg = Mockito.mock(ServiceRegistrationImpl.class);
+        Mockito.when(reg.isValid()).thenReturn(true);
+        Mockito.when(reg.getService(b)).thenReturn(svc);
+
+        ServiceReferenceImpl ref = Mockito.mock(ServiceReferenceImpl.class);
+        Mockito.when(ref.getRegistration()).thenReturn(reg);
+
+        assertSame(svc, sr.getService(b, ref, false));
+    }
+
+    @SuppressWarnings("unchecked")
+    public void testGetServiceHolderAwait() throws Exception
+    {
+        ServiceRegistry sr = new ServiceRegistry(null, null);
+
+        final String svc = "test";
+
+        Bundle b = Mockito.mock(Bundle.class);
+        ServiceRegistrationImpl reg = Mockito.mock(ServiceRegistrationImpl.class);
+        Mockito.when(reg.isValid()).thenReturn(true);
+
+        ServiceReferenceImpl ref = Mockito.mock(ServiceReferenceImpl.class);
+        Mockito.when(ref.getRegistration()).thenReturn(reg);
+
+        UsageCount uc = sr.obtainUsageCount(b, ref, null, false);
+
+        // Set an empty Service Holder so we can test that it waits.
+        final ServiceHolder sh = new ServiceHolder();
+        uc.m_svcHolderRef.set(sh);
+
+        final StringBuilder sb = new StringBuilder();
+        final AtomicBoolean threadException = new AtomicBoolean(false);
+        Thread t = new Thread() {
+            @Override
+            public void run()
+            {
+                try { Thread.sleep(250); } catch (InterruptedException e) {}
+                sh.m_service = svc;
+                if (sb.length() > 0)
+                {
+                    // Should not have put anything in SB until countDown() was called...
+                    threadException.set(true);
+                }
+                sh.m_latch.countDown();
+            }
+        };
+        assertFalse(t.isInterrupted());
+        t.start();
+
+        Object actualSvc = sr.getService(b, ref, false);
+        sb.append(actualSvc);
+
+        t.join();
+        assertFalse("This thread did not wait until the latch was count down",
+                threadException.get());
+
+        assertSame(svc, actualSvc);
+    }
+
+    @SuppressWarnings("unchecked")
+    public void testGetServicePrototype() throws Exception
+    {
+        ServiceRegistry sr = new ServiceRegistry(null, null);
+
+        String svc = "xyz";
+
+        Bundle b = Mockito.mock(Bundle.class);
+        ServiceRegistrationImpl reg = Mockito.mock(ServiceRegistrationImpl.class);
+        Mockito.when(reg.isValid()).thenReturn(true);
+        Mockito.when(reg.getService(b)).thenReturn(svc);
+
+        ServiceReferenceImpl ref = Mockito.mock(ServiceReferenceImpl.class);
+        Mockito.when(ref.getRegistration()).thenReturn(reg);
+
+        assertSame(svc, sr.getService(b, ref, true));
+
+        final ConcurrentMap<Bundle, UsageCount[]> inUseMap =
+                (ConcurrentMap<Bundle, UsageCount[]>) getPrivateField(sr, "m_inUseMap");
+        UsageCount[] uca = inUseMap.get(b);
+        assertEquals(1, uca.length);
+        assertEquals(1, uca[0].m_serviceObjectsCount.get());
+
+        sr.getService(b, ref, true);
+        assertEquals(2, uca[0].m_serviceObjectsCount.get());
+    }
+
+    @SuppressWarnings("unchecked")
+    public void testGetServiceThreadMarking() throws Exception
+    {
+        ServiceRegistry sr = new ServiceRegistry(null, null);
+
+        Bundle b = Mockito.mock(Bundle.class);
+        ServiceRegistrationImpl reg = Mockito.mock(ServiceRegistrationImpl.class);
+
+        ServiceReferenceImpl ref = Mockito.mock(ServiceReferenceImpl.class);
+        Mockito.when(ref.getRegistration()).thenReturn(reg);
+
+        sr.getService(b, ref, false);
+
+        InOrder inOrder = Mockito.inOrder(reg);
+        inOrder.verify(reg, Mockito.times(1)).currentThreadMarked();
+        inOrder.verify(reg, Mockito.times(1)).markCurrentThread();
+        inOrder.verify(reg, Mockito.times(1)).unmarkCurrentThread();
+    }
+
+    @SuppressWarnings("unchecked")
+    public void testGetServiceThreadMarking2() throws Exception
+    {
+        ServiceRegistry sr = new ServiceRegistry(null, null);
+
+        String svc = "bar";
+
+        Bundle b = Mockito.mock(Bundle.class);
+
+        ServiceRegistrationImpl reg = (ServiceRegistrationImpl) sr.registerService(
+                b, new String [] {String.class.getName()}, svc, null);
+
+        ServiceReferenceImpl ref = Mockito.mock(ServiceReferenceImpl.class);
+        Mockito.when(ref.getRegistration()).thenReturn(reg);
+
+        reg.markCurrentThread();
+        try
+        {
+            sr.getService(b, ref, false);
+            fail("Should have thrown an exception to signal reentrant behaviour");
+        }
+        catch (ServiceException se)
+        {
+            assertEquals(ServiceException.FACTORY_ERROR, se.getType());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public void testUngetService() throws Exception
+    {
+        ServiceRegistry sr = new ServiceRegistry(null, null);
+
+        Bundle b = Mockito.mock(Bundle.class);
+        ServiceRegistrationImpl reg = Mockito.mock(ServiceRegistrationImpl.class);
+
+        ServiceReferenceImpl ref = Mockito.mock(ServiceReferenceImpl.class);
+        Mockito.when(ref.getRegistration()).thenReturn(reg);
+
+        final ConcurrentMap<Bundle, UsageCount[]> inUseMap =
+                (ConcurrentMap<Bundle, UsageCount[]>) getPrivateField(sr, "m_inUseMap");
+
+        UsageCount uc = new UsageCount(ref, false);
+        uc.m_svcHolderRef.set(new ServiceHolder());
+
+        inUseMap.put(b, new UsageCount[] {uc});
+
+        assertTrue(sr.ungetService(b, ref, null));
+        assertNull(uc.m_svcHolderRef.get());
+        assertNull(inUseMap.get(b));
+    }
+
+    @SuppressWarnings("unchecked")
+    public void testUngetService2() throws Exception
+    {
+        ServiceRegistry sr = new ServiceRegistry(null, null);
+
+        Bundle b = Mockito.mock(Bundle.class);
+        ServiceRegistrationImpl reg = Mockito.mock(ServiceRegistrationImpl.class);
+
+        ServiceReferenceImpl ref = Mockito.mock(ServiceReferenceImpl.class);
+        Mockito.when(ref.getRegistration()).thenReturn(reg);
+
+        final ConcurrentMap<Bundle, UsageCount[]> inUseMap =
+                (ConcurrentMap<Bundle, UsageCount[]>) getPrivateField(sr, "m_inUseMap");
+
+        UsageCount uc = new UsageCount(ref, false);
+        uc.m_svcHolderRef.set(new ServiceHolder());
+        uc.m_count.incrementAndGet();
+
+        Mockito.verify(reg, Mockito.never()).
+            ungetService(Mockito.isA(Bundle.class), Mockito.any());
+        inUseMap.put(b, new UsageCount[] {uc});
+
+        assertTrue(sr.ungetService(b, ref, null));
+        assertNull(uc.m_svcHolderRef.get());
+        assertNull(inUseMap.get(b));
+
+        Mockito.verify(reg, Mockito.times(1)).
+        ungetService(Mockito.isA(Bundle.class), Mockito.any());
+    }
+
+    @SuppressWarnings("unchecked")
+    public void testUngetService3() throws Exception
+    {
+        ServiceRegistry sr = new ServiceRegistry(null, null);
+
+        Bundle b = Mockito.mock(Bundle.class);
+        ServiceRegistrationImpl reg = Mockito.mock(ServiceRegistrationImpl.class);
+        Mockito.when(reg.isValid()).thenReturn(true);
+
+        ServiceReferenceImpl ref = Mockito.mock(ServiceReferenceImpl.class);
+        Mockito.when(ref.getRegistration()).thenReturn(reg);
+
+        final ConcurrentMap<Bundle, UsageCount[]> inUseMap =
+                (ConcurrentMap<Bundle, UsageCount[]>) getPrivateField(sr, "m_inUseMap");
+
+        UsageCount uc = new UsageCount(ref, false);
+        uc.m_svcHolderRef.set(new ServiceHolder());
+        uc.m_count.set(2);
+
+        inUseMap.put(b, new UsageCount[] {uc});
+
+        assertTrue(sr.ungetService(b, ref, null));
+        assertNotNull(uc.m_svcHolderRef.get());
+        assertNotNull(inUseMap.get(b));
+
+        Mockito.verify(reg, Mockito.never()).
+            ungetService(Mockito.isA(Bundle.class), Mockito.any());
+    }
+
+    @SuppressWarnings("unchecked")
+    public void testUngetService4() throws Exception
+    {
+        ServiceRegistry sr = new ServiceRegistry(null, null);
+
+        Bundle b = Mockito.mock(Bundle.class);
+        ServiceRegistrationImpl reg = Mockito.mock(ServiceRegistrationImpl.class);
+        Mockito.when(reg.isValid()).thenReturn(false);
+
+        ServiceReferenceImpl ref = Mockito.mock(ServiceReferenceImpl.class);
+        Mockito.when(ref.getRegistration()).thenReturn(reg);
+
+        final ConcurrentMap<Bundle, UsageCount[]> inUseMap =
+                (ConcurrentMap<Bundle, UsageCount[]>) getPrivateField(sr, "m_inUseMap");
+
+        UsageCount uc = new UsageCount(ref, false);
+        uc.m_svcHolderRef.set(new ServiceHolder());
+        uc.m_count.set(2);
+
+        inUseMap.put(b, new UsageCount[] {uc});
+
+        assertTrue(sr.ungetService(b, ref, null));
+        assertNull(uc.m_svcHolderRef.get());
+        assertNull(inUseMap.get(b));
+
+        Mockito.verify(reg, Mockito.never()).
+            ungetService(Mockito.isA(Bundle.class), Mockito.any());
+    }
+
+    @SuppressWarnings("unchecked")
+    public void testUngetService5() throws Exception
+    {
+        ServiceRegistry sr = new ServiceRegistry(null, null);
+
+        Bundle b = Mockito.mock(Bundle.class);
+        ServiceRegistrationImpl reg = Mockito.mock(ServiceRegistrationImpl.class);
+        Mockito.doThrow(new RuntimeException("Test!")).when(reg).
+            ungetService(Mockito.isA(Bundle.class), Mockito.any());
+
+        ServiceReferenceImpl ref = Mockito.mock(ServiceReferenceImpl.class);
+        Mockito.when(ref.getRegistration()).thenReturn(reg);
+
+        final ConcurrentMap<Bundle, UsageCount[]> inUseMap =
+                (ConcurrentMap<Bundle, UsageCount[]>) getPrivateField(sr, "m_inUseMap");
+
+        String svc = "myService";
+        UsageCount uc = new UsageCount(ref, false);
+        ServiceHolder sh = new ServiceHolder();
+        sh.m_service = svc;
+        sh.m_latch.countDown();
+        uc.m_svcHolderRef.set(sh);
+        uc.m_count.set(1);
+
+        inUseMap.put(b, new UsageCount[] {uc});
+
+        try
+        {
+            assertTrue(sr.ungetService(b, ref, null));
+            fail("Should have propagated the runtime exception");
+        }
+        catch (RuntimeException re)
+        {
+            assertEquals("Test!", re.getMessage());
+        }
+        assertNull(uc.m_svcHolderRef.get());
+        assertNull(inUseMap.get(b));
+
+        Mockito.verify(reg, Mockito.times(1)).ungetService(b, svc);
+    }
+
+    public void testUngetServiceThreadMarking()
+    {
+        ServiceRegistry sr = new ServiceRegistry(null, null);
+
+        Bundle b = Mockito.mock(Bundle.class);
+        ServiceRegistrationImpl reg = Mockito.mock(ServiceRegistrationImpl.class);
+
+        ServiceReferenceImpl ref = Mockito.mock(ServiceReferenceImpl.class);
+        Mockito.when(ref.getRegistration()).thenReturn(reg);
+
+        assertFalse("There is no usage count, so this method should return false",
+                sr.ungetService(b, ref, null));
+
+        InOrder inOrder = Mockito.inOrder(reg);
+        inOrder.verify(reg, Mockito.times(1)).currentThreadMarked();
+        inOrder.verify(reg, Mockito.times(1)).markCurrentThread();
+        inOrder.verify(reg, Mockito.times(1)).unmarkCurrentThread();
+    }
+
+    public void testUngetServiceThreadMarking2()
+    {
+        ServiceRegistry sr = new ServiceRegistry(null, null);
+
+        Bundle b = Mockito.mock(Bundle.class);
+        ServiceRegistrationImpl reg = Mockito.mock(ServiceRegistrationImpl.class);
+        Mockito.when(reg.currentThreadMarked()).thenReturn(true);
+
+        ServiceReferenceImpl ref = Mockito.mock(ServiceReferenceImpl.class);
+        Mockito.when(ref.getRegistration()).thenReturn(reg);
+
+        try
+        {
+            sr.ungetService(b, ref, null);
+            fail("The thread should be observed as marked and hence throw an exception");
+        }
+        catch (IllegalStateException ise)
+        {
+            // good
+        }
+    }
+
+    public void testObtainUsageCount() throws Exception
+    {
+        ServiceRegistry sr = new ServiceRegistry(null, null);
+
+        @SuppressWarnings("unchecked")
+        ConcurrentMap<Bundle, UsageCount[]> inUseMap = (ConcurrentMap<Bundle, UsageCount[]>) getPrivateField(sr, "m_inUseMap");
+
+        assertEquals("Precondition", 0, inUseMap.size());
+
+        Bundle b = Mockito.mock(Bundle.class);
+        ServiceReference<?> ref = Mockito.mock(ServiceReference.class);
+        UsageCount uc = sr.obtainUsageCount(b, ref, null, false);
+        assertEquals(1, inUseMap.size());
+        assertEquals(1, inUseMap.get(b).length);
+        assertSame(uc, inUseMap.get(b)[0]);
+        assertSame(ref, uc.m_ref);
+        assertFalse(uc.m_prototype);
+
+        UsageCount uc2 = sr.obtainUsageCount(b, ref, null, false);
+        assertSame(uc, uc2);
+
+        ServiceReference<?> ref2 = Mockito.mock(ServiceReference.class);
+        UsageCount uc3 = sr.obtainUsageCount(b, ref2, null, false);
+        assertNotSame(uc3, uc2);
+        assertSame(ref2, uc3.m_ref);
+    }
+
+    public void testObtainUsageCountPrototype() throws Exception
+    {
+        ServiceRegistry sr = new ServiceRegistry(null, null);
+
+        @SuppressWarnings("unchecked")
+        ConcurrentMap<Bundle, UsageCount[]> inUseMap = (ConcurrentMap<Bundle, UsageCount[]>) getPrivateField(sr, "m_inUseMap");
+
+        Bundle b = Mockito.mock(Bundle.class);
+        ServiceReference<?> ref = Mockito.mock(ServiceReference.class);
+        UsageCount uc = sr.obtainUsageCount(b, ref, null, true);
+        assertEquals(1, inUseMap.size());
+        assertEquals(1, inUseMap.values().iterator().next().length);
+
+        ServiceReference<?> ref2 = Mockito.mock(ServiceReference.class);
+        UsageCount uc2 = sr.obtainUsageCount(b, ref2, null, true);
+        assertEquals(1, inUseMap.size());
+        assertEquals(2, inUseMap.values().iterator().next().length);
+        List<UsageCount> ucl = Arrays.asList(inUseMap.get(b));
+        assertTrue(ucl.contains(uc));
+        assertTrue(ucl.contains(uc2));
+    }
+
+    public void testObtainUsageCountPrototypeUnknownLookup() throws Exception
+    {
+        ServiceRegistry sr = new ServiceRegistry(null, null);
+
+        @SuppressWarnings("unchecked")
+        ConcurrentMap<Bundle, UsageCount[]> inUseMap = (ConcurrentMap<Bundle, UsageCount[]>) getPrivateField(sr, "m_inUseMap");
+
+        Bundle b = Mockito.mock(Bundle.class);
+        ServiceReference<?> ref = Mockito.mock(ServiceReference.class);
+
+        UsageCount uc = new UsageCount(ref, true);
+        ServiceHolder sh = new ServiceHolder();
+        String svc = "foobar";
+        sh.m_service = svc;
+        uc.m_svcHolderRef.set(sh);
+        inUseMap.put(b, new UsageCount[] {uc});
+
+        assertNull(sr.obtainUsageCount(b, Mockito.mock(ServiceReference.class), null, null));
+
+        UsageCount uc2 = sr.obtainUsageCount(b, ref, svc, null);
+        assertSame(uc, uc2);
+    }
+
+    public void testObtainUsageCountPrototypeUnknownLookup2() throws Exception
+    {
+        ServiceRegistry sr = new ServiceRegistry(null, null);
+
+        @SuppressWarnings("unchecked")
+        ConcurrentMap<Bundle, UsageCount[]> inUseMap = (ConcurrentMap<Bundle, UsageCount[]>) getPrivateField(sr, "m_inUseMap");
+
+        Bundle b = Mockito.mock(Bundle.class);
+        ServiceReference<?> ref = Mockito.mock(ServiceReference.class);
+
+        UsageCount uc = new UsageCount(ref, false);
+        inUseMap.put(b, new UsageCount[] {uc});
+
+        assertNull(sr.obtainUsageCount(b, Mockito.mock(ServiceReference.class), null, null));
+
+        UsageCount uc2 = sr.obtainUsageCount(b, ref, null, null);
+        assertSame(uc, uc2);
+    }
+
+    @SuppressWarnings("unchecked")
+    public void testObtainUsageCountRetry1() throws Exception
+    {
+        ServiceRegistry sr = new ServiceRegistry(null, null);
+
+        final Bundle b = Mockito.mock(Bundle.class);
+
+        final ConcurrentMap<Bundle, UsageCount[]> orgInUseMap =
+            (ConcurrentMap<Bundle, UsageCount[]>) getPrivateField(sr, "m_inUseMap");
+
+        ConcurrentMap<Bundle, UsageCount[]> inUseMap =
+            Mockito.mock(ConcurrentMap.class, AdditionalAnswers.delegatesTo(orgInUseMap));
+        Mockito.doAnswer(new Answer<UsageCount[]>()
+            {
+                @Override
+                public UsageCount[] answer(InvocationOnMock invocation) throws Throwable
+                {
+                    // This mimicks another thread putting another UsageCount in concurrently
+                    // The putIfAbsent() will fail and it has to retry
+                    UsageCount uc = new UsageCount(Mockito.mock(ServiceReference.class), false);
+                    UsageCount[] uca = new UsageCount[] {uc};
+                    orgInUseMap.put(b, uca);
+                    return uca;
+                }
+            }).when(inUseMap).putIfAbsent(Mockito.any(Bundle.class), Mockito.any(UsageCount[].class));
+        setPrivateField(sr, "m_inUseMap", inUseMap);
+
+        ServiceReference<?> ref = Mockito.mock(ServiceReference.class);
+
+        assertEquals(0, orgInUseMap.size());
+        UsageCount uc = sr.obtainUsageCount(b, ref, null, false);
+        assertEquals(1, orgInUseMap.size());
+        assertEquals(2, orgInUseMap.get(b).length);
+        assertSame(ref, uc.m_ref);
+        assertFalse(uc.m_prototype);
+        List<UsageCount> l = new ArrayList<UsageCount>(Arrays.asList(orgInUseMap.get(b)));
+        l.remove(uc);
+        assertEquals("There should be one UsageCount left", 1, l.size());
+        assertNotSame(ref, l.get(0).m_ref);
+    }
+
+    @SuppressWarnings("unchecked")
+    public void testObtainUsageCountRetry2() throws Exception
+    {
+        ServiceRegistry sr = new ServiceRegistry(null, null);
+
+        final Bundle b = Mockito.mock(Bundle.class);
+
+        final ConcurrentMap<Bundle, UsageCount[]> orgInUseMap =
+            (ConcurrentMap<Bundle, UsageCount[]>) getPrivateField(sr, "m_inUseMap");
+        orgInUseMap.put(b, new UsageCount[] {new UsageCount(Mockito.mock(ServiceReference.class), false)});
+
+        ConcurrentMap<Bundle, UsageCount[]> inUseMap =
+            Mockito.mock(ConcurrentMap.class, AdditionalAnswers.delegatesTo(orgInUseMap));
+        Mockito.doAnswer(new Answer<Boolean>()
+            {
+                @Override
+                public Boolean answer(InvocationOnMock invocation) throws Throwable
+                {
+                    orgInUseMap.remove(b);
+                    return false;
+                }
+            }).when(inUseMap).replace(Mockito.any(Bundle.class),
+                    Mockito.any(UsageCount[].class), Mockito.any(UsageCount[].class));
+        setPrivateField(sr, "m_inUseMap", inUseMap);
+
+        ServiceReference<?> ref = Mockito.mock(ServiceReference.class);
+
+        assertEquals("Precondition", 1, inUseMap.size());
+        assertEquals("Precondition", 1, inUseMap.values().iterator().next().length);
+        assertNotSame("Precondition", ref, inUseMap.get(b)[0].m_ref);
+        sr.obtainUsageCount(b, ref, null, false);
+        assertEquals(1, inUseMap.size());
+        assertEquals(1, inUseMap.values().iterator().next().length);
+        assertSame("The old usage count should have been removed by the mock and this one should have been added",
+                ref, inUseMap.get(b)[0].m_ref);
+    }
+
+    public void testFlushUsageCount() throws Exception
+    {
+        ServiceRegistry sr = new ServiceRegistry(null, null);
+
+        @SuppressWarnings("unchecked")
+        ConcurrentMap<Bundle, UsageCount[]> inUseMap = (ConcurrentMap<Bundle, UsageCount[]>) getPrivateField(sr, "m_inUseMap");
+
+        Bundle b = Mockito.mock(Bundle.class);
+
+        ServiceReference<?> ref = Mockito.mock(ServiceReference.class);
+        UsageCount uc = new UsageCount(ref, false);
+        ServiceReference<?> ref2 = Mockito.mock(ServiceReference.class);
+        UsageCount uc2 = new UsageCount(ref2, true);
+
+        inUseMap.put(b, new UsageCount[] {uc, uc2});
+
+        assertEquals("Precondition", 1, inUseMap.size());
+        assertEquals("Precondition", 2, inUseMap.values().iterator().next().length);
+
+        sr.flushUsageCount(b, ref, uc);
+        assertEquals(1, inUseMap.size());
+        assertEquals(1, inUseMap.values().iterator().next().length);
+        assertSame(uc2, inUseMap.values().iterator().next()[0]);
+
+        sr.flushUsageCount(b, ref2, uc2);
+        assertEquals(0, inUseMap.size());
+    }
+
+    public void testFlushUsageCountNullRef() throws Exception
+    {
+        ServiceRegistry sr = new ServiceRegistry(null, null);
+
+        @SuppressWarnings("unchecked")
+        ConcurrentMap<Bundle, UsageCount[]> inUseMap = (ConcurrentMap<Bundle, UsageCount[]>) getPrivateField(sr, "m_inUseMap");
+
+        Bundle b = Mockito.mock(Bundle.class);
+        Bundle b2 = Mockito.mock(Bundle.class);
+
+        ServiceReference<?> ref = Mockito.mock(ServiceReference.class);
+        UsageCount uc = new UsageCount(ref, false);
+        ServiceReference<?> ref2 = Mockito.mock(ServiceReference.class);
+        UsageCount uc2 = new UsageCount(ref2, true);
+        ServiceReference<?> ref3 = Mockito.mock(ServiceReference.class);
+        UsageCount uc3 = new UsageCount(ref3, true);
+
+        inUseMap.put(b, new UsageCount[] {uc2, uc});
+        inUseMap.put(b2, new UsageCount[] {uc3});
+
+        assertEquals("Precondition", 2, inUseMap.size());
+
+        sr.flushUsageCount(b, null, uc);
+        assertEquals(2, inUseMap.size());
+
+        sr.flushUsageCount(b, null, uc2);
+        assertEquals(1, inUseMap.size());
+    }
+
+    public void testFlushUsageCountAlienObject() throws Exception
+    {
+        ServiceRegistry sr = new ServiceRegistry(null, null);
+
+        @SuppressWarnings("unchecked")
+        ConcurrentMap<Bundle, UsageCount[]> inUseMap = (ConcurrentMap<Bundle, UsageCount[]>) getPrivateField(sr, "m_inUseMap");
+
+        Bundle b = Mockito.mock(Bundle.class);
+
+        ServiceReference<?> ref = Mockito.mock(ServiceReference.class);
+        UsageCount uc = new UsageCount(ref, false);
+
+        inUseMap.put(b, new UsageCount[] {uc});
+        assertEquals("Precondition", 1, inUseMap.size());
+        assertEquals("Precondition", 1, inUseMap.values().iterator().next().length);
+
+        UsageCount uc2 = new UsageCount(Mockito.mock(ServiceReference.class), false);
+        sr.flushUsageCount(b, ref, uc2);
+        assertEquals("Should be no changes", 1, inUseMap.size());
+        assertEquals("Should be no changes", 1, inUseMap.values().iterator().next().length);
+    }
+
+    public void testFlushUsageCountNull() throws Exception
+    {
+        ServiceRegistry sr = new ServiceRegistry(null, null);
+
+        @SuppressWarnings("unchecked")
+        ConcurrentMap<Bundle, UsageCount[]> inUseMap = (ConcurrentMap<Bundle, UsageCount[]>) getPrivateField(sr, "m_inUseMap");
+
+        Bundle b = Mockito.mock(Bundle.class);
+        Bundle b2 = Mockito.mock(Bundle.class);
+
+        ServiceReference<?> ref = Mockito.mock(ServiceReference.class);
+        UsageCount uc = new UsageCount(ref, false);
+        ServiceReference<?> ref2 = Mockito.mock(ServiceReference.class);
+        UsageCount uc2 = new UsageCount(ref2, true);
+        ServiceReference<?> ref3 = Mockito.mock(ServiceReference.class);
+        UsageCount uc3 = new UsageCount(ref3, true);
+
+        inUseMap.put(b, new UsageCount[] {uc2, uc});
+        inUseMap.put(b2, new UsageCount[] {uc3});
+
+        assertEquals("Precondition", 2, inUseMap.size());
+
+        sr.flushUsageCount(b, ref, null);
+        assertEquals(2, inUseMap.size());
+
+        sr.flushUsageCount(b, ref2, null);
+        assertEquals(1, inUseMap.size());
+
+    }
+
+    @SuppressWarnings("unchecked")
+    public void testFlushUsageCountRetry() throws Exception
+    {
+        ServiceRegistry sr = new ServiceRegistry(null, null);
+
+        final Bundle b = Mockito.mock(Bundle.class);
+        final ServiceReference<?> ref = Mockito.mock(ServiceReference.class);
+        final UsageCount uc = new UsageCount(ref, false);
+        final ServiceReference<?> ref2 = Mockito.mock(ServiceReference.class);
+        final UsageCount uc2 = new UsageCount(ref2, false);
+
+        final ConcurrentMap<Bundle, UsageCount[]> orgInUseMap =
+            (ConcurrentMap<Bundle, UsageCount[]>) getPrivateField(sr, "m_inUseMap");
+
+        final ConcurrentMap<Bundle, UsageCount[]> inUseMap =
+            Mockito.mock(ConcurrentMap.class, AdditionalAnswers.delegatesTo(orgInUseMap));
+        Mockito.doAnswer(new Answer<Boolean>()
+            {
+                @Override
+                public Boolean answer(InvocationOnMock invocation) throws Throwable
+                {
+                    inUseMap.put(b, new UsageCount[] {uc});
+                    return false;
+                }
+            }).when(inUseMap).replace(Mockito.isA(Bundle.class),
+                    Mockito.isA(UsageCount[].class), Mockito.isA(UsageCount[].class));
+        setPrivateField(sr, "m_inUseMap", inUseMap);
+
+        inUseMap.put(b, new UsageCount[] {uc, uc2});
+
+        sr.flushUsageCount(b, null, uc);
+
+        assertNull("A 'concurrent' process has removed uc2 as well, "
+                + "so the entry for 'b' should have been removed",
+                inUseMap.get(b));
+    }
+
+    public void testFlushUsageCountRetry2() throws Exception
+    {
+        ServiceRegistry sr = new ServiceRegistry(null, null);
+
+        final Bundle b = Mockito.mock(Bundle.class);
+        final ServiceReference<?> ref = Mockito.mock(ServiceReference.class);
+        final UsageCount uc = new UsageCount(ref, false);
+        final ServiceReference<?> ref2 = Mockito.mock(ServiceReference.class);
+        final UsageCount uc2 = new UsageCount(ref2, false);
+
+        final ConcurrentMap<Bundle, UsageCount[]> orgInUseMap =
+            (ConcurrentMap<Bundle, UsageCount[]>) getPrivateField(sr, "m_inUseMap");
+
+        final ConcurrentMap<Bundle, UsageCount[]> inUseMap =
+            Mockito.mock(ConcurrentMap.class, AdditionalAnswers.delegatesTo(orgInUseMap));
+        Mockito.doAnswer(new Answer<Boolean>()
+            {
+                @Override
+                public Boolean answer(InvocationOnMock invocation) throws Throwable
+                {
+                    inUseMap.put(b, new UsageCount[] {uc, uc2});
+                    return false;
+                }
+            }).when(inUseMap).remove(Mockito.isA(Bundle.class), Mockito.isA(UsageCount[].class));
+        setPrivateField(sr, "m_inUseMap", inUseMap);
+
+        inUseMap.put(b, new UsageCount[] {uc});
+
+        sr.flushUsageCount(b, null, uc);
+
+        assertEquals(1, inUseMap.get(b).length);
+        assertSame(uc2, inUseMap.get(b)[0]);
+    }
+
+    private Object getPrivateField(Object obj, String fieldName) throws NoSuchFieldException,
+            IllegalAccessException
+    {
+        Field f = ServiceRegistry.class.getDeclaredField(fieldName);
+        f.setAccessible(true);
+        return f.get(obj);
+    }
+
+    private void setPrivateField(ServiceRegistry obj, String fieldName, Object val) throws SecurityException,
+            NoSuchFieldException, IllegalArgumentException, IllegalAccessException
+    {
+        Field f = ServiceRegistry.class.getDeclaredField(fieldName);
+        f.setAccessible(true);
+        f.set(obj, val);
     }
 }
