@@ -27,7 +27,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
@@ -112,7 +115,7 @@ public class ServiceRegistry
         final Bundle bundle,
         final String[] classNames,
         final Object svcObj,
-        final Dictionary dict)
+        final Dictionary<?,?> dict)
     {
         // Create the service registration.
         final ServiceRegistrationImpl reg = new ServiceRegistrationImpl(
@@ -149,12 +152,6 @@ public class ServiceRegistry
     {
         // If this is a hook, it should be removed.
         this.hookRegistry.removeHooks(reg.getReference());
-
-        // Note that we don't lock the service registration here using
-        // the m_lockedRegsMap because we want to allow bundles to get
-        // the service during the unregistration process. However, since
-        // we do remove the registration from the service registry, no
-        // new bundles will be able to look up the service.
 
         // Now remove the registered service.
         final List<ServiceRegistration<?>> regs = m_regsMap.get(bundle);
@@ -197,7 +194,7 @@ public class ServiceRegistry
             {
                 if (usages[x].m_ref.equals(ref))
                 {
-                    ungetService(clients[i], ref, (usages[x].m_prototype ? usages[x].m_svcObj : null));
+                    ungetService(clients[i], ref, (usages[x].m_prototype ? usages[x].getService() : null));
                 }
             }
         }
@@ -300,7 +297,7 @@ public class ServiceRegistry
             ((ServiceRegistrationImpl.ServiceReferenceImpl) ref).getRegistration();
 
         // We don't allow cycles when we call out to the service factory.
-        if ( reg.isLocked() )
+        if ( reg.currentThreadMarked() )
         {
             throw new ServiceException(
                     "ServiceFactory.getService() resulted in a cycle.",
@@ -308,63 +305,75 @@ public class ServiceRegistry
                     null);
         }
 
-        // no concurrent operations on the same service registration
-        reg.lock();
-        // Make sure the service registration is still valid.
-        if (reg.isValid())
-        {
-            // Get the usage count, if any.
-            // if prototype, we always create a new usage
-            usage = isPrototype ? null : getUsageCount(bundle, ref, null);
-
-            // If we don't have a usage count, then create one and
-            // since the spec says we increment usage count before
-            // actually getting the service object.
-            if (usage == null)
-            {
-                usage = addUsageCount(bundle, ref, isPrototype);
-            }
-
-            // Increment the usage count and grab the already retrieved
-            // service object, if one exists.
-            usage.m_count++;
-            svcObj = usage.m_svcObj;
-            if ( isServiceObjects )
-            {
-                usage.m_serviceObjectsCount++;
-            }
-        }
-
-        // If we have a usage count, but no service object, then we haven't
-        // cached the service object yet, so we need to create one now without
-        // holding the lock, since we will potentially call out to a service
-        // factory.
         try
         {
-            if ((usage != null) && (svcObj == null))
+            reg.markCurrentThread();
+
+            // Make sure the service registration is still valid.
+            if (reg.isValid())
             {
-                svcObj = reg.getService(bundle);
+                // Get the usage count, or create a new one. If this is a
+                // prototype, the we'll alway create a new one.
+                usage = obtainUsageCount(bundle, ref, null, isPrototype);
+
+                // Increment the usage count and grab the already retrieved
+                // service object, if one exists.
+                usage.m_count.incrementAndGet();
+                svcObj = usage.getService();
+                if ( isServiceObjects )
+                {
+                    usage.m_serviceObjectsCount.incrementAndGet();
+                }
+
+                // If we have a usage count, but no service object, then we haven't
+                // cached the service object yet, so we need to create one.
+                if ((usage != null) && (svcObj == null))
+                {
+                    ServiceHolder holder = null;
+
+                    // There is a possibility that the holder is unset between the compareAndSet() and the get()
+                    // below. If that happens get() returns null and we may have to set a new holder. This is
+                    // why the below section is in a loop.
+                    while (holder == null)
+                    {
+                        ServiceHolder h = new ServiceHolder();
+                        if (usage.m_svcHolderRef.compareAndSet(null, h))
+                        {
+                            holder = h;
+                            svcObj = reg.getService(bundle);
+                            holder.m_service = svcObj;
+                            holder.m_latch.countDown();
+                        }
+                        else
+                        {
+                            holder = usage.m_svcHolderRef.get();
+                            if (holder != null)
+                            {
+                                try
+                                {
+                                    // Need to ensure that the other thread has obtained
+                                    // the service.
+                                    holder.m_latch.await();
+                                }
+                                catch (InterruptedException e)
+                                {
+                                    throw new RuntimeException(e);
+                                }
+                                svcObj = holder.m_service;
+                            }
+                        }
+                    }
+                }
             }
         }
         finally
         {
-            // If we successfully retrieved a service object, then we should
-            // cache it in the usage count. If not, we should flush the usage
-            // count. Either way, we need to unlock the service registration
-            // so that any threads waiting for it can continue.
+            reg.unmarkCurrentThread();
 
-            // Before caching the service object, double check to see if
-            // the registration is still valid, since it may have been
-            // unregistered while we didn't hold the lock.
             if (!reg.isValid() || (svcObj == null))
             {
                 flushUsageCount(bundle, ref, usage);
             }
-            else
-            {
-                usage.m_svcObj = svcObj;
-            }
-            reg.unlock();
         }
 
         return (S) svcObj;
@@ -375,73 +384,66 @@ public class ServiceRegistry
         final ServiceRegistrationImpl reg =
             ((ServiceRegistrationImpl.ServiceReferenceImpl) ref).getRegistration();
 
-        if ( reg.isLocked() )
+        if ( reg.currentThreadMarked() )
         {
             throw new IllegalStateException(
                     "ServiceFactory.ungetService() resulted in a cycle.");
         }
 
-        UsageCount usage = null;
-
-        // First make sure that no existing operation is currently
-        // being performed by another thread on the service registration.
-        reg.lock();
-
-        // Get the usage count.
-        usage = getUsageCount(bundle, ref, svcObj);
-        // If there is no cached services, then just return immediately.
-        if (usage == null)
-        {
-            reg.unlock();
-            return false;
-        }
-        // if this is a call from service objects and the service was not fetched from
-        // there, return false
-        if ( svcObj != null )
-        {
-            // TODO have a proper conditional decrement and get, how???
-            usage.m_serviceObjectsCount--;
-            if (usage.m_serviceObjectsCount < 0)
-            {
-                reg.unlock();
-                return false;
-            }
-        }
-
-        // If usage count will go to zero, then unget the service
-        // from the registration; we do this outside the lock
-        // since this might call out to the service factory.
         try
         {
-            if (usage.m_count == 1)
+            // Mark the current thread to avoid cycles
+            reg.markCurrentThread();
+
+            // Get the usage count.
+            UsageCount usage = obtainUsageCount(bundle, ref, svcObj, null);
+            // If there are no cached services, then just return immediately.
+            if (usage == null)
             {
-                // Remove reference from usages array.
-                ((ServiceRegistrationImpl.ServiceReferenceImpl) ref)
-                    .getRegistration().ungetService(bundle, usage.m_svcObj);
+                return false;
+            }
+            // if this is a call from service objects and the service was not fetched from
+            // there, return false
+            if ( svcObj != null )
+            {
+                if (usage.m_serviceObjectsCount.decrementAndGet() < 0)
+                {
+                    return false;
+                }
+            }
+
+            // If usage count will go to zero, then unget the service
+            // from the registration.
+            try
+            {
+                if (usage.m_count.get() == 1)
+                {
+                    // Remove reference from usages array.
+                    ((ServiceRegistrationImpl.ServiceReferenceImpl) ref)
+                        .getRegistration().ungetService(bundle, usage.getService());
+                }
+            }
+            finally
+            {
+                // Finally, decrement usage count and flush if it goes to zero or
+                // the registration became invalid.
+
+                // Decrement usage count, which spec says should happen after
+                // ungetting the service object.
+                int c = usage.m_count.decrementAndGet();
+
+                // If the registration is invalid or the usage count has reached
+                // zero, then flush it.
+                if ((c <= 0) || !reg.isValid())
+                {
+                    usage.m_svcHolderRef.set(null);
+                    flushUsageCount(bundle, ref, usage);
+                }
             }
         }
         finally
         {
-            // Finally, decrement usage count and flush if it goes to zero or
-            // the registration became invalid while we were not holding the
-            // lock. Either way, unlock the service registration so that any
-            // threads waiting for it can continue.
-
-            // Decrement usage count, which spec says should happen after
-            // ungetting the service object.
-            usage.m_count--;
-
-            // If the registration is invalid or the usage count has reached
-            // zero, then flush it.
-            if (!reg.isValid() || (usage.m_count <= 0))
-            {
-                usage.m_svcObj = null;
-                flushUsageCount(bundle, ref, usage);
-            }
-
-            // Release the registration lock so any waiting threads can
-            // continue.
-            reg.unlock();
+            reg.unmarkCurrentThread();
         }
 
         return true;
@@ -471,7 +473,7 @@ public class ServiceRegistry
         for (int i = 0; i < usages.length; i++)
         {
             // Keep ungetting until all usage count is zero.
-            while (ungetService(bundle, usages[i].m_ref, usages[i].m_prototype ? usages[i].m_svcObj : null))
+            while (ungetService(bundle, usages[i].m_ref, usages[i].m_prototype ? usages[i].getService() : null))
             {
                 // Empty loop body.
             }
@@ -508,7 +510,7 @@ public class ServiceRegistry
         return bundles;
     }
 
-    void servicePropertiesModified(ServiceRegistration<?> reg, Dictionary oldProps)
+    void servicePropertiesModified(ServiceRegistration<?> reg, Dictionary<?,?> oldProps)
     {
         this.hookRegistry.updateHooks(reg.getReference());
         if (m_callbacks != null)
@@ -524,56 +526,66 @@ public class ServiceRegistry
     }
 
     /**
-     * Utility method to retrieve the specified bundle's usage count for the
-     * specified service reference.
-     * @param bundle The bundle whose usage counts are being searched.
-     * @param ref The service reference to find in the bundle's usage counts.
-     * @return The associated usage count or null if not found.
-    **/
-    private UsageCount getUsageCount(Bundle bundle, ServiceReference<?> ref, final Object svcObj)
+     * Obtain a UsageCount object, by looking for an existing one or creating a new one (if possible).
+     * This method tries to find a UsageCount object in the {@code m_inUseMap}. If one is found then
+     * this is returned, otherwise a UsageCount object will be created, but this can only be done if
+     * the {@code isPrototype} parameter is not {@code null}. If {@code isPrototype} is {@code TRUE}
+     * then a new UsageCount object will always be created.
+     * @param bundle The bundle using the service.
+     * @param ref The Service Reference.
+     * @param svcObj A Service Object, if applicable.
+     * @param isPrototype {@code TRUE} if we know that this is a prototype, {@ FALSE} if we know that
+     * it isn't. There are cases where we don't know (the pure lookup case), in that case use {@code null}.
+     * @return The UsageCount object if it could be obtained, or {@code null} otherwise.
+     */
+    UsageCount obtainUsageCount(Bundle bundle, ServiceReference<?> ref, Object svcObj, Boolean isPrototype)
     {
-        UsageCount[] usages = m_inUseMap.get(bundle);
-        for (int i = 0; (usages != null) && (i < usages.length); i++)
+        UsageCount usage = null;
+
+        // This method uses an optimistic concurrency mechanism with a conditional put/replace
+        // on the m_inUseMap. If this fails (because another thread made changes) this thread
+        // retries the operation. This is the purpose of the while loop.
+        boolean success = false;
+        while (!success)
         {
-            if (usages[i].m_ref.equals(ref)
-               && ((svcObj == null && !usages[i].m_prototype) || usages[i].m_svcObj == svcObj))
+            UsageCount[] usages = m_inUseMap.get(bundle);
+
+            // If we know it's a prototype, then we always need to create a new usage count
+            if (!Boolean.TRUE.equals(isPrototype))
             {
-                return usages[i];
+                for (int i = 0; (usages != null) && (i < usages.length); i++)
+                {
+                    if (usages[i].m_ref.equals(ref)
+                       && ((svcObj == null && !usages[i].m_prototype) || usages[i].getService() == svcObj))
+                    {
+                        return usages[i];
+                    }
+                }
+            }
+
+            // We haven't found an existing usage count object so we need to create on. For this we need to
+            // know whether this is a prototype or not.
+            if (isPrototype == null)
+            {
+                // If this parameter isn't passed in we can't create a usage count.
+                return null;
+            }
+
+            // Add a new Usage Count.
+            usage = new UsageCount(ref, isPrototype);
+            if (usages == null)
+            {
+                UsageCount[] newUsages = new UsageCount[] { usage };
+                success = m_inUseMap.putIfAbsent(bundle, newUsages) == null;
+            }
+            else
+            {
+                UsageCount[] newUsages = new UsageCount[usages.length + 1];
+                System.arraycopy(usages, 0, newUsages, 0, usages.length);
+                newUsages[usages.length] = usage;
+                success = m_inUseMap.replace(bundle, usages, newUsages);
             }
         }
-        return null;
-    }
-
-    /**
-     * Utility method to update the specified bundle's usage count array to
-     * include the specified service. This method should only be called
-     * to add a usage count for a previously unreferenced service. If the
-     * service already has a usage count, then the existing usage count
-     * counter simply needs to be incremented.
-     * @param bundle The bundle acquiring the service.
-     * @param ref The service reference of the acquired service.
-     * @param svcObj The service object of the acquired service.
-    **/
-    private UsageCount addUsageCount(Bundle bundle, ServiceReference<?> ref, boolean isPrototype)
-    {
-        UsageCount[] usages = m_inUseMap.get(bundle);
-
-        UsageCount usage = new UsageCount(ref, isPrototype);
-
-        if (usages == null)
-        {
-            usages = new UsageCount[] { usage };
-        }
-        else
-        {
-            UsageCount[] newUsages = new UsageCount[usages.length + 1];
-            System.arraycopy(usages, 0, newUsages, 0, usages.length);
-            newUsages[usages.length] = usage;
-            usages = newUsages;
-        }
-
-        m_inUseMap.put(bundle, usages);
-
         return usage;
     }
 
@@ -589,41 +601,51 @@ public class ServiceRegistry
      * @param bundle The bundle whose usage count should be removed.
      * @param ref The service reference whose usage count should be removed.
     **/
-    private void flushUsageCount(Bundle bundle, ServiceReference<?> ref, UsageCount uc)
+    void flushUsageCount(Bundle bundle, ServiceReference<?> ref, UsageCount uc)
     {
-        UsageCount[] usages = m_inUseMap.get(bundle);
-        for (int i = 0; (usages != null) && (i < usages.length); i++)
+        // This method uses an optimistic concurrency mechanism with conditional modifications
+        // on the m_inUseMap. If this fails (because another thread made changes) this thread
+        // retries the operation. This is the purpose of the while loop.
+        boolean success = false;
+        while (!success)
         {
-            if ((uc == null && usages[i].m_ref.equals(ref)) || (uc == usages[i]))
+            UsageCount[] usages = m_inUseMap.get(bundle);
+            final UsageCount[] orgUsages = usages;
+            for (int i = 0; (usages != null) && (i < usages.length); i++)
             {
-                // If this is the only usage, then point to empty list.
-                if ((usages.length - 1) == 0)
+                if ((uc == null && usages[i].m_ref.equals(ref)) || (uc == usages[i]))
                 {
-                    usages = null;
-                }
-                // Otherwise, we need to do some array copying.
-                else
-                {
-                    UsageCount[] newUsages = new UsageCount[usages.length - 1];
-                    System.arraycopy(usages, 0, newUsages, 0, i);
-                    if (i < newUsages.length)
+                    // If this is the only usage, then point to empty list.
+                    if ((usages.length - 1) == 0)
                     {
-                        System.arraycopy(
-                            usages, i + 1, newUsages, i, newUsages.length - i);
+                        usages = null;
                     }
-                    usages = newUsages;
-                    i--;
+                    // Otherwise, we need to do some array copying.
+                    else
+                    {
+                        UsageCount[] newUsages = new UsageCount[usages.length - 1];
+                        System.arraycopy(usages, 0, newUsages, 0, i);
+                        if (i < newUsages.length)
+                        {
+                            System.arraycopy(
+                                usages, i + 1, newUsages, i, newUsages.length - i);
+                        }
+                        usages = newUsages;
+                        i--;
+                    }
                 }
             }
-        }
 
-        if (usages != null)
-        {
-            m_inUseMap.put(bundle, usages);
-        }
-        else
-        {
-            m_inUseMap.remove(bundle);
+            if (usages == orgUsages)
+                return; // no change in map
+
+            if (orgUsages != null)
+            {
+                if (usages != null)
+                    success = m_inUseMap.replace(bundle, orgUsages, usages);
+                else
+                    success = m_inUseMap.remove(bundle, orgUsages);
+            }
         }
     }
 
@@ -632,25 +654,36 @@ public class ServiceRegistry
         return this.hookRegistry;
     }
 
-    private static class UsageCount
+    static class UsageCount
     {
-        public final ServiceReference<?> m_ref;
-        public final boolean m_prototype;
+        final ServiceReference<?> m_ref;
+        final boolean m_prototype;
 
-        public volatile int m_count;
-        public volatile int m_serviceObjectsCount;
-
-        public volatile Object m_svcObj;
+        final AtomicInteger m_count = new AtomicInteger();
+        final AtomicInteger m_serviceObjectsCount = new AtomicInteger();
+        final AtomicReference<ServiceHolder> m_svcHolderRef = new AtomicReference<ServiceHolder>();
 
         UsageCount(final ServiceReference<?> ref, final boolean isPrototype)
         {
             m_ref = ref;
             m_prototype = isPrototype;
         }
+
+        Object getService()
+        {
+            ServiceHolder sh = m_svcHolderRef.get();
+            return sh == null ? null : sh.m_service;
+        }
+    }
+
+    static class ServiceHolder
+    {
+        final CountDownLatch m_latch = new CountDownLatch(1);
+        volatile Object m_service;
     }
 
     public interface ServiceRegistryCallbacks
     {
-        void serviceChanged(ServiceEvent event, Dictionary oldProps);
+        void serviceChanged(ServiceEvent event, Dictionary<?,?> oldProps);
     }
 }
