@@ -35,7 +35,7 @@
     </scm>
   <dependencies>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>org.apache.felix.framework</artifactId>
       <version>${framework.version}</version>
     </dependency>
@@ -43,7 +43,7 @@
   <properties>
     <log.level>4</log.level>
     <dollar>$</dollar>
-    <framework.version>5.0.0</framework.version>
+    <framework.version>${project.version}</framework.version>
     <gogo.runtime.version>0.16.2</gogo.runtime.version>
     <gogo.shell.version>0.10.0</gogo.shell.version>
     <gogo.command.version>0.14.0</gogo.command.version>
@@ -102,7 +102,7 @@
             <configuration>
                 <artifactItems>
                   <artifactItem>
-                     <groupId>${pom.groupId}</groupId>
+                     <groupId>${project.groupId}</groupId>
                      <artifactId>org.apache.felix.gogo.runtime</artifactId>
                      <version>${gogo.runtime.version}</version>
                      <type>jar</type>
@@ -110,7 +110,7 @@
                      <outputDirectory>${project.basedir}/bundle</outputDirectory>
                    </artifactItem>
                    <artifactItem>
-                     <groupId>${pom.groupId}</groupId>
+                     <groupId>${project.groupId}</groupId>
                      <artifactId>org.apache.felix.gogo.shell</artifactId>
                      <version>${gogo.shell.version}</version>
                      <type>jar</type>
@@ -118,7 +118,7 @@
                      <outputDirectory>${project.basedir}/bundle</outputDirectory>
                    </artifactItem>
                    <artifactItem>
-                     <groupId>${pom.groupId}</groupId>
+                     <groupId>${project.groupId}</groupId>
                      <artifactId>org.apache.felix.gogo.command</artifactId>
                      <version>${gogo.command.version}</version>
                      <type>jar</type>
@@ -126,7 +126,7 @@
                      <outputDirectory>${project.basedir}/bundle</outputDirectory>
                    </artifactItem>
                    <artifactItem>
-                     <groupId>${pom.groupId}</groupId>
+                     <groupId>${project.groupId}</groupId>
                      <artifactId>org.apache.felix.bundlerepository</artifactId>
                      <version>${obr.version}</version>
                      <type>jar</type>
@@ -149,7 +149,7 @@
                 <mkdir dir="${basedir}/bin" />
                 <delete dir="${basedir}/conf" />
                 <mkdir dir="${basedir}/conf" />
-                <copy file="${basedir}/target/org.apache.felix.main-${pom.version}.jar" tofile="${basedir}/bin/felix.jar" />
+                <copy file="${basedir}/target/org.apache.felix.main-${project.version}.jar" tofile="${basedir}/bin/felix.jar" />
                 <copy file="${basedir}/target/classes/config.properties" todir="${basedir}/conf" />
               </tasks>
             </configuration>
