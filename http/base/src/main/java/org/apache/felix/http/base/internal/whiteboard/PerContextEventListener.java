@@ -51,6 +51,7 @@ import org.osgi.framework.ServiceReference;
 public final class PerContextEventListener implements
         HttpSessionListener,
         HttpSessionAttributeListener,
+        HttpSessionIdListener,
         ServletContextAttributeListener,
         ServletRequestListener,
         ServletRequestAttributeListener
@@ -434,5 +435,16 @@ public final class PerContextEventListener implements
                 sessionListeners.keySet(),
                 requestAttributeListeners.keySet(),
                 requestListeners.keySet());
+    }
+
+    /**
+     * @see javax.servlet.http.HttpSessionIdListener#sessionIdChanged(javax.servlet.http.HttpSessionEvent, java.lang.String)
+     */
+    @Override
+    public void sessionIdChanged(@Nonnull final HttpSessionEvent event, @Nonnull final String oldSessionId) {
+        for (final HttpSessionIdListener l : sessionIdListeners.values())
+        {
+            l.sessionIdChanged(event, oldSessionId);
+        }
     }
 }

@@ -39,6 +39,7 @@ import javax.annotation.Nonnull;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextListener;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpSessionEvent;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.HandlerRegistry;
@@ -248,6 +249,24 @@ public final class WhiteboardManager
                 final ExtServletContext context = handler.getServletContext(this.bundleContext.getBundle());
                 new HttpSessionWrapper(contextId, session, context, true).invalidate();
                 handler.ungetServletContext(this.bundleContext.getBundle());
+            }
+        }
+    }
+
+    /**
+     * Handle session id changes
+     * @param session The session where the id changed
+     * @param oldSessionId The old session id
+     * @param contextIds The context ids using that session
+     */
+    public void sessionIdChanged(@Nonnull final HttpSessionEvent event, String oldSessionId, final Set<Long> contextIds)
+    {
+        for(final Long contextId : contextIds)
+        {
+            final ContextHandler handler = this.getContextHandler(contextId);
+            if ( handler != null )
+            {
+                handler.getListenerRegistry().sessionIdChanged(event, oldSessionId);
             }
         }
     }
