@@ -437,9 +437,29 @@ public final class WhiteboardManager
     private List<ContextHandler> getMatchingContexts(final WhiteboardServiceInfo<?> info)
     {
         final List<ContextHandler> result = new ArrayList<ContextHandler>();
-        for(final List<ContextHandler> handlerList : this.contextMap.values()) {
+        for(final List<ContextHandler> handlerList : this.contextMap.values())
+        {
             final ContextHandler h = handlerList.get(0);
-            if ( info.getContextSelectionFilter().match(h.getContextInfo().getServiceReference()) )
+            // check whether the servlet context helper is visible to the whiteboard bundle
+            // see chapter 140.2
+            boolean visible = h.getContextInfo().getServiceId() < 0; // internal ones are always visible
+            if ( !visible )
+            {
+                final String filterString = "(" + Constants.SERVICE_ID + "=" + String.valueOf(h.getContextInfo().getServiceId()) + ")";
+                try
+                {
+                    final Collection<ServiceReference<ServletContextHelper>> col = info.getServiceReference().getBundle().getBundleContext().getServiceReferences(ServletContextHelper.class, filterString);
+                    if ( !col.isEmpty() )
+                    {
+                        visible = true;
+                    }
+                }
+                catch ( final InvalidSyntaxException ise )
+                {
+                    // we ignore this and treat it as an invisible service
+                }
+            }
+            if ( visible && info.getContextSelectionFilter().match(h.getContextInfo().getServiceReference()) )
             {
                 result.add(h);
             }
