@@ -18,6 +18,7 @@
  */
 package org.apache.felix.http.base.internal.logger;
 
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
 
 public final class SystemLogger
@@ -58,5 +59,10 @@ public final class SystemLogger
     public static void error(String message, Throwable cause)
     {
         getLogger().log(LogService.LOG_ERROR, message, cause);
+    }
+
+    public static void error(ServiceReference<?> ref, String message, Throwable cause)
+    {
+        getLogger().log(ref, LogService.LOG_ERROR, message, cause);
     }
 }
