@@ -18,6 +18,7 @@ package org.apache.felix.http.whiteboard.internal.tracker;
 
 import javax.servlet.Filter;
 
+import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.whiteboard.HttpWhiteboardConstants;
 import org.apache.felix.http.whiteboard.internal.manager.ExtenderManager;
 import org.osgi.framework.BundleContext;
@@ -53,6 +54,10 @@ public final class FilterTracker
     @Override
     protected void added(Filter service, ServiceReference ref)
     {
+        SystemLogger.warning("Deprecation warning: " +
+                "Filter registered through Apache Felix whiteboard service: " + ref +
+                ". Please change your code to the OSGi Whiteboard Service.", null);
+
         this.manager.add(service, ref);
     }
 
