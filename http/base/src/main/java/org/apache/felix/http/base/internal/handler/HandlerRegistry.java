@@ -37,8 +37,6 @@ import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
 import org.apache.felix.http.base.internal.runtime.dto.ContextRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.FailureRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.HandlerRegistryRuntime;
-import org.apache.felix.http.base.internal.runtime.dto.InfoServletContextHelperRuntime;
-import org.apache.felix.http.base.internal.runtime.dto.ServletContextHelperRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.ServletRegistryRuntime;
 import org.apache.felix.http.base.internal.whiteboard.RegistrationFailureException;
 
@@ -50,8 +48,6 @@ import org.apache.felix.http.base.internal.whiteboard.RegistrationFailureExcepti
  */
 public final class HandlerRegistry
 {
-    private static final String HTTP_SERVICE_CONTEXT_NAME = "Http service context";
-
     private static FilterHandler[] EMPTY_FILTER_HANDLER = new FilterHandler[0];
 
     /** Current list of context registrations. */
@@ -250,12 +246,6 @@ public final class HandlerRegistry
             }
         }
         return EMPTY_FILTER_HANDLER;
-    }
-
-    public ServletContextHelperRuntime getHttpServiceContextRuntime()
-    {
-        ServletContextHelperInfo info = new ServletContextHelperInfo(Integer.MAX_VALUE, 0, HTTP_SERVICE_CONTEXT_NAME, "/", null);
-        return new InfoServletContextHelperRuntime(info);
     }
 
     public synchronized void addServlet(ServletHandler handler) throws RegistrationFailureException

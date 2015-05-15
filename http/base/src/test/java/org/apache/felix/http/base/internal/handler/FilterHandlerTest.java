@@ -36,6 +36,7 @@ import javax.servlet.FilterConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.http.base.internal.dispatch.InvocationChain;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.junit.Before;
 import org.junit.Test;
@@ -116,9 +117,11 @@ public class FilterHandlerTest extends AbstractHandlerTest
     public void testHandleFoundForbidden() throws Exception
     {
         FilterHandler h1 = createHandler(0, "/a");
+        final ServletHandler sc = mock(ServletHandler.class);
+        when(sc.getContext()).thenReturn(this.context);
+        final InvocationChain ic = new InvocationChain(sc, new FilterHandler[] {h1});
         HttpServletRequest req = createServletRequest();
         HttpServletResponse res = createServletResponse();
-        FilterChain chain = mock(FilterChain.class);
 
         when(req.getRequestURI()).thenReturn("/a");
         // Default behaviour: uncomitted response and default status code...
@@ -127,10 +130,9 @@ public class FilterHandlerTest extends AbstractHandlerTest
 
         when(this.context.handleSecurity(req, res)).thenReturn(false);
 
-        h1.handle(req, res, chain);
+        ic.doFilter(req, res);
 
-        verify(this.filter, never()).doFilter(req, res, chain);
-        verify(chain, never()).doFilter(req, res);
+        verify(this.filter, never()).doFilter(req, res, ic);
         verify(res).sendError(SC_FORBIDDEN);
     }
 
@@ -141,9 +143,11 @@ public class FilterHandlerTest extends AbstractHandlerTest
     public void testHandleFoundForbiddenCommittedOwnResponse() throws Exception
     {
         FilterHandler h1 = createHandler(0, "/a");
+        final ServletHandler sc = mock(ServletHandler.class);
+        when(sc.getContext()).thenReturn(this.context);
+        final InvocationChain ic = new InvocationChain(sc, new FilterHandler[] {h1});
         HttpServletRequest req = createServletRequest();
         HttpServletResponse res = createServletResponse();
-        FilterChain chain = mock(FilterChain.class);
 
         when(req.getRequestURI()).thenReturn("/a");
         // Simulate an already committed response...
@@ -152,10 +156,9 @@ public class FilterHandlerTest extends AbstractHandlerTest
 
         when(this.context.handleSecurity(req, res)).thenReturn(false);
 
-        h1.handle(req, res, chain);
+        ic.doFilter(req, res);
 
-        verify(this.filter, never()).doFilter(req, res, chain);
-        verify(chain, never()).doFilter(req, res);
+        verify(this.filter, never()).doFilter(req, res, ic);
         // Should not be called from our handler...
         verify(res, never()).sendError(SC_FORBIDDEN);
     }
@@ -167,9 +170,11 @@ public class FilterHandlerTest extends AbstractHandlerTest
     public void testHandleFoundForbiddenCustomStatusCode() throws Exception
     {
         FilterHandler h1 = createHandler(0, "/a");
+        final ServletHandler sc = mock(ServletHandler.class);
+        when(sc.getContext()).thenReturn(this.context);
+        final InvocationChain ic = new InvocationChain(sc, new FilterHandler[] {h1});
         HttpServletRequest req = createServletRequest();
         HttpServletResponse res = createServletResponse();
-        FilterChain chain = mock(FilterChain.class);
 
         when(req.getRequestURI()).thenReturn("/a");
         // Simulate an uncommitted response with a non-default status code...
@@ -178,10 +183,9 @@ public class FilterHandlerTest extends AbstractHandlerTest
 
         when(this.context.handleSecurity(req, res)).thenReturn(false);
 
-        h1.handle(req, res, chain);
+        ic.doFilter(req, res);
 
-        verify(this.filter, never()).doFilter(req, res, chain);
-        verify(chain, never()).doFilter(req, res);
+        verify(this.filter, never()).doFilter(req, res, ic);
         // Should not be called from our handler...
         verify(res, never()).sendError(SC_FORBIDDEN);
     }
@@ -190,30 +194,32 @@ public class FilterHandlerTest extends AbstractHandlerTest
     public void testHandleNotFound() throws Exception
     {
         FilterHandler h1 = createHandler(0, "/a");
+        final ServletHandler sc = mock(ServletHandler.class);
+        when(sc.getContext()).thenReturn(this.context);
+        final InvocationChain ic = new InvocationChain(sc, new FilterHandler[] {h1});
         HttpServletRequest req = createServletRequest();
         HttpServletResponse res = createServletResponse();
-        FilterChain chain = mock(FilterChain.class);
 
         when(req.getRequestURI()).thenReturn("/");
-        h1.handle(req, res, chain);
+        ic.doFilter(req, res);
 
-        verify(this.filter, never()).doFilter(req, res, chain);
-        verify(chain, never()).doFilter(req, res);
+        verify(this.filter, never()).doFilter(req, res, ic);
     }
 
     @Test
     public void testHandleNotFoundContextRoot() throws Exception
     {
         FilterHandler h1 = createHandler(0, "/a");
+        final ServletHandler sc = mock(ServletHandler.class);
+        when(sc.getContext()).thenReturn(this.context);
+        final InvocationChain ic = new InvocationChain(sc, new FilterHandler[] {h1});
         HttpServletRequest req = createServletRequest();
         HttpServletResponse res = createServletResponse();
-        FilterChain chain = mock(FilterChain.class);
 
         when(req.getRequestURI()).thenReturn(null);
-        h1.handle(req, res, chain);
+        ic.doFilter(req, res);
 
-        verify(this.filter, never()).doFilter(req, res, chain);
-        verify(chain, never()).doFilter(req, res);
+        verify(this.filter, never()).doFilter(req, res, ic);
     }
 
     @Test

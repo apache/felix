@@ -16,9 +16,6 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
-import static javax.servlet.http.HttpServletResponse.SC_OK;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,8 +24,8 @@ import java.util.regex.Pattern;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
@@ -84,6 +81,7 @@ public final class FilterHandler extends AbstractHandler<FilterHandler> implemen
         return this.filter;
     }
 
+    @Override
     public FilterInfo getFilterInfo()
     {
         return this.filterInfo;
@@ -94,23 +92,9 @@ public final class FilterHandler extends AbstractHandler<FilterHandler> implemen
         return filterInfo.getRanking();
     }
 
-    public boolean handle(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws ServletException, IOException
+    public void handle(ServletRequest req, ServletResponse res, FilterChain chain) throws ServletException, IOException
     {
-        if (getContext().handleSecurity(req, res))
-        {
-            this.filter.doFilter(req, res, chain);
-
-            return true;
-        }
-
-        // FELIX-3988: If the response is not yet committed and still has the default
-        // status, we're going to override this and send an error instead.
-        if (!res.isCommitted() && (res.getStatus() == SC_OK || res.getStatus() == 0))
-        {
-            res.sendError(SC_FORBIDDEN);
-        }
-
-        return false;
+        this.filter.doFilter(req, res, chain);
     }
 
     @Override
@@ -150,6 +134,7 @@ public final class FilterHandler extends AbstractHandler<FilterHandler> implemen
         return this.patterns;
     }
 
+    @Override
     public long getContextServiceId()
     {
         return this.contextServiceId;

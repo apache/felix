@@ -24,7 +24,6 @@ import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionIdListener;
 import javax.servlet.http.HttpSessionListener;
 
-import org.apache.felix.http.base.internal.console.HttpServicePlugin;
 import org.apache.felix.http.base.internal.dispatch.Dispatcher;
 import org.apache.felix.http.base.internal.handler.HandlerRegistry;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
@@ -38,7 +37,6 @@ public final class HttpServiceController
     private final BundleContext bundleContext;
     private final HandlerRegistry registry;
     private final Dispatcher dispatcher;
-    private final HttpServicePlugin plugin;
     private final HttpServiceFactory httpServiceFactory;
     private final WhiteboardManager whiteboardManager;
 
@@ -49,7 +47,6 @@ public final class HttpServiceController
         this.bundleContext = bundleContext;
         this.registry = new HandlerRegistry();
         this.dispatcher = new Dispatcher(this.registry);
-        this.plugin = new HttpServicePlugin(bundleContext, registry);
         this.httpServiceFactory = new HttpServiceFactory(this.bundleContext, this.registry);
         this.whiteboardManager = new WhiteboardManager(bundleContext, this.httpServiceFactory, this.registry);
     }
@@ -113,8 +110,6 @@ public final class HttpServiceController
     {
         this.registry.init();
 
-        this.plugin.register();
-
         this.httpServiceFactory.start(servletContext);
         this.whiteboardManager.start(servletContext);
 
@@ -123,8 +118,6 @@ public final class HttpServiceController
 
     public void unregister()
     {
-        this.plugin.unregister();
-
         this.dispatcher.setWhiteboardManager(null);
 
         if ( this.whiteboardManager != null )

@@ -19,8 +19,7 @@ package org.apache.felix.http.base.internal.handler;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static javax.servlet.http.HttpServletResponse.SC_PAYMENT_REQUIRED;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -35,6 +34,7 @@ import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.http.base.internal.dispatch.InvocationChain;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,14 +63,15 @@ public class SimpleServletHandlerTest extends AbstractHandlerTest
     public void testHandleFound() throws Exception
     {
         ServletHandler h1 = createHandler("/a");
+        final InvocationChain ic = new InvocationChain(h1, new FilterHandler[0]);
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse res = mock(HttpServletResponse.class);
         when(this.context.handleSecurity(req, res)).thenReturn(true);
 
         when(req.getPathInfo()).thenReturn("/a/b");
-        boolean result = h1.handle(req, res);
+        ic.doFilter(req, res);
 
-        assertTrue(result);
+        assertEquals(0, res.getStatus());
         verify(this.servlet).service(any(HttpServletRequest.class), any(HttpServletResponse.class));
     }
 
@@ -78,14 +79,15 @@ public class SimpleServletHandlerTest extends AbstractHandlerTest
     public void testHandleFoundContextRoot() throws Exception
     {
         ServletHandler h1 = createHandler("/");
+        final InvocationChain ic = new InvocationChain(h1, new FilterHandler[0]);
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse res = mock(HttpServletResponse.class);
         when(this.context.handleSecurity(req, res)).thenReturn(true);
 
         when(req.getPathInfo()).thenReturn(null);
-        boolean result = h1.handle(req, res);
+        ic.doFilter(req, res);
 
-        assertTrue(result);
+        assertEquals(0, res.getStatus());
         verify(this.servlet).service(any(HttpServletRequest.class), any(HttpServletResponse.class));
     }
 
@@ -96,6 +98,7 @@ public class SimpleServletHandlerTest extends AbstractHandlerTest
     public void testHandleFoundForbidden() throws Exception
     {
         ServletHandler h1 = createHandler("/a");
+        final InvocationChain ic = new InvocationChain(h1, new FilterHandler[0]);
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse res = mock(HttpServletResponse.class);
 
@@ -107,9 +110,9 @@ public class SimpleServletHandlerTest extends AbstractHandlerTest
         when(this.context.handleSecurity(req, res)).thenReturn(false);
 
         when(req.getPathInfo()).thenReturn("/a/b");
-        boolean result = h1.handle(req, res);
+        ic.doFilter(req, res);
 
-        assertFalse(result);
+        assertEquals(SC_OK, res.getStatus());
         verify(this.servlet, never()).service(req, res);
         verify(res).sendError(SC_FORBIDDEN);
     }
@@ -121,6 +124,7 @@ public class SimpleServletHandlerTest extends AbstractHandlerTest
     public void testHandleFoundForbiddenCommittedOwnResponse() throws Exception
     {
         ServletHandler h1 = createHandler("/a");
+        final InvocationChain ic = new InvocationChain(h1, new FilterHandler[0]);
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse res = mock(HttpServletResponse.class);
 
@@ -132,9 +136,9 @@ public class SimpleServletHandlerTest extends AbstractHandlerTest
         when(this.context.handleSecurity(req, res)).thenReturn(false);
 
         when(req.getPathInfo()).thenReturn("/a/b");
-        boolean result = h1.handle(req, res);
+        ic.doFilter(req, res);
 
-        assertFalse(result);
+        assertEquals(SC_OK, res.getStatus());
         verify(this.servlet, never()).service(req, res);
         verify(res, never()).sendError(SC_FORBIDDEN);
     }
@@ -146,6 +150,7 @@ public class SimpleServletHandlerTest extends AbstractHandlerTest
     public void testHandleFoundForbiddenCustomStatusCode() throws Exception
     {
         ServletHandler h1 = createHandler("/a");
+        final InvocationChain ic = new InvocationChain(h1, new FilterHandler[0]);
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse res = mock(HttpServletResponse.class);
 
@@ -157,9 +162,9 @@ public class SimpleServletHandlerTest extends AbstractHandlerTest
         when(this.context.handleSecurity(req, res)).thenReturn(false);
 
         when(req.getPathInfo()).thenReturn("/a/b");
-        boolean result = h1.handle(req, res);
+        ic.doFilter(req, res);
 
-        assertFalse(result);
+        assertEquals(SC_PAYMENT_REQUIRED, res.getStatus());
         verify(this.servlet, never()).service(req, res);
         verify(res, never()).sendError(SC_FORBIDDEN);
     }
@@ -168,13 +173,13 @@ public class SimpleServletHandlerTest extends AbstractHandlerTest
     public void testHandleNotFound() throws Exception
     {
         ServletHandler h1 = createHandler("/a");
+        final InvocationChain ic = new InvocationChain(h1, new FilterHandler[0]);
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse res = mock(HttpServletResponse.class);
 
         when(req.getPathInfo()).thenReturn("/");
-        boolean result = h1.handle(req, res);
+        ic.doFilter(req, res);
 
-        assertFalse(result);
         verify(this.servlet, never()).service(req, res);
     }
 
@@ -187,9 +192,8 @@ public class SimpleServletHandlerTest extends AbstractHandlerTest
         when(this.context.handleSecurity(req, res)).thenReturn(true);
 
         when(req.getRequestURI()).thenReturn(null);
-        boolean result = h1.handle(req, res);
+        h1.handle(req, res);
 
-        assertTrue(result);
         verify(this.servlet).service(req, res);
     }
 

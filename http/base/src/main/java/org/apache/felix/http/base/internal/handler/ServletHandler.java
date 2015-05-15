@@ -16,16 +16,13 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
-import static javax.servlet.http.HttpServletResponse.SC_OK;
-
 import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
@@ -69,23 +66,9 @@ public abstract class ServletHandler extends AbstractHandler<ServletHandler> imp
         return this.servletInfo.compareTo(other.servletInfo);
     }
 
-    public boolean handle(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException
+    public void handle(ServletRequest req, ServletResponse res) throws ServletException, IOException
     {
-        if (getContext().handleSecurity(req, res))
-        {
-            getServlet().service(req, res);
-
-            return true;
-        }
-
-        // FELIX-3988: If the response is not yet committed and still has the default
-        // status, we're going to override this and send an error instead.
-        if (!res.isCommitted() && (res.getStatus() == SC_OK || res.getStatus() == 0))
-        {
-            res.sendError(SC_FORBIDDEN);
-        }
-
-        return false;
+        getServlet().service(req, res);
     }
 
     public String determineServletPath(String uri)
@@ -114,6 +97,7 @@ public abstract class ServletHandler extends AbstractHandler<ServletHandler> imp
         return this.patterns;
     }
 
+    @Override
     public ServletInfo getServletInfo()
     {
         return this.servletInfo;

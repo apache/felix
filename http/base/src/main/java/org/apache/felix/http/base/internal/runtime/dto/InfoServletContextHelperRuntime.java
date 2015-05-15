@@ -26,15 +26,23 @@ public class InfoServletContextHelperRuntime implements ServletContextHelperRunt
 {
     private final ServletContextHelperInfo info;
 
-    public InfoServletContextHelperRuntime(ServletContextHelperInfo info)
+    private final ServletContext servletContext;
+
+    public InfoServletContextHelperRuntime(final ServletContextHelperInfo info)
+    {
+        this(info, null);
+    }
+
+    public InfoServletContextHelperRuntime(final ServletContextHelperInfo info, final ServletContext ctx)
     {
         this.info = info;
+        this.servletContext = ctx;
     }
 
     @Override
     public ServletContext getSharedContext()
     {
-        return null;
+        return this.servletContext;
     }
 
     @Override
@@ -44,7 +52,7 @@ public class InfoServletContextHelperRuntime implements ServletContextHelperRunt
     }
 
     @Override
-    public int compareTo(InfoServletContextHelperRuntime other)
+    public int compareTo(final InfoServletContextHelperRuntime other)
     {
         return info.compareTo(other.info);
     }

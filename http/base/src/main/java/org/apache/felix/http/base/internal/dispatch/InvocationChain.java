@@ -16,59 +16,67 @@
  */
 package org.apache.felix.http.base.internal.dispatch;
 
+import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 
 import java.io.IOException;
 
+import javax.annotation.Nonnull;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 
-class InvocationFilterChain extends HttpFilterChain
+public class InvocationChain implements FilterChain
 {
     private final ServletHandler servletHandler;
     private final FilterHandler[] filterHandlers;
-    private final FilterChain defaultChain;
 
     private int index = -1;
 
-    public InvocationFilterChain(ServletHandler servletHandler, FilterHandler[] filterHandlers, FilterChain defaultChain)
+    public InvocationChain(@Nonnull final ServletHandler servletHandler, @Nonnull final FilterHandler[] filterHandlers)
     {
         this.filterHandlers = filterHandlers;
         this.servletHandler = servletHandler;
-        this.defaultChain = defaultChain;
     }
 
     @Override
-    protected void doFilter(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException
+    public final void doFilter(ServletRequest req, ServletResponse res) throws IOException, ServletException
     {
+        if ( this.index == -1 )
+        {
+            final HttpServletRequest hReq = (HttpServletRequest) req;
+            final HttpServletResponse hRes = (HttpServletResponse) res;
+
+            // invoke security
+            if ( !servletHandler.getContext().handleSecurity(hReq, hRes))
+            {
+                // FELIX-3988: If the response is not yet committed and still has the default
+                // status, we're going to override this and send an error instead.
+                if (!res.isCommitted() && (hRes.getStatus() == SC_OK || hRes.getStatus() == 0))
+                {
+                    hRes.sendError(SC_FORBIDDEN);
+                }
+
+                // we're done
+                return;
+            }
+        }
         this.index++;
 
         if (this.index < this.filterHandlers.length)
         {
-            if (this.filterHandlers[this.index].handle(req, res, this))
-            {
-                // We're done...
-                return;
-            }
+            this.filterHandlers[this.index].handle(req, res, this);
         }
-
-        // Last entry in the chain...
-        if (this.servletHandler != null && this.servletHandler.handle(req, res))
+        else
         {
-            // We're done...
-            return;
-        }
-
-        // FELIX-3988: If the response is not yet committed and still has the default
-        // status, we're going to override this and send an error instead.
-        if (!res.isCommitted() && res.getStatus() == SC_OK)
-        {
-            this.defaultChain.doFilter(req, res);
+            // Last entry in the chain...
+            this.servletHandler.handle(req, res);
         }
     }
 }
