@@ -194,7 +194,7 @@ public class BundlePlugin extends AbstractMojo
     /**
      * Use locally patched version for now.
      */
-    private Maven2OsgiConverter m_maven2OsgiConverter = new DefaultMaven2OsgiConverter();
+    private final Maven2OsgiConverter m_maven2OsgiConverter = new DefaultMaven2OsgiConverter();
 
     /**
      * The archive configuration to use.
@@ -225,12 +225,6 @@ public class BundlePlugin extends AbstractMojo
     protected Maven2OsgiConverter getMaven2OsgiConverter()
     {
         return m_maven2OsgiConverter;
-    }
-
-
-    protected void setMaven2OsgiConverter( Maven2OsgiConverter maven2OsgiConverter )
-    {
-        m_maven2OsgiConverter = maven2OsgiConverter;
     }
 
 
