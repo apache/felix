@@ -55,12 +55,19 @@ public final class WhiteboardHttpService
      * Register a servlet.
      * @param contextInfo The servlet context helper info
      * @param servletInfo The servlet info
-     * @throws RegistrationFailureException 
+     * @throws RegistrationFailureException
      */
     public void registerServlet(@Nonnull final ContextHandler contextHandler,
             @Nonnull final ServletInfo servletInfo)
             throws RegistrationFailureException
     {
+        // we need to check each and every pattern individually
+        if ( servletInfo.getPatterns() != null )
+        {
+            for(final String pattern : servletInfo.getPatterns() ) {
+
+            }
+        }
         try
         {
             ServletHandler handler = new WhiteboardServletHandler(contextHandler.getContextInfo(),
@@ -80,7 +87,7 @@ public final class WhiteboardHttpService
      * Unregister a servlet
      * @param contextInfo The servlet context helper info
      * @param servletInfo The servlet info
-     * @throws RegistrationFailureException 
+     * @throws RegistrationFailureException
      */
     public void unregisterServlet(@Nonnull final ContextHandler contextHandler, @Nonnull final ServletInfo servletInfo) throws RegistrationFailureException
     {
@@ -92,7 +99,7 @@ public final class WhiteboardHttpService
      * Register a filter
      * @param contextInfo The servlet context helper info
      * @param filterInfo The filter info
-     * @throws RegistrationFailureException 
+     * @throws RegistrationFailureException
      */
     public void registerFilter(@Nonnull  final ContextHandler contextHandler,
             @Nonnull final FilterInfo filterInfo) throws RegistrationFailureException
@@ -141,7 +148,7 @@ public final class WhiteboardHttpService
      * Register a resource.
      * @param contextInfo The servlet context helper info
      * @param resourceInfo The resource info
-     * @throws RegistrationFailureException 
+     * @throws RegistrationFailureException
      */
     public void registerResource(@Nonnull final ContextHandler contextHandler,
             @Nonnull final ResourceInfo resourceInfo) throws RegistrationFailureException
@@ -166,7 +173,7 @@ public final class WhiteboardHttpService
      * Unregister a resource.
      * @param contextInfo The servlet context helper info
      * @param resourceInfo The resource info
-     * @throws RegistrationFailureException 
+     * @throws RegistrationFailureException
      */
     public void unregisterResource(@Nonnull final ContextHandler contextHandler, @Nonnull final ResourceInfo resourceInfo) throws RegistrationFailureException
     {
