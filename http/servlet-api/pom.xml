@@ -55,6 +55,10 @@
                             javax.servlet.http;
                                 version=3.1
                         </Export-Package>
+                        <Provide-Capability>
+                            osgi.contract;osgi.contract="JavaServlet";version:Version="3.1";
+                            uses:="javax.servlet,javax.servlet.http,javax.servlet.descriptor,javax.servlet.annotation"
+                        </Provide-Capability>
 						<Embed-Dependency>tomcat-servlet-api;inline=true</Embed-Dependency>
                     </instructions>
                     <!-- Skip baselining -->
