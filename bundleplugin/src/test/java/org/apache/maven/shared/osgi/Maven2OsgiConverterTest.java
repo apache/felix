@@ -26,7 +26,7 @@ import org.codehaus.plexus.PlexusTestCase;
 
 /**
  * Test for {@link DefaultMaven2OsgiConverter}
- * 
+ *
  * @author <a href="mailto:carlos@apache.org">Carlos Sanchez</a>
  * @version $Id$
  */
@@ -117,6 +117,9 @@ public class Maven2OsgiConverterTest
         osgiVersion = maven2Osgi.getVersion( "2.1-SNAPSHOT" );
         assertEquals( "2.1.0.SNAPSHOT", osgiVersion );
 
+        osgiVersion = maven2Osgi.getVersion( "0.1-SNAPSHOT" );
+        assertEquals( "0.1.0.SNAPSHOT", osgiVersion );
+
         osgiVersion = maven2Osgi.getVersion( "2-SNAPSHOT" );
         assertEquals( "2.0.0.SNAPSHOT", osgiVersion );
 
@@ -149,10 +152,10 @@ public class Maven2OsgiConverterTest
 
         osgiVersion = maven2Osgi.getVersion( "1.4.1-20070217.082013-7" );
         assertEquals( "1.4.1.20070217_082013-7", osgiVersion );
-        
+
         osgiVersion = maven2Osgi.getVersion( "0.0.0.4aug2000r7-dev" );
         assertEquals( "0.0.0.4aug2000r7-dev", osgiVersion );
-        
+
         osgiVersion = maven2Osgi.getVersion( "4aug2000r7-dev" );
         assertEquals( "0.0.0.4aug2000r7-dev", osgiVersion );
     }

@@ -9,9 +9,9 @@ package org.apache.felix.bundleplugin;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -27,12 +27,11 @@ import java.util.Map;
 import org.apache.maven.plugin.testing.stubs.ArtifactStub;
 import org.apache.maven.plugin.testing.stubs.MavenProjectStub;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.shared.osgi.DefaultMaven2OsgiConverter;
 
 
 /**
  * Test for {@link BundleAllPlugin}
- * 
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class BundleAllPluginTest extends AbstractBundlePluginTest
@@ -41,6 +40,7 @@ public class BundleAllPluginTest extends AbstractBundlePluginTest
     private BundleAllPlugin plugin;
 
 
+    @Override
     protected void setUp() throws Exception
     {
         super.setUp();
@@ -56,7 +56,6 @@ public class BundleAllPluginTest extends AbstractBundlePluginTest
         plugin.setBuildDirectory( buildDirectory.getPath() );
         File outputDirectory = new File( buildDirectory, "test-classes" );
         plugin.setOutputDirectory( outputDirectory );
-        plugin.setMaven2OsgiConverter( new DefaultMaven2OsgiConverter() );
     }
 
 
