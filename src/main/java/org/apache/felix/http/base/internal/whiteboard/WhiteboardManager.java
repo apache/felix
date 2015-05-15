@@ -41,6 +41,7 @@ import javax.servlet.ServletContextListener;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionEvent;
 
+import org.apache.felix.http.base.internal.console.HttpServicePlugin;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.HandlerRegistry;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
@@ -60,6 +61,7 @@ import org.apache.felix.http.base.internal.runtime.ServletRequestListenerInfo;
 import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
 import org.apache.felix.http.base.internal.runtime.dto.FailureRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.HandlerRegistryRuntime;
+import org.apache.felix.http.base.internal.runtime.dto.InfoServletContextHelperRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.RegistryRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.ServletContextHelperRuntime;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
@@ -115,6 +117,8 @@ public final class WhiteboardManager
 
     private volatile ServiceRegistration<HttpServiceRuntime> runtimeServiceReg;
 
+    private final HttpServicePlugin plugin;
+
     /**
      * Create a new whiteboard http manager
      * @param bundleContext
@@ -129,6 +133,7 @@ public final class WhiteboardManager
         this.httpServiceFactory = httpServiceFactory;
         this.httpService = new WhiteboardHttpService(this.bundleContext, registry);
         this.serviceRuntime = new HttpServiceRuntimeImpl(registry, this);
+        this.plugin = new HttpServicePlugin(bundleContext, this.serviceRuntime);
     }
 
     public void start(final ServletContext context)
@@ -191,6 +196,7 @@ public final class WhiteboardManager
 
         addTracker(new ServletRequestListenerTracker(this.bundleContext, this));
         addTracker(new ServletRequestAttributeListenerTracker(this.bundleContext, this));
+        this.plugin.register();
     }
 
     private void addTracker(ServiceTracker<?, ?> tracker)
@@ -204,6 +210,7 @@ public final class WhiteboardManager
      */
     public void stop()
     {
+        this.plugin.unregister();
         for(final ServiceTracker<?, ?> t : this.trackers)
         {
             t.close();
@@ -740,6 +747,8 @@ public final class WhiteboardManager
          return handlers;
     }
 
+    private static final String HTTP_SERVICE_CONTEXT_NAME = "Http Service context";
+
     public RegistryRuntime getRuntime(HandlerRegistry registry)
     {
         final Collection<ServletContextHelperRuntime> contextRuntimes = new TreeSet<ServletContextHelperRuntime>(ServletContextHelperRuntime.COMPARATOR);
@@ -759,7 +768,10 @@ public final class WhiteboardManager
                     listenerRuntimes.put(serviceId, handler.getListenerRegistry().getRuntime());
                 }
             }
-            contextRuntimes.add(registry.getHttpServiceContextRuntime());
+            // TODO - this is the wrong place, it adds the context for the http service
+            final ServletContextHelperInfo info = new ServletContextHelperInfo(Integer.MAX_VALUE, 0, HTTP_SERVICE_CONTEXT_NAME, "/", null);
+            contextRuntimes.add(new InfoServletContextHelperRuntime(info, this.webContext));
+
             handlerRuntimes = registry.getRuntime(failureRuntime);
             failureRuntime.add(serviceFailures);
         }

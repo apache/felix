@@ -86,12 +86,12 @@ final class ServletContextDTOBuilder
 
     ServletContextDTO build()
     {
-        ServletContext context  = contextRuntime.getSharedContext();
-        ServletContextHelperInfo contextInfo = contextRuntime.getContextInfo();
-        long contextId = contextInfo.getServiceId();
+        final ServletContext context  = contextRuntime.getSharedContext();
+        final ServletContextHelperInfo contextInfo = contextRuntime.getContextInfo();
+        final long contextId = contextInfo.getServiceId();
 
         contextDTO.attributes = getAttributes(context);
-        contextDTO.contextPath = context == null ? contextInfo.getPath() : context.getContextPath();
+        contextDTO.contextPath = context != null ? context.getContextPath() : contextInfo.getPath();
         contextDTO.errorPageDTOs = errorPageDTOs;
         contextDTO.filterDTOs = filterDTOs;
         contextDTO.initParams = contextInfo.getInitParameters();

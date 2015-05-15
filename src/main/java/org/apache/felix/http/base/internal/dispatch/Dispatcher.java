@@ -541,11 +541,6 @@ public final class Dispatcher implements RequestDispatcherProvider
         }
     }
 
-    /**
-     * Catch-all filter chain that simple finishes all requests with a "404 Not Found" error.
-     */
-    private static final FilterChain DEFAULT_CHAIN = new NotFoundFilterChain();
-
     private final HandlerRegistry handlerRegistry;
 
     private WhiteboardManager whiteboardManager;
@@ -570,7 +565,7 @@ public final class Dispatcher implements RequestDispatcherProvider
      */
     public void dispatch(final HttpServletRequest req, final HttpServletResponse res) throws ServletException, IOException
     {
-        // invalid sessions first
+        // check for invalidating session(s) first
         final HttpSession session = req.getSession(false);
         if ( session != null )
         {
@@ -600,7 +595,7 @@ public final class Dispatcher implements RequestDispatcherProvider
         String pathInfo = UriUtils.compactPath(UriUtils.relativePath(servletPath, requestURI));
         String queryString = null; // XXX
 
-        ExtServletContext servletContext = (servletHandler != null) ? servletHandler.getContext() : null;
+        final ExtServletContext servletContext = servletHandler.getContext();
         final RequestInfo requestInfo = new RequestInfo(servletPath, pathInfo, queryString);
 
         final HttpServletRequest wrappedRequest = new ServletRequestWrapper(req, servletContext, requestInfo, servletHandler.getContextServiceId(),
@@ -707,7 +702,7 @@ public final class Dispatcher implements RequestDispatcherProvider
 
     private void invokeChain(FilterHandler[] filterHandlers, ServletHandler servletHandler, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
     {
-        FilterChain filterChain = new InvocationFilterChain(servletHandler, filterHandlers, DEFAULT_CHAIN);
+        final FilterChain filterChain = new InvocationChain(servletHandler, filterHandlers);
         filterChain.doFilter(request, response);
     }
 }
