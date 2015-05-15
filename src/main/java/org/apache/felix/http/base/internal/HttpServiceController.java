@@ -97,12 +97,12 @@ public final class HttpServiceController
         return new HttpSessionIdListener() {
 
             @Override
-            public void sessionIdChanged(HttpSessionEvent event, String oldSessionId) {
-                // TODO Auto-generated method stub
-
+            public void sessionIdChanged(final HttpSessionEvent event, String oldSessionId) {
+                whiteboardManager.sessionIdChanged(event, oldSessionId, HttpSessionWrapper.getSessionContextIds(event.getSession()));
             }
         };
     }
+
     public void setProperties(final Hashtable<String, Object> props)
     {
         this.httpServiceFactory.setProperties(props);
