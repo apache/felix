@@ -14,31 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.http.base.internal.handler.holder;
+package org.apache.felix.http.base.internal.registry;
 
-import javax.servlet.ServletContext;
+import org.apache.felix.http.base.internal.handler.holder.ServletHolder;
 
-import org.osgi.service.http.runtime.dto.DTOConstants;
+public class PathResolution {
 
-public abstract class AbstractHolder<T extends AbstractHolder<?>> implements Comparable<T>
-{
-    private final ServletContext context;
+    public String servletPath;
 
-    public AbstractHolder(final ServletContext context)
-    {
-        this.context = context;
-    }
+    public String pathInfo;
 
-    public ServletContext getContext()
-    {
-        return this.context;
-    }
-
-    /**
-     * Initialize the object
-     * @return {code -1} on success, a failure reason according to {@link DTOConstants} otherwise.
-     */
-    public abstract int init();
-
-    public abstract void destroy();
+    public ServletHolder holder;
 }

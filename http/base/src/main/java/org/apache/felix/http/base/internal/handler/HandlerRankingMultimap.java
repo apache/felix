@@ -32,7 +32,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 
-final class HandlerRankingMultimap<K>
+public final class HandlerRankingMultimap<K>
 {
     private final Map<ServletHandler, Integer> useCounts = new TreeMap<ServletHandler, Integer>();
 
@@ -42,19 +42,19 @@ final class HandlerRankingMultimap<K>
 
     private int size = 0;
 
-    HandlerRankingMultimap()
+    public HandlerRankingMultimap()
     {
         this.handlerMultimap = new HashMap<K, PriorityQueue<ServletHandler>>();
         this.keyComparator = null;
         this.handlerComparator = null;
     }
 
-    HandlerRankingMultimap(Comparator<K> keyComparator)
+    public HandlerRankingMultimap(Comparator<K> keyComparator)
     {
         this(keyComparator, null);
     }
 
-    HandlerRankingMultimap(Comparator<K> keyComparator, Comparator<ServletHandler> handlerComparator)
+    public HandlerRankingMultimap(Comparator<K> keyComparator, Comparator<ServletHandler> handlerComparator)
     {
         this.keyComparator = keyComparator;
         this.handlerMultimap = new TreeMap<K, PriorityQueue<ServletHandler>>(keyComparator);
@@ -66,7 +66,7 @@ final class HandlerRankingMultimap<K>
         return useCounts.containsKey(handler);
     }
 
-    Update<K> add(K[] keys, ServletHandler handler)
+    public Update<K> add(K[] keys, ServletHandler handler)
     {
         return add(asList(keys), handler);
     }
@@ -103,7 +103,7 @@ final class HandlerRankingMultimap<K>
         return Update.forAdd(activate, deactivate, destroy);
     }
 
-    Update<K> remove(K[] keys, ServletHandler handler)
+    public Update<K> remove(K[] keys, ServletHandler handler)
     {
         return remove(asList(keys), handler);
     }
@@ -199,13 +199,13 @@ final class HandlerRankingMultimap<K>
         return newCount;
     }
 
-    void clear()
+    public void clear()
     {
         handlerMultimap.clear();
         useCounts.clear();
     }
 
-    Collection<ServletHandler> getActiveValues()
+    public Collection<ServletHandler> getActiveValues()
     {
         TreeSet<ServletHandler> activeValues = new TreeSet<ServletHandler>();
         for (PriorityQueue<ServletHandler> queue : handlerMultimap.values())
@@ -215,7 +215,7 @@ final class HandlerRankingMultimap<K>
         return activeValues;
     }
 
-    Collection<ServletHandler> getShadowedValues()
+    public Collection<ServletHandler> getShadowedValues()
     {
         TreeSet<ServletHandler> shadowedValues = new TreeSet<ServletHandler>();
         for (PriorityQueue<ServletHandler> queue : handlerMultimap.values())
@@ -251,7 +251,7 @@ final class HandlerRankingMultimap<K>
         return keyComparator == null ? new HashMap<K, ServletHandler>() : new TreeMap<K, ServletHandler>(keyComparator);
     }
 
-    static final class Update<K>
+    public static final class Update<K>
     {
         private final Map<K, ServletHandler> activate;
         private final Map<K, ServletHandler> deactivate;
@@ -299,22 +299,22 @@ final class HandlerRankingMultimap<K>
             return valueSet;
         }
 
-        Map<K, ServletHandler> getActivated()
+        public Map<K, ServletHandler> getActivated()
         {
             return activate;
         }
 
-        Map<K, ServletHandler> getDeactivated()
+        public Map<K, ServletHandler> getDeactivated()
         {
             return deactivate;
         }
 
-        Collection<ServletHandler> getInit()
+        public Collection<ServletHandler> getInit()
         {
             return init;
         }
 
-        Collection<ServletHandler> getDestroy()
+        public Collection<ServletHandler> getDestroy()
         {
             return destroy;
         }

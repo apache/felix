@@ -42,10 +42,10 @@ import org.apache.felix.http.base.internal.util.PatternUtil.PatternComparator;
  * 3.0 specification.
  * <p>
  * {@link HandlerMapping} instances are immutable.
- * 
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-final class HandlerMapping<V extends AbstractHandler<V>>
+public final class HandlerMapping<V extends AbstractHandler<V>>
 {
     private final SortedMap<Pattern, Set<V>> exactMap;
     private final SortedMap<Pattern, Set<V>> wildcardMap;
@@ -54,7 +54,7 @@ final class HandlerMapping<V extends AbstractHandler<V>>
     /**
      * Creates a new, empty, {@link HandlerMapping} instance.
      */
-    HandlerMapping()
+    public HandlerMapping()
     {
         this(Collections.<Pattern, Collection<V>>emptyMap());
     }
@@ -108,7 +108,7 @@ final class HandlerMapping<V extends AbstractHandler<V>>
      * @return a new {@link HandlerMapping} instance with a mapping for the
      *         given handler.
      */
-    HandlerMapping<V> add(V handler)
+    public HandlerMapping<V> add(V handler)
     {
         Map<Pattern, V> mappings = new TreeMap<Pattern, V>(PatternComparator.INSTANCE);
         for (Pattern pattern : handler.getPatterns())
@@ -133,7 +133,7 @@ final class HandlerMapping<V extends AbstractHandler<V>>
      * @return a new {@link HandlerMapping} instance without a mapping for the
      *         given handler.
      */
-    HandlerMapping<V> remove(V handler)
+    public HandlerMapping<V> remove(V handler)
     {
         Map<Pattern, V> mappings = new TreeMap<Pattern, V>(PatternComparator.INSTANCE);
         for (Pattern pattern : handler.getPatterns())
@@ -197,23 +197,23 @@ final class HandlerMapping<V extends AbstractHandler<V>>
 
     /**
      * Returns all mapped handlers.
-     * 
+     *
      * @return the handlers contained in this mapping. The returned
      *         <code>Collection</code> is unmodifiable and never
      *         <code>null</code>.
      */
-    Collection<V> values()
+    public Collection<V> values()
     {
         return unmodifiableCollection(mappedHandlers);
     }
 
     /**
      * Returns whether this mapping contains the specified handler.
-     * 
+     *
      * @return <code>true</code> if the handlers contains the specified handler,
      *         <code>false</code> otherwise
      */
-    boolean contains(V handler)
+    public boolean contains(V handler)
     {
         return mappedHandlers.contains(handler);
     }
@@ -224,7 +224,7 @@ final class HandlerMapping<V extends AbstractHandler<V>>
      * @param path the path that should match, cannot be <code>null</code>.
      * @return a {@link Collection} of all matching handlers, never <code>null</code>.
      */
-    List<V> getAllMatches(String path)
+    public List<V> getAllMatches(String path)
     {
         return getAllMatches(path, false /* firstOnly */);
     }
