@@ -32,18 +32,18 @@ public final class ErrorsMapping
     private final Map<Integer, ServletHandler> errorCodesMap;
     private final Map<String, ServletHandler> exceptionsMap;
 
-    ErrorsMapping()
+    public ErrorsMapping()
     {
         this(new HashMap<Integer, ServletHandler>(), new HashMap<String, ServletHandler>());
     }
 
-    ErrorsMapping(Map<Integer, ServletHandler> errorCodesMap, Map<String, ServletHandler> exceptionsMap)
+    public ErrorsMapping(Map<Integer, ServletHandler> errorCodesMap, Map<String, ServletHandler> exceptionsMap)
     {
         this.errorCodesMap = errorCodesMap;
         this.exceptionsMap = exceptionsMap;
     }
 
-    ErrorsMapping update(Map<String, ServletHandler> add, Map<String, ServletHandler> remove) throws RegistrationFailureException
+    public ErrorsMapping update(Map<String, ServletHandler> add, Map<String, ServletHandler> remove) throws RegistrationFailureException
     {
         Map<Integer, ServletHandler> newErrorCodesMap = new HashMap<Integer, ServletHandler>(this.errorCodesMap);
         Map<String, ServletHandler> newExceptionsMap = new HashMap<String, ServletHandler>(this.exceptionsMap);;
@@ -160,7 +160,7 @@ public final class ErrorsMapping
 
 
     @SuppressWarnings("unchecked")
-    Collection<ServletHandler> values()
+    public Collection<ServletHandler> values()
     {
         return sortedUnion(errorCodesMap.values(), exceptionsMap.values());
     }

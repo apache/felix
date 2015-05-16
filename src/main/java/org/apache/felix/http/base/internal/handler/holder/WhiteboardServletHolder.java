@@ -42,6 +42,11 @@ public final class WhiteboardServletHolder extends ServletHolder
     @Override
     public int init()
     {
+        if ( this.useCount > 0 )
+        {
+            return -1;
+        }
+
         final ServiceReference<Servlet> serviceReference = getServletInfo().getServiceReference();
         final ServiceObjects<Servlet> so = this.bundleContext.getServiceObjects(serviceReference);
 
@@ -57,18 +62,22 @@ public final class WhiteboardServletHolder extends ServletHolder
     }
 
     @Override
-    public void destroy()
+    public boolean destroy()
     {
         final Servlet s = this.getServlet();
         if ( s != null )
         {
-            super.destroy();
-
-            final ServiceObjects<Servlet> so = this.bundleContext.getServiceObjects(getServletInfo().getServiceReference());
-            if (so != null)
+            if ( super.destroy() )
             {
-                so.ungetService(s);
+
+                final ServiceObjects<Servlet> so = this.bundleContext.getServiceObjects(getServletInfo().getServiceReference());
+                if (so != null)
+                {
+                    so.ungetService(s);
+                }
+                return true;
             }
         }
+        return false;
     }
 }

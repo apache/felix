@@ -32,18 +32,32 @@ import org.osgi.service.http.runtime.dto.DTOConstants;
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public abstract class ServletHolder extends AbstractHolder<ServletHolder>
+public abstract class ServletHolder implements Comparable<ServletHolder>
 {
     private final ServletInfo servletInfo;
 
+    private final ServletContext context;
+
     private volatile Servlet servlet;
+
+    protected volatile int useCount;
 
     public ServletHolder(final ServletContext context,
             final ServletInfo servletInfo)
     {
-        super(context);
-
+        this.context = context;
         this.servletInfo = servletInfo;
+    }
+
+    @Override
+    public int compareTo(final ServletHolder other)
+    {
+        return this.servletInfo.compareTo(other.servletInfo);
+    }
+
+    protected ServletContext getContext()
+    {
+        return this.context;
     }
 
     protected Servlet getServlet()
@@ -56,19 +70,13 @@ public abstract class ServletHolder extends AbstractHolder<ServletHolder>
         this.servlet = s;
     }
 
-    @Override
-    public int compareTo(final ServletHolder other)
-    {
-        return this.servletInfo.compareTo(other.servletInfo);
-    }
-
     public void handle(final ServletRequest req, final ServletResponse res)
             throws ServletException, IOException
     {
         this.servlet.service(req, res);
     }
 
-    protected ServletInfo getServletInfo()
+    public ServletInfo getServletInfo()
     {
         return this.servletInfo;
     }
@@ -83,42 +91,63 @@ public abstract class ServletHolder extends AbstractHolder<ServletHolder>
         return name;
     }
 
-    @Override
+    /**
+     * Initialize the object
+     * @return {code -1} on success, a failure reason according to {@link DTOConstants} otherwise.
+     */
     public int init()
     {
+        if ( this.useCount > 0 )
+        {
+            return -1;
+        }
+
         if (this.servlet == null)
         {
             return DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
         }
 
-        try {
+        try
+        {
             servlet.init(new ServletConfigImpl(getName(), getContext(), getServletInfo().getInitParameters()));
-        } catch (final ServletException e) {
+        }
+        catch (final ServletException e)
+        {
             SystemLogger.error(this.getServletInfo().getServiceReference(),
                     "Error during calling init() on servlet " + this.servlet,
                     e);
             return DTOConstants.FAILURE_REASON_EXCEPTION_ON_INIT;
         }
+        this.useCount++;
         return -1;
     }
 
-    @Override
-    public void destroy()
+
+    public boolean destroy()
     {
         if (this.servlet == null)
         {
-            return;
+            return false;
         }
 
-        try {
-            servlet.destroy();
-        } catch ( final Exception ignore ) {
-            // we ignore this
-            SystemLogger.error(this.getServletInfo().getServiceReference(),
-                    "Error during calling destroy() on servlet " + this.servlet,
-                    ignore);
-        }
+        this.useCount--;
+        if ( this.useCount == 0 )
+        {
+            try
+            {
+                servlet.destroy();
+            }
+            catch ( final Exception ignore )
+            {
+                // we ignore this
+                SystemLogger.error(this.getServletInfo().getServiceReference(),
+                        "Error during calling destroy() on servlet " + this.servlet,
+                        ignore);
+            }
 
-        servlet = null;
+            servlet = null;
+            return true;
+        }
+        return false;
     }
 }
