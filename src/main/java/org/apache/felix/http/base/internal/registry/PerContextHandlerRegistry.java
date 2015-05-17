@@ -19,8 +19,6 @@ package org.apache.felix.http.base.internal.registry;
 import javax.annotation.Nonnull;
 import javax.servlet.DispatcherType;
 
-import org.apache.felix.http.base.internal.handler.ErrorsMapping;
-import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.handler.holder.FilterHolder;
 import org.apache.felix.http.base.internal.handler.holder.ServletHolder;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
@@ -50,6 +48,8 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     private final ServletRegistry servletRegistry = new ServletRegistry();
 
     private final FilterRegistry filterRegistry = new FilterRegistry();
+
+    private final ErrorPageRegistry errorPageRegistry = new ErrorPageRegistry();
 
     /**
      * Default http service registry
@@ -143,6 +143,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     public void addServlet(@Nonnull final ServletHolder holder)
     {
         this.servletRegistry.addServlet(holder);
+        this.errorPageRegistry.addServlet(holder);
     }
 
     /**
@@ -152,6 +153,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     public void removeServlet(@Nonnull final ServletInfo info, final boolean destroy)
     {
         this.servletRegistry.removeServlet(info, destroy);
+        this.errorPageRegistry.removeServlet(info, destroy);
     }
 
     public void addFilter(@Nonnull final FilterHolder holder)
@@ -165,23 +167,13 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     }
 
     public FilterHolder[] getFilterHolders(final ServletHolder servletHolder,
-            DispatcherType dispatcherType, String requestURI) {
+            DispatcherType dispatcherType, String requestURI)
+    {
         return this.filterRegistry.getFilterHolders(servletHolder, dispatcherType, requestURI);
     }
 
-    public void removeErrorPage(ServletInfo servletInfo) {
-        // TODO Auto-generated method stub
-
-    }
-
-    public void addErrorPage(ServletHandler handler, String[] errorPages) {
-        // TODO Auto-generated method stub
-
-    }
-
-    public ErrorsMapping getErrorsMapping()
+    public ServletHolder getErrorHandler(int code, Throwable exception)
     {
-        return new ErrorsMapping();
+        return this.errorPageRegistry.get(exception, code);
     }
-
 }
