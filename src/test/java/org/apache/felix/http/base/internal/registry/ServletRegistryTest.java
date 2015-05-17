@@ -36,6 +36,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.http.runtime.dto.DTOConstants;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 public class ServletRegistryTest {
@@ -61,6 +62,50 @@ public class ServletRegistryTest {
 
         // remove servlet
         reg.removeServlet(h1.getServletInfo());
+
+        // empty again
+        assertEquals(0, status.size());
+    }
+
+    @Test public void testSimpleHiding() throws InvalidSyntaxException
+    {
+        final Map<ServletInfo, ServletRegistry.ServletRegistrationStatus> status = reg.getServletStatusMapping();
+        // empty reg
+        assertEquals(0, status.size());
+
+        // register servlets
+        final ServletHolder h1 = createServletHolder(1L, 10, "/foo");
+        reg.addServlet(h1);
+
+        final ServletHolder h2 = createServletHolder(2L, 0, "/foo");
+        reg.addServlet(h2);
+
+        // two entries in reg
+        assertEquals(2, status.size());
+        assertNotNull(status.get(h1.getServletInfo()));
+        assertNotNull(status.get(h2.getServletInfo()));
+
+        // h1 is active
+        assertNotNull(status.get(h1.getServletInfo()).pathToStatus.get("/foo"));
+        final int code1 = status.get(h1.getServletInfo()).pathToStatus.get("/foo");
+        assertEquals(-1, code1);
+
+        // h2 is hidden
+        assertNotNull(status.get(h2.getServletInfo()).pathToStatus.get("/foo"));
+        final int code2 = status.get(h2.getServletInfo()).pathToStatus.get("/foo");
+        assertEquals(DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE, code2);
+
+        // remove servlet 1
+        reg.removeServlet(h1.getServletInfo());
+
+        // h2 is active
+        assertEquals(1, status.size());
+        assertNotNull(status.get(h2.getServletInfo()).pathToStatus.get("/foo"));
+        final int code3 = status.get(h2.getServletInfo()).pathToStatus.get("/foo");
+        assertEquals(-1, code3);
+
+        // remove servlet 2
+        reg.removeServlet(h2.getServletInfo());
 
         // empty again
         assertEquals(0, status.size());

@@ -185,7 +185,7 @@ public final class ServletRegistry
         List<ServletHolder> inactiveList = this.inactivateServletMapping.get(pattern);
         if ( inactiveList == null )
         {
-            inactiveList = new ArrayList<ServletHolder>(inactiveList);
+            inactiveList = new ArrayList<ServletHolder>();
             this.inactivateServletMapping.put(pattern, inactiveList);
         }
         inactiveList.add(holder);
