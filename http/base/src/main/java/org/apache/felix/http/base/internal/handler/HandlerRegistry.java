@@ -158,14 +158,12 @@ public final class HandlerRegistry
 
     private PerContextHandlerRegistry getRegistry(final long key)
     {
-        synchronized ( this )
+        final List<PerContextHandlerRegistry> list = this.registrations;
+        for(final PerContextHandlerRegistry r : list)
         {
-            for(final PerContextHandlerRegistry r : this.registrations)
+            if ( key == r.getContextServiceId())
             {
-                if ( key == r.getContextServiceId())
-                {
-                    return r;
-                }
+                return r;
             }
         }
         return null;
@@ -173,32 +171,31 @@ public final class HandlerRegistry
 
     public ServletHolder getErrorHandler(String requestURI, Long serviceId, int code, Throwable exception)
     {
-        ErrorsMapping errorsMapping = getErrorsMapping(requestURI, serviceId);
-        if (errorsMapping == null)
+        final PerContextHandlerRegistry reg;
+        if ( serviceId == null )
         {
-            return null;
+            // if the context is unknown, we use the first matching one!
+            PerContextHandlerRegistry found = null;
+            final List<PerContextHandlerRegistry> regs = this.registrations;
+            for(final PerContextHandlerRegistry r : regs)
+            {
+                final String path = r.isMatching(requestURI);
+                if ( path != null )
+                {
+                    found = r;
+                    break;
+                }
+            }
+            reg = found;
         }
-
-        // TODO
-        return null;
-        //return errorsMapping.get(exception, code);
-    }
-
-    private ErrorsMapping getErrorsMapping(final String requestURI, final Long serviceId)
-    {
-        final List<PerContextHandlerRegistry> regs = this.registrations;
-        for(final PerContextHandlerRegistry r : regs)
+        else
         {
-            if ( serviceId != null && serviceId == r.getContextServiceId() )
-            {
-                return r.getErrorsMapping();
-            }
-            else if ( serviceId == null && r.isMatching(requestURI) != null )
-            {
-                return r.getErrorsMapping();
-            }
+            reg = this.getRegistry(serviceId);
         }
-
+        if ( reg != null )
+        {
+            return reg.getErrorHandler(code, exception);
+        }
         return null;
     }
 

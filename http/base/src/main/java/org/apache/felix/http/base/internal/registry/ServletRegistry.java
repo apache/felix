@@ -95,12 +95,12 @@ public final class ServletRegistry
      */
     public void addServlet(@Nonnull final ServletHolder holder)
     {
-        final ServletRegistrationStatus status = new ServletRegistrationStatus();
-
         // we have to check for every pattern in the info
         // Can be null in case of error-handling servlets...
         if ( holder.getServletInfo().getPatterns() != null )
         {
+            final ServletRegistrationStatus status = new ServletRegistrationStatus();
+
             for(final String pattern : holder.getServletInfo().getPatterns())
             {
                 final ServletHandler regHandler = this.activeServletMappings.get(pattern);
