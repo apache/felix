@@ -16,43 +16,39 @@
  */
 package org.apache.felix.http.base.internal.handler.holder;
 
-import java.io.IOException;
-
-import javax.servlet.Servlet;
+import javax.servlet.Filter;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 
-import org.apache.felix.http.base.internal.handler.ServletConfigImpl;
+import org.apache.felix.http.base.internal.handler.FilterConfigImpl;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
-import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.osgi.service.http.runtime.dto.DTOConstants;
 
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public abstract class ServletHolder implements Comparable<ServletHolder>
+public abstract class FilterHolder implements Comparable<FilterHolder>
 {
-    private final ServletInfo servletInfo;
+    private final FilterInfo filterInfo;
 
     private final ServletContext context;
 
-    private volatile Servlet servlet;
+    private volatile Filter filter;
 
     protected volatile int useCount;
 
-    public ServletHolder(final ServletContext context,
-            final ServletInfo servletInfo)
+    public FilterHolder(final ServletContext context,
+            final FilterInfo filterInfo)
     {
         this.context = context;
-        this.servletInfo = servletInfo;
+        this.filterInfo = filterInfo;
     }
 
     @Override
-    public int compareTo(final ServletHolder other)
+    public int compareTo(final FilterHolder other)
     {
-        return this.servletInfo.compareTo(other.servletInfo);
+        return this.filterInfo.compareTo(other.filterInfo);
     }
 
     protected ServletContext getContext()
@@ -60,33 +56,27 @@ public abstract class ServletHolder implements Comparable<ServletHolder>
         return this.context;
     }
 
-    protected Servlet getServlet()
+    protected Filter getFilter()
     {
-        return servlet;
+        return filter;
     }
 
-    protected void setServlet(final Servlet s)
+    protected void setFilter(final Filter f)
     {
-        this.servlet = s;
+        this.filter = f;
     }
 
-    public void handle(final ServletRequest req, final ServletResponse res)
-            throws ServletException, IOException
+    public FilterInfo getFilterInfo()
     {
-        this.servlet.service(req, res);
-    }
-
-    public ServletInfo getServletInfo()
-    {
-        return this.servletInfo;
+        return this.filterInfo;
     }
 
     protected String getName()
     {
-        String name = this.servletInfo.getName();
+        String name = this.filterInfo.getName();
         if (name == null)
         {
-            name = servlet.getClass().getName();
+            name = filter.getClass().getName();
         }
         return name;
     }
@@ -102,19 +92,19 @@ public abstract class ServletHolder implements Comparable<ServletHolder>
             return -1;
         }
 
-        if (this.servlet == null)
+        if (this.filter == null)
         {
             return DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
         }
 
         try
         {
-            servlet.init(new ServletConfigImpl(getName(), getContext(), getServletInfo().getInitParameters()));
+            filter.init(new FilterConfigImpl(getName(), getContext(), getFilterInfo().getInitParameters()));
         }
         catch (final ServletException e)
         {
-            SystemLogger.error(this.getServletInfo().getServiceReference(),
-                    "Error during calling init() on servlet " + this.servlet,
+            SystemLogger.error(this.getFilterInfo().getServiceReference(),
+                    "Error during calling init() on filter " + this.filter,
                     e);
             return DTOConstants.FAILURE_REASON_EXCEPTION_ON_INIT;
         }
@@ -125,7 +115,7 @@ public abstract class ServletHolder implements Comparable<ServletHolder>
 
     public boolean destroy()
     {
-        if (this.servlet == null)
+        if (this.filter == null)
         {
             return false;
         }
@@ -135,17 +125,17 @@ public abstract class ServletHolder implements Comparable<ServletHolder>
         {
             try
             {
-                servlet.destroy();
+                filter.destroy();
             }
             catch ( final Exception ignore )
             {
                 // we ignore this
-                SystemLogger.error(this.getServletInfo().getServiceReference(),
-                        "Error during calling destroy() on servlet " + this.servlet,
+                SystemLogger.error(this.getFilterInfo().getServiceReference(),
+                        "Error during calling destroy() on filter " + this.filter,
                         ignore);
             }
 
-            servlet = null;
+            filter = null;
             return true;
         }
         return false;
@@ -153,7 +143,7 @@ public abstract class ServletHolder implements Comparable<ServletHolder>
 
     public boolean dispose()
     {
-        // fully destroy the servlet
+        // fully destroy the filter
         this.useCount = 1;
         return this.destroy();
     }
