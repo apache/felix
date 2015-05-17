@@ -16,19 +16,11 @@
  */
 package org.apache.felix.http.base.internal.registry;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Pattern;
-
 import javax.annotation.Nonnull;
 
 import org.apache.felix.http.base.internal.handler.holder.ServletHolder;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
-import org.apache.felix.http.base.internal.util.PatternUtil;
+import org.apache.felix.http.base.internal.runtime.ServletInfo;
 
 /**
  * This registry keeps track of all processing components per context:
@@ -50,9 +42,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     /** The context prefix. */
     private final String prefix;
 
-    private Map<String, ServletHandler> activateServletMappings = new ConcurrentHashMap<String, ServletHandler>();
-
-    private Map<String, List<ServletHolder>> inactivateServletMappings = new HashMap<String, List<ServletHolder>>();
+    private final ServletRegistry servletRegistry = new ServletRegistry();
 
     /**
      * Default http service registry
@@ -126,18 +116,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
 
     public PathResolution resolve(final String relativeRequestURI)
     {
-        int len = -1;
-        PathResolution candidate = null;
-        for(final Map.Entry<String, ServletHandler> entry : this.activateServletMappings.entrySet())
-        {
-            final PathResolution pr = entry.getValue().resolve(relativeRequestURI);
-            if ( pr != null && entry.getKey().length() > len )
-            {
-                candidate = pr;
-                len = entry.getKey().length();
-            }
-        }
-        return candidate;
+        return this.servletRegistry.resolve(relativeRequestURI);
     }
 
     /**
@@ -147,70 +126,15 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
      */
     public void addServlet(@Nonnull final ServletHolder holder)
     {
-        // we have to check for every pattern in the info
-        // Can be null in case of error-handling servlets...
-        final String[] patternStrings = holder.getServletInfo().getPatterns();
-        if ( patternStrings != null )
-        {
-            final int length = patternStrings.length;
-            for (int i = 0; i < length; i++)
-            {
-                final String pattern = patternStrings[i];
-
-                final ServletHandler regHandler = this.activateServletMappings.get(pattern);
-                if ( regHandler != null )
-                {
-                    if ( regHandler.getServletHolder().getServletInfo().getServiceReference().compareTo(holder.getServletInfo().getServiceReference()) < 0 )
-                    {
-                        // replace if no error with new servlet
-                        if ( holder.init() == -1 )
-                        {
-                            final Pattern p = Pattern.compile(PatternUtil.convertToRegEx(pattern));
-                            final ServletHandler handler = new ServletHandler(holder, p);
-                            this.activateServletMappings.put(pattern, handler);
-
-                            regHandler.getServletHolder().destroy();
-
-                            this.addToInactiveList(pattern, regHandler.getServletHolder());
-                        }
-                        else
-                        {
-                            // TODO - add to failure
-                        }
-                    }
-                    else
-                    {
-                        // add to inactive
-                        this.addToInactiveList(pattern, holder);
-                    }
-                }
-                else
-                {
-                    // add to active
-                    if ( holder.init() == -1 )
-                    {
-                        final Pattern p = Pattern.compile(PatternUtil.convertToRegEx(pattern));
-                        final ServletHandler handler = new ServletHandler(holder, p);
-                        this.activateServletMappings.put(pattern, handler);
-                    }
-                    else
-                    {
-                        // TODO - add to failure
-                    }
-                }
-            }
-        }
+        this.servletRegistry.addServlet(holder);
     }
 
-    private void addToInactiveList(final String pattern, final ServletHolder holder)
+    /**
+     * Remove a servlet
+     * @param info The servlet info
+     */
+    public void removeServlet(@Nonnull final ServletInfo info)
     {
-        List<ServletHolder> inactiveList = this.inactivateServletMappings.get(pattern);
-        if ( inactiveList == null )
-        {
-            inactiveList = new ArrayList<ServletHolder>(inactiveList);
-            this.inactivateServletMappings.put(pattern, inactiveList);
-        }
-        inactiveList.add(holder);
-        Collections.sort(inactiveList);
+        this.servletRegistry.removeServlet(info);
     }
 }
