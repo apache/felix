@@ -617,11 +617,6 @@ public final class WhiteboardManager
                 handler.getListenerRegistry().addListener((ServletRequestAttributeListenerInfo) info);
             }
         }
-        catch (final RegistrationFailureException e)
-        {
-            serviceFailures.put(e.getInfo(), e.getErrorCode());
-            SystemLogger.error("Exception while registering whiteboard service " + info.getServiceReference(), e);
-        }
         catch (final RuntimeException e)
         {
             serviceFailures.put(info, FAILURE_REASON_UNKNOWN);

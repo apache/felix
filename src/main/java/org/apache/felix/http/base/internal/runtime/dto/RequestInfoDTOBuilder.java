@@ -16,11 +16,9 @@
  */
 package org.apache.felix.http.base.internal.runtime.dto;
 
-import static java.util.Arrays.asList;
-
-import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.HandlerRegistry;
-import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.handler.holder.FilterHolder;
+import org.apache.felix.http.base.internal.registry.PathResolution;
 import org.osgi.service.http.runtime.dto.FilterDTO;
 import org.osgi.service.http.runtime.dto.RequestInfoDTO;
 
@@ -39,19 +37,24 @@ public final class RequestInfoDTOBuilder
 
     public RequestInfoDTO build()
     {
-        ServletHandler servletHandler = registry.getServletHandler(path);
-        FilterHandler[] filterHandlers = registry.getFilterHandlers(servletHandler, null, path);
-        Long contextServiceId = servletHandler.getContextServiceId();
+        PathResolution pr = registry.resolveServlet(path);
+        if ( pr == null )
+        {
+            // TODO what do we return?
+            return null;
+        }
+        FilterHolder[] filterHolders = registry.getFilters(pr.holder, null, path);
+        Long contextServiceId = pr.holder.getContextServiceId();
 
         RequestInfoDTO requestInfoDTO = new RequestInfoDTO();
         requestInfoDTO.path = path;
         requestInfoDTO.servletContextId = contextServiceId;
 
+        /* TODO
         requestInfoDTO.filterDTOs = FilterDTOBuilder.create()
-                .build(asList(filterHandlers), contextServiceId)
+                .build(asList(filterHolders), contextServiceId)
                 .toArray(FILTER_DTO_ARRAY);
-
-        if (servletHandler.getServletInfo().isResource())
+        if (pr.holder.getServletInfo().isResource())
         {
             requestInfoDTO.resourceDTO = ResourceDTOBuilder.create()
                     .buildDTO(servletHandler, contextServiceId);
@@ -61,6 +64,7 @@ public final class RequestInfoDTOBuilder
             requestInfoDTO.servletDTO = ServletDTOBuilder.create()
                     .buildDTO(servletHandler, contextServiceId);
         }
+        */
         return requestInfoDTO;
     }
 }

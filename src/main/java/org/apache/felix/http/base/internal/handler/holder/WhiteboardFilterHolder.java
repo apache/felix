@@ -17,8 +17,8 @@
 package org.apache.felix.http.base.internal.handler.holder;
 
 import javax.servlet.Filter;
-import javax.servlet.ServletContext;
 
+import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceObjects;
@@ -31,11 +31,12 @@ public final class WhiteboardFilterHolder extends FilterHolder
 {
     private final BundleContext bundleContext;
 
-    public WhiteboardFilterHolder(final ServletContext context,
+    public WhiteboardFilterHolder(final long contextServiceId,
+            final ExtServletContext context,
             final FilterInfo filterInfo,
             final BundleContext bundleContext)
     {
-        super(context, filterInfo);
+        super(contextServiceId, context, filterInfo);
         this.bundleContext = bundleContext;
     }
 
@@ -44,6 +45,7 @@ public final class WhiteboardFilterHolder extends FilterHolder
     {
         if ( this.useCount > 0 )
         {
+            this.useCount++;
             return -1;
         }
 
@@ -58,7 +60,7 @@ public final class WhiteboardFilterHolder extends FilterHolder
             so.ungetService(this.getFilter());
             this.setFilter(null);
         }
-        return -reason;
+        return reason;
     }
 
     @Override

@@ -52,6 +52,8 @@ public class ServletHandler
             pr.servletPath = matcher.groupCount() > 0 ? matcher.group(1) : matcher.group();
             pr.pathInfo = UriUtils.compactPath(UriUtils.relativePath(pr.servletPath, requestURI));
             pr.holder = this.holder;
+
+            return pr;
         }
 
         return null;

@@ -17,8 +17,13 @@
 package org.apache.felix.http.base.internal.registry;
 
 import javax.annotation.Nonnull;
+import javax.servlet.DispatcherType;
 
+import org.apache.felix.http.base.internal.handler.ErrorsMapping;
+import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.handler.holder.FilterHolder;
 import org.apache.felix.http.base.internal.handler.holder.ServletHolder;
+import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 
@@ -43,6 +48,8 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     private final String prefix;
 
     private final ServletRegistry servletRegistry = new ServletRegistry();
+
+    private final FilterRegistry filterRegistry = new FilterRegistry();
 
     /**
      * Default http service registry
@@ -74,15 +81,19 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
         }
     }
 
+    public long getContextServiceId()
+    {
+        return this.serviceId;
+    }
+
+    public void removeAll()
+    {
+        // TODO - implement
+    }
+
     @Override
     public int compareTo(@Nonnull final PerContextHandlerRegistry other)
     {
-        // the context of the HttpService is the least element
-        if (this.serviceId == 0 ^ other.serviceId == 0)
-        {
-            return this.serviceId == 0 ? -1 : 1;
-        }
-
         final int result = Integer.compare(other.path.length(), this.path.length());
         if ( result == 0 ) {
             if (this.ranking == other.ranking)
@@ -119,6 +130,11 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
         return this.servletRegistry.resolve(relativeRequestURI);
     }
 
+    public ServletHolder resolveServletByName(final String name)
+    {
+        return this.servletRegistry.resolveByName(name);
+    }
+
     /**
      * Add a servlet
      * @param holder The servlet holder
@@ -133,8 +149,39 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
      * Remove a servlet
      * @param info The servlet info
      */
-    public void removeServlet(@Nonnull final ServletInfo info)
+    public void removeServlet(@Nonnull final ServletInfo info, final boolean destroy)
     {
-        this.servletRegistry.removeServlet(info);
+        this.servletRegistry.removeServlet(info, destroy);
     }
+
+    public void addFilter(@Nonnull final FilterHolder holder)
+    {
+        this.filterRegistry.addFilter(holder);
+    }
+
+    public void removeFilter(@Nonnull final FilterInfo info, final boolean destroy)
+    {
+        this.filterRegistry.removeFilter(info, destroy);
+    }
+
+    public FilterHolder[] getFilterHolders(final ServletHolder servletHolder,
+            DispatcherType dispatcherType, String requestURI) {
+        return this.filterRegistry.getFilterHolders(servletHolder, dispatcherType, requestURI);
+    }
+
+    public void removeErrorPage(ServletInfo servletInfo) {
+        // TODO Auto-generated method stub
+
+    }
+
+    public void addErrorPage(ServletHandler handler, String[] errorPages) {
+        // TODO Auto-generated method stub
+
+    }
+
+    public ErrorsMapping getErrorsMapping()
+    {
+        return new ErrorsMapping();
+    }
+
 }

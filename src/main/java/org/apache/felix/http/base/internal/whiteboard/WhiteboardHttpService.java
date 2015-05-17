@@ -16,18 +16,14 @@
  */
 package org.apache.felix.http.base.internal.whiteboard;
 
-import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_EXCEPTION_ON_INIT;
-import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
-
 import javax.annotation.Nonnull;
-import javax.servlet.Filter;
-import javax.servlet.ServletException;
 
-import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.HandlerRegistry;
-import org.apache.felix.http.base.internal.handler.ResourceServletHandler;
-import org.apache.felix.http.base.internal.handler.ServletHandler;
-import org.apache.felix.http.base.internal.handler.WhiteboardServletHandler;
+import org.apache.felix.http.base.internal.handler.holder.FilterHolder;
+import org.apache.felix.http.base.internal.handler.holder.HttpServiceServletHolder;
+import org.apache.felix.http.base.internal.handler.holder.ServletHolder;
+import org.apache.felix.http.base.internal.handler.holder.WhiteboardFilterHolder;
+import org.apache.felix.http.base.internal.handler.holder.WhiteboardServletHolder;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ResourceInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
@@ -59,28 +55,12 @@ public final class WhiteboardHttpService
      */
     public void registerServlet(@Nonnull final ContextHandler contextHandler,
             @Nonnull final ServletInfo servletInfo)
-            throws RegistrationFailureException
     {
-        // we need to check each and every pattern individually
-        if ( servletInfo.getPatterns() != null )
-        {
-            for(final String pattern : servletInfo.getPatterns() ) {
-
-            }
-        }
-        try
-        {
-            ServletHandler handler = new WhiteboardServletHandler(contextHandler.getContextInfo(),
+        final ServletHolder holder = new WhiteboardServletHolder(
+                contextHandler.getContextInfo().getServiceId(),
                 contextHandler.getServletContext(servletInfo.getServiceReference().getBundle()),
-                servletInfo,
-                bundleContext);
-
-            handlerRegistry.addServlet(handler);
-        }
-        catch (final RegistrationFailureException e)
-        {
-            throw e;
-        }
+                servletInfo, bundleContext);
+        handlerRegistry.addServlet(holder);
     }
 
     /**
@@ -91,7 +71,7 @@ public final class WhiteboardHttpService
      */
     public void unregisterServlet(@Nonnull final ContextHandler contextHandler, @Nonnull final ServletInfo servletInfo) throws RegistrationFailureException
     {
-        handlerRegistry.removeServlet(contextHandler.getContextInfo().getServiceId(), servletInfo);
+        handlerRegistry.removeServlet(contextHandler.getContextInfo().getServiceId(), servletInfo, true);
         contextHandler.ungetServletContext(servletInfo.getServiceReference().getBundle());
     }
 
@@ -99,34 +79,15 @@ public final class WhiteboardHttpService
      * Register a filter
      * @param contextInfo The servlet context helper info
      * @param filterInfo The filter info
-     * @throws RegistrationFailureException
      */
     public void registerFilter(@Nonnull  final ContextHandler contextHandler,
-            @Nonnull final FilterInfo filterInfo) throws RegistrationFailureException
+            @Nonnull final FilterInfo filterInfo)
     {
-        final Filter filter = this.bundleContext.getServiceObjects(filterInfo.getServiceReference()).getService();
-        if ( filter != null )
-        {
-            final FilterHandler handler = new FilterHandler(contextHandler.getContextInfo(),
-                    contextHandler.getServletContext(filterInfo.getServiceReference().getBundle()),
-                    filter,
-                    filterInfo);
-            try {
-                handlerRegistry.addFilter(contextHandler.getContextInfo(), handler);
-            }
-            catch (final RegistrationFailureException e)
-            {
-                throw e;
-            }
-            catch (final ServletException e)
-            {
-                throw new RegistrationFailureException(filterInfo, FAILURE_REASON_EXCEPTION_ON_INIT, e);
-            }
-        }
-        else
-        {
-            throw new RegistrationFailureException(filterInfo, FAILURE_REASON_SERVICE_NOT_GETTABLE);
-        }
+        final FilterHolder holder = new WhiteboardFilterHolder(
+                contextHandler.getContextInfo().getServiceId(),
+                contextHandler.getServletContext(filterInfo.getServiceReference().getBundle()),
+                filterInfo, bundleContext);
+        handlerRegistry.addFilter(holder);
     }
 
     /**
@@ -136,11 +97,7 @@ public final class WhiteboardHttpService
      */
     public void unregisterFilter(@Nonnull final ContextHandler contextHandler, @Nonnull final FilterInfo filterInfo)
     {
-        final Filter instance = handlerRegistry.removeFilter(contextHandler.getContextInfo(), filterInfo);
-        if ( instance != null )
-        {
-            this.bundleContext.getServiceObjects(filterInfo.getServiceReference()).ungetService(instance);
-        }
+        handlerRegistry.removeFilter(contextHandler.getContextInfo().getServiceId(), filterInfo, true);
         contextHandler.ungetServletContext(filterInfo.getServiceReference().getBundle());
     }
 
@@ -151,22 +108,16 @@ public final class WhiteboardHttpService
      * @throws RegistrationFailureException
      */
     public void registerResource(@Nonnull final ContextHandler contextHandler,
-            @Nonnull final ResourceInfo resourceInfo) throws RegistrationFailureException
+            @Nonnull final ResourceInfo resourceInfo)
     {
         final ServletInfo servletInfo = new ServletInfo(resourceInfo);
 
-        final ServletHandler handler = new ResourceServletHandler(contextHandler.getContextInfo(),
-            contextHandler.getServletContext(servletInfo.getServiceReference().getBundle()),
-            servletInfo);
+        final ServletHolder holder = new HttpServiceServletHolder(
+                contextHandler.getContextInfo().getServiceId(),
+                contextHandler.getServletContext(servletInfo.getServiceReference().getBundle()),
+                servletInfo, new ResourceServlet(resourceInfo.getPrefix()));
 
-        try
-        {
-            handlerRegistry.addServlet(handler);
-        }
-        catch (ServletException e)
-        {
-            throw new RegistrationFailureException(resourceInfo, FAILURE_REASON_EXCEPTION_ON_INIT, e);
-        }
+        handlerRegistry.addServlet(holder);
     }
 
     /**
@@ -178,7 +129,7 @@ public final class WhiteboardHttpService
     public void unregisterResource(@Nonnull final ContextHandler contextHandler, @Nonnull final ResourceInfo resourceInfo) throws RegistrationFailureException
     {
         final ServletInfo servletInfo = new ServletInfo(resourceInfo);
-        handlerRegistry.removeServlet(contextHandler.getContextInfo().getServiceId(), servletInfo);
+        handlerRegistry.removeServlet(contextHandler.getContextInfo().getServiceId(), servletInfo, true);
         contextHandler.ungetServletContext(servletInfo.getServiceReference().getBundle());
     }
 

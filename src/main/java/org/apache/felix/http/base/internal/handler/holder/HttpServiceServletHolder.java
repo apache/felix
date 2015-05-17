@@ -17,8 +17,8 @@
 package org.apache.felix.http.base.internal.handler.holder;
 
 import javax.servlet.Servlet;
-import javax.servlet.ServletContext;
 
+import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 
 /**
@@ -26,11 +26,12 @@ import org.apache.felix.http.base.internal.runtime.ServletInfo;
  */
 public final class HttpServiceServletHolder extends ServletHolder
 {
-    public HttpServiceServletHolder(final ServletContext context,
+    public HttpServiceServletHolder(final long contextServiceId,
+            final ExtServletContext context,
             final ServletInfo servletInfo,
             final Servlet servlet)
     {
-        super(context, servletInfo);
+        super(contextServiceId, context, servletInfo);
         this.setServlet(servlet);
     }
 }

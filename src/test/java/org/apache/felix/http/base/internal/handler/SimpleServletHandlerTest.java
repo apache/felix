@@ -34,27 +34,34 @@ import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.dispatch.InvocationChain;
+import org.apache.felix.http.base.internal.handler.holder.FilterHolder;
+import org.apache.felix.http.base.internal.handler.holder.HttpServiceServletHolder;
+import org.apache.felix.http.base.internal.handler.holder.ServletHolder;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
-public class SimpleServletHandlerTest extends AbstractHandlerTest
+public class SimpleServletHandlerTest
 {
     private Servlet servlet;
 
-    @Override
+    private ExtServletContext context;
+
     @Before
     public void setUp()
     {
-        super.setUp();
+        this.context = Mockito.mock(ExtServletContext.class);
         this.servlet = mock(Servlet.class);
     }
 
     @Test
     public void testDestroy()
     {
-        ServletHandler h1 = createHandler("/a");
+        ServletHolder h1 = createHandler("/a");
+        h1.init();
         h1.destroy();
         verify(this.servlet).destroy();
     }
@@ -62,8 +69,8 @@ public class SimpleServletHandlerTest extends AbstractHandlerTest
     @Test
     public void testHandleFound() throws Exception
     {
-        ServletHandler h1 = createHandler("/a");
-        final InvocationChain ic = new InvocationChain(h1, new FilterHandler[0]);
+        ServletHolder h1 = createHandler("/a");
+        final InvocationChain ic = new InvocationChain(h1, new FilterHolder[0]);
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse res = mock(HttpServletResponse.class);
         when(this.context.handleSecurity(req, res)).thenReturn(true);
@@ -78,8 +85,8 @@ public class SimpleServletHandlerTest extends AbstractHandlerTest
     @Test
     public void testHandleFoundContextRoot() throws Exception
     {
-        ServletHandler h1 = createHandler("/");
-        final InvocationChain ic = new InvocationChain(h1, new FilterHandler[0]);
+        ServletHolder h1 = createHandler("/");
+        final InvocationChain ic = new InvocationChain(h1, new FilterHolder[0]);
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse res = mock(HttpServletResponse.class);
         when(this.context.handleSecurity(req, res)).thenReturn(true);
@@ -97,8 +104,8 @@ public class SimpleServletHandlerTest extends AbstractHandlerTest
     @Test
     public void testHandleFoundForbidden() throws Exception
     {
-        ServletHandler h1 = createHandler("/a");
-        final InvocationChain ic = new InvocationChain(h1, new FilterHandler[0]);
+        ServletHolder h1 = createHandler("/a");
+        final InvocationChain ic = new InvocationChain(h1, new FilterHolder[0]);
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse res = mock(HttpServletResponse.class);
 
@@ -123,8 +130,8 @@ public class SimpleServletHandlerTest extends AbstractHandlerTest
     @Test
     public void testHandleFoundForbiddenCommittedOwnResponse() throws Exception
     {
-        ServletHandler h1 = createHandler("/a");
-        final InvocationChain ic = new InvocationChain(h1, new FilterHandler[0]);
+        ServletHolder h1 = createHandler("/a");
+        final InvocationChain ic = new InvocationChain(h1, new FilterHolder[0]);
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse res = mock(HttpServletResponse.class);
 
@@ -149,8 +156,8 @@ public class SimpleServletHandlerTest extends AbstractHandlerTest
     @Test
     public void testHandleFoundForbiddenCustomStatusCode() throws Exception
     {
-        ServletHandler h1 = createHandler("/a");
-        final InvocationChain ic = new InvocationChain(h1, new FilterHandler[0]);
+        ServletHolder h1 = createHandler("/a");
+        final InvocationChain ic = new InvocationChain(h1, new FilterHolder[0]);
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse res = mock(HttpServletResponse.class);
 
@@ -172,8 +179,8 @@ public class SimpleServletHandlerTest extends AbstractHandlerTest
     @Test
     public void testHandleNotFound() throws Exception
     {
-        ServletHandler h1 = createHandler("/a");
-        final InvocationChain ic = new InvocationChain(h1, new FilterHandler[0]);
+        ServletHolder h1 = createHandler("/a");
+        final InvocationChain ic = new InvocationChain(h1, new FilterHolder[0]);
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse res = mock(HttpServletResponse.class);
 
@@ -186,7 +193,7 @@ public class SimpleServletHandlerTest extends AbstractHandlerTest
     @Test
     public void testHandleNotFoundContextRoot() throws Exception
     {
-        ServletHandler h1 = createHandler("/a");
+        ServletHolder h1 = createHandler("/a");
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse res = mock(HttpServletResponse.class);
         when(this.context.handleSecurity(req, res)).thenReturn(true);
@@ -200,35 +207,23 @@ public class SimpleServletHandlerTest extends AbstractHandlerTest
     @Test
     public void testInit() throws Exception
     {
-        ServletHandler h1 = createHandler("/a");
+        ServletHolder h1 = createHandler("/a");
         h1.init();
         verify(this.servlet).init(any(ServletConfig.class));
     }
 
-    @Override
-    protected AbstractHandler createHandler()
-    {
-        return createHandler("/dummy", null);
-    }
-
-    @Override
-    protected AbstractHandler createHandler(Map<String, String> map)
-    {
-        return createHandler("/dummy", map);
-    }
-
-    private ServletHandler createHandler(String alias)
+    private ServletHolder createHandler(String alias)
     {
         return createHandler(alias, null);
     }
 
-    private ServletHandler createHandler(String alias, Map<String, String> map)
+    private ServletHolder createHandler(String alias, Map<String, String> map)
     {
         if ( map == null )
         {
             map = Collections.emptyMap();
         }
         final ServletInfo info = new ServletInfo(null, alias, 0, map);
-        return new SimpleServletHandler(this.context, info, this.servlet);
+        return new HttpServiceServletHolder(3, this.context, info, this.servlet);
     }
 }
