@@ -19,13 +19,17 @@ package org.apache.felix.http.base.internal.registry;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Map;
 
 import javax.servlet.Servlet;
-import javax.servlet.ServletContext;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
 
+import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.holder.HttpServiceServletHolder;
 import org.apache.felix.http.base.internal.handler.holder.ServletHolder;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
@@ -43,7 +47,7 @@ public class ServletRegistryTest {
 
     private final ServletRegistry reg = new ServletRegistry();
 
-    @Test public void testSingleServlet() throws InvalidSyntaxException
+    @Test public void testSingleServlet() throws InvalidSyntaxException, ServletException
     {
         final Map<ServletInfo, ServletRegistry.ServletRegistrationStatus> status = reg.getServletStatusMapping();
         // empty reg
@@ -53,6 +57,8 @@ public class ServletRegistryTest {
         final ServletHolder h1 = createServletHolder(1L, 0, "/foo");
         reg.addServlet(h1);
 
+        verify(h1.getServlet()).init(Matchers.any(ServletConfig.class));
+
         // one entry in reg
         assertEquals(1, status.size());
         assertNotNull(status.get(h1.getServletInfo()));
@@ -61,13 +67,15 @@ public class ServletRegistryTest {
         assertEquals(-1, code);
 
         // remove servlet
-        reg.removeServlet(h1.getServletInfo());
+        final Servlet s = h1.getServlet();
+        reg.removeServlet(h1.getServletInfo(), true);
+        verify(s).destroy();
 
         // empty again
         assertEquals(0, status.size());
     }
 
-    @Test public void testSimpleHiding() throws InvalidSyntaxException
+    @Test public void testSimpleHiding() throws InvalidSyntaxException, ServletException
     {
         final Map<ServletInfo, ServletRegistry.ServletRegistrationStatus> status = reg.getServletStatusMapping();
         // empty reg
@@ -76,9 +84,12 @@ public class ServletRegistryTest {
         // register servlets
         final ServletHolder h1 = createServletHolder(1L, 10, "/foo");
         reg.addServlet(h1);
+        verify(h1.getServlet()).init(Matchers.any(ServletConfig.class));
 
         final ServletHolder h2 = createServletHolder(2L, 0, "/foo");
         reg.addServlet(h2);
+        verify(h2.getServlet(), never()).init(Matchers.any(ServletConfig.class));
+        verify(h1.getServlet(), never()).destroy();
 
         // two entries in reg
         assertEquals(2, status.size());
@@ -96,7 +107,10 @@ public class ServletRegistryTest {
         assertEquals(DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE, code2);
 
         // remove servlet 1
-        reg.removeServlet(h1.getServletInfo());
+        final Servlet s1 = h1.getServlet();
+        reg.removeServlet(h1.getServletInfo(), true);
+        verify(s1).destroy();
+        verify(h2.getServlet()).init(Matchers.any(ServletConfig.class));
 
         // h2 is active
         assertEquals(1, status.size());
@@ -105,7 +119,9 @@ public class ServletRegistryTest {
         assertEquals(-1, code3);
 
         // remove servlet 2
-        reg.removeServlet(h2.getServletInfo());
+        final Servlet s2 = h2.getServlet();
+        reg.removeServlet(h2.getServletInfo(), true);
+        verify(s2).destroy();
 
         // empty again
         assertEquals(0, status.size());
@@ -132,9 +148,9 @@ public class ServletRegistryTest {
     private static ServletHolder createServletHolder(final long id, final int ranking, final String... paths) throws InvalidSyntaxException
     {
         final ServletInfo si = createServletInfo(id, ranking, paths);
-        final ServletContext ctx = mock(ServletContext.class);
+        final ExtServletContext ctx = mock(ExtServletContext.class);
         final Servlet servlet = mock(Servlet.class);
 
-        return new HttpServiceServletHolder(ctx, si, servlet);
+        return new HttpServiceServletHolder(7, ctx, si, servlet);
     }
 }

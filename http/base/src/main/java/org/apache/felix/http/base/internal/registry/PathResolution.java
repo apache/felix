@@ -25,4 +25,6 @@ public class PathResolution {
     public String pathInfo;
 
     public ServletHolder holder;
+
+    public String requestURI;
 }

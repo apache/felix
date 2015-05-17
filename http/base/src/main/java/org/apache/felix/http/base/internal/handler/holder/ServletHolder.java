@@ -19,11 +19,11 @@ package org.apache.felix.http.base.internal.handler.holder;
 import java.io.IOException;
 
 import javax.servlet.Servlet;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
+import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.ServletConfigImpl;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
@@ -34,17 +34,21 @@ import org.osgi.service.http.runtime.dto.DTOConstants;
  */
 public abstract class ServletHolder implements Comparable<ServletHolder>
 {
+    private final long contextServiceId;
+
     private final ServletInfo servletInfo;
 
-    private final ServletContext context;
+    private final ExtServletContext context;
 
     private volatile Servlet servlet;
 
     protected volatile int useCount;
 
-    public ServletHolder(final ServletContext context,
+    public ServletHolder(final long contextServiceId,
+            final ExtServletContext context,
             final ServletInfo servletInfo)
     {
+        this.contextServiceId = contextServiceId;
         this.context = context;
         this.servletInfo = servletInfo;
     }
@@ -55,12 +59,17 @@ public abstract class ServletHolder implements Comparable<ServletHolder>
         return this.servletInfo.compareTo(other.servletInfo);
     }
 
-    protected ServletContext getContext()
+    public long getContextServiceId()
+    {
+        return this.contextServiceId;
+    }
+
+    public ExtServletContext getContext()
     {
         return this.context;
     }
 
-    protected Servlet getServlet()
+    public Servlet getServlet()
     {
         return servlet;
     }
@@ -81,7 +90,7 @@ public abstract class ServletHolder implements Comparable<ServletHolder>
         return this.servletInfo;
     }
 
-    protected String getName()
+    public String getName()
     {
         String name = this.servletInfo.getName();
         if (name == null)
@@ -99,6 +108,7 @@ public abstract class ServletHolder implements Comparable<ServletHolder>
     {
         if ( this.useCount > 0 )
         {
+            this.useCount++;
             return -1;
         }
 

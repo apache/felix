@@ -17,8 +17,8 @@
 package org.apache.felix.http.base.internal.handler.holder;
 
 import javax.servlet.Filter;
-import javax.servlet.ServletContext;
 
+import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 
 /**
@@ -26,11 +26,12 @@ import org.apache.felix.http.base.internal.runtime.FilterInfo;
  */
 public final class HttpServiceFilterHolder extends FilterHolder
 {
-    public HttpServiceFilterHolder(final ServletContext context,
+    public HttpServiceFilterHolder(final long contextServiceId,
+            final ExtServletContext context,
             final FilterInfo filterInfo,
             final Filter filter)
     {
-        super(context, filterInfo);
+        super(contextServiceId, context, filterInfo);
         this.setFilter(filter);
     }
 }

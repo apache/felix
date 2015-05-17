@@ -29,20 +29,20 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.http.base.internal.handler.FilterHandler;
-import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.handler.holder.FilterHolder;
+import org.apache.felix.http.base.internal.handler.holder.ServletHolder;
 
 public class InvocationChain implements FilterChain
 {
-    private final ServletHandler servletHandler;
-    private final FilterHandler[] filterHandlers;
+    private final ServletHolder servletHolder;
+    private final FilterHolder[] filterHolders;
 
     private int index = -1;
 
-    public InvocationChain(@Nonnull final ServletHandler servletHandler, @Nonnull final FilterHandler[] filterHandlers)
+    public InvocationChain(@Nonnull final ServletHolder servletHolder, @Nonnull final FilterHolder[] filterHolders)
     {
-        this.filterHandlers = filterHandlers;
-        this.servletHandler = servletHandler;
+        this.filterHolders = filterHolders;
+        this.servletHolder = servletHolder;
     }
 
     @Override
@@ -54,7 +54,7 @@ public class InvocationChain implements FilterChain
             final HttpServletResponse hRes = (HttpServletResponse) res;
 
             // invoke security
-            if ( !servletHandler.getContext().handleSecurity(hReq, hRes))
+            if ( !servletHolder.getContext().handleSecurity(hReq, hRes))
             {
                 // FELIX-3988: If the response is not yet committed and still has the default
                 // status, we're going to override this and send an error instead.
@@ -69,14 +69,14 @@ public class InvocationChain implements FilterChain
         }
         this.index++;
 
-        if (this.index < this.filterHandlers.length)
+        if (this.index < this.filterHolders.length)
         {
-            this.filterHandlers[this.index].handle(req, res, this);
+            this.filterHolders[this.index].handle(req, res, this);
         }
         else
         {
             // Last entry in the chain...
-            this.servletHandler.handle(req, res);
+            this.servletHolder.handle(req, res);
         }
     }
 }

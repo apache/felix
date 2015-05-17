@@ -36,29 +36,35 @@ import javax.servlet.FilterConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.dispatch.InvocationChain;
+import org.apache.felix.http.base.internal.handler.holder.FilterHolder;
+import org.apache.felix.http.base.internal.handler.holder.HttpServiceFilterHolder;
+import org.apache.felix.http.base.internal.handler.holder.ServletHolder;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
-public class FilterHandlerTest extends AbstractHandlerTest
+public class FilterHandlerTest
 {
     private Filter filter;
 
-    @Override
+    private ExtServletContext context;
+
     @Before
     public void setUp()
     {
-        super.setUp();
+        this.context = Mockito.mock(ExtServletContext.class);
         this.filter = mock(Filter.class);
     }
 
     @Test
     public void testCompare()
     {
-        FilterHandler h1 = createHandler(0, "a");
-        FilterHandler h2 = createHandler(10, "b");
-        FilterHandler h3 = createHandler(10, "c");
+        FilterHolder h1 = createHandler(0, "a");
+        FilterHolder h2 = createHandler(10, "b");
+        FilterHolder h3 = createHandler(10, "c");
 
         assertTrue(h1.compareTo(h1) == 0);
 
@@ -73,7 +79,8 @@ public class FilterHandlerTest extends AbstractHandlerTest
     @Test
     public void testDestroy()
     {
-        FilterHandler h1 = createHandler(0, "/a");
+        FilterHolder h1 = createHandler(0, "/a");
+        h1.init();
         h1.destroy();
         verify(this.filter).destroy();
     }
@@ -81,7 +88,7 @@ public class FilterHandlerTest extends AbstractHandlerTest
     @Test
     public void testHandleFound() throws Exception
     {
-        FilterHandler h1 = createHandler(0, "/a");
+        FilterHolder h1 = createHandler(0, "/a");
         HttpServletRequest req = createServletRequest();
         HttpServletResponse res = createServletResponse();
         FilterChain chain = mock(FilterChain.class);
@@ -97,7 +104,7 @@ public class FilterHandlerTest extends AbstractHandlerTest
     @Test
     public void testHandleFoundContextRoot() throws Exception
     {
-        FilterHandler h1 = createHandler(0, "/");
+        FilterHolder h1 = createHandler(0, "/");
         HttpServletRequest req = createServletRequest();
         HttpServletResponse res = createServletResponse();
         FilterChain chain = mock(FilterChain.class);
@@ -116,10 +123,10 @@ public class FilterHandlerTest extends AbstractHandlerTest
     @Test
     public void testHandleFoundForbidden() throws Exception
     {
-        FilterHandler h1 = createHandler(0, "/a");
-        final ServletHandler sc = mock(ServletHandler.class);
+        FilterHolder h1 = createHandler(0, "/a");
+        final ServletHolder sc = mock(ServletHolder.class);
         when(sc.getContext()).thenReturn(this.context);
-        final InvocationChain ic = new InvocationChain(sc, new FilterHandler[] {h1});
+        final InvocationChain ic = new InvocationChain(sc, new FilterHolder[] {h1});
         HttpServletRequest req = createServletRequest();
         HttpServletResponse res = createServletResponse();
 
@@ -142,10 +149,10 @@ public class FilterHandlerTest extends AbstractHandlerTest
     @Test
     public void testHandleFoundForbiddenCommittedOwnResponse() throws Exception
     {
-        FilterHandler h1 = createHandler(0, "/a");
-        final ServletHandler sc = mock(ServletHandler.class);
+        FilterHolder h1 = createHandler(0, "/a");
+        final ServletHolder sc = mock(ServletHolder.class);
         when(sc.getContext()).thenReturn(this.context);
-        final InvocationChain ic = new InvocationChain(sc, new FilterHandler[] {h1});
+        final InvocationChain ic = new InvocationChain(sc, new FilterHolder[] {h1});
         HttpServletRequest req = createServletRequest();
         HttpServletResponse res = createServletResponse();
 
@@ -169,10 +176,10 @@ public class FilterHandlerTest extends AbstractHandlerTest
     @Test
     public void testHandleFoundForbiddenCustomStatusCode() throws Exception
     {
-        FilterHandler h1 = createHandler(0, "/a");
-        final ServletHandler sc = mock(ServletHandler.class);
+        FilterHolder h1 = createHandler(0, "/a");
+        final ServletHolder sc = mock(ServletHolder.class);
         when(sc.getContext()).thenReturn(this.context);
-        final InvocationChain ic = new InvocationChain(sc, new FilterHandler[] {h1});
+        final InvocationChain ic = new InvocationChain(sc, new FilterHolder[] {h1});
         HttpServletRequest req = createServletRequest();
         HttpServletResponse res = createServletResponse();
 
@@ -193,10 +200,10 @@ public class FilterHandlerTest extends AbstractHandlerTest
     @Test
     public void testHandleNotFound() throws Exception
     {
-        FilterHandler h1 = createHandler(0, "/a");
-        final ServletHandler sc = mock(ServletHandler.class);
+        FilterHolder h1 = createHandler(0, "/a");
+        final ServletHolder sc = mock(ServletHolder.class);
         when(sc.getContext()).thenReturn(this.context);
-        final InvocationChain ic = new InvocationChain(sc, new FilterHandler[] {h1});
+        final InvocationChain ic = new InvocationChain(sc, new FilterHolder[] {h1});
         HttpServletRequest req = createServletRequest();
         HttpServletResponse res = createServletResponse();
 
@@ -209,10 +216,10 @@ public class FilterHandlerTest extends AbstractHandlerTest
     @Test
     public void testHandleNotFoundContextRoot() throws Exception
     {
-        FilterHandler h1 = createHandler(0, "/a");
-        final ServletHandler sc = mock(ServletHandler.class);
+        FilterHolder h1 = createHandler(0, "/a");
+        final ServletHolder sc = mock(ServletHolder.class);
         when(sc.getContext()).thenReturn(this.context);
-        final InvocationChain ic = new InvocationChain(sc, new FilterHandler[] {h1});
+        final InvocationChain ic = new InvocationChain(sc, new FilterHolder[] {h1});
         HttpServletRequest req = createServletRequest();
         HttpServletResponse res = createServletResponse();
 
@@ -225,36 +232,24 @@ public class FilterHandlerTest extends AbstractHandlerTest
     @Test
     public void testInit() throws Exception
     {
-        FilterHandler h1 = createHandler(0, "/a");
+        FilterHolder h1 = createHandler(0, "/a");
         h1.init();
         verify(this.filter).init(any(FilterConfig.class));
     }
 
-   @Override
-    protected AbstractHandler createHandler()
-    {
-        return createHandler(0, "dummy");
-    }
-
-    @Override
-    protected AbstractHandler createHandler(final Map<String, String> initParams)
-    {
-        return createHandler("dummy", 0, initParams);
-    }
-
-    private FilterHandler createHandler(int ranking, String pattern)
+    private FilterHolder createHandler(int ranking, String pattern)
     {
         return createHandler(pattern, ranking, null);
     }
 
-    private FilterHandler createHandler(String pattern, int ranking, Map<String, String> initParams)
+    private FilterHolder createHandler(String pattern, int ranking, Map<String, String> initParams)
     {
         if ( initParams == null )
         {
             initParams = Collections.emptyMap();
         }
         final FilterInfo info = new FilterInfo(null, pattern, ranking, initParams);
-        return new FilterHandler(null, this.context, this.filter, info);
+        return new HttpServiceFilterHolder(0, this.context, info, this.filter);
     }
 
     private HttpServletRequest createServletRequest()

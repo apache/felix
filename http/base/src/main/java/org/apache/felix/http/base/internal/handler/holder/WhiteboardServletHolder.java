@@ -17,8 +17,8 @@
 package org.apache.felix.http.base.internal.handler.holder;
 
 import javax.servlet.Servlet;
-import javax.servlet.ServletContext;
 
+import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceObjects;
@@ -31,11 +31,12 @@ public final class WhiteboardServletHolder extends ServletHolder
 {
     private final BundleContext bundleContext;
 
-    public WhiteboardServletHolder(final ServletContext context,
+    public WhiteboardServletHolder(final long contextServiceId,
+            final ExtServletContext context,
             final ServletInfo servletInfo,
             final BundleContext bundleContext)
     {
-        super(context, servletInfo);
+        super(contextServiceId, context, servletInfo);
         this.bundleContext = bundleContext;
     }
 
@@ -44,6 +45,7 @@ public final class WhiteboardServletHolder extends ServletHolder
     {
         if ( this.useCount > 0 )
         {
+            this.useCount++;
             return -1;
         }
 
@@ -58,7 +60,7 @@ public final class WhiteboardServletHolder extends ServletHolder
             so.ungetService(this.getServlet());
             this.setServlet(null);
         }
-        return -reason;
+        return reason;
     }
 
     @Override
