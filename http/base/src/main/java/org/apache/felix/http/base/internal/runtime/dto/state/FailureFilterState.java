@@ -16,38 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.http.base.internal.runtime.dto;
-
-import javax.servlet.Servlet;
-
-import org.apache.felix.http.base.internal.runtime.ServletInfo;
+package org.apache.felix.http.base.internal.runtime.dto.state;
 
 
+public interface FailureFilterState extends FilterState {
 
-public class FailureServletRuntime implements ServletRuntime
-{
-    private final ServletInfo servletInfo;
-
-    FailureServletRuntime(ServletInfo servletInfo)
-    {
-        this.servletInfo = servletInfo;
-    }
-
-    @Override
-    public ServletInfo getServletInfo()
-    {
-        return servletInfo;
-    }
-
-    @Override
-    public long getContextServiceId()
-    {
-        return 0L;
-    }
-
-    @Override
-    public Servlet getServlet()
-    {
-        return null;
-    }
+    long getReason();
 }

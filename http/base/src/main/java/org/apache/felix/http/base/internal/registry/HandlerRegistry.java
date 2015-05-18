@@ -30,7 +30,6 @@ import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.dto.ContextRuntime;
-import org.apache.felix.http.base.internal.runtime.dto.FailureRuntime;
 
 /**
  * Registry for all services.
@@ -277,16 +276,13 @@ public final class HandlerRegistry
         return null;
     }
 
-    public List<ContextRuntime> getRuntime(FailureRuntime.Builder failureRuntimeBuilder)
+    public ContextRuntime getRuntime(final long contextId)
     {
-        final List<ContextRuntime> handlerRuntimes = new ArrayList<ContextRuntime>();
-
-        final List<PerContextHandlerRegistry> regs = this.registrations;
-        for (final PerContextHandlerRegistry contextRegistry : regs)
+        final PerContextHandlerRegistry reg = this.getRegistry(contextId);
+        if ( reg != null )
         {
-            handlerRuntimes.add(contextRegistry.getRuntime(failureRuntimeBuilder));
+            return reg.getRuntime();
         }
-
-        return handlerRuntimes;
+        return null;
     }
 }

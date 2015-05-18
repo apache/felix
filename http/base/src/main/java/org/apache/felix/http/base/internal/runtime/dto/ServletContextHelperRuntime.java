@@ -18,11 +18,13 @@
  */
 package org.apache.felix.http.base.internal.runtime.dto;
 
+import java.util.Collection;
 import java.util.Comparator;
 
 import javax.servlet.ServletContext;
 
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
+import org.osgi.framework.ServiceReference;
 
 public interface ServletContextHelperRuntime
 {
@@ -38,4 +40,8 @@ public interface ServletContextHelperRuntime
     ServletContext getSharedContext();
 
     ServletContextHelperInfo getContextInfo();
+
+    ContextRuntime getContextRuntime();
+
+    Collection<ServiceReference<?>> getListeners();
 }

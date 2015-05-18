@@ -19,61 +19,83 @@
 package org.apache.felix.http.base.internal.runtime.dto;
 
 import java.util.Collection;
-import java.util.Collections;
 
+import org.apache.felix.http.base.internal.runtime.dto.state.FailureFilterState;
+import org.apache.felix.http.base.internal.runtime.dto.state.FailureServletState;
+import org.apache.felix.http.base.internal.runtime.dto.state.FilterState;
+import org.apache.felix.http.base.internal.runtime.dto.state.ServletState;
+
+/**
+ * Contains all information about a context wrt to the servlet/filter registry.
+ */
 public final class ContextRuntime
 {
-    private final Collection<FilterRuntime> filterRuntimes;
-    private final Collection<ErrorPageRuntime> errorPageRuntimes;
-    private final long serviceId;
-    private final Collection<ServletRuntime> servletRuntimes;
-    private final Collection<ServletRuntime> resourceRuntimes;
+    private final Collection<FilterState> filterRuntimes;
+    private final Collection<ServletState> errorPageRuntimes;
+    private final Collection<ServletState> servletRuntimes;
+    private final Collection<ServletState> resourceRuntimes;
 
+    private final Collection<FailureFilterState> failureFilterRuntimes;
+    private final Collection<FailureServletState> failureErrorPageRuntimes;
+    private final Collection<FailureServletState> failureServletRuntimes;
+    private final Collection<FailureServletState> failureResourceRuntimes;
 
-    public ContextRuntime(Collection<FilterRuntime> filterRuntimes,
-            Collection<ErrorPageRuntime> errorPageRuntimes,
-            Collection<ServletRuntime> servletRuntimes,
-            Collection<ServletRuntime> resourceRuntimes,
-            long serviceId)
+    public ContextRuntime(final Collection<FilterState> filterRuntimes,
+            final Collection<ServletState> errorPageRuntimes,
+            final Collection<ServletState> servletRuntimes,
+            final Collection<ServletState> resourceRuntimes,
+            final Collection<FailureFilterState> failureFilterRuntimes,
+            final Collection<FailureServletState> failureErrorPageRuntimes,
+            final Collection<FailureServletState> failureServletRuntimes,
+            final Collection<FailureServletState> failureResourceRuntimes)
     {
         this.filterRuntimes = filterRuntimes;
         this.errorPageRuntimes = errorPageRuntimes;
-        this.serviceId = serviceId;
         this.servletRuntimes = servletRuntimes;
         this.resourceRuntimes = resourceRuntimes;
+        this.failureFilterRuntimes = failureFilterRuntimes;
+        this.failureErrorPageRuntimes = failureErrorPageRuntimes;
+        this.failureServletRuntimes = failureServletRuntimes;
+        this.failureResourceRuntimes = failureResourceRuntimes;
     }
 
-    public static ContextRuntime empty(long serviceId)
-    {
-        return new ContextRuntime(Collections.<FilterRuntime>emptyList(),
-                Collections.<ErrorPageRuntime> emptyList(),
-                Collections.<ServletRuntime> emptyList(),
-                Collections.<ServletRuntime> emptyList(),
-                serviceId);
-    }
-
-    Collection<ServletRuntime> getServletRuntimes()
+    Collection<ServletState> getServletRuntimes()
     {
         return servletRuntimes;
     }
 
-    Collection<ServletRuntime> getResourceRuntimes()
+    Collection<ServletState> getResourceRuntimes()
     {
         return resourceRuntimes;
     }
 
-    Collection<FilterRuntime> getFilterRuntimes()
+    Collection<FilterState> getFilterRuntimes()
     {
         return filterRuntimes;
     }
 
-    Collection<ErrorPageRuntime> getErrorPageRuntimes()
+    Collection<ServletState> getErrorPageRuntimes()
     {
         return errorPageRuntimes;
     }
 
-    public long getServiceId()
+    Collection<FailureServletState> getFailureServletRuntimes()
     {
-        return serviceId;
+        return failureServletRuntimes;
+    }
+
+    Collection<FailureServletState> getFailureResourceRuntimes()
+    {
+        return failureResourceRuntimes;
+    }
+
+    Collection<FailureFilterState> getFailureFilterRuntimes()
+    {
+        return failureFilterRuntimes;
+    }
+
+    Collection<FailureServletState> getFailureErrorPageRuntimes()
+    {
+        return failureErrorPageRuntimes;
     }
 }

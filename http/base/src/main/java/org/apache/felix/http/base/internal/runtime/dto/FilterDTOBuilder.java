@@ -21,9 +21,10 @@ package org.apache.felix.http.base.internal.runtime.dto;
 import javax.servlet.DispatcherType;
 
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
+import org.apache.felix.http.base.internal.runtime.dto.state.FilterState;
 import org.osgi.service.http.runtime.dto.FilterDTO;
 
-final class FilterDTOBuilder<T extends FilterDTO> extends BaseDTOBuilder<FilterRuntime, T>
+final class FilterDTOBuilder<T extends FilterDTO> extends BaseDTOBuilder<FilterState, T>
 {
     static FilterDTOBuilder<FilterDTO> create()
     {
@@ -36,7 +37,7 @@ final class FilterDTOBuilder<T extends FilterDTO> extends BaseDTOBuilder<FilterR
     }
 
     @Override
-    T buildDTO(FilterRuntime filterRuntime, long servletContextId)
+    T buildDTO(FilterState filterRuntime, long servletContextId)
     {
         FilterInfo info = filterRuntime.getFilterInfo();
 

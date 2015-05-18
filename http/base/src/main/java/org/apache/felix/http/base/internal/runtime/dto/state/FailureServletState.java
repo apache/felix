@@ -16,24 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.http.base.internal.runtime.dto;
-
-import java.util.Comparator;
-
-import org.apache.felix.http.base.internal.runtime.FilterInfo;
+package org.apache.felix.http.base.internal.runtime.dto.state;
 
 
-
-public interface FilterRuntime extends WhiteboardServiceRuntime
+public interface FailureServletState extends ServletState
 {
-    static final Comparator<FilterRuntime> COMPARATOR = new Comparator<FilterRuntime>()
-    {
-        @Override
-        public int compare(FilterRuntime o1, FilterRuntime o2)
-        {
-            return o1.getFilterInfo().compareTo(o2.getFilterInfo());
-        }
-    };
-
-    FilterInfo getFilterInfo();
+    long getReason();
 }

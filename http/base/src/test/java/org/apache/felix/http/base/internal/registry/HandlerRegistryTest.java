@@ -16,12 +16,8 @@
  */
 package org.apache.felix.http.base.internal.registry;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.List;
+import static org.junit.Assert.assertNull;
 
 import org.apache.felix.http.base.internal.runtime.dto.ContextRuntime;
 import org.junit.Test;
@@ -33,25 +29,17 @@ public class HandlerRegistryTest
 
     @Test public void testInitialSetup()
     {
-        List<ContextRuntime> runtimes = registry.getRuntime(null);
-        assertNotNull(runtimes);
-        assertTrue(runtimes.isEmpty());
+        ContextRuntime runtime = registry.getRuntime(0);
+        assertNull(runtime);
 
         registry.init();
 
-        runtimes = registry.getRuntime(null);
-        assertNotNull(runtimes);
-        assertFalse(runtimes.isEmpty());
-        assertEquals(1, runtimes.size());
-
-        final ContextRuntime cr = runtimes.get(0);
-
-        assertEquals(0, cr.getServiceId());
+        runtime = registry.getRuntime(0);
+        assertNotNull(runtime);
 
         registry.shutdown();
-        runtimes = registry.getRuntime(null);
-        assertNotNull(runtimes);
-        assertTrue(runtimes.isEmpty());
+        runtime = registry.getRuntime(0);
+        assertNull(runtime);
     }
     /*
     @Test

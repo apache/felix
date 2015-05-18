@@ -22,7 +22,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.CheckForNull;
@@ -32,8 +31,8 @@ import javax.servlet.DispatcherType;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
-import org.apache.felix.http.base.internal.runtime.dto.FailureRuntime;
-import org.apache.felix.http.base.internal.runtime.dto.FilterRuntime;
+import org.apache.felix.http.base.internal.runtime.dto.state.FailureFilterState;
+import org.apache.felix.http.base.internal.runtime.dto.state.FilterState;
 
 /**
  * TODO - check if add/remove needs syncing
@@ -44,10 +43,19 @@ public final class FilterRegistry
 
     private final Map<FilterInfo, FilterRegistrationStatus> statusMapping = new ConcurrentHashMap<FilterInfo, FilterRegistrationStatus>();
 
-    private static final class FilterRegistrationStatus
+    private static final class FilterRegistrationStatus implements FailureFilterState
     {
         public int result;
         public FilterHandler handler;
+
+        @Override
+        public FilterInfo getFilterInfo() {
+            return handler.getFilterInfo();
+        }
+        @Override
+        public long getReason() {
+            return result;
+        }
     }
 
     public void addFilter(@Nonnull final FilterHandler handler)
@@ -134,11 +142,11 @@ public final class FilterRegistry
         return false;
     }
 
-    public Collection<FilterRuntime> getFilterRuntimes(final FailureRuntime.Builder failureRuntimeBuilder)
+    public void getRuntimeInfo(final Collection<FilterState> filterRuntimes,
+            final Collection<FailureFilterState> failureFilterRuntimes)
     {
         final HandlerMapping mapping = this.filterMapping;
-        final Collection<FilterRuntime> filterRuntimes = new TreeSet<FilterRuntime>(FilterRuntime.COMPARATOR);
-        for (final FilterRuntime filterRuntime : mapping.values())
+        for (final FilterState filterRuntime : mapping.values())
         {
             filterRuntimes.add(filterRuntime);
         }
@@ -147,9 +155,8 @@ public final class FilterRegistry
         {
             if ( status.getValue().result != -1 )
             {
-                failureRuntimeBuilder.add(status.getKey(), status.getValue().result);
+                failureFilterRuntimes.add(status.getValue());
             }
         }
-        return filterRuntimes;
     }
 }

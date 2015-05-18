@@ -18,12 +18,10 @@
  */
 package org.apache.felix.http.base.internal.runtime.dto;
 
-import java.util.Collection;
-import java.util.Iterator;
-
+import org.apache.felix.http.base.internal.runtime.dto.state.ServletState;
 import org.osgi.service.http.runtime.dto.ErrorPageDTO;
 
-final class ErrorPageDTOBuilder<T extends ErrorPageDTO> extends BaseServletDTOBuilder<ErrorPageRuntime, T>
+final class ErrorPageDTOBuilder<T extends ErrorPageDTO> extends BaseServletDTOBuilder<ServletState, T>
 {
     static ErrorPageDTOBuilder<ErrorPageDTO> create()
     {
@@ -36,22 +34,11 @@ final class ErrorPageDTOBuilder<T extends ErrorPageDTO> extends BaseServletDTOBu
     }
 
     @Override
-    T buildDTO(ErrorPageRuntime errorPage, long servletConextId)
+    T buildDTO(ServletState errorPage, long servletConextId)
     {
         T errorPageDTO = super.buildDTO(errorPage, servletConextId);
-        errorPageDTO.errorCodes = getErrorCodes(errorPage.getErrorCodes());
-        errorPageDTO.exceptions = errorPage.getExceptions().toArray(BuilderConstants.STRING_ARRAY);
+        errorPageDTO.errorCodes = errorPage.getErrorCodes();
+        errorPageDTO.exceptions = errorPage.getErrorExceptions();
         return errorPageDTO;
-    }
-
-    private long[] getErrorCodes(Collection<Long> errorCodes)
-    {
-        Iterator<Long> itr = errorCodes.iterator();
-        long[] result = new long[errorCodes.size()];
-        for (int i = 0; i < result.length; i++)
-        {
-            result[i] = itr.next();
-        }
-        return result;
     }
 }

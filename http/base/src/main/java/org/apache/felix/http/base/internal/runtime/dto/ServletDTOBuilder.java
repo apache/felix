@@ -19,9 +19,10 @@
 package org.apache.felix.http.base.internal.runtime.dto;
 
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.runtime.dto.state.ServletState;
 import org.osgi.service.http.runtime.dto.ServletDTO;
 
-final class ServletDTOBuilder<T extends ServletDTO> extends BaseServletDTOBuilder<ServletRuntime, T>
+final class ServletDTOBuilder<T extends ServletDTO> extends BaseServletDTOBuilder<ServletState, T>
 {
     static ServletDTOBuilder<ServletDTO> create()
     {
@@ -34,7 +35,7 @@ final class ServletDTOBuilder<T extends ServletDTO> extends BaseServletDTOBuilde
     }
 
     @Override
-    T buildDTO(ServletRuntime servletRuntime, long servletContextId)
+    T buildDTO(ServletState servletRuntime, long servletContextId)
     {
         ServletInfo info = servletRuntime.getServletInfo();
 

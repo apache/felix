@@ -61,7 +61,6 @@ import org.apache.felix.http.base.internal.runtime.ServletRequestListenerInfo;
 import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
 import org.apache.felix.http.base.internal.runtime.dto.ContextRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.FailureRuntime;
-import org.apache.felix.http.base.internal.runtime.dto.InfoServletContextHelperRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.RegistryRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.ServletContextHelperRuntime;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
@@ -744,36 +743,78 @@ public final class WhiteboardManager
 
     private static final String HTTP_SERVICE_CONTEXT_NAME = "Http Service context";
 
-    public RegistryRuntime getRuntime(HandlerRegistry registry)
+    public RegistryRuntime getRuntime(final HandlerRegistry registry)
     {
+        // we create a ServletContextHelperRuntime for each servlet context
         final Collection<ServletContextHelperRuntime> contextRuntimes = new TreeSet<ServletContextHelperRuntime>(ServletContextHelperRuntime.COMPARATOR);
-        List<ContextRuntime> handlerRuntimes;
-        final Map<Long, Collection<ServiceReference<?>>> listenerRuntimes = new HashMap<Long, Collection<ServiceReference<?>>>();
+
         final FailureRuntime.Builder failureRuntime = FailureRuntime.builder();
         synchronized ( this.contextMap )
         {
-            for (List<ContextHandler> contextHandlerList : this.contextMap.values())
+            for (final List<ContextHandler> contextHandlerList : this.contextMap.values())
             {
                 if ( !contextHandlerList.isEmpty() )
                 {
                     final ContextHandler handler = contextHandlerList.get(0);
-                    contextRuntimes.add(handler);
+                    final ContextRuntime cr = registry.getRuntime(handler.getContextInfo().getServiceId());
+                    if ( cr != null )
+                    {
+                        contextRuntimes.add(new ServletContextHelperRuntime() {
 
-                    final long serviceId = handler.getContextInfo().getServiceId();
-                    listenerRuntimes.put(serviceId, handler.getListenerRegistry().getRuntime());
+                            @Override
+                            public ServletContext getSharedContext() {
+                                return handler.getSharedContext();
+                            }
+
+                            @Override
+                            public Collection<ServiceReference<?>> getListeners() {
+                                return handler.getListenerRegistry().getRuntime();
+                            }
+
+                            @Override
+                            public ContextRuntime getContextRuntime() {
+                                return cr;
+                            }
+
+                            @Override
+                            public ServletContextHelperInfo getContextInfo() {
+                                return handler.getContextInfo();
+                            }
+                        });
+                    }
                 }
             }
-            // TODO - this is the wrong place, it adds the context for the http service
-            final ServletContextHelperInfo info = new ServletContextHelperInfo(Integer.MAX_VALUE, 0, HTTP_SERVICE_CONTEXT_NAME, "/", null);
-            contextRuntimes.add(new InfoServletContextHelperRuntime(info, this.webContext));
-
-            handlerRuntimes = registry.getRuntime(failureRuntime);
             failureRuntime.add(serviceFailures);
         }
 
-        return new RegistryRuntime(contextRuntimes,
-            handlerRuntimes,
-            listenerRuntimes,
-            failureRuntime.build());
+        // add the context for the http service
+        final ServletContextHelperInfo info = new ServletContextHelperInfo(Integer.MAX_VALUE, 0, HTTP_SERVICE_CONTEXT_NAME, "/", null);
+        final ContextRuntime cr = registry.getRuntime(0);
+        if ( cr != null )
+        {
+            contextRuntimes.add(new ServletContextHelperRuntime() {
+
+                @Override
+                public ServletContext getSharedContext() {
+                    return webContext;
+                }
+
+                @Override
+                public Collection<ServiceReference<?>> getListeners() {
+                    return Collections.emptyList();
+                }
+
+                @Override
+                public ContextRuntime getContextRuntime() {
+                    return cr;
+                }
+
+                @Override
+                public ServletContextHelperInfo getContextInfo() {
+                    return info;
+                }
+            });
+        }
+        return new RegistryRuntime(contextRuntimes, failureRuntime.build());
     }
 }

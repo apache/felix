@@ -22,7 +22,6 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
-import org.apache.felix.http.base.internal.runtime.dto.RegistryRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.RequestInfoDTOBuilder;
 import org.apache.felix.http.base.internal.runtime.dto.RuntimeDTOBuilder;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
@@ -50,8 +49,8 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
     @Override
     public RuntimeDTO getRuntimeDTO()
     {
-        RegistryRuntime runtime = contextManager.getRuntime(registry);
-        RuntimeDTOBuilder runtimeDTOBuilder = new RuntimeDTOBuilder(runtime, this.serviceReference);
+        final RuntimeDTOBuilder runtimeDTOBuilder = new RuntimeDTOBuilder(contextManager.getRuntime(registry),
+                this.serviceReference);
         return runtimeDTOBuilder.build();
     }
 
@@ -84,7 +83,8 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
     }
 
     public void setServiceReference(
-            final ServiceReference<HttpServiceRuntime> reference) {
+            final ServiceReference<HttpServiceRuntime> reference)
+    {
         this.serviceReference = reference;
     }
 }
