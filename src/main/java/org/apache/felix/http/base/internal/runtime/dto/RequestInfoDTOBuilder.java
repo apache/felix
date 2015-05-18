@@ -19,7 +19,7 @@ package org.apache.felix.http.base.internal.runtime.dto;
 import static java.util.Arrays.asList;
 
 import org.apache.felix.http.base.internal.handler.FilterHandler;
-import org.apache.felix.http.base.internal.handler.HandlerRegistry;
+import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.registry.PathResolution;
 import org.osgi.service.http.runtime.dto.FilterDTO;
 import org.osgi.service.http.runtime.dto.RequestInfoDTO;
@@ -49,21 +49,21 @@ public final class RequestInfoDTOBuilder
             requestInfoDTO.filterDTOs = FILTER_DTO_ARRAY;
             return requestInfoDTO;
         }
-        requestInfoDTO.servletContextId = pr.holder.getContextServiceId();
-        if (pr.holder.getServletInfo().isResource())
+        requestInfoDTO.servletContextId = pr.handler.getContextServiceId();
+        if (pr.handler.getServletInfo().isResource())
         {
             requestInfoDTO.resourceDTO = ResourceDTOBuilder.create()
-                    .buildDTO(pr.holder, pr.holder.getContextServiceId());
+                    .buildDTO(pr.handler, pr.handler.getContextServiceId());
         }
         else
         {
             requestInfoDTO.servletDTO = ServletDTOBuilder.create()
-                    .buildDTO(pr.holder, pr.holder.getContextServiceId());
+                    .buildDTO(pr.handler, pr.handler.getContextServiceId());
         }
 
         final FilterHandler[] filterHandlers = registry.getFilters(pr, null, path);
         requestInfoDTO.filterDTOs = FilterDTOBuilder.create()
-                .build(asList(filterHandlers), pr.holder.getContextServiceId())
+                .build(asList(filterHandlers), pr.handler.getContextServiceId())
                 .toArray(FILTER_DTO_ARRAY);
 
         return requestInfoDTO;

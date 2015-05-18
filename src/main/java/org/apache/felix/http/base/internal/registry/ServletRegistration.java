@@ -25,7 +25,7 @@ import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.util.UriUtils;
 
 /**
- * Servlet handler is registered with a pattern and a servlet holder
+ * Servlet is registered with a pattern and a servlet handler
  */
 public class ServletRegistration
 {
@@ -51,7 +51,7 @@ public class ServletRegistration
             final PathResolution pr = new PathResolution();
             pr.servletPath = matcher.groupCount() > 0 ? matcher.group(1) : matcher.group();
             pr.pathInfo = UriUtils.compactPath(UriUtils.relativePath(pr.servletPath, requestURI));
-            pr.holder = this.handler;
+            pr.handler = this.handler;
 
             return pr;
         }

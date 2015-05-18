@@ -20,7 +20,7 @@ import org.apache.felix.http.base.internal.handler.ServletHandler;
 
 public class ServletResolution {
 
-    public ServletHandler holder;
+    public ServletHandler handler;
 
     public PerContextHandlerRegistry handlerRegistry;
 }

@@ -23,7 +23,7 @@ import javax.servlet.http.HttpSessionAttributeListener;
 import javax.servlet.http.HttpSessionListener;
 
 import org.apache.felix.http.api.ExtHttpService;
-import org.apache.felix.http.base.internal.handler.HandlerRegistry;
+import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.service.listener.HttpSessionAttributeListenerManager;
 import org.apache.felix.http.base.internal.service.listener.HttpSessionListenerManager;
 import org.apache.felix.http.base.internal.service.listener.ServletContextAttributeListenerManager;

@@ -14,11 +14,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.http.base.internal.handler;
+package org.apache.felix.http.base.internal.registry;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+
+import org.apache.felix.http.base.internal.runtime.dto.ContextRuntime;
+import org.junit.Test;
 
 
 public class HandlerRegistryTest
 {
+    private final HandlerRegistry registry = new HandlerRegistry();
+
+    @Test public void testInitialSetup()
+    {
+        List<ContextRuntime> runtimes = registry.getRuntime(null);
+        assertNotNull(runtimes);
+        assertTrue(runtimes.isEmpty());
+
+        registry.init();
+
+        runtimes = registry.getRuntime(null);
+        assertNotNull(runtimes);
+        assertFalse(runtimes.isEmpty());
+        assertEquals(1, runtimes.size());
+
+        final ContextRuntime cr = runtimes.get(0);
+
+        assertEquals(0, cr.getServiceId());
+
+        registry.shutdown();
+        runtimes = registry.getRuntime(null);
+        assertNotNull(runtimes);
+        assertTrue(runtimes.isEmpty());
+    }
     /*
     @Test
     public void testAddRemoveServlet() throws Exception

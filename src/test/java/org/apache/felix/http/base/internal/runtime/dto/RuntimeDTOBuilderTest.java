@@ -243,13 +243,13 @@ public class RuntimeDTOBuilderTest
         resources.add(createTestServlet("1", context_0, ID_0));
         List<FilterRuntime> filters_0 = asList(createTestFilter("1", context_0));
         List<ErrorPageRuntime> errorPages_0 = asList(createErrorPage("E_1", context_0, ID_0));
-        ContextRuntime contextRuntime_0 = new ContextRuntime(filters_0, errorPages_0, null, ID_0);
+        ContextRuntime contextRuntime_0 = new ContextRuntime(filters_0, errorPages_0, null, null, ID_0);
 
         servlets.add(createTestServlet("A_1", context_A, ID_A));
         resources.add(createTestServlet("A_1", context_A, ID_A));
         List<FilterRuntime> filters_A = asList(createTestFilter("A_1", context_A));
         List<ErrorPageRuntime> errorPages_A = asList(createErrorPage("E_A_1", context_A, ID_A));
-        ContextRuntime contextRuntime_A = new ContextRuntime(filters_A, errorPages_A, null, ID_A);
+        ContextRuntime contextRuntime_A = new ContextRuntime(filters_A, errorPages_A, null, null, ID_A);
 
         servlets.addAll(asList(createTestServletWithServiceId("B_1", context_B, ID_B),
                 createTestServletWithServiceId("B_2", context_B, ID_B)));
@@ -259,7 +259,7 @@ public class RuntimeDTOBuilderTest
                 createTestFilterWithServiceId("B_2", context_B));
         List<ErrorPageRuntime> errorPages_B = asList(createErrorPageWithServiceId("E_B_1", context_B, ID_B),
                 createErrorPageWithServiceId("E_B_2", context_B, ID_B));
-        ContextRuntime contextRuntime_B = new ContextRuntime(filters_B, errorPages_B, null, ID_B);
+        ContextRuntime contextRuntime_B = new ContextRuntime(filters_B, errorPages_B, null, null, ID_B);
 
         Map<Long, Collection<ServiceReference<?>>> listenerRuntimes = setupListeners();
 
@@ -610,7 +610,7 @@ public class RuntimeDTOBuilderTest
 
         ContextRuntime contextRuntime = new ContextRuntime(asList(filterHandler),
                 Collections.<ErrorPageRuntime>emptyList(),
-                null,
+                null, null,
                 ID_0);
         setupRegistry(asList(contextHandler), asList(contextRuntime),
 //                new ServletRegistryRuntime(asList(resourceHandler), asList(servletHandler)),
@@ -670,7 +670,7 @@ public class RuntimeDTOBuilderTest
 
         ContextRuntime contextRuntime = new ContextRuntime(Collections.<FilterRuntime>emptyList(),
                 Collections.<ErrorPageRuntime>emptyList(),
-                null,
+                null, null,
                 ID_0);
         setupRegistry(asList(contextHandler), asList(contextRuntime),
 //                new ServletRegistryRuntime(asList(servletHandler), Collections.<ServletRuntime>emptyList()),

@@ -52,9 +52,9 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
-import org.apache.felix.http.base.internal.handler.HandlerRegistry;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.registry.PathResolution;
 import org.apache.felix.http.base.internal.registry.ServletResolution;
 import org.apache.felix.http.base.internal.util.UriUtils;
@@ -94,11 +94,11 @@ public final class Dispatcher implements RequestDispatcherProvider
             try
             {
                 ServletRequestWrapper req = new ServletRequestWrapper((HttpServletRequest) request,
-                        this.resolution.holder.getContext(),
+                        this.resolution.handler.getContext(),
                         this.requestInfo,
                         DispatcherType.FORWARD,
-                        this.resolution.holder.getContextServiceId(),
-                        this.resolution.holder.getServletInfo().isAsyncSupported());
+                        this.resolution.handler.getContextServiceId(),
+                        this.resolution.handler.getServletInfo().isAsyncSupported());
                 Dispatcher.this.forward(this.resolution, req, (HttpServletResponse) response);
             }
             finally
@@ -117,11 +117,11 @@ public final class Dispatcher implements RequestDispatcherProvider
         public void include(ServletRequest request, ServletResponse response) throws ServletException, IOException
         {
             ServletRequestWrapper req = new ServletRequestWrapper((HttpServletRequest) request,
-                    this.resolution.holder.getContext(),
+                    this.resolution.handler.getContext(),
                     this.requestInfo,
                     DispatcherType.INCLUDE,
-                    this.resolution.holder.getContextServiceId(),
-                    this.resolution.holder.getServletInfo().isAsyncSupported());
+                    this.resolution.handler.getContextServiceId(),
+                    this.resolution.handler.getServletInfo().isAsyncSupported());
             Dispatcher.this.include(this.resolution, req, (HttpServletResponse) response);
         }
     }
@@ -204,7 +204,7 @@ public final class Dispatcher implements RequestDispatcherProvider
                             final FilterHandler[] filterHandlers = handlerRegistry.getFilters(errorResolution, DispatcherType.ERROR, request.getRequestURI());
 
                             // TODO - is async = false correct?
-                            invokeChain(errorResolution.holder, filterHandlers, new ServletRequestWrapper(request, errorResolution.holder.getContext(), requestInfo, this.serviceId, false), this);
+                            invokeChain(errorResolution.handler, filterHandlers, new ServletRequestWrapper(request, errorResolution.handler.getContext(), requestInfo, this.serviceId, false), this);
 
                             invokeSuper = false;
                         }
@@ -593,7 +593,7 @@ public final class Dispatcher implements RequestDispatcherProvider
         final PathResolution pr = this.handlerRegistry.resolveServlet(requestURI);
 
         final HttpServletResponse wrappedResponse = new ServletResponseWrapper(req, res,
-                pr == null ? null : pr.holder);
+                pr == null ? null : pr.handler);
         if ( pr == null )
         {
             wrappedResponse.sendError(404);
@@ -601,12 +601,12 @@ public final class Dispatcher implements RequestDispatcherProvider
         }
 
 
-        final ExtServletContext servletContext = pr.holder.getContext();
+        final ExtServletContext servletContext = pr.handler.getContext();
         final RequestInfo requestInfo = new RequestInfo(pr.servletPath, pr.pathInfo, null);
 
         final HttpServletRequest wrappedRequest = new ServletRequestWrapper(req, servletContext, requestInfo,
-                pr.holder.getContextServiceId(),
-                pr.holder.getServletInfo().isAsyncSupported());
+                pr.handler.getContextServiceId(),
+                pr.handler.getServletInfo().isAsyncSupported());
         final FilterHandler[] filterHandlers = this.handlerRegistry.getFilters(pr, req.getDispatcherType(), pr.requestURI);
 
         try
@@ -615,7 +615,7 @@ public final class Dispatcher implements RequestDispatcherProvider
             {
                 servletContext.getServletRequestListener().requestInitialized(new ServletRequestEvent(servletContext, wrappedRequest));
             }
-            invokeChain(pr.holder, filterHandlers, wrappedRequest, wrappedResponse);
+            invokeChain(pr.handler, filterHandlers, wrappedRequest, wrappedResponse);
         }
         catch ( final Exception e)
         {
@@ -683,7 +683,7 @@ public final class Dispatcher implements RequestDispatcherProvider
         String requestURI = getRequestURI(request);
         FilterHandler[] filterHandlers = this.handlerRegistry.getFilters(resolution, DispatcherType.FORWARD, requestURI);
 
-        invokeChain(resolution.holder, filterHandlers, request, response);
+        invokeChain(resolution.handler, filterHandlers, request, response);
     }
 
     /**
@@ -696,7 +696,7 @@ public final class Dispatcher implements RequestDispatcherProvider
         String requestURI = getRequestURI(request);
         FilterHandler[] filterHandlers = this.handlerRegistry.getFilters(resolution, DispatcherType.INCLUDE, requestURI);
 
-        invokeChain(resolution.holder, filterHandlers, request, response);
+        invokeChain(resolution.handler, filterHandlers, request, response);
     }
 
     private String getRequestURI(HttpServletRequest req)

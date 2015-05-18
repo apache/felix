@@ -26,25 +26,40 @@ public final class ContextRuntime
     private final Collection<FilterRuntime> filterRuntimes;
     private final Collection<ErrorPageRuntime> errorPageRuntimes;
     private final long serviceId;
-    private final ServletRegistryRuntime servletRegistryRuntime;
+    private final Collection<ServletRuntime> servletRuntimes;
+    private final Collection<ServletRuntime> resourceRuntimes;
+
 
     public ContextRuntime(Collection<FilterRuntime> filterRuntimes,
             Collection<ErrorPageRuntime> errorPageRuntimes,
-            final ServletRegistryRuntime servletRegistryRuntime,
+            Collection<ServletRuntime> servletRuntimes,
+            Collection<ServletRuntime> resourceRuntimes,
             long serviceId)
     {
         this.filterRuntimes = filterRuntimes;
         this.errorPageRuntimes = errorPageRuntimes;
-        this.servletRegistryRuntime = servletRegistryRuntime;
         this.serviceId = serviceId;
+        this.servletRuntimes = servletRuntimes;
+        this.resourceRuntimes = resourceRuntimes;
     }
 
     public static ContextRuntime empty(long serviceId)
     {
         return new ContextRuntime(Collections.<FilterRuntime>emptyList(),
                 Collections.<ErrorPageRuntime> emptyList(),
-                null,
+                Collections.<ServletRuntime> emptyList(),
+                Collections.<ServletRuntime> emptyList(),
                 serviceId);
+    }
+
+    Collection<ServletRuntime> getServletRuntimes()
+    {
+        return servletRuntimes;
+    }
+
+    Collection<ServletRuntime> getResourceRuntimes()
+    {
+        return resourceRuntimes;
     }
 
     Collection<FilterRuntime> getFilterRuntimes()
@@ -57,12 +72,7 @@ public final class ContextRuntime
         return errorPageRuntimes;
     }
 
-    ServletRegistryRuntime getServletRegistryRuntime()
-    {
-        return this.servletRegistryRuntime;
-    }
-
-    long getServiceId()
+    public long getServiceId()
     {
         return serviceId;
     }

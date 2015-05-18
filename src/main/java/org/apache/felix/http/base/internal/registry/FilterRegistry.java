@@ -35,6 +35,9 @@ import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.dto.FailureRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.FilterRuntime;
 
+/**
+ * TODO - check if add/remove needs syncing
+ */
 public final class FilterRegistry
 {
     private volatile HandlerMapping filterMapping = new HandlerMapping();
@@ -44,21 +47,21 @@ public final class FilterRegistry
     private static final class FilterRegistrationStatus
     {
         public int result;
-        public FilterHandler holder;
+        public FilterHandler handler;
     }
 
-    public void addFilter(@Nonnull final FilterHandler holder)
+    public void addFilter(@Nonnull final FilterHandler handler)
     {
-        final int result = holder.init();
+        final int result = handler.init();
         if ( result == -1 )
         {
-            this.filterMapping = this.filterMapping.add(holder);
+            this.filterMapping = this.filterMapping.add(handler);
         }
         final FilterRegistrationStatus status = new FilterRegistrationStatus();
         status.result = result;
-        status.holder = holder;
+        status.handler = handler;
 
-        statusMapping.put(holder.getFilterInfo(), status);
+        statusMapping.put(handler.getFilterInfo(), status);
     }
 
     public void removeFilter(@Nonnull final FilterInfo filterInfo, final boolean destroy)
@@ -68,16 +71,16 @@ public final class FilterRegistry
         {
             if ( status.result == -1 )
             {
-                this.filterMapping = this.filterMapping.remove(status.holder);
+                this.filterMapping = this.filterMapping.remove(status.handler);
                 if (destroy)
                 {
-                    status.holder.dispose();
+                    status.handler.dispose();
                 }
             }
         }
     }
 
-    public FilterHandler[] getFilterHandlers(@CheckForNull final ServletHandler holder,
+    public FilterHandler[] getFilterHandlers(@CheckForNull final ServletHandler handler,
             @CheckForNull DispatcherType dispatcherType,
             @Nonnull String requestURI)
     {
@@ -95,7 +98,7 @@ public final class FilterRegistry
             }
         }
 
-        final String servletName = (holder != null) ? holder.getName() : null;
+        final String servletName = (handler != null) ? handler.getName() : null;
         // TODO this is not the most efficient/fastest way of doing this...
         for (FilterHandler filterHandler : this.filterMapping.values())
         {
@@ -108,13 +111,13 @@ public final class FilterRegistry
         return result.toArray(new FilterHandler[result.size()]);
     }
 
-    private boolean referencesDispatcherType(FilterHandler holder, DispatcherType dispatcherType)
+    private boolean referencesDispatcherType(FilterHandler handler, DispatcherType dispatcherType)
     {
         if (dispatcherType == null)
         {
             return true;
         }
-        return Arrays.asList(holder.getFilterInfo().getDispatcher()).contains(dispatcherType);
+        return Arrays.asList(handler.getFilterInfo().getDispatcher()).contains(dispatcherType);
     }
 
     private boolean referencesServletByName(FilterHandler handler, String servletName)

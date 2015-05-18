@@ -145,13 +145,12 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
 
     /**
      * Add a servlet
-     * @param holder The servlet holder
-     * @param info The servlet info
+     * @param handler The servlet handler
      */
-    public void addServlet(@Nonnull final ServletHandler holder)
+    public void addServlet(@Nonnull final ServletHandler handler)
     {
-        this.servletRegistry.addServlet(holder);
-        this.errorPageRegistry.addServlet(holder);
+        this.servletRegistry.addServlet(handler);
+        this.errorPageRegistry.addServlet(handler);
     }
 
     /**
@@ -164,9 +163,9 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
         this.errorPageRegistry.removeServlet(info, destroy);
     }
 
-    public void addFilter(@Nonnull final FilterHandler holder)
+    public void addFilter(@Nonnull final FilterHandler handler)
     {
-        this.filterRegistry.addFilter(holder);
+        this.filterRegistry.addFilter(handler);
     }
 
     public void removeFilter(@Nonnull final FilterInfo info, final boolean destroy)
@@ -185,12 +184,14 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
         return this.errorPageRegistry.get(exception, code);
     }
 
-    public synchronized ContextRuntime getRuntime(final FailureRuntime.Builder failureRuntimeBuilder)
+    public ContextRuntime getRuntime(final FailureRuntime.Builder failureRuntimeBuilder)
     {
         // TODO - add servlets
         // TODO - add failures from filters and error pages
         return new ContextRuntime(this.filterRegistry.getFilterRuntimes(failureRuntimeBuilder),
                 this.errorPageRegistry.getErrorPageRuntimes(),
-                null, this.serviceId);
+                null,
+                null,
+                this.serviceId);
     }
 }
