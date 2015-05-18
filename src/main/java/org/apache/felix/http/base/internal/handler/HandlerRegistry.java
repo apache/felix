@@ -28,13 +28,13 @@ import org.apache.felix.http.base.internal.handler.holder.FilterHolder;
 import org.apache.felix.http.base.internal.handler.holder.ServletHolder;
 import org.apache.felix.http.base.internal.registry.PathResolution;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
+import org.apache.felix.http.base.internal.registry.ServletResolution;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.dto.ContextRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.FailureRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.HandlerRegistryRuntime;
-import org.apache.felix.http.base.internal.runtime.dto.ServletRegistryRuntime;
 
 /**
  * Registry for all services.
@@ -169,7 +169,7 @@ public final class HandlerRegistry
         return null;
     }
 
-    public ServletHolder getErrorHandler(String requestURI, Long serviceId, int code, Throwable exception)
+    public ServletResolution getErrorHandler(String requestURI, Long serviceId, int code, Throwable exception)
     {
         final PerContextHandlerRegistry reg;
         if ( serviceId == null )
@@ -194,20 +194,26 @@ public final class HandlerRegistry
         }
         if ( reg != null )
         {
-            return reg.getErrorHandler(code, exception);
+            final ServletHolder holder = reg.getErrorHandler(code, exception);
+            if ( holder != null )
+            {
+                final ServletResolution res = new ServletResolution();
+                res.holder = holder;
+                res.handlerRegistry = reg;
+
+                return res;
+            }
         }
         return null;
     }
 
-    public FilterHolder[] getFilters(@Nonnull final ServletHolder servletHolder,
+    public FilterHolder[] getFilters(@Nonnull final ServletResolution pr,
             final DispatcherType dispatcherType,
-            @Nonnull final String requestURI)
+            @Nonnull String requestURI)
     {
-        final long key = servletHolder.getContextServiceId();
-        final PerContextHandlerRegistry reg = this.getRegistry(key);
-        if ( reg != null )
+        if ( pr != null && pr.handlerRegistry != null )
         {
-            return reg.getFilterHolders(servletHolder, dispatcherType, requestURI);
+            return pr.handlerRegistry.getFilterHolders(pr.holder, dispatcherType, requestURI);
         }
         return EMPTY_FILTER_HOLDER;
     }
@@ -246,8 +252,9 @@ public final class HandlerRegistry
                 final PathResolution ps = r.resolve(path);
                 if ( ps != null )
                 {
-                    // remove context path from request URI
+                    // remove context path from request URI and add registry object
                     ps.requestURI = path;
+                    ps.handlerRegistry = r;
                     return ps;
                 }
             }
@@ -262,25 +269,34 @@ public final class HandlerRegistry
      * @param name The servlet name
      * @return The servlet holder or {@code null}
      */
-    public ServletHolder resolveServletByName(final Long contextId, @Nonnull final String name)
+    public ServletResolution resolveServletByName(final Long contextId, @Nonnull final String name)
     {
         final PerContextHandlerRegistry reg = (contextId == null ? null : this.getRegistry(contextId));
         if ( reg != null )
         {
-            return reg.resolveServletByName(name);
+            final ServletHolder holder = reg.resolveServletByName(name);
+            if ( holder != null )
+            {
+                final ServletResolution resolution = new ServletResolution();
+                resolution.holder = holder;
+                resolution.handlerRegistry = reg;
+
+                return resolution;
+            }
         }
         return null;
     }
 
-    public synchronized HandlerRegistryRuntime getRuntime(FailureRuntime.Builder failureRuntimeBuilder)
+    public HandlerRegistryRuntime getRuntime(FailureRuntime.Builder failureRuntimeBuilder)
     {
-        List<ContextRuntime> handlerRuntimes = new ArrayList<ContextRuntime>();
-        for (PerContextHandlerRegistry contextRegistry : this.registrations)
+        final List<ContextRuntime> handlerRuntimes = new ArrayList<ContextRuntime>();
+
+        final List<PerContextHandlerRegistry> regs = this.registrations;
+        for (final PerContextHandlerRegistry contextRegistry : regs)
         {
-            // TODO
-            // handlerRuntimes.add(contextRegistry.getRuntime(failureRuntimeBuilder));
+            handlerRuntimes.add(contextRegistry.getRuntime(failureRuntimeBuilder));
         }
-        ServletRegistryRuntime servletRegistryRuntime = servletRegistry.getRuntime(failureRuntimeBuilder);
-        return new HandlerRegistryRuntime(handlerRuntimes, servletRegistryRuntime);
+
+        return new HandlerRegistryRuntime(handlerRuntimes);
     }
 }

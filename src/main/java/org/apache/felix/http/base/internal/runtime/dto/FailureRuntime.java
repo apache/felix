@@ -232,9 +232,10 @@ public final class FailureRuntime
             }
             else if (info instanceof ServletInfo && ((ServletInfo) info).getErrorPage() != null)
             {
+                // TODO
                 FailureServletRuntime servletRuntime = new FailureServletRuntime((ServletInfo) info);
-                ErrorPageRuntime errorPageRuntime = ErrorPageRuntime.fromServletRuntime(servletRuntime);
-                errorPageRuntimes.add(new Failure<ErrorPageRuntime>(errorPageRuntime, failureCode));
+//                ErrorPageRuntime errorPageRuntime = ErrorPageRuntime.fromServletRuntime(servletRuntime);
+//                errorPageRuntimes.add(new Failure<ErrorPageRuntime>(errorPageRuntime, failureCode));
             }
             else if (info instanceof ServletInfo)
             {

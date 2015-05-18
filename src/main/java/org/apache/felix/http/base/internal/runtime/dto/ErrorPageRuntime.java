@@ -18,23 +18,20 @@
  */
 package org.apache.felix.http.base.internal.runtime.dto;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import javax.servlet.Servlet;
 
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
-import org.apache.felix.http.base.internal.util.ErrorPageUtil;
 
 public class ErrorPageRuntime implements ServletRuntime
 {
     private final ServletRuntime servletRuntime;
-    private final Collection<Integer> errorCodes;
+    private final Collection<Long> errorCodes;
     private final Collection<String> exceptions;
 
     public ErrorPageRuntime(ServletRuntime servletRuntime,
-            Collection<Integer> errorCodes,
+            Collection<Long> errorCodes,
             Collection<String> exceptions)
     {
         this.servletRuntime = servletRuntime;
@@ -42,28 +39,7 @@ public class ErrorPageRuntime implements ServletRuntime
         this.exceptions = exceptions;
     }
 
-    public static ErrorPageRuntime fromServletRuntime(ServletRuntime servletRuntime)
-    {
-        List<Integer> errorCodes = new ArrayList<Integer>();
-        List<String> exceptions = new ArrayList<String>();
-
-        for (String string : servletRuntime.getServletInfo().getErrorPage())
-        {
-            List<Integer> parsedErrorCodes = ErrorPageUtil.parseErrorCodes(string);
-            if (parsedErrorCodes != null)
-            {
-                errorCodes.addAll(parsedErrorCodes);
-            }
-            else
-            {
-                exceptions.add(string);
-            }
-        }
-
-        return new ErrorPageRuntime(servletRuntime, errorCodes, exceptions);
-    }
-
-    public Collection<Integer> getErrorCodes()
+    public Collection<Long> getErrorCodes()
     {
         return errorCodes;
     }

@@ -174,7 +174,7 @@ public final class WhiteboardServiceHelper
             long contextServiceId)
     {
         ServletRuntime servletHandler = createTestServlet(identifier, context, serviceId, contextServiceId);
-        Collection<Integer> errorCodes = Arrays.asList(400, 500);
+        Collection<Long> errorCodes = Arrays.asList(400L, 500L);
         Collection<String> exceptions = Arrays.asList("Bad request", "Error");
 
         return new ErrorPageRuntime(servletHandler, errorCodes, exceptions);

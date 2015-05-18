@@ -27,12 +27,13 @@ import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.ServletConfigImpl;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.runtime.dto.ServletRuntime;
 import org.osgi.service.http.runtime.dto.DTOConstants;
 
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public abstract class ServletHolder implements Comparable<ServletHolder>
+public abstract class ServletHolder implements Comparable<ServletHolder>, ServletRuntime
 {
     private final long contextServiceId;
 
@@ -59,6 +60,7 @@ public abstract class ServletHolder implements Comparable<ServletHolder>
         return this.servletInfo.compareTo(other.servletInfo);
     }
 
+    @Override
     public long getContextServiceId()
     {
         return this.contextServiceId;
@@ -69,6 +71,7 @@ public abstract class ServletHolder implements Comparable<ServletHolder>
         return this.context;
     }
 
+    @Override
     public Servlet getServlet()
     {
         return servlet;
@@ -85,6 +88,7 @@ public abstract class ServletHolder implements Comparable<ServletHolder>
         this.servlet.service(req, res);
     }
 
+    @Override
     public ServletInfo getServletInfo()
     {
         return this.servletInfo;

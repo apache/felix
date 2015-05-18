@@ -33,21 +33,19 @@ public final class RegistryRuntime
     private final Collection<ServletContextHelperRuntime> contexts;
     private final Map<Long, Collection<ServiceReference<?>>> listenerRuntimes;
     private final Map<Long, ContextRuntime> handlerRuntimes;
-    private final Map<Long, Collection<ServletRuntime>> servletRuntimes;
-    private final Map<Long, Collection<ServletRuntime>> resourceRuntimes;
     private final FailureRuntime failureRuntime;
 
     public RegistryRuntime(Collection<ServletContextHelperRuntime> contexts,
             Collection<ContextRuntime> contextRuntimes,
-            ServletRegistryRuntime servletRegistryRuntime,
             Map<Long, Collection<ServiceReference<?>>> listenerRuntimes,
             FailureRuntime failureRuntime)
     {
         this.contexts = contexts;
         this.failureRuntime = failureRuntime;
         this.handlerRuntimes = createServiceIdMap(contextRuntimes);
-        this.servletRuntimes = createServletServiceIdMap(servletRegistryRuntime.getServletRuntimes());
-        this.resourceRuntimes = createServletServiceIdMap(servletRegistryRuntime.getResourceRuntimes());
+        // TODO
+//        this.servletRuntimes = createServletServiceIdMap(servletRegistryRuntime.getServletRuntimes());
+//        this.resourceRuntimes = createServletServiceIdMap(servletRegistryRuntime.getResourceRuntimes());
         this.listenerRuntimes = listenerRuntimes;
     }
 
@@ -94,19 +92,23 @@ public final class RegistryRuntime
 
     public Collection<ServletRuntime> getServletRuntimes(ServletContextHelperRuntime contextRuntime)
     {
+        /* TODO
         if (servletRuntimes.containsKey(contextRuntime.getContextInfo().getServiceId()))
         {
             return servletRuntimes.get(contextRuntime.getContextInfo().getServiceId());
         }
+        */
         return Collections.emptyList();
     }
 
     public Collection<ServletRuntime> getResourceRuntimes(ServletContextHelperRuntime contextRuntime)
     {
+        /* TODO
         if (resourceRuntimes.containsKey(contextRuntime.getContextInfo().getServiceId()))
         {
             return resourceRuntimes.get(contextRuntime.getContextInfo().getServiceId());
         }
+        */
         return Collections.emptyList();
     }
 

@@ -18,9 +18,11 @@ package org.apache.felix.http.base.internal.registry;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.CheckForNull;
@@ -30,6 +32,8 @@ import javax.servlet.DispatcherType;
 import org.apache.felix.http.base.internal.handler.holder.FilterHolder;
 import org.apache.felix.http.base.internal.handler.holder.ServletHolder;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
+import org.apache.felix.http.base.internal.runtime.dto.FailureRuntime;
+import org.apache.felix.http.base.internal.runtime.dto.FilterRuntime;
 
 public final class FilterRegistry
 {
@@ -125,5 +129,24 @@ public final class FilterRegistry
             return Arrays.asList(names).contains(servletName);
         }
         return false;
+    }
+
+    public Collection<FilterRuntime> getFilterRuntimes(final FailureRuntime.Builder failureRuntimeBuilder)
+    {
+        final HandlerMapping mapping = this.filterMapping;
+        final Collection<FilterRuntime> filterRuntimes = new TreeSet<FilterRuntime>(FilterRuntime.COMPARATOR);
+        for (final FilterRuntime filterRuntime : mapping.values())
+        {
+            filterRuntimes.add(filterRuntime);
+        }
+
+        for(final Map.Entry<FilterInfo, FilterRegistrationStatus> status : this.statusMapping.entrySet())
+        {
+            if ( status.getValue().result != -1 )
+            {
+                failureRuntimeBuilder.add(status.getKey(), status.getValue().result);
+            }
+        }
+        return filterRuntimes;
     }
 }

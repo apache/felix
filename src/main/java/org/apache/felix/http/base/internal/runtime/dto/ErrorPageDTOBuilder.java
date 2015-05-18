@@ -44,9 +44,9 @@ final class ErrorPageDTOBuilder<T extends ErrorPageDTO> extends BaseServletDTOBu
         return errorPageDTO;
     }
 
-    private long[] getErrorCodes(Collection<Integer> errorCodes)
+    private long[] getErrorCodes(Collection<Long> errorCodes)
     {
-        Iterator<Integer> itr = errorCodes.iterator();
+        Iterator<Long> itr = errorCodes.iterator();
         long[] result = new long[errorCodes.size()];
         for (int i = 0; i < result.length; i++)
         {
