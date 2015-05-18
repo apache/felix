@@ -29,6 +29,8 @@ import javax.annotation.Nonnull;
 
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.runtime.dto.state.FailureServletState;
+import org.apache.felix.http.base.internal.runtime.dto.state.ServletState;
 import org.apache.felix.http.base.internal.util.PatternUtil;
 import org.osgi.service.http.runtime.dto.DTOConstants;
 
@@ -52,28 +54,12 @@ public final class ServletRegistry
 
     private final Map<ServletInfo, ServletRegistrationStatus> statusMapping = new ConcurrentHashMap<ServletInfo, ServletRegistry.ServletRegistrationStatus>();
 
-    private final Map<String, List<ServletNameStatus>> servletsByName = new ConcurrentHashMap<String, List<ServletNameStatus>>();
-
-    private static final class ServletNameStatus implements Comparable<ServletNameStatus>
-    {
-        public volatile boolean isActive = false;
-        public final ServletHandler handler;
-
-        public ServletNameStatus(final ServletHandler h)
-        {
-            this.handler = h;
-        }
-
-        @Override
-        public int compareTo(final ServletNameStatus o)
-        {
-            return handler.compareTo(o.handler);
-        }
-    }
+    private final Map<String, List<ServletHandler>> servletsByName = new ConcurrentHashMap<String, List<ServletHandler>>();
 
     public static final class ServletRegistrationStatus
     {
         public final Map<String, Integer> pathToStatus = new ConcurrentHashMap<String, Integer>();
+        public ServletHandler handler;
     }
 
     public PathResolution resolve(final String relativeRequestURI)
@@ -104,7 +90,9 @@ public final class ServletRegistry
         if ( handler.getServletInfo().getPatterns() != null )
         {
             final ServletRegistrationStatus status = new ServletRegistrationStatus();
+            status.handler = handler;
 
+            boolean isActive = false;
             for(final String pattern : handler.getServletInfo().getPatterns())
             {
                 final ServletRegistration regHandler = this.activeServletMappings.get(pattern);
@@ -115,10 +103,16 @@ public final class ServletRegistry
                         // replace if no error with new servlet
                         if ( this.tryToActivate(pattern, handler, status) )
                         {
-//                            nameStatus.isActive = true;
+                            isActive = true;
+                            final String oldName = regHandler.getServletHandler().getName();
                             regHandler.getServletHandler().destroy();
 
                             this.addToInactiveList(pattern, regHandler.getServletHandler(), this.statusMapping.get(regHandler.getServletHandler().getServletInfo()));
+
+                            if ( regHandler.getServletHandler().getServlet() == null )
+                            {
+                                removeFromNameMapping(oldName, regHandler.getServletHandler());
+                            }
                         }
                     }
                     else
@@ -132,11 +126,60 @@ public final class ServletRegistry
                     // add to active
                     if ( this.tryToActivate(pattern, handler, status) )
                     {
-//                        nameStatus.isActive = true;
+                        isActive = true;
                     }
                 }
             }
             this.statusMapping.put(handler.getServletInfo(), status);
+            if ( isActive )
+            {
+                addToNameMapping(handler);
+            }
+        }
+    }
+
+    private void addToNameMapping(final ServletHandler handler)
+    {
+        final String servletName = handler.getName();
+        List<ServletHandler> list = this.servletsByName.get(servletName);
+        if ( list == null )
+        {
+            list = new ArrayList<ServletHandler>();
+            list.add(handler);
+        }
+        else
+        {
+            list = new ArrayList<ServletHandler>(list);
+            list.add(handler);
+            Collections.sort(list);
+        }
+        this.servletsByName.put(servletName, list);
+    }
+
+    private void removeFromNameMapping(final String servletName, final ServletHandler handler)
+    {
+        List<ServletHandler> list = this.servletsByName.get(servletName);
+        if ( list != null )
+        {
+            final List<ServletHandler> newList = new ArrayList<ServletHandler>(list);
+            final Iterator<ServletHandler> i = newList.iterator();
+            while ( i.hasNext() )
+            {
+                final ServletHandler s = i.next();
+                if ( s == handler )
+                {
+                    i.remove();
+                    break;
+                }
+            }
+            if ( newList.isEmpty() )
+            {
+                this.servletsByName.remove(servletName);
+            }
+            else
+            {
+                this.servletsByName.put(servletName, newList);
+            }
         }
     }
 
@@ -149,15 +192,16 @@ public final class ServletRegistry
         if ( info.getPatterns() != null )
         {
             this.statusMapping.remove(info);
-            ServletHandler cleanuphandler = null;
+            ServletHandler cleanupHandler = null;
 
             for(final String pattern : info.getPatterns())
             {
-
                 final ServletRegistration regHandler = this.activeServletMappings.get(pattern);
                 if ( regHandler != null && regHandler.getServletHandler().getServletInfo().equals(info) )
                 {
-                    cleanuphandler = regHandler.getServletHandler();
+                    cleanupHandler = regHandler.getServletHandler();
+                    removeFromNameMapping(cleanupHandler.getName(), cleanupHandler);
+
                     final List<ServletHandler> inactiveList = this.inactiveServletMappings.get(pattern);
                     if ( inactiveList == null )
                     {
@@ -169,10 +213,18 @@ public final class ServletRegistry
                         while ( !done )
                         {
                             final ServletHandler h = inactiveList.remove(0);
+                            boolean activate = h.getServlet() == null;
                             done = this.tryToActivate(pattern, h, this.statusMapping.get(h.getServletInfo()));
                             if ( !done )
                             {
                                 done = inactiveList.isEmpty();
+                            }
+                            else
+                            {
+                                if ( activate )
+                                {
+                                    this.addToNameMapping(h);
+                                }
                             }
                         }
                         if ( inactiveList.isEmpty() )
@@ -193,7 +245,7 @@ public final class ServletRegistry
                             if ( h.getServletInfo().equals(info) )
                             {
                                 i.remove();
-                                cleanuphandler = h;
+                                cleanupHandler = h;
                                 break;
                             }
                         }
@@ -205,9 +257,9 @@ public final class ServletRegistry
                 }
             }
 
-            if ( cleanuphandler != null )
+            if ( cleanupHandler != null )
             {
-                cleanuphandler.dispose();
+                cleanupHandler.dispose();
             }
         }
     }
@@ -247,22 +299,78 @@ public final class ServletRegistry
         }
     }
 
-    public Map<ServletInfo, ServletRegistrationStatus> getServletStatusMapping()
+    Map<ServletInfo, ServletRegistrationStatus> getServletStatusMapping()
     {
         return this.statusMapping;
     }
 
-    public ServletHandler resolveByName(@Nonnull String name)
+    public ServletHandler resolveByName(final @Nonnull String name)
     {
-        final List<ServletNameStatus> handlerList = this.servletsByName.get(name);
+        final List<ServletHandler> handlerList = this.servletsByName.get(name);
         if ( handlerList != null )
         {
-            final ServletNameStatus status = handlerList.get(0);
-            if ( status != null && status.isActive )
-            {
-                return status.handler;
-            }
+            return handlerList.get(0);
         }
         return null;
+    }
+
+    public void getRuntimeInfo(final Map<Long, ServletState> servletStates,
+            final Map<Long, Map<Integer, FailureServletState>> failureServletStates)
+    {
+        // TODO we could already do some pre calculation in the ServletRegistrationStatus
+        for(final Map.Entry<ServletInfo, ServletRegistrationStatus> entry : statusMapping.entrySet())
+        {
+            final long serviceId = entry.getKey().getServiceId();
+            for(final Map.Entry<String, Integer> map : entry.getValue().pathToStatus.entrySet())
+            {
+                if ( map.getValue() == - 1)
+                {
+                    ServletState state = servletStates.get(serviceId);
+                    if ( state == null )
+                    {
+                        state = new ServletState(entry.getValue().handler);
+                        servletStates.put(serviceId, state);
+                    }
+                    String[] patterns = state.getPatterns();
+                    if ( patterns.length ==  0 )
+                    {
+                        state.setPatterns(new String[] {map.getKey()});
+                    }
+                    else
+                    {
+                        patterns = new String[patterns.length + 1];
+                        System.arraycopy(state.getPatterns(), 0, patterns, 0, patterns.length - 1);
+                        patterns[patterns.length - 1] = map.getKey();
+                    }
+                }
+                else
+                {
+                    Map<Integer, FailureServletState> fmap = failureServletStates.get(serviceId);
+                    if ( fmap == null )
+                    {
+                        fmap = new HashMap<Integer, FailureServletState>();
+                        failureServletStates.put(serviceId, fmap);
+                    }
+                    FailureServletState state = fmap.get(map.getValue());
+                    if ( state == null )
+                    {
+                        state = new FailureServletState(entry.getValue().handler, map.getValue());
+                        fmap.put(map.getValue(), state);
+                    }
+                    String[] patterns = state.getPatterns();
+                    if ( patterns.length ==  0 )
+                    {
+                        state.setPatterns(new String[] {map.getKey()});
+                    }
+                    else
+                    {
+                        patterns = new String[patterns.length + 1];
+                        System.arraycopy(state.getPatterns(), 0, patterns, 0, patterns.length - 1);
+                        patterns[patterns.length - 1] = map.getKey();
+                    }
+                }
+
+            }
+        }
     }
 }

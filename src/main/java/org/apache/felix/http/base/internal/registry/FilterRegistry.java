@@ -53,7 +53,7 @@ public final class FilterRegistry
             return handler.getFilterInfo();
         }
         @Override
-        public long getReason() {
+        public int getReason() {
             return result;
         }
     }

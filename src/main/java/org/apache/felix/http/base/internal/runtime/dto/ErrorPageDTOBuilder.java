@@ -18,6 +18,10 @@
  */
 package org.apache.felix.http.base.internal.runtime.dto;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import org.apache.felix.http.base.internal.runtime.dto.state.ServletState;
 import org.osgi.service.http.runtime.dto.ErrorPageDTO;
 
@@ -31,6 +35,20 @@ final class ErrorPageDTOBuilder<T extends ErrorPageDTO> extends BaseServletDTOBu
     ErrorPageDTOBuilder(DTOFactory<T> dtoFactory)
     {
         super(dtoFactory);
+    }
+
+    @Override
+    Collection<T> build(Collection<? extends ServletState> whiteboardServices,
+            long servletContextId) {
+        List<T> dtoList = new ArrayList<T>();
+        for (ServletState whiteboardService : whiteboardServices)
+        {
+            if ( whiteboardService.getErrorCodes().length > 0 || whiteboardService.getErrorExceptions().length > 0 )
+            {
+                dtoList.add(buildDTO(whiteboardService, servletContextId));
+            }
+        }
+        return dtoList;
     }
 
     @Override

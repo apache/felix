@@ -22,11 +22,15 @@ import java.util.Comparator;
 
 import javax.servlet.Servlet;
 
+import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 
-public interface ServletState
+public class ServletState
 {
-    static final Comparator<ServletState> COMPARATOR = new Comparator<ServletState>()
+    private static final String[] EMPTY_STRING_ARRAY = new String[0];
+    private static final long[] EMPTY_LONG_ARRAY = new long[0];
+
+    public static final Comparator<ServletState> COMPARATOR = new Comparator<ServletState>()
     {
         @Override
         public int compare(ServletState o1, ServletState o2)
@@ -35,13 +39,65 @@ public interface ServletState
         }
     };
 
-    Servlet getServlet();
+    private final ServletHandler handler;
 
-    ServletInfo getServletInfo();
+    private final ServletInfo info;
 
-    String[] getPatterns();
+    private String[] patterns = EMPTY_STRING_ARRAY;
 
-    long[] getErrorCodes();
+    private String[] exceptions = EMPTY_STRING_ARRAY;
 
-    String[] getErrorExceptions();
+    private long[] errorCodes = EMPTY_LONG_ARRAY;
+
+    public ServletState(final ServletHandler handler)
+    {
+        this.handler = handler;
+        this.info = handler.getServletInfo();
+    }
+
+    public ServletState(final ServletInfo info)
+    {
+        this.handler = null;
+        this.info = info;
+    }
+
+    public Servlet getServlet()
+    {
+        return (handler != null ? this.handler.getServlet() : null);
+    }
+
+    public ServletInfo getServletInfo()
+    {
+        return this.info;
+    }
+
+    public String[] getPatterns()
+    {
+        return this.patterns;
+    }
+
+    public long[] getErrorCodes()
+    {
+        return this.errorCodes;
+    }
+
+    public String[] getErrorExceptions()
+    {
+        return this.exceptions;
+    }
+
+    public void setPatterns(final String[] value)
+    {
+        this.patterns = value;
+    }
+
+    public void setErrorCodes(final long[] value)
+    {
+        this.errorCodes = value;
+    }
+
+    public void setErrorExceptions(final String[] value)
+    {
+        this.exceptions = value;
+    }
 }

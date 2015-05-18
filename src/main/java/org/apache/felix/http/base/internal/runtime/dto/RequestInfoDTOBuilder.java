@@ -18,12 +18,9 @@ package org.apache.felix.http.base.internal.runtime.dto;
 
 import static java.util.Arrays.asList;
 
-import javax.servlet.Servlet;
-
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.registry.PathResolution;
-import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.dto.state.ServletState;
 import org.osgi.service.http.runtime.dto.FilterDTO;
 import org.osgi.service.http.runtime.dto.RequestInfoDTO;
@@ -56,81 +53,18 @@ public final class RequestInfoDTOBuilder
         requestInfoDTO.servletContextId = pr.handler.getContextServiceId();
         if (pr.handler.getServletInfo().isResource())
         {
+            final ServletState state = new ServletState(pr.handler);
+            state.setPatterns(pr.handler.getServletInfo().getPatterns());
             requestInfoDTO.resourceDTO = ResourceDTOBuilder.create()
-                    .buildDTO(new ServletState()
-                    {
-
-                        @Override
-                        public ServletInfo getServletInfo()
-                        {
-                            // TODO Auto-generated method stub
-                            return pr.handler.getServletInfo();
-                        }
-
-                        @Override
-                        public Servlet getServlet()
-                        {
-                            // TODO Auto-generated method stub
-                            return pr.handler.getServlet();
-                        }
-
-                        @Override
-                        public String[] getPatterns()
-                        {
-                            return pr.handler.getServletInfo().getPatterns();
-                        }
-
-                        @Override
-                        public String[] getErrorExceptions()
-                        {
-                            return null;
-                        }
-
-                        @Override
-                        public long[] getErrorCodes()
-                        {
-                            return null;
-                        }
-                    },
-
+                    .buildDTO(state,
                             pr.handler.getContextServiceId());
         }
         else
         {
+            final ServletState state = new ServletState(pr.handler);
+            state.setPatterns(pr.handler.getServletInfo().getPatterns());
             requestInfoDTO.servletDTO = ServletDTOBuilder.create()
-                    .buildDTO(new ServletState()
-                    {
-
-                        @Override
-                        public ServletInfo getServletInfo()
-                        {
-                            return pr.handler.getServletInfo();
-                        }
-
-                        @Override
-                        public Servlet getServlet()
-                        {
-                            return pr.handler.getServlet();
-                        }
-
-                        @Override
-                        public String[] getPatterns()
-                        {
-                            return pr.handler.getServletInfo().getPatterns();
-                        }
-
-                        @Override
-                        public String[] getErrorExceptions()
-                        {
-                            return new String[0];
-                        }
-
-                        @Override
-                        public long[] getErrorCodes()
-                        {
-                            return new long[0];
-                        }
-                    }, pr.handler.getContextServiceId());
+                    .buildDTO(state, pr.handler.getContextServiceId());
         }
 
         final FilterHandler[] filterHandlers = registry.getFilters(pr, null, path);

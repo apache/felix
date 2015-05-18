@@ -243,20 +243,20 @@ public class RuntimeDTOBuilderTest
         ServletContextHelperRuntime contextHelper_A = setupContext(context_A, "A", ID_A);
         ServletContextHelperRuntime contextHelper_B = setupContext(context_B, "B", ID_B);
 
-        List<ServletState> servlets = new ArrayList<ServletState>();
-        List<ServletState> resources = new ArrayList<ServletState>();
+        List<ServletHandler> servlets = new ArrayList<ServletHandler>();
+        List<ServletHandler> resources = new ArrayList<ServletHandler>();
 
         servlets.add(createTestServlet("1", context_0, ID_0));
         resources.add(createTestServlet("1", context_0, ID_0));
         List<FilterState> filters_0 = asList(createTestFilter("1", context_0));
         List<ServletState> errorPages_0 = asList(createErrorPage("E_1", context_0, ID_0));
-        ContextRuntime contextRuntime_0 = new ContextRuntime(filters_0, errorPages_0, null, null, null, null, null, null);
+        ContextRuntime contextRuntime_0 = new ContextRuntime(filters_0, errorPages_0, null, null);
 
         servlets.add(createTestServlet("A_1", context_A, ID_A));
         resources.add(createTestServlet("A_1", context_A, ID_A));
         List<FilterState> filters_A = asList(createTestFilter("A_1", context_A));
         List<ServletState> errorPages_A = asList(createErrorPage("E_A_1", context_A, ID_A));
-        ContextRuntime contextRuntime_A = new ContextRuntime(filters_A, errorPages_A, null, null, null, null, null, null);
+        ContextRuntime contextRuntime_A = new ContextRuntime(filters_A, errorPages_A, null, null);
 
         servlets.addAll(asList(createTestServletWithServiceId("B_1", context_B, ID_B),
                 createTestServletWithServiceId("B_2", context_B, ID_B)));
@@ -266,7 +266,7 @@ public class RuntimeDTOBuilderTest
                 createTestFilterWithServiceId("B_2", context_B));
         List<ServletState> errorPages_B = asList(createErrorPageWithServiceId("E_B_1", context_B, ID_B),
                 createErrorPageWithServiceId("E_B_2", context_B, ID_B));
-        ContextRuntime contextRuntime_B = new ContextRuntime(filters_B, errorPages_B, null, null, null, null, null, null);
+        ContextRuntime contextRuntime_B = new ContextRuntime(filters_B, errorPages_B, null, null);
 
         Map<Long, Collection<ServiceReference<?>>> listenerRuntimes = setupListeners();
 
@@ -274,7 +274,7 @@ public class RuntimeDTOBuilderTest
                 asList(contextRuntime_0, contextRuntime_A, contextRuntime_B),
 //                new ServletRegistryRuntime(servlets, resources),
                 listenerRuntimes,
-                FailureRuntime.empty());
+                null);
 
         RuntimeDTO runtimeDTO = new RuntimeDTOBuilder(registry, runtimeReference).build();
 
@@ -617,12 +617,11 @@ public class RuntimeDTOBuilderTest
 
         ContextRuntime contextRuntime = new ContextRuntime(asList(filterHandler),
                 Collections.<ServletState>emptyList(),
-                null, null,
-                null, null, null, null);
+                null, null);
         setupRegistry(asList(contextHandler), asList(contextRuntime),
 //                new ServletRegistryRuntime(asList(resourceHandler), asList(servletHandler)),
                 Collections.<Long, Collection<ServiceReference<?>>>emptyMap(),
-                FailureRuntime.empty());
+                null);
 
         RuntimeDTO runtimeDTO = new RuntimeDTOBuilder(registry, runtimeReference).build();
 
@@ -646,7 +645,7 @@ public class RuntimeDTOBuilderTest
         setupRegistry(asList(contextHandler_0, contextHandler_A),
 null, //                asList(ContextRuntime.empty(ID_0), ContextRuntime.empty(ID_A)),
                 Collections.<Long, Collection<ServiceReference<?>>>emptyMap(),
-                FailureRuntime.empty());
+                null);
 
         RuntimeDTO runtimeDTO = new RuntimeDTOBuilder(registry, runtimeReference).build();
 
@@ -678,12 +677,11 @@ null, //                asList(ContextRuntime.empty(ID_0), ContextRuntime.empty(
 
         ContextRuntime contextRuntime = new ContextRuntime(Collections.<FilterState>emptyList(),
                 Collections.<ServletState>emptyList(),
-                null, null,
-                null, null, null, null);
+                null, null);
         setupRegistry(asList(contextHandler), asList(contextRuntime),
 //                new ServletRegistryRuntime(asList(servletHandler), Collections.<ServletRuntime>emptyList()),
                 Collections.<Long, Collection<ServiceReference<?>>>emptyMap(),
-                FailureRuntime.empty());
+                null);
 
         new RuntimeDTOBuilder(registry, runtimeReference).build();
     }

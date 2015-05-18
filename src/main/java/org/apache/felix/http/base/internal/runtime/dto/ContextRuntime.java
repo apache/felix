@@ -31,32 +31,20 @@ import org.apache.felix.http.base.internal.runtime.dto.state.ServletState;
 public final class ContextRuntime
 {
     private final Collection<FilterState> filterRuntimes;
-    private final Collection<ServletState> errorPageRuntimes;
     private final Collection<ServletState> servletRuntimes;
-    private final Collection<ServletState> resourceRuntimes;
 
     private final Collection<FailureFilterState> failureFilterRuntimes;
-    private final Collection<FailureServletState> failureErrorPageRuntimes;
     private final Collection<FailureServletState> failureServletRuntimes;
-    private final Collection<FailureServletState> failureResourceRuntimes;
 
     public ContextRuntime(final Collection<FilterState> filterRuntimes,
-            final Collection<ServletState> errorPageRuntimes,
             final Collection<ServletState> servletRuntimes,
-            final Collection<ServletState> resourceRuntimes,
             final Collection<FailureFilterState> failureFilterRuntimes,
-            final Collection<FailureServletState> failureErrorPageRuntimes,
-            final Collection<FailureServletState> failureServletRuntimes,
-            final Collection<FailureServletState> failureResourceRuntimes)
+            final Collection<FailureServletState> failureServletRuntimes)
     {
         this.filterRuntimes = filterRuntimes;
-        this.errorPageRuntimes = errorPageRuntimes;
         this.servletRuntimes = servletRuntimes;
-        this.resourceRuntimes = resourceRuntimes;
         this.failureFilterRuntimes = failureFilterRuntimes;
-        this.failureErrorPageRuntimes = failureErrorPageRuntimes;
         this.failureServletRuntimes = failureServletRuntimes;
-        this.failureResourceRuntimes = failureResourceRuntimes;
     }
 
     Collection<ServletState> getServletRuntimes()
@@ -64,19 +52,9 @@ public final class ContextRuntime
         return servletRuntimes;
     }
 
-    Collection<ServletState> getResourceRuntimes()
-    {
-        return resourceRuntimes;
-    }
-
     Collection<FilterState> getFilterRuntimes()
     {
         return filterRuntimes;
-    }
-
-    Collection<ServletState> getErrorPageRuntimes()
-    {
-        return errorPageRuntimes;
     }
 
     Collection<FailureServletState> getFailureServletRuntimes()
@@ -84,18 +62,8 @@ public final class ContextRuntime
         return failureServletRuntimes;
     }
 
-    Collection<FailureServletState> getFailureResourceRuntimes()
-    {
-        return failureResourceRuntimes;
-    }
-
     Collection<FailureFilterState> getFailureFilterRuntimes()
     {
         return failureFilterRuntimes;
-    }
-
-    Collection<FailureServletState> getFailureErrorPageRuntimes()
-    {
-        return failureErrorPageRuntimes;
     }
 }

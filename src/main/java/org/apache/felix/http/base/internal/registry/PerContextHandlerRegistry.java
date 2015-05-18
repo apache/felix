@@ -17,6 +17,8 @@
 package org.apache.felix.http.base.internal.registry;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.TreeSet;
 
 import javax.annotation.Nonnull;
@@ -192,22 +194,30 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
 
     public ContextRuntime getRuntime()
     {
+        // collect filters
         final Collection<FilterState> filterRuntimes = new TreeSet<FilterState>(FilterState.COMPARATOR);
         final Collection<FailureFilterState> failureFilterRuntimes = new TreeSet<FailureFilterState>(FailureFilterState.COMPARATOR);
         this.filterRegistry.getRuntimeInfo(filterRuntimes, failureFilterRuntimes);
 
-        final Collection<ServletState> errorPageRuntimes = new TreeSet<ServletState>(ServletState.COMPARATOR);
-        final Collection<FailureServletState> failureErrorPageRuntimes = new TreeSet<FailureServletState>(FailureServletState.COMPARATOR);
-        this.errorPageRegistry.getRuntimeInfo(errorPageRuntimes, failureErrorPageRuntimes);
-        // TODO - add servlets
-        // TODO - add failures from filters and error pages
+        // collect error pages
+        final Map<Long, ServletState> servletStates = new HashMap<Long, ServletState>();
+        final Map<Long, Map<Integer, FailureServletState>> failureServletStates = new HashMap<Long, Map<Integer,FailureServletState>>();
+        this.errorPageRegistry.getRuntimeInfo(servletStates, failureServletStates);
+
+        // collect servlets and resources
+        this.servletRegistry.getRuntimeInfo(servletStates, failureServletStates);
+
+        final Collection<ServletState> sortedServletStates = new TreeSet<ServletState>(ServletState.COMPARATOR);
+        sortedServletStates.addAll(servletStates.values());
+        final Collection<FailureServletState> sortedFailureServletStates = new TreeSet<FailureServletState>(ServletState.COMPARATOR);
+        for(final Map<Integer, FailureServletState> val : failureServletStates.values())
+        {
+            sortedFailureServletStates.addAll(val.values());
+        }
+
         return new ContextRuntime(filterRuntimes,
-                errorPageRuntimes,
-                null,
-                null,
+                sortedServletStates,
                 failureFilterRuntimes,
-                failureErrorPageRuntimes,
-                null,
-                null);
+                sortedFailureServletStates);
     }
 }

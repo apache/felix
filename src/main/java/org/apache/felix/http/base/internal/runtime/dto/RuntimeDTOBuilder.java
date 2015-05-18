@@ -22,8 +22,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.felix.http.base.internal.runtime.dto.state.FilterState;
-import org.apache.felix.http.base.internal.runtime.dto.state.ServletState;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -102,28 +100,22 @@ public final class RuntimeDTOBuilder
         for (final ServletContextHelperRuntime context : contexts)
         {
             result[index++] = createContextDTO(context,
-                    registry.getHandlerRuntime(context),
-                    registry.getServletRuntimes(context),
-                    registry.getResourceRuntimes(context),
-                    registry.getListenerRuntimes(context));
+                    context.getContextRuntime(),
+                    context.getListeners());
         }
         return result;
     }
 
-    private ServletContextDTO createContextDTO(ServletContextHelperRuntime context,
-            ContextRuntime contextRuntime,
-            Collection<ServletState> servletRuntimes,
-            Collection<ServletState> resourceRuntimes,
-            Collection<ServiceReference<?>> listenerRuntimes)
+    private ServletContextDTO createContextDTO(final ServletContextHelperRuntime context,
+            final ContextRuntime contextRuntime,
+            final Collection<ServiceReference<?>> listenerRuntimes)
     {
-        Collection<FilterState> filterRuntimes = contextRuntime.getFilterRuntimes();
-        Collection<ServletState> errorPageRuntimes = contextRuntime.getErrorPageRuntimes();
-        long servletContextId = context.getContextInfo().getServiceId();
+        final long servletContextId = context.getContextInfo().getServiceId();
 
-        Collection<ServletDTO> servletDTOs = ServletDTOBuilder.create().build(servletRuntimes, servletContextId);
-        Collection<ResourceDTO> resourceDTOs = ResourceDTOBuilder.create().build(resourceRuntimes, servletContextId);
-        Collection<FilterDTO> filterDTOs = FilterDTOBuilder.create().build(filterRuntimes, servletContextId);
-        Collection<ErrorPageDTO> errorDTOs = ErrorPageDTOBuilder.create().build(errorPageRuntimes, servletContextId);
+        Collection<ServletDTO> servletDTOs = ServletDTOBuilder.create().build(contextRuntime.getServletRuntimes(), servletContextId);
+        Collection<ResourceDTO> resourceDTOs = ResourceDTOBuilder.create().build(contextRuntime.getServletRuntimes(), servletContextId);
+        Collection<FilterDTO> filterDTOs = FilterDTOBuilder.create().build(contextRuntime.getFilterRuntimes(), servletContextId);
+        Collection<ErrorPageDTO> errorDTOs = ErrorPageDTOBuilder.create().build(contextRuntime.getServletRuntimes(), servletContextId);
         Collection<ListenerDTO> listenerDTOs = ListenerDTOBuilder.create().build(listenerRuntimes, servletContextId);
 
         return new ServletContextDTOBuilder(context,
