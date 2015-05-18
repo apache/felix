@@ -172,9 +172,10 @@ class PojoSRBundleContext implements BundleContext
     public File getDataFile(String filename)
     {
         File root = new File("bundle" + m_bundle.getBundleId());
-        if (System.getProperty("org.osgi.framework.storage") != null)
+        String storage = getProperty("org.osgi.framework.storage");
+        if (storage != null)
         {
-            root = new File(new File(System.getProperty("org.osgi.framework.storage")), root.getName());
+            root = new File(new File(storage), root.getName());
         }
         root.mkdirs();
         return filename.trim().length() > 0 ? new File(root, filename) : root;
