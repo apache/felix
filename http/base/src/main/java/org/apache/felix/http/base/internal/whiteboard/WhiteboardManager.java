@@ -43,9 +43,9 @@ import javax.servlet.http.HttpSessionEvent;
 
 import org.apache.felix.http.base.internal.console.HttpServicePlugin;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.apache.felix.http.base.internal.handler.HandlerRegistry;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
+import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.AbstractInfo;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.HttpSessionAttributeListenerInfo;
@@ -59,8 +59,8 @@ import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.ServletRequestAttributeListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletRequestListenerInfo;
 import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
+import org.apache.felix.http.base.internal.runtime.dto.ContextRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.FailureRuntime;
-import org.apache.felix.http.base.internal.runtime.dto.HandlerRegistryRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.InfoServletContextHelperRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.RegistryRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.ServletContextHelperRuntime;
@@ -747,7 +747,7 @@ public final class WhiteboardManager
     public RegistryRuntime getRuntime(HandlerRegistry registry)
     {
         final Collection<ServletContextHelperRuntime> contextRuntimes = new TreeSet<ServletContextHelperRuntime>(ServletContextHelperRuntime.COMPARATOR);
-        HandlerRegistryRuntime handlerRuntimes;
+        List<ContextRuntime> handlerRuntimes;
         final Map<Long, Collection<ServiceReference<?>>> listenerRuntimes = new HashMap<Long, Collection<ServiceReference<?>>>();
         final FailureRuntime.Builder failureRuntime = FailureRuntime.builder();
         synchronized ( this.contextMap )
@@ -772,7 +772,7 @@ public final class WhiteboardManager
         }
 
         return new RegistryRuntime(contextRuntimes,
-            handlerRuntimes.getContextRuntimes(),
+            handlerRuntimes,
             listenerRuntimes,
             failureRuntime.build());
     }

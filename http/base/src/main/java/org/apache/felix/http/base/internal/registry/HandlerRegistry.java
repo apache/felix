@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.http.base.internal.handler;
+package org.apache.felix.http.base.internal.registry;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,15 +24,13 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.servlet.DispatcherType;
 
-import org.apache.felix.http.base.internal.registry.PathResolution;
-import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
-import org.apache.felix.http.base.internal.registry.ServletResolution;
+import org.apache.felix.http.base.internal.handler.FilterHandler;
+import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.dto.ContextRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.FailureRuntime;
-import org.apache.felix.http.base.internal.runtime.dto.HandlerRegistryRuntime;
 
 /**
  * Registry for all services.
@@ -42,7 +40,7 @@ import org.apache.felix.http.base.internal.runtime.dto.HandlerRegistryRuntime;
  */
 public final class HandlerRegistry
 {
-    private static FilterHandler[] EMPTY_FILTER_HOLDER = new FilterHandler[0];
+    private static FilterHandler[] EMPTY_FILTER_HANDLER = new FilterHandler[0];
 
     /** Current list of context registrations. */
     private volatile List<PerContextHandlerRegistry> registrations = Collections.emptyList();
@@ -126,14 +124,14 @@ public final class HandlerRegistry
         }
     }
 
-    public void addFilter(@Nonnull final FilterHandler holder)
+    public void addFilter(@Nonnull final FilterHandler handler)
     {
-        final PerContextHandlerRegistry reg = this.getRegistry(holder.getContextServiceId());
+        final PerContextHandlerRegistry reg = this.getRegistry(handler.getContextServiceId());
         // TODO - check whether we need to handle the null case as well
         //        it shouldn't be required as we only get here if the context exists
         if ( reg != null )
         {
-            reg.addFilter(holder);
+            reg.addFilter(handler);
         }
     }
 
@@ -186,11 +184,11 @@ public final class HandlerRegistry
         }
         if ( reg != null )
         {
-            final ServletHandler holder = reg.getErrorHandler(code, exception);
-            if ( holder != null )
+            final ServletHandler handler = reg.getErrorHandler(code, exception);
+            if ( handler != null )
             {
                 final ServletResolution res = new ServletResolution();
-                res.holder = holder;
+                res.handler = handler;
                 res.handlerRegistry = reg;
 
                 return res;
@@ -205,19 +203,19 @@ public final class HandlerRegistry
     {
         if ( pr != null && pr.handlerRegistry != null )
         {
-            return pr.handlerRegistry.getFilterHandlers(pr.holder, dispatcherType, requestURI);
+            return pr.handlerRegistry.getFilterHandlers(pr.handler, dispatcherType, requestURI);
         }
-        return EMPTY_FILTER_HOLDER;
+        return EMPTY_FILTER_HANDLER;
     }
 
-    public void addServlet(final ServletHandler holder)
+    public void addServlet(final ServletHandler handler)
     {
-        final PerContextHandlerRegistry reg = this.getRegistry(holder.getContextServiceId());
+        final PerContextHandlerRegistry reg = this.getRegistry(handler.getContextServiceId());
         // TODO - check whether we need to handle the null case as well
         //        it shouldn't be required as we only get here if the context exists
         if ( reg != null )
         {
-            reg.addServlet(holder);
+            reg.addServlet(handler);
         }
     }
 
@@ -256,21 +254,21 @@ public final class HandlerRegistry
     }
 
     /**
-     * Get the servlet holder for a servlet by name
+     * Get the servlet handler for a servlet by name
      * @param contextId The context id or {@code null}
      * @param name The servlet name
-     * @return The servlet holder or {@code null}
+     * @return The servlet handler or {@code null}
      */
     public ServletResolution resolveServletByName(final Long contextId, @Nonnull final String name)
     {
         final PerContextHandlerRegistry reg = (contextId == null ? null : this.getRegistry(contextId));
         if ( reg != null )
         {
-            final ServletHandler holder = reg.resolveServletByName(name);
-            if ( holder != null )
+            final ServletHandler handler = reg.resolveServletByName(name);
+            if ( handler != null )
             {
                 final ServletResolution resolution = new ServletResolution();
-                resolution.holder = holder;
+                resolution.handler = handler;
                 resolution.handlerRegistry = reg;
 
                 return resolution;
@@ -279,7 +277,7 @@ public final class HandlerRegistry
         return null;
     }
 
-    public HandlerRegistryRuntime getRuntime(FailureRuntime.Builder failureRuntimeBuilder)
+    public List<ContextRuntime> getRuntime(FailureRuntime.Builder failureRuntimeBuilder)
     {
         final List<ContextRuntime> handlerRuntimes = new ArrayList<ContextRuntime>();
 
@@ -289,6 +287,6 @@ public final class HandlerRegistry
             handlerRuntimes.add(contextRegistry.getRuntime(failureRuntimeBuilder));
         }
 
-        return new HandlerRegistryRuntime(handlerRuntimes);
+        return handlerRuntimes;
     }
 }
