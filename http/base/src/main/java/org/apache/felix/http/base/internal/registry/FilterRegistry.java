@@ -29,8 +29,8 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.servlet.DispatcherType;
 
-import org.apache.felix.http.base.internal.handler.holder.FilterHolder;
-import org.apache.felix.http.base.internal.handler.holder.ServletHolder;
+import org.apache.felix.http.base.internal.handler.FilterHandler;
+import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.dto.FailureRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.FilterRuntime;
@@ -44,10 +44,10 @@ public final class FilterRegistry
     private static final class FilterRegistrationStatus
     {
         public int result;
-        public FilterHolder holder;
+        public FilterHandler holder;
     }
 
-    public void addFilter(@Nonnull final FilterHolder holder)
+    public void addFilter(@Nonnull final FilterHandler holder)
     {
         final int result = holder.init();
         if ( result == -1 )
@@ -77,16 +77,16 @@ public final class FilterRegistry
         }
     }
 
-    public FilterHolder[] getFilterHolders(@CheckForNull final ServletHolder holder,
+    public FilterHandler[] getFilterHandlers(@CheckForNull final ServletHandler holder,
             @CheckForNull DispatcherType dispatcherType,
             @Nonnull String requestURI)
     {
         // See Servlet 3.0 specification, section 6.2.4...
-        final List<FilterHolder> result = new ArrayList<FilterHolder>();
+        final List<FilterHandler> result = new ArrayList<FilterHandler>();
         result.addAll(this.filterMapping.getAllMatches(requestURI));
 
         // TODO this is not the most efficient/fastest way of doing this...
-        Iterator<FilterHolder> iter = result.iterator();
+        Iterator<FilterHandler> iter = result.iterator();
         while (iter.hasNext())
         {
             if (!referencesDispatcherType(iter.next(), dispatcherType))
@@ -97,7 +97,7 @@ public final class FilterRegistry
 
         final String servletName = (holder != null) ? holder.getName() : null;
         // TODO this is not the most efficient/fastest way of doing this...
-        for (FilterHolder filterHandler : this.filterMapping.values())
+        for (FilterHandler filterHandler : this.filterMapping.values())
         {
             if (referencesServletByName(filterHandler, servletName))
             {
@@ -105,10 +105,10 @@ public final class FilterRegistry
             }
         }
 
-        return result.toArray(new FilterHolder[result.size()]);
+        return result.toArray(new FilterHandler[result.size()]);
     }
 
-    private boolean referencesDispatcherType(FilterHolder holder, DispatcherType dispatcherType)
+    private boolean referencesDispatcherType(FilterHandler holder, DispatcherType dispatcherType)
     {
         if (dispatcherType == null)
         {
@@ -117,7 +117,7 @@ public final class FilterRegistry
         return Arrays.asList(holder.getFilterInfo().getDispatcher()).contains(dispatcherType);
     }
 
-    private boolean referencesServletByName(FilterHolder handler, String servletName)
+    private boolean referencesServletByName(FilterHandler handler, String servletName)
     {
         if (servletName == null)
         {

@@ -30,8 +30,8 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.apache.felix.http.base.internal.handler.holder.HttpServiceServletHolder;
-import org.apache.felix.http.base.internal.handler.holder.ServletHolder;
+import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
+import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.junit.Test;
 import org.mockito.Matchers;
@@ -54,7 +54,7 @@ public class ServletRegistryTest {
         assertEquals(0, status.size());
 
         // register servlet
-        final ServletHolder h1 = createServletHolder(1L, 0, "/foo");
+        final ServletHandler h1 = createServletHandler(1L, 0, "/foo");
         reg.addServlet(h1);
 
         verify(h1.getServlet()).init(Matchers.any(ServletConfig.class));
@@ -82,11 +82,11 @@ public class ServletRegistryTest {
         assertEquals(0, status.size());
 
         // register servlets
-        final ServletHolder h1 = createServletHolder(1L, 10, "/foo");
+        final ServletHandler h1 = createServletHandler(1L, 10, "/foo");
         reg.addServlet(h1);
         verify(h1.getServlet()).init(Matchers.any(ServletConfig.class));
 
-        final ServletHolder h2 = createServletHolder(2L, 0, "/foo");
+        final ServletHandler h2 = createServletHandler(2L, 0, "/foo");
         reg.addServlet(h2);
         verify(h2.getServlet(), never()).init(Matchers.any(ServletConfig.class));
         verify(h1.getServlet(), never()).destroy();
@@ -145,12 +145,12 @@ public class ServletRegistryTest {
         return si;
     }
 
-    private static ServletHolder createServletHolder(final long id, final int ranking, final String... paths) throws InvalidSyntaxException
+    private static ServletHandler createServletHandler(final long id, final int ranking, final String... paths) throws InvalidSyntaxException
     {
         final ServletInfo si = createServletInfo(id, ranking, paths);
         final ExtServletContext ctx = mock(ExtServletContext.class);
         final Servlet servlet = mock(Servlet.class);
 
-        return new HttpServiceServletHolder(7, ctx, si, servlet);
+        return new HttpServiceServletHandler(7, ctx, si, servlet);
     }
 }

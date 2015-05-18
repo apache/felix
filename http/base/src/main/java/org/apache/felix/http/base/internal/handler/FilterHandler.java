@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import javax.annotation.Nonnull;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -28,23 +29,35 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
+import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
-import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.dto.FilterRuntime;
 import org.apache.felix.http.base.internal.util.PatternUtil;
+import org.osgi.service.http.runtime.dto.DTOConstants;
 
-public final class FilterHandler extends AbstractHandler<FilterHandler> implements FilterRuntime
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
+public class FilterHandler implements Comparable<FilterHandler>, FilterRuntime
 {
-    private final Filter filter;
-    private final FilterInfo filterInfo;
-    private final Pattern[] patterns;
-
     private final long contextServiceId;
 
-    public FilterHandler(final ServletContextHelperInfo contextInfo, ExtServletContext context, Filter filter, FilterInfo filterInfo)
+    private final FilterInfo filterInfo;
+
+    private final ExtServletContext context;
+
+    private volatile Filter filter;
+
+    protected volatile int useCount;
+
+    private final Pattern[] patterns;
+
+    public FilterHandler(final long contextServiceId,
+            final ExtServletContext context,
+            final FilterInfo filterInfo)
     {
-        super(context, filterInfo.getInitParameters(), filterInfo.getName());
-        this.filter = filter;
+        this.contextServiceId = contextServiceId;
+        this.context = context;
         this.filterInfo = filterInfo;
         // Compose a single array of all patterns & regexs the filter must represent...
         String[] patterns = getFilterPatterns(filterInfo);
@@ -54,59 +67,6 @@ public final class FilterHandler extends AbstractHandler<FilterHandler> implemen
         {
             this.patterns[i] = Pattern.compile(patterns[i]);
         }
-        if ( contextInfo != null )
-        {
-            this.contextServiceId = contextInfo.getServiceId();
-        }
-        else
-        {
-            this.contextServiceId = 0;
-        }
-    }
-
-    @Override
-    public int compareTo(FilterHandler other)
-    {
-        return this.filterInfo.compareTo(other.filterInfo);
-    }
-
-    @Override
-    public void destroy()
-    {
-        this.filter.destroy();
-    }
-
-    public Filter getFilter()
-    {
-        return this.filter;
-    }
-
-    @Override
-    public FilterInfo getFilterInfo()
-    {
-        return this.filterInfo;
-    }
-
-    public int getRanking()
-    {
-        return filterInfo.getRanking();
-    }
-
-    public void handle(ServletRequest req, ServletResponse res, FilterChain chain) throws ServletException, IOException
-    {
-        this.filter.doFilter(req, res, chain);
-    }
-
-    @Override
-    public void init() throws ServletException
-    {
-        this.filter.init(new FilterConfigImpl(getName(), getContext(), getInitParams()));
-    }
-
-    @Override
-    protected Object getSubject()
-    {
-        return this.filter;
     }
 
     private static String[] getFilterPatterns(FilterInfo filterInfo)
@@ -129,9 +89,14 @@ public final class FilterHandler extends AbstractHandler<FilterHandler> implemen
         return result.toArray(new String[result.size()]);
     }
 
-    @Override
     public Pattern[] getPatterns() {
         return this.patterns;
+    }
+
+    @Override
+    public int compareTo(final FilterHandler other)
+    {
+        return this.filterInfo.compareTo(other.filterInfo);
     }
 
     @Override
@@ -140,9 +105,108 @@ public final class FilterHandler extends AbstractHandler<FilterHandler> implemen
         return this.contextServiceId;
     }
 
-    @Override
-    protected long getServiceId()
+    public ExtServletContext getContext()
     {
-        return this.filterInfo.getServiceId();
+        return this.context;
+    }
+
+    public Filter getFilter()
+    {
+        return filter;
+    }
+
+    protected void setFilter(final Filter f)
+    {
+        this.filter = f;
+    }
+
+    @Override
+    public FilterInfo getFilterInfo()
+    {
+        return this.filterInfo;
+    }
+
+    public String getName()
+    {
+        String name = this.filterInfo.getName();
+        if (name == null)
+        {
+            name = filter.getClass().getName();
+        }
+        return name;
+    }
+
+    /**
+     * Initialize the object
+     * @return {code -1} on success, a failure reason according to {@link DTOConstants} otherwise.
+     */
+    public int init()
+    {
+        if ( this.useCount > 0 )
+        {
+            this.useCount++;
+            return -1;
+        }
+
+        if (this.filter == null)
+        {
+            return DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
+        }
+
+        try
+        {
+            filter.init(new FilterConfigImpl(getName(), getContext(), getFilterInfo().getInitParameters()));
+        }
+        catch (final ServletException e)
+        {
+            SystemLogger.error(this.getFilterInfo().getServiceReference(),
+                    "Error during calling init() on filter " + this.filter,
+                    e);
+            return DTOConstants.FAILURE_REASON_EXCEPTION_ON_INIT;
+        }
+        this.useCount++;
+        return -1;
+    }
+
+    public void handle(@Nonnull final ServletRequest req,
+            @Nonnull final ServletResponse res,
+            @Nonnull final FilterChain chain) throws ServletException, IOException
+    {
+        this.filter.doFilter(req, res, chain);
+    }
+
+    public boolean destroy()
+    {
+        if (this.filter == null)
+        {
+            return false;
+        }
+
+        this.useCount--;
+        if ( this.useCount == 0 )
+        {
+            try
+            {
+                filter.destroy();
+            }
+            catch ( final Exception ignore )
+            {
+                // we ignore this
+                SystemLogger.error(this.getFilterInfo().getServiceReference(),
+                        "Error during calling destroy() on filter " + this.filter,
+                        ignore);
+            }
+
+            filter = null;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean dispose()
+    {
+        // fully destroy the filter
+        this.useCount = 1;
+        return this.destroy();
     }
 }

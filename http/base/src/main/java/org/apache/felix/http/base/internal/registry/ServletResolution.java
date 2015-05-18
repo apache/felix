@@ -16,11 +16,11 @@
  */
 package org.apache.felix.http.base.internal.registry;
 
-import org.apache.felix.http.base.internal.handler.holder.ServletHolder;
+import org.apache.felix.http.base.internal.handler.ServletHandler;
 
 public class ServletResolution {
 
-    public ServletHolder holder;
+    public ServletHandler holder;
 
     public PerContextHandlerRegistry handlerRegistry;
 }

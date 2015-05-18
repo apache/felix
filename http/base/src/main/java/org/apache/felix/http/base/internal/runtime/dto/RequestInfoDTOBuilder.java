@@ -18,8 +18,8 @@ package org.apache.felix.http.base.internal.runtime.dto;
 
 import static java.util.Arrays.asList;
 
+import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.HandlerRegistry;
-import org.apache.felix.http.base.internal.handler.holder.FilterHolder;
 import org.apache.felix.http.base.internal.registry.PathResolution;
 import org.osgi.service.http.runtime.dto.FilterDTO;
 import org.osgi.service.http.runtime.dto.RequestInfoDTO;
@@ -61,9 +61,9 @@ public final class RequestInfoDTOBuilder
                     .buildDTO(pr.holder, pr.holder.getContextServiceId());
         }
 
-        final FilterHolder[] filterHolders = registry.getFilters(pr, null, path);
+        final FilterHandler[] filterHandlers = registry.getFilters(pr, null, path);
         requestInfoDTO.filterDTOs = FilterDTOBuilder.create()
-                .build(asList(filterHolders), pr.holder.getContextServiceId())
+                .build(asList(filterHandlers), pr.holder.getContextServiceId())
                 .toArray(FILTER_DTO_ARRAY);
 
         return requestInfoDTO;

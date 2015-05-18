@@ -56,8 +56,8 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.apache.felix.http.base.internal.handler.FilterHandler;
-import org.apache.felix.http.base.internal.handler.SimpleServletHandler;
+import org.apache.felix.http.base.internal.handler.HttpServiceFilterHandler;
+import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
 import org.apache.felix.http.base.internal.runtime.AbstractInfo;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
@@ -584,7 +584,7 @@ public class RuntimeDTOBuilderTest
                 true,
                 Collections.<String, String>emptyMap());
         Servlet servlet = mock(Servlet.class);
-        ServletRuntime servletHandler = new SimpleServletHandler(context_0, servletInfo, servlet);
+        ServletRuntime servletHandler = new HttpServiceServletHandler(0, context_0, servletInfo, servlet);
         when(servlet.getServletInfo()).thenReturn("info_0");
 
         FilterInfo filterInfo = createFilterInfo(0,
@@ -596,7 +596,7 @@ public class RuntimeDTOBuilderTest
                 true,
                 null,
                 Collections.<String, String>emptyMap());
-        FilterRuntime filterHandler = new FilterHandler(null, context_0, mock(Filter.class), filterInfo);
+        FilterRuntime filterHandler = new HttpServiceFilterHandler(0, context_0, filterInfo, mock(Filter.class));
 
         ServletInfo resourceInfo = createServletInfo(0,
                 ID_COUNTER.incrementAndGet(),
@@ -606,7 +606,7 @@ public class RuntimeDTOBuilderTest
                 true,
                 Collections.<String, String>emptyMap());
         Servlet resource = mock(Servlet.class);
-        ServletRuntime resourceHandler = new SimpleServletHandler(ID_0, context_0, resourceInfo, resource);
+        ServletRuntime resourceHandler = new HttpServiceServletHandler(ID_0, context_0, resourceInfo, resource);
 
         ContextRuntime contextRuntime = new ContextRuntime(asList(filterHandler),
                 Collections.<ErrorPageRuntime>emptyList(),
@@ -665,7 +665,7 @@ public class RuntimeDTOBuilderTest
                 true,
                 Collections.<String, String>emptyMap());
         Servlet servlet = mock(Servlet.class);
-        ServletRuntime servletHandler = new SimpleServletHandler(ID_0, context_0, servletInfo, servlet);
+        ServletRuntime servletHandler = new HttpServiceServletHandler(ID_0, context_0, servletInfo, servlet);
         when(servlet.getServletInfo()).thenReturn("info_0");
 
         ContextRuntime contextRuntime = new ContextRuntime(Collections.<FilterRuntime>emptyList(),

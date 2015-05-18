@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
 
-import org.apache.felix.http.base.internal.handler.holder.FilterHolder;
+import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.util.PatternUtil;
 import org.apache.felix.http.base.internal.util.PatternUtil.PatternComparator;
 
@@ -50,16 +50,16 @@ import org.apache.felix.http.base.internal.util.PatternUtil.PatternComparator;
  */
 public final class HandlerMapping
 {
-    private final SortedMap<Pattern, Set<FilterHolder>> exactMap;
-    private final SortedMap<Pattern, Set<FilterHolder>> wildcardMap;
-    private final Set<FilterHolder> mappedHandlers;
+    private final SortedMap<Pattern, Set<FilterHandler>> exactMap;
+    private final SortedMap<Pattern, Set<FilterHandler>> wildcardMap;
+    private final Set<FilterHandler> mappedHandlers;
 
     /**
      * Creates a new, empty, {@link HandlerMapping} instance.
      */
     public HandlerMapping()
     {
-        this(Collections.<Pattern, Collection<FilterHolder>>emptyMap());
+        this(Collections.<Pattern, Collection<FilterHandler>>emptyMap());
     }
 
     /**
@@ -67,35 +67,35 @@ public final class HandlerMapping
      *
      * @param mappings the elements to map.
      */
-    private HandlerMapping(@Nonnull final Map<Pattern, Collection<FilterHolder>> mappings)
+    private HandlerMapping(@Nonnull final Map<Pattern, Collection<FilterHandler>> mappings)
     {
-        this.exactMap = new TreeMap<Pattern, Set<FilterHolder>>(PatternComparator.INSTANCE);
-        this.wildcardMap = new TreeMap<Pattern, Set<FilterHolder>>(PatternComparator.INSTANCE);
-        this.mappedHandlers = new TreeSet<FilterHolder>();
+        this.exactMap = new TreeMap<Pattern, Set<FilterHandler>>(PatternComparator.INSTANCE);
+        this.wildcardMap = new TreeMap<Pattern, Set<FilterHandler>>(PatternComparator.INSTANCE);
+        this.mappedHandlers = new TreeSet<FilterHandler>();
 
-        for (Map.Entry<Pattern, Collection<FilterHolder>> mapping : mappings.entrySet())
+        for (Map.Entry<Pattern, Collection<FilterHandler>> mapping : mappings.entrySet())
         {
             Pattern pattern = mapping.getKey();
-            Collection<FilterHolder> handlers = mapping.getValue();
+            Collection<FilterHandler> handlers = mapping.getValue();
 
             mappedHandlers.addAll(handlers);
 
             if (PatternUtil.isWildcardPattern(pattern))
             {
-                Set<FilterHolder> vs = this.wildcardMap.get(pattern);
+                Set<FilterHandler> vs = this.wildcardMap.get(pattern);
                 if (vs == null)
                 {
-                    vs = new TreeSet<FilterHolder>();
+                    vs = new TreeSet<FilterHandler>();
                     this.wildcardMap.put(pattern, vs);
                 }
                 vs.addAll(handlers);
             }
             else
             {
-                Set<FilterHolder> vs = this.exactMap.get(pattern);
+                Set<FilterHandler> vs = this.exactMap.get(pattern);
                 if (vs == null)
                 {
-                    vs = new TreeSet<FilterHolder>();
+                    vs = new TreeSet<FilterHandler>();
                     this.exactMap.put(pattern, vs);
                 }
                 vs.addAll(handlers);
@@ -111,9 +111,9 @@ public final class HandlerMapping
      * @return a new {@link HandlerMapping} instance with a mapping for the
      *         given handler.
      */
-    public HandlerMapping add(@Nonnull final FilterHolder handler)
+    public HandlerMapping add(@Nonnull final FilterHandler handler)
     {
-        final Map<Pattern, FilterHolder> mappings = new TreeMap<Pattern, FilterHolder>(PatternComparator.INSTANCE);
+        final Map<Pattern, FilterHandler> mappings = new TreeMap<Pattern, FilterHandler>(PatternComparator.INSTANCE);
         for (final Pattern pattern : handler.getPatterns())
         {
             mappings.put(pattern, handler);
@@ -121,9 +121,9 @@ public final class HandlerMapping
         return add(mappings);
     }
 
-    HandlerMapping add(@Nonnull final Map<Pattern, FilterHolder> mappings)
+    HandlerMapping add(@Nonnull final Map<Pattern, FilterHandler> mappings)
     {
-        final Map<Pattern, Collection<FilterHolder>> newMappings = getAllMappings();
+        final Map<Pattern, Collection<FilterHandler>> newMappings = getAllMappings();
         addMappings(mappings, newMappings);
         return new HandlerMapping(newMappings);
     }
@@ -136,9 +136,9 @@ public final class HandlerMapping
      * @return a new {@link HandlerMapping} instance without a mapping for the
      *         given handler.
      */
-    public HandlerMapping remove(FilterHolder handler)
+    public HandlerMapping remove(FilterHandler handler)
     {
-        Map<Pattern, FilterHolder> mappings = new TreeMap<Pattern, FilterHolder>(PatternComparator.INSTANCE);
+        Map<Pattern, FilterHandler> mappings = new TreeMap<Pattern, FilterHandler>(PatternComparator.INSTANCE);
         for (Pattern pattern : handler.getPatterns())
         {
             mappings.put(pattern, handler);
@@ -146,38 +146,38 @@ public final class HandlerMapping
         return remove(mappings);
     }
 
-    HandlerMapping remove(Map<Pattern, FilterHolder> mappings)
+    HandlerMapping remove(Map<Pattern, FilterHandler> mappings)
     {
-        Map<Pattern, Collection<FilterHolder>> newMappings = getAllMappings();
+        Map<Pattern, Collection<FilterHandler>> newMappings = getAllMappings();
         removeMappings(mappings, newMappings);
         return new HandlerMapping(newMappings);
     }
 
-    HandlerMapping update(Map<Pattern, FilterHolder> add, Map<Pattern, FilterHolder> remove)
+    HandlerMapping update(Map<Pattern, FilterHandler> add, Map<Pattern, FilterHandler> remove)
     {
-        Map<Pattern, Collection<FilterHolder>> newMappings = getAllMappings();
+        Map<Pattern, Collection<FilterHandler>> newMappings = getAllMappings();
         removeMappings(remove, newMappings);
         addMappings(add, newMappings);
         return new HandlerMapping(newMappings);
     }
 
-    private void addMappings(Map<Pattern, FilterHolder> mappings, Map<Pattern, Collection<FilterHolder>> target)
+    private void addMappings(Map<Pattern, FilterHandler> mappings, Map<Pattern, Collection<FilterHandler>> target)
     {
-        for (Map.Entry<Pattern, FilterHolder> mapping : mappings.entrySet())
+        for (Map.Entry<Pattern, FilterHandler> mapping : mappings.entrySet())
         {
             if (!target.containsKey(mapping.getKey()))
             {
-                target.put(mapping.getKey(), new TreeSet<FilterHolder>());
+                target.put(mapping.getKey(), new TreeSet<FilterHandler>());
             }
             target.get(mapping.getKey()).add(mapping.getValue());
         }
     }
 
-    private void removeMappings(Map<Pattern, FilterHolder> mappings, Map<Pattern, Collection<FilterHolder>> target)
+    private void removeMappings(Map<Pattern, FilterHandler> mappings, Map<Pattern, Collection<FilterHandler>> target)
     {
-        for (Map.Entry<Pattern, FilterHolder> mapping : mappings.entrySet())
+        for (Map.Entry<Pattern, FilterHandler> mapping : mappings.entrySet())
         {
-            Collection<FilterHolder> mappedHandlers = target.get(mapping.getKey());
+            Collection<FilterHandler> mappedHandlers = target.get(mapping.getKey());
             if (mappedHandlers == null)
             {
                 continue;
@@ -190,9 +190,9 @@ public final class HandlerMapping
         }
     }
 
-    private Map<Pattern, Collection<FilterHolder>> getAllMappings()
+    private Map<Pattern, Collection<FilterHandler>> getAllMappings()
     {
-        Map<Pattern, Collection<FilterHolder>> newMappings = new TreeMap<Pattern, Collection<FilterHolder>>(PatternComparator.INSTANCE);
+        Map<Pattern, Collection<FilterHandler>> newMappings = new TreeMap<Pattern, Collection<FilterHandler>>(PatternComparator.INSTANCE);
         newMappings.putAll(exactMap);
         newMappings.putAll(wildcardMap);
         return newMappings;
@@ -205,7 +205,7 @@ public final class HandlerMapping
      *         <code>Collection</code> is unmodifiable and never
      *         <code>null</code>.
      */
-    public Collection<FilterHolder> values()
+    public Collection<FilterHandler> values()
     {
         return unmodifiableCollection(mappedHandlers);
     }
@@ -216,7 +216,7 @@ public final class HandlerMapping
      * @return <code>true</code> if the handlers contains the specified handler,
      *         <code>false</code> otherwise
      */
-    public boolean contains(FilterHolder handler)
+    public boolean contains(FilterHandler handler)
     {
         return mappedHandlers.contains(handler);
     }
@@ -227,7 +227,7 @@ public final class HandlerMapping
      * @param path the path that should match, cannot be <code>null</code>.
      * @return a {@link Collection} of all matching handlers, never <code>null</code>.
      */
-    public List<FilterHolder> getAllMatches(String path)
+    public List<FilterHandler> getAllMatches(String path)
     {
         return getAllMatches(path, false /* firstOnly */);
     }
@@ -245,9 +245,9 @@ public final class HandlerMapping
      * @param path the path that should match, cannot be <code>null</code>.
      * @return the best matching handler for the given path, or <code>null</code> in case no handler matched.
      */
-    FilterHolder getBestMatch(String path)
+    FilterHandler getBestMatch(String path)
     {
-        List<FilterHolder> allMatches = getAllMatches(path, true /* firstOnly */);
+        List<FilterHandler> allMatches = getAllMatches(path, true /* firstOnly */);
         return allMatches.isEmpty() ? null : allMatches.get(0);
     }
 
@@ -257,14 +257,14 @@ public final class HandlerMapping
      * @param name the name of the handler to return, can be <code>null</code> in which case this method will return <code>null</code>.
      * @return the element with the given name, or <code>null</code> if not found, or the given argument was <code>null</code>.
      */
-    FilterHolder getByName(String name)
+    FilterHandler getByName(String name)
     {
         if (name == null)
         {
             return null;
         }
 
-        for (FilterHolder element : this.mappedHandlers)
+        for (FilterHandler element : this.mappedHandlers)
         {
             if (name.equals(element.getName()))
             {
@@ -294,38 +294,38 @@ public final class HandlerMapping
      *        <code>false</code> if all matching patterns should be returned.
      * @return a list with matching elements, never <code>null</code>.
      */
-    private List<FilterHolder> getAllMatches(String path, boolean firstOnly)
+    private List<FilterHandler> getAllMatches(String path, boolean firstOnly)
     {
         path = (path == null) ? "" : path.trim();
 
-        Set<FilterHolder> result = new TreeSet<FilterHolder>();
+        Set<FilterHandler> result = new TreeSet<FilterHandler>();
         // Look for exact matches only, that is, those patterns without wildcards...
-        for (Entry<Pattern, Set<FilterHolder>> entry : this.exactMap.entrySet())
+        for (Entry<Pattern, Set<FilterHandler>> entry : this.exactMap.entrySet())
         {
             Matcher matcher = entry.getKey().matcher(path);
             // !!! we should always match the *entire* pattern, instead of the longest prefix...
             if (matcher.matches())
             {
-                Set<FilterHolder> vs = entry.getValue();
-                for (FilterHolder v : vs)
+                Set<FilterHandler> vs = entry.getValue();
+                for (FilterHandler v : vs)
                 {
                     result.add(v);
                     if (firstOnly)
                     {
-                        return new ArrayList<FilterHolder>(result);
+                        return new ArrayList<FilterHandler>(result);
                     }
                 }
             }
         }
 
         // Try to apply the wildcard patterns...
-        for (Entry<Pattern, Set<FilterHolder>> entry : this.wildcardMap.entrySet())
+        for (Entry<Pattern, Set<FilterHandler>> entry : this.wildcardMap.entrySet())
         {
             Matcher matcher = entry.getKey().matcher(path);
             if (matcher.find(0))
             {
-                Set<FilterHolder> vs = entry.getValue();
-                for (FilterHolder v : vs)
+                Set<FilterHandler> vs = entry.getValue();
+                for (FilterHandler v : vs)
                 {
                     result.add(v);
 
@@ -337,6 +337,6 @@ public final class HandlerMapping
             }
         }
 
-        return new ArrayList<FilterHolder>(result);
+        return new ArrayList<FilterHandler>(result);
     }
 }

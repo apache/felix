@@ -36,15 +36,12 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.dispatch.InvocationChain;
-import org.apache.felix.http.base.internal.handler.holder.FilterHolder;
-import org.apache.felix.http.base.internal.handler.holder.HttpServiceServletHolder;
-import org.apache.felix.http.base.internal.handler.holder.ServletHolder;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-public class SimpleServletHandlerTest
+public class HttpServiceServletHandlerTest
 {
     private Servlet servlet;
 
@@ -60,7 +57,7 @@ public class SimpleServletHandlerTest
     @Test
     public void testDestroy()
     {
-        ServletHolder h1 = createHandler("/a");
+        ServletHandler h1 = createHandler("/a");
         h1.init();
         h1.destroy();
         verify(this.servlet).destroy();
@@ -69,8 +66,8 @@ public class SimpleServletHandlerTest
     @Test
     public void testHandleFound() throws Exception
     {
-        ServletHolder h1 = createHandler("/a");
-        final InvocationChain ic = new InvocationChain(h1, new FilterHolder[0]);
+        ServletHandler h1 = createHandler("/a");
+        final InvocationChain ic = new InvocationChain(h1, new FilterHandler[0]);
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse res = mock(HttpServletResponse.class);
         when(this.context.handleSecurity(req, res)).thenReturn(true);
@@ -85,8 +82,8 @@ public class SimpleServletHandlerTest
     @Test
     public void testHandleFoundContextRoot() throws Exception
     {
-        ServletHolder h1 = createHandler("/");
-        final InvocationChain ic = new InvocationChain(h1, new FilterHolder[0]);
+        ServletHandler h1 = createHandler("/");
+        final InvocationChain ic = new InvocationChain(h1, new FilterHandler[0]);
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse res = mock(HttpServletResponse.class);
         when(this.context.handleSecurity(req, res)).thenReturn(true);
@@ -104,8 +101,8 @@ public class SimpleServletHandlerTest
     @Test
     public void testHandleFoundForbidden() throws Exception
     {
-        ServletHolder h1 = createHandler("/a");
-        final InvocationChain ic = new InvocationChain(h1, new FilterHolder[0]);
+        ServletHandler h1 = createHandler("/a");
+        final InvocationChain ic = new InvocationChain(h1, new FilterHandler[0]);
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse res = mock(HttpServletResponse.class);
 
@@ -130,8 +127,8 @@ public class SimpleServletHandlerTest
     @Test
     public void testHandleFoundForbiddenCommittedOwnResponse() throws Exception
     {
-        ServletHolder h1 = createHandler("/a");
-        final InvocationChain ic = new InvocationChain(h1, new FilterHolder[0]);
+        ServletHandler h1 = createHandler("/a");
+        final InvocationChain ic = new InvocationChain(h1, new FilterHandler[0]);
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse res = mock(HttpServletResponse.class);
 
@@ -156,8 +153,8 @@ public class SimpleServletHandlerTest
     @Test
     public void testHandleFoundForbiddenCustomStatusCode() throws Exception
     {
-        ServletHolder h1 = createHandler("/a");
-        final InvocationChain ic = new InvocationChain(h1, new FilterHolder[0]);
+        ServletHandler h1 = createHandler("/a");
+        final InvocationChain ic = new InvocationChain(h1, new FilterHandler[0]);
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse res = mock(HttpServletResponse.class);
 
@@ -179,8 +176,8 @@ public class SimpleServletHandlerTest
     @Test
     public void testHandleNotFound() throws Exception
     {
-        ServletHolder h1 = createHandler("/a");
-        final InvocationChain ic = new InvocationChain(h1, new FilterHolder[0]);
+        ServletHandler h1 = createHandler("/a");
+        final InvocationChain ic = new InvocationChain(h1, new FilterHandler[0]);
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse res = mock(HttpServletResponse.class);
 
@@ -193,7 +190,7 @@ public class SimpleServletHandlerTest
     @Test
     public void testHandleNotFoundContextRoot() throws Exception
     {
-        ServletHolder h1 = createHandler("/a");
+        ServletHandler h1 = createHandler("/a");
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse res = mock(HttpServletResponse.class);
         when(this.context.handleSecurity(req, res)).thenReturn(true);
@@ -207,23 +204,23 @@ public class SimpleServletHandlerTest
     @Test
     public void testInit() throws Exception
     {
-        ServletHolder h1 = createHandler("/a");
+        ServletHandler h1 = createHandler("/a");
         h1.init();
         verify(this.servlet).init(any(ServletConfig.class));
     }
 
-    private ServletHolder createHandler(String alias)
+    private ServletHandler createHandler(String alias)
     {
         return createHandler(alias, null);
     }
 
-    private ServletHolder createHandler(String alias, Map<String, String> map)
+    private ServletHandler createHandler(String alias, Map<String, String> map)
     {
         if ( map == null )
         {
             map = Collections.emptyMap();
         }
         final ServletInfo info = new ServletInfo(null, alias, 0, map);
-        return new HttpServiceServletHolder(3, this.context, info, this.servlet);
+        return new HttpServiceServletHandler(3, this.context, info, this.servlet);
     }
 }

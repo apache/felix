@@ -17,47 +17,40 @@
 package org.apache.felix.http.base.internal.handler;
 
 import java.io.IOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
+import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.dto.ServletRuntime;
-import org.apache.felix.http.base.internal.util.PatternUtil;
+import org.osgi.service.http.runtime.dto.DTOConstants;
 
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public abstract class ServletHandler extends AbstractHandler<ServletHandler> implements ServletRuntime
+public abstract class ServletHandler implements Comparable<ServletHandler>, ServletRuntime
 {
-    private final ServletInfo servletInfo;
-    private final Pattern[] patterns;
     private final long contextServiceId;
+
+    private final ServletInfo servletInfo;
+
+    private final ExtServletContext context;
+
+    private volatile Servlet servlet;
+
+    protected volatile int useCount;
 
     public ServletHandler(final long contextServiceId,
             final ExtServletContext context,
             final ServletInfo servletInfo)
     {
-        super(context, servletInfo.getInitParameters(), servletInfo.getName());
-
-        this.servletInfo = servletInfo;
-
-        // Can be null in case of error-handling servlets...
-        String[] patterns = this.servletInfo.getPatterns();
-        final int length = patterns == null ? 0 : patterns.length;
-
-        this.patterns = new Pattern[length];
-        for (int i = 0; i < length; i++)
-        {
-            final String pattern = patterns[i];
-            this.patterns[i] = Pattern.compile(PatternUtil.convertToRegEx(pattern));
-        }
-
         this.contextServiceId = contextServiceId;
+        this.context = context;
+        this.servletInfo = servletInfo;
     }
 
     @Override
@@ -66,35 +59,32 @@ public abstract class ServletHandler extends AbstractHandler<ServletHandler> imp
         return this.servletInfo.compareTo(other.servletInfo);
     }
 
-    public void handle(ServletRequest req, ServletResponse res) throws ServletException, IOException
+    @Override
+    public long getContextServiceId()
     {
-        getServlet().service(req, res);
+        return this.contextServiceId;
     }
 
-    public String determineServletPath(String uri)
+    public ExtServletContext getContext()
     {
-        if (uri == null)
-        {
-            uri = "/";
-        }
-
-        // Patterns are sorted on length in descending order, so we should get the longest match first...
-        for (int i = 0; i < this.patterns.length; i++)
-        {
-            Matcher matcher = this.patterns[i].matcher(uri);
-            if (matcher.find(0))
-            {
-                return matcher.groupCount() > 0 ? matcher.group(1) : matcher.group();
-            }
-        }
-
-        return null;
+        return this.context;
     }
 
     @Override
-    public Pattern[] getPatterns()
+    public Servlet getServlet()
     {
-        return this.patterns;
+        return servlet;
+    }
+
+    protected void setServlet(final Servlet s)
+    {
+        this.servlet = s;
+    }
+
+    public void handle(final ServletRequest req, final ServletResponse res)
+            throws ServletException, IOException
+    {
+        this.servlet.service(req, res);
     }
 
     @Override
@@ -103,31 +93,81 @@ public abstract class ServletHandler extends AbstractHandler<ServletHandler> imp
         return this.servletInfo;
     }
 
-    @Override
-    public long getContextServiceId()
+    public String getName()
     {
-        return this.contextServiceId;
-    }
-
-    @Override
-    protected long getServiceId()
-    {
-        return this.servletInfo.getServiceId();
-    }
-
-    @Override
-    protected Object getSubject()
-    {
-        return getServlet();
-    }
-
-    protected static ServletInfo checkIsResource(ServletInfo servletInfo, boolean checkTrue)
-    {
-        if (checkTrue != servletInfo.isResource())
+        String name = this.servletInfo.getName();
+        if (name == null)
         {
-            String message = "ServletInfo must " + (checkTrue ? "" : "not") + " represent a resource";
-            throw new IllegalArgumentException(message);
+            name = servlet.getClass().getName();
         }
-        return servletInfo;
+        return name;
+    }
+
+    /**
+     * Initialize the object
+     * @return {code -1} on success, a failure reason according to {@link DTOConstants} otherwise.
+     */
+    public int init()
+    {
+        if ( this.useCount > 0 )
+        {
+            this.useCount++;
+            return -1;
+        }
+
+        if (this.servlet == null)
+        {
+            return DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
+        }
+
+        try
+        {
+            servlet.init(new ServletConfigImpl(getName(), getContext(), getServletInfo().getInitParameters()));
+        }
+        catch (final ServletException e)
+        {
+            SystemLogger.error(this.getServletInfo().getServiceReference(),
+                    "Error during calling init() on servlet " + this.servlet,
+                    e);
+            return DTOConstants.FAILURE_REASON_EXCEPTION_ON_INIT;
+        }
+        this.useCount++;
+        return -1;
+    }
+
+
+    public boolean destroy()
+    {
+        if (this.servlet == null)
+        {
+            return false;
+        }
+
+        this.useCount--;
+        if ( this.useCount == 0 )
+        {
+            try
+            {
+                servlet.destroy();
+            }
+            catch ( final Exception ignore )
+            {
+                // we ignore this
+                SystemLogger.error(this.getServletInfo().getServiceReference(),
+                        "Error during calling destroy() on servlet " + this.servlet,
+                        ignore);
+            }
+
+            servlet = null;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean dispose()
+    {
+        // fully destroy the servlet
+        this.useCount = 1;
+        return this.destroy();
     }
 }

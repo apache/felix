@@ -14,24 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.http.base.internal.handler.holder;
+package org.apache.felix.http.base.internal.handler;
 
-import javax.servlet.Servlet;
+import javax.servlet.Filter;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.runtime.FilterInfo;
 
 /**
- * Servlet holder for servlets registered through the http service.
+ * Servlet holder for filters registered through the ext http service.
  */
-public final class HttpServiceServletHolder extends ServletHolder
+public final class HttpServiceFilterHandler extends FilterHandler
 {
-    public HttpServiceServletHolder(final long contextServiceId,
+    public HttpServiceFilterHandler(final long contextServiceId,
             final ExtServletContext context,
-            final ServletInfo servletInfo,
-            final Servlet servlet)
+            final FilterInfo filterInfo,
+            final Filter filter)
     {
-        super(contextServiceId, context, servletInfo);
-        this.setServlet(servlet);
+        super(contextServiceId, context, filterInfo);
+        this.setFilter(filter);
     }
 }

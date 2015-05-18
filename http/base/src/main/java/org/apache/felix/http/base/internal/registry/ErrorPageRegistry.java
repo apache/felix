@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
 
-import org.apache.felix.http.base.internal.handler.holder.ServletHolder;
+import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.dto.ErrorPageRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.ServletRuntime;
@@ -76,8 +76,8 @@ public final class ErrorPageRegistry
         return null;
     }
 
-    private final Map<Long, List<ServletHolder>> errorCodesMap = new ConcurrentHashMap<Long, List<ServletHolder>>();
-    private final Map<String, List<ServletHolder>> exceptionsMap = new ConcurrentHashMap<String, List<ServletHolder>>();
+    private final Map<Long, List<ServletHandler>> errorCodesMap = new ConcurrentHashMap<Long, List<ServletHandler>>();
+    private final Map<String, List<ServletHandler>> exceptionsMap = new ConcurrentHashMap<String, List<ServletHandler>>();
 
     private final Map<ServletInfo, ErrorRegistrationStatus> statusMapping = new ConcurrentHashMap<ServletInfo, ErrorRegistrationStatus>();
 
@@ -87,7 +87,7 @@ public final class ErrorPageRegistry
     }
 
     private static final class ErrorRegistrationStatus {
-        ServletHolder holder;
+        ServletHandler holder;
         final Map<Long, Integer> errorCodeMapping = new ConcurrentHashMap<Long, Integer>();
         final Map<String, Integer> exceptionMapping = new ConcurrentHashMap<String, Integer>();
     }
@@ -114,7 +114,7 @@ public final class ErrorPageRegistry
      * Add the servlet for error handling
      * @param holder The servlet holder.
      */
-    public void addServlet(@Nonnull final ServletHolder holder)
+    public void addServlet(@Nonnull final ServletHandler holder)
     {
         final ErrorRegistration reg = getErrorRegistration(holder.getServletInfo());
         if ( reg != null )
@@ -123,20 +123,20 @@ public final class ErrorPageRegistry
             status.holder = holder;
             for(final long code : reg.errorCodes)
             {
-                List<ServletHolder> list = errorCodesMap.get(code);
+                List<ServletHandler> list = errorCodesMap.get(code);
                 if ( list == null )
                 {
                     // activate
                     if ( tryToActivate(code, holder, status) )
                     {
-                        final List<ServletHolder> newList = new ArrayList<ServletHolder>(1);
+                        final List<ServletHandler> newList = new ArrayList<ServletHandler>(1);
                         newList.add(holder);
                         errorCodesMap.put(code, newList);
                     }
                 }
                 else
                 {
-                    final List<ServletHolder> newList = new ArrayList<ServletHolder>(list);
+                    final List<ServletHandler> newList = new ArrayList<ServletHandler>(list);
                     newList.add(holder);
                     Collections.sort(newList);
 
@@ -145,7 +145,7 @@ public final class ErrorPageRegistry
                         // activate and reactive
                         if ( tryToActivate(code, holder, status) )
                         {
-                            final ServletHolder old = list.get(0);
+                            final ServletHandler old = list.get(0);
                             old.destroy();
                             errorCodesMap.put(code, newList);
                         }
@@ -160,20 +160,20 @@ public final class ErrorPageRegistry
             }
             for(final String exception : reg.exceptions)
             {
-                List<ServletHolder> list = exceptionsMap.get(exception);
+                List<ServletHandler> list = exceptionsMap.get(exception);
                 if ( list == null )
                 {
                     // activate
                     if ( tryToActivate(exception, holder, status) )
                     {
-                        final List<ServletHolder> newList = new ArrayList<ServletHolder>(1);
+                        final List<ServletHandler> newList = new ArrayList<ServletHandler>(1);
                         newList.add(holder);
                         exceptionsMap.put(exception, newList);
                     }
                 }
                 else
                 {
-                    final List<ServletHolder> newList = new ArrayList<ServletHolder>(list);
+                    final List<ServletHandler> newList = new ArrayList<ServletHandler>(list);
                     newList.add(holder);
                     Collections.sort(newList);
 
@@ -182,7 +182,7 @@ public final class ErrorPageRegistry
                         // activate and reactive
                         if ( tryToActivate(exception, holder, status) )
                         {
-                            final ServletHolder old = list.get(0);
+                            final ServletHandler old = list.get(0);
                             old.destroy();
                             exceptionsMap.put(exception, newList);
                         }
@@ -211,19 +211,19 @@ public final class ErrorPageRegistry
             this.statusMapping.remove(info);
             for(final long code : reg.errorCodes)
             {
-                final List<ServletHolder> list = errorCodesMap.get(code);
+                final List<ServletHandler> list = errorCodesMap.get(code);
                 if ( list != null )
                 {
                     int index = 0;
-                    final Iterator<ServletHolder> i = list.iterator();
+                    final Iterator<ServletHandler> i = list.iterator();
                     while ( i.hasNext() )
                     {
-                        final ServletHolder holder = i.next();
+                        final ServletHandler holder = i.next();
                         if ( holder.getServletInfo().equals(info) )
                         {
                             holder.destroy();
 
-                            final List<ServletHolder> newList = new ArrayList<ServletHolder>(list);
+                            final List<ServletHandler> newList = new ArrayList<ServletHandler>(list);
                             newList.remove(holder);
 
                             if ( index == 0 )
@@ -231,7 +231,7 @@ public final class ErrorPageRegistry
                                 index++;
                                 while ( index < list.size() )
                                 {
-                                    final ServletHolder next = list.get(index);
+                                    final ServletHandler next = list.get(index);
                                     if ( tryToActivate(code, next, statusMapping.get(next.getServletInfo())) )
                                     {
                                         break;
@@ -259,19 +259,19 @@ public final class ErrorPageRegistry
             }
             for(final String exception : reg.exceptions)
             {
-                final List<ServletHolder> list = exceptionsMap.get(exception);
+                final List<ServletHandler> list = exceptionsMap.get(exception);
                 if ( list != null )
                 {
                     int index = 0;
-                    final Iterator<ServletHolder> i = list.iterator();
+                    final Iterator<ServletHandler> i = list.iterator();
                     while ( i.hasNext() )
                     {
-                        final ServletHolder holder = i.next();
+                        final ServletHandler holder = i.next();
                         if ( holder.getServletInfo().equals(info) )
                         {
                             holder.destroy();
 
-                            final List<ServletHolder> newList = new ArrayList<ServletHolder>(list);
+                            final List<ServletHandler> newList = new ArrayList<ServletHandler>(list);
                             newList.remove(holder);
 
                             if ( index == 0 )
@@ -279,7 +279,7 @@ public final class ErrorPageRegistry
                                 index++;
                                 while ( index < list.size() )
                                 {
-                                    final ServletHolder next = list.get(index);
+                                    final ServletHandler next = list.get(index);
                                     if ( tryToActivate(exception, next, statusMapping.get(next.getServletInfo())) )
                                     {
                                         break;
@@ -314,9 +314,9 @@ public final class ErrorPageRegistry
      * @param errorCode Error code
      * @return The servlet handling the error or {@code null}
      */
-    public ServletHolder get(final Throwable exception, final int errorCode)
+    public ServletHandler get(final Throwable exception, final int errorCode)
     {
-        ServletHolder errorHandler = this.get(exception);
+        ServletHandler errorHandler = this.get(exception);
         if (errorHandler != null)
         {
             return errorHandler;
@@ -325,9 +325,9 @@ public final class ErrorPageRegistry
         return get(errorCode);
     }
 
-    private ServletHolder get(final int errorCode)
+    private ServletHandler get(final int errorCode)
     {
-        final List<ServletHolder> list = this.errorCodesMap.get(errorCode);
+        final List<ServletHandler> list = this.errorCodesMap.get(errorCode);
         if ( list != null )
         {
             return list.get(0);
@@ -335,18 +335,18 @@ public final class ErrorPageRegistry
         return null;
     }
 
-    private ServletHolder get(final Throwable exception)
+    private ServletHandler get(final Throwable exception)
     {
         if (exception == null)
         {
             return null;
         }
 
-        ServletHolder servletHandler = null;
+        ServletHandler servletHandler = null;
         Class<?> throwableClass = exception.getClass();
         while ( servletHandler == null && throwableClass != null )
         {
-            final List<ServletHolder> list = this.errorCodesMap.get(throwableClass.getName());
+            final List<ServletHandler> list = this.errorCodesMap.get(throwableClass.getName());
             if ( list != null )
             {
                 servletHandler = list.get(0);
@@ -364,7 +364,7 @@ public final class ErrorPageRegistry
         return servletHandler;
     }
 
-    private boolean tryToActivate(final Long code, final ServletHolder holder, final ErrorRegistrationStatus status)
+    private boolean tryToActivate(final Long code, final ServletHandler holder, final ErrorRegistrationStatus status)
     {
         // add to active
         final int result = holder.init();
@@ -373,7 +373,7 @@ public final class ErrorPageRegistry
         return result == -1;
     }
 
-    private boolean tryToActivate(final String exception, final ServletHolder holder, final ErrorRegistrationStatus status)
+    private boolean tryToActivate(final String exception, final ServletHandler holder, final ErrorRegistrationStatus status)
     {
         // add to active
         final int result = holder.init();
