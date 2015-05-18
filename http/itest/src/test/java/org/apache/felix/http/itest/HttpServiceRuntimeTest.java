@@ -534,7 +534,7 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
         assertEquals(3, runtimeDTOWithAdditionalContext.servletContextDTOs.length);
 
         // default context is last, as it has the lowest service ranking
-        assertEquals("Http service context", runtimeDTOWithAdditionalContext.servletContextDTOs[0].name);
+        assertEquals("Http Service context", runtimeDTOWithAdditionalContext.servletContextDTOs[0].name);
         assertEquals("/", runtimeDTOWithAdditionalContext.servletContextDTOs[0].contextPath);
         assertEquals("contextA", runtimeDTOWithAdditionalContext.servletContextDTOs[1].name);
         assertEquals("/contextA", runtimeDTOWithAdditionalContext.servletContextDTOs[1].contextPath);
@@ -551,7 +551,7 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
         assertEquals(4, runtimeDTOWithAllContexts.servletContextDTOs.length);
 
         // default context is last, as it has the lowest service ranking
-        assertEquals("Http service context", runtimeDTOWithAdditionalContext.servletContextDTOs[0].name);
+        assertEquals("Http Service context", runtimeDTOWithAdditionalContext.servletContextDTOs[0].name);
         assertEquals("/", runtimeDTOWithAdditionalContext.servletContextDTOs[0].contextPath);
         assertEquals("contextA", runtimeDTOWithAllContexts.servletContextDTOs[1].name);
         assertEquals("/contextA", runtimeDTOWithAllContexts.servletContextDTOs[1].contextPath);
@@ -595,7 +595,7 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
         assertEquals(0, runtimeDTO.failedServletDTOs.length);
 
         assertEquals(3, runtimeDTO.servletContextDTOs.length);
-        assertEquals("Http service context", runtimeDTO.servletContextDTOs[0].name);
+        assertEquals("Http Service context", runtimeDTO.servletContextDTOs[0].name);
         assertEquals("test-context", runtimeDTO.servletContextDTOs[1].name);
         assertEquals("default", runtimeDTO.servletContextDTOs[2].name);
 
@@ -801,7 +801,7 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
         assertEquals(FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE, runtimeDTO.failedServletContextDTOs[0].failureReason);
 
         assertEquals(3, runtimeDTO.servletContextDTOs.length);
-        assertEquals("Http service context", runtimeDTO.servletContextDTOs[0].name);
+        assertEquals("Http Service context", runtimeDTO.servletContextDTOs[0].name);
         assertEquals("default", runtimeDTO.servletContextDTOs[2].name);
 
         assertEquals("contextA", runtimeDTO.servletContextDTOs[1].name);
@@ -814,7 +814,7 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
         assertEquals(0, runtimeDTO.failedServletContextDTOs.length);
 
         assertEquals(3, runtimeDTO.servletContextDTOs.length);
-        assertEquals("Http service context", runtimeDTO.servletContextDTOs[0].name);
+        assertEquals("Http Service context", runtimeDTO.servletContextDTOs[0].name);
         assertEquals("default", runtimeDTO.servletContextDTOs[2].name);
 
         assertEquals("contextA", runtimeDTO.servletContextDTOs[1].name);
@@ -1106,7 +1106,7 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
 
         defaultContext = assertDefaultContext(runtimeWithShadowedServlet);
         ServletContextDTO httpServiceContext = runtimeWithShadowedServlet.servletContextDTOs[0];
-        assertEquals("Http service context", httpServiceContext.name);
+        assertEquals("Http Service context", httpServiceContext.name);
         assertEquals(1, httpServiceContext.servletDTOs.length);
         assertArrayEquals(new String[] {"/pathcollision", "/pathcollision/*"}, httpServiceContext.servletDTOs[0].patterns);
 
@@ -1165,7 +1165,7 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
         assertEquals("test-context", runtimeDTO.servletContextDTOs[1].name);
         assertEquals("/first", runtimeDTO.servletContextDTOs[1].contextPath);
         assertEquals("default", runtimeDTO.servletContextDTOs[2].name);
-        assertEquals("Http service context", runtimeDTO.servletContextDTOs[0].name);
+        assertEquals("Http Service context", runtimeDTO.servletContextDTOs[0].name);
 
         assertEquals(1, runtimeDTO.servletContextDTOs[1].servletDTOs.length);
         assertEquals("servlet", runtimeDTO.servletContextDTOs[1].servletDTOs[0].name);
@@ -1192,7 +1192,7 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
         assertEquals("test-context", runtimeDTO.servletContextDTOs[1].name);
         assertEquals("/second", runtimeDTO.servletContextDTOs[1].contextPath);
         assertEquals("default", runtimeDTO.servletContextDTOs[2].name);
-        assertEquals("Http service context", runtimeDTO.servletContextDTOs[0].name);
+        assertEquals("Http Service context", runtimeDTO.servletContextDTOs[0].name);
 
         assertEquals(1, runtimeDTO.servletContextDTOs[1].servletDTOs.length);
         assertEquals("servlet", runtimeDTO.servletContextDTOs[1].servletDTOs[0].name);
@@ -1207,7 +1207,7 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
         assertEquals("test-context", runtimeDTO.servletContextDTOs[1].name);
         assertEquals("/first", runtimeDTO.servletContextDTOs[1].contextPath);
         assertEquals("default", runtimeDTO.servletContextDTOs[2].name);
-        assertEquals("Http service context", runtimeDTO.servletContextDTOs[0].name);
+        assertEquals("Http Service context", runtimeDTO.servletContextDTOs[0].name);
 
         assertEquals(1, runtimeDTO.servletContextDTOs[1].servletDTOs.length);
         assertEquals("servlet", runtimeDTO.servletContextDTOs[1].servletDTOs[0].name);
@@ -1347,7 +1347,7 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
     private ServletContextDTO assertDefaultContext(RuntimeDTO runtimeDTO)
     {
         assertTrue(1 < runtimeDTO.servletContextDTOs.length);
-        assertEquals("Http service context", runtimeDTO.servletContextDTOs[0].name);
+        assertEquals("Http Service context", runtimeDTO.servletContextDTOs[0].name);
         assertEquals("default", runtimeDTO.servletContextDTOs[1].name);
         return runtimeDTO.servletContextDTOs[1];
     }
