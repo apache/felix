@@ -16,15 +16,12 @@
  */
 package org.apache.felix.http.base.internal.registry;
 
-import org.apache.felix.http.base.internal.handler.holder.ServletHolder;
 
-public class PathResolution {
+public class PathResolution extends ServletResolution {
 
     public String servletPath;
 
     public String pathInfo;
-
-    public ServletHolder holder;
 
     public String requestURI;
 }

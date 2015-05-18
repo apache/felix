@@ -56,7 +56,7 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
     }
 
     @Override
-    public RequestInfoDTO calculateRequestInfoDTO(String path)
+    public RequestInfoDTO calculateRequestInfoDTO(final String path)
     {
         return new RequestInfoDTOBuilder(registry, path).build();
     }

@@ -24,6 +24,8 @@ import org.apache.felix.http.base.internal.handler.holder.ServletHolder;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.runtime.dto.ContextRuntime;
+import org.apache.felix.http.base.internal.runtime.dto.FailureRuntime;
 
 /**
  * This registry keeps track of all processing components per context:
@@ -94,6 +96,12 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     @Override
     public int compareTo(@Nonnull final PerContextHandlerRegistry other)
     {
+        // the context of the HttpService is the least element
+        if (this.serviceId == 0 ^ other.serviceId == 0)
+        {
+            return this.serviceId == 0 ? -1 : 1;
+        }
+
         final int result = Integer.compare(other.path.length(), this.path.length());
         if ( result == 0 ) {
             if (this.ranking == other.ranking)
@@ -175,5 +183,14 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     public ServletHolder getErrorHandler(int code, Throwable exception)
     {
         return this.errorPageRegistry.get(exception, code);
+    }
+
+    public synchronized ContextRuntime getRuntime(final FailureRuntime.Builder failureRuntimeBuilder)
+    {
+        // TODO - add servlets
+        // TODO - add failures from filters and error pages
+        return new ContextRuntime(this.filterRegistry.getFilterRuntimes(failureRuntimeBuilder),
+                this.errorPageRegistry.getErrorPageRuntimes(),
+                null, this.serviceId);
     }
 }

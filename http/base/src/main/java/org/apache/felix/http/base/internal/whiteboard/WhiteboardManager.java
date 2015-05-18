@@ -773,7 +773,6 @@ public final class WhiteboardManager
 
         return new RegistryRuntime(contextRuntimes,
             handlerRuntimes.getContextRuntimes(),
-            handlerRuntimes.getServletRegistryRuntime(),
             listenerRuntimes,
             failureRuntime.build());
     }

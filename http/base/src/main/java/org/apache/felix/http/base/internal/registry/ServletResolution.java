@@ -14,21 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.http.base.internal.runtime.dto;
+package org.apache.felix.http.base.internal.registry;
 
-import java.util.List;
+import org.apache.felix.http.base.internal.handler.holder.ServletHolder;
 
-public final class HandlerRegistryRuntime
-{
-    private final List<ContextRuntime> contextRuntimes;
+public class ServletResolution {
 
-    public HandlerRegistryRuntime(List<ContextRuntime> contextRuntimes)
-    {
-        this.contextRuntimes = contextRuntimes;
-    }
+    public ServletHolder holder;
 
-    public List<ContextRuntime> getContextRuntimes()
-    {
-        return contextRuntimes;
-    }
+    public PerContextHandlerRegistry handlerRegistry;
 }

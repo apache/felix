@@ -16,6 +16,8 @@
  */
 package org.apache.felix.http.base.internal.runtime.dto;
 
+import static java.util.Arrays.asList;
+
 import org.apache.felix.http.base.internal.handler.HandlerRegistry;
 import org.apache.felix.http.base.internal.handler.holder.FilterHolder;
 import org.apache.felix.http.base.internal.registry.PathResolution;
@@ -29,7 +31,7 @@ public final class RequestInfoDTOBuilder
     private final HandlerRegistry registry;
     private final String path;
 
-    public RequestInfoDTOBuilder(HandlerRegistry registry, String path)
+    public RequestInfoDTOBuilder(final HandlerRegistry registry, final String path)
     {
         this.registry = registry;
         this.path = path;
@@ -37,34 +39,33 @@ public final class RequestInfoDTOBuilder
 
     public RequestInfoDTO build()
     {
-        PathResolution pr = registry.resolveServlet(path);
+        final RequestInfoDTO requestInfoDTO = new RequestInfoDTO();
+        requestInfoDTO.path = path;
+
+        final PathResolution pr = registry.resolveServlet(path);
         if ( pr == null )
         {
-            // TODO what do we return?
-            return null;
+            // no servlet found, return empty DTO
+            requestInfoDTO.filterDTOs = FILTER_DTO_ARRAY;
+            return requestInfoDTO;
         }
-        FilterHolder[] filterHolders = registry.getFilters(pr.holder, null, path);
-        Long contextServiceId = pr.holder.getContextServiceId();
-
-        RequestInfoDTO requestInfoDTO = new RequestInfoDTO();
-        requestInfoDTO.path = path;
-        requestInfoDTO.servletContextId = contextServiceId;
-
-        /* TODO
-        requestInfoDTO.filterDTOs = FilterDTOBuilder.create()
-                .build(asList(filterHolders), contextServiceId)
-                .toArray(FILTER_DTO_ARRAY);
+        requestInfoDTO.servletContextId = pr.holder.getContextServiceId();
         if (pr.holder.getServletInfo().isResource())
         {
             requestInfoDTO.resourceDTO = ResourceDTOBuilder.create()
-                    .buildDTO(servletHandler, contextServiceId);
+                    .buildDTO(pr.holder, pr.holder.getContextServiceId());
         }
         else
         {
             requestInfoDTO.servletDTO = ServletDTOBuilder.create()
-                    .buildDTO(servletHandler, contextServiceId);
+                    .buildDTO(pr.holder, pr.holder.getContextServiceId());
         }
-        */
+
+        final FilterHolder[] filterHolders = registry.getFilters(pr, null, path);
+        requestInfoDTO.filterDTOs = FilterDTOBuilder.create()
+                .build(asList(filterHolders), pr.holder.getContextServiceId())
+                .toArray(FILTER_DTO_ARRAY);
+
         return requestInfoDTO;
     }
 }
