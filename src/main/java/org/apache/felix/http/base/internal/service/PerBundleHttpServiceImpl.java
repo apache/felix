@@ -34,8 +34,8 @@ import javax.servlet.ServletRequestListener;
 
 import org.apache.felix.http.api.ExtHttpService;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.apache.felix.http.base.internal.handler.holder.FilterHolder;
-import org.apache.felix.http.base.internal.handler.holder.HttpServiceFilterHolder;
+import org.apache.felix.http.base.internal.handler.FilterHandler;
+import org.apache.felix.http.base.internal.handler.HttpServiceFilterHandler;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
@@ -52,7 +52,7 @@ public final class PerBundleHttpServiceImpl implements ExtHttpService
 {
     private final Bundle bundle;
     private final Set<Servlet> localServlets = new HashSet<Servlet>();
-    private final Set<FilterHolder> localFilters = new HashSet<FilterHolder>();
+    private final Set<FilterHandler> localFilters = new HashSet<FilterHandler>();
     private final ServletContextManager contextManager;
     private final SharedHttpServiceImpl sharedHttpService;
 
@@ -123,7 +123,7 @@ public final class PerBundleHttpServiceImpl implements ExtHttpService
         }
 
         final ExtServletContext httpContext = getServletContext(context);
-        final FilterHolder holder = new HttpServiceFilterHolder(0, httpContext, filterInfo, filter);
+        final FilterHandler holder = new HttpServiceFilterHandler(0, httpContext, filterInfo, filter);
 
         if ( this.sharedHttpService.registerFilter(holder) )
         {
@@ -243,8 +243,8 @@ public final class PerBundleHttpServiceImpl implements ExtHttpService
             unregisterServlet(servlet, false);
         }
 
-        final Set<FilterHolder> filters = new HashSet<FilterHolder>(this.localFilters);
-        for (final FilterHolder holder : filters)
+        final Set<FilterHandler> filters = new HashSet<FilterHandler>(this.localFilters);
+        for (final FilterHandler holder : filters)
         {
             this.sharedHttpService.unregisterFilter(holder, false);
         }
@@ -298,10 +298,10 @@ public final class PerBundleHttpServiceImpl implements ExtHttpService
         {
             synchronized ( this.localFilters )
             {
-                final Iterator<FilterHolder> i = this.localFilters.iterator();
+                final Iterator<FilterHandler> i = this.localFilters.iterator();
                 while ( i.hasNext() )
                 {
-                    final FilterHolder h = i.next();
+                    final FilterHandler h = i.next();
                     if ( h.getFilter() == filter )
                     {
                         this.sharedHttpService.unregisterFilter(h, destroy);

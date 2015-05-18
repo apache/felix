@@ -21,26 +21,26 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
 
-import org.apache.felix.http.base.internal.handler.holder.ServletHolder;
+import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.util.UriUtils;
 
 /**
  * Servlet handler is registered with a pattern and a servlet holder
  */
-public class ServletHandler
+public class ServletRegistration
 {
-    private final ServletHolder holder;
+    private final ServletHandler handler;
     private final Pattern pattern;
 
-    public ServletHandler(@Nonnull final ServletHolder holder, @Nonnull final Pattern pattern)
+    public ServletRegistration(@Nonnull final ServletHandler handler, @Nonnull final Pattern pattern)
     {
-        this.holder = holder;
+        this.handler = handler;
         this.pattern = pattern;
     }
 
-    public ServletHolder getServletHolder()
+    public ServletHandler getServletHandler()
     {
-        return this.holder;
+        return this.handler;
     }
 
     public PathResolution resolve(@Nonnull final String requestURI)
@@ -51,7 +51,7 @@ public class ServletHandler
             final PathResolution pr = new PathResolution();
             pr.servletPath = matcher.groupCount() > 0 ? matcher.group(1) : matcher.group();
             pr.pathInfo = UriUtils.compactPath(UriUtils.relativePath(pr.servletPath, requestURI));
-            pr.holder = this.holder;
+            pr.holder = this.handler;
 
             return pr;
         }

@@ -24,8 +24,6 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.servlet.DispatcherType;
 
-import org.apache.felix.http.base.internal.handler.holder.FilterHolder;
-import org.apache.felix.http.base.internal.handler.holder.ServletHolder;
 import org.apache.felix.http.base.internal.registry.PathResolution;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.registry.ServletResolution;
@@ -44,12 +42,10 @@ import org.apache.felix.http.base.internal.runtime.dto.HandlerRegistryRuntime;
  */
 public final class HandlerRegistry
 {
-    private static FilterHolder[] EMPTY_FILTER_HOLDER = new FilterHolder[0];
+    private static FilterHandler[] EMPTY_FILTER_HOLDER = new FilterHandler[0];
 
     /** Current list of context registrations. */
     private volatile List<PerContextHandlerRegistry> registrations = Collections.emptyList();
-
-    private final ServletHandlerRegistry servletRegistry = new ServletHandlerRegistry();
 
     /**
      * Register default context registry for Http Service
@@ -57,7 +53,6 @@ public final class HandlerRegistry
     public void init()
     {
         this.add(new PerContextHandlerRegistry());
-        servletRegistry.init();
     }
 
     /**
@@ -74,7 +69,6 @@ public final class HandlerRegistry
 
         }
 
-        servletRegistry.shutdown();
         for(final PerContextHandlerRegistry r : list)
         {
             r.removeAll();
@@ -90,7 +84,6 @@ public final class HandlerRegistry
         synchronized ( this )
         {
             this.add(new PerContextHandlerRegistry(info));
-            this.servletRegistry.add(info);
         }
     }
 
@@ -102,7 +95,6 @@ public final class HandlerRegistry
     {
         synchronized ( this )
         {
-            this.servletRegistry.remove(info);
             final List<PerContextHandlerRegistry> updatedList = new ArrayList<PerContextHandlerRegistry>(this.registrations);
             final Iterator<PerContextHandlerRegistry> i = updatedList.iterator();
             while ( i.hasNext() )
@@ -134,7 +126,7 @@ public final class HandlerRegistry
         }
     }
 
-    public void addFilter(@Nonnull final FilterHolder holder)
+    public void addFilter(@Nonnull final FilterHandler holder)
     {
         final PerContextHandlerRegistry reg = this.getRegistry(holder.getContextServiceId());
         // TODO - check whether we need to handle the null case as well
@@ -194,7 +186,7 @@ public final class HandlerRegistry
         }
         if ( reg != null )
         {
-            final ServletHolder holder = reg.getErrorHandler(code, exception);
+            final ServletHandler holder = reg.getErrorHandler(code, exception);
             if ( holder != null )
             {
                 final ServletResolution res = new ServletResolution();
@@ -207,18 +199,18 @@ public final class HandlerRegistry
         return null;
     }
 
-    public FilterHolder[] getFilters(@Nonnull final ServletResolution pr,
+    public FilterHandler[] getFilters(@Nonnull final ServletResolution pr,
             final DispatcherType dispatcherType,
             @Nonnull String requestURI)
     {
         if ( pr != null && pr.handlerRegistry != null )
         {
-            return pr.handlerRegistry.getFilterHolders(pr.holder, dispatcherType, requestURI);
+            return pr.handlerRegistry.getFilterHandlers(pr.holder, dispatcherType, requestURI);
         }
         return EMPTY_FILTER_HOLDER;
     }
 
-    public void addServlet(final ServletHolder holder)
+    public void addServlet(final ServletHandler holder)
     {
         final PerContextHandlerRegistry reg = this.getRegistry(holder.getContextServiceId());
         // TODO - check whether we need to handle the null case as well
@@ -274,7 +266,7 @@ public final class HandlerRegistry
         final PerContextHandlerRegistry reg = (contextId == null ? null : this.getRegistry(contextId));
         if ( reg != null )
         {
-            final ServletHolder holder = reg.resolveServletByName(name);
+            final ServletHandler holder = reg.resolveServletByName(name);
             if ( holder != null )
             {
                 final ServletResolution resolution = new ServletResolution();

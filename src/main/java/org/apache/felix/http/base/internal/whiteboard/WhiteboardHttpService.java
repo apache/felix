@@ -18,12 +18,12 @@ package org.apache.felix.http.base.internal.whiteboard;
 
 import javax.annotation.Nonnull;
 
+import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.HandlerRegistry;
-import org.apache.felix.http.base.internal.handler.holder.FilterHolder;
-import org.apache.felix.http.base.internal.handler.holder.HttpServiceServletHolder;
-import org.apache.felix.http.base.internal.handler.holder.ServletHolder;
-import org.apache.felix.http.base.internal.handler.holder.WhiteboardFilterHolder;
-import org.apache.felix.http.base.internal.handler.holder.WhiteboardServletHolder;
+import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
+import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.handler.WhiteboardFilterHandler;
+import org.apache.felix.http.base.internal.handler.WhiteboardServletHandler;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ResourceInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
@@ -56,7 +56,7 @@ public final class WhiteboardHttpService
     public void registerServlet(@Nonnull final ContextHandler contextHandler,
             @Nonnull final ServletInfo servletInfo)
     {
-        final ServletHolder holder = new WhiteboardServletHolder(
+        final ServletHandler holder = new WhiteboardServletHandler(
                 contextHandler.getContextInfo().getServiceId(),
                 contextHandler.getServletContext(servletInfo.getServiceReference().getBundle()),
                 servletInfo, bundleContext);
@@ -83,7 +83,7 @@ public final class WhiteboardHttpService
     public void registerFilter(@Nonnull  final ContextHandler contextHandler,
             @Nonnull final FilterInfo filterInfo)
     {
-        final FilterHolder holder = new WhiteboardFilterHolder(
+        final FilterHandler holder = new WhiteboardFilterHandler(
                 contextHandler.getContextInfo().getServiceId(),
                 contextHandler.getServletContext(filterInfo.getServiceReference().getBundle()),
                 filterInfo, bundleContext);
@@ -112,7 +112,7 @@ public final class WhiteboardHttpService
     {
         final ServletInfo servletInfo = new ServletInfo(resourceInfo);
 
-        final ServletHolder holder = new HttpServiceServletHolder(
+        final ServletHandler holder = new HttpServiceServletHandler(
                 contextHandler.getContextInfo().getServiceId(),
                 contextHandler.getServletContext(servletInfo.getServiceReference().getBundle()),
                 servletInfo, new ResourceServlet(resourceInfo.getPrefix()));

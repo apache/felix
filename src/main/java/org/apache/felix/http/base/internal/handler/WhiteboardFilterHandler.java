@@ -14,29 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.http.base.internal.handler.holder;
+package org.apache.felix.http.base.internal.handler;
 
-import javax.servlet.Servlet;
+import javax.servlet.Filter;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 
 /**
- * Servlet holder for servlets registered through the http whiteboard.
+ * Filter holder for filters registered through the http whiteboard.
  */
-public final class WhiteboardServletHolder extends ServletHolder
+public final class WhiteboardFilterHandler extends FilterHandler
 {
     private final BundleContext bundleContext;
 
-    public WhiteboardServletHolder(final long contextServiceId,
+    public WhiteboardFilterHandler(final long contextServiceId,
             final ExtServletContext context,
-            final ServletInfo servletInfo,
+            final FilterInfo filterInfo,
             final BundleContext bundleContext)
     {
-        super(contextServiceId, context, servletInfo);
+        super(contextServiceId, context, filterInfo);
         this.bundleContext = bundleContext;
     }
 
@@ -49,16 +49,16 @@ public final class WhiteboardServletHolder extends ServletHolder
             return -1;
         }
 
-        final ServiceReference<Servlet> serviceReference = getServletInfo().getServiceReference();
-        final ServiceObjects<Servlet> so = this.bundleContext.getServiceObjects(serviceReference);
+        final ServiceReference<Filter> serviceReference = getFilterInfo().getServiceReference();
+        final ServiceObjects<Filter> so = this.bundleContext.getServiceObjects(serviceReference);
 
-        this.setServlet((so == null ? null : so.getService()));
+        this.setFilter((so == null ? null : so.getService()));
 
         final int reason = super.init();
         if ( reason != -1 )
         {
-            so.ungetService(this.getServlet());
-            this.setServlet(null);
+            so.ungetService(this.getFilter());
+            this.setFilter(null);
         }
         return reason;
     }
@@ -66,13 +66,13 @@ public final class WhiteboardServletHolder extends ServletHolder
     @Override
     public boolean destroy()
     {
-        final Servlet s = this.getServlet();
+        final Filter s = this.getFilter();
         if ( s != null )
         {
             if ( super.destroy() )
             {
 
-                final ServiceObjects<Servlet> so = this.bundleContext.getServiceObjects(getServletInfo().getServiceReference());
+                final ServiceObjects<Filter> so = this.bundleContext.getServiceObjects(getFilterInfo().getServiceReference());
                 if (so != null)
                 {
                     so.ungetService(s);

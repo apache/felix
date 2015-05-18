@@ -32,8 +32,8 @@ import javax.servlet.Filter;
 import javax.servlet.Servlet;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.apache.felix.http.base.internal.handler.FilterHandler;
-import org.apache.felix.http.base.internal.handler.SimpleServletHandler;
+import org.apache.felix.http.base.internal.handler.HttpServiceFilterHandler;
+import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
 import org.apache.felix.http.base.internal.runtime.dto.ErrorPageRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.FilterRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.ServletRuntime;
@@ -60,7 +60,7 @@ public final class WhiteboardServiceHelper
             Long serviceId)
     {
         FilterInfo filterInfo = createFilterInfo(identifier, serviceId);
-        return new FilterHandler(null, context, mock(Filter.class), filterInfo);
+        return new HttpServiceFilterHandler(0, context, filterInfo, mock(Filter.class));
     }
 
     private static FilterInfo createFilterInfo(String identifier,
@@ -117,7 +117,7 @@ public final class WhiteboardServiceHelper
         ServletInfo servletInfo = createServletInfo(identifier, serviceId);
         Servlet servlet = mock(Servlet.class);
         when(servlet.getServletInfo()).thenReturn("info_" + identifier);
-        return new SimpleServletHandler(contextServiceId, context, servletInfo, servlet);
+        return new HttpServiceServletHandler(contextServiceId, context, servletInfo, servlet);
     }
 
     private static ServletInfo createServletInfo(String identifier, Long serviceId)

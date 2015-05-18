@@ -17,85 +17,69 @@
 package org.apache.felix.http.base.internal.handler;
 
 import javax.servlet.Servlet;
-import javax.servlet.ServletException;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 
+/**
+ * Servlet handler for servlets registered through the http whiteboard.
+ */
 public final class WhiteboardServletHandler extends ServletHandler
 {
     private final BundleContext bundleContext;
 
-    private Servlet servlet;
-
-    public WhiteboardServletHandler(ServletContextHelperInfo contextInfo,
-            ExtServletContext context,
-            ServletInfo servletInfo,
-            BundleContext bundleContext)
+    public WhiteboardServletHandler(final long contextServiceId,
+            final ExtServletContext context,
+            final ServletInfo servletInfo,
+            final BundleContext bundleContext)
     {
-        super(contextInfo.getServiceId(), context, checkIsResource(servletInfo, false));
+        super(contextServiceId, context, servletInfo);
         this.bundleContext = bundleContext;
     }
 
     @Override
-    public Servlet getServlet()
+    public int init()
     {
-        return servlet;
+        if ( this.useCount > 0 )
+        {
+            this.useCount++;
+            return -1;
+        }
+
+        final ServiceReference<Servlet> serviceReference = getServletInfo().getServiceReference();
+        final ServiceObjects<Servlet> so = this.bundleContext.getServiceObjects(serviceReference);
+
+        this.setServlet((so == null ? null : so.getService()));
+
+        final int reason = super.init();
+        if ( reason != -1 )
+        {
+            so.ungetService(this.getServlet());
+            this.setServlet(null);
+        }
+        return reason;
     }
 
     @Override
-    protected Object getSubject()
+    public boolean destroy()
     {
-        return getServlet();
-    }
-
-    @Override
-    public void init() throws ServletException
-    {
-        if (servlet != null)
+        final Servlet s = this.getServlet();
+        if ( s != null )
         {
-            return;
+            if ( super.destroy() )
+            {
+
+                final ServiceObjects<Servlet> so = this.bundleContext.getServiceObjects(getServletInfo().getServiceReference());
+                if (so != null)
+                {
+                    so.ungetService(s);
+                }
+                return true;
+            }
         }
-
-        ServiceReference<Servlet> serviceReference = getServletInfo().getServiceReference();
-        ServiceObjects<Servlet> so = this.bundleContext.getServiceObjects(serviceReference);
-
-        servlet = so.getService();
-
-        if (servlet == null)
-        {
-            // TODO throw Exception - service ungettable ?
-            return;
-        }
-
-        try {
-            servlet.init(new ServletConfigImpl(getName(), getContext(), getInitParams()));
-        } catch (ServletException e) {
-            so.ungetService(servlet);
-            throw e;
-        }
-    }
-
-    @Override
-    public void destroy()
-    {
-        if (servlet == null)
-        {
-            return;
-        }
-
-        servlet.destroy();
-
-        ServiceObjects<Servlet> so = this.bundleContext.getServiceObjects(getServletInfo().getServiceReference());
-        // TODO check if this is needed
-        if (so != null)
-        {
-            so.ungetService(servlet);
-        }
-        servlet = null;
+        return false;
     }
 }

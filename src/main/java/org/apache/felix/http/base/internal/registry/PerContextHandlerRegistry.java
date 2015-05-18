@@ -19,8 +19,8 @@ package org.apache.felix.http.base.internal.registry;
 import javax.annotation.Nonnull;
 import javax.servlet.DispatcherType;
 
-import org.apache.felix.http.base.internal.handler.holder.FilterHolder;
-import org.apache.felix.http.base.internal.handler.holder.ServletHolder;
+import org.apache.felix.http.base.internal.handler.FilterHandler;
+import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
@@ -138,7 +138,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
         return this.servletRegistry.resolve(relativeRequestURI);
     }
 
-    public ServletHolder resolveServletByName(final String name)
+    public ServletHandler resolveServletByName(final String name)
     {
         return this.servletRegistry.resolveByName(name);
     }
@@ -148,7 +148,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
      * @param holder The servlet holder
      * @param info The servlet info
      */
-    public void addServlet(@Nonnull final ServletHolder holder)
+    public void addServlet(@Nonnull final ServletHandler holder)
     {
         this.servletRegistry.addServlet(holder);
         this.errorPageRegistry.addServlet(holder);
@@ -164,7 +164,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
         this.errorPageRegistry.removeServlet(info, destroy);
     }
 
-    public void addFilter(@Nonnull final FilterHolder holder)
+    public void addFilter(@Nonnull final FilterHandler holder)
     {
         this.filterRegistry.addFilter(holder);
     }
@@ -174,13 +174,13 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
         this.filterRegistry.removeFilter(info, destroy);
     }
 
-    public FilterHolder[] getFilterHolders(final ServletHolder servletHolder,
+    public FilterHandler[] getFilterHandlers(final ServletHandler servletHandler,
             DispatcherType dispatcherType, String requestURI)
     {
-        return this.filterRegistry.getFilterHolders(servletHolder, dispatcherType, requestURI);
+        return this.filterRegistry.getFilterHandlers(servletHandler, dispatcherType, requestURI);
     }
 
-    public ServletHolder getErrorHandler(int code, Throwable exception)
+    public ServletHandler getErrorHandler(int code, Throwable exception)
     {
         return this.errorPageRegistry.get(exception, code);
     }

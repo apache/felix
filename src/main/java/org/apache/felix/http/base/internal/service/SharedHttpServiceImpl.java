@@ -25,10 +25,10 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
+import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.HandlerRegistry;
-import org.apache.felix.http.base.internal.handler.holder.FilterHolder;
-import org.apache.felix.http.base.internal.handler.holder.HttpServiceServletHolder;
-import org.apache.felix.http.base.internal.handler.holder.ServletHolder;
+import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
+import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.osgi.service.http.NamespaceException;
 
@@ -36,7 +36,7 @@ public final class SharedHttpServiceImpl
 {
     private final HandlerRegistry handlerRegistry;
 
-    private final Map<String, ServletHolder> aliasMap = new HashMap<String, ServletHolder>();
+    private final Map<String, ServletHandler> aliasMap = new HashMap<String, ServletHandler>();
 
     public SharedHttpServiceImpl(final HandlerRegistry handlerRegistry)
     {
@@ -51,7 +51,7 @@ public final class SharedHttpServiceImpl
     /**
      * Register a filter
      */
-    public boolean registerFilter(@Nonnull final FilterHolder holder)
+    public boolean registerFilter(@Nonnull final FilterHandler holder)
     {
         this.handlerRegistry.addFilter(holder);
         return true;
@@ -65,7 +65,7 @@ public final class SharedHttpServiceImpl
             @Nonnull final Servlet servlet,
             @Nonnull final ServletInfo servletInfo) throws ServletException, NamespaceException
     {
-        final ServletHolder holder = new HttpServiceServletHolder(0, httpContext, servletInfo, servlet);
+        final ServletHandler holder = new HttpServiceServletHandler(0, httpContext, servletInfo, servlet);
 
         synchronized (this.aliasMap)
         {
@@ -86,7 +86,7 @@ public final class SharedHttpServiceImpl
     {
         synchronized (this.aliasMap)
         {
-            final ServletHolder holder = this.aliasMap.remove(alias);
+            final ServletHandler holder = this.aliasMap.remove(alias);
             if (holder == null)
             {
                 throw new IllegalArgumentException("Nothing registered at " + alias);
@@ -104,10 +104,10 @@ public final class SharedHttpServiceImpl
         {
             synchronized (this.aliasMap)
             {
-                final Iterator<Map.Entry<String, ServletHolder>> i = this.aliasMap.entrySet().iterator();
+                final Iterator<Map.Entry<String, ServletHandler>> i = this.aliasMap.entrySet().iterator();
                 while (i.hasNext())
                 {
-                    final Map.Entry<String, ServletHolder> entry = i.next();
+                    final Map.Entry<String, ServletHandler> entry = i.next();
                     if (entry.getValue().getServlet() == servlet)
                     {
                         this.handlerRegistry.removeServlet(0, entry.getValue().getServletInfo(), destroy);
@@ -121,7 +121,7 @@ public final class SharedHttpServiceImpl
         }
     }
 
-    public void unregisterFilter(final FilterHolder filter, final boolean destroy)
+    public void unregisterFilter(final FilterHandler filter, final boolean destroy)
     {
         if (filter != null)
         {
