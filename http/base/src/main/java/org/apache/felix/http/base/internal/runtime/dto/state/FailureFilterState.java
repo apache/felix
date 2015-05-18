@@ -21,5 +21,5 @@ package org.apache.felix.http.base.internal.runtime.dto.state;
 
 public interface FailureFilterState extends FilterState {
 
-    long getReason();
+    int getReason();
 }

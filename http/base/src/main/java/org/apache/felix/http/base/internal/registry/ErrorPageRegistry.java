@@ -17,7 +17,6 @@
 package org.apache.felix.http.base.internal.registry;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -29,7 +28,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
-import javax.servlet.Servlet;
 
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
@@ -85,9 +83,9 @@ public final class ErrorPageRegistry
 
     private final Map<ServletInfo, ErrorRegistrationStatus> statusMapping = new ConcurrentHashMap<ServletInfo, ErrorRegistrationStatus>();
 
-    private static final class ErrorRegistration {
-        final Set<Long> errorCodes = new TreeSet<Long>();
-        final Set<String> exceptions = new TreeSet<String>();
+    public static final class ErrorRegistration {
+        public final Set<Long> errorCodes = new TreeSet<Long>();
+        public final Set<String> exceptions = new TreeSet<String>();
     }
 
     private static final class ErrorRegistrationStatus {
@@ -96,7 +94,7 @@ public final class ErrorPageRegistry
         final Map<String, Integer> exceptionMapping = new ConcurrentHashMap<String, Integer>();
     }
 
-    private ErrorRegistration getErrorRegistration(@Nonnull final ServletInfo info)
+    public static ErrorRegistration getErrorRegistration(@Nonnull final ServletInfo info)
     {
         if ( info.getErrorPage() != null )
         {
@@ -386,8 +384,8 @@ public final class ErrorPageRegistry
         return result == -1;
     }
 
-    public void getRuntimeInfo(final Collection<ServletState> servletStates,
-            final Collection<FailureServletState> failureServletStates)
+    public void getRuntimeInfo(final Map<Long, ServletState> servletStates,
+            final Map<Long, Map<Integer, FailureServletState>> failureServletStates)
     {
         for(final ErrorRegistrationStatus status : this.statusMapping.values())
         {
@@ -431,94 +429,56 @@ public final class ErrorPageRegistry
             }
             if ( !active.errorCodes.isEmpty() || !active.exceptions.isEmpty() )
             {
-                servletStates.add(new ServletState()
+                ServletState state = servletStates.get(status.handler.getServletInfo().getServiceId());
+                if ( state == null )
                 {
-
-                    @Override
-                    public Servlet getServlet()
+                    state = new ServletState(status.handler);
+                    servletStates.put(status.handler.getServletInfo().getServiceId(), state);
+                }
+                if ( !active.errorCodes.isEmpty() )
+                {
+                    final long[] codes = new long[active.errorCodes.size()];
+                    final Iterator<Long> iter = active.errorCodes.iterator();
+                    for(int i=0; i<codes.length; i++)
                     {
-                        return status.handler.getServlet();
+                        codes[i] = iter.next();
                     }
-
-                    @Override
-                    public ServletInfo getServletInfo()
-                    {
-                        return status.handler.getServletInfo();
-                    }
-
-                    @Override
-                    public String[] getPatterns()
-                    {
-                        return null;
-                    }
-
-                    @Override
-                    public long[] getErrorCodes()
-                    {
-                        final long[] codes = new long[active.errorCodes.size()];
-                        final Iterator<Long> iter = active.errorCodes.iterator();
-                        for(int i=0; i<codes.length; i++)
-                        {
-                            codes[i] = iter.next();
-                        }
-                        return codes;
-                    }
-
-                    @Override
-                    public String[] getErrorExceptions()
-                    {
-                        return active.exceptions.toArray(new String[active.exceptions.size()]);
-                    }
-                });
+                    state.setErrorCodes(codes);
+                }
+                if ( !active.exceptions.isEmpty() )
+                {
+                    state.setErrorExceptions(active.exceptions.toArray(new String[active.exceptions.size()]));
+                }
             }
             for(final Map.Entry<Integer, ErrorRegistration> entry : inactive.entrySet())
             {
-                failureServletStates.add(new FailureServletState()
+                Map<Integer, FailureServletState> failureStates = failureServletStates.get(status.handler.getServletInfo().getServiceId());
+                if ( failureStates == null )
                 {
+                    failureStates = new HashMap<Integer, FailureServletState>();
+                    failureServletStates.put(status.handler.getServletInfo().getServiceId(), failureStates);
+                }
 
-                    @Override
-                    public Servlet getServlet()
+                FailureServletState state = failureStates.get(entry.getKey());
+                if ( state == null )
+                {
+                    state = new FailureServletState(status.handler, entry.getKey());
+                    failureStates.put(entry.getKey(), state);
+                }
+                if ( !entry.getValue().errorCodes.isEmpty() )
+                {
+                    final long[] codes = new long[entry.getValue().errorCodes.size()];
+                    final Iterator<Long> iter = entry.getValue().errorCodes.iterator();
+                    for(int i=0; i<codes.length; i++)
                     {
-                        return status.handler.getServlet();
+                        codes[i] = iter.next();
                     }
-
-                    @Override
-                    public ServletInfo getServletInfo()
-                    {
-                        return status.handler.getServletInfo();
-                    }
-
-                    @Override
-                    public String[] getPatterns()
-                    {
-                        return null;
-                    }
-
-                    @Override
-                    public long[] getErrorCodes()
-                    {
-                        final long[] codes = new long[entry.getValue().errorCodes.size()];
-                        final Iterator<Long> iter = entry.getValue().errorCodes.iterator();
-                        for(int i=0; i<codes.length; i++)
-                        {
-                            codes[i] = iter.next();
-                        }
-                        return codes;
-                    }
-
-                    @Override
-                    public String[] getErrorExceptions()
-                    {
-                        return entry.getValue().exceptions.toArray(new String[entry.getValue().exceptions.size()]);
-                    }
-
-                    @Override
-                    public long getReason()
-                    {
-                        return entry.getKey();
-                    }
-
-                });
+                    state.setErrorCodes(codes);
+                }
+                if ( !entry.getValue().exceptions.isEmpty() )
+                {
+                    state.setErrorExceptions(entry.getValue().exceptions.toArray(new String[entry.getValue().exceptions.size()]));
+                }
             }
         }
     }

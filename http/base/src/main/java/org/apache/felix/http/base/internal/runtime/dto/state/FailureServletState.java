@@ -18,8 +18,27 @@
  */
 package org.apache.felix.http.base.internal.runtime.dto.state;
 
+import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.runtime.ServletInfo;
 
-public interface FailureServletState extends ServletState
+
+public class FailureServletState extends ServletState
 {
-    long getReason();
+    private final int reason;
+
+    public FailureServletState(final ServletHandler handler, final int reason)
+    {
+        super(handler);
+        this.reason = reason;
+    }
+
+    public FailureServletState(final ServletInfo info, final int reason)
+    {
+        super(info);
+        this.reason = reason;
+    }
+
+    public int getReason() {
+        return reason;
+    }
 }

@@ -18,6 +18,10 @@
  */
 package org.apache.felix.http.base.internal.runtime.dto;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.dto.state.ServletState;
 import org.osgi.service.http.runtime.dto.ServletDTO;
@@ -32,6 +36,21 @@ final class ServletDTOBuilder<T extends ServletDTO> extends BaseServletDTOBuilde
     ServletDTOBuilder(DTOFactory<T> dtoFactory)
     {
         super(dtoFactory);
+    }
+
+
+    @Override
+    Collection<T> build(Collection<? extends ServletState> whiteboardServices,
+            long servletContextId) {
+        List<T> dtoList = new ArrayList<T>();
+        for (ServletState whiteboardService : whiteboardServices)
+        {
+            if ( whiteboardService.getPatterns().length > 0 && !whiteboardService.getServletInfo().isResource() )
+            {
+                dtoList.add(buildDTO(whiteboardService, servletContextId));
+            }
+        }
+        return dtoList;
     }
 
     @Override

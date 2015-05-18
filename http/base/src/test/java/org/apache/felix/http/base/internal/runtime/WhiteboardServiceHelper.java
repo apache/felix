@@ -98,19 +98,19 @@ public final class WhiteboardServiceHelper
         return info;
     }
 
-    public static ServletState createTestServletWithServiceId(String identifier,
+    public static ServletHandler createTestServletWithServiceId(String identifier,
             ExtServletContext context,
             long contextServiceId)
     {
         return createTestServlet(identifier, context, ID_COUNTER.incrementAndGet(), contextServiceId);
     }
 
-    public static ServletState createTestServlet(String identifier, ExtServletContext context, long contextServiceId)
+    public static ServletHandler createTestServlet(String identifier, ExtServletContext context, long contextServiceId)
     {
         return createTestServlet(identifier, context, -ID_COUNTER.incrementAndGet(), contextServiceId);
     }
 
-    private static ServletState createTestServlet(String identifier,
+    private static ServletHandler createTestServlet(String identifier,
             ExtServletContext context,
             Long serviceId,
             Long contextServiceId)
@@ -120,33 +120,7 @@ public final class WhiteboardServiceHelper
         when(servlet.getServletInfo()).thenReturn("info_" + identifier);
         final ServletHandler h = new HttpServiceServletHandler(contextServiceId, context, servletInfo, servlet);
 
-        return new ServletState() {
-
-            @Override
-            public ServletInfo getServletInfo() {
-                return h.getServletInfo();
-            }
-
-            @Override
-            public Servlet getServlet() {
-                return h.getServlet();
-            }
-
-            @Override
-            public String[] getPatterns() {
-                return h.getServletInfo().getPatterns();
-            }
-
-            @Override
-            public String[] getErrorExceptions() {
-                return null;
-            }
-
-            @Override
-            public long[] getErrorCodes() {
-                return null;
-            }
-        };
+        return h;
     }
 
     private static ServletInfo createServletInfo(String identifier, Long serviceId)
@@ -202,49 +176,20 @@ public final class WhiteboardServiceHelper
             Long serviceId,
             long contextServiceId)
     {
-        final ServletState servletHandler = createTestServlet(identifier, context, serviceId, contextServiceId);
+        final ServletHandler servletHandler = createTestServlet(identifier, context, serviceId, contextServiceId);
         final Collection<Long> errorCodes = Arrays.asList(400L, 500L);
         final Collection<String> exceptions = Arrays.asList("Bad request", "Error");
 
-        return new ServletState()
+        final ServletState state = new ServletState(servletHandler);
+        final long[] codes = new long[errorCodes.size()];
+        final Iterator<Long> iter = errorCodes.iterator();
+        for(int i=0; i<codes.length; i++)
         {
-
-            @Override
-            public ServletInfo getServletInfo()
-            {
-                return servletHandler.getServletInfo();
-            }
-
-            @Override
-            public Servlet getServlet()
-            {
-                return servletHandler.getServlet();
-            }
-
-            @Override
-            public String[] getPatterns()
-            {
-                return servletHandler.getPatterns();
-            }
-
-            @Override
-            public String[] getErrorExceptions()
-            {
-                return exceptions.toArray(new String[1]);
-            }
-
-            @Override
-            public long[] getErrorCodes()
-            {
-                final long[] codes = new long[errorCodes.size()];
-                final Iterator<Long> iter = errorCodes.iterator();
-                for(int i=0; i<codes.length; i++)
-                {
-                    codes[i] = iter.next();
-                }
-                return codes;
-            }
-        };
+            codes[i] = iter.next();
+        }
+        state.setErrorCodes(codes);
+        state.setErrorExceptions(exceptions.toArray(new String[exceptions.size()]));
+        return state;
     }
 
     public static ServletContextHelperInfo createContextInfo(int serviceRanking,
