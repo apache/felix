@@ -18,12 +18,12 @@
  */
 package org.apache.felix.http.base.internal.runtime.dto;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.http.base.internal.runtime.dto.state.FilterState;
+import org.apache.felix.http.base.internal.runtime.dto.state.ServletState;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -96,27 +96,29 @@ public final class RuntimeDTOBuilder
 
     private ServletContextDTO[] createContextDTOs()
     {
-        List<ServletContextDTO> contextDTOs = new ArrayList<ServletContextDTO>();
-        for (ServletContextHelperRuntime context : registry.getContexts())
+        final Collection<ServletContextHelperRuntime> contexts = registry.getContexts();
+        final ServletContextDTO[] result = new ServletContextDTO[contexts.size()];
+        int index = 0;
+        for (final ServletContextHelperRuntime context : contexts)
         {
-            contextDTOs.add(createContextDTO(context,
+            result[index++] = createContextDTO(context,
                     registry.getHandlerRuntime(context),
                     registry.getServletRuntimes(context),
                     registry.getResourceRuntimes(context),
-                    registry.getListenerRuntimes(context)));
+                    registry.getListenerRuntimes(context));
         }
-        return contextDTOs.toArray(BuilderConstants.CONTEXT_DTO_ARRAY);
+        return result;
     }
 
     private ServletContextDTO createContextDTO(ServletContextHelperRuntime context,
             ContextRuntime contextRuntime,
-            Collection<ServletRuntime> servletRuntimes,
-            Collection<ServletRuntime> resourceRuntimes,
+            Collection<ServletState> servletRuntimes,
+            Collection<ServletState> resourceRuntimes,
             Collection<ServiceReference<?>> listenerRuntimes)
     {
-        Collection<FilterRuntime> filterRuntimes = contextRuntime.getFilterRuntimes();
-        Collection<ErrorPageRuntime> errorPageRuntimes = contextRuntime.getErrorPageRuntimes();
-        long servletContextId = contextRuntime.getServiceId();
+        Collection<FilterState> filterRuntimes = contextRuntime.getFilterRuntimes();
+        Collection<ServletState> errorPageRuntimes = contextRuntime.getErrorPageRuntimes();
+        long servletContextId = context.getContextInfo().getServiceId();
 
         Collection<ServletDTO> servletDTOs = ServletDTOBuilder.create().build(servletRuntimes, servletContextId);
         Collection<ResourceDTO> resourceDTOs = ResourceDTOBuilder.create().build(resourceRuntimes, servletContextId);

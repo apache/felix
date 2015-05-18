@@ -24,6 +24,7 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -34,28 +35,28 @@ import javax.servlet.Servlet;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.HttpServiceFilterHandler;
 import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
-import org.apache.felix.http.base.internal.runtime.dto.ErrorPageRuntime;
-import org.apache.felix.http.base.internal.runtime.dto.FilterRuntime;
-import org.apache.felix.http.base.internal.runtime.dto.ServletRuntime;
+import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.runtime.dto.state.FilterState;
+import org.apache.felix.http.base.internal.runtime.dto.state.ServletState;
 import org.osgi.framework.ServiceReference;
 
 public final class WhiteboardServiceHelper
 {
     public static final AtomicLong ID_COUNTER = new AtomicLong();
 
-    public static FilterRuntime createTestFilterWithServiceId(String identifier,
+    public static FilterState createTestFilterWithServiceId(String identifier,
             ExtServletContext context)
     {
         return createTestFilter(identifier, context, ID_COUNTER.incrementAndGet());
     }
 
-    public static FilterRuntime createTestFilter(String identifier,
+    public static FilterState createTestFilter(String identifier,
             ExtServletContext context)
     {
         return createTestFilter(identifier, context, -ID_COUNTER.incrementAndGet());
     }
 
-    private static FilterRuntime createTestFilter(String identifier,
+    private static FilterState createTestFilter(String identifier,
             ExtServletContext context,
             Long serviceId)
     {
@@ -97,19 +98,19 @@ public final class WhiteboardServiceHelper
         return info;
     }
 
-    public static ServletRuntime createTestServletWithServiceId(String identifier,
+    public static ServletState createTestServletWithServiceId(String identifier,
             ExtServletContext context,
             long contextServiceId)
     {
         return createTestServlet(identifier, context, ID_COUNTER.incrementAndGet(), contextServiceId);
     }
 
-    public static ServletRuntime createTestServlet(String identifier, ExtServletContext context, long contextServiceId)
+    public static ServletState createTestServlet(String identifier, ExtServletContext context, long contextServiceId)
     {
         return createTestServlet(identifier, context, -ID_COUNTER.incrementAndGet(), contextServiceId);
     }
 
-    private static ServletRuntime createTestServlet(String identifier,
+    private static ServletState createTestServlet(String identifier,
             ExtServletContext context,
             Long serviceId,
             Long contextServiceId)
@@ -117,7 +118,35 @@ public final class WhiteboardServiceHelper
         ServletInfo servletInfo = createServletInfo(identifier, serviceId);
         Servlet servlet = mock(Servlet.class);
         when(servlet.getServletInfo()).thenReturn("info_" + identifier);
-        return new HttpServiceServletHandler(contextServiceId, context, servletInfo, servlet);
+        final ServletHandler h = new HttpServiceServletHandler(contextServiceId, context, servletInfo, servlet);
+
+        return new ServletState() {
+
+            @Override
+            public ServletInfo getServletInfo() {
+                return h.getServletInfo();
+            }
+
+            @Override
+            public Servlet getServlet() {
+                return h.getServlet();
+            }
+
+            @Override
+            public String[] getPatterns() {
+                return h.getServletInfo().getPatterns();
+            }
+
+            @Override
+            public String[] getErrorExceptions() {
+                return null;
+            }
+
+            @Override
+            public long[] getErrorCodes() {
+                return null;
+            }
+        };
     }
 
     private static ServletInfo createServletInfo(String identifier, Long serviceId)
@@ -158,26 +187,64 @@ public final class WhiteboardServiceHelper
                 };
     }
 
-    public static ErrorPageRuntime createErrorPageWithServiceId(String identifier, ExtServletContext context, long contextServiceId)
+    public static ServletState createErrorPageWithServiceId(String identifier, ExtServletContext context, long contextServiceId)
     {
         return createErrorPage(identifier, context, ID_COUNTER.incrementAndGet(), contextServiceId);
     }
 
-    public static ErrorPageRuntime createErrorPage(String identifier, ExtServletContext context, long contextServiceId)
+    public static ServletState createErrorPage(String identifier, ExtServletContext context, long contextServiceId)
     {
         return createErrorPage(identifier, context, -ID_COUNTER.incrementAndGet(), contextServiceId);
     }
 
-    private static ErrorPageRuntime createErrorPage(String identifier,
+    private static ServletState createErrorPage(String identifier,
             ExtServletContext context,
             Long serviceId,
             long contextServiceId)
     {
-        ServletRuntime servletHandler = createTestServlet(identifier, context, serviceId, contextServiceId);
-        Collection<Long> errorCodes = Arrays.asList(400L, 500L);
-        Collection<String> exceptions = Arrays.asList("Bad request", "Error");
+        final ServletState servletHandler = createTestServlet(identifier, context, serviceId, contextServiceId);
+        final Collection<Long> errorCodes = Arrays.asList(400L, 500L);
+        final Collection<String> exceptions = Arrays.asList("Bad request", "Error");
 
-        return new ErrorPageRuntime(servletHandler, errorCodes, exceptions);
+        return new ServletState()
+        {
+
+            @Override
+            public ServletInfo getServletInfo()
+            {
+                return servletHandler.getServletInfo();
+            }
+
+            @Override
+            public Servlet getServlet()
+            {
+                return servletHandler.getServlet();
+            }
+
+            @Override
+            public String[] getPatterns()
+            {
+                return servletHandler.getPatterns();
+            }
+
+            @Override
+            public String[] getErrorExceptions()
+            {
+                return exceptions.toArray(new String[1]);
+            }
+
+            @Override
+            public long[] getErrorCodes()
+            {
+                final long[] codes = new long[errorCodes.size()];
+                final Iterator<Long> iter = errorCodes.iterator();
+                for(int i=0; i<codes.length; i++)
+                {
+                    codes[i] = iter.next();
+                }
+                return codes;
+            }
+        };
     }
 
     public static ServletContextHelperInfo createContextInfo(int serviceRanking,

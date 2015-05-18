@@ -22,62 +22,28 @@ import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHIT
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeSet;
 
+import org.apache.felix.http.base.internal.runtime.dto.state.ServletState;
 import org.osgi.framework.ServiceReference;
 
 public final class RegistryRuntime
 {
     private final Collection<ServletContextHelperRuntime> contexts;
-    private final Map<Long, Collection<ServiceReference<?>>> listenerRuntimes;
-    private final Map<Long, ContextRuntime> handlerRuntimes;
     private final FailureRuntime failureRuntime;
 
     public RegistryRuntime(Collection<ServletContextHelperRuntime> contexts,
-            Collection<ContextRuntime> contextRuntimes,
-            Map<Long, Collection<ServiceReference<?>>> listenerRuntimes,
             FailureRuntime failureRuntime)
     {
         this.contexts = contexts;
         this.failureRuntime = failureRuntime;
-        this.handlerRuntimes = createServiceIdMap(contextRuntimes);
-        // TODO
-//        this.servletRuntimes = createServletServiceIdMap(servletRegistryRuntime.getServletRuntimes());
-//        this.resourceRuntimes = createServletServiceIdMap(servletRegistryRuntime.getResourceRuntimes());
-        this.listenerRuntimes = listenerRuntimes;
     }
 
-    private static Map<Long, ContextRuntime> createServiceIdMap(Collection<ContextRuntime> contextRuntimes)
-    {
-        Map<Long, ContextRuntime> runtimesMap = new HashMap<Long, ContextRuntime>();
-        for (ContextRuntime contextRuntime : contextRuntimes)
-        {
-            runtimesMap.put(contextRuntime.getServiceId(), contextRuntime);
-        }
-        return runtimesMap;
-    }
 
-    private static Map<Long, Collection<ServletRuntime>> createServletServiceIdMap(Collection<ServletRuntime> runtimes)
-    {
-        Map<Long, Collection<ServletRuntime>> runtimesMap = new HashMap<Long, Collection<ServletRuntime>>();
-        for (ServletRuntime runtime : runtimes)
-        {
-            long contextServiceId = runtime.getContextServiceId();
-            if (!runtimesMap.containsKey(contextServiceId))
-            {
-                runtimesMap.put(contextServiceId, new TreeSet<ServletRuntime>(ServletRuntime.COMPARATOR));
-            }
-            runtimesMap.get(contextServiceId).add(runtime);
-        }
-        return runtimesMap;
-    }
 
     public ContextRuntime getHandlerRuntime(ServletContextHelperRuntime contextRuntime)
     {
         long serviceId = contextRuntime.getContextInfo().getServiceId();
-
+/**
         if (handlerRuntimes.containsKey(serviceId) && isDefaultContext(contextRuntime))
         {
             // TODO Merge with the default context of the HttpService ( handlerRuntimes.get(0) )
@@ -86,11 +52,11 @@ public final class RegistryRuntime
         else if (handlerRuntimes.containsKey(serviceId))
         {
             return handlerRuntimes.get(serviceId);
-        }
-        return ContextRuntime.empty(serviceId);
+        }**/
+        return null; //ContextRuntime.empty(serviceId);
     }
 
-    public Collection<ServletRuntime> getServletRuntimes(ServletContextHelperRuntime contextRuntime)
+    public Collection<ServletState> getServletRuntimes(ServletContextHelperRuntime contextRuntime)
     {
         /* TODO
         if (servletRuntimes.containsKey(contextRuntime.getContextInfo().getServiceId()))
@@ -101,7 +67,7 @@ public final class RegistryRuntime
         return Collections.emptyList();
     }
 
-    public Collection<ServletRuntime> getResourceRuntimes(ServletContextHelperRuntime contextRuntime)
+    public Collection<ServletState> getResourceRuntimes(ServletContextHelperRuntime contextRuntime)
     {
         /* TODO
         if (resourceRuntimes.containsKey(contextRuntime.getContextInfo().getServiceId()))
@@ -119,10 +85,11 @@ public final class RegistryRuntime
 
     public Collection<ServiceReference<?>> getListenerRuntimes(ServletContextHelperRuntime contextRuntime)
     {
+        /**
         if (listenerRuntimes.containsKey(contextRuntime.getContextInfo().getServiceId()))
         {
             return listenerRuntimes.get(contextRuntime.getContextInfo().getServiceId());
-        }
+        }*/
         return Collections.emptyList();
     }
 

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.http.base.internal.runtime.dto;
+package org.apache.felix.http.base.internal.runtime.dto.state;
 
 import java.util.Comparator;
 
@@ -24,14 +24,12 @@ import javax.servlet.Servlet;
 
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 
-
-
-public interface ServletRuntime extends WhiteboardServiceRuntime
+public interface ServletState
 {
-    static final Comparator<ServletRuntime> COMPARATOR = new Comparator<ServletRuntime>()
+    static final Comparator<ServletState> COMPARATOR = new Comparator<ServletState>()
     {
         @Override
-        public int compare(ServletRuntime o1, ServletRuntime o2)
+        public int compare(ServletState o1, ServletState o2)
         {
             return o1.getServletInfo().compareTo(o2.getServletInfo());
         }
@@ -41,6 +39,9 @@ public interface ServletRuntime extends WhiteboardServiceRuntime
 
     ServletInfo getServletInfo();
 
-    long getContextServiceId();
+    String[] getPatterns();
 
+    long[] getErrorCodes();
+
+    String[] getErrorExceptions();
 }

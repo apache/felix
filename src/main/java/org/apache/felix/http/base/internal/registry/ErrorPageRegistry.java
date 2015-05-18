@@ -19,7 +19,7 @@ package org.apache.felix.http.base.internal.registry;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -29,11 +29,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
+import javax.servlet.Servlet;
 
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
-import org.apache.felix.http.base.internal.runtime.dto.ErrorPageRuntime;
-import org.apache.felix.http.base.internal.runtime.dto.ServletRuntime;
+import org.apache.felix.http.base.internal.runtime.dto.state.FailureServletState;
+import org.apache.felix.http.base.internal.runtime.dto.state.ServletState;
 import org.osgi.service.http.runtime.dto.DTOConstants;
 
 /**
@@ -58,7 +59,7 @@ public final class ErrorPageRegistry
         return Collections.unmodifiableList(result);
     }
 
-    private static String parseErrorCodes(final List<Long> codes, final String string)
+    private static String parseErrorCodes(final Set<Long> codes, final String string)
     {
         if (CLIENT_ERROR.equalsIgnoreCase(string))
         {
@@ -85,8 +86,8 @@ public final class ErrorPageRegistry
     private final Map<ServletInfo, ErrorRegistrationStatus> statusMapping = new ConcurrentHashMap<ServletInfo, ErrorRegistrationStatus>();
 
     private static final class ErrorRegistration {
-        final List<Long> errorCodes = new ArrayList<Long>();
-        final Set<String> exceptions = new HashSet<String>();
+        final Set<Long> errorCodes = new TreeSet<Long>();
+        final Set<String> exceptions = new TreeSet<String>();
     }
 
     private static final class ErrorRegistrationStatus {
@@ -385,50 +386,140 @@ public final class ErrorPageRegistry
         return result == -1;
     }
 
-    public Collection<ErrorPageRuntime> getErrorPageRuntimes()
+    public void getRuntimeInfo(final Collection<ServletState> servletStates,
+            final Collection<FailureServletState> failureServletStates)
     {
-        final Collection<ErrorPageRuntime> errorPages = new TreeSet<ErrorPageRuntime>(ServletRuntime.COMPARATOR);
-
         for(final ErrorRegistrationStatus status : this.statusMapping.values())
         {
             // TODO - we could do this calculation already when generating the status object
-            final Set<Long> activeCodes = new HashSet<Long>();
-            final Set<String> activeExceptions = new HashSet<String>();
-            final Set<Long> inactiveCodes = new HashSet<Long>();
-            final Set<String> inactiveExceptions = new HashSet<String>();
+            final ErrorRegistration active = new ErrorRegistration();
+            final Map<Integer, ErrorRegistration> inactive = new HashMap<Integer, ErrorRegistration>();
 
             for(Map.Entry<Long, Integer> codeEntry : status.errorCodeMapping.entrySet() )
             {
                 if ( codeEntry.getValue() == -1 )
                 {
-                    activeCodes.add(codeEntry.getKey());
+                    active.errorCodes.add(codeEntry.getKey());
                 }
                 else
                 {
-                    inactiveCodes.add(codeEntry.getKey());
+                    ErrorRegistration set = inactive.get(codeEntry.getValue());
+                    if ( set == null )
+                    {
+                        set = new ErrorRegistration();
+                        inactive.put(codeEntry.getValue(), set);
+                    }
+                    set.errorCodes.add(codeEntry.getKey());
                 }
             }
             for(Map.Entry<String, Integer> codeEntry : status.exceptionMapping.entrySet() )
             {
                 if ( codeEntry.getValue() == -1 )
                 {
-                    activeExceptions.add(codeEntry.getKey());
+                    active.exceptions.add(codeEntry.getKey());
                 }
                 else
                 {
-                    inactiveExceptions.add(codeEntry.getKey());
+                    ErrorRegistration set = inactive.get(codeEntry.getValue());
+                    if ( set == null )
+                    {
+                        set = new ErrorRegistration();
+                        inactive.put(codeEntry.getValue(), set);
+                    }
+                    set.exceptions.add(codeEntry.getKey());
                 }
             }
-            if ( !activeCodes.isEmpty() || !activeExceptions.isEmpty() )
+            if ( !active.errorCodes.isEmpty() || !active.exceptions.isEmpty() )
             {
-                errorPages.add(new ErrorPageRuntime(status.handler, activeCodes, activeExceptions));
+                servletStates.add(new ServletState()
+                {
+
+                    @Override
+                    public Servlet getServlet()
+                    {
+                        return status.handler.getServlet();
+                    }
+
+                    @Override
+                    public ServletInfo getServletInfo()
+                    {
+                        return status.handler.getServletInfo();
+                    }
+
+                    @Override
+                    public String[] getPatterns()
+                    {
+                        return null;
+                    }
+
+                    @Override
+                    public long[] getErrorCodes()
+                    {
+                        final long[] codes = new long[active.errorCodes.size()];
+                        final Iterator<Long> iter = active.errorCodes.iterator();
+                        for(int i=0; i<codes.length; i++)
+                        {
+                            codes[i] = iter.next();
+                        }
+                        return codes;
+                    }
+
+                    @Override
+                    public String[] getErrorExceptions()
+                    {
+                        return active.exceptions.toArray(new String[active.exceptions.size()]);
+                    }
+                });
             }
-            if ( !inactiveCodes.isEmpty() || !inactiveExceptions.isEmpty() )
+            for(final Map.Entry<Integer, ErrorRegistration> entry : inactive.entrySet())
             {
-                // add failure
+                failureServletStates.add(new FailureServletState()
+                {
+
+                    @Override
+                    public Servlet getServlet()
+                    {
+                        return status.handler.getServlet();
+                    }
+
+                    @Override
+                    public ServletInfo getServletInfo()
+                    {
+                        return status.handler.getServletInfo();
+                    }
+
+                    @Override
+                    public String[] getPatterns()
+                    {
+                        return null;
+                    }
+
+                    @Override
+                    public long[] getErrorCodes()
+                    {
+                        final long[] codes = new long[entry.getValue().errorCodes.size()];
+                        final Iterator<Long> iter = entry.getValue().errorCodes.iterator();
+                        for(int i=0; i<codes.length; i++)
+                        {
+                            codes[i] = iter.next();
+                        }
+                        return codes;
+                    }
+
+                    @Override
+                    public String[] getErrorExceptions()
+                    {
+                        return entry.getValue().exceptions.toArray(new String[entry.getValue().exceptions.size()]);
+                    }
+
+                    @Override
+                    public long getReason()
+                    {
+                        return entry.getKey();
+                    }
+
+                });
             }
         }
-
-        return errorPages;
     }
 }

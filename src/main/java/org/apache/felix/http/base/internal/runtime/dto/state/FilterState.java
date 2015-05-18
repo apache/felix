@@ -16,30 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.http.base.internal.runtime.dto;
+package org.apache.felix.http.base.internal.runtime.dto.state;
+
+import java.util.Comparator;
 
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 
+public interface FilterState {
 
-
-public class FailureFilterRuntime implements FilterRuntime
-{
-    private final FilterInfo filterInfo;
-
-    FailureFilterRuntime(FilterInfo FilterInfo)
+    static final Comparator<FilterState> COMPARATOR = new Comparator<FilterState>()
     {
-        this.filterInfo = FilterInfo;
-    }
+        @Override
+        public int compare(final FilterState o1, final FilterState o2)
+        {
+            return o1.getFilterInfo().compareTo(o2.getFilterInfo());
+        }
+    };
 
-    @Override
-    public FilterInfo getFilterInfo()
-    {
-        return filterInfo;
-    }
-
-    @Override
-    public long getContextServiceId()
-    {
-        return 0L;
-    }
+    FilterInfo getFilterInfo();
 }

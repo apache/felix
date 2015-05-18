@@ -16,6 +16,9 @@
  */
 package org.apache.felix.http.base.internal.registry;
 
+import java.util.Collection;
+import java.util.TreeSet;
+
 import javax.annotation.Nonnull;
 import javax.servlet.DispatcherType;
 
@@ -25,7 +28,10 @@ import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.dto.ContextRuntime;
-import org.apache.felix.http.base.internal.runtime.dto.FailureRuntime;
+import org.apache.felix.http.base.internal.runtime.dto.state.FailureFilterState;
+import org.apache.felix.http.base.internal.runtime.dto.state.FailureServletState;
+import org.apache.felix.http.base.internal.runtime.dto.state.FilterState;
+import org.apache.felix.http.base.internal.runtime.dto.state.ServletState;
 
 /**
  * This registry keeps track of all processing components per context:
@@ -184,14 +190,24 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
         return this.errorPageRegistry.get(exception, code);
     }
 
-    public ContextRuntime getRuntime(final FailureRuntime.Builder failureRuntimeBuilder)
+    public ContextRuntime getRuntime()
     {
+        final Collection<FilterState> filterRuntimes = new TreeSet<FilterState>(FilterState.COMPARATOR);
+        final Collection<FailureFilterState> failureFilterRuntimes = new TreeSet<FailureFilterState>(FailureFilterState.COMPARATOR);
+        this.filterRegistry.getRuntimeInfo(filterRuntimes, failureFilterRuntimes);
+
+        final Collection<ServletState> errorPageRuntimes = new TreeSet<ServletState>(ServletState.COMPARATOR);
+        final Collection<FailureServletState> failureErrorPageRuntimes = new TreeSet<FailureServletState>(FailureServletState.COMPARATOR);
+        this.errorPageRegistry.getRuntimeInfo(errorPageRuntimes, failureErrorPageRuntimes);
         // TODO - add servlets
         // TODO - add failures from filters and error pages
-        return new ContextRuntime(this.filterRegistry.getFilterRuntimes(failureRuntimeBuilder),
-                this.errorPageRegistry.getErrorPageRuntimes(),
+        return new ContextRuntime(filterRuntimes,
+                errorPageRuntimes,
                 null,
                 null,
-                this.serviceId);
+                failureFilterRuntimes,
+                failureErrorPageRuntimes,
+                null,
+                null);
     }
 }
