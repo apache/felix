@@ -24,7 +24,6 @@ import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_VALI
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -33,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 import javax.annotation.Nonnull;
@@ -748,41 +746,39 @@ public final class WhiteboardManager
     {
         final FailedDTOHolder failedDTOHolder = new FailedDTOHolder();
 
-        final Collection<ServletContextDTO> contextDTOs = new TreeSet<ServletContextDTO>(new Comparator<ServletContextDTO>() {
-
-            @Override
-            public int compare(ServletContextDTO o1, ServletContextDTO o2) {
-                // Service id's can be negative. Negative id's follow the reverse natural ordering of integers.
-                int reverseOrder = ( o1.serviceId >= 0 && o2.serviceId >= 0 ) ? 1 : -1;
-                return reverseOrder * Long.compare(o1.serviceId, o2.serviceId);
-            }
-        });
-
-        synchronized ( this.contextMap )
-        {
-            for (final List<ContextHandler> contextHandlerList : this.contextMap.values())
-            {
-                if ( !contextHandlerList.isEmpty() )
-                {
-                    final ContextHandler handler = contextHandlerList.get(0);
-                    final ServletContextDTO dto = ServletContextDTOBuilder.build(handler.getContextInfo(), handler.getSharedContext(), -1);
-
-                    if ( registry.getRuntime(dto, failedDTOHolder) )
-                    {
-                        handler.getListenerRegistry().getRuntime(dto);
-                        contextDTOs.add(dto);
-                    }
-                }
-            }
-            failedDTOHolder.add(serviceFailures);
-        }
-
+        final Collection<ServletContextDTO> contextDTOs = new ArrayList<ServletContextDTO>();
         // add the context for the http service
         final ServletContextHelperInfo info = new ServletContextHelperInfo(Integer.MAX_VALUE, 0, HTTP_SERVICE_CONTEXT_NAME, "/", null);
         final ServletContextDTO dto = ServletContextDTOBuilder.build(info, webContext, -1);
         if ( registry.getRuntime(dto, failedDTOHolder) )
         {
             contextDTOs.add(dto);
+        }
+
+        // get sort list of context handlers
+        final List<ContextHandler> contextHandlerList = new ArrayList<ContextHandler>();
+        synchronized ( this.contextMap )
+        {
+            for (final List<ContextHandler> list : this.contextMap.values())
+            {
+                if ( !list.isEmpty() )
+                {
+                    contextHandlerList.add(list.get(0));
+                }
+            }
+            failedDTOHolder.add(serviceFailures);
+        }
+        Collections.sort(contextHandlerList);
+
+        for (final ContextHandler handler : contextHandlerList)
+        {
+            final ServletContextDTO scDTO = ServletContextDTOBuilder.build(handler.getContextInfo(), handler.getSharedContext(), -1);
+
+            if ( registry.getRuntime(scDTO, failedDTOHolder) )
+            {
+                handler.getListenerRegistry().getRuntime(scDTO);
+                contextDTOs.add(scDTO);
+            }
         }
 
         return new RegistryRuntime(failedDTOHolder, contextDTOs);

@@ -47,7 +47,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.runtime.dto.ServletContextDTO;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
-public class ErrorPageTest {
+public class ErrorPageRegistryTest {
 
     private final ErrorPageRegistry reg = new ErrorPageRegistry();
 
