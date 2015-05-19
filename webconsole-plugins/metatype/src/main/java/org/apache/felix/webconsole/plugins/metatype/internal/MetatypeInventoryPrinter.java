@@ -20,7 +20,6 @@ package org.apache.felix.webconsole.plugins.metatype.internal;
 
 import java.io.PrintWriter;
 import java.util.Hashtable;
-
 import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.InventoryPrinter;
 import org.json.JSONException;
@@ -92,7 +91,8 @@ class MetatypeInventoryPrinter implements InventoryPrinter
 
     private static final void printComponents(final Printer pw, final Bundle bundle, final MetaTypeInformation info)
     {
-        if (info == null) {
+        if (info == null)
+        {
             return;
         }
 
@@ -151,12 +151,47 @@ class MetatypeInventoryPrinter implements InventoryPrinter
         pw.keyValue("description", ad.getDescription());
         pw.keyValue("type", type(ad.getType()));
         pw.keyValue("cardinality", cardinality(ad.getCardinality()));
+        defaultValue(pw, ad.getDefaultValue());
+        options(pw, ad.getOptionLabels(), ad.getOptionValues());
         pw.endGroup();
+    }
 
-        // Omitted:
-        // ad.getDefaultValue()
-        // ad.getOptionLabels()
-        // ad.getOptionValues()
+    private static final void defaultValue(final Printer pw, final String[] defaultValue)
+    {
+        if (defaultValue != null)
+        {
+            switch (defaultValue.length)
+            {
+                case 0: // ignore
+                    break;
+
+                case 1:
+                    pw.keyValue("default", defaultValue[0]);
+                    break;
+
+                default:
+                    pw.list("default");
+                    for (String value : defaultValue)
+                    {
+                        pw.entry(value);
+                    }
+                    pw.endList();
+                    break;
+            }
+        }
+    }
+
+    private static final void options(final Printer pw, final String[] optionLabels, final String[] optionValues)
+    {
+        if (optionLabels != null && optionLabels.length > 0)
+        {
+            pw.group("options");
+            for (int i = 0; i < optionLabels.length; i++)
+            {
+                pw.keyValue(optionLabels[i], optionValues[i]);
+            }
+            pw.endGroup();
+        }
     }
 
     @SuppressWarnings("deprecation")
@@ -213,13 +248,20 @@ class MetatypeInventoryPrinter implements InventoryPrinter
     {
         void start();
 
-        void group(String name);
+        void end();
 
-        void keyValue(String key, Object value);
+        void group(String name);
 
         void endGroup();
 
-        void end();
+        void list(String name);
+
+        void entry(String value);
+
+        void endList();
+
+        void keyValue(String key, Object value);
+
     }
 
     private static class TextPrinter implements Printer
@@ -227,14 +269,23 @@ class MetatypeInventoryPrinter implements InventoryPrinter
 
         private final PrintWriter pw;
 
-        private String indent = "";
+        private String indent;
+
+        private boolean inList;
 
         TextPrinter(final PrintWriter pw)
         {
             this.pw = pw;
+
+            this.indent = "";
+            this.inList = false;
         }
 
         public void start()
+        {
+        }
+
+        public void end()
         {
         }
 
@@ -242,11 +293,6 @@ class MetatypeInventoryPrinter implements InventoryPrinter
         {
             this.pw.printf("%s%s:%n", indent, name);
             this.indent += "  ";
-        }
-
-        public void keyValue(String key, Object value)
-        {
-            this.pw.printf("%s%s: %s%n", indent, key, value);
         }
 
         public void endGroup()
@@ -257,8 +303,33 @@ class MetatypeInventoryPrinter implements InventoryPrinter
             }
         }
 
-        public void end()
+        public void list(String name)
         {
+            this.pw.printf("%s%s: [", indent, name);
+        }
+
+        public void entry(String value)
+        {
+            if (this.inList)
+            {
+                this.pw.print(", ");
+            }
+            else
+            {
+                this.inList = true;
+            }
+            this.pw.print(value);
+        }
+
+        public void endList()
+        {
+            this.inList = false;
+            this.pw.println("]");
+        }
+
+        public void keyValue(String key, Object value)
+        {
+            this.pw.printf("%s%s: %s%n", indent, key, value);
         }
     }
 
@@ -283,22 +354,22 @@ class MetatypeInventoryPrinter implements InventoryPrinter
             }
         }
 
-        public void group(String name)
+        public void end()
         {
             try
             {
-                this.pw.key(name).object();
+                this.pw.endObject();
             }
             catch (JSONException ignore)
             {
             }
         }
 
-        public void keyValue(String key, Object value)
+        public void group(String name)
         {
             try
             {
-                this.pw.key(key).value(value);
+                this.pw.key(name).object();
             }
             catch (JSONException ignore)
             {
@@ -316,11 +387,44 @@ class MetatypeInventoryPrinter implements InventoryPrinter
             }
         }
 
-        public void end()
+        public void list(String name)
         {
             try
             {
-                this.pw.endObject();
+                this.pw.key(name).array();
+            }
+            catch (JSONException ignore)
+            {
+            }
+        }
+
+        public void entry(String value)
+        {
+            try
+            {
+                this.pw.value(value);
+            }
+            catch (JSONException ignore)
+            {
+            }
+        }
+
+        public void endList()
+        {
+            try
+            {
+                this.pw.endArray();
+            }
+            catch (JSONException ignore)
+            {
+            }
+        }
+
+        public void keyValue(String key, Object value)
+        {
+            try
+            {
+                this.pw.key(key).value(value);
             }
             catch (JSONException ignore)
             {
