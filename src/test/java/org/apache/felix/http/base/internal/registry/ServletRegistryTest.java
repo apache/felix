@@ -17,7 +17,10 @@
 package org.apache.felix.http.base.internal.registry;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -33,6 +36,7 @@ import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
 import org.junit.Test;
 import org.mockito.Matchers;
 import org.osgi.framework.Bundle;
@@ -41,17 +45,41 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.runtime.dto.DTOConstants;
+import org.osgi.service.http.runtime.dto.FailedServletDTO;
+import org.osgi.service.http.runtime.dto.ServletContextDTO;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 public class ServletRegistryTest {
 
     private final ServletRegistry reg = new ServletRegistry();
 
+    private void assertEmpty(final ServletContextDTO dto, final FailedDTOHolder holder)
+    {
+        assertNull(dto.servletDTOs);
+        assertNull(dto.resourceDTOs);
+        assertTrue(holder.failedResourceDTOs.isEmpty());
+        assertTrue(holder.failedServletDTOs.isEmpty());
+    }
+
+    private void clear(final ServletContextDTO dto, final FailedDTOHolder holder)
+    {
+        dto.servletDTOs = null;
+        dto.resourceDTOs = null;
+        holder.failedResourceDTOs.clear();
+        holder.failedServletDTOs.clear();
+    }
+
     @Test public void testSingleServlet() throws InvalidSyntaxException, ServletException
     {
+        final FailedDTOHolder holder = new FailedDTOHolder();
+        final ServletContextDTO dto = new ServletContextDTO();
+
         final Map<ServletInfo, ServletRegistry.ServletRegistrationStatus> status = reg.getServletStatusMapping();
         // empty reg
         assertEquals(0, status.size());
+        // check DTO
+        reg.getRuntimeInfo(dto, holder.failedServletDTOs, holder.failedResourceDTOs);
+        assertEmpty(dto, holder);
 
         // register servlet
         final ServletHandler h1 = createServletHandler(1L, 0, "/foo");
@@ -66,6 +94,17 @@ public class ServletRegistryTest {
         final int code = status.get(h1.getServletInfo()).pathToStatus.get("/foo");
         assertEquals(-1, code);
 
+        // check DTO
+        clear(dto, holder);
+        reg.getRuntimeInfo(dto, holder.failedServletDTOs, holder.failedResourceDTOs);
+        assertNull(dto.resourceDTOs);
+        assertTrue(holder.failedResourceDTOs.isEmpty());
+        assertTrue(holder.failedServletDTOs.isEmpty());
+        assertNotNull(dto.servletDTOs);
+        assertEquals(1, dto.servletDTOs.length);
+        assertEquals(1, dto.servletDTOs[0].patterns.length);
+        assertEquals("/foo", dto.servletDTOs[0].patterns[0]);
+
         // remove servlet
         final Servlet s = h1.getServlet();
         reg.removeServlet(h1.getServletInfo(), true);
@@ -73,13 +112,23 @@ public class ServletRegistryTest {
 
         // empty again
         assertEquals(0, status.size());
+        // check DTO
+        clear(dto, holder);
+        reg.getRuntimeInfo(dto, holder.failedServletDTOs, holder.failedResourceDTOs);
+        assertEmpty(dto, holder);
     }
 
     @Test public void testSimpleHiding() throws InvalidSyntaxException, ServletException
     {
+        final FailedDTOHolder holder = new FailedDTOHolder();
+        final ServletContextDTO dto = new ServletContextDTO();
+
         final Map<ServletInfo, ServletRegistry.ServletRegistrationStatus> status = reg.getServletStatusMapping();
         // empty reg
         assertEquals(0, status.size());
+        // check DTO
+        reg.getRuntimeInfo(dto, holder.failedServletDTOs, holder.failedResourceDTOs);
+        assertEmpty(dto, holder);
 
         // register servlets
         final ServletHandler h1 = createServletHandler(1L, 10, "/foo");
@@ -106,6 +155,23 @@ public class ServletRegistryTest {
         final int code2 = status.get(h2.getServletInfo()).pathToStatus.get("/foo");
         assertEquals(DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE, code2);
 
+        // check DTO
+        clear(dto, holder);
+        reg.getRuntimeInfo(dto, holder.failedServletDTOs, holder.failedResourceDTOs);
+        assertNull(dto.resourceDTOs);
+        assertTrue(holder.failedResourceDTOs.isEmpty());
+        assertFalse(holder.failedServletDTOs.isEmpty());
+        assertNotNull(dto.servletDTOs);
+        assertEquals(1, dto.servletDTOs.length);
+        assertEquals(1, dto.servletDTOs[0].patterns.length);
+        assertEquals("/foo", dto.servletDTOs[0].patterns[0]);
+        assertEquals(1, dto.servletDTOs[0].serviceId);
+        assertEquals(1, holder.failedServletDTOs.size());
+        final FailedServletDTO failedDTO = holder.failedServletDTOs.iterator().next();
+        assertEquals(1, failedDTO.patterns.length);
+        assertEquals("/foo", failedDTO.patterns[0]);
+        assertEquals(2, failedDTO.serviceId);
+
         // remove servlet 1
         final Servlet s1 = h1.getServlet();
         reg.removeServlet(h1.getServletInfo(), true);
@@ -118,6 +184,18 @@ public class ServletRegistryTest {
         final int code3 = status.get(h2.getServletInfo()).pathToStatus.get("/foo");
         assertEquals(-1, code3);
 
+        // check DTO
+        clear(dto, holder);
+        reg.getRuntimeInfo(dto, holder.failedServletDTOs, holder.failedResourceDTOs);
+        assertNull(dto.resourceDTOs);
+        assertTrue(holder.failedResourceDTOs.isEmpty());
+        assertTrue(holder.failedServletDTOs.isEmpty());
+        assertNotNull(dto.servletDTOs);
+        assertEquals(1, dto.servletDTOs.length);
+        assertEquals(1, dto.servletDTOs[0].patterns.length);
+        assertEquals("/foo", dto.servletDTOs[0].patterns[0]);
+        assertEquals(2, dto.servletDTOs[0].serviceId);
+
         // remove servlet 2
         final Servlet s2 = h2.getServlet();
         reg.removeServlet(h2.getServletInfo(), true);
@@ -125,6 +203,10 @@ public class ServletRegistryTest {
 
         // empty again
         assertEquals(0, status.size());
+        // check DTO
+        clear(dto, holder);
+        reg.getRuntimeInfo(dto, holder.failedServletDTOs, holder.failedResourceDTOs);
+        assertEmpty(dto, holder);
     }
 
     private static ServletInfo createServletInfo(final long id, final int ranking, final String... paths) throws InvalidSyntaxException
