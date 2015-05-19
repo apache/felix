@@ -1,3 +1,9 @@
+Release org.apache.felix.dependencymanager.r3:
+---------------------------------------------
+
+** Improvement
+    * [FELIX-4889] - Refactor dm shell command to use the org.apache.dm.diagnostics api
+
 Release org.apache.felix.dependencymanager.r1:
 ---------------------------------------------
 
