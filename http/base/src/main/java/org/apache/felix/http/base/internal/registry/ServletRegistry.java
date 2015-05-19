@@ -335,7 +335,7 @@ public final class ServletRegistry
             final long serviceId = entry.getKey().getServiceId();
             for(final Map.Entry<String, Integer> map : entry.getValue().pathToStatus.entrySet())
             {
-                if ( entry.getKey().isResource() )
+                if ( !entry.getKey().isResource() )
                 {
                     ServletDTO state = (map.getValue() == -1 ? servletDTOs.get(serviceId) : failedServletDTOs.get(serviceId));
                     if ( state == null )
