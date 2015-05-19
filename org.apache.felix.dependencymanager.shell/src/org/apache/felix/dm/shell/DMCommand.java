@@ -23,19 +23,19 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.TreeSet;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentDeclaration;
 import org.apache.felix.dm.ComponentDependencyDeclaration;
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.diagnostics.CircularDependency;
+import org.apache.felix.dm.diagnostics.DependencyGraph;
+import org.apache.felix.dm.diagnostics.DependencyGraph.ComponentState;
+import org.apache.felix.dm.diagnostics.DependencyGraph.DependencyState;
+import org.apache.felix.dm.diagnostics.MissingDependency;
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Descriptor;
 import org.apache.felix.service.command.Parameter;
@@ -57,11 +57,11 @@ public class DMCommand {
      * Bundle context used to create OSGi filters.
      */
     private final BundleContext m_context;
-    
+        
     /**
-     * Sorter used to sort components.
+     * Comparator used to compare component declarations based on their bundle ids
      */
-    private static final DependencyManagerSorter SORTER = new DependencyManagerSorter();
+    private static final ComponentDeclarationComparator COMPONENT_DECLARATION_COMPARATOR = new ComponentDeclarationComparator();
 
     /**
      * Constant used by the wtf command, when listing missing services.
@@ -72,6 +72,16 @@ public class DMCommand {
      * Constant used by the wtf command, when listing missing configurations.
      */
     private static final String CONFIGURATION = "configuration";
+    
+    /**
+     * Constant used by the wtf command, when listing missing resource dependencies
+     */
+    private static final String RESOURCE = "resource";
+    
+    /**
+     * Constant used by the wtf command, when listing missing bundle dependencies
+     */
+    private static final String BUNDLE = "bundle";
 
     /**
      * Name of a specific gogo shell variable, which may be used to configure "compact" mode.
@@ -212,100 +222,96 @@ public class DMCommand {
             wtf();
             return;
         }
-
-        // lookup all dependency manager service components
-        List<DependencyManager> managers = DependencyManager.getDependencyManagers();
-        Collections.sort(managers, SORTER);
-        Iterator<DependencyManager> iterator = managers.iterator();
+        
+        DependencyGraph graph = null;
+        if(notavail) {
+        	graph = DependencyGraph.getGraph(ComponentState.UNREGISTERED, DependencyState.ALL_UNAVAILABLE);
+        } else {
+        	graph = DependencyGraph.getGraph(ComponentState.ALL, DependencyState.ALL);
+        }
+        
+        List<ComponentDeclaration> allComponents = graph.getAllComponents();
+        Collections.sort(allComponents, COMPONENT_DECLARATION_COMPARATOR);
         long numberOfComponents = 0;
         long numberOfDependencies = 0;
         long lastBundleId = -1;
-        while (iterator.hasNext()) {
-            DependencyManager manager = iterator.next();
-            List<Component> complist = manager.getComponents();
-            Iterator<Component> componentIterator = complist.iterator();
-            while (componentIterator.hasNext()) {
-                Component component = componentIterator.next();
-                ComponentDeclaration sc = component.getComponentDeclaration();
-                String name = sc.getName();
-                // check if this component is enabled or disabled.
-                if (!mayDisplay(component, servicesFilter, componentsRegex, cids)) {
-                    continue;
+        
+        for(ComponentDeclaration cd : allComponents) {
+        	Bundle bundle = cd.getBundleContext().getBundle();
+        	if(!matchBundle(bundle, bids)) {
+        		continue;
+        	}
+        	
+        	Component component = (Component)cd;
+        	String name = cd.getName();
+        	if (!mayDisplay(component, servicesFilter, componentsRegex, cids)) {
+                continue;
+            }
+        	
+        	numberOfComponents++;
+    		long bundleId = bundle.getBundleId();
+    		if(lastBundleId != bundleId) {
+    			lastBundleId = bundleId;
+    			if (comp) {
+                    System.out.println("[" + bundleId + "] " + compactName(bundle.getSymbolicName()));
+                } else {
+                    System.out.println("[" + bundleId + "] " + bundle.getSymbolicName());
                 }
-                int state = sc.getState();
-                Bundle bundle = sc.getBundleContext().getBundle();
-                if (matchBundle(bundle, bids)) {
-                    long bundleId = bundle.getBundleId();
-                    if (notavail) {
-                        if (sc.getState() != ComponentDeclaration.STATE_UNREGISTERED) {
-                            continue;
-                        }
+    		}
+    		if (comp) {
+                System.out.print(" [" + cd.getId() + "] " + compactName(name) + " "
+                        + compactState(ComponentDeclaration.STATE_NAMES[cd.getState()]));
+            } else {
+                System.out.println(" [" + cd.getId() + "] " + name + " "
+                        + ComponentDeclaration.STATE_NAMES[cd.getState()]);
+            }
+    		
+    		if(!nodeps) {
+    			List<ComponentDependencyDeclaration> dependencies = graph.getDependecies(cd);
+    			if(!dependencies.isEmpty()) {
+    				numberOfDependencies += dependencies.size();
+    				if (comp) {
+                        System.out.print('(');
                     }
+    				for(int j = 0; j < dependencies.size(); j ++) {
+        				ComponentDependencyDeclaration dep = dependencies.get(j);
+        				
+        				String depName = dep.getName();
+                        String depType = dep.getType();
+                        int depState = dep.getState();
 
-                    numberOfComponents++;
-                    if (lastBundleId != bundleId) {
-                        lastBundleId = bundleId;
                         if (comp) {
-                            System.out.println("[" + bundleId + "] " + compactName(bundle.getSymbolicName()));
+                            if (j > 0) {
+                                System.out.print(' ');
+                            }
+                            System.out.print(compactName(depName) + " " + compactState(depType) + " "
+                                    + compactState(ComponentDependencyDeclaration.STATE_NAMES[depState]));
                         } else {
-                            System.out.println("[" + bundleId + "] " + bundle.getSymbolicName());
+                            System.out.println("    " + depName + " " + depType + " "
+                                    + ComponentDependencyDeclaration.STATE_NAMES[depState]);
                         }
-                    }
-                    if (comp) {
-                        System.out.print(" [" + sc.getId() + "] " + compactName(name) + " "
-                                + compactState(ComponentDeclaration.STATE_NAMES[state]));
-                    } else {
-                        System.out.println(" [" + sc.getId() + "] " + name + " "
-                                + ComponentDeclaration.STATE_NAMES[state]);
-                    }
-                    if (!nodeps) {
-                        ComponentDependencyDeclaration[] dependencies = sc.getComponentDependencies();
-                        if (dependencies != null && dependencies.length > 0) {
-                            numberOfDependencies += dependencies.length;
-                            if (comp) {
-                                System.out.print('(');
-                            }
-                            for (int j = 0; j < dependencies.length; j++) {
-                                ComponentDependencyDeclaration dep = dependencies[j];
-                                if (notavail && !isUnavailable(dep)) {
-                                    continue;
-                                }
-                                String depName = dep.getName();
-                                String depType = dep.getType();
-                                int depState = dep.getState();
 
-                                if (comp) {
-                                    if (j > 0) {
-                                        System.out.print(' ');
-                                    }
-                                    System.out.print(compactName(depName) + " " + compactState(depType) + " "
-                                            + compactState(ComponentDependencyDeclaration.STATE_NAMES[depState]));
-                                } else {
-                                    System.out.println("    " + depName + " " + depType + " "
-                                            + ComponentDependencyDeclaration.STATE_NAMES[depState]);
-                                }
-                            }
-                            if (comp) {
-                                System.out.print(')');
-                            }
-                        }
-                    }
+        			}
                     if (comp) {
-                        System.out.println();
+                        System.out.print(')');
                     }
-                }
+    			}
+    		}
+    		if (comp) {
+                System.out.println();
             }
         }
-
-        if (stats) {
-            System.out.println("Statistics:");
-            System.out.println(" - Dependency managers: " + managers.size());
-            System.out.println(" - Components: " + numberOfComponents);
+        
+        if(stats) {
+        	System.out.println("Statistics:");
+        	System.out.println(" - Dependency managers: " + DependencyManager.getDependencyManagers().size());
+        	System.out.println(" - Components: " + numberOfComponents);
             if (!nodeps) {
                 System.out.println(" - Dependencies: " + numberOfDependencies);
             }
         }
-    }
+
+        }
 
     /**
      * Displays components callbacks (init/start/stop/destroy) elapsed time.
@@ -353,16 +359,6 @@ public class DMCommand {
                 System.out.printf("%-100s %10d %10d%n", decl.getClassName(),
                     decl.getCallbacksTime().get("init"), decl.getCallbacksTime().get("start"));
             }
-        }
-    }
-
-    private boolean isUnavailable(ComponentDependencyDeclaration dep) {
-        switch (dep.getState()) {
-            case ComponentDependencyDeclaration.STATE_UNAVAILABLE_OPTIONAL:
-            case ComponentDependencyDeclaration.STATE_UNAVAILABLE_REQUIRED:
-                return true;
-            default:
-                return false;
         }
     }
 
@@ -553,46 +549,68 @@ public class DMCommand {
     }
 
     public void wtf() {
-        List<ComponentDeclaration> downComponents = getComponentsThatAreUnregistered();
-        if (downComponents.isEmpty()) {
-            System.out.println("No missing dependencies found.");
-        }
-        else {
-            String message = downComponents.size() + " missing dependencies found.";
+    	
+    	DependencyGraph graph = DependencyGraph.getGraph(ComponentState.UNREGISTERED, DependencyState.REQUIRED_UNAVAILABLE);
+    	List<ComponentDeclaration> unregisteredComponents = graph.getAllComponents();
+    	
+    	if(unregisteredComponents.isEmpty()) {
+    		System.out.println("No unregistered components found");
+    	} else {
+    		String message = unregisteredComponents.size() + " unregistered components found";
 			System.out.println(message);
             System.out.println("----------------------------------------------------".substring(0, message.length()));
-        }
-        listResolvedBundles();
-        listInstalledBundles();
-        Set<ComponentId> downComponentsRoot = getTheRootCouses(downComponents);
-        listAllMissingConfigurations(downComponentsRoot);
-        listAllMissingServices(downComponents, downComponentsRoot);
+    	}
+    	
+    	listResolvedBundles();
+    	listInstalledBundles();
+    	
+    	List<CircularDependency> circularDependencies = graph.getCircularDependencies();
+    	if(!circularDependencies.isEmpty()) {
+    		System.out.println("Circular dependencies:");
+    		printCircularDependencies(circularDependencies);
+    	}
+    	
+    	List<MissingDependency> missingConfigDependencies = graph.getMissingDependencies(CONFIGURATION);
+    	if(!missingConfigDependencies.isEmpty()) {
+    		System.out.println("The following configuration(s) are missing: ");
+    		printMissingDependencies(missingConfigDependencies);
+    	}
+    	
+    	List<MissingDependency> missingServiceDependencies = graph.getMissingDependencies(SERVICE);
+    	if(!missingServiceDependencies.isEmpty()) {
+    		System.out.println("The following service(s) are missing: ");
+    		printMissingDependencies(missingServiceDependencies);
+    	}
+
+    	
+    	List<MissingDependency> missingResourceDependencies = graph.getMissingDependencies(RESOURCE);
+    	if(!missingResourceDependencies.isEmpty()) {
+    		System.out.println("The following resource(s) are missing: ");
+    		printMissingDependencies(missingResourceDependencies);
+    	}
+    	
+    	List<MissingDependency> missingBundleDependencies = graph.getMissingDependencies(BUNDLE);
+    	if(!missingBundleDependencies.isEmpty()) {
+    		System.out.println("The following bundle(s) are missing: ");
+    		printMissingDependencies(missingBundleDependencies);
+    	}
     }
 
-    private Set<ComponentId> getTheRootCouses(List<ComponentDeclaration> downComponents) {
-        Set<ComponentId> downComponentsRoot = new TreeSet<ComponentId>();
-        for (ComponentDeclaration c : downComponents) {
-            List<ComponentId> root = getRoot(downComponents, c, new ArrayList<ComponentId>());
-            downComponentsRoot.addAll(root);
-        }
-        return downComponentsRoot;
-    }
+	private void printCircularDependencies(List<CircularDependency> circularDependencies) {
+		for(CircularDependency c : circularDependencies) {
+			System.out.print(" *");
+			for(ComponentDeclaration cd : c.getComponents()) {
+				System.out.print(" -> " + cd.getName());
+			}
+			System.out.println();
+		}
+	}
 
-    private List<ComponentDeclaration> getComponentsThatAreUnregistered() {
-        List<DependencyManager> dependencyManagers = DependencyManager.getDependencyManagers();
-        List<ComponentDeclaration> unregisteredComponents = new ArrayList<ComponentDeclaration>();
-        for (DependencyManager dm : dependencyManagers) {
-            List<Component> components = dm.getComponents();
-            // create a list of all components that are unregistered
-            for (Component c : components) {
-                ComponentDeclaration cd = c.getComponentDeclaration();
-                if (cd.getState() == ComponentDeclaration.STATE_UNREGISTERED) {
-                    unregisteredComponents.add(cd);
-                }
-            }
-        }
-        return unregisteredComponents;
-    }
+	private void printMissingDependencies(List<MissingDependency> missingConfigDependencies) {
+		for(MissingDependency m : missingConfigDependencies) {
+			System.out.println(" * " + m.getName() + " for bundle " + m.getBundleName());
+		}
+	}
 
     private void listResolvedBundles() {
         boolean areResolved = false;
@@ -635,150 +653,19 @@ public class DMCommand {
         Dictionary<String, String> headers = b.getHeaders();
         return headers.get("Fragment-Host") != null;
     }
-
-    private void listAllMissingConfigurations(Set<ComponentId> unregisteredComponentsRoot) {
-        if (hasMissingType(unregisteredComponentsRoot, CONFIGURATION)) {
-            System.out.println("The following configuration(s) are missing: ");
-            for (ComponentId s : unregisteredComponentsRoot) {
-                if (CONFIGURATION.equals(s.getType())) {
-                    System.out.println(" * " + s.getName() + " for bundle " + s.getBundleName());
-                }
-            }
-        }
-    }
-
-    private void listAllMissingServices(List<ComponentDeclaration> downComponents, Set<ComponentId> unregisteredComponentsRoot) {
-        if (hasMissingType(unregisteredComponentsRoot, SERVICE)) {
-            System.out.println("The following service(s) are missing: ");
-            for (ComponentId s : unregisteredComponentsRoot) {
-                if (SERVICE.equals(s.getType())) {
-                    System.out.print(" * " + s.getName());
-                    ComponentDeclaration component = getComponentDeclaration(s.getName(), downComponents);
-                    if (component == null) {
-                        System.out.println(" is not found in the service registry");
-                    } else {
-                        ComponentDependencyDeclaration[] componentDependencies = component.getComponentDependencies();
-                        System.out.println(" and needs:");
-                        for (ComponentDependencyDeclaration cdd : componentDependencies) {
-                            if (cdd.getState() == ComponentDependencyDeclaration.STATE_UNAVAILABLE_REQUIRED) {
-                                System.out.println(cdd.getName());
-                            }
-                        }
-                        System.out.println(" to work");
-                    }
-                }
-            }
-        }
-    }
-
-    private boolean hasMissingType(Set<ComponentId> downComponentsRoot, String type) {
-        for (ComponentId s : downComponentsRoot) {
-            if (type.equals(s.getType())) {
-                return true;
-            }
-        }
-        return false;
-    }
     
-    private List<ComponentId> getRoot(List<ComponentDeclaration> downComponents, ComponentDeclaration c, List<ComponentId> backTrace) {
-        ComponentDependencyDeclaration[] componentDependencies = c.getComponentDependencies();
-        int unregisteredDeps = 0;
-        List<ComponentId> result = new ArrayList<ComponentId>();
-        for (ComponentDependencyDeclaration cdd : componentDependencies) {
-            if (cdd.getState() == ComponentDependencyDeclaration.STATE_UNAVAILABLE_REQUIRED) {
-                unregisteredDeps++;
-                // Detect missing configuration dependency
-                if (CONFIGURATION.equals(cdd.getType())) {
-                    String bsn = c.getBundleContext().getBundle().getSymbolicName();
-                    result.add(new ComponentId(cdd.getName(), cdd.getType(), bsn));
-                    continue;
-                }
-
-                // Detect if the missing dependency is a root cause failure
-                ComponentDeclaration component = getComponentDeclaration(cdd.getName(), downComponents);
-                if (component == null) {
-                    result.add(new ComponentId(cdd.getName(), cdd.getType(), null));
-                    continue;
-                }
-                // Detect circular dependency
-                ComponentId componentId = new ComponentId(cdd.getName(), cdd.getType(), null);
-                if (backTrace.contains(componentId)) {
-                    // We already got this one so it's a circular dependency
-                    System.out.print("Circular dependency found:\n *");
-                    for (ComponentId cid : backTrace) {
-                        System.out.print(" -> " + cid.getName() + " ");
-                    }
-                    System.out.println(" -> " + componentId.getName());
-                    result.add(new ComponentId(c.getName(), SERVICE, c.getBundleContext().getBundle().getSymbolicName()));
-                    continue;
-                }
-                backTrace.add(componentId);
-                return getRoot(downComponents, component, backTrace);
-            }
-        }
-        if (unregisteredDeps > 0 && result.isEmpty()) {
-            result.add(new ComponentId(c.getName(), SERVICE, c.getBundleContext().getBundle().getSymbolicName()));
-        }
-        return result;
-    }
-    
-    private ComponentDeclaration getComponentDeclaration(final String fullName, List<ComponentDeclaration> list) {
-        String simpleName = getSimpleName(fullName);
-        Properties props = parseProperties(fullName);
-        for (ComponentDeclaration c : list) {
-            String serviceNames = c.getName();
-            int cuttOff = serviceNames.indexOf("(");
-            if (cuttOff != -1) {
-                serviceNames = serviceNames.substring(0, cuttOff).trim();
-            }
-            for (String serviceName : serviceNames.split(",")) {
-                if (simpleName.equals(serviceName.trim()) && doPropertiesMatch(props, parseProperties(c.getName()))) {
-                    return c;
-                }
-            }
-        }
-        return null;
-    }
-    
-    private boolean doPropertiesMatch(Properties need, Properties provide) {
-        for (Entry<Object, Object> entry : need.entrySet()) {
-            Object prop = provide.get(entry.getKey());
-            if (prop == null || !prop.equals(entry.getValue())) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private String getSimpleName(String name) {
-        int cuttOff = name.indexOf("(");
-        if (cuttOff != -1) {
-            return name.substring(0, cuttOff).trim();
-        }
-        return name.trim();
-    }
-    
-    private Properties parseProperties(String name) {
-        Properties result = new Properties();
-        int cuttOff = name.indexOf("(");
-        if (cuttOff != -1) {
-            String propsText = name.substring(cuttOff + 1, name.indexOf(")"));
-            String[] split = propsText.split(",");
-            for (String prop : split) {
-                String[] kv = prop.split("=");
-                if (kv.length == 2) {
-                    result.put(kv[0], kv[1]);
-                }
-            }
-        }
-        return result;
-    }
-    
-    public static class DependencyManagerSorter implements Comparator<DependencyManager> {
-        public int compare(DependencyManager dm1, DependencyManager dm2) {
-            long id1 = dm1.getBundleContext().getBundle().getBundleId();
-            long id2 = dm2.getBundleContext().getBundle().getBundleId();
-            return id1 > id2 ? 1 : -1;
-        }
+    public static class ComponentDeclarationComparator implements Comparator<ComponentDeclaration> {
+		@Override
+		public int compare(ComponentDeclaration cd1, ComponentDeclaration cd2) {
+			long id1 = cd1.getBundleContext().getBundle().getBundleId();
+			long id2 = cd2.getBundleContext().getBundle().getBundleId();
+			if(id1 == id2) {
+				// sort by component id
+				long cid1 = cd1.getId();
+				long cid2 = cd2.getId();
+				return cid1 > cid2 ? 1 : -1;
+			} 
+			return id1 > id2 ? 1 : -1;
+		}
     }
 }

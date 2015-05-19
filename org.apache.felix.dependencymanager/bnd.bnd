@@ -24,10 +24,11 @@ Private-Package: \
 	org.apache.felix.dm.impl.index,\
 	org.apache.felix.dm.impl.index.multiproperty,\
 	org.apache.felix.dm.impl.metatype
-Export-Package: \
+Export-Package:  \
 	org.apache.felix.dm,\
 	org.apache.felix.dm.tracker,\
-	org.apache.felix.dm.context
+	org.apache.felix.dm.context,\
+	org.apache.felix.dm.diagnostics
 Include-Resource: META-INF/=resources/LICENSE,\
 	META-INF/=resources/NOTICE,\
 	META-INF/=resources/DEPENDENCIES,\
