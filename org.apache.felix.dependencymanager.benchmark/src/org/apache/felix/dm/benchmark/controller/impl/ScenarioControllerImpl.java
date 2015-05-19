@@ -257,6 +257,12 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
                 out.println("Could not start components timely: current start latch=" + m_startLatch.getCount() + ", stop latch=" + m_stopLatch.getCount());
                 Unchecked.run(() -> Thread.sleep(Integer.MAX_VALUE));
             }
+            
+            // Make sure the threadpool is quiescent and has finished to register all components
+            if (! Helper.getThreadPool().awaitQuiescence(5, TimeUnit.SECONDS)) {
+                out.println("could not start components timely (thread pool is still active after 5 seconds)");
+                Unchecked.run(() -> Thread.sleep(Integer.MAX_VALUE));
+            }
                         
             debug(() -> "stopping bundle " + b.getSymbolicName());
             b.stop();
