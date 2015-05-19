@@ -20,7 +20,6 @@ package org.apache.felix.dm.annotation.plugin.bnd;
 
 import java.util.Arrays;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import org.json.JSONArray;
 import org.json.JSONException;
