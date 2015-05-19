@@ -56,6 +56,8 @@ public final class ServletDTOBuilder extends BaseServletDTOBuilder
 
         BaseServletDTOBuilder.fill(dto, info);
 
+        dto.patterns = BuilderConstants.EMPTY_STRING_ARRAY;
+
         return dto;
     }
 }
