@@ -55,8 +55,11 @@ public class Benchmark {
         Helper.debug(() -> "Benchmark.start");
         
         IntStream.range(0, ARTISTS)
-            .mapToObj(i -> createArtists(m_dm)).peek(m_components::add)
+            // Creates a stream of Artist components
+        	.mapToObj(i -> createArtists(m_dm)).peek(m_components::add)
+        	// For each artist in the stream, creates a new stream of Album components
             .flatMap(artist -> createAlbums(m_dm, artist)).peek(m_components::add)
+            // For each Album, creates a new stream of Track components
             .flatMap(album -> createTracks(m_dm, album)).forEach(m_components::add);
                             
         m_components.stream().forEach(m_dm::add);
@@ -68,25 +71,18 @@ public class Benchmark {
     }
 
     private Component createArtists(DependencyManager dm) {
-        Component artist = dm.createComponent()
-            .setInterface(Artist.class.getName(), null)
-            .setImplementation(new ArtistImpl(m_controller));
-        return artist;
+        return dm.createComponent().setInterface(Artist.class.getName(), null).setImplementation(new ArtistImpl(m_controller));            
     }
     
     private Stream<Component> createAlbums(DependencyManager dm, Component artist) {
         return IntStream.range(0, ALBUMS).mapToObj(i -> {
             long id = Helper.generateId();
             String filter = "(id=" + id + ")";
-            artist.add(dm.createServiceDependency()
-                         .setService(Album.class, filter).setRequired(true).setCallbacks("addAlbum", null));            
+            artist.add(dm.createServiceDependency().setService(Album.class, filter).setRequired(true).setCallbacks("addAlbum", null));     
             
             Hashtable<String, Object> props = new Hashtable<>();
             props.put("id", String.valueOf(id));
-            Component c = dm.createComponent()
-                .setInterface(Album.class.getName(), props)
-                .setImplementation(new AlbumImpl(m_controller));
-            return c;
+            return dm.createComponent().setInterface(Album.class.getName(), props).setImplementation(new AlbumImpl(m_controller));
         });
     }
         
@@ -94,15 +90,11 @@ public class Benchmark {
         return IntStream.range(0, TRACKS).mapToObj(i -> {
             long id = Helper.generateId();
             String f = "(id=" + String.valueOf(id) + ")";
-            album.add(dm.createServiceDependency()
-                        .setService(Track.class, f).setRequired(true).setCallbacks("addTrack", null));
+            album.add(dm.createServiceDependency().setService(Track.class, f).setRequired(true).setCallbacks("addTrack", null));
 
             Hashtable<String, Object> p = new Hashtable<>();
             p.put("id", String.valueOf(id));
-            Component c = dm.createComponent()
-                .setInterface(Track.class.getName(), p)
-                .setImplementation(new TrackImpl(m_controller));
-            return c;
+            return dm.createComponent().setInterface(Track.class.getName(), p).setImplementation(new TrackImpl(m_controller));
         });
     }
 }
