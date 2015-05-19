@@ -93,10 +93,15 @@ public final class ErrorPageRegistry
         public final Set<String> exceptions = new TreeSet<String>();
     }
 
-    private static final class ErrorRegistrationStatus {
+    static final class ErrorRegistrationStatus {
         ServletHandler handler;
         final Map<Long, Integer> errorCodeMapping = new ConcurrentHashMap<Long, Integer>();
         final Map<String, Integer> exceptionMapping = new ConcurrentHashMap<String, Integer>();
+    }
+
+    Map<ServletInfo, ErrorRegistrationStatus> getStatusMapping()
+    {
+        return this.statusMapping;
     }
 
     public static ErrorRegistration getErrorRegistration(@Nonnull final ServletInfo info)
@@ -340,7 +345,7 @@ public final class ErrorPageRegistry
      * @param errorCode Error code
      * @return The servlet handling the error or {@code null}
      */
-    private ServletHandler get(final int errorCode)
+    private ServletHandler get(final long errorCode)
     {
         final List<ServletHandler> list = this.errorCodesMap.get(errorCode);
         if ( list != null )
