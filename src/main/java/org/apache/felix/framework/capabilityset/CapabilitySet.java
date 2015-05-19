@@ -32,6 +32,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 import org.apache.felix.framework.util.SecureAction;
@@ -105,7 +106,8 @@ public class CapabilitySet
                     value = convertArrayToList(value);
                 }
 
-                Map<Object, Set<BundleCapability>> index = entry.getValue();
+                ConcurrentMap<Object, Set<BundleCapability>> index =
+                        (ConcurrentMap<Object, Set<BundleCapability>>) entry.getValue();
 
                 if (value instanceof Collection)
                 {
@@ -124,14 +126,12 @@ public class CapabilitySet
     }
 
     private void indexCapability(
-        Map<Object, Set<BundleCapability>> index, BundleCapability cap, Object capValue)
+        ConcurrentMap<Object, Set<BundleCapability>> index, BundleCapability cap, Object capValue)
     {
-        Set<BundleCapability> caps = index.get(capValue);
-        if (caps == null)
-        {
-            caps = Collections.newSetFromMap(new ConcurrentHashMap<BundleCapability, Boolean>());
-            index.put(capValue, caps);
-        }
+        Set<BundleCapability> caps = Collections.newSetFromMap(new ConcurrentHashMap<BundleCapability, Boolean>());
+        Set<BundleCapability> prevval = index.putIfAbsent(capValue, caps);
+        if (prevval != null)
+            caps = prevval;
         caps.add(cap);
     }
 
