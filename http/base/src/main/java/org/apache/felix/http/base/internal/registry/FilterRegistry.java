@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.CheckForNull;
@@ -31,34 +32,27 @@ import javax.servlet.DispatcherType;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
-import org.apache.felix.http.base.internal.runtime.dto.state.FailureFilterState;
-import org.apache.felix.http.base.internal.runtime.dto.state.FilterState;
+import org.apache.felix.http.base.internal.runtime.dto.FilterDTOBuilder;
+import org.osgi.service.http.runtime.dto.FailedFilterDTO;
+import org.osgi.service.http.runtime.dto.FilterDTO;
+import org.osgi.service.http.runtime.dto.ServletContextDTO;
 
 /**
- * TODO - check if add/remove needs syncing
+ * The filter registry keeps track of all filter mappings for a single servlet context.
  */
 public final class FilterRegistry
 {
-    private volatile HandlerMapping filterMapping = new HandlerMapping();
+    private volatile FilterHandlerMapping filterMapping = new FilterHandlerMapping();
 
     private final Map<FilterInfo, FilterRegistrationStatus> statusMapping = new ConcurrentHashMap<FilterInfo, FilterRegistrationStatus>();
 
-    private static final class FilterRegistrationStatus implements FailureFilterState
+    private static final class FilterRegistrationStatus
     {
         public int result;
         public FilterHandler handler;
-
-        @Override
-        public FilterInfo getFilterInfo() {
-            return handler.getFilterInfo();
-        }
-        @Override
-        public int getReason() {
-            return result;
-        }
     }
 
-    public void addFilter(@Nonnull final FilterHandler handler)
+    public synchronized void addFilter(@Nonnull final FilterHandler handler)
     {
         final int result = handler.init();
         if ( result == -1 )
@@ -72,7 +66,7 @@ public final class FilterRegistry
         statusMapping.put(handler.getFilterInfo(), status);
     }
 
-    public void removeFilter(@Nonnull final FilterInfo filterInfo, final boolean destroy)
+    public synchronized void removeFilter(@Nonnull final FilterInfo filterInfo, final boolean destroy)
     {
         final FilterRegistrationStatus status = statusMapping.remove(filterInfo);
         if ( status != null )
@@ -142,21 +136,30 @@ public final class FilterRegistry
         return false;
     }
 
-    public void getRuntimeInfo(final Collection<FilterState> filterRuntimes,
-            final Collection<FailureFilterState> failureFilterRuntimes)
+    public void getRuntimeInfo(final ServletContextDTO servletContextDTO,
+                               final Collection<FailedFilterDTO> failedFilterDTOs)
     {
-        final HandlerMapping mapping = this.filterMapping;
-        for (final FilterState filterRuntime : mapping.values())
-        {
-            filterRuntimes.add(filterRuntime);
-        }
+        // we create a map to sort filter DTOs by ranking/service id
+        final Map<FilterInfo, FilterDTO> filterDTOs = new TreeMap<FilterInfo, FilterDTO>();
+        final Map<FilterInfo, FailedFilterDTO> failureFilterDTOs = new TreeMap<FilterInfo, FailedFilterDTO>();
 
-        for(final Map.Entry<FilterInfo, FilterRegistrationStatus> status : this.statusMapping.entrySet())
+        for(final Map.Entry<FilterInfo, FilterRegistrationStatus> entry : this.statusMapping.entrySet())
         {
-            if ( status.getValue().result != -1 )
+            if ( entry.getValue().result != -1 )
             {
-                failureFilterRuntimes.add(status.getValue());
+                failureFilterDTOs.put(entry.getKey(), FilterDTOBuilder.buildFailed(entry.getValue().handler, entry.getValue().result));
+            }
+            else
+            {
+                filterDTOs.put(entry.getKey(), FilterDTOBuilder.build(entry.getValue().handler));
             }
         }
+
+        final Collection<FilterDTO> filterDTOArray = filterDTOs.values();
+        if ( !filterDTOArray.isEmpty() )
+        {
+            servletContextDTO.filterDTOs = filterDTOArray.toArray(new FilterDTO[filterDTOArray.size()]);
+        }
+        failedFilterDTOs.addAll(failureFilterDTOs.values());
     }
 }

@@ -20,46 +20,90 @@ package org.apache.felix.http.base.internal.runtime.dto;
 
 import javax.servlet.DispatcherType;
 
+import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
-import org.apache.felix.http.base.internal.runtime.dto.state.FilterState;
+import org.osgi.service.http.runtime.dto.FailedFilterDTO;
 import org.osgi.service.http.runtime.dto.FilterDTO;
 
-final class FilterDTOBuilder<T extends FilterDTO> extends BaseDTOBuilder<FilterState, T>
+public final class FilterDTOBuilder
 {
-    static FilterDTOBuilder<FilterDTO> create()
+    /**
+     * Build an array of filter DTO from a filter handler array
+     * @param handlers The filter handler array
+     * @return The filter DTO array
+     */
+    public static FilterDTO[] build(final FilterHandler[] handlers)
     {
-        return new FilterDTOBuilder<FilterDTO>(DTOFactories.FILTER);
+        if ( handlers.length == 0 )
+        {
+            return BuilderConstants.EMPTY_FILTER_DTO_ARRAY;
+        }
+        final FilterDTO[] array = new FilterDTO[handlers.length];
+        for(int i=0; i<handlers.length; i++)
+        {
+            array[i] = build(handlers[i]);
+        }
+
+        return array;
     }
 
-    FilterDTOBuilder(DTOFactory<T> dtoFactory)
+    /**
+     * Build a filter DTO from a filter handler
+     * @param handler The filter handler
+     * @return A filter DTO
+     */
+    public static FilterDTO build(final FilterHandler handler)
     {
-        super(dtoFactory);
-    }
+        final FilterDTO filterDTO = build(handler.getFilterInfo(), false);
 
-    @Override
-    T buildDTO(FilterState filterRuntime, long servletContextId)
-    {
-        FilterInfo info = filterRuntime.getFilterInfo();
-
-        T filterDTO = getDTOFactory().get();
-        filterDTO.asyncSupported = info.isAsyncSupported();
-        filterDTO.dispatcher = getNames(info.getDispatcher());
-        filterDTO.initParams = info.getInitParameters();
-        filterDTO.name = info.getName();
-        filterDTO.patterns = copyWithDefault(info.getPatterns(), BuilderConstants.STRING_ARRAY);
-        filterDTO.regexs = copyWithDefault(info.getRegexs(), BuilderConstants.STRING_ARRAY);
-        filterDTO.serviceId = info.getServiceId();
-        filterDTO.servletContextId = servletContextId;
-        filterDTO.servletNames = copyWithDefault(info.getServletNames(), BuilderConstants.STRING_ARRAY);
+        filterDTO.name = handler.getName();
+        filterDTO.servletContextId = handler.getContextServiceId();
 
         return filterDTO;
     }
 
-    private String[] getNames(DispatcherType[] dispatcher)
+    /**
+     * Build a filter DTO from a filter info
+     * @param info The filter info
+     * @return A filter DTO
+     */
+    public static FilterDTO build(final FilterInfo info, final boolean failed)
+    {
+        final FilterDTO filterDTO = (failed ? new FailedFilterDTO() : new FilterDTO());
+
+        filterDTO.asyncSupported = info.isAsyncSupported();
+        filterDTO.dispatcher = getNames(info.getDispatcher());
+        filterDTO.initParams = info.getInitParameters();
+        filterDTO.name = info.getName();
+        filterDTO.patterns = BuilderConstants.copyWithDefault(info.getPatterns(), BuilderConstants.EMPTY_STRING_ARRAY);
+        filterDTO.regexs = BuilderConstants.copyWithDefault(info.getRegexs(), BuilderConstants.EMPTY_STRING_ARRAY);
+        filterDTO.serviceId = info.getServiceId();
+        filterDTO.servletNames = BuilderConstants.copyWithDefault(info.getServletNames(), BuilderConstants.EMPTY_STRING_ARRAY);
+
+        return filterDTO;
+    }
+
+    /**
+     * Build a filter failed DTO from a filter handler
+     * @param handler The filter handler
+     * @return A filter DTO
+     */
+    public static FailedFilterDTO buildFailed(final FilterHandler handler, final int reason)
+    {
+        final FailedFilterDTO filterDTO = (FailedFilterDTO)build(handler.getFilterInfo(), true);
+
+        filterDTO.name = handler.getName();
+        filterDTO.servletContextId = handler.getContextServiceId();
+        filterDTO.failureReason = reason;
+
+        return filterDTO;
+    }
+
+    private static String[] getNames(final DispatcherType[] dispatcher)
     {
         if (dispatcher == null)
         {
-            return BuilderConstants.STRING_ARRAY;
+            return BuilderConstants.EMPTY_STRING_ARRAY;
         }
 
         String[] names = new String[dispatcher.length];

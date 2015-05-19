@@ -18,48 +18,37 @@
  */
 package org.apache.felix.http.base.internal.runtime.dto;
 
-import javax.servlet.Servlet;
-
+import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
-import org.apache.felix.http.base.internal.runtime.dto.state.ServletState;
 import org.osgi.service.http.runtime.dto.BaseServletDTO;
 
-abstract class BaseServletDTOBuilder<T extends ServletState, U extends BaseServletDTO> extends BaseDTOBuilder<T, U>
+abstract class BaseServletDTOBuilder
 {
-    BaseServletDTOBuilder(DTOFactory<U> servletDTOFactory)
+    /**
+     * Build a servlet DTO from a servlet info
+     * @param info The servlet info
+     * @return A servlet DTO
+     */
+    public static void fill(final BaseServletDTO dto, final ServletHandler handler)
     {
-        super(servletDTOFactory);
+        dto.name = handler.getName();
+        if ( handler.getServlet() != null )
+        {
+            dto.servletInfo = handler.getServlet().getServletInfo();
+        }
+        dto.servletContextId = handler.getContextServiceId();
     }
 
-    @Override
-    U buildDTO(T servletRuntime, long servletContextId)
+    /**
+     * Build a servlet DTO from a servlet info
+     * @param info The servlet info
+     * @return A servlet DTO
+     */
+    public static void fill(final BaseServletDTO dto, final ServletInfo info)
     {
-        ServletInfo info = servletRuntime.getServletInfo();
-        Servlet servlet = servletRuntime.getServlet();
-
-        U dto = getDTOFactory().get();
         dto.asyncSupported = info.isAsyncSupported();
         dto.initParams = info.getInitParameters();
-        dto.name = getName(info, servlet);
-        dto.serviceId = servletRuntime.getServletInfo().getServiceId();
-        dto.servletContextId = servletContextId;
-        dto.servletInfo = servlet != null ? servlet.getServletInfo() : null;
-        return dto;
-    }
-
-    private String getName(ServletInfo info, Servlet servlet)
-    {
-        String name = info.getName();
-        if (name != null)
-        {
-            return name;
-        }
-
-        if (servlet != null)
-        {
-            return servlet.getServletConfig().getServletName();
-        }
-
-        return null;
+        dto.name = info.getName();
+        dto.serviceId = info.getServiceId();
     }
 }

@@ -44,30 +44,30 @@ import org.apache.felix.http.base.internal.util.PatternUtil.PatternComparator;
  * for easy access to those handlers, based on the match rules defined in section 12.1 of Servlet
  * 3.0 specification.
  * <p>
- * {@link HandlerMapping} instances are immutable.
+ * {@link FilterHandlerMapping} instances are immutable.
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public final class HandlerMapping
+public final class FilterHandlerMapping
 {
     private final SortedMap<Pattern, Set<FilterHandler>> exactMap;
     private final SortedMap<Pattern, Set<FilterHandler>> wildcardMap;
     private final Set<FilterHandler> mappedHandlers;
 
     /**
-     * Creates a new, empty, {@link HandlerMapping} instance.
+     * Creates a new, empty, {@link FilterHandlerMapping} instance.
      */
-    public HandlerMapping()
+    public FilterHandlerMapping()
     {
         this(Collections.<Pattern, Collection<FilterHandler>>emptyMap());
     }
 
     /**
-     * Creates a new {@link HandlerMapping} instance for the given elements.
+     * Creates a new {@link FilterHandlerMapping} instance for the given elements.
      *
      * @param mappings the elements to map.
      */
-    private HandlerMapping(@Nonnull final Map<Pattern, Collection<FilterHandler>> mappings)
+    private FilterHandlerMapping(@Nonnull final Map<Pattern, Collection<FilterHandler>> mappings)
     {
         this.exactMap = new TreeMap<Pattern, Set<FilterHandler>>(PatternComparator.INSTANCE);
         this.wildcardMap = new TreeMap<Pattern, Set<FilterHandler>>(PatternComparator.INSTANCE);
@@ -104,14 +104,14 @@ public final class HandlerMapping
     }
 
     /**
-     * Returns a new {@link HandlerMapping} instance with a mapping for the
+     * Returns a new {@link FilterHandlerMapping} instance with a mapping for the
      * given handler.
      *
      * @param handler the handler to be added to the mapping.
-     * @return a new {@link HandlerMapping} instance with a mapping for the
+     * @return a new {@link FilterHandlerMapping} instance with a mapping for the
      *         given handler.
      */
-    public HandlerMapping add(@Nonnull final FilterHandler handler)
+    public FilterHandlerMapping add(@Nonnull final FilterHandler handler)
     {
         final Map<Pattern, FilterHandler> mappings = new TreeMap<Pattern, FilterHandler>(PatternComparator.INSTANCE);
         for (final Pattern pattern : handler.getPatterns())
@@ -121,22 +121,22 @@ public final class HandlerMapping
         return add(mappings);
     }
 
-    HandlerMapping add(@Nonnull final Map<Pattern, FilterHandler> mappings)
+    FilterHandlerMapping add(@Nonnull final Map<Pattern, FilterHandler> mappings)
     {
         final Map<Pattern, Collection<FilterHandler>> newMappings = getAllMappings();
         addMappings(mappings, newMappings);
-        return new HandlerMapping(newMappings);
+        return new FilterHandlerMapping(newMappings);
     }
 
     /**
-     * Returns a new {@link HandlerMapping} instance without a mapping for the
+     * Returns a new {@link FilterHandlerMapping} instance without a mapping for the
      * given handler.
      *
      * @param subject the handled element to be removed from the mapping
-     * @return a new {@link HandlerMapping} instance without a mapping for the
+     * @return a new {@link FilterHandlerMapping} instance without a mapping for the
      *         given handler.
      */
-    public HandlerMapping remove(FilterHandler handler)
+    public FilterHandlerMapping remove(FilterHandler handler)
     {
         Map<Pattern, FilterHandler> mappings = new TreeMap<Pattern, FilterHandler>(PatternComparator.INSTANCE);
         for (Pattern pattern : handler.getPatterns())
@@ -146,19 +146,19 @@ public final class HandlerMapping
         return remove(mappings);
     }
 
-    HandlerMapping remove(Map<Pattern, FilterHandler> mappings)
+    FilterHandlerMapping remove(Map<Pattern, FilterHandler> mappings)
     {
         Map<Pattern, Collection<FilterHandler>> newMappings = getAllMappings();
         removeMappings(mappings, newMappings);
-        return new HandlerMapping(newMappings);
+        return new FilterHandlerMapping(newMappings);
     }
 
-    HandlerMapping update(Map<Pattern, FilterHandler> add, Map<Pattern, FilterHandler> remove)
+    FilterHandlerMapping update(Map<Pattern, FilterHandler> add, Map<Pattern, FilterHandler> remove)
     {
         Map<Pattern, Collection<FilterHandler>> newMappings = getAllMappings();
         removeMappings(remove, newMappings);
         addMappings(add, newMappings);
-        return new HandlerMapping(newMappings);
+        return new FilterHandlerMapping(newMappings);
     }
 
     private void addMappings(Map<Pattern, FilterHandler> mappings, Map<Pattern, Collection<FilterHandler>> target)

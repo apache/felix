@@ -44,9 +44,12 @@ import org.apache.felix.http.base.internal.runtime.ServletContextAttributeListen
 import org.apache.felix.http.base.internal.runtime.ServletContextListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletRequestAttributeListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletRequestListenerInfo;
+import org.apache.felix.http.base.internal.runtime.dto.ListenerDTOBuilder;
 import org.apache.felix.http.base.internal.util.CollectionUtils;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.http.runtime.dto.ListenerDTO;
+import org.osgi.service.http.runtime.dto.ServletContextDTO;
 
 public final class PerContextEventListener implements
         HttpSessionListener,
@@ -424,19 +427,6 @@ public final class PerContextEventListener implements
         }
     }
 
-    @SuppressWarnings("unchecked")
-    Collection<ServiceReference<?>> getRuntime()
-    {
-        return CollectionUtils.<ServiceReference<?>>sortedUnion(
-                Collections.<ServiceReference<?>>reverseOrder(),
-                contextListeners.keySet(),
-                contextAttributeListeners.keySet(),
-                sessionAttributeListeners.keySet(),
-                sessionListeners.keySet(),
-                requestAttributeListeners.keySet(),
-                requestListeners.keySet());
-    }
-
     /**
      * @see javax.servlet.http.HttpSessionIdListener#sessionIdChanged(javax.servlet.http.HttpSessionEvent, java.lang.String)
      */
@@ -445,6 +435,26 @@ public final class PerContextEventListener implements
         for (final HttpSessionIdListener l : sessionIdListeners.values())
         {
             l.sessionIdChanged(event, oldSessionId);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    void getRuntime(final ServletContextDTO dto)
+    {
+        final Collection<ServiceReference<?>> col = CollectionUtils.<ServiceReference<?>>sortedUnion(
+                Collections.<ServiceReference<?>>reverseOrder(),
+                contextListeners.keySet(),
+                contextAttributeListeners.keySet(),
+                sessionAttributeListeners.keySet(),
+                sessionIdListeners.keySet(),
+                sessionListeners.keySet(),
+                requestAttributeListeners.keySet(),
+                requestListeners.keySet());
+        dto.listenerDTOs = new ListenerDTO[col.size()];
+        int index = 0;
+        for(final ServiceReference<?> ref : col)
+        {
+            dto.listenerDTOs[index++] = ListenerDTOBuilder.build(ref, dto.serviceId);
         }
     }
 }

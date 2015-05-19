@@ -92,7 +92,7 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
     public String getName()
     {
         String name = this.servletInfo.getName();
-        if (name == null)
+        if (name == null && servlet != null )
         {
             name = servlet.getClass().getName();
         }

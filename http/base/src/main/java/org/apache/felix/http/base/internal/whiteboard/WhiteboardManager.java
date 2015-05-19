@@ -59,10 +59,9 @@ import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.ServletRequestAttributeListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletRequestListenerInfo;
 import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
-import org.apache.felix.http.base.internal.runtime.dto.ContextRuntime;
-import org.apache.felix.http.base.internal.runtime.dto.FailureRuntime;
+import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
 import org.apache.felix.http.base.internal.runtime.dto.RegistryRuntime;
-import org.apache.felix.http.base.internal.runtime.dto.ServletContextHelperRuntime;
+import org.apache.felix.http.base.internal.runtime.dto.ServletContextDTOBuilder;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.apache.felix.http.base.internal.service.HttpServiceRuntimeImpl;
 import org.apache.felix.http.base.internal.util.MimeTypes;
@@ -87,6 +86,7 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.context.ServletContextHelper;
 import org.osgi.service.http.runtime.HttpServiceRuntime;
 import org.osgi.service.http.runtime.HttpServiceRuntimeConstants;
+import org.osgi.service.http.runtime.dto.ServletContextDTO;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -745,10 +745,10 @@ public final class WhiteboardManager
 
     public RegistryRuntime getRuntime(final HandlerRegistry registry)
     {
-        // we create a ServletContextHelperRuntime for each servlet context
-        final Collection<ServletContextHelperRuntime> contextRuntimes = new TreeSet<ServletContextHelperRuntime>(ServletContextHelperRuntime.COMPARATOR);
+        final FailedDTOHolder failedDTOHolder = new FailedDTOHolder();
 
-        final FailureRuntime.Builder failureRuntime = FailureRuntime.builder();
+        final Collection<ServletContextDTO> contextDTOs = new TreeSet<ServletContextDTO>();
+
         synchronized ( this.contextMap )
         {
             for (final List<ContextHandler> contextHandlerList : this.contextMap.values())
@@ -756,65 +756,26 @@ public final class WhiteboardManager
                 if ( !contextHandlerList.isEmpty() )
                 {
                     final ContextHandler handler = contextHandlerList.get(0);
-                    final ContextRuntime cr = registry.getRuntime(handler.getContextInfo().getServiceId());
-                    if ( cr != null )
+                    final ServletContextDTO dto = ServletContextDTOBuilder.build(handler.getContextInfo(), handler.getSharedContext(), -1);
+
+                    if ( registry.getRuntime(dto, failedDTOHolder) )
                     {
-                        contextRuntimes.add(new ServletContextHelperRuntime() {
-
-                            @Override
-                            public ServletContext getSharedContext() {
-                                return handler.getSharedContext();
-                            }
-
-                            @Override
-                            public Collection<ServiceReference<?>> getListeners() {
-                                return handler.getListenerRegistry().getRuntime();
-                            }
-
-                            @Override
-                            public ContextRuntime getContextRuntime() {
-                                return cr;
-                            }
-
-                            @Override
-                            public ServletContextHelperInfo getContextInfo() {
-                                return handler.getContextInfo();
-                            }
-                        });
+                        handler.getListenerRegistry().getRuntime(dto);
+                        contextDTOs.add(dto);
                     }
                 }
             }
-            failureRuntime.add(serviceFailures);
+            failedDTOHolder.add(serviceFailures);
         }
 
         // add the context for the http service
         final ServletContextHelperInfo info = new ServletContextHelperInfo(Integer.MAX_VALUE, 0, HTTP_SERVICE_CONTEXT_NAME, "/", null);
-        final ContextRuntime cr = registry.getRuntime(0);
-        if ( cr != null )
+        final ServletContextDTO dto = ServletContextDTOBuilder.build(info, webContext, -1);
+        if ( registry.getRuntime(dto, failedDTOHolder) )
         {
-            contextRuntimes.add(new ServletContextHelperRuntime() {
-
-                @Override
-                public ServletContext getSharedContext() {
-                    return webContext;
-                }
-
-                @Override
-                public Collection<ServiceReference<?>> getListeners() {
-                    return Collections.emptyList();
-                }
-
-                @Override
-                public ContextRuntime getContextRuntime() {
-                    return cr;
-                }
-
-                @Override
-                public ServletContextHelperInfo getContextInfo() {
-                    return info;
-                }
-            });
+            contextDTOs.add(dto);
         }
-        return new RegistryRuntime(contextRuntimes, failureRuntime.build());
+
+        return new RegistryRuntime(failedDTOHolder, contextDTOs);
     }
 }

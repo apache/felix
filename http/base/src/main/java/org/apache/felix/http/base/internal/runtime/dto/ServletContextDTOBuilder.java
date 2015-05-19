@@ -20,7 +20,6 @@ package org.apache.felix.http.base.internal.runtime.dto;
 
 import static java.util.Collections.list;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,82 +28,30 @@ import javax.servlet.ServletContext;
 
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.osgi.dto.DTO;
-import org.osgi.service.http.runtime.dto.ErrorPageDTO;
-import org.osgi.service.http.runtime.dto.FilterDTO;
-import org.osgi.service.http.runtime.dto.ListenerDTO;
-import org.osgi.service.http.runtime.dto.ResourceDTO;
+import org.osgi.service.http.runtime.dto.FailedServletContextDTO;
 import org.osgi.service.http.runtime.dto.ServletContextDTO;
-import org.osgi.service.http.runtime.dto.ServletDTO;
 
-final class ServletContextDTOBuilder
+public final class ServletContextDTOBuilder
 {
 
-    private final ServletContextDTO contextDTO;
-    private final ServletContextHelperRuntime contextRuntime;
-    private final ServletDTO[] servletDTOs;
-    private final ResourceDTO[] resourceDTOs;
-    private final FilterDTO[] filterDTOs;
-    private final ErrorPageDTO[] errorPageDTOs;
-    private final ListenerDTO[] listenerDTOs;
-
-    ServletContextDTOBuilder(ServletContextDTO contextDTO,
-            ServletContextHelperRuntime contextRuntime,
-            Collection<ServletDTO> servletDTOs,
-            Collection<ResourceDTO> resourceDTOs,
-            Collection<FilterDTO> filterDTOs,
-            Collection<ErrorPageDTO> errorPageDTOs,
-            Collection<ListenerDTO> listenerDTOs)
+    public static ServletContextDTO build(final ServletContextHelperInfo info, final ServletContext context, final int reason)
     {
-        this.contextDTO = contextDTO;
-        this.contextRuntime = contextRuntime;
-        this.servletDTOs = servletDTOs != null ?
-                servletDTOs.toArray(BuilderConstants.SERVLET_DTO_ARRAY) : BuilderConstants.SERVLET_DTO_ARRAY;
-        this.resourceDTOs = resourceDTOs != null ?
-                resourceDTOs.toArray(BuilderConstants.RESOURCE_DTO_ARRAY) : BuilderConstants.RESOURCE_DTO_ARRAY;
-        this.filterDTOs = filterDTOs != null ?
-                filterDTOs.toArray(BuilderConstants.FILTER_DTO_ARRAY) : BuilderConstants.FILTER_DTO_ARRAY;
-        this.errorPageDTOs = errorPageDTOs != null ?
-                errorPageDTOs.toArray(BuilderConstants.ERROR_PAGE_DTO_ARRAY) : BuilderConstants.ERROR_PAGE_DTO_ARRAY;
-        this.listenerDTOs = listenerDTOs != null ?
-                listenerDTOs.toArray(BuilderConstants.LISTENER_DTO_ARRAY) : BuilderConstants.LISTENER_DTO_ARRAY;
+        final ServletContextDTO dto = (reason == -1 ? new ServletContextDTO() : new FailedServletContextDTO());
+
+        dto.attributes = getAttributes(context);
+        dto.contextPath = context != null ? context.getContextPath() : info.getPath();
+        dto.initParams = info.getInitParameters();
+        dto.name = info.getName();
+        dto.serviceId = info.getServiceId();
+
+        if ( reason != -1 )
+        {
+            ((FailedServletContextDTO)dto).failureReason = reason;
+        }
+        return dto;
     }
 
-    ServletContextDTOBuilder(ServletContextHelperRuntime contextRuntime,
-            Collection<ServletDTO> servletDTOs,
-            Collection<ResourceDTO> resourceDTOs,
-            Collection<FilterDTO> filterDTOs,
-            Collection<ErrorPageDTO> errorPageDTOs,
-            Collection<ListenerDTO> listenerDTOs)
-    {
-        this(new ServletContextDTO(), contextRuntime, servletDTOs, resourceDTOs, filterDTOs, errorPageDTOs, listenerDTOs);
-    }
-
-    ServletContextDTOBuilder(ServletContextDTO contextDTO, ServletContextHelperRuntime contextRuntime)
-    {
-        this(contextDTO, contextRuntime, null, null, null, null, null);
-    }
-
-    ServletContextDTO build()
-    {
-        final ServletContext context  = contextRuntime.getSharedContext();
-        final ServletContextHelperInfo contextInfo = contextRuntime.getContextInfo();
-        final long contextId = contextInfo.getServiceId();
-
-        contextDTO.attributes = getAttributes(context);
-        contextDTO.contextPath = context != null ? context.getContextPath() : contextInfo.getPath();
-        contextDTO.errorPageDTOs = errorPageDTOs;
-        contextDTO.filterDTOs = filterDTOs;
-        contextDTO.initParams = contextInfo.getInitParameters();
-        contextDTO.listenerDTOs = listenerDTOs;
-        contextDTO.name = contextInfo.getName();
-        contextDTO.resourceDTOs = resourceDTOs;
-        contextDTO.servletDTOs = servletDTOs;
-        contextDTO.serviceId = contextId;
-
-        return contextDTO;
-    }
-
-    private Map<String, Object> getAttributes(ServletContext context)
+    private static Map<String, Object> getAttributes(final ServletContext context)
     {
         if (context == null)
         {
@@ -123,7 +70,7 @@ final class ServletContextDTOBuilder
         return attributes;
     }
 
-    private boolean isSupportedType(Object attribute)
+    private static boolean isSupportedType(Object attribute)
     {
         Class<?> attributeClass = attribute.getClass();
         Class<?> type = !attributeClass.isArray() ?
