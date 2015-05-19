@@ -44,6 +44,12 @@ public final class ServletContextDTOBuilder
         dto.name = info.getName();
         dto.serviceId = info.getServiceId();
 
+        dto.errorPageDTOs = BuilderConstants.ERROR_PAGE_DTO_ARRAY;
+        dto.filterDTOs = BuilderConstants.FILTER_FAILURE_DTO_ARRAY;
+        dto.listenerDTOs = BuilderConstants.LISTENER_DTO_ARRAY;
+        dto.resourceDTOs = BuilderConstants.RESOURCE_DTO_ARRAY;
+        dto.servletDTOs = BuilderConstants.SERVLET_DTO_ARRAY;
+
         if ( reason != -1 )
         {
             ((FailedServletContextDTO)dto).failureReason = reason;

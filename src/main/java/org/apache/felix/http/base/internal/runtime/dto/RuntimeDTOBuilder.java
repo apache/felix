@@ -52,13 +52,15 @@ public final class RuntimeDTOBuilder
     {
         final RuntimeDTO runtimeDTO = new RuntimeDTO();
         runtimeDTO.serviceDTO = createServiceDTO();
+        runtimeDTO.servletContextDTOs = createContextDTOs();
+
         runtimeDTO.failedErrorPageDTOs = registry.getFailedDTOHolder().failedErrorPageDTOs.toArray(new FailedErrorPageDTO[registry.getFailedDTOHolder().failedErrorPageDTOs.size()]);
         runtimeDTO.failedFilterDTOs = registry.getFailedDTOHolder().failedFilterDTOs.toArray(new FailedFilterDTO[registry.getFailedDTOHolder().failedFilterDTOs.size()]);
         runtimeDTO.failedListenerDTOs = registry.getFailedDTOHolder().failedListenerDTOs.toArray(new FailedListenerDTO[registry.getFailedDTOHolder().failedListenerDTOs.size()]);
         runtimeDTO.failedResourceDTOs = registry.getFailedDTOHolder().failedResourceDTOs.toArray(new FailedResourceDTO[registry.getFailedDTOHolder().failedResourceDTOs.size()]);
         runtimeDTO.failedServletContextDTOs = registry.getFailedDTOHolder().failedServletContextDTO.toArray(new FailedServletContextDTO[registry.getFailedDTOHolder().failedServletContextDTO.size()]);
         runtimeDTO.failedServletDTOs = registry.getFailedDTOHolder().failedServletDTOs.toArray(new FailedServletDTO[registry.getFailedDTOHolder().failedServletDTOs.size()]);
-        runtimeDTO.servletContextDTOs = createContextDTOs();
+
         return runtimeDTO;
     }
 
