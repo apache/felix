@@ -28,6 +28,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import aQute.bnd.differ.Baseline;
+import aQute.bnd.differ.Baseline.Info;
+import aQute.bnd.differ.DiffPluginImpl;
+import aQute.bnd.osgi.Instructions;
+import aQute.bnd.osgi.Jar;
+import aQute.bnd.osgi.Processor;
+import aQute.bnd.service.diff.Delta;
+import aQute.bnd.service.diff.Diff;
+import aQute.bnd.version.Version;
+import aQute.service.reporter.Reporter;
+
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.metadata.ArtifactMetadataRetrievalException;
@@ -47,17 +58,6 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.StringUtils;
-
-import aQute.bnd.differ.Baseline;
-import aQute.bnd.differ.Baseline.Info;
-import aQute.bnd.differ.DiffPluginImpl;
-import aQute.bnd.osgi.Instructions;
-import aQute.bnd.osgi.Jar;
-import aQute.bnd.osgi.Processor;
-import aQute.bnd.service.diff.Delta;
-import aQute.bnd.service.diff.Diff;
-import aQute.bnd.version.Version;
-import aQute.service.reporter.Reporter;
 
 /**
  * Abstract BND Baseline check between two bundles.
@@ -161,7 +161,17 @@ abstract class AbstractBaselinePlugin
         }
 
         final Artifact previousArtifact = getPreviousArtifact();
-        final Jar previousBundle = openJar(previousArtifact.getFile());
+
+        final Jar previousBundle;
+        if (previousArtifact != null)
+        {
+            previousBundle = openJar(previousArtifact.getFile());
+        }
+        else
+        {
+            previousBundle = null;
+        }
+
         if ( previousBundle == null )
         {
             getLog().info( "Not generating Baseline report as there is no previous version of the library to compare against" );
