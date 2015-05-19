@@ -24,6 +24,7 @@ import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_VALI
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -747,7 +748,15 @@ public final class WhiteboardManager
     {
         final FailedDTOHolder failedDTOHolder = new FailedDTOHolder();
 
-        final Collection<ServletContextDTO> contextDTOs = new TreeSet<ServletContextDTO>();
+        final Collection<ServletContextDTO> contextDTOs = new TreeSet<ServletContextDTO>(new Comparator<ServletContextDTO>() {
+
+            @Override
+            public int compare(ServletContextDTO o1, ServletContextDTO o2) {
+                // Service id's can be negative. Negative id's follow the reverse natural ordering of integers.
+                int reverseOrder = ( o1.serviceId >= 0 && o2.serviceId >= 0 ) ? 1 : -1;
+                return reverseOrder * Long.compare(o1.serviceId, o2.serviceId);
+            }
+        });
 
         synchronized ( this.contextMap )
         {
