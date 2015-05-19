@@ -16,11 +16,6 @@
  */
 package org.apache.felix.http.base.internal.registry;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeSet;
-
 import javax.annotation.Nonnull;
 import javax.servlet.DispatcherType;
 
@@ -29,11 +24,8 @@ import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
-import org.apache.felix.http.base.internal.runtime.dto.ContextRuntime;
-import org.apache.felix.http.base.internal.runtime.dto.state.FailureFilterState;
-import org.apache.felix.http.base.internal.runtime.dto.state.FailureServletState;
-import org.apache.felix.http.base.internal.runtime.dto.state.FilterState;
-import org.apache.felix.http.base.internal.runtime.dto.state.ServletState;
+import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
+import org.osgi.service.http.runtime.dto.ServletContextDTO;
 
 /**
  * This registry keeps track of all processing components per context:
@@ -192,32 +184,21 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
         return this.errorPageRegistry.get(exception, code);
     }
 
-    public ContextRuntime getRuntime()
+    /**
+     * Create all DTOs for servlets, filters, resources and error pages
+     * @param dto The servlet context DTO
+     * @param failedDTOHolder The container for all failed DTOs
+     */
+    public void getRuntime(final ServletContextDTO dto,
+            final FailedDTOHolder failedDTOHolder)
     {
         // collect filters
-        final Collection<FilterState> filterRuntimes = new TreeSet<FilterState>(FilterState.COMPARATOR);
-        final Collection<FailureFilterState> failureFilterRuntimes = new TreeSet<FailureFilterState>(FailureFilterState.COMPARATOR);
-        this.filterRegistry.getRuntimeInfo(filterRuntimes, failureFilterRuntimes);
+        this.filterRegistry.getRuntimeInfo(dto, failedDTOHolder.failedFilterDTOs);
 
         // collect error pages
-        final Map<Long, ServletState> servletStates = new HashMap<Long, ServletState>();
-        final Map<Long, Map<Integer, FailureServletState>> failureServletStates = new HashMap<Long, Map<Integer,FailureServletState>>();
-        this.errorPageRegistry.getRuntimeInfo(servletStates, failureServletStates);
+        this.errorPageRegistry.getRuntimeInfo(dto, failedDTOHolder.failedErrorPageDTOs);
 
         // collect servlets and resources
-        this.servletRegistry.getRuntimeInfo(servletStates, failureServletStates);
-
-        final Collection<ServletState> sortedServletStates = new TreeSet<ServletState>(ServletState.COMPARATOR);
-        sortedServletStates.addAll(servletStates.values());
-        final Collection<FailureServletState> sortedFailureServletStates = new TreeSet<FailureServletState>(ServletState.COMPARATOR);
-        for(final Map<Integer, FailureServletState> val : failureServletStates.values())
-        {
-            sortedFailureServletStates.addAll(val.values());
-        }
-
-        return new ContextRuntime(filterRuntimes,
-                sortedServletStates,
-                failureFilterRuntimes,
-                sortedFailureServletStates);
+        this.servletRegistry.getRuntimeInfo(dto, failedDTOHolder.failedServletDTOs, failedDTOHolder.failedResourceDTOs);
     }
 }

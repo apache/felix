@@ -17,6 +17,7 @@
 package org.apache.felix.http.base.internal.registry;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -29,10 +30,15 @@ import javax.annotation.Nonnull;
 
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
-import org.apache.felix.http.base.internal.runtime.dto.state.FailureServletState;
-import org.apache.felix.http.base.internal.runtime.dto.state.ServletState;
+import org.apache.felix.http.base.internal.runtime.dto.ResourceDTOBuilder;
+import org.apache.felix.http.base.internal.runtime.dto.ServletDTOBuilder;
 import org.apache.felix.http.base.internal.util.PatternUtil;
 import org.osgi.service.http.runtime.dto.DTOConstants;
+import org.osgi.service.http.runtime.dto.FailedResourceDTO;
+import org.osgi.service.http.runtime.dto.FailedServletDTO;
+import org.osgi.service.http.runtime.dto.ResourceDTO;
+import org.osgi.service.http.runtime.dto.ServletContextDTO;
+import org.osgi.service.http.runtime.dto.ServletDTO;
 
 /**
  * The servlet registry keeps the mappings for all servlets (by using their pattern)
@@ -41,8 +47,6 @@ import org.osgi.service.http.runtime.dto.DTOConstants;
  * TODO - servlet name handling
  *
  * TODO - sort active servlet mappings by pattern length, longest first (avoids looping over all)
- *
- * TODO - check if add/remove needs syncing
  *
  * TODO - replace patterns with own matchers
  */
@@ -156,7 +160,7 @@ public final class ServletRegistry
         this.servletsByName.put(servletName, list);
     }
 
-    private void removeFromNameMapping(final String servletName, final ServletHandler handler)
+    private synchronized void removeFromNameMapping(final String servletName, final ServletHandler handler)
     {
         List<ServletHandler> list = this.servletsByName.get(servletName);
         if ( list != null )
@@ -187,7 +191,7 @@ public final class ServletRegistry
      * Remove a servlet
      * @param info The servlet info
      */
-    public void removeServlet(@Nonnull final ServletInfo info, final boolean destroy)
+    public synchronized void removeServlet(@Nonnull final ServletInfo info, final boolean destroy)
     {
         if ( info.getPatterns() != null )
         {
@@ -314,63 +318,93 @@ public final class ServletRegistry
         return null;
     }
 
-    public void getRuntimeInfo(final Map<Long, ServletState> servletStates,
-            final Map<Long, Map<Integer, FailureServletState>> failureServletStates)
+    public void getRuntimeInfo(
+            final ServletContextDTO servletContextDTO,
+            final Collection<FailedServletDTO> allFailedServletDTOs,
+            final Collection<FailedResourceDTO> allFailedResourceDTOs)
     {
+        final Map<Long, ServletDTO> servletDTOs = new HashMap<Long, ServletDTO>();
+        final Map<Long, ResourceDTO> resourceDTOs = new HashMap<Long, ResourceDTO>();
+
+        final Map<Long, FailedServletDTO> failedServletDTOs = new HashMap<Long, FailedServletDTO>();
+        final Map<Long, FailedResourceDTO> failedResourceDTOs = new HashMap<Long, FailedResourceDTO>();
+
         // TODO we could already do some pre calculation in the ServletRegistrationStatus
         for(final Map.Entry<ServletInfo, ServletRegistrationStatus> entry : statusMapping.entrySet())
         {
             final long serviceId = entry.getKey().getServiceId();
             for(final Map.Entry<String, Integer> map : entry.getValue().pathToStatus.entrySet())
             {
-                if ( map.getValue() == - 1)
+                if ( entry.getKey().isResource() )
                 {
-                    ServletState state = servletStates.get(serviceId);
+                    ServletDTO state = (map.getValue() == -1 ? servletDTOs.get(serviceId) : failedServletDTOs.get(serviceId));
                     if ( state == null )
                     {
-                        state = new ServletState(entry.getValue().handler);
-                        servletStates.put(serviceId, state);
+                        state = ServletDTOBuilder.build(entry.getValue().handler, map.getValue());
+                        if ( map.getValue() == -1 )
+                        {
+                            servletDTOs.put(serviceId, state);
+                        }
+                        else
+                        {
+                            failedServletDTOs.put(serviceId, (FailedServletDTO)state);
+                        }
                     }
-                    String[] patterns = state.getPatterns();
+                    String[] patterns = state.patterns;
                     if ( patterns.length ==  0 )
                     {
-                        state.setPatterns(new String[] {map.getKey()});
+                        state.patterns = new String[] {map.getKey()};
                     }
                     else
                     {
                         patterns = new String[patterns.length + 1];
-                        System.arraycopy(state.getPatterns(), 0, patterns, 0, patterns.length - 1);
+                        System.arraycopy(state.patterns, 0, patterns, 0, patterns.length - 1);
                         patterns[patterns.length - 1] = map.getKey();
+                        state.patterns = patterns;
                     }
                 }
                 else
                 {
-                    Map<Integer, FailureServletState> fmap = failureServletStates.get(serviceId);
-                    if ( fmap == null )
-                    {
-                        fmap = new HashMap<Integer, FailureServletState>();
-                        failureServletStates.put(serviceId, fmap);
-                    }
-                    FailureServletState state = fmap.get(map.getValue());
+                    ResourceDTO state = (map.getValue() == -1 ? resourceDTOs.get(serviceId) : failedResourceDTOs.get(serviceId));
                     if ( state == null )
                     {
-                        state = new FailureServletState(entry.getValue().handler, map.getValue());
-                        fmap.put(map.getValue(), state);
+                        state = ResourceDTOBuilder.build(entry.getValue().handler, map.getValue());
+                        if ( map.getValue() == -1 )
+                        {
+                            resourceDTOs.put(serviceId, state);
+                        }
+                        else
+                        {
+                            failedResourceDTOs.put(serviceId, (FailedResourceDTO)state);
+                        }
                     }
-                    String[] patterns = state.getPatterns();
+                    String[] patterns = state.patterns;
                     if ( patterns.length ==  0 )
                     {
-                        state.setPatterns(new String[] {map.getKey()});
+                        state.patterns = new String[] {map.getKey()};
                     }
                     else
                     {
                         patterns = new String[patterns.length + 1];
-                        System.arraycopy(state.getPatterns(), 0, patterns, 0, patterns.length - 1);
+                        System.arraycopy(state.patterns, 0, patterns, 0, patterns.length - 1);
                         patterns[patterns.length - 1] = map.getKey();
+                        state.patterns = patterns;
                     }
                 }
-
             }
         }
+
+        final Collection<ServletDTO> servletDTOsArray = servletDTOs.values();
+        if ( !servletDTOsArray.isEmpty() )
+        {
+            servletContextDTO.servletDTOs = servletDTOsArray.toArray(new ServletDTO[servletDTOsArray.size()]);
+        }
+        final Collection<ResourceDTO> resourceDTOsArray = resourceDTOs.values();
+        if ( !resourceDTOsArray.isEmpty() )
+        {
+            servletContextDTO.resourceDTOs = resourceDTOsArray.toArray(new ResourceDTO[resourceDTOsArray.size()]);
+        }
+        allFailedResourceDTOs.addAll(failedResourceDTOs.values());
+        allFailedServletDTOs.addAll(failedServletDTOs.values());
     }
 }

@@ -29,7 +29,8 @@ import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
-import org.apache.felix.http.base.internal.runtime.dto.ContextRuntime;
+import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
+import org.osgi.service.http.runtime.dto.ServletContextDTO;
 
 /**
  * Registry for all services.
@@ -276,13 +277,15 @@ public final class HandlerRegistry
         return null;
     }
 
-    public ContextRuntime getRuntime(final long contextId)
+    public boolean getRuntime(final ServletContextDTO dto,
+            final FailedDTOHolder failedDTOHolder)
     {
-        final PerContextHandlerRegistry reg = this.getRegistry(contextId);
+        final PerContextHandlerRegistry reg = this.getRegistry(dto.serviceId);
         if ( reg != null )
         {
-            return reg.getRuntime();
+            reg.getRuntime(dto, failedDTOHolder);
+            return true;
         }
-        return null;
+        return false;
     }
 }

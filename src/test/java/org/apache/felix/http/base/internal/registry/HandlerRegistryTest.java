@@ -16,11 +16,12 @@
  */
 package org.apache.felix.http.base.internal.registry;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-import org.apache.felix.http.base.internal.runtime.dto.ContextRuntime;
+import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
 import org.junit.Test;
+import org.osgi.service.http.runtime.dto.ServletContextDTO;
 
 
 public class HandlerRegistryTest
@@ -29,17 +30,16 @@ public class HandlerRegistryTest
 
     @Test public void testInitialSetup()
     {
-        ContextRuntime runtime = registry.getRuntime(0);
-        assertNull(runtime);
+        final FailedDTOHolder holder = new FailedDTOHolder();
+        final ServletContextDTO dto = new ServletContextDTO();
+        assertFalse(registry.getRuntime(dto, holder));
 
         registry.init();
 
-        runtime = registry.getRuntime(0);
-        assertNotNull(runtime);
+        assertTrue(registry.getRuntime(dto, holder));
 
         registry.shutdown();
-        runtime = registry.getRuntime(0);
-        assertNull(runtime);
+        assertFalse(registry.getRuntime(dto, holder));
     }
     /*
     @Test

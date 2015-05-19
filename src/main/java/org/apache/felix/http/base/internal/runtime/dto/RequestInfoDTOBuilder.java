@@ -16,12 +16,9 @@
  */
 package org.apache.felix.http.base.internal.runtime.dto;
 
-import static java.util.Arrays.asList;
-
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.registry.PathResolution;
-import org.apache.felix.http.base.internal.runtime.dto.state.ServletState;
 import org.osgi.service.http.runtime.dto.FilterDTO;
 import org.osgi.service.http.runtime.dto.RequestInfoDTO;
 
@@ -53,24 +50,17 @@ public final class RequestInfoDTOBuilder
         requestInfoDTO.servletContextId = pr.handler.getContextServiceId();
         if (pr.handler.getServletInfo().isResource())
         {
-            final ServletState state = new ServletState(pr.handler);
-            state.setPatterns(pr.handler.getServletInfo().getPatterns());
-            requestInfoDTO.resourceDTO = ResourceDTOBuilder.create()
-                    .buildDTO(state,
-                            pr.handler.getContextServiceId());
+            requestInfoDTO.resourceDTO = ResourceDTOBuilder.build(pr.handler, -1);
+            requestInfoDTO.resourceDTO.patterns = pr.handler.getServletInfo().getPatterns();
         }
         else
         {
-            final ServletState state = new ServletState(pr.handler);
-            state.setPatterns(pr.handler.getServletInfo().getPatterns());
-            requestInfoDTO.servletDTO = ServletDTOBuilder.create()
-                    .buildDTO(state, pr.handler.getContextServiceId());
+            requestInfoDTO.servletDTO = ServletDTOBuilder.build(pr.handler, -1);
+            requestInfoDTO.servletDTO.patterns = pr.handler.getServletInfo().getPatterns();
         }
 
         final FilterHandler[] filterHandlers = registry.getFilters(pr, null, path);
-        requestInfoDTO.filterDTOs = FilterDTOBuilder.create()
-                .build(asList(filterHandlers), pr.handler.getContextServiceId())
-                .toArray(FILTER_DTO_ARRAY);
+        requestInfoDTO.filterDTOs = FilterDTOBuilder.build(filterHandlers);
 
         return requestInfoDTO;
     }

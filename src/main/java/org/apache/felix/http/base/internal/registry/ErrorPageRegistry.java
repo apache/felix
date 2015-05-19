@@ -17,6 +17,7 @@
 package org.apache.felix.http.base.internal.registry;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -31,12 +32,16 @@ import javax.annotation.Nonnull;
 
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
-import org.apache.felix.http.base.internal.runtime.dto.state.FailureServletState;
-import org.apache.felix.http.base.internal.runtime.dto.state.ServletState;
+import org.apache.felix.http.base.internal.runtime.dto.ErrorPageDTOBuilder;
 import org.osgi.service.http.runtime.dto.DTOConstants;
+import org.osgi.service.http.runtime.dto.ErrorPageDTO;
+import org.osgi.service.http.runtime.dto.FailedErrorPageDTO;
+import org.osgi.service.http.runtime.dto.ServletContextDTO;
 
 /**
- * TODO - check if add/remove needs syncing
+ * The error page registry keeps tracks of the active/inactive servlets handling
+ * error pages (error code and/or exception).
+ * This registry is per servlet context.
  */
 public final class ErrorPageRegistry
 {
@@ -116,7 +121,7 @@ public final class ErrorPageRegistry
      * Add the servlet for error handling
      * @param handler The servlet handler.
      */
-    public void addServlet(@Nonnull final ServletHandler handler)
+    public synchronized void addServlet(@Nonnull final ServletHandler handler)
     {
         final ErrorRegistration reg = getErrorRegistration(handler.getServletInfo());
         if ( reg != null )
@@ -205,7 +210,7 @@ public final class ErrorPageRegistry
      * Remove the servlet from error handling
      * @param info The servlet info.
      */
-    public void removeServlet(@Nonnull final ServletInfo info, final boolean destroy)
+    public synchronized void removeServlet(@Nonnull final ServletInfo info, final boolean destroy)
     {
         final ErrorRegistration reg = getErrorRegistration(info);
         if ( reg != null )
@@ -311,7 +316,10 @@ public final class ErrorPageRegistry
     }
 
     /**
-     * Get the servlet handling the error
+     * Get the servlet handling the error (error code or exception).
+     * If an exception is provided, a handler for the exception is searched first.
+     * If no handler is found (or no exception provided) a handler for the error
+     * code is searched.
      * @param exception Optional exception
      * @param errorCode Error code
      * @return The servlet handling the error or {@code null}
@@ -327,6 +335,11 @@ public final class ErrorPageRegistry
         return get(errorCode);
     }
 
+    /**
+     * Get the servlet handling the error code
+     * @param errorCode Error code
+     * @return The servlet handling the error or {@code null}
+     */
     private ServletHandler get(final int errorCode)
     {
         final List<ServletHandler> list = this.errorCodesMap.get(errorCode);
@@ -337,6 +350,11 @@ public final class ErrorPageRegistry
         return null;
     }
 
+    /**
+     * Get the servlet handling the exception
+     * @param exception Error exception
+     * @return The servlet handling the error or {@code null}
+     */
     private ServletHandler get(final Throwable exception)
     {
         if (exception == null)
@@ -348,7 +366,7 @@ public final class ErrorPageRegistry
         Class<?> throwableClass = exception.getClass();
         while ( servletHandler == null && throwableClass != null )
         {
-            final List<ServletHandler> list = this.errorCodesMap.get(throwableClass.getName());
+            final List<ServletHandler> list = this.exceptionsMap.get(throwableClass.getName());
             if ( list != null )
             {
                 servletHandler = list.get(0);
@@ -366,6 +384,13 @@ public final class ErrorPageRegistry
         return servletHandler;
     }
 
+    /**
+     * Try to activate a servlet for an error code
+     * @param code The error code
+     * @param handler The servlet handler
+     * @param status The status to keep track of activation
+     * @return {@code -1} if activation was successful, failure code otherwise
+     */
     private boolean tryToActivate(final Long code, final ServletHandler handler, final ErrorRegistrationStatus status)
     {
         // add to active
@@ -375,6 +400,13 @@ public final class ErrorPageRegistry
         return result == -1;
     }
 
+    /**
+     * Try to activate a servlet for an exception
+     * @param exception The exception
+     * @param handler The servlet handler
+     * @param status The status to keep track of activation
+     * @return {@code -1} if activation was successful, failure code otherwise
+     */
     private boolean tryToActivate(final String exception, final ServletHandler handler, final ErrorRegistrationStatus status)
     {
         // add to active
@@ -384,9 +416,11 @@ public final class ErrorPageRegistry
         return result == -1;
     }
 
-    public void getRuntimeInfo(final Map<Long, ServletState> servletStates,
-            final Map<Long, Map<Integer, FailureServletState>> failureServletStates)
+    public void getRuntimeInfo(final ServletContextDTO dto,
+            final Collection<FailedErrorPageDTO> failedErrorPageDTOs)
     {
+        final Collection<ErrorPageDTO> errorPageDTOs = new ArrayList<ErrorPageDTO>();
+
         for(final ErrorRegistrationStatus status : this.statusMapping.values())
         {
             // TODO - we could do this calculation already when generating the status object
@@ -427,14 +461,11 @@ public final class ErrorPageRegistry
                     set.exceptions.add(codeEntry.getKey());
                 }
             }
+
+            // create DTOs
             if ( !active.errorCodes.isEmpty() || !active.exceptions.isEmpty() )
             {
-                ServletState state = servletStates.get(status.handler.getServletInfo().getServiceId());
-                if ( state == null )
-                {
-                    state = new ServletState(status.handler);
-                    servletStates.put(status.handler.getServletInfo().getServiceId(), state);
-                }
+                final ErrorPageDTO state = ErrorPageDTOBuilder.build(status.handler, -1);
                 if ( !active.errorCodes.isEmpty() )
                 {
                     final long[] codes = new long[active.errorCodes.size()];
@@ -443,28 +474,17 @@ public final class ErrorPageRegistry
                     {
                         codes[i] = iter.next();
                     }
-                    state.setErrorCodes(codes);
+                    state.errorCodes = codes;
                 }
                 if ( !active.exceptions.isEmpty() )
                 {
-                    state.setErrorExceptions(active.exceptions.toArray(new String[active.exceptions.size()]));
+                    state.exceptions = active.exceptions.toArray(new String[active.exceptions.size()]);
                 }
+                errorPageDTOs.add(state);
             }
             for(final Map.Entry<Integer, ErrorRegistration> entry : inactive.entrySet())
             {
-                Map<Integer, FailureServletState> failureStates = failureServletStates.get(status.handler.getServletInfo().getServiceId());
-                if ( failureStates == null )
-                {
-                    failureStates = new HashMap<Integer, FailureServletState>();
-                    failureServletStates.put(status.handler.getServletInfo().getServiceId(), failureStates);
-                }
-
-                FailureServletState state = failureStates.get(entry.getKey());
-                if ( state == null )
-                {
-                    state = new FailureServletState(status.handler, entry.getKey());
-                    failureStates.put(entry.getKey(), state);
-                }
+                final FailedErrorPageDTO state = (FailedErrorPageDTO)ErrorPageDTOBuilder.build(status.handler, entry.getKey());
                 if ( !entry.getValue().errorCodes.isEmpty() )
                 {
                     final long[] codes = new long[entry.getValue().errorCodes.size()];
@@ -473,13 +493,18 @@ public final class ErrorPageRegistry
                     {
                         codes[i] = iter.next();
                     }
-                    state.setErrorCodes(codes);
+                    state.errorCodes = codes;
                 }
                 if ( !entry.getValue().exceptions.isEmpty() )
                 {
-                    state.setErrorExceptions(entry.getValue().exceptions.toArray(new String[entry.getValue().exceptions.size()]));
+                    state.exceptions = entry.getValue().exceptions.toArray(new String[entry.getValue().exceptions.size()]);
                 }
+                failedErrorPageDTOs.add(state);
             }
+        }
+        if ( !errorPageDTOs.isEmpty() )
+        {
+            dto.errorPageDTOs = errorPageDTOs.toArray(new ErrorPageDTO[errorPageDTOs.size()]);
         }
     }
 }

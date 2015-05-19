@@ -31,14 +31,13 @@ import javax.servlet.ServletResponse;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
-import org.apache.felix.http.base.internal.runtime.dto.state.FilterState;
 import org.apache.felix.http.base.internal.util.PatternUtil;
 import org.osgi.service.http.runtime.dto.DTOConstants;
 
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class FilterHandler implements Comparable<FilterHandler>, FilterState
+public class FilterHandler implements Comparable<FilterHandler>
 {
     private final long contextServiceId;
 
@@ -119,7 +118,6 @@ public class FilterHandler implements Comparable<FilterHandler>, FilterState
         this.filter = f;
     }
 
-    @Override
     public FilterInfo getFilterInfo()
     {
         return this.filterInfo;
@@ -128,7 +126,7 @@ public class FilterHandler implements Comparable<FilterHandler>, FilterState
     public String getName()
     {
         String name = this.filterInfo.getName();
-        if (name == null)
+        if (name == null && filter != null )
         {
             name = filter.getClass().getName();
         }

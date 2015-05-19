@@ -20,25 +20,27 @@ package org.apache.felix.http.base.internal.runtime.dto;
 
 import java.util.Collection;
 
+import org.osgi.service.http.runtime.dto.ServletContextDTO;
+
 public final class RegistryRuntime
 {
-    private final Collection<ServletContextHelperRuntime> contexts;
-    private final FailureRuntime failureRuntime;
+    private final Collection<ServletContextDTO> contextDTOs;
+    private final FailedDTOHolder failedDTOHolder;
 
-    public RegistryRuntime(Collection<ServletContextHelperRuntime> contexts,
-            FailureRuntime failureRuntime)
+    public RegistryRuntime(final FailedDTOHolder failedDTOHolder,
+            final Collection<ServletContextDTO> contextDTOs)
     {
-        this.contexts = contexts;
-        this.failureRuntime = failureRuntime;
+        this.failedDTOHolder = failedDTOHolder;
+        this.contextDTOs = contextDTOs;
     }
 
-    public Collection<ServletContextHelperRuntime> getContexts()
+    public FailedDTOHolder getFailedDTOHolder()
     {
-        return contexts;
+        return this.failedDTOHolder;
     }
 
-    public FailureRuntime getFailureRuntime()
+    public Collection<ServletContextDTO> getServletContextDTOs()
     {
-        return failureRuntime;
+        return this.contextDTOs;
     }
 }

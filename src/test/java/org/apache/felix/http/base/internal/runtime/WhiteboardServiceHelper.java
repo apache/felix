@@ -21,10 +21,7 @@ package org.apache.felix.http.base.internal.runtime;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -33,30 +30,29 @@ import javax.servlet.Filter;
 import javax.servlet.Servlet;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
+import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.HttpServiceFilterHandler;
 import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
-import org.apache.felix.http.base.internal.runtime.dto.state.FilterState;
-import org.apache.felix.http.base.internal.runtime.dto.state.ServletState;
 import org.osgi.framework.ServiceReference;
 
 public final class WhiteboardServiceHelper
 {
     public static final AtomicLong ID_COUNTER = new AtomicLong();
 
-    public static FilterState createTestFilterWithServiceId(String identifier,
+    public static FilterHandler createTestFilterWithServiceId(String identifier,
             ExtServletContext context)
     {
         return createTestFilter(identifier, context, ID_COUNTER.incrementAndGet());
     }
 
-    public static FilterState createTestFilter(String identifier,
+    public static FilterHandler createTestFilter(String identifier,
             ExtServletContext context)
     {
         return createTestFilter(identifier, context, -ID_COUNTER.incrementAndGet());
     }
 
-    private static FilterState createTestFilter(String identifier,
+    private static FilterHandler createTestFilter(String identifier,
             ExtServletContext context,
             Long serviceId)
     {
@@ -160,7 +156,7 @@ public final class WhiteboardServiceHelper
                     }
                 };
     }
-
+/*
     public static ServletState createErrorPageWithServiceId(String identifier, ExtServletContext context, long contextServiceId)
     {
         return createErrorPage(identifier, context, ID_COUNTER.incrementAndGet(), contextServiceId);
@@ -191,7 +187,7 @@ public final class WhiteboardServiceHelper
         state.setErrorExceptions(exceptions.toArray(new String[exceptions.size()]));
         return state;
     }
-
+*/
     public static ServletContextHelperInfo createContextInfo(int serviceRanking,
             long serviceId,
             String name,

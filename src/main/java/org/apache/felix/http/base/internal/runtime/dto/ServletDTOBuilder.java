@@ -18,57 +18,44 @@
  */
 package org.apache.felix.http.base.internal.runtime.dto;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
+import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
-import org.apache.felix.http.base.internal.runtime.dto.state.ServletState;
+import org.osgi.service.http.runtime.dto.FailedServletDTO;
 import org.osgi.service.http.runtime.dto.ServletDTO;
 
-final class ServletDTOBuilder<T extends ServletDTO> extends BaseServletDTOBuilder<ServletState, T>
+public final class ServletDTOBuilder extends BaseServletDTOBuilder
 {
-    static ServletDTOBuilder<ServletDTO> create()
+    /**
+     * Build a servlet DTO from a servlet handler
+     * @param handler The servlet handler
+     * @param reason If reason is -1, a servlet DTO is created, otherwise a failed servlet DTO is returned
+     * @return A servlet DTO
+     */
+    public static ServletDTO build(final ServletHandler handler, final int reason)
     {
-        return new ServletDTOBuilder<ServletDTO>(DTOFactories.SERVLET);
-    }
+        final ServletDTO dto = build(handler.getServletInfo(), reason != -1);
 
-    ServletDTOBuilder(DTOFactory<T> dtoFactory)
-    {
-        super(dtoFactory);
-    }
+        BaseServletDTOBuilder.fill(dto, handler);
 
-
-    @Override
-    Collection<T> build(Collection<? extends ServletState> whiteboardServices,
-            long servletContextId) {
-        List<T> dtoList = new ArrayList<T>();
-        for (ServletState whiteboardService : whiteboardServices)
+        if ( reason != -1 )
         {
-            if ( whiteboardService.getPatterns().length > 0 && !whiteboardService.getServletInfo().isResource() )
-            {
-                dtoList.add(buildDTO(whiteboardService, servletContextId));
-            }
+            ((FailedServletDTO)dto).failureReason = reason;
         }
-        return dtoList;
+
+        return dto;
     }
 
-    @Override
-    T buildDTO(ServletState servletRuntime, long servletContextId)
+    /**
+     * Build a servlet DTO from a servlet info
+     * @param info The servlet info
+     * @return A servlet DTO
+     */
+    public static ServletDTO build(final ServletInfo info, final boolean failed)
     {
-        ServletInfo info = servletRuntime.getServletInfo();
+        final ServletDTO dto = (failed ? new FailedServletDTO() : new ServletDTO());
 
-        T servletDTO = super.buildDTO(servletRuntime, servletContextId);
-        servletDTO.patterns = copyWithDefault(checkNotEmpty(info.getPatterns()), null);
-        return servletDTO;
-    }
+        BaseServletDTOBuilder.fill(dto, info);
 
-    private String[] checkNotEmpty(String[] patterns)
-    {
-        if (patterns == null || patterns.length == 0)
-        {
-            throw new IllegalArgumentException("No patterns specified in servlet info");
-        }
-        return patterns;
+        return dto;
     }
 }

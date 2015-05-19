@@ -18,45 +18,47 @@
  */
 package org.apache.felix.http.base.internal.runtime.dto;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import org.apache.felix.http.base.internal.runtime.dto.state.ServletState;
+import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.osgi.service.http.runtime.dto.ErrorPageDTO;
+import org.osgi.service.http.runtime.dto.FailedErrorPageDTO;
 
-final class ErrorPageDTOBuilder<T extends ErrorPageDTO> extends BaseServletDTOBuilder<ServletState, T>
+public final class ErrorPageDTOBuilder extends BaseServletDTOBuilder
 {
-    static ErrorPageDTOBuilder<ErrorPageDTO> create()
+    /**
+     * Build a servlet DTO from a servlet handler
+     * @param handler The servlet handler
+     * @param reason If reason is -1, a servlet DTO is created, otherwise a failed servlet DTO is returned
+     * @return A servlet DTO
+     */
+    public static ErrorPageDTO build(final ServletHandler handler, final int reason)
     {
-        return new ErrorPageDTOBuilder<ErrorPageDTO>(DTOFactories.ERROR_PAGE);
-    }
+        final ErrorPageDTO dto = build(handler.getServletInfo(), reason != -1);
 
-    ErrorPageDTOBuilder(DTOFactory<T> dtoFactory)
-    {
-        super(dtoFactory);
-    }
+        BaseServletDTOBuilder.fill(dto, handler);
 
-    @Override
-    Collection<T> build(Collection<? extends ServletState> whiteboardServices,
-            long servletContextId) {
-        List<T> dtoList = new ArrayList<T>();
-        for (ServletState whiteboardService : whiteboardServices)
+        if ( reason != -1 )
         {
-            if ( whiteboardService.getErrorCodes().length > 0 || whiteboardService.getErrorExceptions().length > 0 )
-            {
-                dtoList.add(buildDTO(whiteboardService, servletContextId));
-            }
+            ((FailedErrorPageDTO)dto).failureReason = reason;
         }
-        return dtoList;
+
+        return dto;
     }
 
-    @Override
-    T buildDTO(ServletState errorPage, long servletConextId)
+    /**
+     * Build a servlet DTO from a servlet info
+     * @param info The servlet info
+     * @return A servlet DTO
+     */
+    public static ErrorPageDTO build(final ServletInfo info, final boolean failed)
     {
-        T errorPageDTO = super.buildDTO(errorPage, servletConextId);
-        errorPageDTO.errorCodes = errorPage.getErrorCodes();
-        errorPageDTO.exceptions = errorPage.getErrorExceptions();
-        return errorPageDTO;
+        final ErrorPageDTO dto = (failed ? new FailedErrorPageDTO() : new ErrorPageDTO());
+
+        BaseServletDTOBuilder.fill(dto, info);
+
+        dto.errorCodes = BuilderConstants.EMPTY_LONG_ARRAY;
+        dto.exceptions = BuilderConstants.EMPTY_STRING_ARRAY;
+
+        return dto;
     }
 }
