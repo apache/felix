@@ -535,7 +535,7 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
 
         // default context is last, as it has the lowest service ranking
         assertEquals("Http Service context", runtimeDTOWithAdditionalContext.servletContextDTOs[0].name);
-        assertEquals("/", runtimeDTOWithAdditionalContext.servletContextDTOs[0].contextPath);
+        assertEquals("", runtimeDTOWithAdditionalContext.servletContextDTOs[0].contextPath);
         assertEquals("contextA", runtimeDTOWithAdditionalContext.servletContextDTOs[1].name);
         assertEquals("/contextA", runtimeDTOWithAdditionalContext.servletContextDTOs[1].contextPath);
         assertEquals("default", runtimeDTOWithAdditionalContext.servletContextDTOs[2].name);
