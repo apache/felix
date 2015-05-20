@@ -231,7 +231,7 @@ public final class HandlerRegistry
 
     }
 
-    public PathResolution resolveServlet(final String requestURI)
+    public PathResolution resolveServlet(@Nonnull final String requestURI)
     {
         final List<PerContextHandlerRegistry> regs = this.registrations;
         for(final PerContextHandlerRegistry r : regs)

@@ -116,7 +116,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
         return result;
     }
 
-    public String isMatching(final String requestURI)
+    public String isMatching(@Nonnull final String requestURI)
     {
         if (requestURI.equals(this.path))
         {
@@ -133,7 +133,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
         return null;
     }
 
-    public PathResolution resolve(final String relativeRequestURI)
+    public PathResolution resolve(@Nonnull final String relativeRequestURI)
     {
         return this.servletRegistry.resolve(relativeRequestURI);
     }

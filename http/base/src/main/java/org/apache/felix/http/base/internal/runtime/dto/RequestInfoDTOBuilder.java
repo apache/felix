@@ -51,12 +51,12 @@ public final class RequestInfoDTOBuilder
         if (pr.handler.getServletInfo().isResource())
         {
             requestInfoDTO.resourceDTO = ResourceDTOBuilder.build(pr.handler, -1);
-            requestInfoDTO.resourceDTO.patterns = pr.handler.getServletInfo().getPatterns();
+            requestInfoDTO.resourceDTO.patterns = pr.patterns;
         }
         else
         {
             requestInfoDTO.servletDTO = ServletDTOBuilder.build(pr.handler, -1);
-            requestInfoDTO.servletDTO.patterns = pr.handler.getServletInfo().getPatterns();
+            requestInfoDTO.servletDTO.patterns = pr.patterns;
         }
 
         final FilterHandler[] filterHandlers = registry.getFilters(pr, null, path);
