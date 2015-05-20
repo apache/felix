@@ -209,6 +209,57 @@ public class ServletRegistryTest {
         assertEmpty(dto, holder);
     }
 
+    @Test public void testServletOrdering() throws InvalidSyntaxException
+    {
+        final ServletHandler h1 = createServletHandler(1L, 0, "/foo");
+        reg.addServlet(h1);
+        final ServletHandler h2 = createServletHandler(2L, 0, "/foo/*");
+        reg.addServlet(h2);
+        final ServletHandler h3 = createServletHandler(3L, 0, "/foo/rsrc");
+        reg.addServlet(h3);
+        final ServletHandler h4 = createServletHandler(4L, 0, "/foo/rsrc/*");
+        reg.addServlet(h4);
+        final ServletHandler h5 = createServletHandler(5L, 0, "/other");
+        reg.addServlet(h5);
+
+        PathResolution pr = null;
+
+        pr = reg.resolve("/foo");
+        assertNotNull(pr);
+        assertEquals("/foo", pr.patterns[0]);
+        assertEquals(h1, pr.handler);
+
+        pr = reg.resolve("/fool");
+        assertNull(pr);
+
+        pr = reg.resolve("/foo/bar");
+        assertEquals("/foo/*", pr.patterns[0]);
+        assertEquals(h2, pr.handler);
+
+        pr = reg.resolve("/foo/rsrc");
+        assertEquals("/foo/rsrc", pr.patterns[0]);
+        assertEquals(h3, pr.handler);
+
+        pr = reg.resolve("/foo/rsrc/some");
+        assertEquals("/foo/rsrc/*", pr.patterns[0]);
+        assertEquals(h4, pr.handler);
+
+        pr = reg.resolve("/other");
+        assertEquals("/other", pr.patterns[0]);
+        assertEquals(h5, pr.handler);
+
+        pr = reg.resolve("/other/bla");
+        assertEquals("/other", pr.patterns[0]);
+        assertEquals(h5, pr.handler);
+
+        // cleanup
+        reg.removeServlet(h1.getServletInfo(), true);
+        reg.removeServlet(h2.getServletInfo(), true);
+        reg.removeServlet(h3.getServletInfo(), true);
+        reg.removeServlet(h4.getServletInfo(), true);
+        reg.removeServlet(h5.getServletInfo(), true);
+    }
+
     private static ServletInfo createServletInfo(final long id, final int ranking, final String... paths) throws InvalidSyntaxException
     {
         final BundleContext bCtx = mock(BundleContext.class);

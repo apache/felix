@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
 
@@ -32,7 +31,6 @@ import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.dto.ResourceDTOBuilder;
 import org.apache.felix.http.base.internal.runtime.dto.ServletDTOBuilder;
-import org.apache.felix.http.base.internal.util.PatternUtil;
 import org.osgi.service.http.runtime.dto.DTOConstants;
 import org.osgi.service.http.runtime.dto.FailedResourceDTO;
 import org.osgi.service.http.runtime.dto.FailedServletDTO;
@@ -44,11 +42,8 @@ import org.osgi.service.http.runtime.dto.ServletDTO;
  * The servlet registry keeps the mappings for all servlets (by using their pattern)
  * for a single servlet context.
  *
- * TODO - servlet name handling
- *
  * TODO - sort active servlet mappings by pattern length, longest first (avoids looping over all)
  *
- * TODO - replace patterns with own matchers
  */
 public final class ServletRegistry
 {
@@ -66,17 +61,25 @@ public final class ServletRegistry
         public ServletHandler handler;
     }
 
-    public PathResolution resolve(final String relativeRequestURI)
+    /**
+     * Resolve a request uri
+     *
+     * @param relativeRequestURI The request uri
+     * @return A path resolution if a servlet matched, {@code null} otherwise
+     */
+    public PathResolution resolve(@Nonnull final String relativeRequestURI)
     {
-        int len = -1;
+        PathResolver resolver = null;
         PathResolution candidate = null;
         for(final Map.Entry<String, ServletRegistration> entry : this.activeServletMappings.entrySet())
         {
             final PathResolution pr = entry.getValue().resolve(relativeRequestURI);
-            if ( pr != null && entry.getKey().length() > len )
+            if ( pr != null && (resolver == null || entry.getValue().getPathResolver().compareTo(resolver) < 0) )
             {
+                // TODO - we should have all patterns under which this servlet is actively registered
+                pr.patterns = new String[] {entry.getKey()};
                 candidate = pr;
-                len = entry.getKey().length();
+                resolver = entry.getValue().getPathResolver();
             }
         }
         return candidate;
@@ -287,8 +290,7 @@ public final class ServletRegistry
         final int result = handler.init();
         if ( result == -1 )
         {
-            final Pattern p = Pattern.compile(PatternUtil.convertToRegEx(pattern));
-            final ServletRegistration reg = new ServletRegistration(handler, p);
+            final ServletRegistration reg = new ServletRegistration(handler, PathResolverFactory.create(pattern));
             this.activeServletMappings.put(pattern, reg);
 
             // add ok

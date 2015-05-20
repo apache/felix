@@ -121,14 +121,7 @@ public class ServletInfo extends WhiteboardServiceInfo<Servlet>
     {
         super(serviceRanking);
         this.name = name;
-        if ( pattern.equals("/") )
-        {
-            this.patterns = new String[] {"/", "/*"};
-        }
-        else
-        {
-            this.patterns = new String[] {pattern, pattern + "/*"};
-        }
+        this.patterns = new String[] {pattern};
         this.initParams = Collections.unmodifiableMap(initParams);
         this.asyncSupported = true;
         this.errorPage = null;

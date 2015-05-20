@@ -17,13 +17,11 @@
 package org.apache.felix.http.base.internal.registry;
 
 
-public class PathResolution extends ServletResolution {
+public interface PathResolver extends Comparable<PathResolver> {
 
-    public String servletPath;
+    PathResolution match(String uri);
 
-    public String pathInfo;
+    int getRanking();
 
-    public String requestURI;
-
-    public String[] patterns;
+    int getOrdering();
 }
