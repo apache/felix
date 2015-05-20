@@ -47,7 +47,7 @@ import org.osgi.service.http.runtime.dto.ServletDTO;
  */
 public final class ServletRegistry
 {
-    private final Map<String, ServletRegistration> activeServletMappings = new ConcurrentHashMap<String, ServletRegistration>();
+    private final Map<String, PathResolver> activeServletMappings = new ConcurrentHashMap<String, PathResolver>();
 
     private final Map<String, List<ServletHandler>> inactiveServletMappings = new HashMap<String, List<ServletHandler>>();
 
@@ -71,15 +71,15 @@ public final class ServletRegistry
     {
         PathResolver resolver = null;
         PathResolution candidate = null;
-        for(final Map.Entry<String, ServletRegistration> entry : this.activeServletMappings.entrySet())
+        for(final Map.Entry<String, PathResolver> entry : this.activeServletMappings.entrySet())
         {
             final PathResolution pr = entry.getValue().resolve(relativeRequestURI);
-            if ( pr != null && (resolver == null || entry.getValue().getPathResolver().compareTo(resolver) < 0) )
+            if ( pr != null && (resolver == null || entry.getValue().compareTo(resolver) < 0) )
             {
                 // TODO - we should have all patterns under which this servlet is actively registered
                 pr.patterns = new String[] {entry.getKey()};
                 candidate = pr;
-                resolver = entry.getValue().getPathResolver();
+                resolver = entry.getValue();
             }
         }
         return candidate;
@@ -102,7 +102,7 @@ public final class ServletRegistry
             boolean isActive = false;
             for(final String pattern : handler.getServletInfo().getPatterns())
             {
-                final ServletRegistration regHandler = this.activeServletMappings.get(pattern);
+                final PathResolver regHandler = this.activeServletMappings.get(pattern);
                 if ( regHandler != null )
                 {
                     if ( regHandler.getServletHandler().getServletInfo().getServiceReference().compareTo(handler.getServletInfo().getServiceReference()) < 0 )
@@ -203,7 +203,7 @@ public final class ServletRegistry
 
             for(final String pattern : info.getPatterns())
             {
-                final ServletRegistration regHandler = this.activeServletMappings.get(pattern);
+                final PathResolver regHandler = this.activeServletMappings.get(pattern);
                 if ( regHandler != null && regHandler.getServletHandler().getServletInfo().equals(info) )
                 {
                     cleanupHandler = regHandler.getServletHandler();
@@ -290,7 +290,7 @@ public final class ServletRegistry
         final int result = handler.init();
         if ( result == -1 )
         {
-            final ServletRegistration reg = new ServletRegistration(handler, PathResolverFactory.create(pattern));
+            final PathResolver reg = PathResolverFactory.create(handler, pattern);
             this.activeServletMappings.put(pattern, reg);
 
             // add ok

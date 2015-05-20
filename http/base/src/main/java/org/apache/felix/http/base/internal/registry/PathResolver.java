@@ -16,10 +16,14 @@
  */
 package org.apache.felix.http.base.internal.registry;
 
+import org.apache.felix.http.base.internal.handler.ServletHandler;
+
 
 public interface PathResolver extends Comparable<PathResolver> {
 
-    PathResolution match(String uri);
+    PathResolution resolve(String uri);
+
+    ServletHandler getServletHandler();
 
     int getRanking();
 
