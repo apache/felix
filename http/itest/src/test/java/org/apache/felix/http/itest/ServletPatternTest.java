@@ -164,7 +164,7 @@ public class ServletPatternTest extends BaseIntegrationTest
             assertTrue(initLatch.await(5, TimeUnit.SECONDS));
 
             assertContent("whiteboardServlet", createURL("/test/bar"));
-            assertContent("httpServiceServlet", createURL("/test/foo"));
+            assertContent("whiteboardServlet", createURL("/test/bar"));
         }
         finally
         {

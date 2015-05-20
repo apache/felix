@@ -88,6 +88,7 @@ import org.osgi.service.http.runtime.dto.FailedServletDTO;
 import org.osgi.service.http.runtime.dto.RequestInfoDTO;
 import org.osgi.service.http.runtime.dto.RuntimeDTO;
 import org.osgi.service.http.runtime.dto.ServletContextDTO;
+import org.osgi.service.http.runtime.dto.ServletDTO;
 
 @RunWith(JUnit4TestRunner.class)
 @ExamReactorStrategy( EagerSingleStagedReactorFactory.class )
@@ -1108,12 +1109,15 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
         ServletContextDTO httpServiceContext = runtimeWithShadowedServlet.servletContextDTOs[0];
         assertEquals("Http Service context", httpServiceContext.name);
         assertEquals(1, httpServiceContext.servletDTOs.length);
-        assertArrayEquals(new String[] {"/pathcollision", "/pathcollision/*"}, httpServiceContext.servletDTOs[0].patterns);
+        assertArrayEquals(new String[] {"/pathcollision"}, httpServiceContext.servletDTOs[0].patterns);
 
-        assertEquals(1, runtimeWithShadowedServlet.failedServletDTOs.length);
-        FailedServletDTO failedServletDTO = runtimeWithShadowedServlet.failedServletDTOs[0];
-        assertEquals("servlet 1", failedServletDTO.name);
-        assertEquals(FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE, failedServletDTO.failureReason);
+        assertEquals(1, defaultContext.servletDTOs.length);
+        ServletDTO servletDTO = defaultContext.servletDTOs[0];
+        assertEquals("servlet 1", servletDTO.name);
+
+        // check request info DTO to see which servlet responds
+        final RequestInfoDTO infoDTO = serviceRuntime.calculateRequestInfoDTO("/pathcollision");
+        assertEquals(httpServiceContext.serviceId, infoDTO.servletDTO.servletContextId);
 
         unregister(testServlet);
         awaitServiceRegistration(destroyLatch);
