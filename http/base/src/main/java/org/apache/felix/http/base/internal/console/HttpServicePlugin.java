@@ -21,9 +21,12 @@ package org.apache.felix.http.base.internal.console;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.Servlet;
@@ -31,15 +34,17 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.http.base.internal.handler.FilterHandler;
-import org.apache.felix.http.base.internal.handler.ServletHandler;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.dto.ServiceReferenceDTO;
 import org.osgi.service.http.runtime.HttpServiceRuntime;
+import org.osgi.service.http.runtime.dto.ErrorPageDTO;
+import org.osgi.service.http.runtime.dto.FilterDTO;
+import org.osgi.service.http.runtime.dto.ListenerDTO;
+import org.osgi.service.http.runtime.dto.ResourceDTO;
 import org.osgi.service.http.runtime.dto.RuntimeDTO;
 import org.osgi.service.http.runtime.dto.ServletContextDTO;
 import org.osgi.service.http.runtime.dto.ServletDTO;
@@ -73,6 +78,32 @@ public class HttpServicePlugin extends HttpServlet
         this.serviceReg = context.registerService(Servlet.class, this, props);
     }
 
+    /** Escape xml text */
+    private static String escapeXml(final String input) {
+        if (input == null) {
+            return null;
+        }
+
+        final StringBuilder b = new StringBuilder(input.length());
+        for(int i = 0;i  < input.length(); i++) {
+            final char c = input.charAt(i);
+            if(c == '&') {
+                b.append("&amp;");
+            } else if(c == '<') {
+                b.append("&lt;");
+            } else if(c == '>') {
+                b.append("&gt;");
+            } else if(c == '"') {
+                b.append("&quot;");
+            } else if(c == '\'') {
+                b.append("&apos;");
+            } else {
+                b.append(c);
+            }
+        }
+        return b.toString();
+    }
+
     @Override
     protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws IOException
     {
@@ -90,6 +121,7 @@ public class HttpServicePlugin extends HttpServlet
         {
             printContextDetails(pw, ctxDto);
         }
+        pw.println("<br/>");
     }
 
     private String getValueAsString(final Object value)
@@ -161,7 +193,17 @@ public class HttpServicePlugin extends HttpServlet
         for(final String val : columns)
         {
             pw.print("<td>");
-            pw.print(val);
+            String text = escapeXml(val).replace("\n", "<br/>");
+            int pos;
+            while ( (pos = text.indexOf("${#link:")) != -1) {
+                final int endPos = text.indexOf("}", pos);
+                final int bundleId = Integer.valueOf(text.substring(pos + 8, endPos));
+                final int tokenEndPos = text.indexOf("${link#}", pos);
+
+                text = text.substring(0, pos) + "<a href=\"${appRoot}/bundles/" + String.valueOf(bundleId) + "\">" +
+                       text.substring(endPos + 1, tokenEndPos) + "</a>" + text.substring(tokenEndPos + 8);
+            }
+            pw.print(text);
             pw.println("</td>");
         }
 
@@ -169,63 +211,130 @@ public class HttpServicePlugin extends HttpServlet
         return !odd;
     }
 
+    private String getContextPath(final String path)
+    {
+        if ( path.length() == 0 )
+        {
+            return "<root>";
+        }
+        return path;
+    }
+
     private void printContextDetails(final PrintWriter pw, final ServletContextDTO dto)
     {
         pw.print("<p class=\"statline ui-state-highlight\">${Servlet Context} '");
-        pw.print(dto.name);
+        pw.print(escapeXml(dto.name));
         pw.println("'</p>");
 
         pw.println("<table class=\"nicetable\">");
 
         boolean odd = true;
-        odd = printRow(pw, odd, "${Path}", dto.contextPath);
+        pw.println("<thead><tr>");
+        pw.println("<th class=\"header\">${Name}</th>");
+        pw.println("<th class=\"header\">${Value)}</th>");
+        pw.println("</tr></thead>");
+        odd = printRow(pw, odd, "${Path}", getContextPath(dto.contextPath));
         odd = printRow(pw, odd, "${service.id}", String.valueOf(dto.serviceId));
         pw.println("</table>");
 
         printServletDetails(pw, dto);
         printFilterDetails(pw, dto);
+        printResourceDetails(pw, dto);
+        printErrorPageDetails(pw, dto);
+        printListenerDetails(pw, dto);
     }
 
     private void printFilterDetails(final PrintWriter pw, final ServletContextDTO dto)
     {
+        if ( dto.filterDTOs.length == 0 )
+        {
+            return;
+        }
         pw.print("<p class=\"statline ui-state-highlight\">${Servlet Context} '");
-        pw.print(dto.name);
+        pw.print(escapeXml(dto.name));
         pw.println("' ${Registered Filter Services}</p>");
 
         pw.println("<table class=\"nicetable\">");
         pw.println("<thead><tr>");
         pw.println("<th class=\"header\">${Pattern}</th>");
-        pw.println("<th class=\"header\">${Filter(Ranking)}</th>");
-        pw.println("<th class=\"header\">${Bundle}</th>");
+        pw.println("<th class=\"header\">${Filter}</th>");
+        pw.println("<th class=\"header\">${Info}</th>");
         pw.println("</tr></thead>");
 
-        FilterHandler[] filters = new FilterHandler[0]; // XXX was: registry.getFilters();
-        Arrays.sort(filters);
-        String rowClass = "odd";
-        for (FilterHandler filter : filters)
+        boolean odd = true;
+        for (final FilterDTO filter : dto.filterDTOs)
         {
-            pw.println("<tr class=\"" + rowClass + " ui-state-default\">");
-//            pw.println("<td>" + Arrays.toString(filter.getPatternStrings()) + "</td>"); // XXX
-//            pw.println("<td>" + filter.getFilter().getClass().getName() + "(" + filter.getRanking() + ")" + "</td>");
-
-            printBundleDetails(pw, filter.getFilter().getClass());
-
-            if (rowClass.equals("odd"))
+            final StringBuilder sb = new StringBuilder();
+            final ServiceReference<?> ref = this.getServiceReference(filter.serviceId);
+            if ( ref != null )
             {
-                rowClass = "even";
+                int ranking = 0;
+                final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
+                if ( obj instanceof Integer)
+                {
+                    ranking = (Integer)obj;
+                }
+                sb.append("${ranking} : ").append(String.valueOf(ranking)).append("\n");
             }
-            else
+            sb.append("${async} : ").append(String.valueOf(filter.asyncSupported)).append("\n");
+            sb.append("${dispatcher} : ").append(getValueAsString(filter.dispatcher)).append("\n");
+            sb.append("${service.id} : ").append(String.valueOf(filter.serviceId)).append("\n");
+            if ( ref != null )
             {
-                rowClass = "odd";
+                sb.append("${bundle} : ");
+                sb.append("${#link:");
+                sb.append(ref.getBundle().getBundleId());
+                sb.append("}");
+                sb.append(ref.getBundle().getSymbolicName());
+                sb.append("${link#}\n");
             }
+
+            final List<String> patterns = new ArrayList<String>();
+            patterns.addAll(Arrays.asList(filter.patterns));
+            patterns.addAll(Arrays.asList(filter.regexs));
+            for(final String name : filter.servletNames)
+            {
+                patterns.add("Servlet : " + name);
+            }
+            Collections.sort(patterns);
+            final StringBuilder psb = new StringBuilder();
+            for(final String p : patterns)
+            {
+                psb.append(p).append('\n');
+            }
+            odd = printRow(pw, odd, psb.toString(), filter.name, sb.toString());
         }
         pw.println("</table>");
     }
 
+    private ServiceReference<?> getServiceReference(final long serviceId)
+    {
+        if ( serviceId > 0 )
+        {
+            try
+            {
+                final ServiceReference<?>[] ref = this.context.getServiceReferences((String)null, "(" + Constants.SERVICE_ID + "=" + String.valueOf(serviceId));
+                if ( ref != null && ref.length > 0 )
+                {
+                    return ref[0];
+                }
+            }
+            catch (final InvalidSyntaxException e)
+            {
+                // ignore
+            }
+        }
+        return null;
+    }
+
     private void printServletDetails(final PrintWriter pw, final ServletContextDTO dto)
     {
+        if ( dto.servletDTOs.length == 0 )
+        {
+            return;
+        }
         pw.print("<p class=\"statline ui-state-highlight\">${Servlet Context} '");
-        pw.print(dto.name);
+        pw.print(escapeXml(dto.name));
         pw.println("' ${Registered Servlet Services}</p>");
 
         pw.println("<table class=\"nicetable\">");
@@ -236,12 +345,200 @@ public class HttpServicePlugin extends HttpServlet
         pw.println("</tr></thead>");
 
         boolean odd = true;
-        for (ServletDTO servlet : dto.servletDTOs)
+        for (final ServletDTO servlet : dto.servletDTOs)
         {
             final StringBuilder sb = new StringBuilder();
+            final ServiceReference<?> ref = this.getServiceReference(servlet.serviceId);
+            if ( ref != null )
+            {
+                int ranking = 0;
+                final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
+                if ( obj instanceof Integer)
+                {
+                    ranking = (Integer)obj;
+                }
+                sb.append("${ranking} : ").append(String.valueOf(ranking)).append("\n");
+            }
+            sb.append("${async} : ").append(String.valueOf(servlet.asyncSupported)).append("\n");
             sb.append("${service.id} : ").append(String.valueOf(servlet.serviceId)).append("\n");
+            if ( ref != null )
+            {
+                sb.append("${bundle} : ");
+                sb.append("${#link:");
+                sb.append(ref.getBundle().getBundleId());
+                sb.append("}");
+                sb.append(ref.getBundle().getSymbolicName());
+                sb.append("${link#}\n");
+            }
 
-            odd = printRow(pw, odd, getValueAsString(servlet.patterns), servlet.name, sb.toString());
+            final StringBuilder psb = new StringBuilder();
+            for(final String p : servlet.patterns)
+            {
+                psb.append(p).append('\n');
+            }
+            odd = printRow(pw, odd, psb.toString(), servlet.name, sb.toString());
+        }
+        pw.println("</table>");
+    }
+
+    private void printResourceDetails(final PrintWriter pw, final ServletContextDTO dto)
+    {
+        if ( dto.resourceDTOs.length == 0 )
+        {
+            return;
+        }
+        pw.print("<p class=\"statline ui-state-highlight\">${Servlet Context} '");
+        pw.print(escapeXml(dto.name));
+        pw.println("' ${Registered Resource Services}</p>");
+
+        pw.println("<table class=\"nicetable\">");
+        pw.println("<thead><tr>");
+        pw.println("<th class=\"header\">${Path}</th>");
+        pw.println("<th class=\"header\">${Prefix}</th>");
+        pw.println("<th class=\"header\">${Info}</th>");
+        pw.println("</tr></thead>");
+
+        boolean odd = true;
+        for (final ResourceDTO rsrc : dto.resourceDTOs)
+        {
+            final StringBuilder sb = new StringBuilder();
+            final ServiceReference<?> ref = this.getServiceReference(rsrc.serviceId);
+            if ( ref != null )
+            {
+                int ranking = 0;
+                final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
+                if ( obj instanceof Integer)
+                {
+                    ranking = (Integer)obj;
+                }
+                sb.append("${ranking} : ").append(String.valueOf(ranking)).append("\n");
+            }
+            sb.append("${service.id} : ").append(String.valueOf(rsrc.serviceId)).append("\n");
+            if ( ref != null )
+            {
+                sb.append("${bundle} : ");
+                sb.append("${#link:");
+                sb.append(ref.getBundle().getBundleId());
+                sb.append("}");
+                sb.append(ref.getBundle().getSymbolicName());
+                sb.append("${link#}\n");
+            }
+
+            final StringBuilder psb = new StringBuilder();
+            for(final String p : rsrc.patterns)
+            {
+                psb.append(p).append('\n');
+            }
+            odd = printRow(pw, odd, psb.toString(), rsrc.prefix, sb.toString());
+        }
+        pw.println("</table>");
+    }
+
+    private void printErrorPageDetails(final PrintWriter pw, final ServletContextDTO dto)
+    {
+        if ( dto.errorPageDTOs.length == 0 )
+        {
+            return;
+        }
+        pw.print("<p class=\"statline ui-state-highlight\">${Servlet Context} '");
+        pw.print(escapeXml(dto.name));
+        pw.println("' ${Registered Resource Services}</p>");
+
+        pw.println("<table class=\"nicetable\">");
+        pw.println("<thead><tr>");
+        pw.println("<th class=\"header\">${Path}</th>");
+        pw.println("<th class=\"header\">${Name}</th>");
+        pw.println("<th class=\"header\">${Info}</th>");
+        pw.println("</tr></thead>");
+
+        boolean odd = true;
+        for (final ErrorPageDTO ep : dto.errorPageDTOs)
+        {
+            final StringBuilder sb = new StringBuilder();
+            final ServiceReference<?> ref = this.getServiceReference(ep.serviceId);
+            if ( ref != null )
+            {
+                int ranking = 0;
+                final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
+                if ( obj instanceof Integer)
+                {
+                    ranking = (Integer)obj;
+                }
+                sb.append("${ranking} : ").append(String.valueOf(ranking)).append("\n");
+            }
+            sb.append("${async} : ").append(String.valueOf(ep.asyncSupported)).append("\n");
+            sb.append("${service.id} : ").append(String.valueOf(ep.serviceId)).append("\n");
+            if ( ref != null )
+            {
+                sb.append("${bundle} : ");
+                sb.append("${#link:");
+                sb.append(ref.getBundle().getBundleId());
+                sb.append("}");
+                sb.append(ref.getBundle().getSymbolicName());
+                sb.append("${link#}\n");
+            }
+
+            final StringBuilder psb = new StringBuilder();
+            for(final long p : ep.errorCodes)
+            {
+                psb.append(p).append('\n');
+            }
+            for(final String p : ep.exceptions)
+            {
+                psb.append(p).append('\n');
+            }
+            odd = printRow(pw, odd, psb.toString(), ep.name, sb.toString());
+        }
+        pw.println("</table>");
+    }
+
+    private void printListenerDetails(final PrintWriter pw, final ServletContextDTO dto)
+    {
+        if ( dto.listenerDTOs.length == 0 )
+        {
+            return;
+        }
+        pw.print("<p class=\"statline ui-state-highlight\">${Servlet Context} '");
+        pw.print(escapeXml(dto.name));
+        pw.println("' ${Registered Listeners}</p>");
+
+        pw.println("<table class=\"nicetable\">");
+        pw.println("<thead><tr>");
+        pw.println("<th class=\"header\">${Type}</th>");
+        pw.println("<th class=\"header\">${Info}</th>");
+        pw.println("</tr></thead>");
+
+        boolean odd = true;
+        for (final ListenerDTO ep : dto.listenerDTOs)
+        {
+            final StringBuilder sb = new StringBuilder();
+            final ServiceReference<?> ref = this.getServiceReference(ep.serviceId);
+            if ( ref != null )
+            {
+                int ranking = 0;
+                final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
+                if ( obj instanceof Integer)
+                {
+                    ranking = (Integer)obj;
+                }
+                sb.append("${ranking} : ").append(String.valueOf(ranking)).append("\n");
+            }
+            sb.append("${service.id} : ").append(String.valueOf(ep.serviceId)).append("\n");
+            if ( ref != null )
+            {
+                sb.append("${bundle} : ");
+                sb.append("${#link:");
+                sb.append(ref.getBundle().getBundleId());
+                sb.append("}");
+                sb.append(ref.getBundle().getSymbolicName());
+                sb.append("${link#}\n");
+            }
+            final StringBuilder tsb = new StringBuilder();
+            for(final String t : ep.types)
+            {
+                tsb.append(t).append('\n');
+            }
+            odd = printRow(pw, odd, tsb.toString(), sb.toString());
         }
         pw.println("</table>");
     }
@@ -251,34 +548,237 @@ public class HttpServicePlugin extends HttpServlet
      */
     public void printConfiguration(final PrintWriter pw)
     {
-        pw.println("HTTP Service Details:");
+        final RuntimeDTO dto = this.runtime.getRuntimeDTO();
+
+        pw.println("HTTP Service Details");
+        pw.println("====================");
         pw.println();
-        pw.println("Registered Servlet Services");
-        ServletHandler[] servlets = new ServletHandler[0]; // XXX was: registry.getServlets();
-        for (ServletHandler servlet : servlets)
+        pw.println("Runtime Properties");
+        pw.println("------------------");
+
+        for(final Map.Entry<String, Object> prop : dto.serviceDTO.properties.entrySet())
         {
-//            pw.println("Patterns : " + Arrays.toString(servlet.getPatternStrings())); // XXX
-            addSpace(pw, 1);
-            pw.println("Class    : " + servlet.getServlet().getClass().getName());
-            addSpace(pw, 1);
-            pw.println("Bundle   : " + getBundleDetails(servlet.getServlet().getClass()));
+            pw.print(prop.getKey());
+            pw.print(" : ");
+            pw.println(getValueAsString(prop.getValue()));
+        }
+        pw.println();
+        for(final ServletContextDTO ctxDto : dto.servletContextDTOs )
+        {
+            pw.print("Servlet Context ");
+            pw.println(ctxDto.name);
+            pw.println("-----------------------------------------------");
+
+            pw.print("Path : ");
+            pw.println(getContextPath(ctxDto.contextPath));
+            pw.print("service.id : ");
+            pw.println(String.valueOf(ctxDto.serviceId));
+            pw.println();
+            if ( ctxDto.servletDTOs.length > 0 )
+            {
+                pw.println("Servlets");
+                for (final ServletDTO servlet : ctxDto.servletDTOs)
+                {
+                    pw.print("Patterns : ");
+                    pw.println(getValueAsString(servlet.patterns));
+                    pw.print("Name : ");
+                    pw.println(servlet.name);
+                    final ServiceReference<?> ref = this.getServiceReference(servlet.serviceId);
+                    if ( ref != null )
+                    {
+                        int ranking = 0;
+                        final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
+                        if ( obj instanceof Integer)
+                        {
+                            ranking = (Integer)obj;
+                        }
+                        pw.print("Ranking : ");
+                        pw.println(String.valueOf(ranking));
+                    }
+                    pw.print("async : ");
+                    pw.println(String.valueOf(servlet.asyncSupported));
+                    pw.print("service.id : ");
+                    pw.println(String.valueOf(servlet.serviceId));
+                    pw.println();
+                    if ( ref != null )
+                    {
+                        pw.print("Bundle : ");
+                        pw.print(ref.getBundle().getSymbolicName());
+                        pw.print(" <");
+                        pw.print(String.valueOf(ref.getBundle().getBundleId()));
+                        pw.println(">");
+                    }
+                }
+                pw.println();
+            }
+
+            if ( ctxDto.filterDTOs.length > 0 )
+            {
+                pw.println("Filters");
+                for (final FilterDTO filter : ctxDto.filterDTOs)
+                {
+                    final List<String> patterns = new ArrayList<String>();
+                    patterns.addAll(Arrays.asList(filter.patterns));
+                    patterns.addAll(Arrays.asList(filter.regexs));
+                    for(final String name : filter.servletNames)
+                    {
+                        patterns.add("Servlet : " + name);
+                    }
+                    Collections.sort(patterns);
+
+                    pw.print("Patterns : ");
+                    pw.println(patterns);
+                    pw.print("Name : ");
+                    pw.println(filter.name);
+                    final ServiceReference<?> ref = this.getServiceReference(filter.serviceId);
+                    if ( ref != null )
+                    {
+                        int ranking = 0;
+                        final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
+                        if ( obj instanceof Integer)
+                        {
+                            ranking = (Integer)obj;
+                        }
+                        pw.print("Ranking : ");
+                        pw.println(String.valueOf(ranking));
+                    }
+                    pw.print("async : ");
+                    pw.println(String.valueOf(filter.asyncSupported));
+                    pw.print("dispatcher : ");
+                    pw.println(getValueAsString(filter.dispatcher));
+                    pw.print("service.id : ");
+                    pw.println(String.valueOf(filter.serviceId));
+                    if ( ref != null )
+                    {
+                        pw.print("Bundle : ");
+                        pw.print(ref.getBundle().getSymbolicName());
+                        pw.print(" <");
+                        pw.print(String.valueOf(ref.getBundle().getBundleId()));
+                        pw.println(">");
+                    }
+                    pw.println();
+                }
+                pw.println();
+            }
+            if ( ctxDto.resourceDTOs.length > 0 )
+            {
+                pw.println("Resources");
+                for (final ResourceDTO rsrc : ctxDto.resourceDTOs)
+                {
+                    pw.print("Patterns : ");
+                    pw.println(getValueAsString(rsrc.patterns));
+                    pw.print("Prefix : ");
+                    pw.println(rsrc.prefix);
+                    final ServiceReference<?> ref = this.getServiceReference(rsrc.serviceId);
+                    if ( ref != null )
+                    {
+                        int ranking = 0;
+                        final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
+                        if ( obj instanceof Integer)
+                        {
+                            ranking = (Integer)obj;
+                        }
+                        pw.print("Ranking : ");
+                        pw.println(String.valueOf(ranking));
+                    }
+                    pw.print("service.id : ");
+                    pw.println(String.valueOf(rsrc.serviceId));
+                    pw.println();
+                    if ( ref != null )
+                    {
+                        pw.print("Bundle : ");
+                        pw.print(ref.getBundle().getSymbolicName());
+                        pw.print(" <");
+                        pw.print(String.valueOf(ref.getBundle().getBundleId()));
+                        pw.println(">");
+                    }
+                }
+                pw.println();
+
+            }
+            if ( ctxDto.errorPageDTOs.length > 0 )
+            {
+                pw.println("Error Pages");
+                for (final ErrorPageDTO ep : ctxDto.errorPageDTOs)
+                {
+                    final List<String> patterns = new ArrayList<String>();
+                    for(final long p : ep.errorCodes)
+                    {
+                        patterns.add(String.valueOf(p));
+                    }
+                    for(final String p : ep.exceptions)
+                    {
+                        patterns.add(p);
+                    }
+                    pw.print("Patterns : ");
+                    pw.println(patterns);
+                    pw.print("Name : ");
+                    pw.println(ep.name);
+                    final ServiceReference<?> ref = this.getServiceReference(ep.serviceId);
+                    if ( ref != null )
+                    {
+                        int ranking = 0;
+                        final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
+                        if ( obj instanceof Integer)
+                        {
+                            ranking = (Integer)obj;
+                        }
+                        pw.print("Ranking : ");
+                        pw.println(String.valueOf(ranking));
+                    }
+                    pw.print("async : ");
+                    pw.println(String.valueOf(ep.asyncSupported));
+                    pw.print("service.id : ");
+                    pw.println(String.valueOf(ep.serviceId));
+                    if ( ref != null )
+                    {
+                        pw.print("Bundle : ");
+                        pw.print(ref.getBundle().getSymbolicName());
+                        pw.print(" <");
+                        pw.print(String.valueOf(ref.getBundle().getBundleId()));
+                        pw.println(">");
+                    }
+                    pw.println();
+                }
+                pw.println();
+            }
+
+            if ( ctxDto.listenerDTOs.length > 0 )
+            {
+                pw.println("Listeners");
+                for (final ListenerDTO ep : ctxDto.listenerDTOs)
+                {
+                    pw.print("Types : ");
+                    pw.println(getValueAsString(ep.types));
+                    final ServiceReference<?> ref = this.getServiceReference(ep.serviceId);
+                    if ( ref != null )
+                    {
+                        int ranking = 0;
+                        final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
+                        if ( obj instanceof Integer)
+                        {
+                            ranking = (Integer)obj;
+                        }
+                        pw.print("Ranking : ");
+                        pw.println(String.valueOf(ranking));
+                    }
+                    pw.print("service.id : ");
+                    pw.println(String.valueOf(ep.serviceId));
+                    if ( ref != null )
+                    {
+                        pw.print("Bundle : ");
+                        pw.print(ref.getBundle().getSymbolicName());
+                        pw.print(" <");
+                        pw.print(String.valueOf(ref.getBundle().getBundleId()));
+                        pw.println(">");
+                    }
+                    pw.println();
+                }
+                pw.println();
+            }
+            pw.println();
         }
 
-        pw.println();
-
-        pw.println("Registered Filter Services");
-        FilterHandler[] filters = new FilterHandler[0]; // XXX was: registry.getFilters();
-        Arrays.sort(filters);
-        for (FilterHandler filter : filters)
-        {
-//            pw.println("Patterns : " + Arrays.toString(filter.getPatternStrings())); // XXX
-            addSpace(pw, 1);
-//            pw.println("Ranking  : " + filter.getRanking()); // XXX
-            addSpace(pw, 1);
-            pw.println("Class    : " + filter.getFilter().getClass().getName());
-            addSpace(pw, 1);
-            pw.println("Bundle   : " + getBundleDetails(filter.getFilter().getClass()));
-        }
     }
 
     public void unregister()
@@ -288,40 +788,5 @@ public class HttpServicePlugin extends HttpServlet
             this.serviceReg.unregister();
             this.serviceReg = null;
         }
-    }
-
-    private void printBundleDetails(PrintWriter pw, Class<?> c)
-    {
-        Bundle b = getBundle(c);
-        pw.println("<td>");
-        if (b == null)
-        {
-            pw.print("UNKNOWN");
-        }
-        else
-        {
-            String details = b.getSymbolicName();
-            pw.print("<a href=\"${appRoot}/bundles/" + b.getBundleId() + "\">" + details + "</a>");
-        }
-        pw.println("</td>");
-    }
-
-    private String getBundleDetails(Class<?> c)
-    {
-        Bundle b = getBundle(c);
-        return (b == null) ? "UNKNOWN" : b.getSymbolicName();
-    }
-
-    private static void addSpace(PrintWriter pw, int count)
-    {
-        for (int i = 0; i < count; i++)
-        {
-            pw.print("  ");
-        }
-    }
-
-    private Bundle getBundle(Class<?> clazz)
-    {
-        return FrameworkUtil.getBundle(clazz);
     }
 }
