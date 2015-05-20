@@ -53,11 +53,13 @@ public class ResourceTest extends BaseIntegrationTest
 
         HttpContext context = new HttpContext()
         {
+            @Override
             public boolean handleSecurity(HttpServletRequest request, HttpServletResponse response) throws IOException
             {
                 return true;
             }
 
+            @Override
             public URL getResource(String name)
             {
                 try
@@ -75,6 +77,7 @@ public class ResourceTest extends BaseIntegrationTest
                 return null;
             }
 
+            @Override
             public String getMimeType(String name)
             {
                 return null;
@@ -99,10 +102,11 @@ public class ResourceTest extends BaseIntegrationTest
         assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
 
         assertResponseCode(SC_OK, testHtmlURL);
-        assertResponseCode(SC_NOT_FOUND, testURL);
+        assertResponseCode(SC_OK, testURL);
 
         unregister("/");
 
         assertResponseCode(SC_NOT_FOUND, testHtmlURL);
+        assertResponseCode(SC_NOT_FOUND, testURL);
     }
 }
