@@ -147,10 +147,8 @@ public final class HttpWhiteboardConstants {
 	 * property to apply the filter to the servlet.
 	 * 
 	 * <p>
-	 * Servlet names must be unique among all servlet services associated with a
-	 * single {@link ServletContextHelper}. If multiple servlet services
-	 * associated with the same HttpContext have the same servlet name, then all
-	 * but the highest ranked servlet service are ignored.
+	 * Servlet names should be unique among all servlet services associated with
+	 * a single {@link ServletContextHelper}.
 	 * 
 	 * <p>
 	 * The value of this service property must be of type {@code String}.
@@ -233,11 +231,8 @@ public final class HttpWhiteboardConstants {
 	 * used as the servlet filter name.
 	 * 
 	 * <p>
-	 * Servlet filter names must be unique among all servlet filter services
-	 * associated with a single {@link ServletContextHelper}. If multiple
-	 * servlet filter services associated with the same context have the same
-	 * servlet filter name, then all but the highest ranked servlet filter
-	 * service are ignored.
+	 * Servlet filter names should be unique among all servlet filter services
+	 * associated with a single {@link ServletContextHelper}.
 	 * 
 	 * <p>
 	 * The value of this service property must be of type {@code String}.
