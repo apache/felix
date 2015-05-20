@@ -121,7 +121,7 @@ public final class FilterHandlerMapping
         return add(mappings);
     }
 
-    FilterHandlerMapping add(@Nonnull final Map<Pattern, FilterHandler> mappings)
+    private FilterHandlerMapping add(@Nonnull final Map<Pattern, FilterHandler> mappings)
     {
         final Map<Pattern, Collection<FilterHandler>> newMappings = getAllMappings();
         addMappings(mappings, newMappings);
@@ -146,18 +146,10 @@ public final class FilterHandlerMapping
         return remove(mappings);
     }
 
-    FilterHandlerMapping remove(Map<Pattern, FilterHandler> mappings)
+    private FilterHandlerMapping remove(Map<Pattern, FilterHandler> mappings)
     {
         Map<Pattern, Collection<FilterHandler>> newMappings = getAllMappings();
         removeMappings(mappings, newMappings);
-        return new FilterHandlerMapping(newMappings);
-    }
-
-    FilterHandlerMapping update(Map<Pattern, FilterHandler> add, Map<Pattern, FilterHandler> remove)
-    {
-        Map<Pattern, Collection<FilterHandler>> newMappings = getAllMappings();
-        removeMappings(remove, newMappings);
-        addMappings(add, newMappings);
         return new FilterHandlerMapping(newMappings);
     }
 
@@ -211,17 +203,6 @@ public final class FilterHandlerMapping
     }
 
     /**
-     * Returns whether this mapping contains the specified handler.
-     *
-     * @return <code>true</code> if the handlers contains the specified handler,
-     *         <code>false</code> otherwise
-     */
-    public boolean contains(FilterHandler handler)
-    {
-        return mappedHandlers.contains(handler);
-    }
-
-    /**
      * Returns all matching handlers for the given path.
      *
      * @param path the path that should match, cannot be <code>null</code>.
@@ -230,59 +211,6 @@ public final class FilterHandlerMapping
     public List<FilterHandler> getAllMatches(String path)
     {
         return getAllMatches(path, false /* firstOnly */);
-    }
-
-    /**
-     * Returns the best matching handler for the given path, according to the rules defined in section 12.1 of Servlet 3.0 specification:
-     * <ul>
-     * <li>find an exact match of the path of the request to the path of the handler. A successful match selects the handler;</li>
-     * <li>recursively try to match the longest path-prefix. This is done by stepping down the path tree a directory at a time, using the
-     *     '/' character as a path separator. The longest match determines the servlet selected;</li>
-     * <li>if the last segment in the URL path contains an extension (e.g. .jsp), the servlet container will try to match a servlet that
-     *     handles requests for the extension. An extension is defined as the part of the last segment after the last '.' character.</li>
-     * </ul>
-     *
-     * @param path the path that should match, cannot be <code>null</code>.
-     * @return the best matching handler for the given path, or <code>null</code> in case no handler matched.
-     */
-    FilterHandler getBestMatch(String path)
-    {
-        List<FilterHandler> allMatches = getAllMatches(path, true /* firstOnly */);
-        return allMatches.isEmpty() ? null : allMatches.get(0);
-    }
-
-    /**
-     * Returns the (first) handler identified by the given name.
-     *
-     * @param name the name of the handler to return, can be <code>null</code> in which case this method will return <code>null</code>.
-     * @return the element with the given name, or <code>null</code> if not found, or the given argument was <code>null</code>.
-     */
-    FilterHandler getByName(String name)
-    {
-        if (name == null)
-        {
-            return null;
-        }
-
-        for (FilterHandler element : this.mappedHandlers)
-        {
-            if (name.equals(element.getName()))
-            {
-                return element;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Provides information on whether there are elements mapped or not.
-     *
-     * @return <code>false</code> if there is at least one element mapped, <code>true</code> otherwise.
-     */
-    boolean isEmpty()
-    {
-        return this.mappedHandlers.isEmpty();
     }
 
     /**
