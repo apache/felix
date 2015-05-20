@@ -21,6 +21,8 @@ package org.apache.felix.http.base.internal.console;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.servlet.Servlet;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -51,6 +54,7 @@ import org.osgi.service.http.runtime.dto.FailedServletContextDTO;
 import org.osgi.service.http.runtime.dto.FailedServletDTO;
 import org.osgi.service.http.runtime.dto.FilterDTO;
 import org.osgi.service.http.runtime.dto.ListenerDTO;
+import org.osgi.service.http.runtime.dto.RequestInfoDTO;
 import org.osgi.service.http.runtime.dto.ResourceDTO;
 import org.osgi.service.http.runtime.dto.RuntimeDTO;
 import org.osgi.service.http.runtime.dto.ServletContextDTO;
@@ -62,6 +66,10 @@ import org.osgi.service.http.runtime.dto.ServletDTO;
 @SuppressWarnings("serial")
 public class HttpServicePlugin extends HttpServlet
 {
+    private static final String ATTR_TEST = "test";
+    private static final String ATTR_MSG = "msg";
+    private static final String ATTR_SUBMIT = "resolve";
+
 
     private final HttpServiceRuntime runtime;
     private final BundleContext context;
@@ -112,18 +120,102 @@ public class HttpServicePlugin extends HttpServlet
     }
 
     @Override
-    protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws IOException
-    {
-        getHtml(resp);
+    protected void doPost(HttpServletRequest request,
+            HttpServletResponse response) throws ServletException, IOException {
+
+        final String test = request.getParameter(ATTR_TEST);
+        String msg = null;
+        if (test != null && test.length() > 0) {
+
+            final RequestInfoDTO dto = this.runtime.calculateRequestInfoDTO(test);
+
+            final StringBuilder sb = new StringBuilder();
+            if ( dto.servletDTO != null )
+            {
+                sb.append("Servlet: ");
+                sb.append(getValueAsString(dto.servletDTO.patterns));
+                sb.append(" (");
+                sb.append("service.id=");
+                sb.append(String.valueOf(dto.servletDTO.serviceId));
+                sb.append("), Filters: [");
+                boolean first = true;
+                for(final FilterDTO f : dto.filterDTOs)
+                {
+                    if ( first )
+                    {
+                        first = false;
+                    }
+                    else
+                    {
+                        sb.append(", ");
+                    }
+                    sb.append(f.serviceId);
+                }
+                sb.append("]");
+            }
+            else if ( dto.resourceDTO != null )
+            {
+                sb.append("Resource: ");
+                sb.append(getValueAsString(dto.resourceDTO.patterns));
+                sb.append(" (");
+                sb.append("service.id=");
+                sb.append(String.valueOf(dto.resourceDTO.serviceId));
+                sb.append("), Filters: [");
+                boolean first = true;
+                for(final FilterDTO f : dto.filterDTOs)
+                {
+                    if ( first )
+                    {
+                        first = false;
+                    }
+                    else
+                    {
+                        sb.append(", ");
+                    }
+                    sb.append(f.serviceId);
+                }
+                sb.append("]");
+            }
+            else
+            {
+                sb.append("<404>");
+            }
+            msg = sb.toString();
+        }
+
+        // finally redirect
+        final String path = request.getContextPath() + request.getServletPath()
+                + request.getPathInfo();
+        final String redirectTo;
+        if (msg == null) {
+            redirectTo = path;
+        } else {
+            redirectTo = path + '?' + ATTR_MSG + '=' + encodeParam(msg) + '&'
+                    + ATTR_TEST + '=' + encodeParam(test);
+        }
+        response.sendRedirect(redirectTo);
     }
 
-    private void getHtml(final HttpServletResponse resp) throws IOException
+    private String encodeParam(final String value) {
+        try {
+            return URLEncoder.encode(value, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            // should never happen
+            return value;
+        }
+    }
+
+    @Override
+    protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws IOException
     {
         final RuntimeDTO dto = this.runtime.getRuntimeDTO();
 
         final PrintWriter pw = resp.getWriter();
 
+        printForm(pw, req.getParameter(ATTR_TEST), req.getParameter(ATTR_MSG));
+
         printRuntimeDetails(pw, dto.serviceDTO);
+
         for(final ServletContextDTO ctxDto : dto.servletContextDTOs )
         {
             printContextDetails(pw, ctxDto);
@@ -139,6 +231,66 @@ public class HttpServicePlugin extends HttpServlet
         printFailedListenerDetails(pw, dto);
 
         pw.println("<br/>");
+    }
+
+    private void printForm(final PrintWriter pw, final String value, final String msg)
+    {
+        pw.println("<table class='content' cellpadding='0' cellspacing='0' width='100%'>");
+
+        separatorHtml(pw);
+
+        titleHtml(
+                pw,
+                "Test Servlet Resolution",
+                "To test the servlet resolution, enter a relative URL into "
+                        + "the field and click 'Resolve'.");
+
+        pw.println("<tr class='content'>");
+        pw.println("<td class='content'>Test</td>");
+        pw.print("<td class='content' colspan='2'>");
+        pw.print("<form method='post'>");
+        pw.print("<input type='text' name='" + ATTR_TEST + "' value='");
+        if (value != null) {
+            pw.print(escapeXml(value));
+        }
+        pw.println("' class='input' size='50'>");
+        pw.println("&nbsp;&nbsp;<input type='submit' name='" + ATTR_SUBMIT
+                + "' value='Resolve' class='submit'>");
+        pw.print("</form>");
+        pw.print("</td>");
+        pw.println("</tr>");
+
+        if (msg != null) {
+            pw.println("<tr class='content'>");
+            pw.println("<td class='content'>&nbsp;</td>");
+            pw.print("<td class='content' colspan='2'>");
+            pw.print(escapeXml(msg));
+            pw.println("</td>");
+            pw.println("</tr>");
+        }
+        pw.println("</table>");
+    }
+
+    private void titleHtml(PrintWriter pw, String title, String description)
+    {
+        pw.println("<tr class='content'>");
+        pw.println("<th colspan='3'class='content container'>" + title
+                + "</th>");
+        pw.println("</tr>");
+
+        if (description != null) {
+            pw.println("<tr class='content'>");
+            pw.println("<td colspan='3'class='content'>" + description
+                    + "</th>");
+            pw.println("</tr>");
+        }
+    }
+
+    private void separatorHtml(PrintWriter pw)
+    {
+        pw.println("<tr class='content'>");
+        pw.println("<td class='content' colspan='3'>&nbsp;</td>");
+        pw.println("</tr>");
     }
 
     private String getValueAsString(final Object value)
