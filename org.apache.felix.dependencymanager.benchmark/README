@@ -15,21 +15,77 @@
  * limitations under the License.
  */
 
-Installation:
-============
+Stress test for Dependency Manager
+==================================
 
-- see toplevel README on how to import dependencymanager into bndtools
+This module provides a little framework used to perform some stress tests on Dependency Manager.
+(but other DI frameworks can easily be integrated).
+
+What is doing this test ?
+=========================
+
+This loader measures the time nedded to create a graph of service components that have dependencies
+between each other. For sake of simplicity, a simple scenario domain is used (actually, this example
+domain has been inspired from the "Java8 Lambdas" book, O'reilly) and the following services are used:
+
+- Artist service: An Artist is an individual or group of musicians, who creates some "Albums". One
+  Artist service depends on several Album services.
+
+- Album service: is a single release of musics, comprising several music Tracks. One Album depends
+  on several Track services.
+
+- Track service: A piece of music.
+
+The scenario consists in starting/stopping many times a bundle that will synchronously create the
+graph of Artist/Album/Track components (630 by default). A scenario controller monitors the number
+of created components and when the number of expected components are created, then the controller
+stops the bundle, which will then unregister all components. Finally, when the controller detects
+that all components are unregistered, the elapsed time is recorded in a list of time duration (in
+nano seconds).
+
+The same is done by another bundle that does exactly the same, but using concurrent component
+registration. 
+
+At the end of the test (that is, when the bundle that creates the components has been
+started/stopped many times), then the list of all time durations (start/stop) is sorted: the first
+element of the list corresponds to the shortest elapsed time used by the bundle to create and destroy the
+components; and the last element in the list corresponds to the slowest elapsed time. The
+middle in the duration time list is the average. We display the first entry (fastest), the entry at 1/4
+of the list, the middle of the list, the entry at 3/4 of the list, and the last entry (slowest time).
+We don't do an average, because usually, when running benchmark, some measurements don't reflect reality,
+especially, when there is a full GC or when the JVM is warming up. (we actually do the same as in Java
+Chronicle: https://github.com/peter-lawrey/Java-Chronicle).
+
+Bundle descriptions:
+===================
+
+- org.apache.felix.dm.benchmark.dependencymanager: a test bundle that creates the components synchronously
+  when the bundle is started. And when it is stopped, then the components are unregistered.
+
+- org.apache.felix.dm.benchmark.dependencymanager.parallel: same as before, but the components are
+  created concurrently.
+
+- org.apache.felix.dm.benchmark.scenario: this bundle contains the component classes that are
+  part of the scenario: we have an Artist service that depends on some Albums services, each Album
+  also depends on some music Track services. The components are bound using a special "id" service
+  property.
+
+- org.apache.felix.dm.benchmark.scenario.impl: the simple Artist/Albums/Track implementations.
+
+- org.apache.felix.dm.benchmark.controller: provides a ScenarioController service that is
+  injected in all Artist/Album/Track components. When an Artist, an Album, or a Track component is
+  started, it notifies the ScenerioController. Then when the controller detects that all components
+  are properly created, it then stops the bundle, which in turns unregisters all components.
+
+- org.apache.felix.dm.benchmark.controller.impl: this is the ScenarioController implementation.
 
 How to launch the stress test under bndtools:
 ============================================
 
-The stress test performs two kind of tests on DM and parallel DM.
+The stress test performs two kinds of tests on DM and parallel DM:
 
-1) first kind of tests: starts/stops several times each tested bundle (DM/Parallel DM). When
-started, the test bundle is expected to register/unregister several services. And no processing is
-done at all in each component start methods).
-
-2) second kind of tests: same as before, but some processing is done in each component start methods.
+-noindex.bndrun: the tests is performed without using optimized DM filter indices.
+-index.bndrun: the test is performed with the DM filter indices.
 
 To launch the stress test under BndTools, click on the noindex.bndrun file of the
 "org.apache.felix.dm.benchmark" project, then click on "Run", then in "Run OSGi". 
@@ -56,9 +112,8 @@ Benchmarking bundle: org.apache.felix.dependencymanager.benchmark.dependencymana
 -> results in nanos: [687,259,058 | 696,725,568 | 700,220,615 | 704,310,739 | 740,325,481]
 -----------------------------------------------------------------------------------------------------------------
 
-You can also possibly run the same test using optimized DM filter indices.
-To do so, run "index.bndrun"
-but using DM filter indices has a CPU cost and are useful if you have many service dependencies.
+You can also run the same test using optimized DM filter indices.
+To do so, run "index.bndrun". But using DM filter indices has a CPU cost and are useful if you have many service dependencies.
 To test filter indices, first increase the number of components created/removed during bundle
 startup. To do so, edit the Artist.java and change the "Artists" from 30 to 300.
 
@@ -119,64 +174,9 @@ for example:
 
 	-> results in nanos: [85,158,366 | 103,439,337 | 122,633,515 | 157,082,407 | 284,332,202]
 
-Here is how to interpret the results: when testing a bundle, the benchmark controller starts/stops
-it many times, then the elapsed time used to start the bundle, activate/deactivate all services, and
-stop the bundle is recorded in a list. Then this list is sorted: the first entry is the fastest
-execution time, the last entry is the slowest. the middle one is the average. We display the first
-entry (fastest), the entry at 1/4 of the list, the middle of the list, the entry at 3/4 of the list,
-and the last entry (slowest time).
+Here, the shortest time used to activate and bind the components with each other took around 85,158,366 nanos.
+the value in the midle of the list represents the averate time (122,633,515 nanos.
+the last entry is the slowest elapsed time (284,332,202).
 
-We don't do an average, because usually, when running benchmark, some measurements don't reflect
-reality, especially, when there is a full GC or when the JVM is warming up. (we actually do the same
-as in Java Chronicle: https://github.com/peter-lawrey/Java-Chronicle). 
 
-Stress test scenario description
---------------------------------
 
-For sake of simplicity, a simple scenario domain is used (actually, this example domain has been
-inspired from the "Java8 Lambdas" book, O'reilly): We have the following services: 
-
-"Artist" service: An Artist is an individual or group of musicians, who creates some "Albums". One
-Artist service depends on several Album services. 
-
-"Album" service: is a single release of musics, comprising several music Tracks. One Album depends
-on several Track services. 
-
-"Track" service: A piece of music.
-
-The scenario is implemented in the following bundles
-
-- org.apache.felix.dm.benchmark.scenario: defines the interfaces.
-- org.apache.felix.dm.benchmark.scenario.impl: defines the basic implementations for the services.
-
-The Scenario Controller (see
-org.apache.felix.dm.benchmark.scenario/org.apache.felix.dm.benchmark.scenario.impl) is in charge of
-starting/stopping many times some specific bundles (DM, Parallel DM).
-
-By default, when a tested bundle is started, it will create several Artists (see Artists.ARTISTS
-constant). each Artist depends on several Albums (see Artists.ALBUMS constant), and each Album
-depends on several music Tracks (see Artists.TRACKS constants).
-
-Test bundles (DM, parallel DM)
-==============================
-
-- org.apache.felix.dm.benchmark.dependencymanager: 
-It contains a simple activator, which creates the various services using dependency manager API.
-
-- org.apache.felix.dm.benchmark.dependencymanager.parallel: 
-same as above, but using parallel dependency manager where components dependency management and
-components activation processing is performed concurrently, using a fixed thread pool.
-
-The org.apache.felix.dm.benchmark.controller bundle, when started, first stops all tested bundles.
-Then for each one, it performs the following test (multiple times):
-
-- start the tested bundle
-- wait for all expected services to be registered (Artists/Albums/Tracks)
-- stop the tested bundle.
-- wait for all expected services to be unregistered
-
-All the elapsed time (nanoseconds) used to execute each iteration is then recorded in a list.
-When enough iterations are done, the list is sorted (that is : the first entry in the list
-corresponds to the fastest execution time, and the last entry corresponds to the slowest execution
-time). Then, we display some meaningful entries in the list (like the first entry, the entry in the
-middle of the list (average), and the last entry (slowest).
