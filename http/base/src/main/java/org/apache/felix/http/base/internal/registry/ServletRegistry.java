@@ -105,7 +105,7 @@ public final class ServletRegistry
                 final PathResolver regHandler = this.activeServletMappings.get(pattern);
                 if ( regHandler != null )
                 {
-                    if ( regHandler.getServletHandler().getServletInfo().getServiceReference().compareTo(handler.getServletInfo().getServiceReference()) < 0 )
+                    if ( regHandler.getServletHandler().getServletInfo().compareTo(handler.getServletInfo()) < 0 )
                     {
                         // replace if no error with new servlet
                         if ( this.tryToActivate(pattern, handler, status) )
