@@ -160,6 +160,8 @@ public final class ErrorPageRegistry
                             final ServletHandler old = list.get(0);
                             old.destroy();
                             errorCodesMap.put(code, newList);
+                            final ErrorRegistrationStatus oldStatus = statusMapping.get(old.getServletInfo());
+                            oldStatus.errorCodeMapping.put(code, DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
                         }
                     }
                     else
@@ -197,6 +199,8 @@ public final class ErrorPageRegistry
                             final ServletHandler old = list.get(0);
                             old.destroy();
                             exceptionsMap.put(exception, newList);
+                            final ErrorRegistrationStatus oldStatus = statusMapping.get(old.getServletInfo());
+                            oldStatus.exceptionMapping.put(exception, DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
                         }
                     }
                     else

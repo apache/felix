@@ -96,12 +96,6 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     @Override
     public int compareTo(@Nonnull final PerContextHandlerRegistry other)
     {
-        // the context of the HttpService is the least element
-        if (this.serviceId == 0 ^ other.serviceId == 0)
-        {
-            return this.serviceId == 0 ? -1 : 1;
-        }
-
         final int result = Integer.compare(other.path.length(), this.path.length());
         if ( result == 0 ) {
             if (this.ranking == other.ranking)
