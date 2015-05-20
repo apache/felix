@@ -58,7 +58,7 @@ public final class BridgeActivator extends AbstractHttpActivator
         if ( getBundleContext().getProperty(FELIX_HTTP_SERVICE_ENDPOINTS) != null )
         {
             final Hashtable<String, Object> serviceRegProps = new Hashtable<String, Object>();
-            serviceRegProps.put(HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT_ATTRIBUTE,
+            serviceRegProps.put(HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT,
                     getBundleContext().getProperty(FELIX_HTTP_SERVICE_ENDPOINTS));
             this.getHttpServiceController().setProperties(serviceRegProps);
         }
