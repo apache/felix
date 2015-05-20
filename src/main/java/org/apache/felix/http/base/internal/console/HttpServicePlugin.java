@@ -41,7 +41,14 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.dto.ServiceReferenceDTO;
 import org.osgi.service.http.runtime.HttpServiceRuntime;
+import org.osgi.service.http.runtime.dto.DTOConstants;
 import org.osgi.service.http.runtime.dto.ErrorPageDTO;
+import org.osgi.service.http.runtime.dto.FailedErrorPageDTO;
+import org.osgi.service.http.runtime.dto.FailedFilterDTO;
+import org.osgi.service.http.runtime.dto.FailedListenerDTO;
+import org.osgi.service.http.runtime.dto.FailedResourceDTO;
+import org.osgi.service.http.runtime.dto.FailedServletContextDTO;
+import org.osgi.service.http.runtime.dto.FailedServletDTO;
 import org.osgi.service.http.runtime.dto.FilterDTO;
 import org.osgi.service.http.runtime.dto.ListenerDTO;
 import org.osgi.service.http.runtime.dto.ResourceDTO;
@@ -121,6 +128,16 @@ public class HttpServicePlugin extends HttpServlet
         {
             printContextDetails(pw, ctxDto);
         }
+        for(final FailedServletContextDTO ctxDto : dto.failedServletContextDTOs )
+        {
+            printFailedContextDetails(pw, ctxDto);
+        }
+        printFailedServletDetails(pw, dto);
+        printFailedFilterDetails(pw, dto);
+        printFailedResourceDetails(pw, dto);
+        printFailedErrorPageDetails(pw, dto);
+        printFailedListenerDetails(pw, dto);
+
         pw.println("<br/>");
     }
 
@@ -244,6 +261,25 @@ public class HttpServicePlugin extends HttpServlet
         printListenerDetails(pw, dto);
     }
 
+    private void printFailedContextDetails(final PrintWriter pw, final FailedServletContextDTO dto)
+    {
+        pw.print("<p class=\"statline ui-state-highlight\">${Servlet Context} '");
+        pw.print(escapeXml(dto.name));
+        pw.println("'</p>");
+
+        pw.println("<table class=\"nicetable\">");
+
+        boolean odd = true;
+        pw.println("<thead><tr>");
+        pw.println("<th class=\"header\">${Name}</th>");
+        pw.println("<th class=\"header\">${Value)}</th>");
+        pw.println("</tr></thead>");
+        odd = printRow(pw, odd, "${Path}", getContextPath(dto.contextPath));
+        odd = printRow(pw, odd, "${reason}", getErrorText(dto.failureReason));
+        odd = printRow(pw, odd, "${service.id}", String.valueOf(dto.serviceId));
+        pw.println("</table>");
+    }
+
     private void printFilterDetails(final PrintWriter pw, final ServletContextDTO dto)
     {
         if ( dto.filterDTOs.length == 0 )
@@ -265,6 +301,82 @@ public class HttpServicePlugin extends HttpServlet
         for (final FilterDTO filter : dto.filterDTOs)
         {
             final StringBuilder sb = new StringBuilder();
+            final ServiceReference<?> ref = this.getServiceReference(filter.serviceId);
+            if ( ref != null )
+            {
+                int ranking = 0;
+                final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
+                if ( obj instanceof Integer)
+                {
+                    ranking = (Integer)obj;
+                }
+                sb.append("${ranking} : ").append(String.valueOf(ranking)).append("\n");
+            }
+            sb.append("${async} : ").append(String.valueOf(filter.asyncSupported)).append("\n");
+            sb.append("${dispatcher} : ").append(getValueAsString(filter.dispatcher)).append("\n");
+            sb.append("${service.id} : ").append(String.valueOf(filter.serviceId)).append("\n");
+            if ( ref != null )
+            {
+                sb.append("${bundle} : ");
+                sb.append("${#link:");
+                sb.append(ref.getBundle().getBundleId());
+                sb.append("}");
+                sb.append(ref.getBundle().getSymbolicName());
+                sb.append("${link#}\n");
+            }
+
+            final List<String> patterns = new ArrayList<String>();
+            patterns.addAll(Arrays.asList(filter.patterns));
+            patterns.addAll(Arrays.asList(filter.regexs));
+            for(final String name : filter.servletNames)
+            {
+                patterns.add("Servlet : " + name);
+            }
+            Collections.sort(patterns);
+            final StringBuilder psb = new StringBuilder();
+            for(final String p : patterns)
+            {
+                psb.append(p).append('\n');
+            }
+            odd = printRow(pw, odd, psb.toString(), filter.name, sb.toString());
+        }
+        pw.println("</table>");
+    }
+
+    private String getErrorText(final int reason)
+    {
+        switch ( reason )
+        {
+        case DTOConstants.FAILURE_REASON_EXCEPTION_ON_INIT : return "Exception on init";
+        case DTOConstants.FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING : return "No match";
+        case DTOConstants.FAILURE_REASON_SERVICE_IN_USE : return "In use";
+        case DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE : return "Not gettable";
+        case DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE : return "Context failure";
+        case DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE : return "Shadowed";
+        case DTOConstants.FAILURE_REASON_VALIDATION_FAILED : return "Invalid";
+        default: return "unknown";
+        }
+    }
+    private void printFailedFilterDetails(final PrintWriter pw, final RuntimeDTO dto)
+    {
+        if ( dto.failedFilterDTOs.length == 0 )
+        {
+            return;
+        }
+        pw.print("<p class=\"statline ui-state-highlight\">${Failed Filter Services}</p>");
+
+        pw.println("<table class=\"nicetable\">");
+        pw.println("<thead><tr>");
+        pw.println("<th class=\"header\">${Pattern}</th>");
+        pw.println("<th class=\"header\">${Filter}</th>");
+        pw.println("<th class=\"header\">${Info}</th>");
+        pw.println("</tr></thead>");
+
+        boolean odd = true;
+        for (final FailedFilterDTO filter : dto.failedFilterDTOs)
+        {
+            final StringBuilder sb = new StringBuilder();
+            sb.append("${reason} : ").append(getErrorText(filter.failureReason)).append("\n");
             final ServiceReference<?> ref = this.getServiceReference(filter.serviceId);
             if ( ref != null )
             {
@@ -381,6 +493,59 @@ public class HttpServicePlugin extends HttpServlet
         pw.println("</table>");
     }
 
+    private void printFailedServletDetails(final PrintWriter pw, final RuntimeDTO dto)
+    {
+        if ( dto.failedServletDTOs.length == 0 )
+        {
+            return;
+        }
+        pw.print("<p class=\"statline ui-state-highlight\">${Failed Servlet Services}</p>");
+
+        pw.println("<table class=\"nicetable\">");
+        pw.println("<thead><tr>");
+        pw.println("<th class=\"header\">${Path}</th>");
+        pw.println("<th class=\"header\">${Name}</th>");
+        pw.println("<th class=\"header\">${Info}</th>");
+        pw.println("</tr></thead>");
+
+        boolean odd = true;
+        for (final FailedServletDTO servlet : dto.failedServletDTOs)
+        {
+            final StringBuilder sb = new StringBuilder();
+            sb.append("${reason} : ").append(getErrorText(servlet.failureReason)).append("\n");
+            final ServiceReference<?> ref = this.getServiceReference(servlet.serviceId);
+            if ( ref != null )
+            {
+                int ranking = 0;
+                final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
+                if ( obj instanceof Integer)
+                {
+                    ranking = (Integer)obj;
+                }
+                sb.append("${ranking} : ").append(String.valueOf(ranking)).append("\n");
+            }
+            sb.append("${async} : ").append(String.valueOf(servlet.asyncSupported)).append("\n");
+            sb.append("${service.id} : ").append(String.valueOf(servlet.serviceId)).append("\n");
+            if ( ref != null )
+            {
+                sb.append("${bundle} : ");
+                sb.append("${#link:");
+                sb.append(ref.getBundle().getBundleId());
+                sb.append("}");
+                sb.append(ref.getBundle().getSymbolicName());
+                sb.append("${link#}\n");
+            }
+
+            final StringBuilder psb = new StringBuilder();
+            for(final String p : servlet.patterns)
+            {
+                psb.append(p).append('\n');
+            }
+            odd = printRow(pw, odd, psb.toString(), servlet.name, sb.toString());
+        }
+        pw.println("</table>");
+    }
+
     private void printResourceDetails(final PrintWriter pw, final ServletContextDTO dto)
     {
         if ( dto.resourceDTOs.length == 0 )
@@ -434,6 +599,58 @@ public class HttpServicePlugin extends HttpServlet
         pw.println("</table>");
     }
 
+    private void printFailedResourceDetails(final PrintWriter pw, final RuntimeDTO dto)
+    {
+        if ( dto.failedResourceDTOs.length == 0 )
+        {
+            return;
+        }
+        pw.print("<p class=\"statline ui-state-highlight\">${Failed Resource Services}</p>");
+
+        pw.println("<table class=\"nicetable\">");
+        pw.println("<thead><tr>");
+        pw.println("<th class=\"header\">${Path}</th>");
+        pw.println("<th class=\"header\">${Prefix}</th>");
+        pw.println("<th class=\"header\">${Info}</th>");
+        pw.println("</tr></thead>");
+
+        boolean odd = true;
+        for (final FailedResourceDTO rsrc : dto.failedResourceDTOs)
+        {
+            final StringBuilder sb = new StringBuilder();
+            sb.append("${reason} : ").append(getErrorText(rsrc.failureReason)).append("\n");
+            final ServiceReference<?> ref = this.getServiceReference(rsrc.serviceId);
+            if ( ref != null )
+            {
+                int ranking = 0;
+                final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
+                if ( obj instanceof Integer)
+                {
+                    ranking = (Integer)obj;
+                }
+                sb.append("${ranking} : ").append(String.valueOf(ranking)).append("\n");
+            }
+            sb.append("${service.id} : ").append(String.valueOf(rsrc.serviceId)).append("\n");
+            if ( ref != null )
+            {
+                sb.append("${bundle} : ");
+                sb.append("${#link:");
+                sb.append(ref.getBundle().getBundleId());
+                sb.append("}");
+                sb.append(ref.getBundle().getSymbolicName());
+                sb.append("${link#}\n");
+            }
+
+            final StringBuilder psb = new StringBuilder();
+            for(final String p : rsrc.patterns)
+            {
+                psb.append(p).append('\n');
+            }
+            odd = printRow(pw, odd, psb.toString(), rsrc.prefix, sb.toString());
+        }
+        pw.println("</table>");
+    }
+
     private void printErrorPageDetails(final PrintWriter pw, final ServletContextDTO dto)
     {
         if ( dto.errorPageDTOs.length == 0 )
@@ -442,7 +659,7 @@ public class HttpServicePlugin extends HttpServlet
         }
         pw.print("<p class=\"statline ui-state-highlight\">${Servlet Context} '");
         pw.print(escapeXml(dto.name));
-        pw.println("' ${Registered Resource Services}</p>");
+        pw.println("' ${Registered Error Pages}</p>");
 
         pw.println("<table class=\"nicetable\">");
         pw.println("<thead><tr>");
@@ -455,6 +672,63 @@ public class HttpServicePlugin extends HttpServlet
         for (final ErrorPageDTO ep : dto.errorPageDTOs)
         {
             final StringBuilder sb = new StringBuilder();
+            final ServiceReference<?> ref = this.getServiceReference(ep.serviceId);
+            if ( ref != null )
+            {
+                int ranking = 0;
+                final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
+                if ( obj instanceof Integer)
+                {
+                    ranking = (Integer)obj;
+                }
+                sb.append("${ranking} : ").append(String.valueOf(ranking)).append("\n");
+            }
+            sb.append("${async} : ").append(String.valueOf(ep.asyncSupported)).append("\n");
+            sb.append("${service.id} : ").append(String.valueOf(ep.serviceId)).append("\n");
+            if ( ref != null )
+            {
+                sb.append("${bundle} : ");
+                sb.append("${#link:");
+                sb.append(ref.getBundle().getBundleId());
+                sb.append("}");
+                sb.append(ref.getBundle().getSymbolicName());
+                sb.append("${link#}\n");
+            }
+
+            final StringBuilder psb = new StringBuilder();
+            for(final long p : ep.errorCodes)
+            {
+                psb.append(p).append('\n');
+            }
+            for(final String p : ep.exceptions)
+            {
+                psb.append(p).append('\n');
+            }
+            odd = printRow(pw, odd, psb.toString(), ep.name, sb.toString());
+        }
+        pw.println("</table>");
+    }
+
+    private void printFailedErrorPageDetails(final PrintWriter pw, final RuntimeDTO dto)
+    {
+        if ( dto.failedErrorPageDTOs.length == 0 )
+        {
+            return;
+        }
+        pw.print("<p class=\"statline ui-state-highlight\">${Registered Error Pages}</p>");
+
+        pw.println("<table class=\"nicetable\">");
+        pw.println("<thead><tr>");
+        pw.println("<th class=\"header\">${Path}</th>");
+        pw.println("<th class=\"header\">${Name}</th>");
+        pw.println("<th class=\"header\">${Info}</th>");
+        pw.println("</tr></thead>");
+
+        boolean odd = true;
+        for (final FailedErrorPageDTO ep : dto.failedErrorPageDTOs)
+        {
+            final StringBuilder sb = new StringBuilder();
+            sb.append("${reason} : ").append(getErrorText(ep.failureReason)).append("\n");
             final ServiceReference<?> ref = this.getServiceReference(ep.serviceId);
             if ( ref != null )
             {
@@ -512,6 +786,56 @@ public class HttpServicePlugin extends HttpServlet
         for (final ListenerDTO ep : dto.listenerDTOs)
         {
             final StringBuilder sb = new StringBuilder();
+            final ServiceReference<?> ref = this.getServiceReference(ep.serviceId);
+            if ( ref != null )
+            {
+                int ranking = 0;
+                final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
+                if ( obj instanceof Integer)
+                {
+                    ranking = (Integer)obj;
+                }
+                sb.append("${ranking} : ").append(String.valueOf(ranking)).append("\n");
+            }
+            sb.append("${service.id} : ").append(String.valueOf(ep.serviceId)).append("\n");
+            if ( ref != null )
+            {
+                sb.append("${bundle} : ");
+                sb.append("${#link:");
+                sb.append(ref.getBundle().getBundleId());
+                sb.append("}");
+                sb.append(ref.getBundle().getSymbolicName());
+                sb.append("${link#}\n");
+            }
+            final StringBuilder tsb = new StringBuilder();
+            for(final String t : ep.types)
+            {
+                tsb.append(t).append('\n');
+            }
+            odd = printRow(pw, odd, tsb.toString(), sb.toString());
+        }
+        pw.println("</table>");
+    }
+
+    private void printFailedListenerDetails(final PrintWriter pw, final RuntimeDTO dto)
+    {
+        if ( dto.failedListenerDTOs.length == 0 )
+        {
+            return;
+        }
+        pw.print("<p class=\"statline ui-state-highlight\">${Failed Listeners}</p>");
+
+        pw.println("<table class=\"nicetable\">");
+        pw.println("<thead><tr>");
+        pw.println("<th class=\"header\">${Type}</th>");
+        pw.println("<th class=\"header\">${Info}</th>");
+        pw.println("</tr></thead>");
+
+        boolean odd = true;
+        for (final FailedListenerDTO ep : dto.failedListenerDTOs)
+        {
+            final StringBuilder sb = new StringBuilder();
+            sb.append("${reason} : ").append(getErrorText(ep.failureReason)).append("\n");
             final ServiceReference<?> ref = this.getServiceReference(ep.serviceId);
             if ( ref != null )
             {
@@ -779,6 +1103,236 @@ public class HttpServicePlugin extends HttpServlet
             pw.println();
         }
 
+        if ( dto.failedServletContextDTOs.length > 0 )
+        {
+            for(final FailedServletContextDTO ctxDto : dto.failedServletContextDTOs )
+            {
+                pw.print("Failed Servlet Context ");
+                pw.println(ctxDto.name);
+                pw.println("-----------------------------------------------");
+
+                pw.print("Reason : ");
+                pw.println(getErrorText(ctxDto.failureReason));
+                pw.print("Path : ");
+                pw.println(getContextPath(ctxDto.contextPath));
+                pw.print("service.id : ");
+                pw.println(String.valueOf(ctxDto.serviceId));
+                pw.println();
+            }
+        }
+        if ( dto.failedServletDTOs.length > 0 )
+        {
+            pw.println("Failed Servlets");
+            for (final FailedServletDTO servlet : dto.failedServletDTOs)
+            {
+                pw.print("Patterns : ");
+                pw.println(getValueAsString(servlet.patterns));
+                pw.print("Reason : ");
+                pw.println(getErrorText(servlet.failureReason));
+                pw.print("Name : ");
+                pw.println(servlet.name);
+                final ServiceReference<?> ref = this.getServiceReference(servlet.serviceId);
+                if ( ref != null )
+                {
+                    int ranking = 0;
+                    final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
+                    if ( obj instanceof Integer)
+                    {
+                        ranking = (Integer)obj;
+                    }
+                    pw.print("Ranking : ");
+                    pw.println(String.valueOf(ranking));
+                }
+                pw.print("async : ");
+                pw.println(String.valueOf(servlet.asyncSupported));
+                pw.print("service.id : ");
+                pw.println(String.valueOf(servlet.serviceId));
+                pw.println();
+                if ( ref != null )
+                {
+                    pw.print("Bundle : ");
+                    pw.print(ref.getBundle().getSymbolicName());
+                    pw.print(" <");
+                    pw.print(String.valueOf(ref.getBundle().getBundleId()));
+                    pw.println(">");
+                }
+            }
+            pw.println();
+        }
+
+        if ( dto.failedFilterDTOs.length > 0 )
+        {
+            pw.println("Failed Filters");
+            for (final FailedFilterDTO filter : dto.failedFilterDTOs)
+            {
+                final List<String> patterns = new ArrayList<String>();
+                patterns.addAll(Arrays.asList(filter.patterns));
+                patterns.addAll(Arrays.asList(filter.regexs));
+                for(final String name : filter.servletNames)
+                {
+                    patterns.add("Servlet : " + name);
+                }
+                Collections.sort(patterns);
+
+                pw.print("Patterns : ");
+                pw.println(patterns);
+                pw.print("Reason : ");
+                pw.println(getErrorText(filter.failureReason));
+                pw.print("Name : ");
+                pw.println(filter.name);
+                final ServiceReference<?> ref = this.getServiceReference(filter.serviceId);
+                if ( ref != null )
+                {
+                    int ranking = 0;
+                    final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
+                    if ( obj instanceof Integer)
+                    {
+                        ranking = (Integer)obj;
+                    }
+                    pw.print("Ranking : ");
+                    pw.println(String.valueOf(ranking));
+                }
+                pw.print("async : ");
+                pw.println(String.valueOf(filter.asyncSupported));
+                pw.print("dispatcher : ");
+                pw.println(getValueAsString(filter.dispatcher));
+                pw.print("service.id : ");
+                pw.println(String.valueOf(filter.serviceId));
+                if ( ref != null )
+                {
+                    pw.print("Bundle : ");
+                    pw.print(ref.getBundle().getSymbolicName());
+                    pw.print(" <");
+                    pw.print(String.valueOf(ref.getBundle().getBundleId()));
+                    pw.println(">");
+                }
+                pw.println();
+            }
+            pw.println();
+        }
+        if ( dto.failedResourceDTOs.length > 0 )
+        {
+            pw.println("Failed Resources");
+            for (final FailedResourceDTO rsrc : dto.failedResourceDTOs)
+            {
+                pw.print("Patterns : ");
+                pw.println(getValueAsString(rsrc.patterns));
+                pw.print("Reason : ");
+                pw.println(getErrorText(rsrc.failureReason));
+                pw.print("Prefix : ");
+                pw.println(rsrc.prefix);
+                final ServiceReference<?> ref = this.getServiceReference(rsrc.serviceId);
+                if ( ref != null )
+                {
+                    int ranking = 0;
+                    final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
+                    if ( obj instanceof Integer)
+                    {
+                        ranking = (Integer)obj;
+                    }
+                    pw.print("Ranking : ");
+                    pw.println(String.valueOf(ranking));
+                }
+                pw.print("service.id : ");
+                pw.println(String.valueOf(rsrc.serviceId));
+                pw.println();
+                if ( ref != null )
+                {
+                    pw.print("Bundle : ");
+                    pw.print(ref.getBundle().getSymbolicName());
+                    pw.print(" <");
+                    pw.print(String.valueOf(ref.getBundle().getBundleId()));
+                    pw.println(">");
+                }
+            }
+            pw.println();
+
+        }
+        if ( dto.failedErrorPageDTOs.length > 0 )
+        {
+            pw.println("Failed Error Pages");
+            for (final FailedErrorPageDTO ep : dto.failedErrorPageDTOs)
+            {
+                final List<String> patterns = new ArrayList<String>();
+                for(final long p : ep.errorCodes)
+                {
+                    patterns.add(String.valueOf(p));
+                }
+                for(final String p : ep.exceptions)
+                {
+                    patterns.add(p);
+                }
+                pw.print("Patterns : ");
+                pw.println(patterns);
+                pw.print("Reason : ");
+                pw.println(getErrorText(ep.failureReason));
+                pw.print("Name : ");
+                pw.println(ep.name);
+                final ServiceReference<?> ref = this.getServiceReference(ep.serviceId);
+                if ( ref != null )
+                {
+                    int ranking = 0;
+                    final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
+                    if ( obj instanceof Integer)
+                    {
+                        ranking = (Integer)obj;
+                    }
+                    pw.print("Ranking : ");
+                    pw.println(String.valueOf(ranking));
+                }
+                pw.print("async : ");
+                pw.println(String.valueOf(ep.asyncSupported));
+                pw.print("service.id : ");
+                pw.println(String.valueOf(ep.serviceId));
+                if ( ref != null )
+                {
+                    pw.print("Bundle : ");
+                    pw.print(ref.getBundle().getSymbolicName());
+                    pw.print(" <");
+                    pw.print(String.valueOf(ref.getBundle().getBundleId()));
+                    pw.println(">");
+                }
+                pw.println();
+            }
+            pw.println();
+        }
+
+        if ( dto.failedListenerDTOs.length > 0 )
+        {
+            pw.println("Listeners");
+            for (final FailedListenerDTO ep : dto.failedListenerDTOs)
+            {
+                pw.print("Types : ");
+                pw.println(getValueAsString(ep.types));
+                pw.print("Reason : ");
+                pw.println(getErrorText(ep.failureReason));
+                final ServiceReference<?> ref = this.getServiceReference(ep.serviceId);
+                if ( ref != null )
+                {
+                    int ranking = 0;
+                    final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
+                    if ( obj instanceof Integer)
+                    {
+                        ranking = (Integer)obj;
+                    }
+                    pw.print("Ranking : ");
+                    pw.println(String.valueOf(ranking));
+                }
+                pw.print("service.id : ");
+                pw.println(String.valueOf(ep.serviceId));
+                if ( ref != null )
+                {
+                    pw.print("Bundle : ");
+                    pw.print(ref.getBundle().getSymbolicName());
+                    pw.print(" <");
+                    pw.print(String.valueOf(ref.getBundle().getBundleId()));
+                    pw.println(">");
+                }
+                pw.println();
+            }
+            pw.println();
+        }
+        pw.println();
     }
 
     public void unregister()
