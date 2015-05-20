@@ -1024,7 +1024,7 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
 
     // As specified in OSGi Compendium Release 6, Chapter 140.4.1
     @Test
-    public void multipleErrorPagesForSameExceptionsChoosenByServiceRankingRules() throws InterruptedException
+    public void multipleErrorPagesForSameErrorCodeChoosenByServiceRankingRules() throws InterruptedException
     {
         registerErrorPage("error page 1", asList(NullPointerException.class.getName(), "500"));
 
@@ -1059,14 +1059,14 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
         assertArrayEquals(new long[] { 500 }, defaultContext.errorPageDTOs[0].errorCodes);
         assertArrayEquals(new String[] { IllegalArgumentException.class.getName() }, defaultContext.errorPageDTOs[0].exceptions);
         assertEquals("error page 1", defaultContext.errorPageDTOs[1].name);
-        assertArrayEquals(new long[] { 500 }, defaultContext.errorPageDTOs[1].errorCodes);
+        assertEquals(0, defaultContext.errorPageDTOs[1].errorCodes.length);
         assertArrayEquals(new String[] { NullPointerException.class.getName() }, defaultContext.errorPageDTOs[1].exceptions);
 
         assertEquals(1, runtimeWithShadowedErrorPage.failedErrorPageDTOs.length);
         FailedErrorPageDTO failedErrorPageDTO = runtimeWithShadowedErrorPage.failedErrorPageDTOs[0];
         assertEquals("error page 1", failedErrorPageDTO.name);
         assertArrayEquals(new long[] { 500 }, failedErrorPageDTO.errorCodes);
-        assertArrayEquals(new String[] { NullPointerException.class.getName() }, failedErrorPageDTO.exceptions);
+        assertEquals(0, failedErrorPageDTO.exceptions.length);
         assertEquals(FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE, failedErrorPageDTO.failureReason);
 
         higherRankingServlet.unregister();
