@@ -16,12 +16,23 @@
  */
 package org.apache.felix.http.base.internal.registry;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Collections;
+
+import javax.servlet.Servlet;
+import javax.servlet.ServletConfig;
+
+import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
+import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.osgi.service.http.runtime.dto.ServletContextDTO;
+import org.osgi.service.http.runtime.dto.ServletDTO;
 
 
 public class HandlerRegistryTest
@@ -41,56 +52,45 @@ public class HandlerRegistryTest
         registry.shutdown();
         assertFalse(registry.getRuntime(dto, holder));
     }
-    /*
+
     @Test
     public void testAddRemoveServlet() throws Exception
     {
-        HandlerRegistry hr = new HandlerRegistry();
+        registry.init();
+
+        final FailedDTOHolder holder = new FailedDTOHolder();
+        final ServletContextDTO dto = new ServletContextDTO();
+        dto.servletDTOs = new ServletDTO[0];
 
         Servlet servlet = Mockito.mock(Servlet.class);
-        final ServletInfo info = new ServletInfo("foo", "/foo", 0, null, servlet, null);
-        ServletHandler handler = new ServletHandler(null, null, info, info.getServlet());
-        assertEquals("Precondition", 0, hr.getServlets().length);
-        hr.addServlet(null, handler);
+        final ServletInfo info = new ServletInfo("foo", "/foo", 0, Collections.EMPTY_MAP);
+        ServletHandler handler = new HttpServiceServletHandler(0, null, info, servlet);
+
+        assertTrue(registry.getRuntime(dto, holder));
+        assertEquals("Precondition", 0, dto.servletDTOs.length);
+
+        registry.addServlet(handler);
         Mockito.verify(servlet, Mockito.times(1)).init(Mockito.any(ServletConfig.class));
-        assertEquals(1, hr.getServlets().length);
-        assertSame(handler, hr.getServlets()[0]);
+        assertTrue(registry.getRuntime(dto, holder));
+        assertEquals(1, dto.servletDTOs.length);
+        assertEquals(info.getServiceId(), dto.servletDTOs[0].serviceId);
 
-        final ServletInfo info2 = new ServletInfo("bar", "/bar", 0, null, servlet, null);
-        ServletHandler handler2 = new ServletHandler(null, null, info2, info2.getServlet());
-        try
-        {
-            hr.addServlet(null, handler2);
-            // TODO
-//            fail("Should not have allowed to add the same servlet twice");
-        }
-        catch (ServletException se)
-        {
-            // good
-        }
-        assertArrayEquals(new ServletHandler[] {handler2, handler}, hr.getServlets());
+        final ServletInfo info2 = new ServletInfo("bar", "/bar", 0, Collections.EMPTY_MAP);
+        ServletHandler handler2 = new HttpServiceServletHandler(0, null, info2, Mockito.mock(Servlet.class));
+        registry.addServlet(handler2);
+        assertTrue(registry.getRuntime(dto, holder));
+        assertEquals(2, dto.servletDTOs.length);
 
-        final ServletInfo info3 = new ServletInfo("zar", "/foo", 0, null, Mockito.mock(Servlet.class), null);
-        ServletHandler handler3 = new ServletHandler(null, null,info3, info3.getServlet());
+        final ServletInfo info3 = new ServletInfo("zar", "/foo", 0, Collections.EMPTY_MAP);
+        ServletHandler handler3 = new HttpServiceServletHandler(0, null,info3, Mockito.mock(Servlet.class));
+        registry.addServlet(handler3);
+        assertTrue(registry.getRuntime(dto, holder));
+        assertEquals(2, dto.servletDTOs.length);
+        assertEquals(1, holder.failedServletDTOs.size());
 
-        try
-        {
-            hr.addServlet(null, handler3);
-            fail("Should not have allowed to add the same alias twice");
-        }
-        catch (NamespaceException ne) {
-            // good
-        }
-        assertArrayEquals(new ServletHandler[] {handler2, handler}, hr.getServlets());
-
-        assertSame(servlet, hr.getServletByAlias("/foo"));
-
-        Mockito.verify(servlet, Mockito.never()).destroy();
-        hr.removeServlet(servlet, true);
-        Mockito.verify(servlet, Mockito.times(2)).destroy();
-        assertEquals(0, hr.getServlets().length);
+        registry.shutdown();
     }
-
+/*
     @Test
     public void testAddServletWhileSameServletAddedDuringInit() throws Exception
     {

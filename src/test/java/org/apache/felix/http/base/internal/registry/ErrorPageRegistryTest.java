@@ -230,6 +230,7 @@ public class ErrorPageRegistryTest {
         final Bundle bundle = mock(Bundle.class);
         when(bundle.getBundleContext()).thenReturn(bCtx);
 
+        @SuppressWarnings("unchecked")
         final ServiceReference<Servlet> ref = mock(ServiceReference.class);
         when(ref.getBundle()).thenReturn(bundle);
         when(ref.getProperty(Constants.SERVICE_ID)).thenReturn(id);
