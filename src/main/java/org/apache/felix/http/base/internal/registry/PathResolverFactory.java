@@ -16,6 +16,8 @@
  */
 package org.apache.felix.http.base.internal.registry;
 
+import org.apache.felix.http.base.internal.handler.ServletHandler;
+
 /**
  * The path resolver factory creates a path resolver for a pattern.
  * The servlet spec supports different patterns
@@ -30,33 +32,36 @@ package org.apache.felix.http.base.internal.registry;
  */
 public abstract class PathResolverFactory {
 
-    public static PathResolver create(final String pattern)
+    public static PathResolver create(final ServletHandler handler, final String pattern)
     {
         if ( pattern.length() == 0 )
         {
-            return new RootMatcher();
+            return new RootMatcher(handler);
         }
         else if ( pattern.equals("/") )
         {
-            return new DefaultMatcher();
+            return new DefaultMatcher(handler);
         }
         else if ( pattern.startsWith("*.") )
         {
-            return new ExtensionMatcher(pattern.substring(1));
+            return new ExtensionMatcher(handler, pattern.substring(1));
         }
         else if ( pattern.endsWith("/*") )
         {
-            return new PathMatcher(pattern);
+            return new PathMatcher(handler, pattern);
         }
-        return new ExactAndPathMatcher(pattern);
+        return new ExactAndPathMatcher(handler, pattern);
     }
 
     public static abstract class AbstractMatcher implements PathResolver
     {
         private final int ranking;
 
-        public AbstractMatcher(final int ranking)
+        private final ServletHandler handler;
+
+        public AbstractMatcher(final ServletHandler handler, final int ranking)
         {
+            this.handler = handler;
             this.ranking = ranking;
         }
 
@@ -68,6 +73,11 @@ public abstract class PathResolverFactory {
                 result = o.getOrdering() - this.getOrdering();
             }
             return result;
+        }
+
+        @Override
+        public ServletHandler getServletHandler() {
+            return this.handler;
         }
 
         @Override
@@ -83,19 +93,20 @@ public abstract class PathResolverFactory {
 
     public static final class RootMatcher extends AbstractMatcher
     {
-        public RootMatcher()
+        public RootMatcher(final ServletHandler handler)
         {
-            super(2);
+            super(handler, 2);
         }
 
         @Override
-        public PathResolution match(final String uri) {
+        public PathResolution resolve(final String uri) {
             if ( uri.length() == 0 )
             {
                 final PathResolution pr = new PathResolution();
                 pr.pathInfo = "/";
                 pr.servletPath = "";
                 pr.requestURI = "";
+                pr.handler = this.getServletHandler();
 
                 return pr;
             }
@@ -105,17 +116,18 @@ public abstract class PathResolverFactory {
 
     public static final class DefaultMatcher extends AbstractMatcher
     {
-        public DefaultMatcher()
+        public DefaultMatcher(final ServletHandler handler)
         {
-            super(1);
+            super(handler, 1);
         }
 
         @Override
-        public PathResolution match(final String uri) {
+        public PathResolution resolve(final String uri) {
             final PathResolution pr = new PathResolution();
             pr.pathInfo = null;
             pr.servletPath = uri;
             pr.requestURI = uri;
+            pr.handler = this.getServletHandler();
 
             return pr;
         }
@@ -127,21 +139,22 @@ public abstract class PathResolverFactory {
 
         private final String prefix;
 
-        public ExactAndPathMatcher(final String pattern)
+        public ExactAndPathMatcher(final ServletHandler handler, final String pattern)
         {
-            super(4);
+            super(handler, 4);
             this.path = pattern;
             this.prefix = pattern.concat("/");
         }
 
         @Override
-        public PathResolution match(final String uri) {
+        public PathResolution resolve(final String uri) {
             if ( uri.equals(this.path) )
             {
                 final PathResolution pr = new PathResolution();
                 pr.pathInfo = null;
                 pr.servletPath = uri;
                 pr.requestURI = uri;
+                pr.handler = this.getServletHandler();
 
                 return pr;
             }
@@ -151,6 +164,7 @@ public abstract class PathResolverFactory {
                 pr.servletPath = this.prefix.substring(0, this.prefix.length() - 1);
                 pr.pathInfo = uri.substring(pr.servletPath.length());
                 pr.requestURI = uri;
+                pr.handler = this.getServletHandler();
 
                 return pr;
             }
@@ -168,20 +182,21 @@ public abstract class PathResolverFactory {
     {
         private final String prefix;
 
-        public PathMatcher(final String pattern)
+        public PathMatcher(final ServletHandler handler, final String pattern)
         {
-            super(4);
+            super(handler, 4);
             this.prefix = pattern.substring(0, pattern.length() - 1);
         }
 
         @Override
-        public PathResolution match(final String uri) {
+        public PathResolution resolve(final String uri) {
             if ( uri.startsWith(this.prefix) )
             {
                 final PathResolution pr = new PathResolution();
                 pr.servletPath = this.prefix.substring(0, this.prefix.length() - 1);
                 pr.pathInfo = uri.substring(pr.servletPath.length());
                 pr.requestURI = uri;
+                pr.handler = this.getServletHandler();
 
                 return pr;
             }
@@ -199,20 +214,21 @@ public abstract class PathResolverFactory {
     {
         private final String extension;
 
-        public ExtensionMatcher(final String extension)
+        public ExtensionMatcher(final ServletHandler handler, final String extension)
         {
-            super(3);
+            super(handler, 3);
             this.extension = extension;
         }
 
         @Override
-        public PathResolution match(final String uri) {
+        public PathResolution resolve(final String uri) {
             if ( uri.endsWith(this.extension) )
             {
                 final PathResolution pr = new PathResolution();
                 pr.pathInfo = null;
                 pr.servletPath = uri;
                 pr.requestURI = uri;
+                pr.handler = this.getServletHandler();
 
                 return pr;
             }
