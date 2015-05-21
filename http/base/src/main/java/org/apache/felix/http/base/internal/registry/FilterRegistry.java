@@ -17,12 +17,13 @@
 package org.apache.felix.http.base.internal.registry;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.CheckForNull;
@@ -39,29 +40,48 @@ import org.osgi.service.http.runtime.dto.ServletContextDTO;
 
 /**
  * The filter registry keeps track of all filter mappings for a single servlet context.
+ *
+ * TODO - we should sort the statusMapping by result and ranking, keeping the active filters first,
+ *        highest ranking first. This would allow to stop iterating and avoid sorting the result.
  */
 public final class FilterRegistry
 {
-    private volatile FilterHandlerMapping filterMapping = new FilterHandlerMapping();
-
+    /** Map of all filter registrations. */
     private final Map<FilterInfo, FilterRegistrationStatus> statusMapping = new ConcurrentHashMap<FilterInfo, FilterRegistrationStatus>();
 
     private static final class FilterRegistrationStatus
     {
         public int result;
         public FilterHandler handler;
+        public PathResolver[] resolvers;
     }
 
     public synchronized void addFilter(@Nonnull final FilterHandler handler)
     {
         final int result = handler.init();
-        if ( result == -1 )
-        {
-            this.filterMapping = this.filterMapping.add(handler);
-        }
         final FilterRegistrationStatus status = new FilterRegistrationStatus();
         status.result = result;
         status.handler = handler;
+
+        if ( result == -1 )
+        {
+            final List<PathResolver> resolvers = new ArrayList<PathResolver>();
+            if ( handler.getFilterInfo().getPatterns() != null )
+            {
+                for(final String pattern : handler.getFilterInfo().getPatterns() ) {
+                    resolvers.add(PathResolverFactory.createPatternMatcher(null, pattern));
+                }
+            }
+            if ( handler.getFilterInfo().getRegexs() != null )
+            {
+                for(final String regex : handler.getFilterInfo().getRegexs() ) {
+                    resolvers.add(PathResolverFactory.createRegexMatcher(regex));
+                }
+            }
+            Collections.sort(resolvers);
+
+            status.resolvers = resolvers.toArray(new PathResolver[resolvers.size()]);
+        }
 
         statusMapping.put(handler.getFilterInfo(), status);
     }
@@ -73,7 +93,6 @@ public final class FilterRegistry
         {
             if ( status.result == -1 )
             {
-                this.filterMapping = this.filterMapping.remove(status.handler);
                 if (destroy)
                 {
                     status.handler.dispose();
@@ -82,56 +101,69 @@ public final class FilterRegistry
         }
     }
 
-    public FilterHandler[] getFilterHandlers(@CheckForNull final ServletHandler handler,
-            @CheckForNull DispatcherType dispatcherType,
-            @Nonnull String requestURI)
+    /**
+     * Get all filters handling the request.
+     * Filters are applied to the url and/or the servlet
+     * @param handler Optional servlet handler
+     * @param dispatcherType The dispatcher type
+     * @param requestURI The request uri
+     * @return The array of filter handlers, might be empty.
+     */
+    public @Nonnull FilterHandler[] getFilterHandlers(@CheckForNull final ServletHandler handler,
+            @Nonnull final DispatcherType dispatcherType,
+            @Nonnull final String requestURI)
     {
-        // See Servlet 3.0 specification, section 6.2.4...
-        final List<FilterHandler> result = new ArrayList<FilterHandler>();
-        result.addAll(this.filterMapping.getAllMatches(requestURI));
+        final Set<FilterHandler> result = new TreeSet<FilterHandler>();
 
-        // TODO this is not the most efficient/fastest way of doing this...
-        Iterator<FilterHandler> iter = result.iterator();
-        while (iter.hasNext())
+        for(final FilterRegistrationStatus status : this.statusMapping.values())
         {
-            if (!referencesDispatcherType(iter.next(), dispatcherType))
+            if (referencesDispatcherType(status.handler, dispatcherType) )
             {
-                iter.remove();
-            }
-        }
+                boolean added = false;
+                for(final PathResolver resolver : status.resolvers)
+                {
+                    if ( resolver.resolve(requestURI) != null )
+                    {
+                        result.add(status.handler);
+                        added = true;
+                        break;
+                    }
+                }
+                // check for servlet name
+                final String servletName = (handler != null) ? handler.getName() : null;
+                if ( !added && servletName != null && status.handler.getFilterInfo().getServletNames() != null )
+                {
+                    for(final String name : status.handler.getFilterInfo().getServletNames())
+                    {
+                        if ( servletName.equals(name) )
+                        {
+                            result.add(status.handler);
+                            added = true;
+                            break;
+                        }
+                    }
+                }
 
-        final String servletName = (handler != null) ? handler.getName() : null;
-        // TODO this is not the most efficient/fastest way of doing this...
-        for (FilterHandler filterHandler : this.filterMapping.values())
-        {
-            if (referencesServletByName(filterHandler, servletName))
-            {
-                result.add(filterHandler);
             }
         }
 
         return result.toArray(new FilterHandler[result.size()]);
     }
 
-    private boolean referencesDispatcherType(FilterHandler handler, DispatcherType dispatcherType)
+    /**
+     * Check if the filter is registered for the required dispatcher type
+     * @param handler The filter handler
+     * @param dispatcherType The requested dispatcher type
+     * @return {@code true} if the filter can be applied.
+     */
+    private boolean referencesDispatcherType(final FilterHandler handler, final DispatcherType dispatcherType)
     {
-        if (dispatcherType == null)
+        for(final DispatcherType dt : handler.getFilterInfo().getDispatcher())
         {
-            return true;
-        }
-        return Arrays.asList(handler.getFilterInfo().getDispatcher()).contains(dispatcherType);
-    }
-
-    private boolean referencesServletByName(FilterHandler handler, String servletName)
-    {
-        if (servletName == null)
-        {
-            return false;
-        }
-        String[] names = handler.getFilterInfo().getServletNames();
-        if (names != null && names.length > 0)
-        {
-            return Arrays.asList(names).contains(servletName);
+            if ( dt == dispatcherType )
+            {
+                return true;
+            }
         }
         return false;
     }

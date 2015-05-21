@@ -147,45 +147,51 @@ public final class ServletRegistry
 
     private void addToNameMapping(final ServletHandler handler)
     {
-        final String servletName = handler.getName();
-        List<ServletHandler> list = this.servletsByName.get(servletName);
-        if ( list == null )
+        if ( !handler.getServletInfo().isResource() )
         {
-            list = new ArrayList<ServletHandler>();
-            list.add(handler);
+            final String servletName = handler.getName();
+            List<ServletHandler> list = this.servletsByName.get(servletName);
+            if ( list == null )
+            {
+                list = new ArrayList<ServletHandler>();
+                list.add(handler);
+            }
+            else
+            {
+                list = new ArrayList<ServletHandler>(list);
+                list.add(handler);
+                Collections.sort(list);
+            }
+            this.servletsByName.put(servletName, list);
         }
-        else
-        {
-            list = new ArrayList<ServletHandler>(list);
-            list.add(handler);
-            Collections.sort(list);
-        }
-        this.servletsByName.put(servletName, list);
     }
 
     private synchronized void removeFromNameMapping(final String servletName, final ServletHandler handler)
     {
-        List<ServletHandler> list = this.servletsByName.get(servletName);
-        if ( list != null )
+        if ( !handler.getServletInfo().isResource() )
         {
-            final List<ServletHandler> newList = new ArrayList<ServletHandler>(list);
-            final Iterator<ServletHandler> i = newList.iterator();
-            while ( i.hasNext() )
+            List<ServletHandler> list = this.servletsByName.get(servletName);
+            if ( list != null )
             {
-                final ServletHandler s = i.next();
-                if ( s == handler )
+                final List<ServletHandler> newList = new ArrayList<ServletHandler>(list);
+                final Iterator<ServletHandler> i = newList.iterator();
+                while ( i.hasNext() )
                 {
-                    i.remove();
-                    break;
+                    final ServletHandler s = i.next();
+                    if ( s == handler )
+                    {
+                        i.remove();
+                        break;
+                    }
                 }
-            }
-            if ( newList.isEmpty() )
-            {
-                this.servletsByName.remove(servletName);
-            }
-            else
-            {
-                this.servletsByName.put(servletName, newList);
+                if ( newList.isEmpty() )
+                {
+                    this.servletsByName.remove(servletName);
+                }
+                else
+                {
+                    this.servletsByName.put(servletName, newList);
+                }
             }
         }
     }
@@ -290,7 +296,7 @@ public final class ServletRegistry
         final int result = handler.init();
         if ( result == -1 )
         {
-            final PathResolver reg = PathResolverFactory.create(handler, pattern);
+            final PathResolver reg = PathResolverFactory.createPatternMatcher(handler, pattern);
             this.activeServletMappings.put(pattern, reg);
 
             // add ok
