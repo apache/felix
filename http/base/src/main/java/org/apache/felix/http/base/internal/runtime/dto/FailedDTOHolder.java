@@ -19,8 +19,8 @@
 package org.apache.felix.http.base.internal.runtime.dto;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.http.base.internal.logger.SystemLogger;
@@ -41,17 +41,17 @@ import org.osgi.service.http.runtime.dto.FailedServletDTO;
 public final class FailedDTOHolder
 {
 
-    public Collection<FailedFilterDTO> failedFilterDTOs = new ArrayList<FailedFilterDTO>();
+    public final List<FailedFilterDTO> failedFilterDTOs = new ArrayList<FailedFilterDTO>();
 
-    public Collection<FailedListenerDTO> failedListenerDTOs = new ArrayList<FailedListenerDTO>();
+    public final List<FailedListenerDTO> failedListenerDTOs = new ArrayList<FailedListenerDTO>();
 
-    public Collection<FailedServletDTO> failedServletDTOs = new ArrayList<FailedServletDTO>();
+    public final List<FailedServletDTO> failedServletDTOs = new ArrayList<FailedServletDTO>();
 
-    public Collection<FailedResourceDTO> failedResourceDTOs = new ArrayList<FailedResourceDTO>();
+    public final List<FailedResourceDTO> failedResourceDTOs = new ArrayList<FailedResourceDTO>();
 
-    public Collection<FailedErrorPageDTO> failedErrorPageDTOs = new ArrayList<FailedErrorPageDTO>();
+    public final List<FailedErrorPageDTO> failedErrorPageDTOs = new ArrayList<FailedErrorPageDTO>();
 
-    public Collection<FailedServletContextDTO> failedServletContextDTO = new ArrayList<FailedServletContextDTO>();
+    public final List<FailedServletContextDTO> failedServletContextDTO = new ArrayList<FailedServletContextDTO>();
 
     public void add(Map<AbstractInfo<?>, Integer> failureInfos)
     {

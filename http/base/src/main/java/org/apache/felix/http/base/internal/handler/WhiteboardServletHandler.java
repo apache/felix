@@ -57,7 +57,10 @@ public final class WhiteboardServletHandler extends ServletHandler
         final int reason = super.init();
         if ( reason != -1 )
         {
-            so.ungetService(this.getServlet());
+            if ( so != null )
+            {
+                so.ungetService(this.getServlet());
+            }
             this.setServlet(null);
         }
         return reason;

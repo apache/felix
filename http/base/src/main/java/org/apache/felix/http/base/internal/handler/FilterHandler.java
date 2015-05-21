@@ -31,7 +31,8 @@ import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.osgi.service.http.runtime.dto.DTOConstants;
 
 /**
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ * The filter handler handles the initialization and destruction of filter
+ * objects.
  */
 public class FilterHandler implements Comparable<FilterHandler>
 {
@@ -116,7 +117,7 @@ public class FilterHandler implements Comparable<FilterHandler>
         {
             filter.init(new FilterConfigImpl(getName(), getContext(), getFilterInfo().getInitParameters()));
         }
-        catch (final ServletException e)
+        catch (final Exception e)
         {
             SystemLogger.error(this.getFilterInfo().getServiceReference(),
                     "Error during calling init() on filter " + this.filter,

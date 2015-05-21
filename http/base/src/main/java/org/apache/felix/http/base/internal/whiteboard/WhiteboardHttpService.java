@@ -27,6 +27,7 @@ import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ResourceInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.service.ResourceServlet;
 import org.osgi.framework.BundleContext;
 
 public final class WhiteboardHttpService

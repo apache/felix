@@ -29,7 +29,8 @@ import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.osgi.service.http.runtime.dto.DTOConstants;
 
 /**
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ * The servlet handler handles the initialization and destruction of
+ * a servlet.
  */
 public abstract class ServletHandler implements Comparable<ServletHandler>
 {
@@ -120,7 +121,7 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
         {
             servlet.init(new ServletConfigImpl(getName(), getContext(), getServletInfo().getInitParameters()));
         }
-        catch (final ServletException e)
+        catch (final Exception e)
         {
             SystemLogger.error(this.getServletInfo().getServiceReference(),
                     "Error during calling init() on servlet " + this.servlet,
