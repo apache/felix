@@ -16,6 +16,7 @@
  */
 package org.apache.felix.http.base.internal.registry;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.servlet.DispatcherType;
 
@@ -167,8 +168,9 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
         this.filterRegistry.removeFilter(info, destroy);
     }
 
-    public FilterHandler[] getFilterHandlers(final ServletHandler servletHandler,
-            DispatcherType dispatcherType, String requestURI)
+    public FilterHandler[] getFilterHandlers(@CheckForNull final ServletHandler servletHandler,
+            @Nonnull final DispatcherType dispatcherType,
+            @Nonnull final String requestURI)
     {
         return this.filterRegistry.getFilterHandlers(servletHandler, dispatcherType, requestURI);
     }

@@ -16,6 +16,8 @@
  */
 package org.apache.felix.http.base.internal.runtime.dto;
 
+import javax.servlet.DispatcherType;
+
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.registry.PathResolution;
@@ -59,7 +61,7 @@ public final class RequestInfoDTOBuilder
             requestInfoDTO.servletDTO.patterns = pr.patterns;
         }
 
-        final FilterHandler[] filterHandlers = registry.getFilters(pr, null, path);
+        final FilterHandler[] filterHandlers = registry.getFilters(pr, DispatcherType.REQUEST, path);
         requestInfoDTO.filterDTOs = FilterDTOBuilder.build(filterHandlers);
 
         return requestInfoDTO;

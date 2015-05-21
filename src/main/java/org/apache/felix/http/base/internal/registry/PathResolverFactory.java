@@ -16,6 +16,11 @@
  */
 package org.apache.felix.http.base.internal.registry;
 
+import java.util.regex.Pattern;
+
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 
 /**
@@ -32,7 +37,7 @@ import org.apache.felix.http.base.internal.handler.ServletHandler;
  */
 public abstract class PathResolverFactory {
 
-    public static PathResolver create(final ServletHandler handler, final String pattern)
+    public static @Nonnull PathResolver createPatternMatcher(@CheckForNull final ServletHandler handler, @Nonnull final String pattern)
     {
         if ( pattern.length() == 0 )
         {
@@ -51,6 +56,11 @@ public abstract class PathResolverFactory {
             return new PathMatcher(handler, pattern);
         }
         return new ExactAndPathMatcher(handler, pattern);
+    }
+
+    public static @Nonnull PathResolver createRegexMatcher(@Nonnull final String regex)
+    {
+        return new RegexMatcher(regex);
     }
 
     public static abstract class AbstractMatcher implements PathResolver
@@ -100,12 +110,12 @@ public abstract class PathResolverFactory {
 
         @Override
         public PathResolution resolve(final String uri) {
-            if ( uri.length() == 0 )
+            if ( uri.length() == 0 || uri.equals("/") )
             {
                 final PathResolution pr = new PathResolution();
                 pr.pathInfo = "/";
                 pr.servletPath = "";
-                pr.requestURI = "";
+                pr.requestURI = uri;
                 pr.handler = this.getServletHandler();
 
                 return pr;
@@ -239,6 +249,37 @@ public abstract class PathResolverFactory {
         public int getOrdering()
         {
             return this.extension.length();
+        }
+    }
+
+    public static final class RegexMatcher extends AbstractMatcher
+    {
+        private final Pattern pattern;
+
+        public RegexMatcher(final String regex)
+        {
+            super(null, 0);
+            this.pattern = Pattern.compile(regex);
+        }
+
+        @Override
+        public @CheckForNull PathResolution resolve(@Nonnull final String uri) {
+            if ( pattern.matcher(uri).matches() )
+            {
+                final PathResolution pr = new PathResolution();
+                pr.pathInfo = null;
+                pr.servletPath = uri;
+                pr.requestURI = uri;
+
+                return pr;
+            }
+            return null;
+        }
+
+        @Override
+        public int getOrdering()
+        {
+            return this.pattern.toString().length();
         }
     }
 }

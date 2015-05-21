@@ -198,7 +198,7 @@ public final class HandlerRegistry
     }
 
     public FilterHandler[] getFilters(@Nonnull final ServletResolution pr,
-            final DispatcherType dispatcherType,
+            @Nonnull final DispatcherType dispatcherType,
             @Nonnull String requestURI)
     {
         if ( pr != null && pr.handlerRegistry != null )
