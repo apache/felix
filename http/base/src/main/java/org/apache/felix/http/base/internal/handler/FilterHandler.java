@@ -17,9 +17,6 @@
 package org.apache.felix.http.base.internal.handler;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
 import javax.servlet.Filter;
@@ -31,7 +28,6 @@ import javax.servlet.ServletResponse;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
-import org.apache.felix.http.base.internal.util.PatternUtil;
 import org.osgi.service.http.runtime.dto.DTOConstants;
 
 /**
@@ -49,8 +45,6 @@ public class FilterHandler implements Comparable<FilterHandler>
 
     protected volatile int useCount;
 
-    private final Pattern[] patterns;
-
     public FilterHandler(final long contextServiceId,
             final ExtServletContext context,
             final FilterInfo filterInfo)
@@ -58,38 +52,6 @@ public class FilterHandler implements Comparable<FilterHandler>
         this.contextServiceId = contextServiceId;
         this.context = context;
         this.filterInfo = filterInfo;
-        // Compose a single array of all patterns & regexs the filter must represent...
-        String[] patterns = getFilterPatterns(filterInfo);
-
-        this.patterns = new Pattern[patterns.length];
-        for (int i = 0; i < patterns.length; i++)
-        {
-            this.patterns[i] = Pattern.compile(patterns[i]);
-        }
-    }
-
-    private static String[] getFilterPatterns(FilterInfo filterInfo)
-    {
-        List<String> result = new ArrayList<String>();
-        if (filterInfo.getPatterns() != null)
-        {
-            for (int i = 0; i < filterInfo.getPatterns().length; i++)
-            {
-                result.add(PatternUtil.convertToRegEx(filterInfo.getPatterns()[i]));
-            }
-        }
-        if (filterInfo.getRegexs() != null)
-        {
-            for (int i = 0; i < filterInfo.getRegexs().length; i++)
-            {
-                result.add(filterInfo.getRegexs()[i]);
-            }
-        }
-        return result.toArray(new String[result.size()]);
-    }
-
-    public Pattern[] getPatterns() {
-        return this.patterns;
     }
 
     @Override
