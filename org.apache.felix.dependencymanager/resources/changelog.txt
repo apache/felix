@@ -8,7 +8,6 @@ Release org.apache.felix.dependencymanager.r3:
 ** Improvement
     * [FELIX-4614] - Factory create() method should have access to the component definition
     * [FELIX-4878] - Support more signatures for Dependency callbacks
-    * [FELIX-4879] - ConfigurationDependency should always "need instance".
     * [FELIX-4880] - Missing callback instance support for some adapters
     * [FELIX-4873] - Enhance DM API to get missing and circular dependencies
     
