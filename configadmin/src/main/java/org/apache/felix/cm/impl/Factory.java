@@ -58,7 +58,7 @@ class Factory extends ConfigurationBase
     }
 
 
-    private static String factoryPidToIdentifier( String factoryPid )
+    static String factoryPidToIdentifier( String factoryPid )
     {
         return factoryPid + ".factory";
     }

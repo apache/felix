@@ -29,9 +29,7 @@ getting started guide for users:
 
   http://felix.apache.org/documentation/subprojects/apache-felix-dependency-manager.html
 
-You can also find examples from the following location:
-
-  http://svn.apache.org/repos/asf/felix/trunk/examples/dependencymanager-samples
+You can also find examples from ./org.apache.felix.dependencymanager.samples/README
 
 Many thanks for using Apache Felix Dependency Manager.
 

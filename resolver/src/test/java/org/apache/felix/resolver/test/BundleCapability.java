@@ -37,17 +37,17 @@ class BundleCapability implements Capability
         m_resource = resource;
         m_dirs = new HashMap<String, String>();
         m_attrs = new HashMap<String, Object>();
-        m_attrs.put(BundleNamespace.BUNDLE_NAMESPACE, name);
+        m_attrs.put(BundleNamespace.BUNDLE_NAMESPACE.intern(), name);
     }
 
     public String getNamespace()
     {
-        return BundleNamespace.BUNDLE_NAMESPACE;
+        return BundleNamespace.BUNDLE_NAMESPACE.intern();
     }
 
     public void addDirective(String name, String value)
     {
-        m_dirs.put(name, value);
+        m_dirs.put(name.intern(), value);
     }
 
     public Map<String, String> getDirectives()
@@ -57,7 +57,7 @@ class BundleCapability implements Capability
 
     public void addAttribute(String name, Object value)
     {
-        m_attrs.put(name, value);
+        m_attrs.put(name.intern(), value);
     }
 
     public Map<String, Object> getAttributes()

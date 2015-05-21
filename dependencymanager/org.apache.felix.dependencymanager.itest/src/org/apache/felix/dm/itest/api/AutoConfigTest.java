@@ -18,18 +18,20 @@
  */
 package org.apache.felix.dm.itest.api;
 
+import java.util.ArrayList;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
-import org.junit.Assert;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
+import org.junit.Assert;
 import org.osgi.framework.Constants;
 
 /**
@@ -179,6 +181,7 @@ public class AutoConfigTest extends TestBase {
     
     public class ConsumerWithIterableField {
         final Iterable<Provider> m_providers = new ConcurrentLinkedQueue<>();
+        final List m_notInjectMe = new ArrayList();
         
         void start() {
             Assert.assertNotNull(m_providers);
@@ -188,6 +191,8 @@ public class AutoConfigTest extends TestBase {
                 found ++;
             }
             Assert.assertTrue(found == 2);
+            // The "m_notInjectMe" should not be injected with anything
+            Assert.assertEquals(m_notInjectMe.size(), 0);
             m_ensure.step(3);
         }
         
@@ -208,11 +213,13 @@ public class AutoConfigTest extends TestBase {
     
     public class ConsumerWithMapField {
         final Map<Provider, Dictionary> m_providers = new ConcurrentHashMap<>();
+        final Map m_notInjectMe = new HashMap<>();
         
         void start() {
             Assert.assertNotNull(m_providers);
             System.out.println("ConsumerMap.start: injected providers=" + m_providers);
             Assert.assertTrue(m_providers.size() == 2);
+            Assert.assertEquals(0, m_notInjectMe.size());
             for (Map.Entry<Provider, Dictionary> e : m_providers.entrySet()) {
                 Provider provider = e.getKey();
                 Dictionary props = e.getValue();

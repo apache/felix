@@ -65,6 +65,10 @@ class ServiceRegistrationImpl implements ServiceRegistration
     private final ServiceReferenceImpl m_ref;
     // Flag indicating that we are unregistering.
     private volatile boolean m_isUnregistering = false;
+    // This threadlocal is used to detect cycles.
+    private final ThreadLocal<Boolean> m_threadLoopDetection = new ThreadLocal<Boolean>();
+
+    private final Object syncObject = new Object();
 
     public ServiceRegistrationImpl(
         ServiceRegistry registry, Bundle bundle,
@@ -86,7 +90,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
         m_ref = new ServiceReferenceImpl();
     }
 
-    protected synchronized boolean isValid()
+    protected boolean isValid()
     {
         return (m_svcObj != null);
     }
@@ -752,5 +756,20 @@ class ServiceRegistrationImpl implements ServiceRegistration
         {
             return Collections.EMPTY_SET;
         }
+    }
+
+    boolean currentThreadMarked()
+    {
+        return m_threadLoopDetection.get() != null;
+    }
+
+    void markCurrentThread()
+    {
+        m_threadLoopDetection.set(Boolean.TRUE);
+    }
+
+    void unmarkCurrentThread()
+    {
+        m_threadLoopDetection.set(null);
     }
 }

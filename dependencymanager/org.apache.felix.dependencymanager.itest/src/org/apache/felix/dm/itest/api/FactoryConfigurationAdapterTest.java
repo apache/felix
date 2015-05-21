@@ -40,6 +40,14 @@ public class FactoryConfigurationAdapterTest extends TestBase
     private static Ensure m_ensure;
     
     public void testFactoryConfigurationAdapter() {
+    	testFactoryConfigurationAdapter(Adapter.class, "updated");
+    }
+    
+    public void testFactoryConfigurationAdapterWithUpdatedCallbackThatTakesComponentAsParameter() {
+    	testFactoryConfigurationAdapter(AdapterWithUpdateMethodThatTakesComponentAsParameter.class, "updatedWithComponent");
+    }
+    
+    public void testFactoryConfigurationAdapter(Class<?> adapterImplClass, String adapterUpdate) {
         DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         m_ensure = new Ensure();
@@ -54,9 +62,9 @@ public class FactoryConfigurationAdapterTest extends TestBase
 
         // Create an Adapter that will be instantiated, once the configuration is created.
         // This Adapter provides an AdapterService, and depends on an AdapterExtraDependency service.
-        Component s2 = m.createFactoryConfigurationAdapterService("MyFactoryPid", "updated", true /* propagate CM settings */)
+        Component s2 = m.createFactoryConfigurationAdapterService("MyFactoryPid", adapterUpdate, true /* propagate CM settings */)
                       .setInterface(AdapterService.class.getName(), new Hashtable() {{ put("foo", "bar"); }})
-                      .setImplementation(Adapter.class);
+                      .setImplementation(adapterImplClass);
 
         s2.add(m.createServiceDependency()
             .setService(AdapterExtraDependency.class)
@@ -184,6 +192,14 @@ public class FactoryConfigurationAdapterTest extends TestBase
         
         public void stop() {
             m_ensure.step(16);
+        }
+    }
+    
+    public static class AdapterWithUpdateMethodThatTakesComponentAsParameter extends Adapter {
+        void updatedWithComponent(Component component, Dictionary settings) {
+        	Assert.assertNotNull(component);
+        	Assert.assertEquals(this, component.getInstance());
+        	super.updated(settings);
         }
     }
 

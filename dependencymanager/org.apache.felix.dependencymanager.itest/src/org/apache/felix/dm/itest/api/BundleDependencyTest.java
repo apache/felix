@@ -77,6 +77,26 @@ public class BundleDependencyTest extends TestBase {
         e.waitForStep(2, 5000);
     }
     
+    public void testRequiredBundleDependencyWithComponentArgInCallbackMethod() {
+        DependencyManager m = getDM();
+        
+        // helper class that ensures certain steps get executed in sequence
+        Ensure e = new Ensure();
+        Component consumerWithFilter = m.createComponent()
+            .setImplementation(new FilteredConsumerRequiredWithComponentArg(e))
+            .add(m.createBundleDependency()
+                .setRequired(true)
+                .setFilter("(Bundle-SymbolicName=" + BSN + ")")
+                .setCallbacks("add", "remove")
+                );
+        // add a consumer with a filter
+        m.add(consumerWithFilter);
+        e.waitForStep(1, 5000);
+        // remove the consumer again
+        m.remove(consumerWithFilter);
+        e.waitForStep(2, 5000);
+    }
+    
     static class Consumer {
         private volatile int m_count = 0;
 
@@ -136,6 +156,22 @@ public class BundleDependencyTest extends TestBase {
             if (b.getSymbolicName().equals(BSN)) {
                 m_ensure.step(2);
             }
+        }
+    }
+
+    static class FilteredConsumerRequiredWithComponentArg extends FilteredConsumerRequired {
+        public FilteredConsumerRequiredWithComponentArg(Ensure e) {
+            super(e);
+        }
+        
+        public void add(Component component, Bundle b) {
+        	Assert.assertNotNull(component);
+        	super.add(b);
+        }
+        
+        public void remove(Component component, Bundle b) {
+        	Assert.assertNotNull(component);
+        	super.remove(b);
         }
     }
 }

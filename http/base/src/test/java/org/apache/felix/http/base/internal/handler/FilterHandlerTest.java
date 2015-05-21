@@ -19,7 +19,7 @@ package org.apache.felix.http.base.internal.handler;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static javax.servlet.http.HttpServletResponse.SC_PAYMENT_REQUIRED;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -36,19 +36,23 @@ import javax.servlet.FilterConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.http.base.internal.context.ExtServletContext;
+import org.apache.felix.http.base.internal.dispatch.InvocationChain;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
-public class FilterHandlerTest extends AbstractHandlerTest
+public class FilterHandlerTest
 {
     private Filter filter;
 
-    @Override
+    private ExtServletContext context;
+
     @Before
     public void setUp()
     {
-        super.setUp();
+        this.context = Mockito.mock(ExtServletContext.class);
         this.filter = mock(Filter.class);
     }
 
@@ -59,20 +63,21 @@ public class FilterHandlerTest extends AbstractHandlerTest
         FilterHandler h2 = createHandler(10, "b");
         FilterHandler h3 = createHandler(10, "c");
 
-        assertEquals(0, h1.compareTo(h1));
+        assertTrue(h1.compareTo(h1) == 0);
 
-        assertEquals(1, h1.compareTo(h2));
-        assertEquals(-1, h2.compareTo(h1));
+        assertTrue(h1.compareTo(h2) > 0);
+        assertTrue(h2.compareTo(h1) < 0);
 
         // h2 is actually registered first, so should be called first...
-        assertEquals(-1, h2.compareTo(h3));
-        assertEquals(1, h3.compareTo(h2));
+        assertTrue(h2.compareTo(h3) < 0);
+        assertTrue(h3.compareTo(h2) > 0);
     }
 
     @Test
     public void testDestroy()
     {
         FilterHandler h1 = createHandler(0, "/a");
+        h1.init();
         h1.destroy();
         verify(this.filter).destroy();
     }
@@ -116,9 +121,11 @@ public class FilterHandlerTest extends AbstractHandlerTest
     public void testHandleFoundForbidden() throws Exception
     {
         FilterHandler h1 = createHandler(0, "/a");
+        final ServletHandler sc = mock(ServletHandler.class);
+        when(sc.getContext()).thenReturn(this.context);
+        final InvocationChain ic = new InvocationChain(sc, new FilterHandler[] {h1});
         HttpServletRequest req = createServletRequest();
         HttpServletResponse res = createServletResponse();
-        FilterChain chain = mock(FilterChain.class);
 
         when(req.getRequestURI()).thenReturn("/a");
         // Default behaviour: uncomitted response and default status code...
@@ -127,10 +134,9 @@ public class FilterHandlerTest extends AbstractHandlerTest
 
         when(this.context.handleSecurity(req, res)).thenReturn(false);
 
-        h1.handle(req, res, chain);
+        ic.doFilter(req, res);
 
-        verify(this.filter, never()).doFilter(req, res, chain);
-        verify(chain, never()).doFilter(req, res);
+        verify(this.filter, never()).doFilter(req, res, ic);
         verify(res).sendError(SC_FORBIDDEN);
     }
 
@@ -141,9 +147,11 @@ public class FilterHandlerTest extends AbstractHandlerTest
     public void testHandleFoundForbiddenCommittedOwnResponse() throws Exception
     {
         FilterHandler h1 = createHandler(0, "/a");
+        final ServletHandler sc = mock(ServletHandler.class);
+        when(sc.getContext()).thenReturn(this.context);
+        final InvocationChain ic = new InvocationChain(sc, new FilterHandler[] {h1});
         HttpServletRequest req = createServletRequest();
         HttpServletResponse res = createServletResponse();
-        FilterChain chain = mock(FilterChain.class);
 
         when(req.getRequestURI()).thenReturn("/a");
         // Simulate an already committed response...
@@ -152,10 +160,9 @@ public class FilterHandlerTest extends AbstractHandlerTest
 
         when(this.context.handleSecurity(req, res)).thenReturn(false);
 
-        h1.handle(req, res, chain);
+        ic.doFilter(req, res);
 
-        verify(this.filter, never()).doFilter(req, res, chain);
-        verify(chain, never()).doFilter(req, res);
+        verify(this.filter, never()).doFilter(req, res, ic);
         // Should not be called from our handler...
         verify(res, never()).sendError(SC_FORBIDDEN);
     }
@@ -167,9 +174,11 @@ public class FilterHandlerTest extends AbstractHandlerTest
     public void testHandleFoundForbiddenCustomStatusCode() throws Exception
     {
         FilterHandler h1 = createHandler(0, "/a");
+        final ServletHandler sc = mock(ServletHandler.class);
+        when(sc.getContext()).thenReturn(this.context);
+        final InvocationChain ic = new InvocationChain(sc, new FilterHandler[] {h1});
         HttpServletRequest req = createServletRequest();
         HttpServletResponse res = createServletResponse();
-        FilterChain chain = mock(FilterChain.class);
 
         when(req.getRequestURI()).thenReturn("/a");
         // Simulate an uncommitted response with a non-default status code...
@@ -178,10 +187,9 @@ public class FilterHandlerTest extends AbstractHandlerTest
 
         when(this.context.handleSecurity(req, res)).thenReturn(false);
 
-        h1.handle(req, res, chain);
+        ic.doFilter(req, res);
 
-        verify(this.filter, never()).doFilter(req, res, chain);
-        verify(chain, never()).doFilter(req, res);
+        verify(this.filter, never()).doFilter(req, res, ic);
         // Should not be called from our handler...
         verify(res, never()).sendError(SC_FORBIDDEN);
     }
@@ -190,30 +198,32 @@ public class FilterHandlerTest extends AbstractHandlerTest
     public void testHandleNotFound() throws Exception
     {
         FilterHandler h1 = createHandler(0, "/a");
+        final ServletHandler sc = mock(ServletHandler.class);
+        when(sc.getContext()).thenReturn(this.context);
+        final InvocationChain ic = new InvocationChain(sc, new FilterHandler[] {h1});
         HttpServletRequest req = createServletRequest();
         HttpServletResponse res = createServletResponse();
-        FilterChain chain = mock(FilterChain.class);
 
         when(req.getRequestURI()).thenReturn("/");
-        h1.handle(req, res, chain);
+        ic.doFilter(req, res);
 
-        verify(this.filter, never()).doFilter(req, res, chain);
-        verify(chain, never()).doFilter(req, res);
+        verify(this.filter, never()).doFilter(req, res, ic);
     }
 
     @Test
     public void testHandleNotFoundContextRoot() throws Exception
     {
         FilterHandler h1 = createHandler(0, "/a");
+        final ServletHandler sc = mock(ServletHandler.class);
+        when(sc.getContext()).thenReturn(this.context);
+        final InvocationChain ic = new InvocationChain(sc, new FilterHandler[] {h1});
         HttpServletRequest req = createServletRequest();
         HttpServletResponse res = createServletResponse();
-        FilterChain chain = mock(FilterChain.class);
 
         when(req.getRequestURI()).thenReturn(null);
-        h1.handle(req, res, chain);
+        ic.doFilter(req, res);
 
-        verify(this.filter, never()).doFilter(req, res, chain);
-        verify(chain, never()).doFilter(req, res);
+        verify(this.filter, never()).doFilter(req, res, ic);
     }
 
     @Test
@@ -222,18 +232,6 @@ public class FilterHandlerTest extends AbstractHandlerTest
         FilterHandler h1 = createHandler(0, "/a");
         h1.init();
         verify(this.filter).init(any(FilterConfig.class));
-    }
-
-   @Override
-    protected AbstractHandler createHandler()
-    {
-        return createHandler(0, "dummy");
-    }
-
-    @Override
-    protected AbstractHandler createHandler(final Map<String, String> initParams)
-    {
-        return createHandler("dummy", 0, initParams);
     }
 
     private FilterHandler createHandler(int ranking, String pattern)
@@ -248,7 +246,7 @@ public class FilterHandlerTest extends AbstractHandlerTest
             initParams = Collections.emptyMap();
         }
         final FilterInfo info = new FilterInfo(null, pattern, ranking, initParams);
-        return new FilterHandler(null, this.context, this.filter, info);
+        return new HttpServiceFilterHandler(this.context, info, this.filter);
     }
 
     private HttpServletRequest createServletRequest()

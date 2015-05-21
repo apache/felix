@@ -46,11 +46,10 @@ public final class ContextHandler implements Comparable<ContextHandler>
 
     public ContextHandler(final ServletContextHelperInfo info,
             final ServletContext webContext,
-            final PerContextEventListener eventListener,
             final Bundle bundle)
     {
         this.info = info;
-        this.eventListener = eventListener;
+        this.eventListener = new PerContextEventListener(bundle, this);
         this.bundle = bundle;
         this.sharedContext = new SharedServletContextImpl(webContext,
                 info.getName(),
@@ -143,5 +142,9 @@ public final class ContextHandler implements Comparable<ContextHandler>
         public long counter;
         public ExtServletContext servletContext;
         public ServletContextHelper servletContextHelper;
+    }
+
+    public PerContextEventListener getListenerRegistry() {
+        return this.eventListener;
     }
 }

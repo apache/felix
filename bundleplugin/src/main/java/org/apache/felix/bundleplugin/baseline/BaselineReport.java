@@ -28,6 +28,9 @@ import java.util.Map;
 import java.util.ResourceBundle;
 
 import org.apache.maven.doxia.sink.Sink;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.reporting.MavenReport;
 import org.apache.maven.reporting.MavenReportException;
 import org.codehaus.plexus.util.IOUtil;
@@ -37,11 +40,10 @@ import aQute.bnd.version.Version;
 /**
  * BND Baseline report.
  *
- * @goal baseline-report
- * @phase site
- * @threadSafe true
  * @since 2.4.1
  */
+@Mojo( name = "baseline-report", threadSafe = true,
+       defaultPhase = LifecyclePhase.SITE)
 public final class BaselineReport
     extends AbstractBaselinePlugin
     implements MavenReport
@@ -49,10 +51,8 @@ public final class BaselineReport
 
     /**
      * Specifies the directory where the report will be generated.
-     *
-     * @parameter default-value="${project.reporting.outputDirectory}"
-     * @required
      */
+    @Parameter(defaultValue = "${project.reporting.outputDirectory}")
     private File outputDirectory;
 
     private static final class Context {

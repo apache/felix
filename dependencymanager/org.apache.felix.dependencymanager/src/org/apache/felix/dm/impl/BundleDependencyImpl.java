@@ -23,6 +23,7 @@ import java.lang.reflect.Proxy;
 import java.util.Dictionary;
 
 import org.apache.felix.dm.BundleDependency;
+import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentDependencyDeclaration;
 import org.apache.felix.dm.context.AbstractDependency;
 import org.apache.felix.dm.context.DependencyContext;
@@ -194,8 +195,8 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
     private void invoke(String method, Event e) {
         BundleEventImpl be = (BundleEventImpl) e;
         m_component.invokeCallbackMethod(getInstances(), method,
-            new Class[][] {{Bundle.class}, {Object.class}, {}},             
-            new Object[][] {{be.getBundle()}, {be.getBundle()}, {}});
+            new Class[][] {{Bundle.class}, {Object.class}, {Component.class, Bundle.class}, {}},             
+            new Object[][] {{be.getBundle()}, {be.getBundle()}, {m_component, be.getBundle()}, {}});
     }
     
     public BundleDependency setBundle(Bundle bundle) {

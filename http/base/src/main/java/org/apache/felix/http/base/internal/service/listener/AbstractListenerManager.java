@@ -21,11 +21,16 @@ package org.apache.felix.http.base.internal.service.listener;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
+/**
+ * @deprecated
+ */
+@Deprecated
 public class AbstractListenerManager<ListenerType> extends ServiceTracker<ListenerType, ListenerType>
 {
 
@@ -75,33 +80,37 @@ public class AbstractListenerManager<ListenerType> extends ServiceTracker<Listen
     @Override
     public ListenerType addingService(ServiceReference<ListenerType> reference)
     {
+        final ListenerType result = super.addingService(reference);
+        if ( result != null ) {
+            SystemLogger.warning("Deprecation warning: " +
+                "Listener registered through Apache Felix whiteboard service: " + reference +
+                ". Please change your code to the OSGi Whiteboard Service.", null);
+        }
         synchronized (lock)
         {
             allContextListeners = null;
         }
 
-        return super.addingService(reference);
+        return result;
     }
 
     @Override
     public void modifiedService(ServiceReference<ListenerType> reference, ListenerType service)
     {
+        super.modifiedService(reference, service);
         synchronized (lock)
         {
             allContextListeners = null;
         }
-
-        super.modifiedService(reference, service);
     }
 
     @Override
     public void removedService(ServiceReference<ListenerType> reference, ListenerType service)
     {
+        super.removedService(reference, service);
         synchronized (lock)
         {
             allContextListeners = null;
         }
-
-        super.removedService(reference, service);
     }
 }

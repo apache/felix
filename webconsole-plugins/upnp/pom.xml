@@ -20,7 +20,7 @@
 
 	<artifactId>org.apache.felix.webconsole.plugins.upnp</artifactId>
 	<packaging>bundle</packaging>
-	<version>1.0.5-SNAPSHOT</version>
+	<version>1.0.7-SNAPSHOT</version>
 
 	<name>Apache Felix Web Console UPnP Plugin</name>
 	<description>

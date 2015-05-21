@@ -57,7 +57,6 @@ import org.apache.felix.framework.cache.BundleCache;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.ext.SecurityProvider;
-import org.apache.felix.framework.resolver.ResolveException;
 import org.apache.felix.framework.util.EventDispatcher;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.ListenerInfo;
@@ -102,6 +101,7 @@ import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.framework.wiring.FrameworkWiring;
 import org.osgi.resource.Requirement;
 import org.osgi.service.packageadmin.ExportedPackage;
+import org.osgi.service.resolver.ResolutionException;
 
 public class Felix extends BundleImpl implements Framework
 {
@@ -412,8 +412,16 @@ public class Felix extends BundleImpl implements Framework
         // Create default bundle stream handler.
         m_bundleStreamHandler = new URLHandlersBundleStreamHandler(this);
 
+        // Create service registry.
+        m_registry = new ServiceRegistry(m_logger, new ServiceRegistryCallbacks() {
+            public void serviceChanged(ServiceEvent event, Dictionary oldProps)
+            {
+                fireServiceEvent(event, oldProps);
+            }
+        });
+
         // Create a resolver and its state.
-        m_resolver = new StatefulResolver(this);
+        m_resolver = new StatefulResolver(this, m_registry);
 
         // Create the extension manager, which we will use as the
         // revision for the system bundle.
@@ -428,14 +436,6 @@ public class Felix extends BundleImpl implements Framework
             // a runtime exception.
             throw new RuntimeException(ex.getMessage());
         }
-
-        // Create service registry.
-        m_registry = new ServiceRegistry(m_logger, new ServiceRegistryCallbacks() {
-            public void serviceChanged(ServiceEvent event, Dictionary oldProps)
-            {
-                fireServiceEvent(event, oldProps);
-            }
-        });
 
         // Create event dispatcher.
         m_dispatcher = new EventDispatcher(m_logger, m_registry);
@@ -734,12 +734,12 @@ public class Felix extends BundleImpl implements Framework
                         Collections.singleton(adapt(BundleRevision.class)),
                         Collections.EMPTY_SET);
                 }
-                catch (ResolveException ex)
+                catch (ResolutionException ex)
                 {
                     // This should never happen.
                     throw new BundleException(
                         "Unresolved constraint in System Bundle:"
-                        + ex.getRequirement());
+                        + ex.getUnresolvedRequirements());
                 }
 
                 // Reload the cached bundles before creating and starting the
@@ -833,6 +833,7 @@ public class Felix extends BundleImpl implements Framework
                 }
 
                 // Start services
+                m_resolver.start();
                 m_fwkWiring.start();
                 m_fwkStartLevel.start();
 
@@ -847,10 +848,6 @@ public class Felix extends BundleImpl implements Framework
                     m_logger.log(Logger.LOG_ERROR, "Unable to start system bundle.", ex);
                     throw new RuntimeException("Unable to start system bundle.");
                 }
-
-                // Now that the system bundle is successfully created we can give
-                // its bundle context to the logger so that it can track log services.
-                m_logger.setSystemBundleContext(_getBundleContext());
 
                 // We have to check with the security provider (if there is one).
                 // This is to avoid having bundles in the cache that have been tampered with
@@ -2780,22 +2777,47 @@ public class Felix extends BundleImpl implements Framework
         boolean locked = acquireGlobalLock();
         if (locked)
         {
+            // Populate a set of refresh candidates. This also includes any bundles that this bundle
+            // is wired to but have previously been uninstalled.
+            List<Bundle> refreshCandidates = new ArrayList<Bundle>();
+            refreshCandidates.add(bundle); // Add this bundle first, so that it gets refreshed first
+            BundleRevisions bundleRevisions = bundle.adapt(BundleRevisions.class);
+            if (bundleRevisions != null)
+            {
+                for (BundleRevision br : bundleRevisions.getRevisions())
+                {
+                    BundleWiring bw = br.getWiring();
+                    if (bw != null)
+                    {
+                        for (BundleWire wire : bw.getRequiredWires(null))
+                        {
+                            Bundle b = wire.getProvider().getBundle();
+                            if (Bundle.UNINSTALLED == b.getState() && !refreshCandidates.contains(b))
+                                refreshCandidates.add(b);
+                        }
+                    }
+                }
+            }
+
             try
             {
-                // If the bundle is not used by anyone, then garbage
-                // collect it now.
-                if (!m_dependencies.hasDependents(bundle))
+                for (Bundle b : refreshCandidates)
                 {
-                    try
+                    // If the bundle is not used by anyone, then garbage
+                    // collect it now.
+                    if (!m_dependencies.hasDependents(b))
                     {
-                        List<Bundle> list = Collections.singletonList((Bundle) bundle);
-                        refreshPackages(list, null);
-                    }
-                    catch (Exception ex)
-                    {
-                        m_logger.log(bundle,
-                            Logger.LOG_ERROR,
-                            "Unable to immediately garbage collect the bundle.", ex);
+                        try
+                        {
+                            List<Bundle> list = Collections.singletonList(b);
+                            refreshPackages(list, null);
+                        }
+                        catch (Exception ex)
+                        {
+                            m_logger.log(b,
+                                Logger.LOG_ERROR,
+                                "Unable to immediately garbage collect the bundle.", ex);
+                        }
                     }
                 }
             }
@@ -3333,7 +3355,7 @@ public class Felix extends BundleImpl implements Framework
 
         // Invoke ListenerHook.removed() if filter updated.
         Set<ServiceReference<org.osgi.framework.hooks.service.ListenerHook>> listenerHooks =
-            m_registry.getHooks(org.osgi.framework.hooks.service.ListenerHook.class);
+            m_registry.getHookRegistry().getHooks(org.osgi.framework.hooks.service.ListenerHook.class);
         if (oldFilter != null)
         {
             final Collection removed = Collections.singleton(
@@ -3404,7 +3426,7 @@ public class Felix extends BundleImpl implements Framework
         {
             // Invoke the ListenerHook.removed() on all hooks.
             Set<ServiceReference<org.osgi.framework.hooks.service.ListenerHook>> listenerHooks =
-                m_registry.getHooks(org.osgi.framework.hooks.service.ListenerHook.class);
+                m_registry.getHookRegistry().getHooks(org.osgi.framework.hooks.service.ListenerHook.class);
             Collection removed = Collections.singleton(listener);
             for (ServiceReference<org.osgi.framework.hooks.service.ListenerHook> sr : listenerHooks)
             {
@@ -3488,11 +3510,11 @@ public class Felix extends BundleImpl implements Framework
             }
         }
 
-        reg = m_registry.registerService(context, classNames, svcObj, dict);
+        reg = m_registry.registerService(context.getBundle(), classNames, svcObj, dict);
 
         // Check to see if this a listener hook; if so, then we need
         // to invoke the callback with all existing service listeners.
-        if (ServiceRegistry.isHook(
+        if (HookRegistry.isHook(
             classNames, org.osgi.framework.hooks.service.ListenerHook.class, svcObj))
         {
             org.osgi.framework.hooks.service.ListenerHook lh =
@@ -3512,13 +3534,12 @@ public class Felix extends BundleImpl implements Framework
                 }
                 finally
                 {
-                    m_registry.ungetService(this, reg.getReference(), null);
+                    this.ungetService(this, reg.getReference(), null);
                 }
             }
         }
 
-        // Fire service event.
-        fireServiceEvent(new ServiceEvent(ServiceEvent.REGISTERED, reg.getReference()), null);
+        this.fireServiceEvent(new ServiceEvent(ServiceEvent.REGISTERED, reg.getReference()), null);
 
         return reg;
     }
@@ -3576,7 +3597,7 @@ public class Felix extends BundleImpl implements Framework
 
         // activate findhooks
         Set<ServiceReference<org.osgi.framework.hooks.service.FindHook>> findHooks =
-            m_registry.getHooks(org.osgi.framework.hooks.service.FindHook.class);
+            m_registry.getHookRegistry().getHooks(org.osgi.framework.hooks.service.FindHook.class);
         for (ServiceReference<org.osgi.framework.hooks.service.FindHook> sr : findHooks)
         {
             org.osgi.framework.hooks.service.FindHook fh = getService(this, sr, false);
@@ -3713,19 +3734,19 @@ public class Felix extends BundleImpl implements Framework
     // Hook service management methods.
     //
 
-    boolean isHookBlackListed(ServiceReference sr)
+    boolean isHookBlackListed(final ServiceReference sr)
     {
-        return m_registry.isHookBlackListed(sr);
+        return m_registry.getHookRegistry().isHookBlackListed(sr);
     }
 
-    void blackListHook(ServiceReference sr)
+    void blackListHook(final ServiceReference sr)
     {
-        m_registry.blackListHook(sr);
+        m_registry.getHookRegistry().blackListHook(sr);
     }
 
-    public <S> Set<ServiceReference<S>> getHooks(Class<S> hookClass)
+    public <S> Set<ServiceReference<S>> getHooks(final Class<S> hookClass)
     {
-        return m_registry.getHooks(hookClass);
+        return m_registry.getHookRegistry().getHooks(hookClass);
     }
 
     //
@@ -4062,7 +4083,7 @@ public class Felix extends BundleImpl implements Framework
                         }
                     }
                 }
-                catch (ResolveException ex)
+                catch (ResolutionException ex)
                 {
                     result = false;
                 }
@@ -4087,19 +4108,11 @@ public class Felix extends BundleImpl implements Framework
         {
             m_resolver.resolve(Collections.singleton(revision), Collections.EMPTY_SET);
         }
-        catch (ResolveException ex)
+        catch (ResolutionException ex)
         {
-            if (ex.getRevision() != null)
-            {
-                Bundle b = ex.getRevision().getBundle();
-                throw new BundleException(
-                    "Unresolved constraint in bundle "
-                    + b + ": " + ex.getMessage(), BundleException.RESOLVE_ERROR);
-            }
-            else
-            {
-                throw new BundleException(ex.getMessage(), BundleException.RESOLVE_ERROR);
-            }
+            throw new BundleException(ex.getMessage() +
+                " Unresolved requirements: " + ex.getUnresolvedRequirements(),
+                BundleException.RESOLVE_ERROR);
         }
     }
 
@@ -4610,7 +4623,7 @@ public class Felix extends BundleImpl implements Framework
             }
         }
     }
-    
+
     private void loadPrefixFromDefaultIfNotDefined(Map configMap, Properties defaultProperties, String prefix)
     {
         Map<String, String> defaultPropsWithPrefix = Util.getDefaultPropertiesWithPrefix(defaultProperties, prefix);

@@ -29,7 +29,8 @@ public enum InternalIdFactory
 {
     INSTANCE;
 
-    private final AtomicLong idCounter = new AtomicLong();
+    /** -1 is reserved for the http service servlet context. */
+    private final AtomicLong idCounter = new AtomicLong(-1);
 
     public long next()
     {

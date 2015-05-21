@@ -16,137 +16,48 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
-import static javax.servlet.http.HttpServletResponse.SC_OK;
-
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Pattern;
 
+import javax.annotation.Nonnull;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
+import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
-import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
-import org.apache.felix.http.base.internal.util.PatternUtil;
+import org.osgi.service.http.runtime.dto.DTOConstants;
 
-public final class FilterHandler extends AbstractHandler<FilterHandler>
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
+public class FilterHandler implements Comparable<FilterHandler>
 {
-    private final Filter filter;
-    private final FilterInfo filterInfo;
-    private final Pattern[] patterns;
-
     private final long contextServiceId;
 
-    public FilterHandler(final ServletContextHelperInfo contextInfo, ExtServletContext context, Filter filter, FilterInfo filterInfo)
-    {
-        super(context, filterInfo.getInitParameters(), filterInfo.getName());
-        this.filter = filter;
-        this.filterInfo = filterInfo;
-        // Compose a single array of all patterns & regexs the filter must represent...
-        String[] patterns = getFilterPatterns(filterInfo);
+    private final FilterInfo filterInfo;
 
-        this.patterns = new Pattern[patterns.length];
-        for (int i = 0; i < patterns.length; i++)
-        {
-            this.patterns[i] = Pattern.compile(patterns[i]);
-        }
-        if ( contextInfo != null )
-        {
-            this.contextServiceId = contextInfo.getServiceId();
-        }
-        else
-        {
-            this.contextServiceId = 0;
-        }
+    private final ExtServletContext context;
+
+    private volatile Filter filter;
+
+    protected volatile int useCount;
+
+    public FilterHandler(final long contextServiceId,
+            final ExtServletContext context,
+            final FilterInfo filterInfo)
+    {
+        this.contextServiceId = contextServiceId;
+        this.context = context;
+        this.filterInfo = filterInfo;
     }
 
     @Override
-    public int compareTo(FilterHandler other)
+    public int compareTo(final FilterHandler other)
     {
         return this.filterInfo.compareTo(other.filterInfo);
-    }
-
-    @Override
-    public void destroy()
-    {
-        this.filter.destroy();
-    }
-
-    public Filter getFilter()
-    {
-        return this.filter;
-    }
-
-    public FilterInfo getFilterInfo()
-    {
-        return this.filterInfo;
-    }
-
-    public int getRanking()
-    {
-        return filterInfo.getRanking();
-    }
-
-    public boolean handle(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws ServletException, IOException
-    {
-        if (getContext().handleSecurity(req, res))
-        {
-            this.filter.doFilter(req, res, chain);
-
-            return true;
-        }
-
-        // FELIX-3988: If the response is not yet committed and still has the default
-        // status, we're going to override this and send an error instead.
-        if (!res.isCommitted() && (res.getStatus() == SC_OK || res.getStatus() == 0))
-        {
-            res.sendError(SC_FORBIDDEN);
-        }
-
-        return false;
-    }
-
-    @Override
-    public void init() throws ServletException
-    {
-        this.filter.init(new FilterConfigImpl(getName(), getContext(), getInitParams()));
-    }
-
-    @Override
-    protected Object getSubject()
-    {
-        return this.filter;
-    }
-
-    private static String[] getFilterPatterns(FilterInfo filterInfo)
-    {
-        List<String> result = new ArrayList<String>();
-        if (filterInfo.getPatterns() != null)
-        {
-            for (int i = 0; i < filterInfo.getPatterns().length; i++)
-            {
-                result.add(PatternUtil.convertToRegEx(filterInfo.getPatterns()[i]));
-            }
-        }
-        if (filterInfo.getRegexs() != null)
-        {
-            for (int i = 0; i < filterInfo.getRegexs().length; i++)
-            {
-                result.add(filterInfo.getRegexs()[i]);
-            }
-        }
-        return result.toArray(new String[result.size()]);
-    }
-
-    @Override
-    public Pattern[] getPatterns() {
-        return this.patterns;
     }
 
     public long getContextServiceId()
@@ -154,9 +65,107 @@ public final class FilterHandler extends AbstractHandler<FilterHandler>
         return this.contextServiceId;
     }
 
-    @Override
-    protected long getServiceId()
+    public ExtServletContext getContext()
     {
-        return this.filterInfo.getServiceId();
+        return this.context;
+    }
+
+    public Filter getFilter()
+    {
+        return filter;
+    }
+
+    protected void setFilter(final Filter f)
+    {
+        this.filter = f;
+    }
+
+    public FilterInfo getFilterInfo()
+    {
+        return this.filterInfo;
+    }
+
+    public String getName()
+    {
+        String name = this.filterInfo.getName();
+        if (name == null && filter != null )
+        {
+            name = filter.getClass().getName();
+        }
+        return name;
+    }
+
+    /**
+     * Initialize the object
+     * @return {code -1} on success, a failure reason according to {@link DTOConstants} otherwise.
+     */
+    public int init()
+    {
+        if ( this.useCount > 0 )
+        {
+            this.useCount++;
+            return -1;
+        }
+
+        if (this.filter == null)
+        {
+            return DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
+        }
+
+        try
+        {
+            filter.init(new FilterConfigImpl(getName(), getContext(), getFilterInfo().getInitParameters()));
+        }
+        catch (final ServletException e)
+        {
+            SystemLogger.error(this.getFilterInfo().getServiceReference(),
+                    "Error during calling init() on filter " + this.filter,
+                    e);
+            return DTOConstants.FAILURE_REASON_EXCEPTION_ON_INIT;
+        }
+        this.useCount++;
+        return -1;
+    }
+
+    public void handle(@Nonnull final ServletRequest req,
+            @Nonnull final ServletResponse res,
+            @Nonnull final FilterChain chain) throws ServletException, IOException
+    {
+        this.filter.doFilter(req, res, chain);
+    }
+
+    public boolean destroy()
+    {
+        if (this.filter == null)
+        {
+            return false;
+        }
+
+        this.useCount--;
+        if ( this.useCount == 0 )
+        {
+            try
+            {
+                filter.destroy();
+            }
+            catch ( final Exception ignore )
+            {
+                // we ignore this
+                SystemLogger.error(this.getFilterInfo().getServiceReference(),
+                        "Error during calling destroy() on filter " + this.filter,
+                        ignore);
+            }
+
+            filter = null;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean dispose()
+    {
+        // fully destroy the filter
+        this.useCount = 1;
+        return this.destroy();
     }
 }

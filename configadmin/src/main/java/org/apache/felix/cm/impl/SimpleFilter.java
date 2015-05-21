@@ -26,6 +26,8 @@ import java.util.Dictionary;
 import java.util.Iterator;
 import java.util.List;
 
+import org.osgi.framework.InvalidSyntaxException;
+
 public class SimpleFilter
 {
     public static final int MATCH_ALL = 0;
@@ -65,6 +67,7 @@ public class SimpleFilter
         return m_op;
     }
 
+    @Override
     public String toString()
     {
         StringBuilder sb = new StringBuilder();
@@ -182,17 +185,17 @@ public class SimpleFilter
         }
     }
 
-    public static SimpleFilter parse(String filter)
+    public static SimpleFilter parse(final String filter) throws InvalidSyntaxException
     {
         int idx = skipWhitespace(filter, 0);
 
         if ((filter == null) || (filter.length() == 0) || (idx >= filter.length()))
         {
-            throw new IllegalArgumentException("Null or empty filter.");
+            throw new InvalidSyntaxException("Null or empty filter.", filter);
         }
         else if (filter.charAt(idx) != '(')
         {
-            throw new IllegalArgumentException("Missing opening parenthesis: " + filter);
+            throw new InvalidSyntaxException("Missing opening parenthesis", filter);
         }
 
         SimpleFilter sf = null;
@@ -202,8 +205,8 @@ public class SimpleFilter
         {
             if (sf != null)
             {
-                throw new IllegalArgumentException(
-                        "Only one top-level operation allowed: " + filter);
+                throw new InvalidSyntaxException(
+                        "Only one top-level operation allowed", filter);
             }
 
             if (!isEscaped && (filter.charAt(idx) == '('))
@@ -293,13 +296,13 @@ public class SimpleFilter
 
         if (sf == null)
         {
-            throw new IllegalArgumentException("Missing closing parenthesis: " + filter);
+            throw new InvalidSyntaxException("Missing closing parenthesis", filter);
         }
 
         return sf;
     }
 
-    private static SimpleFilter subfilter(String filter, int startIdx, int endIdx)
+    private static SimpleFilter subfilter(String filter, int startIdx, int endIdx) throws InvalidSyntaxException
     {
         final String opChars = "=<>~";
 
@@ -319,8 +322,8 @@ public class SimpleFilter
         }
         if (attrEndIdx == startIdx)
         {
-            throw new IllegalArgumentException(
-                    "Missing attribute name: " + filter.substring(startIdx, endIdx));
+            throw new InvalidSyntaxException(
+                    "Missing attribute name: " + filter.substring(startIdx, endIdx), filter);
         }
         String attr = filter.substring(startIdx, attrEndIdx);
 
@@ -338,8 +341,8 @@ public class SimpleFilter
             case '<':
                 if (filter.charAt(startIdx + 1) != '=')
                 {
-                    throw new IllegalArgumentException(
-                            "Unknown operator: " + filter.substring(startIdx, endIdx));
+                    throw new InvalidSyntaxException(
+                            "Unknown operator: " + filter.substring(startIdx, endIdx), filter);
                 }
                 op = LTE;
                 startIdx += 2;
@@ -347,8 +350,8 @@ public class SimpleFilter
             case '>':
                 if (filter.charAt(startIdx + 1) != '=')
                 {
-                    throw new IllegalArgumentException(
-                            "Unknown operator: " + filter.substring(startIdx, endIdx));
+                    throw new InvalidSyntaxException(
+                            "Unknown operator: " + filter.substring(startIdx, endIdx), filter);
                 }
                 op = GTE;
                 startIdx += 2;
@@ -356,15 +359,15 @@ public class SimpleFilter
             case '~':
                 if (filter.charAt(startIdx + 1) != '=')
                 {
-                    throw new IllegalArgumentException(
-                            "Unknown operator: " + filter.substring(startIdx, endIdx));
+                    throw new InvalidSyntaxException(
+                            "Unknown operator: " + filter.substring(startIdx, endIdx), filter);
                 }
                 op = APPROX;
                 startIdx += 2;
                 break;
             default:
-                throw new IllegalArgumentException(
-                        "Unknown operator: " + filter.substring(startIdx, endIdx));
+                throw new InvalidSyntaxException(
+                        "Unknown operator: " + filter.substring(startIdx, endIdx), filter);
         }
 
         // Parse value.
@@ -695,7 +698,7 @@ public class SimpleFilter
                     return false;
                 }
             case SimpleFilter.APPROX :
-                return compareApproximate(((Comparable) lhs), rhs);
+                return compareApproximate((lhs), rhs);
             case SimpleFilter.SUBSTRING :
                 return SimpleFilter.compareSubstring((List<String>) rhs, (String) lhs);
             default:

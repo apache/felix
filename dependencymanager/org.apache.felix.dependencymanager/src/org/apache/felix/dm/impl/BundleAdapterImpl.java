@@ -37,30 +37,47 @@ import org.osgi.framework.Bundle;
  */
 public class BundleAdapterImpl extends FilterComponent
 {
-    /**
+	/**
      * Creates a new Bundle Adapter Service implementation.
      */
     public BundleAdapterImpl(DependencyManager dm, int bundleStateMask, String bundleFilter, boolean propagate)
     {
-        super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
-        m_component.setImplementation(new BundleAdapterDecorator(bundleStateMask, propagate))
-                 .add(dm.createBundleDependency()
-                      .setFilter(bundleFilter)
-                      .setStateMask(bundleStateMask)
-                      .setCallbacks("added", "removed"))
-                 .setCallbacks("init", null, "stop", null);
+    	this(dm, bundleStateMask, bundleFilter, propagate, null, null, null, null);
     }
 
-    public class BundleAdapterDecorator extends AbstractDecorator {
+	public BundleAdapterImpl(DependencyManager dm, int stateMask, String filter, boolean propagate, Object cbInstance, String add, String change, String remove) {
+        super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
+        m_component
+        	.setImplementation(new BundleAdapterDecorator(stateMask, propagate, cbInstance, add, change, remove))
+        	.add(dm.createBundleDependency()
+        		   .setFilter(filter)
+        		   .setStateMask(stateMask)
+        		   .setCallbacks("added", "removed"))
+        		   .setCallbacks("init", null, "stop", null);
+	}
+
+	public class BundleAdapterDecorator extends AbstractDecorator {
         private final boolean m_propagate;
         private final int m_bundleStateMask;
+        public final Object m_cbInstance;
+    	public final String m_add;
+    	public final String m_change;
+    	public final String m_remove;
 
         public BundleAdapterDecorator(int bundleStateMask, boolean propagate) {
-            m_bundleStateMask = bundleStateMask;
-            m_propagate = propagate;
+            this(bundleStateMask, propagate, null, null, null, null);
         }
         
-        public Component createService(Object[] properties) {
+		public BundleAdapterDecorator(int bundleStateMask, boolean propagate, Object callbackInstance, String add, String change, String remove) {
+            m_bundleStateMask = bundleStateMask;
+            m_propagate = propagate;
+            m_cbInstance = callbackInstance;
+            m_add = add;
+            m_change = change;
+            m_remove = remove;
+        }
+
+		public Component createService(Object[] properties) {
             Bundle bundle = (Bundle) properties[0];
             Hashtable<String, Object> props = new Hashtable<>();
             if (m_serviceProperties != null) {
@@ -84,7 +101,7 @@ public class BundleAdapterImpl extends FilterComponent
                     .setBundle(bundle)
                     .setStateMask(m_bundleStateMask)
                     .setPropagate(m_propagate)
-                    .setCallbacks(null, "changed", null)
+                    .setCallbacks(m_cbInstance, m_add, m_change, m_remove)
                     .setAutoConfig(true)
                     .setRequired(true));
 

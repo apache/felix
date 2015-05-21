@@ -21,8 +21,6 @@ package org.apache.felix.http.base.internal.runtime;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -33,8 +31,10 @@ import javax.servlet.Servlet;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
+import org.apache.felix.http.base.internal.handler.HttpServiceFilterHandler;
+import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
-import org.apache.felix.http.base.internal.runtime.HandlerRuntime.ErrorPage;
+import org.osgi.framework.ServiceReference;
 
 public final class WhiteboardServiceHelper
 {
@@ -57,7 +57,7 @@ public final class WhiteboardServiceHelper
             Long serviceId)
     {
         FilterInfo filterInfo = createFilterInfo(identifier, serviceId);
-        return new FilterHandler(null, context, mock(Filter.class), filterInfo);
+        return new HttpServiceFilterHandler(context, filterInfo, mock(Filter.class));
     }
 
     private static FilterInfo createFilterInfo(String identifier,
@@ -95,24 +95,28 @@ public final class WhiteboardServiceHelper
     }
 
     public static ServletHandler createTestServletWithServiceId(String identifier,
-            ExtServletContext context)
+            ExtServletContext context,
+            long contextServiceId)
     {
-        return createTestServlet(identifier, context, ID_COUNTER.incrementAndGet());
+        return createTestServlet(identifier, context, ID_COUNTER.incrementAndGet(), contextServiceId);
     }
 
-    public static ServletHandler createTestServlet(String identifier, ExtServletContext context)
+    public static ServletHandler createTestServlet(String identifier, ExtServletContext context, long contextServiceId)
     {
-        return createTestServlet(identifier, context, -ID_COUNTER.incrementAndGet());
+        return createTestServlet(identifier, context, -ID_COUNTER.incrementAndGet(), contextServiceId);
     }
 
     private static ServletHandler createTestServlet(String identifier,
             ExtServletContext context,
-            Long serviceId)
+            Long serviceId,
+            Long contextServiceId)
     {
         ServletInfo servletInfo = createServletInfo(identifier, serviceId);
         Servlet servlet = mock(Servlet.class);
         when(servlet.getServletInfo()).thenReturn("info_" + identifier);
-        return new ServletHandler(null, context, servletInfo, servlet);
+        final ServletHandler h = new HttpServiceServletHandler(context, servletInfo, servlet);
+
+        return h;
     }
 
     private static ServletInfo createServletInfo(String identifier, Long serviceId)
@@ -136,7 +140,7 @@ public final class WhiteboardServiceHelper
                 serviceId,
                 name,
                 patterns,
-                null,
+                errorPages,
                 asyncSupported,
                 initParams);
     }
@@ -152,28 +156,38 @@ public final class WhiteboardServiceHelper
                     }
                 };
     }
-
-    public static ErrorPage createErrorPageWithServiceId(String identifier, ExtServletContext context)
+/*
+    public static ServletState createErrorPageWithServiceId(String identifier, ExtServletContext context, long contextServiceId)
     {
-        return createErrorPage(identifier, context, ID_COUNTER.incrementAndGet());
+        return createErrorPage(identifier, context, ID_COUNTER.incrementAndGet(), contextServiceId);
     }
 
-    public static ErrorPage createErrorPage(String identifier, ExtServletContext context)
+    public static ServletState createErrorPage(String identifier, ExtServletContext context, long contextServiceId)
     {
-        return createErrorPage(identifier, context, -ID_COUNTER.incrementAndGet());
+        return createErrorPage(identifier, context, -ID_COUNTER.incrementAndGet(), contextServiceId);
     }
 
-    private static ErrorPage createErrorPage(String identifier,
+    private static ServletState createErrorPage(String identifier,
             ExtServletContext context,
-            Long serviceId)
+            Long serviceId,
+            long contextServiceId)
     {
-        ServletHandler servletHandler = createTestServlet(identifier, context, serviceId);
-        Collection<Integer> errorCodes = Arrays.asList(400, 500);
-        Collection<String> exceptions = Arrays.asList("Bad request", "Error");
+        final ServletHandler servletHandler = createTestServlet(identifier, context, serviceId, contextServiceId);
+        final Collection<Long> errorCodes = Arrays.asList(400L, 500L);
+        final Collection<String> exceptions = Arrays.asList("Bad request", "Error");
 
-        return new ErrorPage(servletHandler, errorCodes, exceptions);
+        final ServletState state = new ServletState(servletHandler);
+        final long[] codes = new long[errorCodes.size()];
+        final Iterator<Long> iter = errorCodes.iterator();
+        for(int i=0; i<codes.length; i++)
+        {
+            codes[i] = iter.next();
+        }
+        state.setErrorCodes(codes);
+        state.setErrorExceptions(exceptions.toArray(new String[exceptions.size()]));
+        return state;
     }
-
+*/
     public static ServletContextHelperInfo createContextInfo(int serviceRanking,
             long serviceId,
             String name,
@@ -185,5 +199,10 @@ public final class WhiteboardServiceHelper
                 name,
                 path,
                 initParams);
+    }
+
+    public static ResourceInfo createContextInfo(ServiceReference<Object> ref)
+    {
+        return new ResourceInfo(ref);
     }
 }

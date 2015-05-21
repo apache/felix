@@ -34,7 +34,6 @@ import java.util.jar.Manifest;
 import org.apache.maven.model.Organization;
 import org.apache.maven.plugin.testing.stubs.MavenProjectStub;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.shared.osgi.DefaultMaven2OsgiConverter;
 import org.osgi.framework.Constants;
 
 import aQute.bnd.osgi.Analyzer;
@@ -44,7 +43,7 @@ import aQute.bnd.osgi.Jar;
 
 /**
  * Test for {@link BundlePlugin}.
- * 
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class BundlePluginTest extends AbstractBundlePluginTest
@@ -53,11 +52,11 @@ public class BundlePluginTest extends AbstractBundlePluginTest
     private BundlePlugin plugin;
 
 
+    @Override
     protected void setUp() throws Exception
     {
         super.setUp();
         plugin = new BundlePlugin();
-        plugin.setMaven2OsgiConverter( new DefaultMaven2OsgiConverter() );
         plugin.setBuildDirectory( "." );
         plugin.setOutputDirectory( new File( getBasedir(), "target" + File.separatorChar + "scratch" ) );
     }

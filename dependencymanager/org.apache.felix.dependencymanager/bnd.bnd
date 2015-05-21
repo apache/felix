@@ -24,17 +24,18 @@ Private-Package: \
 	org.apache.felix.dm.impl.index,\
 	org.apache.felix.dm.impl.index.multiproperty,\
 	org.apache.felix.dm.impl.metatype
-Export-Package: \
+Export-Package:  \
 	org.apache.felix.dm,\
 	org.apache.felix.dm.tracker,\
-	org.apache.felix.dm.context
+	org.apache.felix.dm.context,\
+	org.apache.felix.dm.diagnostics
 Include-Resource: META-INF/=resources/LICENSE,\
 	META-INF/=resources/NOTICE,\
 	META-INF/=resources/DEPENDENCIES,\
 	META-INF/=resources/changelog.txt
 Import-Package: !org.junit,!org.mockito.*,*
 Bundle-Activator: org.apache.felix.dm.impl.Activator
-Bundle-Version: 4.0.0
+Bundle-Version: 4.1.0
 Bundle-Name: Apache Felix Dependency Manager
 Bundle-Description: Provides dynamic service and component dependency management
 Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.txt

@@ -1,6 +1,6 @@
 /*
- * Copyright (c) OSGi Alliance (2012, 2014). All Rights Reserved.
- *
+ * Copyright (c) OSGi Alliance (2012, 2015). All Rights Reserved.
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,7 +17,6 @@
 package org.osgi.service.http.runtime.dto;
 
 import java.util.Map;
-
 import org.osgi.dto.DTO;
 
 /**
@@ -25,22 +24,24 @@ import org.osgi.dto.DTO;
  * resources, servlet Filters, and listeners associated with that servlet
  * context. The Servlet Context is usually backed by a
  * {@link org.osgi.service.http.context.ServletContextHelper} service.
- *
+ * 
  * @NotThreadSafe
  * @author $Id$
  */
 public class ServletContextDTO extends DTO {
 	/**
 	 * The name of the servlet context.
-	 *
 	 * The name of the corresponding
 	 * {@link org.osgi.service.http.context.ServletContextHelper}.
+	 * <p>
+	 * This is the value returned by the
+	 * {@code ServletContext.getServletContextName()} method.
 	 */
-	public String				name;
+	public String name;
 
 	/**
 	 * The servlet context path.
-	 *
+	 * 
 	 * This is the value returned by the {@code ServletContext.getContextPath()}
 	 * method.
 	 */
@@ -56,7 +57,7 @@ public class ServletContextDTO extends DTO {
 
 	/**
 	 * The servlet context attributes.
-	 *
+	 * 
 	 * <p>
 	 * The value type must be a numerical type, {@code Boolean}, {@code String},
 	 * {@code DTO} or an array of any of the former. Therefore this method will
@@ -80,7 +81,7 @@ public class ServletContextDTO extends DTO {
 	/**
 	 * Returns the representations of the {@code Servlet} services associated
 	 * with this context.
-	 *
+	 * 
 	 * The representations of the {@code Servlet} services associated with this
 	 * context. The returned array may be empty if this context is currently not
 	 * associated with any {@code Servlet} services.
@@ -90,7 +91,7 @@ public class ServletContextDTO extends DTO {
 	/**
 	 * Returns the representations of the resource services associated with this
 	 * context.
-	 *
+	 * 
 	 * The representations of the resource services associated with this
 	 * context. The returned array may be empty if this context is currently not
 	 * associated with any resource services.
@@ -100,7 +101,7 @@ public class ServletContextDTO extends DTO {
 	/**
 	 * Returns the representations of the servlet {@code Filter} services
 	 * associated with this context.
-	 *
+	 * 
 	 * The representations of the servlet {@code Filter} services associated
 	 * with this context. The returned array may be empty if this context is
 	 * currently not associated with any servlet {@code Filter} services.
@@ -110,7 +111,7 @@ public class ServletContextDTO extends DTO {
 	/**
 	 * Returns the representations of the error page {@code Servlet} services
 	 * associated with this context.
-	 *
+	 * 
 	 * The representations of the error page {@code Servlet} services associated
 	 * with this context. The returned array may be empty if this context is
 	 * currently not associated with any error pages.
@@ -120,7 +121,7 @@ public class ServletContextDTO extends DTO {
 	/**
 	 * Returns the representations of the listener services associated with this
 	 * context.
-	 *
+	 * 
 	 * The representations of the listener services associated with this
 	 * context. The returned array may be empty if this context is currently not
 	 * associated with any listener services.

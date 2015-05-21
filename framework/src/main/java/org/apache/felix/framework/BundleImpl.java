@@ -1023,6 +1023,11 @@ class BundleImpl implements Bundle, BundleRevisions
                 AdminPermission.LIFECYCLE));
         }
 
+        Map headers = getCurrentLocalizedHeader(Locale.getDefault().toString());
+
+        // Uninstall the bundle.
+        getFramework().uninstallBundle(this);
+
         // After a bundle is uninstalled, the spec says getHeaders() should
         // return the localized headers for the default locale at the time of
         // of uninstall. So, let's clear the existing header cache to throw
@@ -1035,13 +1040,10 @@ class BundleImpl implements Bundle, BundleRevisions
         {
             if (m_uninstalledHeaders == null)
             {
-                m_uninstalledHeaders = getCurrentLocalizedHeader(Locale.getDefault().toString());
+                m_uninstalledHeaders = headers;
                 m_cachedHeaders.clear();
             }
         }
-
-        // Uninstall the bundle.
-        getFramework().uninstallBundle(this);
     }
 
     private static final SecurityManagerEx m_smEx = new SecurityManagerEx();

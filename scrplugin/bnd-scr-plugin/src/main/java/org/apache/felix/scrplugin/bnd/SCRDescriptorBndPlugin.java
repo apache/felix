@@ -29,8 +29,11 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.felix.scrplugin.Options;
 import org.apache.felix.scrplugin.Result;
@@ -200,15 +203,33 @@ public class SCRDescriptorBndPlugin implements AnalyzerPlugin, Plugin {
 	}
 
 	private void addServiceComponentHeader(Analyzer analyzer, String components) {
-		String oldComponents = analyzer.getProperty("Service-Component");
-		if (oldComponents != null && oldComponents.length() > 0) {
-			StringBuilder sb = new StringBuilder(oldComponents);
-			sb.append(",");
-			sb.append(components);
-			components = sb.toString();
+		Set<String> descriptorsSet = new HashSet<String>();
+		String oldComponents = analyzer.getProperty("Service-Component");		
+		parseComponents(descriptorsSet, oldComponents);
+		parseComponents(descriptorsSet, components);
+		
+		StringBuilder sb = new StringBuilder();
+		Iterator<String> it = descriptorsSet.iterator();
+		while (it.hasNext()) {
+		    sb.append(it.next());
+		    if (it.hasNext()) {
+		        sb.append(",");
+		    }
 		}
-		log.info("Setting Service-Component header: " + components);
-		analyzer.setProperty("Service-Component", components);
+		String comps = sb.toString();
+		log.info("Setting Service-Component header: " + comps);
+		analyzer.setProperty("Service-Component", comps);
+	}
+
+    private void parseComponents(Set<String> descriptorsSet, String components) {
+        if (components != null && components.length() > 0) {
+            for (String comp : components.split(",")) {
+                comp = comp.trim();
+                if (comp.length() > 0) {
+                    descriptorsSet.add(comp);
+                }
+            }
+        }
 	}
 
 	private void init(Analyzer analyzer) {

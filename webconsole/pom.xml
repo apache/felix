@@ -28,7 +28,7 @@
 
     <artifactId>org.apache.felix.webconsole</artifactId>
     <packaging>bundle</packaging>
-    <version>4.2.7-SNAPSHOT</version>
+    <version>4.2.9-SNAPSHOT</version>
 
     <name>Apache Felix Web Management Console</name>
     <description>

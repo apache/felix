@@ -37,14 +37,14 @@ class BundleRequirement implements Requirement
         m_resource = resource;
         m_dirs = new HashMap<String, String>();
         m_dirs.put(
-            BundleNamespace.REQUIREMENT_FILTER_DIRECTIVE,
+            BundleNamespace.REQUIREMENT_FILTER_DIRECTIVE.intern(),
             "(" + BundleNamespace.BUNDLE_NAMESPACE + "=" + name + ")");
         m_attrs = new HashMap<String, Object>();
     }
 
     public String getNamespace()
     {
-        return BundleNamespace.BUNDLE_NAMESPACE;
+        return BundleNamespace.BUNDLE_NAMESPACE.intern();
     }
 
     public Map<String, String> getDirectives()

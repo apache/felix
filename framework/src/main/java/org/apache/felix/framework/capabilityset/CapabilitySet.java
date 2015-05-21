@@ -24,14 +24,16 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeMap;
+import java.util.SortedMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 import org.apache.felix.framework.util.SecureAction;
 import org.apache.felix.framework.util.StringComparator;
@@ -39,11 +41,12 @@ import org.apache.felix.framework.util.VersionRange;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.osgi.framework.Version;
 import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.resource.Capability;
 
 public class CapabilitySet
 {
-    private final Map<String, Map<Object, Set<BundleCapability>>> m_indices;
-    private final Set<BundleCapability> m_capSet = new HashSet<BundleCapability>();
+    private final SortedMap<String, Map<Object, Set<BundleCapability>>> m_indices; // Should also be concurrent!
+    private final Set<Capability> m_capSet = Collections.newSetFromMap(new ConcurrentHashMap<Capability, Boolean>());
     private final static SecureAction m_secureAction = new SecureAction();
 
     public void dump()
@@ -75,20 +78,20 @@ public class CapabilitySet
         }
     }
 
-    public CapabilitySet(List<String> indexProps, boolean caseSensitive)
+    public CapabilitySet(final List<String> indexProps, final boolean caseSensitive)
     {
         m_indices = (caseSensitive)
-            ? new TreeMap<String, Map<Object, Set<BundleCapability>>>()
-            : new TreeMap<String, Map<Object, Set<BundleCapability>>>(
-                new StringComparator(false));
+            ? new ConcurrentSkipListMap<String, Map<Object, Set<BundleCapability>>>()
+            : new ConcurrentSkipListMap<String, Map<Object, Set<BundleCapability>>>(
+                StringComparator.COMPARATOR);
         for (int i = 0; (indexProps != null) && (i < indexProps.size()); i++)
         {
             m_indices.put(
-                indexProps.get(i), new HashMap<Object, Set<BundleCapability>>());
+                indexProps.get(i), new ConcurrentHashMap<Object, Set<BundleCapability>>());
         }
     }
 
-    public void addCapability(BundleCapability cap)
+    public void addCapability(final BundleCapability cap)
     {
         m_capSet.add(cap);
 
@@ -103,7 +106,8 @@ public class CapabilitySet
                     value = convertArrayToList(value);
                 }
 
-                Map<Object, Set<BundleCapability>> index = entry.getValue();
+                ConcurrentMap<Object, Set<BundleCapability>> index =
+                        (ConcurrentMap<Object, Set<BundleCapability>>) entry.getValue();
 
                 if (value instanceof Collection)
                 {
@@ -122,18 +126,16 @@ public class CapabilitySet
     }
 
     private void indexCapability(
-        Map<Object, Set<BundleCapability>> index, BundleCapability cap, Object capValue)
+        ConcurrentMap<Object, Set<BundleCapability>> index, BundleCapability cap, Object capValue)
     {
-        Set<BundleCapability> caps = index.get(capValue);
-        if (caps == null)
-        {
-            caps = new HashSet<BundleCapability>();
-            index.put(capValue, caps);
-        }
+        Set<BundleCapability> caps = Collections.newSetFromMap(new ConcurrentHashMap<BundleCapability, Boolean>());
+        Set<BundleCapability> prevval = index.putIfAbsent(capValue, caps);
+        if (prevval != null)
+            caps = prevval;
         caps.add(cap);
     }
 
-    public void removeCapability(BundleCapability cap)
+    public void removeCapability(final BundleCapability cap)
     {
         if (m_capSet.remove(cap))
         {
@@ -180,17 +182,17 @@ public class CapabilitySet
         }
     }
 
-    public Set<BundleCapability> match(SimpleFilter sf, boolean obeyMandatory)
+    public Set<Capability> match(final SimpleFilter sf, final boolean obeyMandatory)
     {
-        Set<BundleCapability> matches = match(m_capSet, sf);
+        final Set<Capability> matches = match(m_capSet, sf);
         return (obeyMandatory)
             ? matchMandatory(matches, sf)
             : matches;
     }
 
-    private Set<BundleCapability> match(Set<BundleCapability> caps, SimpleFilter sf)
+    private Set<Capability> match(Set<Capability> caps, final SimpleFilter sf)
     {
-        Set<BundleCapability> matches = new HashSet<BundleCapability>();
+        Set<Capability> matches = Collections.newSetFromMap(new ConcurrentHashMap<Capability, Boolean>());
 
         if (sf.getOperation() == SimpleFilter.MATCH_ALL)
         {
@@ -202,7 +204,7 @@ public class CapabilitySet
             // For AND we calculate the intersection of each subfilter.
             // We can short-circuit the AND operation if there are no
             // remaining capabilities.
-            List<SimpleFilter> sfs = (List<SimpleFilter>) sf.getValue();
+            final List<SimpleFilter> sfs = (List<SimpleFilter>) sf.getValue();
             for (int i = 0; (caps.size() > 0) && (i < sfs.size()); i++)
             {
                 matches = match(caps, sfs.get(i));
@@ -247,9 +249,9 @@ public class CapabilitySet
             }
             else
             {
-                for (Iterator<BundleCapability> it = caps.iterator(); it.hasNext(); )
+                for (Iterator<Capability> it = caps.iterator(); it.hasNext(); )
                 {
-                    BundleCapability cap = it.next();
+                    Capability cap = it.next();
                     Object lhs = cap.getAttributes().get(sf.getName());
                     if (lhs != null)
                     {
@@ -265,12 +267,12 @@ public class CapabilitySet
         return matches;
     }
 
-    public static boolean matches(BundleCapability cap, SimpleFilter sf)
+    public static boolean matches(Capability cap, SimpleFilter sf)
     {
         return matchesInternal(cap, sf) && matchMandatory(cap, sf);
     }
 
-    private static boolean matchesInternal(BundleCapability cap, SimpleFilter sf)
+    private static boolean matchesInternal(Capability cap, SimpleFilter sf)
     {
         boolean matched = true;
 
@@ -324,12 +326,12 @@ public class CapabilitySet
         return matched;
     }
 
-    private static Set<BundleCapability> matchMandatory(
-        Set<BundleCapability> caps, SimpleFilter sf)
+    private static Set<Capability> matchMandatory(
+        Set<Capability> caps, SimpleFilter sf)
     {
-        for (Iterator<BundleCapability> it = caps.iterator(); it.hasNext(); )
+        for (Iterator<Capability> it = caps.iterator(); it.hasNext(); )
         {
-            BundleCapability cap = it.next();
+            Capability cap = it.next();
             if (!matchMandatory(cap, sf))
             {
                 it.remove();
@@ -338,7 +340,7 @@ public class CapabilitySet
         return caps;
     }
 
-    private static boolean matchMandatory(BundleCapability cap, SimpleFilter sf)
+    private static boolean matchMandatory(Capability cap, SimpleFilter sf)
     {
         Map<String, Object> attrs = cap.getAttributes();
         for (Entry<String, Object> entry : attrs.entrySet())
@@ -404,13 +406,13 @@ public class CapabilitySet
             {
                 //Do nothing will check later if rhs is null
             }
-            
+
             if(rhs != null && rhs instanceof VersionRange)
             {
                 return ((VersionRange)rhs).isInRange((Version)lhs);
             }
         }
-        
+
         // If the type is comparable, then we can just return the
         // result immediately.
         if (lhs instanceof Comparable)
@@ -468,7 +470,7 @@ public class CapabilitySet
                         return false;
                     }
                 case SimpleFilter.APPROX :
-                    return compareApproximate(((Comparable) lhs), rhs);
+                    return compareApproximate(lhs, rhs);
                 case SimpleFilter.SUBSTRING :
                     return SimpleFilter.compareSubstring((List<String>) rhs, (String) lhs);
                 default:

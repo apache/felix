@@ -23,7 +23,7 @@ import javax.servlet.http.HttpSessionAttributeListener;
 import javax.servlet.http.HttpSessionListener;
 
 import org.apache.felix.http.api.ExtHttpService;
-import org.apache.felix.http.base.internal.handler.HandlerRegistry;
+import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.service.listener.HttpSessionAttributeListenerManager;
 import org.apache.felix.http.base.internal.service.listener.HttpSessionListenerManager;
 import org.apache.felix.http.base.internal.service.listener.ServletContextAttributeListenerManager;
@@ -40,6 +40,11 @@ import org.osgi.service.http.runtime.HttpServiceRuntimeConstants;
 public final class HttpServiceFactory
     implements ServiceFactory<HttpService>
 {
+    public static final String HTTP_SERVICE_CONTEXT_NAME = "Http Service context";
+
+    public static final long HTTP_SERVICE_CONTEXT_SERVICE_ID = -1;
+
+
     /**
      * Name of the Framework property indicating whether the servlet context
      * attributes of the ServletContext objects created for each HttpContext
@@ -102,7 +107,7 @@ public final class HttpServiceFactory
         this.sessionListenerManager.open();
         this.sessionAttributeListenerManager.open();
 
-        this.sharedHttpService = new SharedHttpServiceImpl(handlerRegistry.getRegistry(null));
+        this.sharedHttpService = new SharedHttpServiceImpl(handlerRegistry);
 
         final String[] ifaces = new String[] { HttpService.class.getName(), ExtHttpService.class.getName() };
         this.httpServiceReg = bundleContext.registerService(ifaces, this, this.httpServiceProps);
@@ -173,10 +178,10 @@ public final class HttpServiceFactory
         this.httpServiceProps.clear();
         this.httpServiceProps.putAll(props);
 
-        if ( this.httpServiceProps.get(HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT_ATTRIBUTE) != null )
+        if ( this.httpServiceProps.get(HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT) != null )
         {
             this.httpServiceProps.put(OBSOLETE_REG_PROPERTY_ENDPOINTS,
-                    this.httpServiceProps.get(HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT_ATTRIBUTE));
+                    this.httpServiceProps.get(HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT));
         }
 
         if (this.httpServiceReg != null)

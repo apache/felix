@@ -8,6 +8,7 @@ Changes from 1.0.10 to 1.0.12
 	* [FELIX-4644] - Designates with multiple Objects
 	* [FELIX-4665] - Metatype service does not allow a default empty string in XML resource
 	* [FELIX-4771] - Possible NPE when accessing content of attribute
+        * [FELIX-4799] - Support for multiple factory designates in single MetaType file
 
 
 Changes from 1.0.8 to 1.0.10

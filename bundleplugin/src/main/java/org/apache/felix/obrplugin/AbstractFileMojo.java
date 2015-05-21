@@ -25,6 +25,8 @@ import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
 
@@ -37,65 +39,56 @@ public abstract class AbstractFileMojo extends AbstractMojo
 {
     /**
      * GroupId of the bundle. Retrieved from POM file if specified.
-     *
-     * @parameter expression="${groupId}"
      */
+    @Parameter( property = "groupId" )
     private String groupId;
 
     /**
      * ArtifactId of the bundle. Retrieved from POM file if specified.
-     *
-     * @parameter expression="${artifactId}"
      */
+    @Parameter( property = "artifactId" )
     private String artifactId;
 
     /**
      * Version of the bundle. Retrieved from POM file if specified.
-     *
-     * @parameter expression="${version}"
      */
+    @Parameter( property = "version" )
     private String version;
 
     /**
      * Packaging type of the bundle. Retrieved from POM file if specified.
-     *
-     * @parameter expression="${packaging}"
      */
+    @Parameter( property = "packaging" )
     private String packaging;
 
     /**
      * Classifier type of the bundle. Defaults to none.
-     *
-     * @parameter expression="${classifier}"
      */
+    @Parameter( property = "classifier" )
     private String classifier;
 
     /**
      * Location of an existing POM file.
-     *
-     * @parameter expression="${pomFile}"
      */
+    @Parameter( property = "pomFile" )
     private File pomFile;
 
     /**
      * Bundle file, defaults to the artifact in the local Maven repository.
-     *
-     * @parameter expression="${file}"
      */
+    @Parameter( property = "file" )
     protected File file;
 
     /**
      * Optional XML file describing additional requirements and capabilities.
-     * 
-     * @parameter expression="${obrXml}"
      */
+    @Parameter( property = "obrXml" )
     protected String obrXml;
 
     /**
      * Component factory for Maven artifacts
-     * 
-     * @component
      */
+    @Component
     private ArtifactFactory m_factory;
 
 

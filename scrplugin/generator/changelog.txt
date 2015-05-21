@@ -1,3 +1,13 @@
+Changes from 1.13.0 to 1.12.0 
+-----------------------------
+** Improvement
+    * [FELIX-4773] - Generated service component xml does not conform to XSD
+** Bug
+    * [FELIX-4861] - Metatype generation should fail if there is no configuration property
+    * [FELIX-4622] - Regression: SCR spec version detection incorrect for activate method
+    * [FELIX-4774] - Support for @Reference annotation with unbind method "-"
+
+
 Changes from 1.12.0 to 1.10.0
 ----------------------------
 ** Improvement

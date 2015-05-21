@@ -17,19 +17,17 @@
 package org.apache.felix.http.base.internal.whiteboard;
 
 import javax.annotation.Nonnull;
-import javax.servlet.Filter;
-import javax.servlet.Servlet;
-import javax.servlet.ServletException;
 
 import org.apache.felix.http.base.internal.handler.FilterHandler;
-import org.apache.felix.http.base.internal.handler.HandlerRegistry;
-import org.apache.felix.http.base.internal.handler.PerContextHandlerRegistry;
+import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.handler.WhiteboardFilterHandler;
+import org.apache.felix.http.base.internal.handler.WhiteboardServletHandler;
+import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ResourceInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceObjects;
 
 public final class WhiteboardHttpService
 {
@@ -53,51 +51,27 @@ public final class WhiteboardHttpService
      * Register a servlet.
      * @param contextInfo The servlet context helper info
      * @param servletInfo The servlet info
+     * @throws RegistrationFailureException
      */
     public void registerServlet(@Nonnull final ContextHandler contextHandler,
             @Nonnull final ServletInfo servletInfo)
     {
-        final ServiceObjects<Servlet> so = this.bundleContext.getServiceObjects(servletInfo.getServiceReference());
-        if ( so != null )
-        {
-            final Servlet servlet = so.getService();
-            // TODO create failure DTO if null
-            if ( servlet != null )
-            {
-                final ServletHandler handler = new ServletHandler(contextHandler.getContextInfo(),
-                        contextHandler.getServletContext(servletInfo.getServiceReference().getBundle()),
-                        servletInfo,
-                        servlet);
-                try {
-                    final PerContextHandlerRegistry registry = this.handlerRegistry.getRegistry(contextHandler.getContextInfo());
-                    if (registry != null )
-                    {
-                        registry.addServlet(handler);
-                    }
-                } catch (final ServletException e) {
-                    so.ungetService(servlet);
-                    // TODO create failure DTO
-                }
-            }
-        }
+        final ServletHandler holder = new WhiteboardServletHandler(
+                contextHandler.getContextInfo().getServiceId(),
+                contextHandler.getServletContext(servletInfo.getServiceReference().getBundle()),
+                servletInfo, bundleContext);
+        handlerRegistry.addServlet(holder);
     }
 
     /**
      * Unregister a servlet
      * @param contextInfo The servlet context helper info
      * @param servletInfo The servlet info
+     * @throws RegistrationFailureException
      */
-    public void unregisterServlet(@Nonnull final ContextHandler contextHandler, @Nonnull final ServletInfo servletInfo)
+    public void unregisterServlet(@Nonnull final ContextHandler contextHandler, @Nonnull final ServletInfo servletInfo) throws RegistrationFailureException
     {
-        final PerContextHandlerRegistry registry = this.handlerRegistry.getRegistry(contextHandler.getContextInfo());
-        if (registry != null )
-        {
-            final Servlet instance = registry.removeServlet(servletInfo, true);
-            if ( instance != null )
-            {
-                this.bundleContext.getServiceObjects(servletInfo.getServiceReference()).ungetService(instance);
-            }
-        }
+        handlerRegistry.removeServlet(contextHandler.getContextInfo().getServiceId(), servletInfo, true);
         contextHandler.ungetServletContext(servletInfo.getServiceReference().getBundle());
     }
 
@@ -109,24 +83,11 @@ public final class WhiteboardHttpService
     public void registerFilter(@Nonnull  final ContextHandler contextHandler,
             @Nonnull final FilterInfo filterInfo)
     {
-        final Filter filter = this.bundleContext.getServiceObjects(filterInfo.getServiceReference()).getService();
-        // TODO create failure DTO if null
-        if ( filter != null )
-        {
-            final FilterHandler handler = new FilterHandler(contextHandler.getContextInfo(),
-                    contextHandler.getServletContext(filterInfo.getServiceReference().getBundle()),
-                    filter,
-                    filterInfo);
-            try {
-                final PerContextHandlerRegistry registry = this.handlerRegistry.getRegistry(contextHandler.getContextInfo());
-                if (registry != null )
-                {
-                    registry.addFilter(handler);
-                }
-            } catch (final ServletException e) {
-                // TODO create failure DTO
-            }
-        }
+        final FilterHandler holder = new WhiteboardFilterHandler(
+                contextHandler.getContextInfo().getServiceId(),
+                contextHandler.getServletContext(filterInfo.getServiceReference().getBundle()),
+                filterInfo, bundleContext);
+        handlerRegistry.addFilter(holder);
     }
 
     /**
@@ -136,15 +97,7 @@ public final class WhiteboardHttpService
      */
     public void unregisterFilter(@Nonnull final ContextHandler contextHandler, @Nonnull final FilterInfo filterInfo)
     {
-        final PerContextHandlerRegistry registry = this.handlerRegistry.getRegistry(contextHandler.getContextInfo());
-        if (registry != null )
-        {
-            final Filter instance = registry.removeFilter(filterInfo, true);
-            if ( instance != null )
-            {
-                this.bundleContext.getServiceObjects(filterInfo.getServiceReference()).ungetService(instance);
-            }
-        }
+        handlerRegistry.removeFilter(contextHandler.getContextInfo().getServiceId(), filterInfo, true);
         contextHandler.ungetServletContext(filterInfo.getServiceReference().getBundle());
     }
 
@@ -152,41 +105,31 @@ public final class WhiteboardHttpService
      * Register a resource.
      * @param contextInfo The servlet context helper info
      * @param resourceInfo The resource info
+     * @throws RegistrationFailureException
      */
     public void registerResource(@Nonnull final ContextHandler contextHandler,
             @Nonnull final ResourceInfo resourceInfo)
     {
         final ServletInfo servletInfo = new ServletInfo(resourceInfo);
 
-        final Servlet servlet = new ResourceServlet(resourceInfo.getPrefix());
-        final ServletHandler handler = new ServletHandler(contextHandler.getContextInfo(),
+        final ServletHandler holder = new HttpServiceServletHandler(
+                contextHandler.getContextInfo().getServiceId(),
                 contextHandler.getServletContext(servletInfo.getServiceReference().getBundle()),
-                servletInfo,
-                servlet);
-        try {
-            final PerContextHandlerRegistry registry = this.handlerRegistry.getRegistry(contextHandler.getContextInfo());
-            if (registry != null )
-            {
-                registry.addServlet(handler);
-            }
-        } catch (ServletException e) {
-            // TODO create failure DTO
-        }
+                servletInfo, new ResourceServlet(resourceInfo.getPrefix()));
+
+        handlerRegistry.addServlet(holder);
     }
 
     /**
      * Unregister a resource.
      * @param contextInfo The servlet context helper info
      * @param resourceInfo The resource info
+     * @throws RegistrationFailureException
      */
-    public void unregisterResource(@Nonnull final ContextHandler contextHandler, @Nonnull final ResourceInfo resourceInfo)
+    public void unregisterResource(@Nonnull final ContextHandler contextHandler, @Nonnull final ResourceInfo resourceInfo) throws RegistrationFailureException
     {
         final ServletInfo servletInfo = new ServletInfo(resourceInfo);
-        final PerContextHandlerRegistry registry = this.handlerRegistry.getRegistry(contextHandler.getContextInfo());
-        if (registry != null )
-        {
-            registry.removeServlet(servletInfo, true);
-        }
+        handlerRegistry.removeServlet(contextHandler.getContextInfo().getServiceId(), servletInfo, true);
         contextHandler.ungetServletContext(servletInfo.getServiceReference().getBundle());
     }
 

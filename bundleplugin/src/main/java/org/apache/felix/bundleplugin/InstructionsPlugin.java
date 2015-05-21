@@ -27,6 +27,8 @@ import java.util.Properties;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
 import aQute.bnd.osgi.Jar;
@@ -34,11 +36,8 @@ import aQute.bnd.osgi.Jar;
 
 /**
  * Generate BND instructions for this project
- *
- * @goal instructions
- * @requiresDependencyResolution test
- * @threadSafe
  */
+@Mojo( name = "instructions", requiresDependencyResolution = ResolutionScope.TEST, threadSafe = true  )
 public class InstructionsPlugin extends BundlePlugin
 {
     @Override

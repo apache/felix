@@ -19,7 +19,9 @@
 package org.apache.felix.cm.file;
 
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -29,6 +31,7 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
 
+import junit.framework.Assert;
 import junit.framework.TestCase;
 
 
@@ -253,6 +256,37 @@ public class FilePersistenceManagerTest extends TestCase
         check( "LPT1", "lpt1" );
     }
 
+    public void testKeyOrderInFile() throws IOException
+    {
+        Dictionary props = new Hashtable();
+        // The following keys are stored as "c, a, b" in HashTable based
+        // due to their hash code
+        props.put( "a_first", "a" );
+        props.put( "b_second", "b" );
+        props.put( "c_third", "c" );
+
+        String pid = "keyOrderInFile";
+        fpm.store( pid, props );
+        File configFile = new File( file, fpm.encodePid( pid ) + ".config" );
+        FileReader reader = new FileReader( configFile );
+        BufferedReader breader = new BufferedReader(reader);
+        try
+        {
+            String previousLine = breader.readLine();
+            while ( previousLine != null) 
+            {
+                String line = breader.readLine();
+                if (line != null) {
+                    Assert.assertTrue( previousLine.compareTo( line ) < 0 );
+                }
+                previousLine = line;
+            }
+        }
+        finally
+        {
+            breader.close();
+        }
+    }
 
     private void check( String name, Object value ) throws IOException
     {

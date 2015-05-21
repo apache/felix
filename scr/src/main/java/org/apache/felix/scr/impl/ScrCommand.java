@@ -330,10 +330,10 @@ public class ScrCommand implements ScrInfo
             if ( services != null )
             {
                 out.print( "  Services: " );
-                for ( int i = 1; i < services.length; i++ )
+                for ( String service: services )
                 {
                     out.print( "          " );
-                    out.println( services[i] );
+                    out.println( service );
                 }
                 out.print( "  Service Scope: " );
                 out.println( component.scope );
@@ -426,21 +426,21 @@ public class ScrCommand implements ScrInfo
             out.println( ref.name );
             out.print( "      Target: " );
             out.println( ref.target );
-          ServiceReferenceDTO[] serviceRefs = ref.boundServices;
-          if ( serviceRefs != null )
-          {
-              out.print( "      Bound to:" );
-              for ( ServiceReferenceDTO sr: serviceRefs )
-              {
-                  out.print( "        " );
-                  out.println( sr.id );
-                  propertyInfo(sr.properties, out, "        ");
-              }
-          }
-          else
-          {
-              out.println( "      (unbound)" );
-          }
+            ServiceReferenceDTO[] serviceRefs = ref.boundServices;
+            if ( serviceRefs != null )
+            {
+                out.print( "      Bound to:" );
+                for ( ServiceReferenceDTO sr: serviceRefs )
+                {
+                    out.print( "        " );
+                    out.println( sr.id );
+                    propertyInfo(sr.properties, out, "        ");
+                }
+            }
+            else
+            {
+                out.println( "      (unbound)" );
+            }
 
         }
         for ( UnsatisfiedReferenceDTO ref: cc.unsatisfiedReferences)
@@ -449,20 +449,20 @@ public class ScrCommand implements ScrInfo
             out.println( ref.name );
             out.print( "      Target: " );
             out.println( ref.target );
-          ServiceReferenceDTO[] serviceRefs = ref.targetServices;
-          if ( serviceRefs != null )
-          {
-              out.print( "      Target services:" );
-              for ( ServiceReferenceDTO sr: serviceRefs )
-              {
-                  out.print( "        " );
-                  out.println( sr.id );
-              }
-          }
-          else
-          {
-              out.println( "      (unbound)" );
-          }
+            ServiceReferenceDTO[] serviceRefs = ref.targetServices;
+            if ( serviceRefs != null )
+            {
+                out.print( "      Target services:" );
+                for ( ServiceReferenceDTO sr: serviceRefs )
+                {
+                    out.print( "        " );
+                    out.println( sr.id );
+                }
+            }
+            else
+            {
+                out.println( "      (unbound)" );
+            }
 
         }
         propertyInfo( cc.properties, out, "    ");

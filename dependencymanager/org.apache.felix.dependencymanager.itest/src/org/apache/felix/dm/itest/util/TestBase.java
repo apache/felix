@@ -122,7 +122,7 @@ public abstract class TestBase extends TestCase implements LogService, Framework
         return m_dm;
     }
                 
-    protected void clearComponents() throws InterruptedException {
+    protected void clearComponents() {
         m_dm.clear();
         warn("All component cleared.");
     }

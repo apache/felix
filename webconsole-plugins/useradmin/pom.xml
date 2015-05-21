@@ -28,7 +28,7 @@
 
 	<artifactId>org.apache.felix.webconsole.plugins.useradmin</artifactId>
 	<packaging>bundle</packaging>
-	<version>1.0.1-SNAPSHOT</version>
+	<version>1.0.3-SNAPSHOT</version>
 
 	<name>Apache Felix Web Console User Admin Plugin</name>
 	<description>

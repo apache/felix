@@ -100,6 +100,46 @@ public class TemporalServiceDependencyTest extends TestBase {
         m.clear();
     }
 
+    // Same test as testServiceConsumptionWithCallbackAndIntermittentAvailability, but the consumer is now
+    // an adapter for the Adaptee interface.
+    public void testFELIX4858_ServiceAdapterConsumptionWithCallbackAndIntermittentAvailability() {
+        final DependencyManager m = getDM();
+        // helper class that ensures certain steps get executed in sequence
+        Ensure e = new Ensure();
+        // create a service provider and consumer
+        TemporalServiceProvider provider = new TemporalServiceProvider(e);
+        Component sp = m.createComponent().setImplementation(provider).setInterface(TemporalServiceInterface.class.getName(), null);
+        TemporalServiceProvider2 provider2 = new TemporalServiceProvider2(e);
+        Component sp2 = m.createComponent().setImplementation(provider2).setInterface(TemporalServiceInterface.class.getName(), null);
+        TemporalServiceConsumerAdapterWithCallback consumer = new TemporalServiceConsumerAdapterWithCallback(e);
+        ServiceDependency temporalDep =  m.createTemporalServiceDependency(10000).setService(TemporalServiceInterface.class).setRequired(true).setCallbacks("add", "remove");
+        Component sc = m.createAdapterService(Adaptee.class, null).setImplementation(consumer).add(temporalDep);            
+        Component adaptee = m.createComponent().setImplementation(new Adaptee()).setInterface(Adaptee.class.getName(), null);
+            
+        // add the adapter service consumer
+        m.add(sc);
+        // add the adaptee (the adapter service depends on it)
+        m.add(adaptee);
+        // now add the first provider
+        m.add(sp);
+        e.waitForStep(2, 5000);
+        // and remove it again (this should not affect the consumer yet)
+        m.remove(sp);
+        // now add the second provider
+        m.add(sp2);
+        e.step(3);
+        e.waitForStep(4, 5000);
+        // and remove it again
+        m.remove(sp2);
+        // finally remove the consumer
+        m.remove(sc);
+        // Wait for the consumer.remove callback
+        e.waitForStep(6, 5000);
+        // ensure we executed all steps inside the component instance
+        e.step(7);
+        m.clear();
+    }
+
     public void testFelix4602_PropagateServiceInvocationException() {
         final DependencyManager m = getDM();
         final Ensure ensure = new Ensure();
@@ -192,6 +232,30 @@ public class TemporalServiceDependencyTest extends TestBase {
     static class TemporalServiceConsumerWithCallback extends TemporalServiceConsumer {
         public TemporalServiceConsumerWithCallback(Ensure e) {
             super(e);
+        }
+        
+        public void add(TemporalServiceInterface service) {
+            m_service = service;
+        }
+        
+        public void remove(TemporalServiceInterface service) {
+            Assert.assertTrue(m_service == service);
+            m_ensure.step(6);
+        }
+    }
+    
+    public static class Adaptee {       
+    }
+       
+    static class TemporalServiceConsumerAdapterWithCallback extends TemporalServiceConsumer {
+        volatile Adaptee m_adaptee;
+        
+        public TemporalServiceConsumerAdapterWithCallback(Ensure e) {
+            super(e);
+        }
+        
+        public void start() {
+            Assert.assertTrue(m_adaptee != null);
         }
         
         public void add(TemporalServiceInterface service) {

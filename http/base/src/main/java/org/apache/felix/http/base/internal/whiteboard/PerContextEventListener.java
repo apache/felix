@@ -17,6 +17,7 @@
 package org.apache.felix.http.base.internal.whiteboard;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentSkipListMap;
 
@@ -33,22 +34,27 @@ import javax.servlet.ServletRequestListener;
 import javax.servlet.http.HttpSessionAttributeListener;
 import javax.servlet.http.HttpSessionBindingEvent;
 import javax.servlet.http.HttpSessionEvent;
+import javax.servlet.http.HttpSessionIdListener;
 import javax.servlet.http.HttpSessionListener;
 
 import org.apache.felix.http.base.internal.runtime.HttpSessionAttributeListenerInfo;
+import org.apache.felix.http.base.internal.runtime.HttpSessionIdListenerInfo;
 import org.apache.felix.http.base.internal.runtime.HttpSessionListenerInfo;
-import org.apache.felix.http.base.internal.runtime.ListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextAttributeListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletRequestAttributeListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletRequestListenerInfo;
+import org.apache.felix.http.base.internal.runtime.dto.ListenerDTOBuilder;
 import org.apache.felix.http.base.internal.util.CollectionUtils;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.http.runtime.dto.ListenerDTO;
+import org.osgi.service.http.runtime.dto.ServletContextDTO;
 
 public final class PerContextEventListener implements
         HttpSessionListener,
         HttpSessionAttributeListener,
+        HttpSessionIdListener,
         ServletContextAttributeListener,
         ServletRequestListener,
         ServletRequestAttributeListener
@@ -65,6 +71,9 @@ public final class PerContextEventListener implements
     /** Session listeners. */
     private final Map<ServiceReference<HttpSessionListener>, HttpSessionListener> sessionListeners = new ConcurrentSkipListMap<ServiceReference<HttpSessionListener>, HttpSessionListener>();
 
+    /** Session id listeners. */
+    private final Map<ServiceReference<HttpSessionIdListener>, HttpSessionIdListener> sessionIdListeners = new ConcurrentSkipListMap<ServiceReference<HttpSessionIdListener>, HttpSessionIdListener>();
+
     /** Request listeners. */
     private final Map<ServiceReference<ServletRequestListener>, ServletRequestListener> requestListeners = new ConcurrentSkipListMap<ServiceReference<ServletRequestListener>, ServletRequestListener>();
 
@@ -73,13 +82,15 @@ public final class PerContextEventListener implements
 
     private final Bundle bundle;
 
-    PerContextEventListener(final Bundle bundle)
+    private final ContextHandler contextHandler;
+
+    PerContextEventListener(final Bundle bundle, final ContextHandler contextHandler)
     {
         this.bundle = bundle;
+        this.contextHandler = contextHandler;
     }
 
-    void initialized(@Nonnull final ServletContextListenerInfo listenerInfo,
-            @Nonnull ContextHandler contextHandler)
+    void initialized(@Nonnull final ServletContextListenerInfo listenerInfo)
     {
         final ServletContextListener listener = listenerInfo.getService(bundle);
         if (listener != null)
@@ -94,8 +105,7 @@ public final class PerContextEventListener implements
         }
     }
 
-    void destroyed(@Nonnull final ServletContextListenerInfo listenerInfo,
-            @Nonnull ContextHandler contextHandler)
+    void destroyed(@Nonnull final ServletContextListenerInfo listenerInfo)
     {
         final ServiceReference<ServletContextListener> listenerRef = listenerInfo
                 .getServiceReference();
@@ -204,6 +214,35 @@ public final class PerContextEventListener implements
     }
 
     /**
+     * Add session id listener
+     *
+     * @param info
+     */
+    void addListener(@Nonnull final HttpSessionIdListenerInfo info)
+    {
+        final HttpSessionIdListener service = info.getService(bundle);
+        if (service != null)
+        {
+            this.sessionIdListeners.put(info.getServiceReference(),
+                    service);
+        }
+    }
+
+    /**
+     * Remove session id listener
+     *
+     * @param info
+     */
+    void removeListener(@Nonnull final HttpSessionIdListenerInfo info)
+    {
+        final HttpSessionIdListener service = this.sessionIdListeners.remove(info.getServiceReference());
+        if (service != null)
+        {
+            info.ungetService(bundle, service);
+        }
+    }
+
+    /**
      * Add request listener
      *
      * @param info
@@ -260,19 +299,6 @@ public final class PerContextEventListener implements
         {
             info.ungetService(bundle, service);
         }
-    }
-
-    // Make calling from ListenerRegistry easier
-    <T extends ListenerInfo<?>> void addListener(@Nonnull T info)
-    {
-        throw new UnsupportedOperationException("Listeners of type "
-                + info.getClass() + "are not supported");
-    }
-
-    <T extends ListenerInfo<?>> void removeListener(@Nonnull T info)
-    {
-        throw new UnsupportedOperationException("Listeners of type "
-                + info.getClass() + "are not supported");
     }
 
     @Override
@@ -401,15 +427,34 @@ public final class PerContextEventListener implements
         }
     }
 
+    /**
+     * @see javax.servlet.http.HttpSessionIdListener#sessionIdChanged(javax.servlet.http.HttpSessionEvent, java.lang.String)
+     */
+    @Override
+    public void sessionIdChanged(@Nonnull final HttpSessionEvent event, @Nonnull final String oldSessionId) {
+        for (final HttpSessionIdListener l : sessionIdListeners.values())
+        {
+            l.sessionIdChanged(event, oldSessionId);
+        }
+    }
+
     @SuppressWarnings("unchecked")
-    Collection<ServiceReference<?>> getRuntime()
+    void getRuntime(final ServletContextDTO dto)
     {
-        return CollectionUtils.<ServiceReference<?>> union(
+        final Collection<ServiceReference<?>> col = CollectionUtils.<ServiceReference<?>>sortedUnion(
+                Collections.<ServiceReference<?>>reverseOrder(),
                 contextListeners.keySet(),
                 contextAttributeListeners.keySet(),
                 sessionAttributeListeners.keySet(),
+                sessionIdListeners.keySet(),
                 sessionListeners.keySet(),
                 requestAttributeListeners.keySet(),
                 requestListeners.keySet());
+        dto.listenerDTOs = new ListenerDTO[col.size()];
+        int index = 0;
+        for(final ServiceReference<?> ref : col)
+        {
+            dto.listenerDTOs[index++] = ListenerDTOBuilder.build(ref, dto.serviceId);
+        }
     }
 }

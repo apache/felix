@@ -327,7 +327,7 @@ public class AnnotationCollector extends ClassDataCollector
     {
         return m_exportService;
     }
-
+    
     private void parseComponentAnnotation(Annotation annotation)
     {
         EntryWriter writer = new EntryWriter(EntryType.Component);
@@ -458,12 +458,8 @@ public class AnnotationCollector extends ClassDataCollector
         m_writers.add(writer);
 
         // service attribute
-        String service = annotation.get(EntryParam.service.toString());
-        if (service != null)
-        {
-            service = Patterns.parseClass(service, Patterns.CLASS, 1);
-        }
-        else
+        String service = parseClassAttrValue(annotation.get(EntryParam.service.toString()));
+        if (service == null)
         {
             if (m_isField)
             {
@@ -471,7 +467,48 @@ public class AnnotationCollector extends ClassDataCollector
             }
             else
             {
-                service = Patterns.parseClass(m_descriptor, Patterns.BIND_CLASS, 2);
+            	// parse "bind(Component, ServiceReference, Service)" signature
+            	service = Patterns.parseClass(m_descriptor, Patterns.BIND_CLASS1, 3, false);            		
+            	
+            	if (service == null) {
+                	// parse "bind(Component, Service)" signature
+                	service = Patterns.parseClass(m_descriptor, Patterns.BIND_CLASS2, 2, false);            		
+            	}
+            	
+            	if (service == null) {
+            		// parse "bind(Component, Map, Service)" signature
+                	service = Patterns.parseClass(m_descriptor, Patterns.BIND_CLASS3, 3, false);            		
+            	}
+            	
+            	if (service == null) {
+            		// parse "bind(ServiceReference, Service)" signature
+                	service = Patterns.parseClass(m_descriptor, Patterns.BIND_CLASS4, 2, false);            		
+            	}
+
+            	if (service == null) {
+            		// parse "bind(Service)" signature
+                	service = Patterns.parseClass(m_descriptor, Patterns.BIND_CLASS5, 1, false);            		
+            	}
+
+            	if (service == null) {
+            		// parse "bind(Service, Map)" signature
+                	service = Patterns.parseClass(m_descriptor, Patterns.BIND_CLASS6, 1, false);            		
+            	}
+
+            	if (service == null) {
+            		// parse "bind(Map, Service)" signature
+                	service = Patterns.parseClass(m_descriptor, Patterns.BIND_CLASS7, 2, false);            		
+            	}
+
+            	if (service == null) {
+            		// parse "bind(Service, Dictionary)" signature
+                	service = Patterns.parseClass(m_descriptor, Patterns.BIND_CLASS8, 1, false);            		
+            	}
+
+            	if (service == null) {
+            		// parse "bind(Dictionary, Service)" signature
+                	service = Patterns.parseClass(m_descriptor, Patterns.BIND_CLASS9, 2, true);            		
+            	}
             }
         }
         writer.put(EntryParam.service, service);
@@ -494,7 +531,7 @@ public class AnnotationCollector extends ClassDataCollector
         }
 
         // defaultImpl attribute
-        writer.putClass(annotation, EntryParam.defaultImpl, null);
+        writer.putClass(annotation, EntryParam.defaultImpl);
 
         // added callback
         writer.putString(annotation, EntryParam.added, (!m_isField) ? m_method : null);
@@ -522,6 +559,32 @@ public class AnnotationCollector extends ClassDataCollector
         // propagate attribute
         writer.putString(annotation, EntryParam.propagate, null);
     }
+        
+    /**
+     * Parse the value of a given annotation attribute (which is of type 'class').
+     * This method is compatible with bndtools 2.4.1 (where the annotation.get() method returns a String of the form "Lfull/class/name;"),
+     * and with bndtools 3.x.x (where the annotation.get() method returns a TypeRef).
+     * 
+     * @param annot the annotation which contains the given attribute
+     * @param attr the attribute name (of 'class' type).
+     * @return the annotation class attribute value
+     */
+    public static String parseClassAttrValue(Object value) {
+    	if (value instanceof String)
+    	{
+            return Patterns.parseClass((String) value, Patterns.CLASS, 1);
+    	}
+    	else if (value instanceof TypeRef) 
+    	{
+    		return ((TypeRef) value).getFQN();
+    	} 
+    	else if (value == null) {
+    		return null;
+    	}
+    	else {
+    		throw new IllegalStateException("can't parse class attribute value from " + value);
+    	}
+    }
 
     /**
      * Parses a ConfigurationDependency annotation.
@@ -533,13 +596,9 @@ public class AnnotationCollector extends ClassDataCollector
         m_writers.add(writer);
 
         // pid attribute (can be specified using the pid attribute, or using the classPid attribute)
-        String  pid = annotation.get(EntryParam.pidClass.toString());
-        if (pid != null)
-        {
-            pid = Patterns.parseClass(pid, Patterns.CLASS, 1);
-        } else {
-            pid = get(annotation, EntryParam.pid.toString(), m_className);
-        }
+        String pidFromClass = parseClassAttrValue(annotation.get(EntryParam.pidClass.toString()));
+        String pid = pidFromClass != null ? pidFromClass : get(annotation, EntryParam.pid.toString(), m_className);
+
         writer.put(EntryParam.pid, pid);
         
         // the method on which the annotation is applied
@@ -609,7 +668,7 @@ public class AnnotationCollector extends ClassDataCollector
         }
         else
         {
-            writer.putClass(annotation, EntryParam.service, null);
+            writer.putClass(annotation, EntryParam.service);
         }
         
         // Parse factoryMethod attribute
@@ -665,7 +724,7 @@ public class AnnotationCollector extends ClassDataCollector
         }
 
         // Parse the mandatory adapted service interface.
-        writer.putClass(annotation, EntryParam.adapteeService, null);
+        writer.putClass(annotation, EntryParam.adapteeService);
 
         // Parse Adapter properties.
         parseProperties(annotation, EntryParam.properties, writer);
@@ -785,13 +844,9 @@ public class AnnotationCollector extends ClassDataCollector
         writer.put(EntryParam.impl, m_className);
 
         // factory pid attribute (can be specified using the factoryPid attribute, or using the factoryPidClass attribute)
-        String  factoryPid = annotation.get(EntryParam.factoryPidClass.toString());
-        if (factoryPid != null)
-        {
-            factoryPid = Patterns.parseClass(factoryPid, Patterns.CLASS, 1);
-        } else {
-            factoryPid = get(annotation, EntryParam.factoryPid.toString(), m_className);
-        }
+        String factoryPidClass = parseClassAttrValue(annotation.get(EntryParam.factoryPidClass.toString()));
+        String factoryPid = factoryPidClass != null ? factoryPidClass : get(annotation, EntryParam.factoryPid.toString(), m_className);
+        
         writer.put(EntryParam.factoryPid, factoryPid);
 
         // Parse updated callback
@@ -917,8 +972,7 @@ public class AnnotationCollector extends ClassDataCollector
                 Annotation property = (Annotation) p;
                 String heading = property.get("heading");
                 String id = property.get("id");
-                String type = (String) property.get("type");
-                type = (type != null) ? Patterns.parseClass(type, Patterns.CLASS, 1) : null;
+                String type = parseClassAttrValue(property.get("type"));
                 Object[] defaults = (Object[]) property.get("defaults");
                 String description = property.get("description");
                 Integer cardinality = property.get("cardinality");
@@ -999,12 +1053,11 @@ public class AnnotationCollector extends ClassDataCollector
                     Annotation a = (Annotation) p;
                     String name = (String) a.get("name");
 
-                    String type = a.get("type");
+                    String type = parseClassAttrValue(a.get("type"));
                     Class<?> classType;
                     try
                     {
-                        classType = (type == null) ? String.class : Class.forName(Patterns.parseClass(type,
-                            Patterns.CLASS, 1));
+                        classType = (type == null) ? String.class : Class.forName(type);
                     }
                     catch (ClassNotFoundException e)
                     {

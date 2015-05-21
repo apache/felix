@@ -1,3 +1,15 @@
+Changes from 4.6.1 to 5.0.0
+---------------------------
+** Bug
+    * [FELIX-4838] - Deadlock in Service Registry
+    * [FELIX-4850] - org.osgi.framework.version should be 1.8
+    * [FELIX-4854] - Unable to create consistent wiring when same package is exported in same version by multiple bundles
+
+** Improvement
+    * [FELIX-4821] - Use a faster implementation for StringMap
+    * [FELIX-4845] - Clean up Logger implementation
+    * [FELIX-4525] - Refactor the Framework to use the Resolver module
+
 Changes from 4.6.0 to 4.6.1
 ---------------------------
 ** Bug

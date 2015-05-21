@@ -126,54 +126,7 @@ public @interface ServiceDependency
      * then pick up whatever information needed from already injected (unnamed) dependencies, and configure dynamically
      * your named dependencies, which will then be calculated once the init() method returns.
      * 
-     * <p> Usage example of a Service whose dependency filter is configured from ConfigAdmin:
-     * 
-     * <blockquote><pre>
-     *  &#47;**
-     *    * A Service whose service dependency "otherService" filter is configured from ConfigAdmin
-     *    *&#47;
-     *  &#64;Service
-     *  class X {
-     *      private Dictionary m_config;
-     *      
-     *      &#47;**
-     *       * Initialize our service from config ... and store the config for later usage (from our init method)
-     *       *&#47; 
-     *      &#64;ConfigurationDependency(pid="MyPid")
-     *      void configure(Dictionary conf) {
-     *           m_config = config;
-     *      }
-     * 
-     *      &#47;**
-     *       * All unnamed dependencies are injected: we can now configure other named
-     *       * dependencies, using the already injected configuration.
-     *       * The returned Map will be used to configure our "otherService" Dependency.
-     *       *&#47;
-     *      &#64;Init
-     *      Map init() {
-     *          return new HashMap() {{
-     *              put("otherService.filter", m_config.get("filter"));
-     *              put("otherService.required", m_config.get("required"));
-     *          }};
-     *      } 
-     *
-     *      &#47;**
-     *       * This named dependency filter/required flag will be configured by our init method (see above).
-     *       *&#47;
-     *      &#64;ServiceDependency(name="otherService") 
-     *      void bindOtherService(OtherService other) {
-     *      }
-     *      
-     *      &#47;**
-     *       * All dependencies are injected and our service is now ready to be published.
-     *       * Notice that you can also use the publisher service attribute if you need 
-     *       * to take control on service exposition.
-     *       *&#47;
-     *      &#64;Start
-     *      void start() {
-     *      }
-     *  }
-     *  </pre></blockquote>
+     * <p> See {@link Init} annotation for an example usage of a dependency dynamically configured from the init method.
      */
     String name() default "";
     

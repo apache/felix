@@ -1,4 +1,14 @@
-Changes from 1.20,0 to 1.19.0
+Changes from 1.21.0 to 1.20.0
+-----------------------------
+** Improvement
+    * [FELIX-4773] - Generated service component xml does not conform to XSD
+** Bug 
+    * [FELIX-4861] - Metatype generation should fail if there is no configuration property
+    * [FELIX-4622] - Regression: SCR spec version detection incorrect for activate method
+    * [FELIX-4774] - Support for @Reference annotation with unbind method "-"
+
+
+Changes from 1.20.0 to 1.19.0
 -----------------------------
 ** Bug
     * [FELIX-4595] - Passing configuration to the maven-bundle-plugin does not always work

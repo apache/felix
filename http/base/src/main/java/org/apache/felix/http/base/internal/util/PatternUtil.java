@@ -28,19 +28,6 @@ import java.util.StringTokenizer;
 public class PatternUtil
 {
 
-    public static String convertToRegEx(String pattern)
-    {
-        String result = pattern;
-        // see Servlet 3.0, section 12.2
-        // - replace '*.' prefixes with a regex that matches extensions...
-        result = result.replaceFirst("^\\Q*.\\E(.*)$", "\\^(.*)(\\\\.\\\\Q$1\\\\E)\\$");
-        // - replace '/*' suffixes with a regex that matches paths (actually,
-        //   the path should also start with a leading slash, but we're a bit
-        //   more liberal on this one)...
-        result = result.replaceFirst("^(.*)\\Q/*\\E$", "\\^($1)(|/.*)\\$");
-        return result;
-    }
-
     // check for valid symbolic name
     public static boolean isValidSymbolicName(final String name)
     {

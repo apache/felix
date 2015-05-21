@@ -18,143 +18,84 @@
  */
 package org.apache.felix.http.base.internal.runtime.dto;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.http.base.internal.handler.FilterHandler;
-import org.apache.felix.http.base.internal.handler.ServletHandler;
-import org.apache.felix.http.base.internal.runtime.AbstractInfo;
-import org.apache.felix.http.base.internal.runtime.HandlerRuntime;
-import org.apache.felix.http.base.internal.runtime.HandlerRuntime.ErrorPage;
-import org.apache.felix.http.base.internal.runtime.RegistryRuntime;
-import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
-import org.apache.felix.http.base.internal.whiteboard.ContextHandler;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.runtime.dto.DTOConstants;
-import org.osgi.service.http.runtime.dto.ErrorPageDTO;
+import org.osgi.framework.dto.ServiceReferenceDTO;
+import org.osgi.service.http.runtime.HttpServiceRuntime;
 import org.osgi.service.http.runtime.dto.FailedErrorPageDTO;
 import org.osgi.service.http.runtime.dto.FailedFilterDTO;
 import org.osgi.service.http.runtime.dto.FailedListenerDTO;
 import org.osgi.service.http.runtime.dto.FailedResourceDTO;
 import org.osgi.service.http.runtime.dto.FailedServletContextDTO;
 import org.osgi.service.http.runtime.dto.FailedServletDTO;
-import org.osgi.service.http.runtime.dto.FilterDTO;
-import org.osgi.service.http.runtime.dto.ListenerDTO;
-import org.osgi.service.http.runtime.dto.ResourceDTO;
 import org.osgi.service.http.runtime.dto.RuntimeDTO;
 import org.osgi.service.http.runtime.dto.ServletContextDTO;
-import org.osgi.service.http.runtime.dto.ServletDTO;
 
 public final class RuntimeDTOBuilder
 {
 
-    private static final ServletDTOBuilder SERVLET_DTO_BUILDER = new ServletDTOBuilder();
-    private static final ResourceDTOBuilder RESOURCE_DTO_BUILDER = new ResourceDTOBuilder();
-    private static final FilterDTOBuilder FILTER_DTO_BUILDER = new FilterDTOBuilder();
-    private static final ErrorPageDTOBuilder ERROR_PAGE_DTO_BUILDER = new ErrorPageDTOBuilder();
-    private static final ListenerDTOBuilder LISTENER_DTO_BUILDER = new ListenerDTOBuilder();
-
     private final RegistryRuntime registry;
-    private final Map<String, Object> serviceProperties;
+    private final ServiceReference<HttpServiceRuntime> serviceReference;
 
-    public RuntimeDTOBuilder(RegistryRuntime registry, Map<String, Object> serviceProperties)
+    public RuntimeDTOBuilder(final RegistryRuntime registry, final ServiceReference<HttpServiceRuntime> ref)
     {
         this.registry = registry;
-        this.serviceProperties = serviceProperties;
+        this.serviceReference = ref;
     }
 
     public RuntimeDTO build()
     {
-        RuntimeDTO runtimeDTO = new RuntimeDTO();
-        runtimeDTO.attributes = createAttributes();
-        final List<FailedErrorPageDTO> failedErrorPageDTOs = new ArrayList<FailedErrorPageDTO>();
-        final List<FailedFilterDTO> failedFilterDTOs = new ArrayList<FailedFilterDTO>();
-        final List<FailedListenerDTO> failedListenerDTOs = new ArrayList<FailedListenerDTO>();
-        final List<FailedResourceDTO> failedResourceDTOs = new ArrayList<FailedResourceDTO>();
-        final List<FailedServletContextDTO> failedServletContextDTOs = new ArrayList<FailedServletContextDTO>();
-        final List<FailedServletDTO> failedServletDTOs = new ArrayList<FailedServletDTO>();
-
-        for(final AbstractInfo<?> info : this.registry.getInvalidServices())
-        {
-            if ( info instanceof ServletContextHelperInfo )
-            {
-                final ServletContextHelperInfo sch = (ServletContextHelperInfo)info;
-                final FailedServletContextDTO dto = new FailedServletContextDTO();
-                dto.attributes = Collections.emptyMap();
-                dto.contextPath = sch.getPath();
-                dto.errorPageDTOs = BuilderConstants.ERROR_PAGE_DTO_ARRAY;
-                dto.failureReason = DTOConstants.FAILURE_REASON_VALIDATION_FAILED;
-                dto.filterDTOs = BuilderConstants.FILTER_DTO_ARRAY;
-                dto.initParams = sch.getInitParameters();
-                dto.listenerDTOs = BuilderConstants.LISTENER_DTO_ARRAY;
-                dto.name = sch.getName();
-                dto.resourceDTOs = BuilderConstants.RESOURCE_DTO_ARRAY;
-                dto.serviceId = sch.getServiceId();
-                dto.servletDTOs = BuilderConstants.SERVLET_DTO_ARRAY;
-
-                failedServletContextDTOs.add(dto);
-            }
-        }
-        //TODO <**
-        runtimeDTO.failedErrorPageDTOs = failedErrorPageDTOs.toArray(new FailedErrorPageDTO[failedErrorPageDTOs.size()]);
-        runtimeDTO.failedFilterDTOs = failedFilterDTOs.toArray(new FailedFilterDTO[failedFilterDTOs.size()]);
-        runtimeDTO.failedListenerDTOs = failedListenerDTOs.toArray(new FailedListenerDTO[failedListenerDTOs.size()]);
-        runtimeDTO.failedResourceDTOs = failedResourceDTOs.toArray(new FailedResourceDTO[failedResourceDTOs.size()]);
-        runtimeDTO.failedServletContextDTOs = failedServletContextDTOs.toArray(new FailedServletContextDTO[failedServletContextDTOs.size()]);
-        runtimeDTO.failedServletDTOs = failedServletDTOs.toArray(new FailedServletDTO[failedServletDTOs.size()]);
-        //**>
+        final RuntimeDTO runtimeDTO = new RuntimeDTO();
+        runtimeDTO.serviceDTO = createServiceDTO();
         runtimeDTO.servletContextDTOs = createContextDTOs();
+
+        runtimeDTO.failedErrorPageDTOs = registry.getFailedDTOHolder().failedErrorPageDTOs.toArray(new FailedErrorPageDTO[registry.getFailedDTOHolder().failedErrorPageDTOs.size()]);
+        runtimeDTO.failedFilterDTOs = registry.getFailedDTOHolder().failedFilterDTOs.toArray(new FailedFilterDTO[registry.getFailedDTOHolder().failedFilterDTOs.size()]);
+        runtimeDTO.failedListenerDTOs = registry.getFailedDTOHolder().failedListenerDTOs.toArray(new FailedListenerDTO[registry.getFailedDTOHolder().failedListenerDTOs.size()]);
+        runtimeDTO.failedResourceDTOs = registry.getFailedDTOHolder().failedResourceDTOs.toArray(new FailedResourceDTO[registry.getFailedDTOHolder().failedResourceDTOs.size()]);
+        runtimeDTO.failedServletContextDTOs = registry.getFailedDTOHolder().failedServletContextDTO.toArray(new FailedServletContextDTO[registry.getFailedDTOHolder().failedServletContextDTO.size()]);
+        runtimeDTO.failedServletDTOs = registry.getFailedDTOHolder().failedServletDTOs.toArray(new FailedServletDTO[registry.getFailedDTOHolder().failedServletDTOs.size()]);
+
         return runtimeDTO;
     }
 
-    private Map<String, String> createAttributes()
+    private ServiceReferenceDTO createServiceDTO()
     {
-        Map<String, String> attributes = new HashMap<String, String>();
-        for (Map.Entry<String, Object> entry : this.serviceProperties.entrySet())
+        final ServiceReferenceDTO dto = new ServiceReferenceDTO();
+        dto.bundle = this.serviceReference.getBundle().getBundleId();
+        dto.id = (Long) this.serviceReference.getProperty(Constants.SERVICE_ID);
+        final Map<String, Object> props = new HashMap<String, Object>();
+        for (String key : this.serviceReference.getPropertyKeys())
         {
-            attributes.put(entry.getKey(), entry.getValue().toString());
+            props.put(key, this.serviceReference.getProperty(key));
         }
-        return attributes;
+        dto.properties = props;
+
+        final Bundle[] ubs = this.serviceReference.getUsingBundles();
+        if (ubs == null)
+        {
+            dto.usingBundles = new long[0];
+        }
+        else
+        {
+            dto.usingBundles = new long[ubs.length];
+            for (int j=0; j < ubs.length; j++)
+            {
+                dto.usingBundles[j] = ubs[j].getBundleId();
+            }
+        }
+
+        return dto;
     }
 
     private ServletContextDTO[] createContextDTOs()
     {
-        List<ServletContextDTO> contextDTOs = new ArrayList<ServletContextDTO>();
-        for (ContextHandler context : registry.getContexts())
-        {
-            contextDTOs.add(createContextDTO(context,
-                    registry.getHandlerRuntime(context),
-                    registry.getListenerRuntime(context)));
-        }
-        return contextDTOs.toArray(BuilderConstants.CONTEXT_DTO_ARRAY);
-    }
-
-    private ServletContextDTO createContextDTO(ContextHandler context,
-            HandlerRuntime handlerRuntime,
-            Collection<ServiceReference<?>> listenerRefs)
-    {
-        Collection<ServletHandler> servletHandlers = handlerRuntime.getServletHandlers();
-        Collection<ServletHandler> resourceHandlers = handlerRuntime.getResourceHandlers();
-        Collection<FilterHandler> filterHandlers = handlerRuntime.getFilterHandlers();
-        Collection<ErrorPage> errorPages = handlerRuntime.getErrorPages();
-        long servletContextId = handlerRuntime.getServiceId();
-
-        Collection<ServletDTO> servletDTOs = SERVLET_DTO_BUILDER.build(servletHandlers, servletContextId);
-        Collection<ResourceDTO> resourcesDTOs = RESOURCE_DTO_BUILDER.build(resourceHandlers, servletContextId);
-        Collection<FilterDTO> filtersDTOs = FILTER_DTO_BUILDER.build(filterHandlers, servletContextId);
-        Collection<ErrorPageDTO> errorsDTOs = ERROR_PAGE_DTO_BUILDER.build(errorPages, servletContextId);
-        Collection<ListenerDTO> listenersDTOs = LISTENER_DTO_BUILDER.build(listenerRefs, servletContextId);
-
-        return new ServletContextDTOBuilder(context,
-                    servletDTOs,
-                    resourcesDTOs,
-                    filtersDTOs,
-                    errorsDTOs,
-                    listenersDTOs)
-                .build();
+        final Collection<ServletContextDTO> contexts = registry.getServletContextDTOs();
+        return contexts.toArray(new ServletContextDTO[contexts.size()]);
     }
 }

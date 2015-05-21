@@ -24,33 +24,66 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotates a method which will be invoked when the Service is initializing.
- * All required dependencies are already injected before the annotated method is called, and 
- * optional dependencies on class fields are injected with NullObjects if the optional
- * dependencies are not currently available.<p>
+ * Annotates a method used to configure dynamic dependencies.
+ * When this method is invoked, all required dependencies (except the ones declared with a <code>name</code> 
+ * attribute) are already injected, and optional dependencies on class fields 
+ * are also already injected (possibly with NullObjects).<p>
  * 
- * If some dependencies are declared using a <b>named</b> &#64;{@link ServiceDependency} annotation, 
- * then the annotated method may optionally return a Map used to dynamically configure such 
- * dependencies (Please refer to &#64;{@link ServiceDependency#name()} attribute for more 
- * information about this feature).<p>
+ * The purpose of the @Init method is to either declare more dynamic dependencies using the DM API, or to
+ * return a Map used to dynamically configure dependencies that are annotated using a <code>name</code> attribute. 
  * 
- * After the init method returns, the component is then invoked in the method annotated with
- * &#64;{@link Start}, in order to notify that the component is about to be registered into the OSGi 
- * registry (if this one provides a service). However, you can take control of when the service is registered,
- * using the &#64;{@link LifecycleController} annotation).
+ * After the init method returns, the added or configured dependencies are then tracked, and when all dynamic 
+ * dependencies are injected, then the start method (annotated with @Start) is then invoked.
  * 
  * <h3>Usage Examples</h3>
- * Here, the "VideoPlayer" init method is called after the "log" dependency is injected.
+ * In this sample, the "PersistenceImpl" component dynamically configures the "storage" dependency from the "init" method. 
+ * The dependency "required" flag and filter string are derived from an xml configuration that is already injected before the init 
+ * method.
+ * 
  * <blockquote>
  * <pre>
  * 
  * &#64;Component
- * public class VideoPlayer {
+ * public class PersistenceImpl implements Persistence {
+ *     // Injected before init.
  *     &#64;ServiceDependency
  *     LogService log;
  *     
+ *     // Injected before init.
+ *     &#64;ConfigurationDependency
+ *     void updated(Dictionary conf) {
+ *        if (conf != null) {
+ *           _xmlConfiguration = parseXmlConfiguration(conf.get("xmlConfiguration"));
+ *        }
+ *     }
+ *     
+ *     // Parsed xml configuration, where we'll get our storage service filter and required dependency flag.
+ *     XmlConfiguration _xmlConfiguration;
+ *  
+ *     // Injected after init (dependency filter is defined dynamically from our init method).
+ *     &#64;ServiceDependency(name="storage")
+ *     Storage storage;
+ * 
+ *     // Dynamically configure the dependency declared with a "storage" name.
  *     &#64;Init
- *     void init() {} // initialize our service (the "log" dependency is already injected).
+ *     Map<String, String> init() {
+ *        log.log(LogService.LOG_WARNING, "init: storage type=" + storageType + ", storageRequired=" + storageRequired);
+ *        Map<String, String> props = new HashMap<>();
+ *        props.put("storage.required", Boolean.toString(_xmlConfiguration.isStorageRequired()))
+ *        props.put("storage.filter", "(type=" + _xmlConfiguration.getStorageType() + ")");
+ *        return props;       
+ *     }
+ *     
+ *     // All dependencies injected, including dynamic dependencies defined from init method.
+ *     &#64;Start
+ *     void start() {
+ *        log.log(LogService.LOG_WARNING, "start");
+ *     }
+ * 
+ *     @Override
+ *     void store(String key, String value) {
+ *        storage.store(key, value);
+ *     }
  * }
  * </pre>
  * </blockquote>

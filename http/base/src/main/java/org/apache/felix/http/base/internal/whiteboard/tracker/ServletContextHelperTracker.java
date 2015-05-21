@@ -19,7 +19,7 @@ package org.apache.felix.http.base.internal.whiteboard.tracker;
 import javax.annotation.Nonnull;
 
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
-import org.apache.felix.http.base.internal.whiteboard.ServletContextHelperManager;
+import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
@@ -31,7 +31,7 @@ import org.osgi.util.tracker.ServiceTracker;
  */
 public final class ServletContextHelperTracker extends ServiceTracker<ServletContextHelper, ServiceReference<ServletContextHelper>>
 {
-    private final ServletContextHelperManager contextManager;
+    private final WhiteboardManager contextManager;
 
     private static org.osgi.framework.Filter createFilter(final BundleContext btx)
     {
@@ -47,7 +47,7 @@ public final class ServletContextHelperTracker extends ServiceTracker<ServletCon
         return null; // we never get here - and if we get an NPE which is fine
     }
 
-    public ServletContextHelperTracker(@Nonnull final BundleContext context, @Nonnull final ServletContextHelperManager manager)
+    public ServletContextHelperTracker(@Nonnull final BundleContext context, @Nonnull final WhiteboardManager manager)
     {
         super(context, createFilter(context), null);
         this.contextManager = manager;

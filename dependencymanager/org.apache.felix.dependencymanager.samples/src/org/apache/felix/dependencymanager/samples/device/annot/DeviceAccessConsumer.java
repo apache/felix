@@ -32,7 +32,7 @@ public class DeviceAccessConsumer {
     @ServiceDependency
     volatile LogService log;
     
-    // Injected afer all required dependencies have been injected (including our logger)
+    // Injected after all required dependencies have been injected (including our logger)
     @ServiceDependency(required=false)
     void add(Map<String, Object> props, DeviceAccess deviceAccess) {
         log.log(LogService.LOG_INFO, "Handling device access: id=" + props.get("device.id") 

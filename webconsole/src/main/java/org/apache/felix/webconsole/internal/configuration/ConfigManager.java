@@ -303,7 +303,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
                     // configuration
                     final Configuration[] configs = ca.listConfigurations( filter );
                     boolean printComma = false;
-                    for(int i=0; i<configs.length; i++)
+                    for(int i=0; configs != null && i<configs.length; i++)
                     {
                         final Configuration config = configs[i];
                         if ( config != null )

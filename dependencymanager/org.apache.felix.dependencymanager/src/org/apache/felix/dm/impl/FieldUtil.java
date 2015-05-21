@@ -289,12 +289,15 @@ public class FieldUtil {
     private static boolean mayInjectToIterable(Class<?> clazz, Field field, boolean strictClassEquality) {
         Class<?> fieldType = field.getType();
         if (Iterable.class.isAssignableFrom(fieldType)) {
-            ParameterizedType parameterType = (ParameterizedType) field.getGenericType();
-            if (parameterType == null) {
+            Type type = field.getGenericType();
+            
+            // The field must be a parameterized map (generics).
+            if (! (type instanceof ParameterizedType)) {
                 return false;
             }
+            ParameterizedType parameterType = (ParameterizedType) type;
             Type[] types = parameterType.getActualTypeArguments();
-            if (types == null || types.length == 0) {
+            if (types == null || types.length != 1) {
             	return false;
             }
             if (types[0] instanceof Class<?>) {
@@ -309,17 +312,15 @@ public class FieldUtil {
     private static boolean mayInjectToMap(Class<?> clazz, Field field, boolean strictClassEquality) {
         Class<?> fieldType = field.getType();
         if (Map.class.isAssignableFrom(fieldType)) {
-            // The field must be a parameterized map (generics).
-            if (! (field.getGenericType() instanceof ParameterizedType)) {
-                return false;
-            }
-            ParameterizedType parameterType = (ParameterizedType) field.getGenericType();
-            if (parameterType == null) {
-                return false;
-            }
+            Type type = field.getGenericType();
             
+            // The field must be a parameterized map (generics).
+            if (! (type instanceof ParameterizedType)) {
+                return false;
+            }
+            ParameterizedType parameterType = (ParameterizedType) type;
             Type[] types = parameterType.getActualTypeArguments();
-            if (types == null || types.length < 2) {
+            if (types == null || types.length != 2) {
             	return false;
             }
                    

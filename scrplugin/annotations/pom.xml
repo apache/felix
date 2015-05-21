@@ -29,7 +29,7 @@
     <groupId>org.apache.felix</groupId>
     <artifactId>org.apache.felix.scr.annotations</artifactId>
 
-    <version>1.9.11-SNAPSHOT</version>
+    <version>1.9.13-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Annotations for SCR</name>

@@ -19,6 +19,8 @@
 package org.apache.felix.http.base.internal.runtime;
 
 import org.apache.felix.http.base.internal.util.InternalIdFactory;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
@@ -51,7 +53,15 @@ public abstract class WhiteboardServiceInfo<T> extends AbstractInfo<T>
         Filter f = null;
         try
         {
-            f = ref.getBundle().getBundleContext().createFilter(this.contextSelection);
+            final Bundle bundle = ref.getBundle();
+            if ( bundle != null )
+            {
+                final BundleContext ctx = bundle.getBundleContext();
+                if ( ctx != null )
+                {
+                    f = ctx.createFilter(this.contextSelection);
+                }
+            }
         }
         catch ( final InvalidSyntaxException ise)
         {

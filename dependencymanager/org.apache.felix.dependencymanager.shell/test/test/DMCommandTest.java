@@ -70,14 +70,12 @@ public class DMCommandTest {
         System.setErr(new PrintStream(errContent));
         dm = new DependencyManager(m_bundleContext);
         dme = new DMCommand(m_bundleContext);
-        DependencyManager.getDependencyManagers().add(dm);
     }
 
     @After
     public void cleanUp() {
         System.setOut(null);
         System.setErr(null);
-        DependencyManager.getDependencyManagers().remove(dm);
     }
 
     @Test
@@ -86,7 +84,7 @@ public class DMCommandTest {
         setupEmptyBundles();
         
         dme.wtf();
-        assertEquals("No missing dependencies found.\n", outContent.toString());
+        assertEquals("No unregistered components found\n", outContent.toString());
     }
 
     @Test
@@ -99,7 +97,7 @@ public class DMCommandTest {
             .setInterface(Object.class.getName(), null)
             );
         dme.wtf();
-        assertEquals("No missing dependencies found.\n", outContent.toString());
+        assertEquals("No unregistered components found\n", outContent.toString());
     }
     
     @Test
@@ -117,7 +115,7 @@ public class DMCommandTest {
         
         dme.wtf();
         String output = outContent.toString();
-        assertTrue(output.contains("1 missing"));
+        assertTrue(output.contains("1 unregistered"));
         assertTrue(output.contains("java.lang.Math"));
         
         // remove the mess
@@ -145,8 +143,8 @@ public class DMCommandTest {
         
         dme.wtf();
         String output = outContent.toString();
-        assertTrue(output.contains("Circular dependency found:"));
-        assertTrue(output.contains("-> java.lang.Math  -> javax.crypto.Cipher  -> java.lang.Math"));
+        assertTrue(output.contains("-> java.lang.Math -> javax.crypto.Cipher -> java.lang.Math") ||
+        		output.contains("-> javax.crypto.Cipher -> java.lang.Math -> javax.crypto.Cipher"));
         
         // remove the mess
         dm.remove(component1);
@@ -172,7 +170,7 @@ public class DMCommandTest {
         
         dme.wtf();
         String output = outContent.toString();
-        assertTrue(output.contains("2 missing"));
+        assertTrue(output.contains("2 unregistered"));
         assertTrue(output.contains("java.lang.String"));
         
         // remove the mess
@@ -205,7 +203,7 @@ public class DMCommandTest {
         
         dme.wtf();
         String output = outContent.toString();
-        assertTrue(output.contains("3 missing"));
+        assertTrue(output.contains("3 unregistered"));
         assertTrue(output.contains("java.lang.String"));
         assertFalse(output.contains("java.lang.Float"));
         
@@ -230,7 +228,7 @@ public class DMCommandTest {
         
         dme.wtf();
         String output = outContent.toString();
-        assertTrue(output.contains("1 missing"));
+        assertTrue(output.contains("1 unregistered"));
         assertTrue(output.contains("java.lang.Math"));
         assertTrue(output.contains("java.lang.Long"));
         

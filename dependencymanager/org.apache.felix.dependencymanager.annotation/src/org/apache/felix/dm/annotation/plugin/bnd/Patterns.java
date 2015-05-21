@@ -34,8 +34,32 @@ public class Patterns
     // Pattern used to check if a method returns an array of Objects
     public final static Pattern COMPOSITION = Pattern.compile("\\(\\)\\[Ljava/lang/Object;");
 
-    // Pattern used to parse the class parameter from the bind methods ("bind(Type)" or "bind(Map, Type)" or "bind(BundleContext, Type)"
-    public final static Pattern BIND_CLASS = Pattern.compile("\\((L[^;]+;)?L([^;]+);\\)V");
+    // Pattern used to parse service type from "bind(Component, ServiceReference, Service)" signature
+    public final static Pattern BIND_CLASS1 = Pattern.compile("\\((Lorg/apache/felix/dm/Component;)(Lorg/osgi/framework/ServiceReference;)L([^;]+);\\)V");
+    
+    // Pattern used to parse service type from "bind(Component, Service)" signature
+    public final static Pattern BIND_CLASS2 = Pattern.compile("\\((Lorg/apache/felix/dm/Component;)L([^;]+);\\)V");
+
+    // Pattern used to parse service type from "bind(Component, Map, Service)" signature
+    public final static Pattern BIND_CLASS3 = Pattern.compile("\\((Lorg/apache/felix/dm/Component;)(Ljava/util/Map;)L([^;]+);\\)V");
+
+    // Pattern used to parse service type from "bind(ServiceReference, Service)" signature
+    public final static Pattern BIND_CLASS4 = Pattern.compile("\\((Lorg/osgi/framework/ServiceReference;)L([^;]+);\\)V");
+
+    // Pattern used to parse service type from "bind(Service)" signature
+    public final static Pattern BIND_CLASS5 = Pattern.compile("\\(L([^;]+);\\)V");
+
+    // Pattern used to parse service type from "bind(Service, Map)" signature
+    public final static Pattern BIND_CLASS6 = Pattern.compile("\\(L([^;]+);(Ljava/util/Map;)\\)V");
+
+    // Pattern used to parse service type from "bind(Map, Service)" signature
+    public final static Pattern BIND_CLASS7 = Pattern.compile("\\((Ljava/util/Map;)L([^;]+);\\)V");
+
+    // Pattern used to parse service type from "bind(Service, Dictionary)" signature
+    public final static Pattern BIND_CLASS8 = Pattern.compile("\\(L([^;]+);(Ljava/util/Dictionary;)\\)V");
+
+    // Pattern used to parse service type from "bind(Dictionary, Service)" signature
+    public final static Pattern BIND_CLASS9 = Pattern.compile("\\((Ljava/util/Dictionary;)L([^;]+);\\)V");
 
     // Pattern used to parse classes from class descriptors;
     public final static Pattern CLASS = Pattern.compile("L([^;]+);");
@@ -61,17 +85,32 @@ public class Patterns
      */
     public static String parseClass(String clazz, Pattern pattern, int group)
     {
+    	return parseClass(clazz, pattern, group, true);
+    }
+    
+    /**
+     * Parses a class.
+     * @param clazz the class to be parsed (the package is "/" separated).
+     * @param pattern the pattern used to match the class.
+     * @param group the pattern group index where the class can be retrieved.
+     * @param throwException true if an Exception must be thrown in case the clazz does not match the pattern.
+     * @return the parsed class.
+     */
+    public static String parseClass(String clazz, Pattern pattern, int group, boolean throwException)
+    {
         Matcher matcher = pattern.matcher(clazz);
         if (matcher.matches())
         {
             return matcher.group(group).replace("/", ".");
         }
-        else
+        else if (throwException)
         {
             throw new IllegalArgumentException("Invalid class descriptor: " + clazz);
+        } else {
+        	return null;
         }
     }
-    
+
     /**
      * Checks if a method descriptor matches a given pattern. 
      * @param the method whose signature descriptor is checked

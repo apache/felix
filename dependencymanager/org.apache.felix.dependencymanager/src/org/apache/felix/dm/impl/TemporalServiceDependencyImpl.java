@@ -25,6 +25,7 @@ import java.lang.reflect.Proxy;
 
 import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.ServiceDependency;
+import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.context.EventType;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -60,6 +61,21 @@ public class TemporalServiceDependencyImpl extends ServiceDependencyImpl impleme
         }
         m_timeout = timeout;
         m_frameworkBundle = context.getBundle(0);
+    }
+    
+    /**
+     * Creates a clone of an existing temporal service dependency.
+     */
+    public TemporalServiceDependencyImpl(TemporalServiceDependencyImpl prototype) {
+        super(prototype);
+        super.setRequired(true);
+        m_timeout = prototype.m_timeout;
+        m_frameworkBundle = prototype.m_frameworkBundle;
+    }
+
+    @Override
+    public DependencyContext createCopy() {
+        return new TemporalServiceDependencyImpl(this);
     }
 
     /**

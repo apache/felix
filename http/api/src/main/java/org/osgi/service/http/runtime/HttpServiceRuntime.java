@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2012, 2014). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2012, 2015). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,15 +21,15 @@ import org.osgi.service.http.runtime.dto.RequestInfoDTO;
 import org.osgi.service.http.runtime.dto.RuntimeDTO;
 
 /**
- * The {@code HttpServiceRuntime} service represents the runtime information of
- * a Http (Whiteboard) Implementation.
+ * The HttpServiceRuntime service represents the runtime information of an Http
+ * Whiteboard implementation.
  *
  * <p>
  * It provides access to DTOs representing the current state of the service.
  * <p>
- * The {@code HttpServiceRuntime} service must at least be registered with the
- * {@link HttpServiceRuntimeConstants#HTTP_SERVICE_ENDPOINT_ATTRIBUTE}
- * attribute.
+ * The HttpServiceRuntime service must be registered with the
+ * {@link HttpServiceRuntimeConstants#HTTP_SERVICE_ENDPOINT} service
+ * property.
  *
  * @ThreadSafe
  * @author $Id$
@@ -39,17 +39,18 @@ public interface HttpServiceRuntime {
 
 	/**
 	 * Return the runtime DTO representing the current state.
-	 * @return The runtime DTO
+	 * 
+	 * @return The runtime DTO.
 	 */
 	public RuntimeDTO getRuntimeDTO();
-	
+
 	/**
-	 * Return a request info DTO containing the services
-	 * involved with processing a request for the given
-	 * path.
-	 * @param path The request path, relative to the root of the
-	 *             Http (Whiteboard) Service.
-	 * @return A request info DTO
+	 * Return a request info DTO containing the services involved with
+	 * processing a request for the specified path.
+	 * 
+	 * @param path The request path, relative to the root of the Http Whiteboard
+	 *        implementation.
+	 * @return The request info DTO for the specified path.
 	 */
 	public RequestInfoDTO calculateRequestInfoDTO(String path);
 }

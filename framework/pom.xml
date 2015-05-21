@@ -27,8 +27,7 @@
   <packaging>bundle</packaging>
   <name>Apache Felix Framework</name>
   <artifactId>org.apache.felix.framework</artifactId>
-  <version>4.7.0-SNAPSHOT</version>
-
+  <version>5.1.0-SNAPSHOT</version>
   <properties>
     <dollar>$</dollar>
   </properties>
@@ -62,13 +61,16 @@
             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
             <Export-Package>
                 org.osgi.framework.*;-split-package:=merge-first,
-                org.osgi.resource,
-                org.osgi.resource.dto,
-                org.osgi.service.*,
-                org.osgi.util.tracker,
+                org.osgi.resource;-split-package:=first,
+                org.osgi.resource.dto;-split-package:=first,                
+                org.osgi.service.packageadmin;-split-package:=first,
+                org.osgi.service.startlevel;-split-package:=first,
+	        org.osgi.service.url;-split-package:=first,
+                org.osgi.service.resolver,
+                org.osgi.util.tracker;-split-package:=first,
                 org.osgi.dto
             </Export-Package>
-            <Private-Package>org.apache.felix.framework.*</Private-Package>
+            <Private-Package>org.apache.felix.framework.*, org.apache.felix.resolver.*</Private-Package>
             <Import-Package>!*</Import-Package>
           </instructions>
         </configuration>
@@ -131,9 +133,21 @@
        <scope>provided</scope>
     </dependency>
     <dependency>
+       <groupId>org.apache.felix</groupId>
+       <artifactId>org.apache.felix.resolver</artifactId>
+       <version>1.2.0</version>
+       <scope>provided</scope>
+    </dependency>
+    <dependency>
         <groupId>org.ow2.asm</groupId>
         <artifactId>asm-all</artifactId>
         <version>4.2</version>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-all</artifactId>
+        <version>1.10.19</version>
         <scope>test</scope>
     </dependency>
   </dependencies>

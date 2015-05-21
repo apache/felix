@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2012, 2014). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2012, 2015). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,65 +25,52 @@ public final class DTOConstants {
 	}
 
 	/**
-	 * Failure reason is unknown
-	 * <p>
-	 * The value of {@code FAILURE_REASON_UNKNOWN} is 0.
+	 * Failure reason is unknown.
 	 */
-	public static final int	FAILURE_REASON_UNKNOWN		= 0;
+	public static final int	FAILURE_REASON_UNKNOWN						= 0;
 
 	/**
 	 * No matching {@code ServletContextHelper}.
-	 * <p>
-	 * The value of {@code FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING} is 1.
 	 **/
 	public static final int	FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING	= 1;
 
 	/**
 	 * Matching {@code ServletContextHelper}, but the context is not used due to
 	 * a problem with the context.
-	 * <p>
-	 * The value of {@code FAILURE_REASON_SERVLET_CONTEXT_FAILURE} is 2.
 	 */
 	public static final int	FAILURE_REASON_SERVLET_CONTEXT_FAILURE		= 2;
 
 	/**
-	 * Service is shadowed by another service, e.g. a service with the same
-	 * registration properties but a higher service ranking.
+	 * Service is shadowed by another service.
 	 * <p>
-	 * The value of {@code FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE} is 3.
+	 * For example, a service with the same service properties but a higher
+	 * service ranking.
 	 */
 	public static final int	FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE	= 3;
 
 	/**
-	 * An exception occurred during initializing of the service. This reason can
-	 * only happen for servlets and servlet filters.
+	 * An exception occurred during initializing of the service.
 	 * <p>
-	 * The value of {@code FAILURE_REASON_EXCEPTION_ON_INIT} is 4.
+	 * This reason can only happen for servlets and servlet filters.
 	 */
 	public static final int	FAILURE_REASON_EXCEPTION_ON_INIT			= 4;
 
 	/**
 	 * The service is registered in the service registry but getting the service
 	 * fails as it returns {@code null}.
-	 * <p>
-	 * The value of {@code FAILURE_REASON_SERVICE_NOT_GETTABLE} is 5.
 	 */
 	public static final int	FAILURE_REASON_SERVICE_NOT_GETTABLE			= 5;
 
 	/**
-	 * The service is registered in the service registry but the provided
-	 * registration properties are invalid.
-	 * <p>
-	 * The value of {@code FAILURE_REASON_VALIDATION_FAILED} is 6.
+	 * The service is registered in the service registry but the service
+	 * properties are invalid.
 	 */
 	public static final int	FAILURE_REASON_VALIDATION_FAILED			= 6;
 
 	/**
 	 * The service is not registered as a prototype scoped service and is
-	 * already used with one servlet context and therefore can't be used with
+	 * already in use with a servlet context and therefore can't be used with
 	 * another servlet context.
-	 * <p>
-	 * The value of {@code FAILURE_REASON_SERVICE_ALREAY_USED} is 7.
 	 */
-	public static final int	FAILURE_REASON_SERVICE_ALREAY_USED			= 7;
+	public static final int	FAILURE_REASON_SERVICE_IN_USE				= 7;
 }

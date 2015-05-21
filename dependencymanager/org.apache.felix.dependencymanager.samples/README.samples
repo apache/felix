@@ -20,7 +20,7 @@ This sub-project contains some examples using the Dependency Manager Api and ann
 To execute the samples under bndtools, click on the "org.apache.felix.dependencymanager.samples" project, 
 then Run as "Bnd OSGi Run Launcher".
 
-Each samples displays some logs using the OSGi log service. 
+Each sample displays some logs using the OSGi log service.
 Just type:
 
   log info

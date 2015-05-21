@@ -18,32 +18,47 @@
  */
 package org.apache.felix.http.base.internal.runtime.dto;
 
-import java.util.Collection;
-import java.util.Iterator;
-
-import org.apache.felix.http.base.internal.runtime.HandlerRuntime.ErrorPage;
+import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.osgi.service.http.runtime.dto.ErrorPageDTO;
+import org.osgi.service.http.runtime.dto.FailedErrorPageDTO;
 
-final class ErrorPageDTOBuilder extends BaseServletDTOBuilder<ErrorPage, ErrorPageDTO>
+public final class ErrorPageDTOBuilder extends BaseServletDTOBuilder
 {
-    @Override
-    ErrorPageDTO buildDTO(ErrorPage errorPage, long servletConextId)
+    /**
+     * Build a servlet DTO from a servlet handler
+     * @param handler The servlet handler
+     * @param reason If reason is -1, a servlet DTO is created, otherwise a failed servlet DTO is returned
+     * @return A servlet DTO
+     */
+    public static ErrorPageDTO build(final ServletHandler handler, final int reason)
     {
-        ErrorPageDTO errorPageDTO = new ErrorPageDTO();
-        setBaseFields(errorPageDTO, errorPage.getServletHandler(), servletConextId);
-        errorPageDTO.errorCodes = getErrorCodes(errorPage.getErrorCodes());
-        errorPageDTO.exceptions = errorPage.getExceptions().toArray(BuilderConstants.STRING_ARRAY);
-        return errorPageDTO;
+        final ErrorPageDTO dto = build(handler.getServletInfo(), reason != -1);
+
+        BaseServletDTOBuilder.fill(dto, handler);
+
+        if ( reason != -1 )
+        {
+            ((FailedErrorPageDTO)dto).failureReason = reason;
+        }
+
+        return dto;
     }
 
-    private long[] getErrorCodes(Collection<Integer> errorCodes)
+    /**
+     * Build a servlet DTO from a servlet info
+     * @param info The servlet info
+     * @return A servlet DTO
+     */
+    public static ErrorPageDTO build(final ServletInfo info, final boolean failed)
     {
-        Iterator<Integer> itr = errorCodes.iterator();
-        long[] result = new long[errorCodes.size()];
-        for (int i = 0; i < result.length; i++)
-        {
-            result[i] = itr.next();
-        }
-        return result;
+        final ErrorPageDTO dto = (failed ? new FailedErrorPageDTO() : new ErrorPageDTO());
+
+        BaseServletDTOBuilder.fill(dto, info);
+
+        dto.errorCodes = BuilderConstants.EMPTY_LONG_ARRAY;
+        dto.exceptions = BuilderConstants.EMPTY_STRING_ARRAY;
+
+        return dto;
     }
 }

@@ -26,6 +26,8 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.IOUtil;
@@ -38,10 +40,8 @@ import aQute.bnd.osgi.Jar;
 /**
  * Generate Ant script to create the bundle (you should run ant:ant first).
  *
- * @goal ant
- * @requiresDependencyResolution test
- * @description generate Ant script to create the bundle
  */
+@Mojo( name = "ant", requiresDependencyResolution = ResolutionScope.TEST )
 public class AntPlugin extends BundlePlugin
 {
     static final String BUILD_XML = "/build.xml";

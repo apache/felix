@@ -18,6 +18,7 @@ package org.apache.felix.http.whiteboard.internal.tracker;
 
 import javax.servlet.Servlet;
 
+import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.whiteboard.HttpWhiteboardConstants;
 import org.apache.felix.http.whiteboard.internal.manager.ExtenderManager;
 import org.osgi.framework.BundleContext;
@@ -53,6 +54,9 @@ public final class ServletTracker
     @Override
     protected void added(Servlet service, ServiceReference ref)
     {
+        SystemLogger.warning("Deprecation warning: " +
+                "Servlet registered through Apache Felix whiteboard service: " + ref +
+                ". Please change your code to the OSGi Whiteboard Service.", null);
         this.manager.add(service, ref);
     }
 

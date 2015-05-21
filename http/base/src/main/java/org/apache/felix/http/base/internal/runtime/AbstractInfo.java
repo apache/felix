@@ -23,9 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
@@ -49,11 +47,11 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
 
     public AbstractInfo(final ServiceReference<T> ref)
     {
-        this.serviceId = (Long)ref.getProperty(Constants.SERVICE_ID);
+        this.serviceId = (Long) ref.getProperty(Constants.SERVICE_ID);
         final Object rankingObj = ref.getProperty(Constants.SERVICE_RANKING);
-        if ( rankingObj instanceof Integer )
+        if (rankingObj instanceof Integer)
         {
-            this.ranking = (Integer)rankingObj;
+            this.ranking = (Integer) rankingObj;
         }
         else
         {
@@ -105,7 +103,7 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
     protected String getStringProperty(final ServiceReference<T> ref, final String key)
     {
         final Object value = ref.getProperty(key);
-        return (value instanceof String) ? ((String) value).trim(): null;
+        return (value instanceof String) ? ((String) value).trim() : null;
     }
 
     protected String[] getStringArrayProperty(ServiceReference<T> ref, String key)
@@ -119,13 +117,16 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
         else if (value instanceof String[])
         {
             final String[] arr = (String[]) value;
-            for(int i=0; i<arr.length; i++)
+            String[] values = new String[arr.length];
+
+            for (int i = 0, j = 0; i < arr.length; i++)
             {
-                if ( arr[i] != null )
+                if (arr[i] != null)
                 {
-                    arr[i] = arr[i].trim();
+                    values[j++] = arr[i].trim();
                 }
             }
+            return values;
         }
         else if (value instanceof Collection<?>)
         {
@@ -166,7 +167,7 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
         final Map<String, String> result = new HashMap<String, String>();
         for (final String key : ref.getPropertyKeys())
         {
-            if ( key.startsWith(prefix))
+            if (key.startsWith(prefix))
             {
                 final String paramKey = key.substring(prefix.length());
                 final String paramValue = getStringProperty(ref, key);
@@ -198,31 +199,6 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
     public ServiceReference<T> getServiceReference()
     {
         return this.serviceReference;
-    }
-
-    public T getService(final Bundle bundle)
-    {
-        if ( this.serviceReference != null )
-        {
-            final ServiceObjects<T> so = bundle.getBundleContext().getServiceObjects(this.serviceReference);
-            if ( so != null )
-            {
-                return so.getService();
-            }
-        }
-        return null;
-    }
-
-    public void ungetService(final Bundle bundle, final T service)
-    {
-        if ( this.serviceReference != null )
-        {
-            final ServiceObjects<T> so = bundle.getBundleContext().getServiceObjects(this.serviceReference);
-            if ( so != null )
-            {
-                so.ungetService(service);
-            }
-        }
     }
 
     @Override

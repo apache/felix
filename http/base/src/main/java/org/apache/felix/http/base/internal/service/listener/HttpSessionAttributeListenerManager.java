@@ -31,7 +31,9 @@ import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
  * The <code>ProxyListener</code> implements the Servlet API 2.4 listener
  * interfaces forwarding any event calls to registered OSGi services
  * implementing the respective Servlet API 2.4 listener interface.
+ * @deprecated
  */
+@Deprecated
 public class HttpSessionAttributeListenerManager extends AbstractListenerManager<HttpSessionAttributeListener>
     implements HttpSessionAttributeListener
 {

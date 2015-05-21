@@ -53,6 +53,10 @@ import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
 import org.w3c.dom.Document;
@@ -65,100 +69,77 @@ import org.xml.sax.SAXException;
 /**
  * Clean a remote repository file.
  * It just looks for every resources and check that pointed file exists.
- * 
- * @requiresProject false
- * @goal remote-clean
- * @phase clean
- * 
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+@Mojo( name = "remote-clean", requiresProject = false, defaultPhase = LifecyclePhase.CLEAN )
 public final class ObrRemoteClean extends AbstractMojo
 {
     /**
      * When true, ignore remote locking.
-     * 
-     * @parameter expression="${ignoreLock}"
      */
+    @Parameter( property = "ignoreLock" )
     private boolean ignoreLock;
 
     /**
      * Optional public URL prefix for the remote repository.
-     *
-     * @parameter expression="${prefixUrl}"
      */
+    @Parameter( property = "prefixUrl" )
     private String prefixUrl;
 
     /**
      * Remote OBR Repository.
-     * 
-     * @parameter expression="${remoteOBR}" default-value="NONE"
      */
+    @Parameter( property = "remoteOBR", defaultValue = "NONE" )
     private String remoteOBR;
 
     /**
      * Local OBR Repository.
-     * 
-     * @parameter expression="${obrRepository}"
      */
+    @Parameter( property = "obrRepository" )
     private String obrRepository;
 
     /**
      * Project types which this plugin supports.
-     *
-     * @parameter
      */
+    @Parameter
     private List supportedProjectTypes = Arrays.asList( new String[]
         { "jar", "bundle" } );
 
-    /**
-     * @parameter expression="${project.distributionManagementArtifactRepository}"
-     * @readonly
-     */
+    @Parameter( defaultValue = "${project.distributionManagementArtifactRepository}", readonly = true )
     private ArtifactRepository deploymentRepository;
 
     /**
      * Alternative deployment repository. Format: id::layout::url
-     * 
-     * @parameter expression="${altDeploymentRepository}"
      */
+    @Parameter( property = "altDeploymentRepository" )
     private String altDeploymentRepository;
 
     /**
      * OBR specific deployment repository. Format: id::layout::url
-     *
-     * @parameter expression="${obrDeploymentRepository}"
      */
+    @Parameter( property = "obrDeploymentRepository" )
     private String obrDeploymentRepository;
 
-    /**
-     * @parameter default-value="${settings.interactiveMode}"
-     * @readonly
-     */
+    @Parameter( defaultValue = "${settings.interactiveMode}", readonly = true )
     private boolean interactive;
 
     /**
      * The Maven project.
-     * 
-     * @parameter expression="${project}"
-     * @required
-     * @readonly
      */
+    @Parameter( defaultValue = "${project}", readonly = true, required = true )
     private MavenProject project;
 
     /**
      * Local Maven settings.
-     * 
-     * @parameter expression="${settings}"
-     * @required
-     * @readonly
      */
+    @Parameter( defaultValue = "${settings}", readonly = true, required = true )
     private Settings settings;
 
     /**
      * The Wagon manager.
-     * 
-     * @component
      */
+    @Component
     private WagonManager m_wagonManager;
 
 
@@ -374,7 +355,7 @@ public final class ObrRemoteClean extends AbstractMojo
 
     /**
      * Initialize the document builder from Xerces.
-     * 
+     *
      * @return DocumentBuilder ready to create new document
      * @throws MojoExecutionException : occurs when the instantiation of the document builder fails
      */
@@ -397,7 +378,7 @@ public final class ObrRemoteClean extends AbstractMojo
 
     /**
      * Open an XML file.
-     * 
+     *
      * @param file : XML file
      * @param constructor DocumentBuilder get from xerces
      * @return Document which describes this file
@@ -433,7 +414,7 @@ public final class ObrRemoteClean extends AbstractMojo
 
     /**
      * write a Node in a xml file.
-     * 
+     *
      * @param outputFilename URI to the output file
      * @param treeToBeWrite Node root of the tree to be write in file
      * @throws MojoExecutionException if the plugin failed

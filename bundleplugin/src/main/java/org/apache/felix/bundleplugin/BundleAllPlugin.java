@@ -44,6 +44,11 @@ import org.apache.maven.artifact.resolver.ArtifactResolutionException;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.artifact.versioning.VersionRange;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectBuilder;
 import org.apache.maven.project.ProjectBuildingException;
@@ -58,15 +63,12 @@ import aQute.bnd.osgi.Jar;
 
 
 /**
- * Create OSGi bundles from all dependencies in the Maven project
- * 
- * @goal bundleall
- * @phase package
- * @requiresDependencyResolution test
- * @description build an OSGi bundle jar for all transitive dependencies
+ * Build an OSGi bundle jar for all transitive dependencies.
+ *
  * @deprecated The bundleall goal is no longer supported and may be removed in a future release
  */
 @Deprecated
+@Mojo( name = "bundleall", requiresDependencyResolution = ResolutionScope.TEST, defaultPhase = LifecyclePhase.PACKAGE )
 public class BundleAllPlugin extends ManifestPlugin
 {
     private static final String LS = System.getProperty( "line.separator" );
@@ -75,79 +77,60 @@ public class BundleAllPlugin extends ManifestPlugin
 
     /**
      * Local repository.
-     *
-     * @parameter expression="${localRepository}"
-     * @required
-     * @readonly
      */
+    @Parameter( defaultValue = "${localRepository}", readonly = true, required = true )
     private ArtifactRepository localRepository;
 
     /**
      * Remote repositories.
-     * 
-     * @parameter expression="${project.remoteArtifactRepositories}"
-     * @required
-     * @readonly
      */
+    @Parameter( defaultValue = "${project.remoteArtifactRepositories}", readonly = true, required = true )
     private List remoteRepositories;
 
     /**
      * Import-Package to be used when wrapping dependencies.
-     *
-     * @parameter expression="${wrapImportPackage}" default-value="*"
      */
+    @Parameter( property = "wrapImportPackage", defaultValue = "*" )
     private String wrapImportPackage;
 
-    /**
-     * @component
-     */
+    @Component
     private ArtifactFactory m_factory;
 
-    /**
-     * @component
-     */
+    @Component
     private ArtifactMetadataSource m_artifactMetadataSource;
 
-    /**
-     * @component
-     */
+    @Component
     private ArtifactCollector m_collector;
 
     /**
      * Artifact resolver, needed to download jars.
-     * 
-     * @component
      */
+    @Component
     private ArtifactResolver m_artifactResolver;
 
-    /**
-     * @component
-     */
+    @Component
     private DependencyTreeBuilder m_dependencyTreeBuilder;
 
-    /**
-     * @component
-     */
+    @Component
     private MavenProjectBuilder m_mavenProjectBuilder;
 
     /**
      * Ignore missing artifacts that are not required by current project but are required by the
      * transitive dependencies.
-     * 
-     * @parameter
      */
+    @Parameter
     private boolean ignoreMissingArtifacts;
 
     private Set m_artifactsBeingProcessed = new HashSet();
 
     /**
-     * Process up to some depth 
-     * 
-     * @parameter
+     * Process up to some depth
      */
+    @Parameter
     private int depth = Integer.MAX_VALUE;
 
 
+    @Override
     public void execute() throws MojoExecutionException
     {
         getLog().warn( "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
@@ -161,7 +144,7 @@ public class BundleAllPlugin extends ManifestPlugin
 
     /**
      * Bundle a project and all its dependencies
-     * 
+     *
      * @param project
      * @throws MojoExecutionException
      */
@@ -173,7 +156,7 @@ public class BundleAllPlugin extends ManifestPlugin
 
     /**
      * Bundle a project and its transitive dependencies up to some depth level
-     * 
+     *
      * @param project
      * @param maxDepth how deep to process the dependency tree
      * @throws MojoExecutionException
@@ -306,7 +289,7 @@ public class BundleAllPlugin extends ManifestPlugin
 
     /**
      * Bundle the root of a dependency tree after all its children have been bundled
-     * 
+     *
      * @param project
      * @param bundleInfo
      * @return
@@ -331,7 +314,7 @@ public class BundleAllPlugin extends ManifestPlugin
 
     /**
      * Bundle one project only without building its childre
-     * 
+     *
      * @param project
      * @throws MojoExecutionException
      */
@@ -444,9 +427,10 @@ public class BundleAllPlugin extends ManifestPlugin
 
     /**
      * Use previously built bundles when available.
-     * 
+     *
      * @param artifact
      */
+    @Override
     protected File getFile( final Artifact artifact )
     {
         File bundle = getBuiltFile( artifact );
@@ -473,7 +457,7 @@ public class BundleAllPlugin extends ManifestPlugin
 
         /*
          * Find snapshots in output folder, eg. 2.1-SNAPSHOT will match 2.1.0.20070207_193904_2
-         * TODO there has to be another way to do this using Maven libs 
+         * TODO there has to be another way to do this using Maven libs
          */
         if ( ( bundle == null ) && artifact.isSnapshot() )
         {
@@ -511,9 +495,9 @@ public class BundleAllPlugin extends ManifestPlugin
     /**
      * Check that the bundleName provided correspond to the artifact provided.
      * Used to determine when the bundle name is a timestamped snapshot and the artifact is a snapshot not timestamped.
-     * 
+     *
      * @param artifact artifact with snapshot version
-     * @param bundleName bundle file name 
+     * @param bundleName bundle file name
      * @return if both represent the same artifact and version, forgetting about the snapshot timestamp
      */
     protected boolean snapshotMatch( Artifact artifact, String bundleName )

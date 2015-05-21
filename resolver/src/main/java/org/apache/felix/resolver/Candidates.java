@@ -24,11 +24,19 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
+
+import org.apache.felix.resolver.util.CopyOnWriteSet;
+import org.apache.felix.resolver.util.CopyOnWriteList;
+import org.apache.felix.resolver.util.OpenHashMap;
+import org.apache.felix.resolver.util.OpenHashMapList;
+import org.apache.felix.resolver.util.OpenHashMapSet;
+import org.apache.felix.resolver.util.ShadowList;
 import org.osgi.framework.Version;
 import org.osgi.framework.namespace.HostNamespace;
 import org.osgi.framework.namespace.IdentityNamespace;
@@ -49,9 +57,9 @@ class Candidates
 
     private final Set<Resource> m_mandatoryResources;
     // Maps a capability to requirements that match it.
-    private final Map<Capability, Set<Requirement>> m_dependentMap;
+    private final OpenHashMapSet<Capability, Requirement> m_dependentMap;
     // Maps a requirement to the capability it matches.
-    private final Map<Requirement, List<Capability>> m_candidateMap;
+    private final OpenHashMapList<Requirement, Capability> m_candidateMap;
     // Maps a bundle revision to its associated wrapped revision; this only happens
     // when a revision being resolved has fragments to attach to it.
     private final Map<Resource, WrappedResource> m_allWrappedHosts;
@@ -65,23 +73,20 @@ class Candidates
 
     private final Map<Capability, Requirement> m_subtitutableMap;
 
+    private final OpenHashMapSet<Requirement, Capability> m_delta;
+
     /**
      * Private copy constructor used by the copy() method.
-     *
-     * @param dependentMap the capability dependency map.
-     * @param candidateMap the requirement candidate map.
-     * @param hostFragments the fragment map.
-     * @param wrappedHosts the wrapped hosts map.
-     * @param substitutableMap
      */
     private Candidates(
         Set<Resource> mandatoryResources,
-        Map<Capability, Set<Requirement>> dependentMap,
-        Map<Requirement, List<Capability>> candidateMap,
+        OpenHashMapSet<Capability, Requirement> dependentMap,
+        OpenHashMapList<Requirement, Capability> candidateMap,
         Map<Resource, WrappedResource> wrappedHosts, Map<Resource, Object> populateResultCache,
         boolean fragmentsPresent,
         Map<Resource, Boolean> onDemandResources,
-        Map<Capability, Requirement> substitutableMap)
+        Map<Capability, Requirement> substitutableMap,
+        OpenHashMapSet<Requirement, Capability> delta)
     {
         m_mandatoryResources = mandatoryResources;
         m_dependentMap = dependentMap;
@@ -91,6 +96,7 @@ class Candidates
         m_fragmentsPresent = fragmentsPresent;
         m_validOnDemandResources = onDemandResources;
         m_subtitutableMap = substitutableMap;
+        m_delta = delta;
     }
 
     /**
@@ -99,12 +105,22 @@ class Candidates
     public Candidates(Map<Resource, Boolean> validOnDemandResources)
     {
         m_mandatoryResources = new HashSet<Resource>();
-        m_dependentMap = new HashMap<Capability, Set<Requirement>>();
-        m_candidateMap = new HashMap<Requirement, List<Capability>>();
+        m_dependentMap = new OpenHashMapSet<Capability, Requirement>();
+        m_candidateMap = new OpenHashMapList<Requirement, Capability>();
         m_allWrappedHosts = new HashMap<Resource, WrappedResource>();
-        m_populateResultCache = new HashMap<Resource, Object>();
+        m_populateResultCache = new LinkedHashMap<Resource, Object>();
         m_validOnDemandResources = validOnDemandResources;
-        m_subtitutableMap = new HashMap<Capability, Requirement>();
+        m_subtitutableMap = new LinkedHashMap<Capability, Requirement>();
+        m_delta = new OpenHashMapSet<Requirement, Capability>(3);
+    }
+
+    /**
+     * Returns the delta which is the differences in the candidates from the
+     * original Candidates permutation.
+     * @return the delta
+     */
+    public Object getDelta() {
+        return m_delta;
     }
 
     /**
@@ -173,10 +189,11 @@ class Candidates
     /**
      * Populates candidates for the specified revision.
      *
-     * @param state the resolver state used for populating the candidates.
-     * @param revision the revision whose candidates should be populated.
+     * @param rc the resolver state used for populating the candidates.
+     * @param resource the revision whose candidates should be populated.
      */
 // TODO: FELIX3 - Modify to not be recursive.
+    @SuppressWarnings("unchecked")
     private void populateResource(ResolveContext rc, Resource resource) throws ResolutionException
     {
         // Determine if we've already calculated this revision's candidates.
@@ -222,8 +239,7 @@ class Candidates
         else if (cacheValue != null)
         {
             // Increment and get the cycle count.
-            cycleCount = (Integer) (((Object[]) cacheValue)[0] =
-                new Integer(((Integer) ((Object[]) cacheValue)[0]).intValue() + 1));
+            cycleCount = (Integer) (((Object[]) cacheValue)[0] = (Integer) ((Object[]) cacheValue)[0] + 1);
             // Get the already populated candidates.
             localCandidateMap = (Map) ((Object[]) cacheValue)[1];
             // Get the remaining requirements.
@@ -236,14 +252,14 @@ class Candidates
         if ((remainingReqs == null) && (localCandidateMap == null))
         {
             // Record cycle count.
-            cycleCount = new Integer(0);
+            cycleCount = 0;
 
             // Create a local map for populating candidates first, just in case
             // the revision is not resolvable.
-            localCandidateMap = new HashMap();
+            localCandidateMap = new HashMap<Requirement, List<Capability>>();
 
             // Create a modifiable list of the revision's requirements.
-            remainingReqs = new ArrayList(resource.getRequirements(null));
+            remainingReqs = new ArrayList<Requirement>(resource.getRequirements(null));
 
             // Add these value to the result cache so we know we are
             // in the middle of populating candidates for the current
@@ -309,14 +325,30 @@ class Candidates
 
         // If we are exiting from a cycle then decrement
         // cycle counter, otherwise record the result.
-        if (cycleCount.intValue() > 0)
+        if (cycleCount > 0)
         {
-            ((Object[]) cacheValue)[0] = new Integer(cycleCount.intValue() - 1);
+            ((Object[]) cacheValue)[0] = cycleCount - 1;
         }
-        else if (cycleCount.intValue() == 0)
+        else if (cycleCount == 0)
         {
             // Record that the revision was successfully populated.
             m_populateResultCache.put(resource, Boolean.TRUE);
+            // FELIX-4825: Verify candidate map in case of cycles and optional requirements
+            for (Iterator<Map.Entry<Requirement, List<Capability>>> it = localCandidateMap.entrySet().iterator(); it.hasNext();)
+            {
+                Map.Entry<Requirement, List<Capability>> entry = it.next();
+                for (Iterator<Capability> it2 = entry.getValue().iterator(); it2.hasNext();)
+                {
+                    if (m_populateResultCache.get(it2.next().getResource()) instanceof ResolutionException)
+                    {
+                        it2.remove();
+                    }
+                }
+                if (entry.getValue().isEmpty())
+                {
+                    it.remove();
+                }
+            }
             // Merge local candidate map into global candidate map.
             if (localCandidateMap.size() > 0)
             {
@@ -369,11 +401,11 @@ class Candidates
         {
             return;
         }
-        Map<String, Collection<Capability>> exportNames = new HashMap<String, Collection<Capability>>();
+        Map<String, List<Capability>> exportNames = new LinkedHashMap<String, List<Capability>>();
         for (Capability packageExport : packageExports)
         {
             String packageName = (String) packageExport.getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE);
-            Collection<Capability> caps = exportNames.get(packageName);
+            List<Capability> caps = exportNames.get(packageName);
             if (caps == null)
             {
                 caps = new ArrayList<Capability>(1);
@@ -388,7 +420,7 @@ class Candidates
             if (substitutes != null && !substitutes.isEmpty())
             {
                 String packageName = (String) substitutes.iterator().next().getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE);
-                Collection<Capability> exportedPackages = exportNames.get(packageName);
+                List<Capability> exportedPackages = exportNames.get(packageName);
                 if (exportedPackages != null)
                 {
                     // The package is exported;
@@ -417,7 +449,7 @@ class Candidates
 
     void checkSubstitutes(List<Candidates> importPermutations) throws ResolutionException
     {
-        Map<Capability, Integer> substituteStatuses = new HashMap<Capability, Integer>(m_subtitutableMap.size());
+        Map<Capability, Integer> substituteStatuses = new LinkedHashMap<Capability, Integer>(m_subtitutableMap.size());
         for (Capability substitutable : m_subtitutableMap.keySet())
         {
             // initialize with unprocessed
@@ -444,7 +476,7 @@ class Candidates
             Requirement substitutedReq = m_subtitutableMap.get(substituteStatus.getKey());
             if (substitutedReq != null)
             {
-                ResolverImpl.permutateIfNeeded(this, substitutedReq, importPermutations);
+                permutateIfNeeded(substitutedReq, importPermutations);
             }
             Set<Requirement> dependents = m_dependentMap.get(substituteStatus.getKey());
             if (dependents != null)
@@ -480,7 +512,7 @@ class Candidates
                         {
                             if (Util.isOptional(dependent))
                             {
-                                clearCandidates(dependent);
+                                m_candidateMap.remove(dependent);
                             }
                             else
                             {
@@ -503,7 +535,7 @@ class Candidates
             return false;
         }
 
-        switch (substituteState.intValue())
+        switch (substituteState)
         {
             case PROCESSING:
                 // found a cycle mark the initiator as not substituted
@@ -529,9 +561,8 @@ class Candidates
         List<Capability> substitutes = m_candidateMap.get(substitutableReq);
         if (substitutes != null)
         {
-            for (Iterator<Capability> iSubstitutes = substitutes.iterator(); iSubstitutes.hasNext();)
+            for (Capability substituteCandidate : substitutes)
             {
-                Capability substituteCandidate = iSubstitutes.next();
                 if (substituteCandidate.getResource().equals(substitutableCap.getResource()))
                 {
                     substituteStatuses.put(substitutableCap, EXPORTED);
@@ -585,8 +616,8 @@ class Candidates
      * fragments, since fragment capabilities only appear once, but technically
      * each host represents a unique capability.
      *
-     * @param state the resolver state.
-     * @param revision the revision being resolved.
+     * @param rc the resolver state.
+     * @param resource the revision being resolved.
      * @param candidates the candidates to process.
      * @return a resolve exception to be re-thrown, if any, or null.
      */
@@ -739,7 +770,7 @@ class Candidates
         }
 
         // Record the candidates.
-        m_candidateMap.put(req, candidates);
+        m_candidateMap.put(req, new CopyOnWriteList<Capability>(candidates));
     }
 
     /**
@@ -781,12 +812,54 @@ class Candidates
      */
     public List<Capability> getCandidates(Requirement req)
     {
-        return m_candidateMap.get(req);
+        List<Capability> candidates = m_candidateMap.get(req);
+        if (candidates != null)
+        {
+            return Collections.unmodifiableList(candidates);
+        }
+        return null;
     }
 
-    public void clearCandidates(Requirement req)
+    public Capability getFirstCandidate(Requirement req)
     {
-        m_candidateMap.remove(req);
+        List<Capability> candidates = m_candidateMap.get(req);
+        if (candidates != null && !candidates.isEmpty())
+        {
+            return m_candidateMap.get(req).get(0);
+        }
+        return null;
+    }
+
+    public void removeFirstCandidate(Requirement req)
+    {
+        List<Capability> candidates = m_candidateMap.get(req);
+        // Remove the conflicting candidate.
+        Capability cap = candidates.remove(0);
+        if (candidates.isEmpty())
+        {
+            m_candidateMap.remove(req);
+        }
+        // Update the delta with the removed capability
+        CopyOnWriteSet<Capability> capPath = m_delta.get(req);
+        if (capPath == null) {
+            capPath = new CopyOnWriteSet<Capability>();
+            m_delta.put(req, capPath);
+        }
+        capPath.add(cap);
+    }
+
+    public List<Capability> clearCandidates(Requirement req, Collection<Capability> caps)
+    {
+        List<Capability> l = m_candidateMap.get(req);
+        l.removeAll(caps);
+        // Update candidates delta with the removed capabilities.
+        CopyOnWriteSet<Capability> capPath = m_delta.get(req);
+        if (capPath == null) {
+            capPath = new CopyOnWriteSet<Capability>();
+            m_delta.put(req, capPath);
+        }
+        capPath.addAll(caps);
+        return l;
     }
 
     /**
@@ -803,7 +876,7 @@ class Candidates
      * satisfied by the fragment will end up having the two hosts as potential
      * candidates, rather than the single fragment.
      *
-     * @throws ResolutionException if the removal of any unselected fragments
+     * @throws org.osgi.service.resolver.ResolutionException if the removal of any unselected fragments
      * result in the root module being unable to resolve.
      */
     public void prepare(ResolveContext rc) throws ResolutionException
@@ -812,7 +885,7 @@ class Candidates
         // the fragment map maps a fragment symbolic name to a map that maps
         // a version to a list of fragments requirements matching that symbolic
         // name and version.
-        Map<Capability, Map<String, Map<Version, List<Requirement>>>> hostFragments = Collections.EMPTY_MAP;
+        Map<Capability, Map<String, Map<Version, List<Requirement>>>> hostFragments = Collections.emptyMap();
         if (m_fragmentsPresent)
         {
             hostFragments = populateDependents();
@@ -908,10 +981,10 @@ class Candidates
                     // from the dependent map, but you can't since it may come from
                     // a fragment that is attached to multiple hosts, so each host
                     // will need to make their own copy.
-                    Set<Requirement> dependents = m_dependentMap.get(origCap);
+                    CopyOnWriteSet<Requirement> dependents = m_dependentMap.get(origCap);
                     if (dependents != null)
                     {
-                        dependents = new HashSet<Requirement>(dependents);
+                        dependents = new CopyOnWriteSet<Requirement>(dependents);
                         m_dependentMap.put(c, dependents);
                         for (Requirement r : dependents)
                         {
@@ -945,8 +1018,7 @@ class Candidates
                             List<Capability> cands = m_candidateMap.get(r);
                             if (!(cands instanceof ShadowList))
                             {
-                                ShadowList<Capability> shadow =
-                                    new ShadowList<Capability>(cands);
+                                ShadowList<Capability> shadow = new ShadowList<Capability>(cands);
                                 m_candidateMap.put(r, shadow);
                                 cands = shadow;
                             }
@@ -956,7 +1028,7 @@ class Candidates
                             // shadow copy of the list accordingly.
                             if (!origCap.getResource().equals(hostResource.getDeclaredResource()))
                             {
-                                List<Capability> original = ((ShadowList) cands).getOriginal();
+                                List<Capability> original = ((ShadowList<Capability>) cands).getOriginal();
                                 int removeIdx = original.indexOf(origCap);
                                 if (removeIdx != -1)
                                 {
@@ -989,7 +1061,7 @@ class Candidates
                 List<Capability> cands = m_candidateMap.get(origReq);
                 if (cands != null)
                 {
-                    m_candidateMap.put(r, new ArrayList<Capability>(cands));
+                    m_candidateMap.put(r, new CopyOnWriteList<Capability>(cands));
                     for (Capability cand : cands)
                     {
                         Set<Requirement> dependents = m_dependentMap.get(cand);
@@ -1012,6 +1084,9 @@ class Candidates
         }
 
         populateSubstitutables();
+
+        m_candidateMap.concat();
+        m_dependentMap.concat();
     }
 
     // Maps a host capability to a map containing its potential fragments;
@@ -1022,17 +1097,17 @@ class Candidates
     {
         Map<Capability, Map<String, Map<Version, List<Requirement>>>> hostFragments =
             new HashMap<Capability, Map<String, Map<Version, List<Requirement>>>>();
-        for (Entry<Requirement, List<Capability>> entry : m_candidateMap.entrySet())
+        for (Entry<Requirement, CopyOnWriteList<Capability>> entry : m_candidateMap.entrySet())
         {
             Requirement req = entry.getKey();
             List<Capability> caps = entry.getValue();
             for (Capability cap : caps)
             {
                 // Record the requirement as dependent on the capability.
-                Set<Requirement> dependents = m_dependentMap.get(cap);
+                CopyOnWriteSet<Requirement> dependents = m_dependentMap.get(cap);
                 if (dependents == null)
                 {
-                    dependents = new HashSet<Requirement>();
+                    dependents = new CopyOnWriteSet<Requirement>();
                     m_dependentMap.put(cap, dependents);
                 }
                 dependents.add(req);
@@ -1078,8 +1153,8 @@ class Candidates
      * become unresolved if they depended on the module's capabilities and there
      * is no other candidate.
      *
-     * @param revision the module to remove.
-     * @throws ResolveException if removing the module caused the resolve to
+     * @param resource the module to remove.
+     * @throws ResolutionException if removing the module caused the resolve to
      * fail.
      */
     private void removeResource(Resource resource, ResolutionException ex)
@@ -1105,11 +1180,11 @@ class Candidates
      * involves removing its requirements and its capabilities. This may cause
      * other modules to become unresolved as a result.
      *
-     * @param br the module to remove.
-     * @param unresolvedRevisions a list to containing any additional modules
+     * @param resource the module to remove.
+     * @param unresolvedResources a list to containing any additional modules
      * that that became unresolved as a result of removing this module and will
      * also need to be removed.
-     * @throws ResolveException if removing the module caused the resolve to
+     * @throws ResolutionException if removing the module caused the resolve to
      * fail.
      */
     private void remove(Resource resource, Set<Resource> unresolvedResources)
@@ -1133,8 +1208,6 @@ class Candidates
      */
     private void remove(Requirement req)
     {
-        boolean isFragment = req.getNamespace().equals(HostNamespace.HOST_NAMESPACE);
-
         List<Capability> candidates = m_candidateMap.remove(req);
         if (candidates != null)
         {
@@ -1154,10 +1227,10 @@ class Candidates
      * other modules to become unresolved as a result.
      *
      * @param c the capability to remove.
-     * @param unresolvedRevisions a list to containing any additional modules
+     * @param unresolvedResources a list to containing any additional modules
      * that that became unresolved as a result of removing this module and will
      * also need to be removed.
-     * @throws ResolveException if removing the module caused the resolve to
+     * @throws ResolutionException if removing the module caused the resolve to
      * fail.
      */
     private void remove(Capability c, Set<Resource> unresolvedResources)
@@ -1195,35 +1268,23 @@ class Candidates
      */
     public Candidates copy()
     {
-        Map<Capability, Set<Requirement>> dependentMap =
-            new HashMap<Capability, Set<Requirement>>();
-        for (Entry<Capability, Set<Requirement>> entry : m_dependentMap.entrySet())
-        {
-            Set<Requirement> dependents = new HashSet<Requirement>(entry.getValue());
-            dependentMap.put(entry.getKey(), dependents);
-        }
-
-        Map<Requirement, List<Capability>> candidateMap =
-            new HashMap<Requirement, List<Capability>>();
-        for (Entry<Requirement, List<Capability>> entry
-            : m_candidateMap.entrySet())
-        {
-            List<Capability> candidates =
-                new ArrayList<Capability>(entry.getValue());
-            candidateMap.put(entry.getKey(), candidates);
-        }
-
         return new Candidates(
-            m_mandatoryResources, dependentMap, candidateMap,
-            m_allWrappedHosts, m_populateResultCache, m_fragmentsPresent, m_validOnDemandResources,
-            m_subtitutableMap);
+                m_mandatoryResources,
+                m_dependentMap.deepClone(),
+                m_candidateMap.deepClone(),
+                m_allWrappedHosts,
+                m_populateResultCache,
+                m_fragmentsPresent,
+                m_validOnDemandResources,
+                m_subtitutableMap,
+                m_delta.deepClone());
     }
 
     public void dump(ResolveContext rc)
     {
         // Create set of all revisions from requirements.
-        Set<Resource> resources = new HashSet<Resource>();
-        for (Entry<Requirement, List<Capability>> entry
+        Set<Resource> resources = new CopyOnWriteSet<Resource>();
+        for (Entry<Requirement, CopyOnWriteList<Capability>> entry
             : m_candidateMap.entrySet())
         {
             resources.add(entry.getKey().getResource());
@@ -1260,4 +1321,51 @@ class Candidates
         }
         System.out.println("=== END CANDIDATE MAP ===");
     }
+
+    public void permutate(Requirement req, List<Candidates> permutations)
+    {
+        if (!Util.isMultiple(req) && canRemoveCandidate(req))
+        {
+            Candidates perm = copy();
+            perm.removeFirstCandidate(req);
+            permutations.add(perm);
+        }
+    }
+
+    public boolean canRemoveCandidate(Requirement req)
+    {
+        List<Capability> candidates = m_candidateMap.get(req);
+        return ((candidates != null) && (candidates.size() > 1 || Util.isOptional(req)));
+    }
+
+    public void permutateIfNeeded(Requirement req, List<Candidates> permutations)
+    {
+        List<Capability> candidates = m_candidateMap.get(req);
+        if ((candidates != null) && (candidates.size() > 1))
+        {
+            // Check existing permutations to make sure we haven't
+            // already permutated this requirement. This check for
+            // duplicate permutations is simplistic. It assumes if
+            // there is any permutation that contains a different
+            // initial candidate for the requirement in question,
+            // then it has already been permutated.
+            boolean permutated = false;
+            for (Candidates existingPerm : permutations)
+            {
+                List<Capability> existingPermCands = existingPerm.m_candidateMap.get(req);
+                if (existingPermCands != null && !existingPermCands.get(0).equals(candidates.get(0)))
+                {
+                    permutated = true;
+                    break;
+                }
+            }
+            // If we haven't already permutated the existing
+            // import, do so now.
+            if (!permutated)
+            {
+                permutate(req, permutations);
+            }
+        }
+    }
+
 }

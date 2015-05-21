@@ -23,7 +23,7 @@
 import aQute.bnd.build.Workspace
 
 // Our release number, which has to be monotonically incremented each time we make a new release.
-ext.dmRelease = "r1"
+ext.dmRelease = "r2"
 
 // Our Apache svn Staging repo
 ext.svnStagingPath = "https://dist.apache.org/repos/dist/dev/felix"
@@ -167,10 +167,32 @@ task commitToStaging << {
 // Promotes the staged distributions to release
 task promoteToRelease << {
     description = 'Moves the staging repository to the Apache release repository.'
+
+    // Move all artifacts from the staging repo to the release repo
+    new ByteArrayOutputStream().withStream { os ->
+		def result = exec {
+	    	executable = 'svn'
+	    	args = ['list', svnStagingPath+"/org.apache.felix.dependencymanager-" + dmRelease]
+	    	standardOutput = os
+		}
+		def outputAsString = os.toString()
+
+		outputAsString.split("\n").each { artifact -> 
+	    	logger.lifecycle("    Moving " + artifact + " to release repository ...")
+	    	getProject().exec { 
+				commandLine 'svn',
+				'move', svnStagingPath+"/org.apache.felix.dependencymanager-" + dmRelease + "/" + artifact , 
+				svnReleasePath, '-m', "Releasing Apache Felix Dependency Manager release " + dmRelease + "."
+	    	}
+		}
+    }
+
+    // And remove the toplevel release path from the staging repo
+    logger.lifecycle("    Removing org.apache.felix.dependencymanager-" + dmRelease + " from staging ...")    
     getProject().exec { 
     	commandLine 'svn',
-		'move', svnStagingPath+"/org.apache.felix.dependencymanager-" + dmRelease , svnReleasePath, 
-		'-m', "Releasing Apache Felix Dependency Manager release " + dmRelease + "."
+		'rm', svnStagingPath+"/org.apache.felix.dependencymanager-" + dmRelease, "-m", 
+		"Releasing Apache Felix Dependency Manager release " + dmRelease + "."
     }
 }
 
@@ -194,4 +216,5 @@ task clean(overwrite: true) << {
 task cleanStaging << {
     description = 'Clean the local staging directory.'
     new File("release/staging").deleteDir()
+    new File("release/staging-copy").deleteDir()
 }

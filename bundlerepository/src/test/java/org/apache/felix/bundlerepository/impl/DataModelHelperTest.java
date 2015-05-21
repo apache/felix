@@ -18,11 +18,14 @@
  */
 package org.apache.felix.bundlerepository.impl;
 
+import java.net.URL;
 import java.util.jar.Attributes;
 
 import junit.framework.TestCase;
 import org.apache.felix.bundlerepository.DataModelHelper;
+import org.apache.felix.bundlerepository.Repository;
 import org.apache.felix.bundlerepository.Resource;
+import static org.junit.Assert.*;
 
 public class DataModelHelperTest extends TestCase
 {
@@ -61,5 +64,17 @@ public class DataModelHelperTest extends TestCase
 
         r.setFilter("(&(package=javax.transaction)(partial=true)(mandatory:<*partial))");
         assertEquals("(&(package=javax.transaction)(partial=true)(mandatory:<*partial))", r.getFilter());
+    }
+    
+    public void testGzipResource() throws Exception {
+        URL urlArchive = getClass().getResource("/spec_repository.gz");
+        assertNotNull("GZ archive was not found", urlArchive);
+        Repository repository1 = dmh.repository(urlArchive);
+
+        URL urlRepo = getClass().getResource("/spec_repository.xml");
+        assertNotNull("Repository file was not found", urlRepo);
+        Repository repository2 = dmh.repository(urlRepo);
+        assertEquals(repository1.getName(), repository2.getName());
+        assertEquals(repository1.getResources().length, repository2.getResources().length);
     }
 }

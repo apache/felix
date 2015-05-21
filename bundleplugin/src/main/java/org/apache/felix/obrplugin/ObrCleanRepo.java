@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -43,6 +43,9 @@ import javax.xml.transform.stream.StreamResult;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.FileUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -53,29 +56,22 @@ import org.xml.sax.SAXException;
 
 /**
  * Clean an OBR repository by finding and removing missing resources.
- * 
- * @requiresProject false
- * @goal clean
- * @phase clean
- * 
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+@Mojo( name = "clean", requiresProject = false, defaultPhase = LifecyclePhase.CLEAN )
 public class ObrCleanRepo extends AbstractMojo
 {
     /**
      * OBR Repository.
-     * 
-     * @parameter expression="${obrRepository}"
      */
+    @Parameter( property = "obrRepository" )
     private String obrRepository;
 
     /**
      * Local Repository.
-     * 
-     * @parameter expression="${localRepository}"
-     * @required
-     * @readonly
      */
+    @Parameter( defaultValue = "${localRepository}", readonly = true, required = true )
     private ArtifactRepository localRepository;
 
 
@@ -130,7 +126,7 @@ public class ObrCleanRepo extends AbstractMojo
 
     /**
      * Analyze the given XML tree (DOM of the repository file) and remove missing resources.
-     * 
+     *
      * @param elem : the input XML tree
      * @return the cleaned XML tree
      */
@@ -189,7 +185,7 @@ public class ObrCleanRepo extends AbstractMojo
 
     /**
      * Initialize the document builder from Xerces.
-     * 
+     *
      * @return DocumentBuilder ready to create new document
      * @throws MojoExecutionException : occurs when the instantiation of the document builder fails
      */
@@ -212,7 +208,7 @@ public class ObrCleanRepo extends AbstractMojo
 
     /**
      * Open an XML file.
-     * 
+     *
      * @param file : XML file path
      * @param constructor DocumentBuilder get from xerces
      * @return Document which describes this file
@@ -248,7 +244,7 @@ public class ObrCleanRepo extends AbstractMojo
 
     /**
      * write a Node in a xml file.
-     * 
+     *
      * @param outputFilename URI to the output file
      * @param treeToBeWrite Node root of the tree to be write in file
      * @throws MojoExecutionException if the plugin failed

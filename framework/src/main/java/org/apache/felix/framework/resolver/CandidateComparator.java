@@ -19,29 +19,42 @@
 package org.apache.felix.framework.resolver;
 
 import java.util.Comparator;
+
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.resource.Capability;
 
-public class CandidateComparator implements Comparator<BundleCapability>
+public class CandidateComparator implements Comparator<Capability>
 {
-    public int compare(BundleCapability cap1, BundleCapability cap2)
+    public int compare(Capability cap1, Capability cap2)
     {
         // First check resolved state, since resolved capabilities have priority
         // over unresolved ones. Compare in reverse order since we want to sort
         // in descending order.
         int c = 0;
-        if ((cap1.getRevision().getWiring() != null)
-            && (cap2.getRevision().getWiring() == null))
+
+        BundleCapability bcap1 = null;
+        BundleCapability bcap2 = null;
+
+        if (cap1 instanceof BundleCapability &&
+            cap2 instanceof BundleCapability)
         {
-            c = -1;
-        }
-        else if ((cap1.getRevision().getWiring() == null)
-            && (cap2.getRevision().getWiring() != null))
-        {
-            c = 1;
+            bcap1 = (BundleCapability) cap1;
+            bcap2 = (BundleCapability) cap2;
+
+            if ((bcap1.getRevision().getWiring() != null)
+                && (bcap2.getRevision().getWiring() == null))
+            {
+                c = -1;
+            }
+            else if ((bcap1.getRevision().getWiring() == null)
+                && (bcap2.getRevision().getWiring() != null))
+            {
+                c = 1;
+            }
         }
 
         // Compare revision capabilities.
@@ -82,15 +95,15 @@ public class CandidateComparator implements Comparator<BundleCapability>
         }
 
         // Finally, compare bundle identity.
-        if (c == 0)
+        if (c == 0 && bcap1 != null && bcap2 != null)
         {
-            if (cap1.getRevision().getBundle().getBundleId() <
-                cap2.getRevision().getBundle().getBundleId())
+            if (bcap1.getRevision().getBundle().getBundleId() <
+                bcap2.getRevision().getBundle().getBundleId())
             {
                 c = -1;
             }
-            else if (cap1.getRevision().getBundle().getBundleId() >
-                cap2.getRevision().getBundle().getBundleId())
+            else if (bcap1.getRevision().getBundle().getBundleId() >
+                bcap2.getRevision().getBundle().getBundleId())
             {
                 c = 1;
             }

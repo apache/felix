@@ -54,7 +54,7 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
     @SuppressWarnings("unchecked")
     void start()
     {
-        m_slReg = (ServiceRegistration<StartLevel>) m_registry.registerService(m_felix._getBundleContext(),
+        m_slReg = (ServiceRegistration<StartLevel>) m_registry.registerService(m_felix,
                 new String[] { StartLevel.class.getName() },
                 new StartLevelImpl(m_felix),
                 null);

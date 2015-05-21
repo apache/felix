@@ -44,7 +44,6 @@ import java.util.TreeSet;
 import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.cache.JarContent;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
-import org.apache.felix.framework.resolver.ResolveException;
 import org.apache.felix.framework.resolver.ResourceNotFoundException;
 import org.apache.felix.framework.util.CompoundEnumeration;
 import org.apache.felix.framework.util.FelixConstants;
@@ -75,6 +74,7 @@ import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
 import org.osgi.resource.Wire;
+import org.osgi.service.resolver.ResolutionException;
 
 public class BundleWiringImpl implements BundleWiring
 {
@@ -1210,7 +1210,7 @@ public class BundleWiringImpl implements BundleWiring
             {
                 provider = m_resolver.resolve(m_revision, pkgName);
             }
-            catch (ResolveException ex)
+            catch (ResolutionException ex)
             {
                 // Ignore this since it is likely normal.
             }
@@ -1635,7 +1635,7 @@ public class BundleWiringImpl implements BundleWiring
         {
             provider = m_resolver.resolve(m_revision, pkgName);
         }
-        catch (ResolveException ex)
+        catch (ResolutionException ex)
         {
             // Ignore this since it is likely normal.
         }
@@ -2810,7 +2810,7 @@ public class BundleWiringImpl implements BundleWiring
             }
 
             String exporter = (exporters.isEmpty())
-                ? null : exporters.iterator().next().getRevision().getBundle().toString();
+                ? null : exporters.iterator().next().toString();
 
             StringBuffer sb = new StringBuffer("*** Class '");
             sb.append(name);
@@ -2855,7 +2855,7 @@ public class BundleWiringImpl implements BundleWiring
                 // Ignore
             }
 
-            String exporter = exports.iterator().next().getRevision().getBundle().toString();
+            String exporter = exports.iterator().next().toString();
 
             StringBuffer sb = new StringBuffer("*** Class '");
             sb.append(name);

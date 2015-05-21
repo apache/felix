@@ -405,15 +405,42 @@ public class DependencyManager {
      * </pre></blockquote>
      * 
      * @param factoryPid the pid matching the factory configuration
-     * @param update the adapter method name that will be notified when the factory configuration is created/updated.
+     * @param update the adapter method name that will be notified when the factory configuration is created/updated.<p>
+     *  The following signatures are supported:<p>
+     *        <ul><li> updated(Dictionary)
+     *        <li> updated(Component, Dictionary)
+     *        </ul>
      * @param propagate true if public factory configuration should be propagated to the adapter service properties
      * @return a service that acts as a factory for generating the managed service factory configuration adapter
      */
     public Component createFactoryConfigurationAdapterService(String factoryPid, String update, boolean propagate) {
-        return new FactoryConfigurationAdapterImpl(this, factoryPid, update, propagate);
+        return new FactoryConfigurationAdapterImpl(this, factoryPid, update, propagate, null);
     }
 
     /**
+     * Creates a new Managed Service Factory Configuration Adapter using a specific update callback instance. 
+     * For each new Config Admin factory configuration matching the factoryPid, an adapter will be created 
+     * based on the adapter implementation class.
+     * The adapter will be registered with the specified interface, and with the specified adapter service properties.
+     * Depending on the <code>propagate</code> parameter, every public factory configuration properties 
+     * (which don't start with ".") will be propagated along with the adapter service properties. 
+     * It will also inherit all dependencies.
+     * 
+     * @param factoryPid the pid matching the factory configuration
+     * @param update the adapter method name that will be notified when the factory configuration is created/updated.<p>
+     *  The following signatures are supported:<p>
+     *        <ul><li> updated(Dictionary)
+     *        <li> updated(Component, Dictionary)
+     *        </ul>
+     * @param propagate true if public factory configuration should be propagated to the adapter service properties
+     * @param callbackInstance the object on which the updated callback will be invoked.
+     * @return a service that acts as a factory for generating the managed service factory configuration adapter
+     */
+    public Component createFactoryConfigurationAdapterService(String factoryPid, String update, boolean propagate, Object callbackInstance) {
+        return new FactoryConfigurationAdapterImpl(this, factoryPid, update, propagate, callbackInstance);
+    }
+
+   /**
      * Creates a new Managed Service Factory Configuration Adapter with meta type support. For each new Config Admin 
      * factory configuration matching the factoryPid, an adapter will be created based on the adapter implementation 
      * class. The adapter will be registered with the specified interface, and with the specified adapter service 
@@ -445,7 +472,11 @@ public class DependencyManager {
      * </pre></blockquote>
      * 
      * @param factoryPid the pid matching the factory configuration
-     * @param update the adapter method name that will be notified when the factory configuration is created/updated.
+     * @param update the adapter method name that will be notified when the factory configuration is created/updated.<p>
+     *  The following signatures are supported:<p>
+     *        <ul><li> updated(Dictionary)
+     *        <li> updated(Component, Dictionary)
+     *        </ul>
      * @param propagate true if public factory configuration should be propagated to the adapter service properties
      * @param heading The label used to display the tab name (or section) where the properties are displayed. 
      *        Example: "Printer Service"
@@ -462,7 +493,7 @@ public class DependencyManager {
     public Component createAdapterFactoryConfigurationService(String factoryPid, String update, boolean propagate,
         String heading, String desc, String localization, PropertyMetaData[] propertiesMetaData)
     {
-        return new FactoryConfigurationAdapterImpl(this, factoryPid, update, propagate, m_context, m_logger, heading,
+        return new FactoryConfigurationAdapterImpl(this, factoryPid, update, propagate, null, m_context, m_logger, heading,
             desc, localization, propertiesMetaData);
     }
 
@@ -495,6 +526,26 @@ public class DependencyManager {
      */
     public Component createBundleAdapterService(int bundleStateMask, String bundleFilter, boolean propagate) {
         return new BundleAdapterImpl(this, bundleStateMask, bundleFilter, propagate);
+    }
+
+    /**
+     * Creates a new bundle adapter using specific callback instance. 
+     * The adapter will be applied to any bundle that matches the specified bundle state mask and filter condition. 
+     * For each matching bundle an adapter will be created based on the adapter implementation class, and
+     * The adapter will be registered with the specified interface.
+     * 
+     * @param bundleStateMask the bundle state mask to apply
+     * @param bundleFilter the filter to apply to the bundle manifest
+     * @param propagate <code>true</code> if properties from the bundle should be propagated to the service
+     * @param callbackInstance the instance to invoke the callbacks on, or null if the callbacks have to be invoked on the adapter itself
+     * @param add name of the callback method to invoke on add
+     * @param change name of the callback method to invoke on change
+     * @param remove name of the callback method to invoke on remove
+     * @return a service that acts as a factory for generating bundle adapters
+     */
+    public Component createBundleAdapterService(int bundleStateMask, String bundleFilter, boolean propagate,
+    		Object callbackInstance, String add, String change, String remove) {
+        return new BundleAdapterImpl(this, bundleStateMask, bundleFilter, propagate, callbackInstance, add, change, remove);
     }
 
     /**

@@ -23,7 +23,6 @@ import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static javax.servlet.http.HttpServletResponse.SC_PAYMENT_REQUIRED;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -96,8 +95,7 @@ public class HttpJettyTest extends BaseIntegrationTest
 
         bundle.stop();
 
-        // destroy should not be called as the bundle stopped
-        assertFalse(destroyLatch.await(5, TimeUnit.SECONDS));
+        assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
 
         try
         {

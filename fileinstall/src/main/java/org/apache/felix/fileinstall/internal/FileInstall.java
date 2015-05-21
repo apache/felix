@@ -103,6 +103,7 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer
             set(ht, DirectoryWatcher.USE_START_TRANSIENT);
             set(ht, DirectoryWatcher.NO_INITIAL_DELAY);
             set(ht, DirectoryWatcher.START_LEVEL);
+            set(ht, DirectoryWatcher.OPTIONAL_SCOPE);
 
             // check if dir is an array of dirs
             String dirs = ht.get(DirectoryWatcher.DIR);

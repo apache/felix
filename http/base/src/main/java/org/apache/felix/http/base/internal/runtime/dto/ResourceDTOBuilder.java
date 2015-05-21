@@ -19,21 +19,62 @@
 package org.apache.felix.http.base.internal.runtime.dto;
 
 import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.runtime.ResourceInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.osgi.service.http.runtime.dto.FailedResourceDTO;
 import org.osgi.service.http.runtime.dto.ResourceDTO;
 
-final class ResourceDTOBuilder extends BaseDTOBuilder<ServletHandler, ResourceDTO>
+public final class ResourceDTOBuilder
 {
-    @Override
-    ResourceDTO buildDTO(ServletHandler handler, long servletContextId)
+    /**
+     * Build a servlet DTO from a servlet handler
+     * @param handler The servlet handler
+     * @param reason If reason is -1, a servlet DTO is created, otherwise a failed servlet DTO is returned
+     * @return A servlet DTO
+     */
+    public static ResourceDTO build(final ServletHandler handler, final int reason)
     {
-        ServletInfo servletInfo = handler.getServletInfo();
+        final ResourceDTO dto = build(handler.getServletInfo(), reason != -1);
 
-        ResourceDTO resourceDTO = new ResourceDTO();
-        resourceDTO.patterns = copyWithDefault(servletInfo.getPatterns(), BuilderConstants.STRING_ARRAY);
-        resourceDTO.prefix = servletInfo.getPrefix();
-        resourceDTO.serviceId = servletInfo.getServiceId();
-        resourceDTO.servletContextId = servletContextId;
-        return resourceDTO;
+        dto.servletContextId = handler.getContextServiceId();
+
+        if ( reason != -1 )
+        {
+            ((FailedResourceDTO)dto).failureReason = reason;
+        }
+
+        return dto;
+    }
+
+    /**
+     * Build a servlet DTO from a servlet info
+     * @param info The servlet info
+     * @return A servlet DTO
+     */
+    public static ResourceDTO build(final ServletInfo info, final boolean failed)
+    {
+        final ResourceDTO dto = (failed ? new FailedResourceDTO() : new ResourceDTO());
+
+        dto.patterns = BuilderConstants.EMPTY_STRING_ARRAY;
+        dto.prefix = info.getPrefix();
+        dto.serviceId = info.getServiceId();
+
+        return dto;
+    }
+
+    /**
+     * Build a servlet DTO from a servlet info
+     * @param info The servlet info
+     * @return A servlet DTO
+     */
+    public static ResourceDTO build(final ResourceInfo info, final boolean failed)
+    {
+        final ResourceDTO dto = (failed ? new FailedResourceDTO() : new ResourceDTO());
+
+        dto.patterns = BuilderConstants.copyWithDefault(info.getPatterns(), BuilderConstants.EMPTY_STRING_ARRAY);
+        dto.prefix = info.getPrefix();
+        dto.serviceId = info.getServiceId();
+
+        return dto;
     }
 }

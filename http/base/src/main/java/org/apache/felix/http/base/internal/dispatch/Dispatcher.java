@@ -51,11 +51,12 @@ import javax.servlet.http.HttpServletResponseWrapper;
 import javax.servlet.http.HttpSession;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.apache.felix.http.base.internal.handler.ErrorsMapping;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
-import org.apache.felix.http.base.internal.handler.HandlerRegistry;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.registry.HandlerRegistry;
+import org.apache.felix.http.base.internal.registry.PathResolution;
+import org.apache.felix.http.base.internal.registry.ServletResolution;
 import org.apache.felix.http.base.internal.util.UriUtils;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
 import org.osgi.service.http.HttpContext;
@@ -69,11 +70,11 @@ public final class Dispatcher implements RequestDispatcherProvider
     final class RequestDispatcherImpl implements RequestDispatcher
     {
         private final RequestInfo requestInfo;
-        private final ServletHandler handler;
+        private final ServletResolution resolution;
 
-        public RequestDispatcherImpl(ServletHandler handler, RequestInfo requestInfo)
+        public RequestDispatcherImpl(final ServletResolution resolution, final RequestInfo requestInfo)
         {
-            this.handler = handler;
+            this.resolution = resolution;
             this.requestInfo = requestInfo;
         }
 
@@ -92,9 +93,13 @@ public final class Dispatcher implements RequestDispatcherProvider
 
             try
             {
-                ServletRequestWrapper req = new ServletRequestWrapper((HttpServletRequest) request, this.handler.getContext(), this.requestInfo, DispatcherType.FORWARD, this.handler.getContextServiceId(),
-                        handler.getServletInfo().isAsyncSupported());
-                Dispatcher.this.forward(this.handler, req, (HttpServletResponse) response);
+                ServletRequestWrapper req = new ServletRequestWrapper((HttpServletRequest) request,
+                        this.resolution.handler.getContext(),
+                        this.requestInfo,
+                        DispatcherType.FORWARD,
+                        this.resolution.handler.getContextServiceId(),
+                        this.resolution.handler.getServletInfo().isAsyncSupported());
+                Dispatcher.this.forward(this.resolution, req, (HttpServletResponse) response);
             }
             finally
             {
@@ -111,9 +116,13 @@ public final class Dispatcher implements RequestDispatcherProvider
         @Override
         public void include(ServletRequest request, ServletResponse response) throws ServletException, IOException
         {
-            ServletRequestWrapper req = new ServletRequestWrapper((HttpServletRequest) request, this.handler.getContext(), this.requestInfo, DispatcherType.INCLUDE,
-                    this.handler.getContextServiceId(), handler.getServletInfo().isAsyncSupported());
-            Dispatcher.this.include(this.handler, req, (HttpServletResponse) response);
+            ServletRequestWrapper req = new ServletRequestWrapper((HttpServletRequest) request,
+                    this.resolution.handler.getContext(),
+                    this.requestInfo,
+                    DispatcherType.INCLUDE,
+                    this.resolution.handler.getContextServiceId(),
+                    this.resolution.handler.getServletInfo().isAsyncSupported());
+            Dispatcher.this.include(this.resolution, req, (HttpServletResponse) response);
         }
     }
 
@@ -128,7 +137,8 @@ public final class Dispatcher implements RequestDispatcherProvider
 
         private final String servletName;
 
-        public ServletResponseWrapper(final HttpServletRequest req, final HttpServletResponse res, final ServletHandler servletHandler)
+        public ServletResponseWrapper(final HttpServletRequest req, final HttpServletResponse res,
+                final ServletHandler servletHandler)
         {
             super(res);
             this.request = req;
@@ -167,65 +177,49 @@ public final class Dispatcher implements RequestDispatcherProvider
                     code != SC_PARTIAL_CONTENT &&
                     code >= SC_OK)
                 {
+                    final Throwable exception = (Throwable)request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
+                    final ServletResolution errorResolution = handlerRegistry.getErrorHandler(request.getRequestURI(), this.serviceId, code, exception);
 
-                    final ErrorsMapping errorsMapping = handlerRegistry.getErrorsMapping(request.getRequestURI(), this.serviceId);
-                    if ( errorsMapping != null )
+                    if ( errorResolution != null )
                     {
-                        final String exceptionType = (String)request.getAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE);
-
-                        ServletHandler errorHandler = null;
-
-                        if (exceptionType != null)
+                        try
                         {
-                            errorHandler = errorsMapping.get(exceptionType);
+                            request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, new Integer(code));
+                            if ( message != null )
+                            {
+                                request.setAttribute(RequestDispatcher.ERROR_MESSAGE, message);
+                            }
+                            request.setAttribute(RequestDispatcher.ERROR_REQUEST_URI, request.getRequestURI());
+                            if ( this.servletName != null )
+                            {
+                                request.setAttribute(RequestDispatcher.ERROR_SERVLET_NAME, this.servletName);
+                            }
+
+                            final String servletPath = null;
+                            final String pathInfo = request.getRequestURI();
+                            final String queryString = null; // XXX
+
+                            final RequestInfo requestInfo = new RequestInfo(servletPath, pathInfo, queryString);
+
+                            final FilterHandler[] filterHandlers = handlerRegistry.getFilters(errorResolution, DispatcherType.ERROR, request.getRequestURI());
+
+                            // TODO - is async = false correct?
+                            invokeChain(errorResolution.handler, filterHandlers, new ServletRequestWrapper(request, errorResolution.handler.getContext(), requestInfo, this.serviceId, false), this);
+
+                            invokeSuper = false;
                         }
-
-                        if ( errorHandler == null )
+                        catch (final ServletException e)
                         {
-                            errorHandler = errorsMapping.get(code);
+                            // ignore
                         }
-
-                        if ( errorHandler != null )
+                        finally
                         {
-                            try
-                            {
-                                request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, new Integer(code));
-                                if ( message != null )
-                                {
-                                    request.setAttribute(RequestDispatcher.ERROR_MESSAGE, message);
-                                }
-                                request.setAttribute(RequestDispatcher.ERROR_REQUEST_URI, request.getRequestURI());
-                                if ( this.servletName != null )
-                                {
-                                    request.setAttribute(RequestDispatcher.ERROR_SERVLET_NAME, this.servletName);
-                                }
-
-                                final String servletPath = null;
-                                final String pathInfo = request.getRequestURI();
-                                final String queryString = null; // XXX
-
-                                final RequestInfo requestInfo = new RequestInfo(servletPath, pathInfo, queryString);
-
-                                final FilterHandler[] filterHandlers = handlerRegistry.getFilterHandlers(errorHandler, DispatcherType.ERROR, request.getRequestURI());
-
-                                // TODO - is async = false correct?
-                                invokeChain(filterHandlers, errorHandler, new ServletRequestWrapper(request, errorHandler.getContext(), requestInfo, this.serviceId, false), this);
-
-                                invokeSuper = false;
-                            }
-                            catch (final ServletException e)
-                            {
-                                // ignore
-                            }
-                            finally
-                            {
-                                request.removeAttribute(RequestDispatcher.ERROR_STATUS_CODE);
-                                request.removeAttribute(RequestDispatcher.ERROR_MESSAGE);
-                                request.removeAttribute(RequestDispatcher.ERROR_REQUEST_URI);
-                                request.removeAttribute(RequestDispatcher.ERROR_SERVLET_NAME);
-                                request.removeAttribute(RequestDispatcher.ERROR_EXCEPTION);
-                                request.removeAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE);
-                            }
+                            request.removeAttribute(RequestDispatcher.ERROR_STATUS_CODE);
+                            request.removeAttribute(RequestDispatcher.ERROR_MESSAGE);
+                            request.removeAttribute(RequestDispatcher.ERROR_REQUEST_URI);
+                            request.removeAttribute(RequestDispatcher.ERROR_SERVLET_NAME);
+                            request.removeAttribute(RequestDispatcher.ERROR_EXCEPTION);
+                            request.removeAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE);
                         }
                     }
                 }
@@ -558,11 +552,6 @@ public final class Dispatcher implements RequestDispatcherProvider
         }
     }
 
-    /**
-     * Catch-all filter chain that simple finishes all requests with a "404 Not Found" error.
-     */
-    private static final FilterChain DEFAULT_CHAIN = new NotFoundFilterChain();
-
     private final HandlerRegistry handlerRegistry;
 
     private WhiteboardManager whiteboardManager;
@@ -587,7 +576,7 @@ public final class Dispatcher implements RequestDispatcherProvider
      */
     public void dispatch(final HttpServletRequest req, final HttpServletResponse res) throws ServletException, IOException
     {
-        // invalid sessions first
+        // check for invalidating session(s) first
         final HttpSession session = req.getSession(false);
         if ( session != null )
         {
@@ -600,29 +589,25 @@ public final class Dispatcher implements RequestDispatcherProvider
             requestURI = "";
         }
 
-        // Determine which servlets we should forward the request to...
-        final ServletHandler servletHandler = this.handlerRegistry.getServletHander(requestURI);
+        // Determine which servlet we should forward the request to...
+        final PathResolution pr = this.handlerRegistry.resolveServlet(requestURI);
 
-        final HttpServletResponse wrappedResponse = new ServletResponseWrapper(req, res, servletHandler);
-        if ( servletHandler == null )
+        final HttpServletResponse wrappedResponse = new ServletResponseWrapper(req, res,
+                pr == null ? null : pr.handler);
+        if ( pr == null )
         {
             wrappedResponse.sendError(404);
             return;
         }
 
-        // strip of context path
-        requestURI = requestURI.substring(servletHandler.getContext().getContextPath().length() - req.getContextPath().length());
 
-        final String servletPath = servletHandler.determineServletPath(requestURI);
-        String pathInfo = UriUtils.compactPath(UriUtils.relativePath(servletPath, requestURI));
-        String queryString = null; // XXX
+        final ExtServletContext servletContext = pr.handler.getContext();
+        final RequestInfo requestInfo = new RequestInfo(pr.servletPath, pr.pathInfo, null);
 
-        ExtServletContext servletContext = (servletHandler != null) ? servletHandler.getContext() : null;
-        final RequestInfo requestInfo = new RequestInfo(servletPath, pathInfo, queryString);
-
-        final HttpServletRequest wrappedRequest = new ServletRequestWrapper(req, servletContext, requestInfo, servletHandler.getContextServiceId(),
-                servletHandler.getServletInfo().isAsyncSupported());
-        final FilterHandler[] filterHandlers = this.handlerRegistry.getFilterHandlers(servletHandler, req.getDispatcherType(), requestURI);
+        final HttpServletRequest wrappedRequest = new ServletRequestWrapper(req, servletContext, requestInfo,
+                pr.handler.getContextServiceId(),
+                pr.handler.getServletInfo().isAsyncSupported());
+        final FilterHandler[] filterHandlers = this.handlerRegistry.getFilters(pr, req.getDispatcherType(), pr.requestURI);
 
         try
         {
@@ -630,7 +615,7 @@ public final class Dispatcher implements RequestDispatcherProvider
             {
                 servletContext.getServletRequestListener().requestInitialized(new ServletRequestEvent(servletContext, wrappedRequest));
             }
-            invokeChain(filterHandlers, servletHandler, wrappedRequest, wrappedResponse);
+            invokeChain(pr.handler, filterHandlers, wrappedRequest, wrappedResponse);
         }
         catch ( final Exception e)
         {
@@ -651,8 +636,8 @@ public final class Dispatcher implements RequestDispatcherProvider
     @Override
     public RequestDispatcher getNamedDispatcher(final Long contextId, final String name)
     {
-        ServletHandler handler = this.handlerRegistry.getServletHandlerByName(contextId, name);
-        return handler != null ? new RequestDispatcherImpl(handler, null) : null;
+        final ServletResolution resolution = this.handlerRegistry.resolveServletByName(contextId, name);
+        return resolution != null ? new RequestDispatcherImpl(resolution, null) : null;
     }
 
     @Override
@@ -678,17 +663,14 @@ public final class Dispatcher implements RequestDispatcherProvider
             requestURI = "";
         }
 
-        ServletHandler handler = this.handlerRegistry.getServletHander(requestURI);
-        if (handler == null)
+        final PathResolution pr = this.handlerRegistry.resolveServlet(requestURI);
+        if (pr == null)
         {
             return null;
         }
 
-        String servletPath = handler.determineServletPath(requestURI);
-        String pathInfo = UriUtils.relativePath(servletPath, path);
-
-        RequestInfo requestInfo = new RequestInfo(servletPath, pathInfo, query);
-        return new RequestDispatcherImpl(handler, requestInfo);
+        final RequestInfo requestInfo = new RequestInfo(pr.servletPath, pr.pathInfo, query);
+        return new RequestDispatcherImpl(pr, requestInfo);
     }
 
     /**
@@ -696,12 +678,12 @@ public final class Dispatcher implements RequestDispatcherProvider
      * @param request the {@link HttpServletRequest};
      * @param response the {@link HttpServletResponse};
      */
-    void forward(ServletHandler servletHandler, HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
+    void forward(final ServletResolution resolution, HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
     {
         String requestURI = getRequestURI(request);
-        FilterHandler[] filterHandlers = this.handlerRegistry.getFilterHandlers(servletHandler, DispatcherType.FORWARD, requestURI);
+        FilterHandler[] filterHandlers = this.handlerRegistry.getFilters(resolution, DispatcherType.FORWARD, requestURI);
 
-        invokeChain(filterHandlers, servletHandler, request, response);
+        invokeChain(resolution.handler, filterHandlers, request, response);
     }
 
     /**
@@ -709,12 +691,12 @@ public final class Dispatcher implements RequestDispatcherProvider
      * @param request the {@link HttpServletRequest};
      * @param response the {@link HttpServletResponse};
      */
-    void include(ServletHandler servletHandler, HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
+    void include(final ServletResolution resolution, HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
     {
         String requestURI = getRequestURI(request);
-        FilterHandler[] filterHandlers = this.handlerRegistry.getFilterHandlers(servletHandler, DispatcherType.INCLUDE, requestURI);
+        FilterHandler[] filterHandlers = this.handlerRegistry.getFilters(resolution, DispatcherType.INCLUDE, requestURI);
 
-        invokeChain(filterHandlers, servletHandler, request, response);
+        invokeChain(resolution.handler, filterHandlers, request, response);
     }
 
     private String getRequestURI(HttpServletRequest req)
@@ -722,9 +704,13 @@ public final class Dispatcher implements RequestDispatcherProvider
         return UriUtils.relativePath(req.getContextPath(), req.getRequestURI());
     }
 
-    private void invokeChain(FilterHandler[] filterHandlers, ServletHandler servletHandler, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
+    private void invokeChain(final ServletHandler servletHandler,
+            final FilterHandler[] filterHandlers,
+            final HttpServletRequest request,
+            final HttpServletResponse response)
+    throws IOException, ServletException
     {
-        FilterChain filterChain = new InvocationFilterChain(servletHandler, filterHandlers, DEFAULT_CHAIN);
+        final FilterChain filterChain = new InvocationChain(servletHandler, filterHandlers);
         filterChain.doFilter(request, response);
     }
 }

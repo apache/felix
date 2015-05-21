@@ -21,59 +21,70 @@ import static java.util.Collections.list;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.apache.felix.http.base.internal.handler.HandlerRegistry;
-import org.apache.felix.http.base.internal.runtime.RegistryRuntime;
+import org.apache.felix.http.base.internal.registry.HandlerRegistry;
+import org.apache.felix.http.base.internal.runtime.dto.RequestInfoDTOBuilder;
 import org.apache.felix.http.base.internal.runtime.dto.RuntimeDTOBuilder;
-import org.apache.felix.http.base.internal.whiteboard.ServletContextHelperManager;
+import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.runtime.HttpServiceRuntime;
 import org.osgi.service.http.runtime.dto.RequestInfoDTO;
 import org.osgi.service.http.runtime.dto.RuntimeDTO;
 
 public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
 {
-    private final Hashtable<String, Object> attributes = new Hashtable<String, Object>();
+    private volatile Hashtable<String, Object> attributes = new Hashtable<String, Object>();
 
     private final HandlerRegistry registry;
-    private final ServletContextHelperManager contextManager;
+    private final WhiteboardManager contextManager;
 
+    private volatile ServiceReference<HttpServiceRuntime> serviceReference;
 
     public HttpServiceRuntimeImpl(HandlerRegistry registry,
-            ServletContextHelperManager contextManager)
+            WhiteboardManager contextManager)
     {
         this.registry = registry;
         this.contextManager = contextManager;
     }
 
-    public synchronized RuntimeDTO getRuntimeDTO()
+    @Override
+    public RuntimeDTO getRuntimeDTO()
     {
-        RegistryRuntime runtime = contextManager.getRuntime(registry);
-        RuntimeDTOBuilder runtimeDTOBuilder = new RuntimeDTOBuilder(runtime, attributes);
+        final RuntimeDTOBuilder runtimeDTOBuilder = new RuntimeDTOBuilder(contextManager.getRuntime(registry),
+                this.serviceReference);
         return runtimeDTOBuilder.build();
     }
 
     @Override
-    public RequestInfoDTO calculateRequestInfoDTO(String path)
+    public RequestInfoDTO calculateRequestInfoDTO(final String path)
     {
-        // TODO Auto-generated method stub
-        return null;
+        return new RequestInfoDTOBuilder(registry, path).build();
     }
 
     public synchronized void setAttribute(String name, Object value)
     {
-        attributes.put(name, value);
+        Hashtable<String, Object> newAttributes = new Hashtable<String, Object>(attributes);
+        newAttributes.put(name, value);
+        attributes = newAttributes;
     }
 
-    public synchronized void setAllAttributes(Dictionary<String, Object> attributes)
+    public synchronized void setAllAttributes(Dictionary<String, Object> newAttributes)
     {
-        this.attributes.clear();
-        for (String key :list(attributes.keys()))
+        Hashtable<String, Object> replacement = new Hashtable<String, Object>();
+        for (String key : list(newAttributes.keys()))
         {
-            this.attributes.put(key, attributes.get(key));
+            replacement.put(key, newAttributes.get(key));
         }
+        attributes = replacement;
     }
 
-    public synchronized Dictionary<String, Object> getAttributes()
+    public Dictionary<String, Object> getAttributes()
     {
         return attributes;
+    }
+
+    public void setServiceReference(
+            final ServiceReference<HttpServiceRuntime> reference)
+    {
+        this.serviceReference = reference;
     }
 }

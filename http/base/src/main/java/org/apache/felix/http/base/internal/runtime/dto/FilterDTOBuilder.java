@@ -22,34 +22,88 @@ import javax.servlet.DispatcherType;
 
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
+import org.osgi.service.http.runtime.dto.FailedFilterDTO;
 import org.osgi.service.http.runtime.dto.FilterDTO;
 
-final class FilterDTOBuilder extends BaseDTOBuilder<FilterHandler, FilterDTO>
+public final class FilterDTOBuilder
 {
-    @Override
-    FilterDTO buildDTO(FilterHandler filterHandler, long servletContextId)
+    /**
+     * Build an array of filter DTO from a filter handler array
+     * @param handlers The filter handler array
+     * @return The filter DTO array
+     */
+    public static FilterDTO[] build(final FilterHandler[] handlers)
     {
-        FilterInfo info = filterHandler.getFilterInfo();
+        if ( handlers.length == 0 )
+        {
+            return BuilderConstants.EMPTY_FILTER_DTO_ARRAY;
+        }
+        final FilterDTO[] array = new FilterDTO[handlers.length];
+        for(int i=0; i<handlers.length; i++)
+        {
+            array[i] = build(handlers[i]);
+        }
 
-        FilterDTO filterDTO = new FilterDTO();
-        filterDTO.asyncSupported = info.isAsyncSupported();
-        filterDTO.dispatcher = getNames(info.getDispatcher());
-        filterDTO.initParams = info.getInitParameters();
-        filterDTO.name = info.getName();
-        filterDTO.patterns = copyWithDefault(info.getPatterns(), BuilderConstants.STRING_ARRAY);
-        filterDTO.regexs = copyWithDefault(info.getRegexs(), BuilderConstants.STRING_ARRAY);
-        filterDTO.serviceId = filterHandler.getFilterInfo().getServiceId();
-        filterDTO.servletContextId = servletContextId;
-        filterDTO.servletNames = copyWithDefault(info.getServletNames(), BuilderConstants.STRING_ARRAY);
+        return array;
+    }
+
+    /**
+     * Build a filter DTO from a filter handler
+     * @param handler The filter handler
+     * @return A filter DTO
+     */
+    public static FilterDTO build(final FilterHandler handler)
+    {
+        final FilterDTO filterDTO = build(handler.getFilterInfo(), false);
+
+        filterDTO.name = handler.getName();
+        filterDTO.servletContextId = handler.getContextServiceId();
 
         return filterDTO;
     }
 
-    private String[] getNames(DispatcherType[] dispatcher)
+    /**
+     * Build a filter DTO from a filter info
+     * @param info The filter info
+     * @return A filter DTO
+     */
+    public static FilterDTO build(final FilterInfo info, final boolean failed)
+    {
+        final FilterDTO filterDTO = (failed ? new FailedFilterDTO() : new FilterDTO());
+
+        filterDTO.asyncSupported = info.isAsyncSupported();
+        filterDTO.dispatcher = getNames(info.getDispatcher());
+        filterDTO.initParams = info.getInitParameters();
+        filterDTO.name = info.getName();
+        filterDTO.patterns = BuilderConstants.copyWithDefault(info.getPatterns(), BuilderConstants.EMPTY_STRING_ARRAY);
+        filterDTO.regexs = BuilderConstants.copyWithDefault(info.getRegexs(), BuilderConstants.EMPTY_STRING_ARRAY);
+        filterDTO.serviceId = info.getServiceId();
+        filterDTO.servletNames = BuilderConstants.copyWithDefault(info.getServletNames(), BuilderConstants.EMPTY_STRING_ARRAY);
+
+        return filterDTO;
+    }
+
+    /**
+     * Build a filter failed DTO from a filter handler
+     * @param handler The filter handler
+     * @return A filter DTO
+     */
+    public static FailedFilterDTO buildFailed(final FilterHandler handler, final int reason)
+    {
+        final FailedFilterDTO filterDTO = (FailedFilterDTO)build(handler.getFilterInfo(), true);
+
+        filterDTO.name = handler.getName();
+        filterDTO.servletContextId = handler.getContextServiceId();
+        filterDTO.failureReason = reason;
+
+        return filterDTO;
+    }
+
+    private static String[] getNames(final DispatcherType[] dispatcher)
     {
         if (dispatcher == null)
         {
-            return BuilderConstants.STRING_ARRAY;
+            return BuilderConstants.EMPTY_STRING_ARRAY;
         }
 
         String[] names = new String[dispatcher.length];

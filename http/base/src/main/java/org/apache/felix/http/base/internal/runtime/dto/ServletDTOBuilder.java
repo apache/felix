@@ -20,27 +20,44 @@ package org.apache.felix.http.base.internal.runtime.dto;
 
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.osgi.service.http.runtime.dto.FailedServletDTO;
 import org.osgi.service.http.runtime.dto.ServletDTO;
 
-final class ServletDTOBuilder extends BaseServletDTOBuilder<ServletHandler, ServletDTO>
+public final class ServletDTOBuilder extends BaseServletDTOBuilder
 {
-    @Override
-    ServletDTO buildDTO(ServletHandler servletHandler, long servletContextId)
+    /**
+     * Build a servlet DTO from a servlet handler
+     * @param handler The servlet handler
+     * @param reason If reason is -1, a servlet DTO is created, otherwise a failed servlet DTO is returned
+     * @return A servlet DTO
+     */
+    public static ServletDTO build(final ServletHandler handler, final int reason)
     {
-        ServletInfo info = servletHandler.getServletInfo();
+        final ServletDTO dto = build(handler.getServletInfo(), reason != -1);
 
-        ServletDTO servletDTO = new ServletDTO();
-        setBaseFields(servletDTO, servletHandler, servletContextId);
-        servletDTO.patterns = copyWithDefault(checkNotEmpty(info.getPatterns()), null);
-        return servletDTO;
+        BaseServletDTOBuilder.fill(dto, handler);
+
+        if ( reason != -1 )
+        {
+            ((FailedServletDTO)dto).failureReason = reason;
+        }
+
+        return dto;
     }
 
-    private String[] checkNotEmpty(String[] patterns)
+    /**
+     * Build a servlet DTO from a servlet info
+     * @param info The servlet info
+     * @return A servlet DTO
+     */
+    public static ServletDTO build(final ServletInfo info, final boolean failed)
     {
-        if (patterns == null || patterns.length == 0)
-        {
-            throw new IllegalArgumentException("No patterns specified in servlet info");
-        }
-        return patterns;
+        final ServletDTO dto = (failed ? new FailedServletDTO() : new ServletDTO());
+
+        BaseServletDTOBuilder.fill(dto, info);
+
+        dto.patterns = BuilderConstants.EMPTY_STRING_ARRAY;
+
+        return dto;
     }
 }

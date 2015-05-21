@@ -1,9 +1,11 @@
-Initial Release 1.0.0
----------------------
-
+Changes from 1.0.0 to 1.0.2
+---------------------------
 ** Bug
     * [FELIX-3633] - User Admin Plugin - no German translation
-    * [FELIX-3634] - User Admin Plugin - no Russian translation
+    * [FELIX-4763] - Reload button on user admin plugin doesn't work correctly.
+
+Initial Release 1.0.0
+---------------------
 
 ** Improvement
     * [FELIX-2254] - User Admin Plugin
