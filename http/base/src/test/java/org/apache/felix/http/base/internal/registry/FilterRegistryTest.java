@@ -147,6 +147,6 @@ public class FilterRegistryTest {
         final ExtServletContext ctx = mock(ExtServletContext.class);
         final Filter filter = mock(Filter.class);
 
-        return new HttpServiceFilterHandler(7, ctx, si, filter);
+        return new HttpServiceFilterHandler(ctx, si, filter);
     }
 }

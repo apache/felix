@@ -246,7 +246,7 @@ public class FilterHandlerTest
             initParams = Collections.emptyMap();
         }
         final FilterInfo info = new FilterInfo(null, pattern, ranking, initParams);
-        return new HttpServiceFilterHandler(0, this.context, info, this.filter);
+        return new HttpServiceFilterHandler(this.context, info, this.filter);
     }
 
     private HttpServletRequest createServletRequest()

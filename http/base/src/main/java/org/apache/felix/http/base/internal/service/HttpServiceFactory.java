@@ -40,6 +40,11 @@ import org.osgi.service.http.runtime.HttpServiceRuntimeConstants;
 public final class HttpServiceFactory
     implements ServiceFactory<HttpService>
 {
+    public static final String HTTP_SERVICE_CONTEXT_NAME = "Http Service context";
+
+    public static final long HTTP_SERVICE_CONTEXT_SERVICE_ID = -1;
+
+
     /**
      * Name of the Framework property indicating whether the servlet context
      * attributes of the ServletContext objects created for each HttpContext

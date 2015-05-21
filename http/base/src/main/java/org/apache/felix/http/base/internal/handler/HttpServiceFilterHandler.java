@@ -20,18 +20,18 @@ import javax.servlet.Filter;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
+import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 
 /**
  * Servlet holder for filters registered through the ext http service.
  */
 public final class HttpServiceFilterHandler extends FilterHandler
 {
-    public HttpServiceFilterHandler(final long contextServiceId,
-            final ExtServletContext context,
+    public HttpServiceFilterHandler(final ExtServletContext context,
             final FilterInfo filterInfo,
             final Filter filter)
     {
-        super(contextServiceId, context, filterInfo);
+        super(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID, context, filterInfo);
         this.setFilter(filter);
     }
 }

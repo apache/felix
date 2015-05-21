@@ -123,7 +123,7 @@ public final class PerBundleHttpServiceImpl implements ExtHttpService
         }
 
         final ExtServletContext httpContext = getServletContext(context);
-        final FilterHandler holder = new HttpServiceFilterHandler(0, httpContext, filterInfo, filter);
+        final FilterHandler holder = new HttpServiceFilterHandler(httpContext, filterInfo, filter);
 
         if ( this.sharedHttpService.registerFilter(holder) )
         {

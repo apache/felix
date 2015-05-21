@@ -26,6 +26,7 @@ import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
+import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.osgi.service.http.runtime.dto.ServletContextDTO;
 
 /**
@@ -59,7 +60,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
      */
     public PerContextHandlerRegistry()
     {
-        this.serviceId = 0;
+        this.serviceId = HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID;
         this.ranking = Integer.MAX_VALUE;
         this.path = "/";
         this.prefix = null;

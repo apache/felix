@@ -221,6 +221,6 @@ public class HttpServiceServletHandlerTest
             map = Collections.emptyMap();
         }
         final ServletInfo info = new ServletInfo(null, alias, 0, map);
-        return new HttpServiceServletHandler(3, this.context, info, this.servlet);
+        return new HttpServiceServletHandler(this.context, info, this.servlet);
     }
 }

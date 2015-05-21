@@ -57,7 +57,7 @@ public final class WhiteboardServiceHelper
             Long serviceId)
     {
         FilterInfo filterInfo = createFilterInfo(identifier, serviceId);
-        return new HttpServiceFilterHandler(0, context, filterInfo, mock(Filter.class));
+        return new HttpServiceFilterHandler(context, filterInfo, mock(Filter.class));
     }
 
     private static FilterInfo createFilterInfo(String identifier,
@@ -114,7 +114,7 @@ public final class WhiteboardServiceHelper
         ServletInfo servletInfo = createServletInfo(identifier, serviceId);
         Servlet servlet = mock(Servlet.class);
         when(servlet.getServletInfo()).thenReturn("info_" + identifier);
-        final ServletHandler h = new HttpServiceServletHandler(contextServiceId, context, servletInfo, servlet);
+        final ServletHandler h = new HttpServiceServletHandler(context, servletInfo, servlet);
 
         return h;
     }

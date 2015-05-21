@@ -17,6 +17,7 @@
 package org.apache.felix.http.base.internal.registry;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -26,7 +27,9 @@ import static org.mockito.Mockito.when;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
@@ -45,12 +48,11 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.runtime.dto.DTOConstants;
+import org.osgi.service.http.runtime.dto.FailedErrorPageDTO;
 import org.osgi.service.http.runtime.dto.ServletContextDTO;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 public class ErrorPageRegistryTest {
-
-    private final ErrorPageRegistry reg = new ErrorPageRegistry();
 
     private void assertEmpty(final ServletContextDTO dto, final FailedDTOHolder holder)
     {
@@ -70,6 +72,8 @@ public class ErrorPageRegistryTest {
 
     @Test public void testSingleErrorPage() throws InvalidSyntaxException, ServletException
     {
+        final ErrorPageRegistry reg = new ErrorPageRegistry();
+
         final FailedDTOHolder holder = new FailedDTOHolder();
         final ServletContextDTO dto = new ServletContextDTO();
 
@@ -127,6 +131,8 @@ public class ErrorPageRegistryTest {
 
     @Test public void testSimpleHiding() throws InvalidSyntaxException, ServletException
     {
+        final ErrorPageRegistry reg = new ErrorPageRegistry();
+
         final FailedDTOHolder holder = new FailedDTOHolder();
         final ServletContextDTO dto = new ServletContextDTO();
 
@@ -223,6 +229,88 @@ public class ErrorPageRegistryTest {
         assertEmpty(dto, holder);
     }
 
+    @Test public void testRangeRegistration() throws InvalidSyntaxException
+    {
+        final ErrorPageRegistry reg = new ErrorPageRegistry();
+        final FailedDTOHolder holder = new FailedDTOHolder();
+        final ServletContextDTO dto = new ServletContextDTO();
+
+        final ServletHandler handler4 = createServletHandler(1L, 0, "4xx");
+        final ServletHandler handler5 = createServletHandler(2L, 0, "5xx");
+
+        reg.addServlet(handler4);
+        reg.addServlet(handler5);
+
+        // check DTO
+        reg.getRuntimeInfo(dto, holder.failedErrorPageDTOs);
+
+        assertTrue(holder.failedErrorPageDTOs.isEmpty());
+        assertEquals(2, dto.errorPageDTOs.length);
+        assertEquals(100, dto.errorPageDTOs[0].errorCodes.length);
+        final Set<Long> codes4 = new HashSet<Long>();
+        for(final long c : dto.errorPageDTOs[0].errorCodes)
+        {
+            assertTrue(c >= 400 && c < 500);
+            codes4.add(c);
+        }
+        assertEquals(100, codes4.size());
+        assertEquals(100, dto.errorPageDTOs[1].errorCodes.length);
+        final Set<Long> codes5 = new HashSet<Long>();
+        for(final long c : dto.errorPageDTOs[1].errorCodes)
+        {
+            assertTrue(c >= 500 && c < 600);
+            codes5.add(c);
+        }
+        assertEquals(100, codes5.size());
+    }
+
+    @Test public void testRangeRegistrationOverlay() throws InvalidSyntaxException
+    {
+        final ErrorPageRegistry reg = new ErrorPageRegistry();
+        final FailedDTOHolder holder = new FailedDTOHolder();
+        final ServletContextDTO dto = new ServletContextDTO();
+
+        final ServletHandler handler4 = createServletHandler(1L, 0, "4xx");
+        final ServletHandler handler = createServletHandler(2L, 10, "404", "403");
+
+        reg.addServlet(handler4);
+        reg.addServlet(handler);
+
+        // check DTO
+        reg.getRuntimeInfo(dto, holder.failedErrorPageDTOs);
+
+        assertEquals(1, holder.failedErrorPageDTOs.size());
+        assertEquals(2, dto.errorPageDTOs.length);
+        assertEquals(98, dto.errorPageDTOs[0].errorCodes.length);
+        final Set<Long> codes4 = new HashSet<Long>();
+        for(final long c : dto.errorPageDTOs[0].errorCodes)
+        {
+            assertTrue(c >= 400 && c < 500);
+            codes4.add(c);
+        }
+        assertEquals(98, codes4.size());
+        assertFalse(codes4.contains(404L));
+        assertFalse(codes4.contains(403L));
+        assertEquals(2, dto.errorPageDTOs[1].errorCodes.length);
+        final Set<Long> codes = new HashSet<Long>();
+        for(final long c : dto.errorPageDTOs[1].errorCodes)
+        {
+            assertTrue(c >= 403 && c < 405);
+            codes.add(c);
+        }
+        assertEquals(2, codes.size());
+
+        final FailedErrorPageDTO fep = holder.failedErrorPageDTOs.iterator().next();
+        assertEquals(2, fep.errorCodes.length);
+        codes.clear();
+        for(final long c : fep.errorCodes)
+        {
+            assertTrue(c >= 403 && c < 405);
+            codes.add(c);
+        }
+        assertEquals(2, codes.size());
+    }
+
     private static ServletInfo createServletInfo(final long id, final int ranking, final String... codes) throws InvalidSyntaxException
     {
         final BundleContext bCtx = mock(BundleContext.class);
@@ -248,6 +336,6 @@ public class ErrorPageRegistryTest {
         final ExtServletContext ctx = mock(ExtServletContext.class);
         final Servlet servlet = mock(Servlet.class);
 
-        return new HttpServiceServletHandler(7, ctx, si, servlet);
+        return new HttpServiceServletHandler(ctx, si, servlet);
     }
 }
