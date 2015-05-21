@@ -24,6 +24,10 @@ import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 
 /**
+ * Defines a composite service using a composition manager that is used to
+ * instantiate component instances, depending of what is found from the configuration.
+ * The configuration is created from the org.apache.felix.dependencymanager.samples.conf.Configurator component.
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class Activator extends DependencyActivatorBase {
