@@ -24,7 +24,6 @@ import java.util.Map;
 import javax.servlet.Servlet;
 
 import org.osgi.dto.DTO;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.runtime.dto.ServletDTO;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
@@ -190,32 +189,5 @@ public class ServletInfo extends WhiteboardServiceInfo<Servlet>
     public String getPrefix()
     {
         return prefix;
-    }
-
-    @Override
-    public ServiceReference<Servlet> getServiceReference()
-    {
-        // TODO This method returns a ServiceReference<Object> in case of a resource
-        return super.getServiceReference();
-    }
-
-    @Override
-    public Servlet getService(Bundle bundle)
-    {
-        if (isResource)
-        {
-            throw new UnsupportedOperationException();
-        };
-        return super.getService(bundle);
-    }
-
-    @Override
-    public void ungetService(Bundle bundle, Servlet service)
-    {
-        if (isResource)
-        {
-            throw new UnsupportedOperationException();
-        };
-        super.ungetService(bundle, service);
     }
 }

@@ -18,6 +18,8 @@
  */
 package org.apache.felix.http.base.internal.runtime;
 
+import org.osgi.framework.Bundle;
+import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
@@ -41,5 +43,31 @@ public abstract class ListenerInfo<T> extends WhiteboardServiceInfo<T>
     public boolean isValid()
     {
         return super.isValid() && "true".equalsIgnoreCase(this.enabled);
+    }
+
+
+    public T getService(final Bundle bundle)
+    {
+        if (this.getServiceReference() != null)
+        {
+            final ServiceObjects<T> so = bundle.getBundleContext().getServiceObjects(this.getServiceReference());
+            if (so != null)
+            {
+                return so.getService();
+            }
+        }
+        return null;
+    }
+
+    public void ungetService(final Bundle bundle, final T service)
+    {
+        if (this.getServiceReference() != null)
+        {
+            final ServiceObjects<T> so = bundle.getBundleContext().getServiceObjects(this.getServiceReference());
+            if (so != null)
+            {
+                so.ungetService(service);
+            }
+        }
     }
 }
