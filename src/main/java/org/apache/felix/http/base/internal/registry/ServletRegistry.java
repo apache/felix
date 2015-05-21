@@ -43,7 +43,7 @@ import org.osgi.service.http.runtime.dto.ServletDTO;
  * for a single servlet context.
  *
  * TODO - sort active servlet mappings by pattern length, longest first (avoids looping over all)
- *
+ * TODO - we could collapse all three maps into a single map (activeServletMappings, inactiveServletMappings and statusMapping)
  */
 public final class ServletRegistry
 {

@@ -23,6 +23,9 @@ import java.util.Map;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 
+/**
+ * Implementation of the servlet configuration
+ */
 public final class ServletConfigImpl implements ServletConfig
 {
     private final String name;
@@ -51,7 +54,7 @@ public final class ServletConfigImpl implements ServletConfig
     }
 
     @Override
-    public String getInitParameter(String name)
+    public String getInitParameter(final String name)
     {
         return this.initParams.get(name);
     }

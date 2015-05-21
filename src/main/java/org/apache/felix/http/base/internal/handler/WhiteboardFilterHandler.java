@@ -57,7 +57,10 @@ public final class WhiteboardFilterHandler extends FilterHandler
         final int reason = super.init();
         if ( reason != -1 )
         {
-            so.ungetService(this.getFilter());
+            if ( so != null )
+            {
+                so.ungetService(this.getFilter());
+            }
             this.setFilter(null);
         }
         return reason;
