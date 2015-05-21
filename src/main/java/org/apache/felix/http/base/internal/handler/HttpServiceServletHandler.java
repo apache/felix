@@ -20,12 +20,20 @@ import javax.servlet.Servlet;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 
 /**
  * Servlet handler for servlets registered through the http service.
  */
 public final class HttpServiceServletHandler extends ServletHandler
 {
+    public HttpServiceServletHandler(final ExtServletContext context,
+            final ServletInfo servletInfo,
+            final Servlet servlet)
+    {
+        this(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID, context, servletInfo, servlet);
+    }
+
     public HttpServiceServletHandler(final long contextServiceId,
             final ExtServletContext context,
             final ServletInfo servletInfo,

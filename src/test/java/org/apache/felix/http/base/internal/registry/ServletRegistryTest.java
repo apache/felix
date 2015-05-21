@@ -284,6 +284,6 @@ public class ServletRegistryTest {
         final ExtServletContext ctx = mock(ExtServletContext.class);
         final Servlet servlet = mock(Servlet.class);
 
-        return new HttpServiceServletHandler(7, ctx, si, servlet);
+        return new HttpServiceServletHandler(ctx, si, servlet);
     }
 }

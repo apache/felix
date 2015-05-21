@@ -740,7 +740,6 @@ public final class WhiteboardManager
          return handlers;
     }
 
-    private static final String HTTP_SERVICE_CONTEXT_NAME = "Http Service context";
 
     public RegistryRuntime getRuntime(final HandlerRegistry registry)
     {
@@ -748,7 +747,9 @@ public final class WhiteboardManager
 
         final Collection<ServletContextDTO> contextDTOs = new ArrayList<ServletContextDTO>();
         // add the context for the http service
-        final ServletContextHelperInfo info = new ServletContextHelperInfo(Integer.MAX_VALUE, 0, HTTP_SERVICE_CONTEXT_NAME, "/", null);
+        final ServletContextHelperInfo info = new ServletContextHelperInfo(Integer.MAX_VALUE,
+                HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID,
+                HttpServiceFactory.HTTP_SERVICE_CONTEXT_NAME, "/", null);
         final ServletContextDTO dto = ServletContextDTOBuilder.build(info, webContext, -1);
         if ( registry.getRuntime(dto, failedDTOHolder) )
         {

@@ -65,7 +65,7 @@ public final class SharedHttpServiceImpl
             @Nonnull final Servlet servlet,
             @Nonnull final ServletInfo servletInfo) throws ServletException, NamespaceException
     {
-        final ServletHandler holder = new HttpServiceServletHandler(0, httpContext, servletInfo, servlet);
+        final ServletHandler holder = new HttpServiceServletHandler(httpContext, servletInfo, servlet);
 
         synchronized (this.aliasMap)
         {
@@ -93,7 +93,7 @@ public final class SharedHttpServiceImpl
             }
 
             final Servlet s = holder.getServlet();
-            this.handlerRegistry.removeServlet(0, holder.getServletInfo(), true);
+            this.handlerRegistry.removeServlet(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID, holder.getServletInfo(), true);
             return s;
         }
     }
@@ -110,7 +110,7 @@ public final class SharedHttpServiceImpl
                     final Map.Entry<String, ServletHandler> entry = i.next();
                     if (entry.getValue().getServlet() == servlet)
                     {
-                        this.handlerRegistry.removeServlet(0, entry.getValue().getServletInfo(), destroy);
+                        this.handlerRegistry.removeServlet(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID, entry.getValue().getServletInfo(), destroy);
 
                         i.remove();
                         break;
