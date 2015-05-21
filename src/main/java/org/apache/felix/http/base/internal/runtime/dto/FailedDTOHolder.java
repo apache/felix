@@ -97,8 +97,7 @@ public final class FailedDTOHolder
 
             if ( ((ServletInfo) info).getPatterns() != null || !isError )
             {
-                final FailedServletDTO dto = (FailedServletDTO)ServletDTOBuilder.build((ServletInfo) info, true);
-                dto.failureReason = failureCode;
+                final FailedServletDTO dto = (FailedServletDTO)ServletDTOBuilder.build((ServletInfo) info, failureCode);
                 if ( ((ServletInfo) info).getPatterns() != null )
                 {
                     dto.patterns = ((ServletInfo) info).getPatterns();
@@ -108,7 +107,7 @@ public final class FailedDTOHolder
         }
         else if (info instanceof FilterInfo)
         {
-            final FailedFilterDTO dto = (FailedFilterDTO)FilterDTOBuilder.build((FilterInfo) info, true);
+            final FailedFilterDTO dto = (FailedFilterDTO)FilterDTOBuilder.build((FilterInfo) info, failureCode);
             dto.failureReason = failureCode;
 
             this.failedFilterDTOs.add(dto);

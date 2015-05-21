@@ -19,12 +19,8 @@ package org.apache.felix.http.base.internal.registry;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -41,27 +37,67 @@ import org.osgi.service.http.runtime.dto.ServletContextDTO;
 /**
  * The filter registry keeps track of all filter mappings for a single servlet context.
  *
- * TODO - we should sort the statusMapping by result and ranking, keeping the active filters first,
- *        highest ranking first. This would allow to stop iterating and avoid sorting the result.
  */
 public final class FilterRegistry
 {
-    /** Map of all filter registrations. */
-    private final Map<FilterInfo, FilterRegistrationStatus> statusMapping = new ConcurrentHashMap<FilterInfo, FilterRegistrationStatus>();
+    /** List of all filter registrations. These are sorted by the status objects. */
+    private volatile List<FilterRegistrationStatus> filters = Collections.emptyList();
 
-    private static final class FilterRegistrationStatus
+    /**
+     * The status object keeps track of the registration status of a filter and holds
+     * the resolvers to match against a uri.
+     * The status objects are sorted by result first, followed by ranking. The active
+     * filters ( result == -1) are first, followed by the inactive ones. This sorting
+     * allows to only traverse over the active ones and also avoids any sorting
+     * as the filters are processed in the correct order already.
+     */
+    private static final class FilterRegistrationStatus implements Comparable<FilterRegistrationStatus>
     {
-        public int result;
-        public FilterHandler handler;
-        public PathResolver[] resolvers;
+        private final int result;
+        private final FilterHandler handler;
+        private final PathResolver[] resolvers;
+
+        public FilterRegistrationStatus(@Nonnull final FilterHandler handler, @CheckForNull final PathResolver[] resolvers, final int result)
+        {
+            this.handler = handler;
+            this.resolvers = resolvers;
+            this.result = result;
+        }
+
+        public int getResult()
+        {
+            return this.result;
+        }
+
+        public @Nonnull FilterHandler getHandler()
+        {
+            return this.handler;
+        }
+
+        public @CheckForNull PathResolver[] getResolvers()
+        {
+            return this.resolvers;
+        }
+
+        @Override
+        public int compareTo(final FilterRegistrationStatus o) {
+            int result = this.result - o.result;
+            if ( result == 0 )
+            {
+                result = this.handler.compareTo(o.handler);
+            }
+            return result;
+        }
     }
 
+    /**
+     * Add a filter.
+     * @param handler The handler for the filter
+     */
     public synchronized void addFilter(@Nonnull final FilterHandler handler)
     {
         final int result = handler.init();
-        final FilterRegistrationStatus status = new FilterRegistrationStatus();
-        status.result = result;
-        status.handler = handler;
+        PathResolver[] prs = null;
 
         if ( result == -1 )
         {
@@ -80,23 +116,45 @@ public final class FilterRegistry
             }
             Collections.sort(resolvers);
 
-            status.resolvers = resolvers.toArray(new PathResolver[resolvers.size()]);
+            prs = resolvers.toArray(new PathResolver[resolvers.size()]);
         }
 
-        statusMapping.put(handler.getFilterInfo(), status);
+        final FilterRegistrationStatus status = new FilterRegistrationStatus(handler, prs, result);
+
+        final List<FilterRegistrationStatus> newList = new ArrayList<FilterRegistry.FilterRegistrationStatus>(this.filters);
+        newList.add(status);
+        Collections.sort(newList);
+
+        this.filters = newList;
     }
 
+    /**
+     * Remove a filter
+     * @param filterInfo The filter info
+     * @param destroy boolean flag indicating whether to call destroy on the filter.
+     */
     public synchronized void removeFilter(@Nonnull final FilterInfo filterInfo, final boolean destroy)
     {
-        final FilterRegistrationStatus status = statusMapping.remove(filterInfo);
-        if ( status != null )
+        FilterRegistrationStatus found = null;
+        final List<FilterRegistrationStatus> newList = new ArrayList<FilterRegistry.FilterRegistrationStatus>(this.filters);
+        final Iterator<FilterRegistrationStatus> i = newList.iterator();
+        while ( i.hasNext() )
         {
-            if ( status.result == -1 )
+            final FilterRegistrationStatus status = i.next();
+            if ( status.getHandler().getFilterInfo().compareTo(filterInfo) == 0 )
             {
-                if (destroy)
-                {
-                    status.handler.dispose();
-                }
+                found = status;
+                i.remove();
+                break;
+            }
+        }
+        if ( found != null )
+        {
+            this.filters = newList;
+
+            if ( found.getResult() == -1 && destroy )
+            {
+                found.getHandler().dispose();
             }
         }
     }
@@ -113,31 +171,37 @@ public final class FilterRegistry
             @Nonnull final DispatcherType dispatcherType,
             @Nonnull final String requestURI)
     {
-        final Set<FilterHandler> result = new TreeSet<FilterHandler>();
+        final List<FilterHandler> result = new ArrayList<FilterHandler>();
+        final List<FilterRegistrationStatus> allFilters = this.filters;
 
-        for(final FilterRegistrationStatus status : this.statusMapping.values())
+        for(final FilterRegistrationStatus status : allFilters)
         {
-            if (referencesDispatcherType(status.handler, dispatcherType) )
+            // as soon as we encounter a failing filter, we can stop
+            if ( status.getResult() != -1 )
+            {
+                break;
+            }
+            if (referencesDispatcherType(status.getHandler(), dispatcherType) )
             {
                 boolean added = false;
-                for(final PathResolver resolver : status.resolvers)
+                for(final PathResolver resolver : status.getResolvers())
                 {
                     if ( resolver.resolve(requestURI) != null )
                     {
-                        result.add(status.handler);
+                        result.add(status.getHandler());
                         added = true;
                         break;
                     }
                 }
                 // check for servlet name
                 final String servletName = (handler != null) ? handler.getName() : null;
-                if ( !added && servletName != null && status.handler.getFilterInfo().getServletNames() != null )
+                if ( !added && servletName != null && status.getHandler().getFilterInfo().getServletNames() != null )
                 {
-                    for(final String name : status.handler.getFilterInfo().getServletNames())
+                    for(final String name : status.getHandler().getFilterInfo().getServletNames())
                     {
                         if ( servletName.equals(name) )
                         {
-                            result.add(status.handler);
+                            result.add(status.getHandler());
                             added = true;
                             break;
                         }
@@ -168,30 +232,32 @@ public final class FilterRegistry
         return false;
     }
 
+    /**
+     * Get the runtime information about filters
+     * @param servletContextDTO The servlet context DTO
+     * @param failedFilterDTOs The collection holding the failed filters.
+     */
     public void getRuntimeInfo(final ServletContextDTO servletContextDTO,
                                final Collection<FailedFilterDTO> failedFilterDTOs)
     {
-        // we create a map to sort filter DTOs by ranking/service id
-        final Map<FilterInfo, FilterDTO> filterDTOs = new TreeMap<FilterInfo, FilterDTO>();
-        final Map<FilterInfo, FailedFilterDTO> failureFilterDTOs = new TreeMap<FilterInfo, FailedFilterDTO>();
+        final List<FilterDTO> filterDTOs = new ArrayList<FilterDTO>();
 
-        for(final Map.Entry<FilterInfo, FilterRegistrationStatus> entry : this.statusMapping.entrySet())
+        final List<FilterRegistrationStatus> allFilters = this.filters;
+        for(final FilterRegistrationStatus status : allFilters)
         {
-            if ( entry.getValue().result != -1 )
+            if ( status.getResult() != -1 )
             {
-                failureFilterDTOs.put(entry.getKey(), FilterDTOBuilder.buildFailed(entry.getValue().handler, entry.getValue().result));
+                failedFilterDTOs.add((FailedFilterDTO)FilterDTOBuilder.build(status.getHandler(), status.getResult()));
             }
             else
             {
-                filterDTOs.put(entry.getKey(), FilterDTOBuilder.build(entry.getValue().handler));
+                filterDTOs.add(FilterDTOBuilder.build(status.getHandler(), status.getResult()));
             }
         }
 
-        final Collection<FilterDTO> filterDTOArray = filterDTOs.values();
-        if ( !filterDTOArray.isEmpty() )
+        if ( !filterDTOs.isEmpty() )
         {
-            servletContextDTO.filterDTOs = filterDTOArray.toArray(new FilterDTO[filterDTOArray.size()]);
+            servletContextDTO.filterDTOs = filterDTOs.toArray(new FilterDTO[filterDTOs.size()]);
         }
-        failedFilterDTOs.addAll(failureFilterDTOs.values());
     }
 }
