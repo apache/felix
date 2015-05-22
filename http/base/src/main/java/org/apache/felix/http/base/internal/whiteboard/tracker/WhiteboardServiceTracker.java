@@ -19,6 +19,7 @@ package org.apache.felix.http.base.internal.whiteboard.tracker;
 import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
@@ -105,8 +106,7 @@ public abstract class WhiteboardServiceTracker<T> extends ServiceTracker<T, Serv
 
     private void removed(final ServiceReference<T> ref)
     {
-        final WhiteboardServiceInfo<T> info = this.getServiceInfo(ref);
-        this.contextManager.removeWhiteboardService(info);
+        this.contextManager.removeWhiteboardService((Long)ref.getProperty(Constants.SERVICE_ID));
     }
 
     /**

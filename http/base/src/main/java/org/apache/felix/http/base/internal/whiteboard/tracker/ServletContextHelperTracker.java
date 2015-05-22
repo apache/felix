@@ -21,6 +21,7 @@ import javax.annotation.Nonnull;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.context.ServletContextHelper;
@@ -81,7 +82,6 @@ public final class ServletContextHelperTracker extends ServiceTracker<ServletCon
 
     private void removed(@Nonnull final ServiceReference<ServletContextHelper> ref)
     {
-        final ServletContextHelperInfo info = new ServletContextHelperInfo(ref);
-        this.contextManager.removeContextHelper(info);
+        this.contextManager.removeContextHelper((Long)ref.getProperty(Constants.SERVICE_ID));
     }
 }

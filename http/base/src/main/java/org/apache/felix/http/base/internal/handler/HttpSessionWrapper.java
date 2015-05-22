@@ -40,8 +40,6 @@ import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 /**
  * The session wrapper keeps track of the internal session, manages their attributes
  * separately and also handles session timeout.
- *
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class HttpSessionWrapper implements HttpSession
 {

@@ -18,15 +18,17 @@
  */
 package org.apache.felix.http.base.internal.util;
 
-import static org.apache.felix.http.base.internal.util.UriUtils.*;
-import static org.junit.Assert.*;
+import static org.apache.felix.http.base.internal.util.UriUtils.compactPath;
+import static org.apache.felix.http.base.internal.util.UriUtils.concat;
+import static org.apache.felix.http.base.internal.util.UriUtils.decodePath;
+import static org.apache.felix.http.base.internal.util.UriUtils.relativePath;
+import static org.apache.felix.http.base.internal.util.UriUtils.removeDotSegments;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
 /**
  * Test cases for {@link UriUtils}.
- * 
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class UriUtilsTest
 {
@@ -51,7 +53,7 @@ public class UriUtilsTest
         assertEquals(null, relativePath("/foo", null));
         assertEquals(null, relativePath("/foo", ""));
         assertEquals(null, relativePath("/foo", "/foo"));
-        assertEquals(null, relativePath("/foo", "/foo/")); // XXX or "/"?   
+        assertEquals(null, relativePath("/foo", "/foo/")); // XXX or "/"?
         assertEquals("/foo", relativePath("/", "/foo"));
         assertEquals("/foo/", relativePath("/", "/foo/"));
         assertEquals("/foo/", relativePath(null, "/foo/"));
@@ -159,7 +161,7 @@ public class UriUtilsTest
         assertEquals("foo..", removeDotSegments("foo.."));
         assertEquals("foo.", removeDotSegments("foo."));
         assertEquals("/.foo", removeDotSegments("/.foo"));
-        assertEquals("/..foo", removeDotSegments("/..foo"));        
+        assertEquals("/..foo", removeDotSegments("/..foo"));
 
         // FELIX-4440
         assertEquals("foo.bar", removeDotSegments("foo.bar"));

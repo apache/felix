@@ -193,8 +193,8 @@ public final class FilterRegistry
                         break;
                     }
                 }
-                // check for servlet name
-                final String servletName = (handler != null) ? handler.getName() : null;
+                // check for servlet name if it's not a resource
+                final String servletName = (handler != null && !handler.getServletInfo().isResource()) ? handler.getName() : null;
                 if ( !added && servletName != null && status.getHandler().getFilterInfo().getServletNames() != null )
                 {
                     for(final String name : status.getHandler().getFilterInfo().getServletNames())

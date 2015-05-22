@@ -22,9 +22,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 /**
- *
- *
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ * Info object for a resource registration
  */
 public final class ResourceInfo extends WhiteboardServiceInfo<Object>
 {
