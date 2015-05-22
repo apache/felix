@@ -26,7 +26,7 @@
     <packaging>bundle</packaging>
     <name>Apache Felix Connect</name>
     <artifactId>org.apache.felix.connect</artifactId>
-    <version>0.1.1-SNAPSHOT</version>
+    <version>0.1.0</version>
     <description>A service registry that enables OSGi style service registry programs without using an OSGi framework.
     </description>
     <url>http://felix.apache.org/</url>
@@ -38,9 +38,9 @@
         </license>
     </licenses>
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/connect</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/connect</developerConnection>
-        <url>http://svn.apache.org/repos/asf/felix/connect</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.connect-0.1.0</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.connect-0.1.0</developerConnection>
+        <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.connect-0.1.0</url>
     </scm>
     <developers>
         <developer>
