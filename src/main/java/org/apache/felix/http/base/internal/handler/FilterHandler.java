@@ -169,4 +169,25 @@ public class FilterHandler implements Comparable<FilterHandler>
         this.useCount = 1;
         return this.destroy();
     }
+
+    @Override
+    public int hashCode()
+    {
+        return 31 + filterInfo.hashCode();
+    }
+
+    @Override
+    public boolean equals(final Object obj)
+    {
+        if (this == obj)
+        {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass() )
+        {
+            return false;
+        }
+        final FilterHandler other = (FilterHandler) obj;
+        return filterInfo.equals(other.filterInfo);
+    }
 }

@@ -19,7 +19,6 @@
 package org.apache.felix.http.base.internal.runtime.dto;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -77,21 +76,8 @@ public final class FailedDTOHolder
                 final FailedErrorPageDTO dto = (FailedErrorPageDTO)ErrorPageDTOBuilder.build((ServletInfo)info, true);
                 dto.failureReason = failureCode;
                 final ErrorPageRegistry.ErrorRegistration  reg = ErrorPageRegistry.getErrorRegistration((ServletInfo)info);
-                if ( !reg.errorCodes.isEmpty() )
-                {
-                    final long[] codes = new long[reg.errorCodes.size()];
-                    int index = 0;
-                    final Iterator<Long> i = reg.errorCodes.iterator();
-                    while ( i.hasNext() )
-                    {
-                        codes[index++] = i.next();
-                    }
-                    dto.errorCodes = codes;
-                }
-                if ( !reg.exceptions.isEmpty() )
-                {
-                    dto.exceptions = reg.exceptions.toArray(new String[reg.exceptions.size()]);
-                }
+                dto.errorCodes = reg.errorCodes;
+                dto.exceptions = reg.exceptions;
                 this.failedErrorPageDTOs.add(dto);
             }
 

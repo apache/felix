@@ -22,9 +22,6 @@ package org.apache.felix.http.base.internal.dispatch;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
 
-/**
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
- */
 public interface RequestDispatcherProvider
 {
     /**

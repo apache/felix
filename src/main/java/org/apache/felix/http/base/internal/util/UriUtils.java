@@ -28,10 +28,8 @@ import java.nio.charset.CodingErrorAction;
 
 /**
  * Some convenience methods for handling URI(-parts).
- *
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class UriUtils
+public abstract class UriUtils
 {
     private static final String SLASH_STR = "/";
     private static final char DOT = '.';

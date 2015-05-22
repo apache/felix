@@ -167,4 +167,26 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
         this.useCount = 1;
         return this.destroy();
     }
+
+    @Override
+    public int hashCode()
+    {
+        return 31 + servletInfo.hashCode();
+    }
+
+    @Override
+    public boolean equals(final Object obj)
+    {
+        if (this == obj)
+        {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass() )
+        {
+            return false;
+        }
+        final ServletHandler other = (ServletHandler) obj;
+        return servletInfo.equals(other.servletInfo);
+    }
+
 }

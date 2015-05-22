@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 import javax.annotation.Nonnull;
@@ -116,6 +117,9 @@ public final class WhiteboardManager
     private volatile ServiceRegistration<HttpServiceRuntime> runtimeServiceReg;
 
     private final HttpServicePlugin plugin;
+
+    /** Map containing all info objects reported from the trackers. */
+    private final Map<Long, AbstractInfo<?>> allInfos = new ConcurrentHashMap<Long, AbstractInfo<?>>();
 
     /**
      * Create a new whiteboard http manager
@@ -229,6 +233,7 @@ public final class WhiteboardManager
             this.runtimeServiceReg.unregister();
             this.runtimeServiceReg = null;
         }
+        this.allInfos.clear();
     }
 
     public void setProperties(final Hashtable<String, Object> props)
@@ -360,6 +365,7 @@ public final class WhiteboardManager
         // no failure DTO and no logging if not matching
         if ( isMatchingService(info) )
         {
+            this.allInfos.put(info.getServiceId(), info);
             if ( info.isValid() )
             {
                 synchronized ( this.contextMap )
@@ -407,10 +413,10 @@ public final class WhiteboardManager
     /**
      * Remove a servlet context helper
      */
-    public void removeContextHelper(final ServletContextHelperInfo info)
+    public void removeContextHelper(final long serviceId)
     {
-        // no failure DTO and no logging if not matching
-        if ( isMatchingService(info) )
+        final ServletContextHelperInfo info = (ServletContextHelperInfo) this.allInfos.remove(serviceId);
+        if ( info != null )
         {
             if ( info.isValid() )
             {
@@ -500,6 +506,7 @@ public final class WhiteboardManager
         // no logging and no DTO if other target service
         if ( isMatchingService(info) )
         {
+            this.allInfos.put(info.getServiceId(), info);
             if ( info.isValid() )
             {
                 synchronized ( this.contextMap )
@@ -537,12 +544,13 @@ public final class WhiteboardManager
 
     /**
      * Remove whiteboard service from the registry
-     * @param info Whiteboard service info
+     * @param info The service id of the whiteboard service
      */
-    public void removeWhiteboardService(@Nonnull final WhiteboardServiceInfo<?> info)
+    public void removeWhiteboardService(final long serviceId)
     {
-        // no logging and no DTO if other target service
-        if ( isMatchingService(info) ) {
+        final WhiteboardServiceInfo<?> info = (WhiteboardServiceInfo<?>) this.allInfos.remove(serviceId);
+        if ( info != null )
+        {
             if ( info.isValid() )
             {
                 synchronized ( this.contextMap )

@@ -24,8 +24,6 @@ import org.osgi.framework.ServiceReference;
 
 /**
  * Info object for registered servlet context listeners
- *
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public final class HttpSessionAttributeListenerInfo extends ListenerInfo<HttpSessionAttributeListener>
 {

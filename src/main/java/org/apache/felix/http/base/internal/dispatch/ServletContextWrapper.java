@@ -24,9 +24,6 @@ import javax.servlet.RequestDispatcher;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.context.ExtServletContextWrapper;
 
-/**
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
- */
 class ServletContextWrapper extends ExtServletContextWrapper
 {
     private final RequestDispatcherProvider provider;

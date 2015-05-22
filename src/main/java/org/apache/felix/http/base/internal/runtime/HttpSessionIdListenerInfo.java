@@ -24,8 +24,6 @@ import org.osgi.framework.ServiceReference;
 
 /**
  * Info object for registered http session id listeners
- *
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public final class HttpSessionIdListenerInfo extends ListenerInfo<HttpSessionIdListener>
 {

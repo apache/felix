@@ -28,10 +28,12 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.runtime.dto.BuilderConstants;
 import org.apache.felix.http.base.internal.runtime.dto.ErrorPageDTOBuilder;
 import org.osgi.service.http.runtime.dto.DTOConstants;
 import org.osgi.service.http.runtime.dto.ErrorPageDTO;
@@ -52,6 +54,43 @@ public final class ErrorPageRegistry
     private static final List<Long> CLIENT_ERROR_CODES = hundredOf(400);
     private static final List<Long> SERVER_ERROR_CODES = hundredOf(500);
 
+    private final Map<String, List<ServletHandler>> errorMapping = new ConcurrentHashMap<String, List<ServletHandler>>();
+
+    private volatile List<ErrorRegistrationStatus> status = Collections.emptyList();
+
+    public static final class ErrorRegistration {
+        public final long[] errorCodes;
+        public final String[] exceptions;
+
+        public ErrorRegistration(final long[] errorCodes, final String[] exceptions)
+        {
+            this.errorCodes = errorCodes;
+            this.exceptions = exceptions;
+        }
+    }
+
+    static final class ErrorRegistrationStatus implements Comparable<ErrorRegistrationStatus> {
+
+        private final ServletHandler handler;
+        public final Map<Integer, ErrorRegistration> reasonMapping = new HashMap<Integer, ErrorRegistration>();
+
+        public ErrorRegistrationStatus(final ServletHandler handler)
+        {
+            this.handler = handler;
+        }
+
+        public ServletHandler getHandler()
+        {
+            return this.handler;
+        }
+
+        @Override
+        public int compareTo(final ErrorRegistrationStatus o)
+        {
+            return this.handler.compareTo(o.getHandler());
+        }
+    }
+
     private static List<Long> hundredOf(final int start)
     {
         List<Long> result = new ArrayList<Long>();
@@ -60,6 +99,51 @@ public final class ErrorPageRegistry
             result.add(i);
         }
         return Collections.unmodifiableList(result);
+    }
+
+    private static long[] toLongArray(final Set<Long> set)
+    {
+        long[] codes = BuilderConstants.EMPTY_LONG_ARRAY;
+        if ( !set.isEmpty() )
+        {
+            codes = new long[set.size()];
+            int index = 0;
+            for(final Long code : set)
+            {
+                codes[index++] = code;
+            }
+        }
+        return codes;
+    }
+
+    private static Set<Long> toLongSet(final long[] codes)
+    {
+        final Set<Long> set = new TreeSet<Long>();
+        for(final long c : codes)
+        {
+            set.add(c);
+        }
+        return set;
+    }
+
+    private static String[] toStringArray(final Set<String> set)
+    {
+        String[] array = BuilderConstants.EMPTY_STRING_ARRAY;
+        if ( !set.isEmpty() )
+        {
+            array = set.toArray(new String[set.size()]);
+        }
+        return array;
+    }
+
+    private static Set<String> toStringSet(final String[] array)
+    {
+        final Set<String> set = new TreeSet<String>();
+        for(final String s : array)
+        {
+            set.add(s);
+        }
+        return set;
     }
 
     private static String parseErrorCodes(final Set<Long> codes, final String string)
@@ -83,41 +167,30 @@ public final class ErrorPageRegistry
         return null;
     }
 
-    private final Map<Long, List<ServletHandler>> errorCodesMap = new ConcurrentHashMap<Long, List<ServletHandler>>();
-    private final Map<String, List<ServletHandler>> exceptionsMap = new ConcurrentHashMap<String, List<ServletHandler>>();
-
-    private final Map<ServletInfo, ErrorRegistrationStatus> statusMapping = new ConcurrentHashMap<ServletInfo, ErrorRegistrationStatus>();
-
-    public static final class ErrorRegistration {
-        public final Set<Long> errorCodes = new TreeSet<Long>();
-        public final Set<String> exceptions = new TreeSet<String>();
-    }
-
-    static final class ErrorRegistrationStatus {
-        ServletHandler handler;
-        final Map<Long, Integer> errorCodeMapping = new ConcurrentHashMap<Long, Integer>();
-        final Map<String, Integer> exceptionMapping = new ConcurrentHashMap<String, Integer>();
-    }
-
-    Map<ServletInfo, ErrorRegistrationStatus> getStatusMapping()
-    {
-        return this.statusMapping;
-    }
-
-    public static ErrorRegistration getErrorRegistration(@Nonnull final ServletInfo info)
+    /**
+     * Parse the registration properties of the servlet for error handling
+     * @param info The servlet info
+     * @return An error registration object if the servlet handles errors
+     */
+    public static @CheckForNull ErrorRegistration getErrorRegistration(@Nonnull final ServletInfo info)
     {
         if ( info.getErrorPage() != null )
         {
-            final ErrorRegistration reg = new ErrorRegistration();
+            final Set<Long> errorCodes = new TreeSet<Long>();
+            final Set<String> exceptions = new TreeSet<String>();
+
             for(final String val : info.getErrorPage())
             {
-                final String exception = parseErrorCodes(reg.errorCodes, val);
+                final String exception = parseErrorCodes(errorCodes, val);
                 if ( exception != null )
                 {
-                    reg.exceptions.add(exception);
+                    exceptions.add(exception);
                 }
             }
-            return reg;
+            final long[] codes = toLongArray(errorCodes);
+            final String[] exceptionsArray = toStringArray(exceptions);
+
+            return new ErrorRegistration(codes, exceptionsArray);
         }
         return null;
     }
@@ -131,87 +204,19 @@ public final class ErrorPageRegistry
         final ErrorRegistration reg = getErrorRegistration(handler.getServletInfo());
         if ( reg != null )
         {
-            final ErrorRegistrationStatus status = new ErrorRegistrationStatus();
-            status.handler = handler;
+            final ErrorRegistrationStatus status = new ErrorRegistrationStatus(handler);
             for(final long code : reg.errorCodes)
             {
-                List<ServletHandler> list = errorCodesMap.get(code);
-                if ( list == null )
-                {
-                    // activate
-                    if ( tryToActivate(code, handler, status) )
-                    {
-                        final List<ServletHandler> newList = new ArrayList<ServletHandler>(1);
-                        newList.add(handler);
-                        errorCodesMap.put(code, newList);
-                    }
-                }
-                else
-                {
-                    final List<ServletHandler> newList = new ArrayList<ServletHandler>(list);
-                    newList.add(handler);
-                    Collections.sort(newList);
-
-                    if ( newList.get(0) == handler )
-                    {
-                        // activate and reactive
-                        if ( tryToActivate(code, handler, status) )
-                        {
-                            final ServletHandler old = list.get(0);
-                            old.destroy();
-                            errorCodesMap.put(code, newList);
-                            final ErrorRegistrationStatus oldStatus = statusMapping.get(old.getServletInfo());
-                            oldStatus.errorCodeMapping.put(code, DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
-                        }
-                    }
-                    else
-                    {
-                        // failure
-                        status.errorCodeMapping.put(code, DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
-                        errorCodesMap.put(code, newList);
-                    }
-                }
+                addErrorHandling(handler, status, code, null);
             }
             for(final String exception : reg.exceptions)
             {
-                List<ServletHandler> list = exceptionsMap.get(exception);
-                if ( list == null )
-                {
-                    // activate
-                    if ( tryToActivate(exception, handler, status) )
-                    {
-                        final List<ServletHandler> newList = new ArrayList<ServletHandler>(1);
-                        newList.add(handler);
-                        exceptionsMap.put(exception, newList);
-                    }
-                }
-                else
-                {
-                    final List<ServletHandler> newList = new ArrayList<ServletHandler>(list);
-                    newList.add(handler);
-                    Collections.sort(newList);
-
-                    if ( newList.get(0) == handler )
-                    {
-                        // activate and reactive
-                        if ( tryToActivate(exception, handler, status) )
-                        {
-                            final ServletHandler old = list.get(0);
-                            old.destroy();
-                            exceptionsMap.put(exception, newList);
-                            final ErrorRegistrationStatus oldStatus = statusMapping.get(old.getServletInfo());
-                            oldStatus.exceptionMapping.put(exception, DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
-                        }
-                    }
-                    else
-                    {
-                        // failure
-                        status.exceptionMapping.put(exception, DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
-                        exceptionsMap.put(exception, newList);
-                    }
-                }
+                addErrorHandling(handler, status, 0, exception);
             }
-            this.statusMapping.put(handler.getServletInfo(), status);
+            final List<ErrorRegistrationStatus> newList = new ArrayList<ErrorPageRegistry.ErrorRegistrationStatus>(this.status);
+            newList.add(status);
+            Collections.sort(newList);
+            this.status = newList;
         }
     }
 
@@ -224,102 +229,213 @@ public final class ErrorPageRegistry
         final ErrorRegistration reg = getErrorRegistration(info);
         if ( reg != null )
         {
-            this.statusMapping.remove(info);
+            final List<ErrorRegistrationStatus> newList = new ArrayList<ErrorPageRegistry.ErrorRegistrationStatus>(this.status);
+            final Iterator<ErrorRegistrationStatus> i = newList.iterator();
+            while ( i.hasNext() )
+            {
+                final ErrorRegistrationStatus status = i.next();
+                if ( status.handler.getServletInfo().equals(info) )
+                {
+                    i.remove();
+                    break;
+                }
+            }
+            this.status = newList;
+
             for(final long code : reg.errorCodes)
             {
-                final List<ServletHandler> list = errorCodesMap.get(code);
-                if ( list != null )
-                {
-                    int index = 0;
-                    final Iterator<ServletHandler> i = list.iterator();
-                    while ( i.hasNext() )
-                    {
-                        final ServletHandler handler = i.next();
-                        if ( handler.getServletInfo().equals(info) )
-                        {
-                            handler.destroy();
-
-                            final List<ServletHandler> newList = new ArrayList<ServletHandler>(list);
-                            newList.remove(handler);
-
-                            if ( index == 0 )
-                            {
-                                index++;
-                                while ( index < list.size() )
-                                {
-                                    final ServletHandler next = list.get(index);
-                                    if ( tryToActivate(code, next, statusMapping.get(next.getServletInfo())) )
-                                    {
-                                        break;
-                                    }
-                                    else
-                                    {
-                                        newList.remove(next);
-                                    }
-                                }
-                            }
-                            if ( newList.isEmpty() )
-                            {
-                                errorCodesMap.remove(code);
-                            }
-                            else
-                            {
-                                errorCodesMap.put(code, newList);
-                            }
-
-                            break;
-                        }
-                        index++;
-                    }
-                }
+                removeErrorHandling(info, code, null);
             }
             for(final String exception : reg.exceptions)
             {
-                final List<ServletHandler> list = exceptionsMap.get(exception);
+                removeErrorHandling(info, 0, exception);
+            }
+        }
+    }
+
+    private void addErrorHandling(final ServletHandler handler, final ErrorRegistrationStatus status, final long code, final String exception)
+    {
+        final String key = (exception != null ? exception : String.valueOf(code));
+
+        final List<ServletHandler> newList;
+        final List<ServletHandler> list = errorMapping.get(key);
+        if ( list == null )
+        {
+            newList = Collections.singletonList(handler);
+        }
+        else
+        {
+            newList = new ArrayList<ServletHandler>(list);
+            newList.add(handler);
+            Collections.sort(newList);
+        }
+        if ( newList.get(0) == handler )
+        {
+            // try to activate (and deactivate old handler)
+            final int result = handler.init();
+            addReason(status, code, exception, result);
+            if ( result == -1 )
+            {
                 if ( list != null )
                 {
-                    int index = 0;
-                    final Iterator<ServletHandler> i = list.iterator();
-                    while ( i.hasNext() )
+                    final ServletHandler old = list.get(0);
+                    old.destroy();
+                    errorMapping.put(key, newList);
+                    ErrorRegistrationStatus oldStatus = null;
+                    final Iterator<ErrorRegistrationStatus> i = this.status.iterator();
+                    while ( oldStatus == null && i.hasNext() )
                     {
-                        final ServletHandler handler = i.next();
-                        if ( handler.getServletInfo().equals(info) )
+                        final ErrorRegistrationStatus current = i.next();
+                        if ( current.handler.getServletInfo().equals(old.getServletInfo()) )
                         {
-                            handler.destroy();
+                            oldStatus = current;
+                        }
+                    }
+                    if ( oldStatus != null )
+                    {
+                        removeReason(oldStatus, code, exception, -1);
+                        addReason(oldStatus, code, exception, DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
+                    }
+                }
+                else
+                {
+                    errorMapping.put(key, newList);
+                }
+            }
+        }
+        else
+        {
+            // failure
+            addReason(status, code, exception, DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
+            errorMapping.put(key, newList);
+        }
+    }
 
-                            final List<ServletHandler> newList = new ArrayList<ServletHandler>(list);
-                            newList.remove(handler);
+    private void addReason(final ErrorRegistrationStatus status, final long code, final String exception, final int reason)
+    {
+        ErrorRegistration reg = status.reasonMapping.get(reason);
+        if ( reg == null )
+        {
+            if ( exception != null )
+            {
+                reg = new ErrorRegistration(BuilderConstants.EMPTY_LONG_ARRAY, new String[] {exception});
+            }
+            else
+            {
+                reg = new ErrorRegistration(new long[] {code}, BuilderConstants.EMPTY_STRING_ARRAY);
+            }
+        }
+        else
+        {
+            long[] codes = reg.errorCodes;
+            String[] exceptions = reg.exceptions;
+            if ( exception != null )
+            {
+                final Set<String> set = toStringSet(exceptions);
+                set.add(exception);
+                exceptions = toStringArray(set);
+            }
+            else
+            {
+                final Set<Long> set = toLongSet(codes);
+                set.add(code);
+                codes = toLongArray(set);
+            }
 
-                            if ( index == 0 )
+            reg = new ErrorRegistration(codes, exceptions);
+        }
+        status.reasonMapping.put(reason, reg);
+    }
+
+    private void removeReason(final ErrorRegistrationStatus status, final long code, final String exception, final int reason)
+    {
+        ErrorRegistration reg = status.reasonMapping.get(reason);
+        if ( reg != null )
+        {
+            long[] codes = reg.errorCodes;
+            String[] exceptions = reg.exceptions;
+            if ( exception != null )
+            {
+                final Set<String> set = toStringSet(exceptions);
+                set.remove(exception);
+                exceptions = toStringArray(set);
+            }
+            else
+            {
+                final Set<Long> set = toLongSet(codes);
+                set.remove(code);
+                codes = toLongArray(set);
+            }
+            if ( codes.length == 0 && exceptions.length == 0 )
+            {
+                status.reasonMapping.remove(reason);
+            }
+            else
+            {
+                status.reasonMapping.put(reason, new ErrorRegistration(codes, exceptions));
+            }
+        }
+    }
+
+    private void removeErrorHandling(final ServletInfo info, final long code, final String exception)
+    {
+        final String key = (exception != null ? exception : String.valueOf(code));
+
+        final List<ServletHandler> list = errorMapping.get(key);
+        if ( list != null )
+        {
+            int index = 0;
+            final Iterator<ServletHandler> i = list.iterator();
+            while ( i.hasNext() )
+            {
+                final ServletHandler handler = i.next();
+                if ( handler.getServletInfo().equals(info) )
+                {
+                    final List<ServletHandler> newList = new ArrayList<ServletHandler>(list);
+                    newList.remove(handler);
+
+                    if ( index == 0 )
+                    {
+                        handler.destroy();
+
+                        index++;
+                        while ( index < list.size() )
+                        {
+                            final ServletHandler next = list.get(index);
+                            ErrorRegistrationStatus nextStatus = null;
+                            for(final ErrorRegistrationStatus s : this.status)
                             {
-                                index++;
-                                while ( index < list.size() )
+                                if ( s.handler.getServletInfo().equals(next.getServletInfo()) )
                                 {
-                                    final ServletHandler next = list.get(index);
-                                    if ( tryToActivate(exception, next, statusMapping.get(next.getServletInfo())) )
-                                    {
-                                        break;
-                                    }
-                                    else
-                                    {
-                                        newList.remove(next);
-                                    }
+                                    nextStatus = s;
+                                    break;
                                 }
                             }
-                            if ( newList.isEmpty() )
+                            this.removeReason(nextStatus, code, exception, DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
+                            final int reason = next.init();
+                            this.addReason(nextStatus, code, exception, reason);
+                            if ( reason == -1 )
                             {
-                                exceptionsMap.remove(exception);
+                                break;
                             }
                             else
                             {
-                                exceptionsMap.put(exception, newList);
+                                newList.remove(next);
                             }
-
-                            break;
                         }
-                        index++;
                     }
+                    if ( newList.isEmpty() )
+                    {
+                        errorMapping.remove(key);
+                    }
+                    else
+                    {
+                        errorMapping.put(key, newList);
+                    }
+
+                    break;
                 }
+                index++;
             }
         }
     }
@@ -351,7 +467,7 @@ public final class ErrorPageRegistry
      */
     private ServletHandler get(final long errorCode)
     {
-        final List<ServletHandler> list = this.errorCodesMap.get(errorCode);
+        final List<ServletHandler> list = this.errorMapping.get(String.valueOf(errorCode));
         if ( list != null )
         {
             return list.get(0);
@@ -375,7 +491,7 @@ public final class ErrorPageRegistry
         Class<?> throwableClass = exception.getClass();
         while ( servletHandler == null && throwableClass != null )
         {
-            final List<ServletHandler> list = this.exceptionsMap.get(throwableClass.getName());
+            final List<ServletHandler> list = this.errorMapping.get(throwableClass.getName());
             if ( list != null )
             {
                 servletHandler = list.get(0);
@@ -394,121 +510,31 @@ public final class ErrorPageRegistry
     }
 
     /**
-     * Try to activate a servlet for an error code
-     * @param code The error code
-     * @param handler The servlet handler
-     * @param status The status to keep track of activation
-     * @return {@code -1} if activation was successful, failure code otherwise
+     * Get DTOs for error pages.
+     * @param dto The servlet context DTO
+     * @param failedErrorPageDTOs The failed error page DTOs
      */
-    private boolean tryToActivate(final Long code, final ServletHandler handler, final ErrorRegistrationStatus status)
-    {
-        // add to active
-        final int result = handler.init();
-        status.errorCodeMapping.put(code, result);
-
-        return result == -1;
-    }
-
-    /**
-     * Try to activate a servlet for an exception
-     * @param exception The exception
-     * @param handler The servlet handler
-     * @param status The status to keep track of activation
-     * @return {@code -1} if activation was successful, failure code otherwise
-     */
-    private boolean tryToActivate(final String exception, final ServletHandler handler, final ErrorRegistrationStatus status)
-    {
-        // add to active
-        final int result = handler.init();
-        status.exceptionMapping.put(exception, result);
-
-        return result == -1;
-    }
-
     public void getRuntimeInfo(final ServletContextDTO dto,
             final Collection<FailedErrorPageDTO> failedErrorPageDTOs)
     {
-        final Collection<ErrorPageDTO> errorPageDTOs = new ArrayList<ErrorPageDTO>();
-
-        for(final ErrorRegistrationStatus status : this.statusMapping.values())
+        final List<ErrorPageDTO> errorPageDTOs = new ArrayList<ErrorPageDTO>();
+        final List<ErrorRegistrationStatus> statusList = this.status;
+        for(final ErrorRegistrationStatus status : statusList)
         {
-            // TODO - we could do this calculation already when generating the status object
-            final ErrorRegistration active = new ErrorRegistration();
-            final Map<Integer, ErrorRegistration> inactive = new HashMap<Integer, ErrorRegistration>();
-
-            for(Map.Entry<Long, Integer> codeEntry : status.errorCodeMapping.entrySet() )
+            for(final Map.Entry<Integer, ErrorRegistration> entry : status.reasonMapping.entrySet())
             {
-                if ( codeEntry.getValue() == -1 )
+                final ErrorPageDTO state = ErrorPageDTOBuilder.build(status.getHandler(), entry.getKey());
+                state.errorCodes = entry.getValue().errorCodes;
+                state.exceptions = entry.getValue().exceptions;
+
+                if ( entry.getKey() == -1 )
                 {
-                    active.errorCodes.add(codeEntry.getKey());
+                    errorPageDTOs.add(state);
                 }
                 else
                 {
-                    ErrorRegistration set = inactive.get(codeEntry.getValue());
-                    if ( set == null )
-                    {
-                        set = new ErrorRegistration();
-                        inactive.put(codeEntry.getValue(), set);
-                    }
-                    set.errorCodes.add(codeEntry.getKey());
+                    failedErrorPageDTOs.add((FailedErrorPageDTO)state);
                 }
-            }
-            for(Map.Entry<String, Integer> codeEntry : status.exceptionMapping.entrySet() )
-            {
-                if ( codeEntry.getValue() == -1 )
-                {
-                    active.exceptions.add(codeEntry.getKey());
-                }
-                else
-                {
-                    ErrorRegistration set = inactive.get(codeEntry.getValue());
-                    if ( set == null )
-                    {
-                        set = new ErrorRegistration();
-                        inactive.put(codeEntry.getValue(), set);
-                    }
-                    set.exceptions.add(codeEntry.getKey());
-                }
-            }
-
-            // create DTOs
-            if ( !active.errorCodes.isEmpty() || !active.exceptions.isEmpty() )
-            {
-                final ErrorPageDTO state = ErrorPageDTOBuilder.build(status.handler, -1);
-                if ( !active.errorCodes.isEmpty() )
-                {
-                    final long[] codes = new long[active.errorCodes.size()];
-                    final Iterator<Long> iter = active.errorCodes.iterator();
-                    for(int i=0; i<codes.length; i++)
-                    {
-                        codes[i] = iter.next();
-                    }
-                    state.errorCodes = codes;
-                }
-                if ( !active.exceptions.isEmpty() )
-                {
-                    state.exceptions = active.exceptions.toArray(new String[active.exceptions.size()]);
-                }
-                errorPageDTOs.add(state);
-            }
-            for(final Map.Entry<Integer, ErrorRegistration> entry : inactive.entrySet())
-            {
-                final FailedErrorPageDTO state = (FailedErrorPageDTO)ErrorPageDTOBuilder.build(status.handler, entry.getKey());
-                if ( !entry.getValue().errorCodes.isEmpty() )
-                {
-                    final long[] codes = new long[entry.getValue().errorCodes.size()];
-                    final Iterator<Long> iter = entry.getValue().errorCodes.iterator();
-                    for(int i=0; i<codes.length; i++)
-                    {
-                        codes[i] = iter.next();
-                    }
-                    state.errorCodes = codes;
-                }
-                if ( !entry.getValue().exceptions.isEmpty() )
-                {
-                    state.exceptions = entry.getValue().exceptions.toArray(new String[entry.getValue().exceptions.size()]);
-                }
-                failedErrorPageDTOs.add(state);
             }
         }
         if ( !errorPageDTOs.isEmpty() )

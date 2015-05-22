@@ -19,14 +19,13 @@
 package org.apache.felix.http.base.internal.runtime;
 
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 /**
  * Info object for registered listeners.
- *
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public abstract class ListenerInfo<T> extends WhiteboardServiceInfo<T>
 {
@@ -50,10 +49,14 @@ public abstract class ListenerInfo<T> extends WhiteboardServiceInfo<T>
     {
         if (this.getServiceReference() != null)
         {
-            final ServiceObjects<T> so = bundle.getBundleContext().getServiceObjects(this.getServiceReference());
-            if (so != null)
+            final BundleContext bctx = bundle.getBundleContext();
+            if ( bctx != null )
             {
-                return so.getService();
+                final ServiceObjects<T> so = bctx.getServiceObjects(this.getServiceReference());
+                if (so != null)
+                {
+                    return so.getService();
+                }
             }
         }
         return null;
@@ -63,10 +66,14 @@ public abstract class ListenerInfo<T> extends WhiteboardServiceInfo<T>
     {
         if (this.getServiceReference() != null)
         {
-            final ServiceObjects<T> so = bundle.getBundleContext().getServiceObjects(this.getServiceReference());
-            if (so != null)
+            final BundleContext bctx = bundle.getBundleContext();
+            if ( bctx != null )
             {
-                so.ungetService(service);
+                final ServiceObjects<T> so = bctx.getServiceObjects(this.getServiceReference());
+                if (so != null)
+                {
+                    so.ungetService(service);
+                }
             }
         }
     }

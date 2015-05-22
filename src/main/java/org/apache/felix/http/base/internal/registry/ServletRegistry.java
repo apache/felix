@@ -20,9 +20,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nonnull;
@@ -100,8 +102,15 @@ public final class ServletRegistry
             status.handler = handler;
 
             boolean isActive = false;
+            // used for detecting duplicates
+            final Set<String> patterns = new HashSet<String>();
             for(final String pattern : handler.getServletInfo().getPatterns())
             {
+                if ( patterns.contains(pattern) )
+                {
+                    continue;
+                }
+                patterns.add(pattern);
                 final PathResolver regHandler = this.activeServletMappings.get(pattern);
                 if ( regHandler != null )
                 {
@@ -207,8 +216,15 @@ public final class ServletRegistry
             this.statusMapping.remove(info);
             ServletHandler cleanupHandler = null;
 
+            // used for detecting duplicates
+            final Set<String> patterns = new HashSet<String>();
             for(final String pattern : info.getPatterns())
             {
+                if ( patterns.contains(pattern) )
+                {
+                    continue;
+                }
+                patterns.add(pattern);
                 final PathResolver regHandler = this.activeServletMappings.get(pattern);
                 if ( regHandler != null && regHandler.getServletHandler().getServletInfo().equals(info) )
                 {

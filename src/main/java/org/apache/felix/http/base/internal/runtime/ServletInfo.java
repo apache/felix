@@ -23,6 +23,7 @@ import java.util.Map;
 
 import javax.servlet.Servlet;
 
+import org.apache.felix.http.base.internal.util.PatternUtil;
 import org.osgi.dto.DTO;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.runtime.dto.ServletDTO;
@@ -33,8 +34,6 @@ import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
  * <p>
  * This class only provides information used at registration time, and as such differs slightly from {@link DTO}s like, {@link ServletDTO}.
  * </p>
- *
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ServletInfo extends WhiteboardServiceInfo<Servlet>
 {
@@ -128,28 +127,25 @@ public class ServletInfo extends WhiteboardServiceInfo<Servlet>
         this.prefix = null;
     }
 
-    ServletInfo(int serviceRanking,
-            long serviceId,
-            String name,
-            String[] patterns,
-            String[] errorPage,
-            boolean asyncSupported,
-            Map<String, String> initParams)
-    {
-        super(serviceRanking, serviceId);
-        this.name = name;
-        this.patterns = patterns;
-        this.errorPage = errorPage;
-        this.asyncSupported = asyncSupported;
-        this.initParams = Collections.unmodifiableMap(initParams);
-        this.isResource = false;
-        this.prefix = null;
-    }
-
     @Override
     public boolean isValid()
     {
-        return super.isValid() && !(isEmpty(this.patterns) && isEmpty(this.errorPage));
+        boolean valid = super.isValid() && !(isEmpty(this.patterns) && isEmpty(this.errorPage));
+        if ( valid )
+        {
+            if ( this.patterns != null )
+            {
+                for(final String p : this.patterns)
+                {
+                    if ( !PatternUtil.isValidPattern(p) )
+                    {
+                        valid = false;
+                        break;
+                    }
+                }
+            }
+        }
+        return valid;
     }
 
     public String getName()
