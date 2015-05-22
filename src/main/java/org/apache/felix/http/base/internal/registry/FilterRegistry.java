@@ -141,7 +141,7 @@ public final class FilterRegistry
         while ( i.hasNext() )
         {
             final FilterRegistrationStatus status = i.next();
-            if ( status.getHandler().getFilterInfo().compareTo(filterInfo) == 0 )
+            if ( status.getHandler().getFilterInfo().equals(filterInfo) )
             {
                 found = status;
                 i.remove();

@@ -431,7 +431,7 @@ public final class WhiteboardManager
                         while ( i.hasNext() )
                         {
                             final ContextHandler handler = i.next();
-                            if ( handler.getContextInfo().compareTo(info) == 0 )
+                            if ( handler.getContextInfo().equals(info) )
                             {
                                 i.remove();
                                 // check for deactivate
