@@ -192,6 +192,9 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
 
 	private ServiceReferenceDTO serviceReferenceToDTO( ServiceReference<?> serviceRef)
 	{
+	    if (serviceRef == null)
+	        return null;
+
 		ServiceReferenceDTO dto = new ServiceReferenceDTO();
 		dto.bundle = serviceRef.getBundle().getBundleId();
 		dto.id = (Long) serviceRef.getProperty(Constants.SERVICE_ID);
