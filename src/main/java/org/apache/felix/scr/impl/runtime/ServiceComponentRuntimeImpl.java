@@ -157,7 +157,9 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
                 int j = 0;
                 for (ServiceReference<?> serviceRef : serviceRefs)
                 {
-                    srDTOs[j++] = serviceReferenceToDTO(serviceRef);
+                    ServiceReferenceDTO srefDTO = serviceReferenceToDTO(serviceRef);
+                    if (srefDTO != null)
+                        srDTOs[j++] = srefDTO;
                 }
                 dto.boundServices = srDTOs;
                 dtos.add(dto);
@@ -181,7 +183,9 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
                 int j = 0;
                 for (ServiceReference<?> serviceRef : serviceRefs)
                 {
-                    srDTOs[j++] = serviceReferenceToDTO(serviceRef);
+                    ServiceReferenceDTO srefDTO = serviceReferenceToDTO(serviceRef);
+                    if (srefDTO != null)
+                        srDTOs[j++] = srefDTO;
                 }
                 dto.targetServices = srDTOs;
                 dtos.add(dto);
