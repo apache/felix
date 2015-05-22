@@ -75,7 +75,7 @@ public class PojoSR implements PojoServiceRegistry
             {
                 public void serviceChanged(ServiceEvent event, Dictionary<String, ?> oldProps)
                 {
-                    m_dispatcher.fireServiceEvent(event, oldProps, null);
+                    m_dispatcher.fireServiceEvent(event, oldProps, m_bundles.get(0l));
                 }
             });
 
