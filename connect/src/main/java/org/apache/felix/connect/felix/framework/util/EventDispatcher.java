@@ -578,7 +578,7 @@ public class EventDispatcher
         return whitelist;
     }
 
-    public void fireServiceEvent(final ServiceEvent event, final Dictionary<String, ?> oldProps, final Framework felix)
+    public void fireServiceEvent(final ServiceEvent event, final Dictionary<String, ?> oldProps, final Bundle framework)
     {
         // Take a snapshot of the listener array.
         Map<BundleContext, List<ListenerInfo>> listeners;
@@ -588,16 +588,16 @@ public class EventDispatcher
         }
 
         // Use service registry hooks to filter target listeners.
-        listeners = filterListenersUsingHooks(event, felix, listeners);
+        listeners = filterListenersUsingHooks(event, framework, listeners);
 
         // Fire all service events immediately on the calling thread.
         fireEventImmediately(this, Request.SERVICE_EVENT, listeners, event, oldProps);
     }
 
     private Map<BundleContext, List<ListenerInfo>> filterListenersUsingHooks(
-            ServiceEvent event, Framework felix, Map<BundleContext, List<ListenerInfo>> listeners)
+            ServiceEvent event, Bundle framework, Map<BundleContext, List<ListenerInfo>> listeners)
     {
-        if (felix == null)
+        if (framework == null)
         {
             return listeners;
         }
@@ -631,7 +631,7 @@ public class EventDispatcher
             {
                 try
                 {
-                    org.osgi.framework.hooks.service.EventHook eh = m_registry.getService(felix, sr);
+                    org.osgi.framework.hooks.service.EventHook eh = m_registry.getService(framework, sr);
                     if (eh != null)
                     {
                         try
@@ -645,7 +645,7 @@ public class EventDispatcher
                         }
                         finally
                         {
-                            m_registry.ungetService(felix, sr);
+                            m_registry.ungetService(framework, sr);
                         }
                     }
                 }
@@ -666,7 +666,7 @@ public class EventDispatcher
             {
                 try
                 {
-                    EventListenerHook elh = m_registry.getService(felix, sr);
+                    EventListenerHook elh = m_registry.getService(framework, sr);
                     if (elh != null)
                     {
                         try
@@ -680,7 +680,7 @@ public class EventDispatcher
                         }
                         finally
                         {
-                            m_registry.ungetService(felix, sr);
+                            m_registry.ungetService(framework, sr);
                         }
                     }
                 }
