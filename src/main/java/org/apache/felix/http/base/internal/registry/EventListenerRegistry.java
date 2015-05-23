@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.http.base.internal.whiteboard;
+package org.apache.felix.http.base.internal.registry;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -46,12 +46,17 @@ import org.apache.felix.http.base.internal.runtime.ServletRequestAttributeListen
 import org.apache.felix.http.base.internal.runtime.ServletRequestListenerInfo;
 import org.apache.felix.http.base.internal.runtime.dto.ListenerDTOBuilder;
 import org.apache.felix.http.base.internal.util.CollectionUtils;
+import org.apache.felix.http.base.internal.whiteboard.ContextHandler;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.http.runtime.dto.DTOConstants;
 import org.osgi.service.http.runtime.dto.ListenerDTO;
 import org.osgi.service.http.runtime.dto.ServletContextDTO;
 
-public final class PerContextEventListener implements
+/**
+ * Per context event listener registry.
+ */
+public final class EventListenerRegistry implements
         HttpSessionListener,
         HttpSessionAttributeListener,
         HttpSessionIdListener,
@@ -82,30 +87,32 @@ public final class PerContextEventListener implements
 
     private final Bundle bundle;
 
-    private final ContextHandler contextHandler;
-
-    PerContextEventListener(final Bundle bundle, final ContextHandler contextHandler)
+    public EventListenerRegistry(final Bundle bundle)
     {
         this.bundle = bundle;
-        this.contextHandler = contextHandler;
     }
 
-    void initialized(@Nonnull final ServletContextListenerInfo listenerInfo)
+    public int initialized(@Nonnull final ServletContextListenerInfo listenerInfo, @Nonnull final ContextHandler contextHandler)
     {
         final ServletContextListener listener = listenerInfo.getService(bundle);
         if (listener != null)
         {
-            this.contextListeners.put(listenerInfo.getServiceReference(), listener);
-
             final ServletContext context = contextHandler
                     .getServletContext(listenerInfo.getServiceReference()
                             .getBundle());
+            if ( context != null )
+            {
+                this.contextListeners.put(listenerInfo.getServiceReference(), listener);
 
-            listener.contextInitialized(new ServletContextEvent(context));
+                listener.contextInitialized(new ServletContextEvent(context));
+                return -1;
+            }
+            return DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
         }
+        return DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
     }
 
-    void destroyed(@Nonnull final ServletContextListenerInfo listenerInfo)
+    public void destroyed(@Nonnull final ServletContextListenerInfo listenerInfo, @Nonnull final ContextHandler contextHandler)
     {
         final ServiceReference<ServletContextListener> listenerRef = listenerInfo
                 .getServiceReference();
@@ -129,14 +136,16 @@ public final class PerContextEventListener implements
      *
      * @param info
      */
-    void addListener(@Nonnull final ServletContextAttributeListenerInfo info)
+    public int addListener(@Nonnull final ServletContextAttributeListenerInfo info)
     {
         final ServletContextAttributeListener service = info.getService(bundle);
         if (service != null)
         {
             this.contextAttributeListeners.put(info.getServiceReference(),
                     service);
+            return -1;
         }
+        return DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
     }
 
     /**
@@ -144,7 +153,7 @@ public final class PerContextEventListener implements
      *
      * @param info
      */
-    void removeListener(@Nonnull final ServletContextAttributeListenerInfo info)
+    public void removeListener(@Nonnull final ServletContextAttributeListenerInfo info)
     {
         final ServletContextAttributeListener service = this.contextAttributeListeners
                 .remove(info.getServiceReference());
@@ -159,14 +168,16 @@ public final class PerContextEventListener implements
      *
      * @param info
      */
-    void addListener(@Nonnull final HttpSessionAttributeListenerInfo info)
+    public int addListener(@Nonnull final HttpSessionAttributeListenerInfo info)
     {
         final HttpSessionAttributeListener service = info.getService(bundle);
         if (service != null)
         {
             this.sessionAttributeListeners.put(info.getServiceReference(),
                     service);
+            return -1;
         }
+        return DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
     }
 
     /**
@@ -174,7 +185,7 @@ public final class PerContextEventListener implements
      *
      * @param info
      */
-    void removeListener(@Nonnull final HttpSessionAttributeListenerInfo info)
+    public void removeListener(@Nonnull final HttpSessionAttributeListenerInfo info)
     {
         final HttpSessionAttributeListener service = this.sessionAttributeListeners
                 .remove(info.getServiceReference());
@@ -189,13 +200,15 @@ public final class PerContextEventListener implements
      *
      * @param info
      */
-    void addListener(@Nonnull final HttpSessionListenerInfo info)
+    public int addListener(@Nonnull final HttpSessionListenerInfo info)
     {
         final HttpSessionListener service = info.getService(bundle);
         if (service != null)
         {
             this.sessionListeners.put(info.getServiceReference(), service);
+            return -1;
         }
+        return DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
     }
 
     /**
@@ -203,7 +216,7 @@ public final class PerContextEventListener implements
      *
      * @param info
      */
-    void removeListener(@Nonnull final HttpSessionListenerInfo info)
+    public void removeListener(@Nonnull final HttpSessionListenerInfo info)
     {
         final HttpSessionListener service = this.sessionListeners.remove(info
                 .getServiceReference());
@@ -218,14 +231,16 @@ public final class PerContextEventListener implements
      *
      * @param info
      */
-    void addListener(@Nonnull final HttpSessionIdListenerInfo info)
+    public  int addListener(@Nonnull final HttpSessionIdListenerInfo info)
     {
         final HttpSessionIdListener service = info.getService(bundle);
         if (service != null)
         {
             this.sessionIdListeners.put(info.getServiceReference(),
                     service);
+            return -1;
         }
+        return DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
     }
 
     /**
@@ -233,7 +248,7 @@ public final class PerContextEventListener implements
      *
      * @param info
      */
-    void removeListener(@Nonnull final HttpSessionIdListenerInfo info)
+    public void removeListener(@Nonnull final HttpSessionIdListenerInfo info)
     {
         final HttpSessionIdListener service = this.sessionIdListeners.remove(info.getServiceReference());
         if (service != null)
@@ -247,13 +262,15 @@ public final class PerContextEventListener implements
      *
      * @param info
      */
-    void addListener(@Nonnull final ServletRequestListenerInfo info)
+    public int addListener(@Nonnull final ServletRequestListenerInfo info)
     {
         final ServletRequestListener service = info.getService(bundle);
         if (service != null)
         {
             this.requestListeners.put(info.getServiceReference(), service);
+            return -1;
         }
+        return DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
     }
 
     /**
@@ -261,7 +278,7 @@ public final class PerContextEventListener implements
      *
      * @param info
      */
-    void removeListener(@Nonnull final ServletRequestListenerInfo info)
+    public void removeListener(@Nonnull final ServletRequestListenerInfo info)
     {
         final ServletRequestListener service = this.requestListeners
                 .remove(info.getServiceReference());
@@ -276,14 +293,16 @@ public final class PerContextEventListener implements
      *
      * @param info
      */
-    void addListener(@Nonnull final ServletRequestAttributeListenerInfo info)
+    public int addListener(@Nonnull final ServletRequestAttributeListenerInfo info)
     {
         final ServletRequestAttributeListener service = info.getService(bundle);
         if (service != null)
         {
             this.requestAttributeListeners.put(info.getServiceReference(),
                     service);
+            return -1;
         }
+        return DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
     }
 
     /**
@@ -291,7 +310,7 @@ public final class PerContextEventListener implements
      *
      * @param info
      */
-    void removeListener(@Nonnull final ServletRequestAttributeListenerInfo info)
+    public void removeListener(@Nonnull final ServletRequestAttributeListenerInfo info)
     {
         final ServletRequestAttributeListener service = this.requestAttributeListeners
                 .remove(info.getServiceReference());
@@ -439,7 +458,7 @@ public final class PerContextEventListener implements
     }
 
     @SuppressWarnings("unchecked")
-    void getRuntime(final ServletContextDTO dto)
+    public void getRuntime(final ServletContextDTO dto)
     {
         final Collection<ServiceReference<?>> col = CollectionUtils.<ServiceReference<?>>sortedUnion(
                 Collections.<ServiceReference<?>>reverseOrder(),

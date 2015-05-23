@@ -16,6 +16,9 @@
  */
 package org.apache.felix.http.base.internal.whiteboard.tracker;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import javax.annotation.Nonnull;
 
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
@@ -33,6 +36,9 @@ import org.osgi.util.tracker.ServiceTracker;
 public final class ServletContextHelperTracker extends ServiceTracker<ServletContextHelper, ServiceReference<ServletContextHelper>>
 {
     private final WhiteboardManager contextManager;
+
+    /** Map containing all info objects reported from the trackers. */
+    private final Map<Long, ServletContextHelperInfo> allInfos = new ConcurrentHashMap<Long, ServletContextHelperInfo>();
 
     private static org.osgi.framework.Filter createFilter(final BundleContext btx)
     {
@@ -52,6 +58,12 @@ public final class ServletContextHelperTracker extends ServiceTracker<ServletCon
     {
         super(context, createFilter(context), null);
         this.contextManager = manager;
+    }
+
+    @Override
+    public void close() {
+        super.close();
+        this.allInfos.clear();
     }
 
     @Override
@@ -77,11 +89,18 @@ public final class ServletContextHelperTracker extends ServiceTracker<ServletCon
     private void added(@Nonnull final ServiceReference<ServletContextHelper> ref)
     {
         final ServletContextHelperInfo info = new ServletContextHelperInfo(ref);
-        this.contextManager.addContextHelper(info);
+        if ( this.contextManager.addContextHelper(info) )
+        {
+            this.allInfos.put((Long)ref.getProperty(Constants.SERVICE_ID), info);
+        }
     }
 
     private void removed(@Nonnull final ServiceReference<ServletContextHelper> ref)
     {
-        this.contextManager.removeContextHelper((Long)ref.getProperty(Constants.SERVICE_ID));
+        final ServletContextHelperInfo info = this.allInfos.get(ref.getProperty(Constants.SERVICE_ID));
+        if ( info != null )
+        {
+            this.contextManager.removeContextHelper(info);
+        }
     }
 }

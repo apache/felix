@@ -23,8 +23,10 @@ import javax.annotation.Nonnull;
 import javax.servlet.ServletContext;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
+import org.apache.felix.http.base.internal.registry.EventListenerRegistry;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceObjects;
 import org.osgi.service.http.context.ServletContextHelper;
 
@@ -42,14 +44,14 @@ public final class ContextHandler implements Comparable<ContextHandler>
     /** A map of all created servlet contexts. Each bundle gets it's own instance. */
     private final Map<Long, ContextHolder> perBundleContextMap = new HashMap<Long, ContextHolder>();
 
-    private final PerContextEventListener eventListener;
+    private final EventListenerRegistry eventListener;
 
     public ContextHandler(final ServletContextHelperInfo info,
             final ServletContext webContext,
             final Bundle bundle)
     {
         this.info = info;
-        this.eventListener = new PerContextEventListener(bundle, this);
+        this.eventListener = new EventListenerRegistry(bundle);
         this.bundle = bundle;
         this.sharedContext = new SharedServletContextImpl(webContext,
                 info.getName(),
@@ -69,11 +71,18 @@ public final class ContextHandler implements Comparable<ContextHandler>
         return this.info.compareTo(o.info);
     }
 
-    public void activate()
+    /**
+     * Activate this context.
+     * @return {@code true} if it succeeded.
+     */
+    public boolean activate()
     {
-        getServletContext(bundle);
+        return getServletContext(bundle) != null;
     }
 
+    /**
+     * Deactivate this context.
+     */
     public void deactivate()
     {
         this.ungetServletContext(bundle);
@@ -92,24 +101,31 @@ public final class ContextHandler implements Comparable<ContextHandler>
             ContextHolder holder = this.perBundleContextMap.get(key);
             if ( holder == null )
             {
-                final ServiceObjects<ServletContextHelper> so = bundle.getBundleContext().getServiceObjects(this.info.getServiceReference());
+                final BundleContext ctx = bundle.getBundleContext();
+                final ServiceObjects<ServletContextHelper> so = (ctx == null ? null : ctx.getServiceObjects(this.info.getServiceReference()));
                 if ( so != null )
                 {
-                    holder = new ContextHolder();
-                    // TODO check for null of getService()
-                    holder.servletContextHelper = so.getService();
-                    holder.servletContext = new PerBundleServletContextImpl(bundle,
-                            this.sharedContext,
-                            holder.servletContextHelper,
-                            this.eventListener);
-                    this.perBundleContextMap.put(key, holder);
+                    final ServletContextHelper service = so.getService();
+                    if ( service != null )
+                    {
+                        holder = new ContextHolder();
+                        holder.servletContextHelper = service;
+                        holder.servletContext = new PerBundleServletContextImpl(bundle,
+                                this.sharedContext,
+                                service,
+                                this.eventListener);
+                        this.perBundleContextMap.put(key, holder);
+                    }
                 }
-                // TODO - check null for so
             }
-            holder.counter++;
+            if ( holder != null )
+            {
+                holder.counter++;
 
-            return holder.servletContext;
+                return holder.servletContext;
+            }
         }
+        return null;
     }
 
     public void ungetServletContext(@Nonnull final Bundle bundle)
@@ -126,7 +142,8 @@ public final class ContextHandler implements Comparable<ContextHandler>
                     this.perBundleContextMap.remove(key);
                     if ( holder.servletContextHelper != null )
                     {
-                        final ServiceObjects<ServletContextHelper> so = bundle.getBundleContext().getServiceObjects(this.info.getServiceReference());
+                        final BundleContext ctx = bundle.getBundleContext();
+                        final ServiceObjects<ServletContextHelper> so = (ctx == null ? null : ctx.getServiceObjects(this.info.getServiceReference()));
                         if ( so != null )
                         {
                             so.ungetService(holder.servletContextHelper);
@@ -144,7 +161,7 @@ public final class ContextHandler implements Comparable<ContextHandler>
         public ServletContextHelper servletContextHelper;
     }
 
-    public PerContextEventListener getListenerRegistry() {
+    public EventListenerRegistry getListenerRegistry() {
         return this.eventListener;
     }
 }
