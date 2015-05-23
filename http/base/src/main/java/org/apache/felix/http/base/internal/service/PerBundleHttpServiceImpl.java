@@ -39,6 +39,7 @@ import org.apache.felix.http.base.internal.handler.HttpServiceFilterHandler;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.util.PatternUtil;
 import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.NamespaceException;
@@ -146,10 +147,13 @@ public final class PerBundleHttpServiceImpl implements ExtHttpService
             throw new IllegalArgumentException("Malformed resource name [" + name + "]");
         }
 
-        // TODO - check validity of alias
+        if (!PatternUtil.isValidPattern(alias) || !alias.startsWith("/") )
+        {
+            throw new IllegalArgumentException("Malformed resource alias [" + alias + "]");
+        }
         try
         {
-            Servlet servlet = new ResourceServlet(name);
+            final Servlet servlet = new ResourceServlet(name);
             registerServlet(alias, servlet, null, context);
         }
         catch (ServletException e)
@@ -168,7 +172,7 @@ public final class PerBundleHttpServiceImpl implements ExtHttpService
         {
             throw new IllegalArgumentException("Servlet must not be null");
         }
-        if (!isAliasValid(alias))
+        if (!PatternUtil.isValidPattern(alias) || !alias.startsWith("/") )
         {
             throw new IllegalArgumentException("Malformed servlet alias [" + alias + "]");
         }
@@ -321,21 +325,6 @@ public final class PerBundleHttpServiceImpl implements ExtHttpService
         }
 
         if (!name.equals("/") && name.endsWith("/"))
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    private boolean isAliasValid(final String alias)
-    {
-        if (alias == null)
-        {
-            return false;
-        }
-
-        if (!alias.equals("/") && (!alias.startsWith("/") || alias.endsWith("/")))
         {
             return false;
         }

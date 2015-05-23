@@ -18,6 +18,7 @@ package org.apache.felix.http.base.internal.whiteboard;
 
 import javax.annotation.Nonnull;
 
+import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
@@ -29,6 +30,7 @@ import org.apache.felix.http.base.internal.runtime.ResourceInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.service.ResourceServlet;
 import org.osgi.framework.BundleContext;
+import org.osgi.service.http.runtime.dto.DTOConstants;
 
 public final class WhiteboardHttpService
 {
@@ -52,25 +54,29 @@ public final class WhiteboardHttpService
      * Register a servlet.
      * @param contextInfo The servlet context helper info
      * @param servletInfo The servlet info
-     * @throws RegistrationFailureException
      */
-    public void registerServlet(@Nonnull final ContextHandler contextHandler,
+    public int registerServlet(@Nonnull final ContextHandler contextHandler,
             @Nonnull final ServletInfo servletInfo)
     {
+        final ExtServletContext context = contextHandler.getServletContext(servletInfo.getServiceReference().getBundle());
+        if ( context == null )
+        {
+            return DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
+        }
         final ServletHandler holder = new WhiteboardServletHandler(
                 contextHandler.getContextInfo().getServiceId(),
-                contextHandler.getServletContext(servletInfo.getServiceReference().getBundle()),
+                context,
                 servletInfo, bundleContext);
         handlerRegistry.addServlet(holder);
+        return -1;
     }
 
     /**
      * Unregister a servlet
      * @param contextInfo The servlet context helper info
      * @param servletInfo The servlet info
-     * @throws RegistrationFailureException
      */
-    public void unregisterServlet(@Nonnull final ContextHandler contextHandler, @Nonnull final ServletInfo servletInfo) throws RegistrationFailureException
+    public void unregisterServlet(@Nonnull final ContextHandler contextHandler, @Nonnull final ServletInfo servletInfo)
     {
         handlerRegistry.removeServlet(contextHandler.getContextInfo().getServiceId(), servletInfo, true);
         contextHandler.ungetServletContext(servletInfo.getServiceReference().getBundle());
@@ -81,14 +87,20 @@ public final class WhiteboardHttpService
      * @param contextInfo The servlet context helper info
      * @param filterInfo The filter info
      */
-    public void registerFilter(@Nonnull  final ContextHandler contextHandler,
+    public int registerFilter(@Nonnull  final ContextHandler contextHandler,
             @Nonnull final FilterInfo filterInfo)
     {
+        final ExtServletContext context = contextHandler.getServletContext(filterInfo.getServiceReference().getBundle());
+        if ( context == null )
+        {
+            return DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
+        }
         final FilterHandler holder = new WhiteboardFilterHandler(
                 contextHandler.getContextInfo().getServiceId(),
-                contextHandler.getServletContext(filterInfo.getServiceReference().getBundle()),
+                context,
                 filterInfo, bundleContext);
         handlerRegistry.addFilter(holder);
+        return -1;
     }
 
     /**
@@ -106,28 +118,33 @@ public final class WhiteboardHttpService
      * Register a resource.
      * @param contextInfo The servlet context helper info
      * @param resourceInfo The resource info
-     * @throws RegistrationFailureException
      */
-    public void registerResource(@Nonnull final ContextHandler contextHandler,
+    public int registerResource(@Nonnull final ContextHandler contextHandler,
             @Nonnull final ResourceInfo resourceInfo)
     {
         final ServletInfo servletInfo = new ServletInfo(resourceInfo);
 
+        final ExtServletContext context = contextHandler.getServletContext(servletInfo.getServiceReference().getBundle());
+        if ( context == null )
+        {
+            return DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
+        }
+
         final ServletHandler holder = new HttpServiceServletHandler(
                 contextHandler.getContextInfo().getServiceId(),
-                contextHandler.getServletContext(servletInfo.getServiceReference().getBundle()),
+                context,
                 servletInfo, new ResourceServlet(resourceInfo.getPrefix()));
 
         handlerRegistry.addServlet(holder);
+        return -1;
     }
 
     /**
      * Unregister a resource.
      * @param contextInfo The servlet context helper info
      * @param resourceInfo The resource info
-     * @throws RegistrationFailureException
      */
-    public void unregisterResource(@Nonnull final ContextHandler contextHandler, @Nonnull final ResourceInfo resourceInfo) throws RegistrationFailureException
+    public void unregisterResource(@Nonnull final ContextHandler contextHandler, @Nonnull final ResourceInfo resourceInfo)
     {
         final ServletInfo servletInfo = new ServletInfo(resourceInfo);
         handlerRegistry.removeServlet(contextHandler.getContextInfo().getServiceId(), servletInfo, true);
