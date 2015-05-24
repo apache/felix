@@ -29,9 +29,8 @@ import javax.servlet.http.HttpSessionAttributeListener;
 import javax.servlet.http.HttpSessionIdListener;
 import javax.servlet.http.HttpSessionListener;
 
+import org.apache.felix.http.base.internal.handler.ListenerHandler;
 import org.apache.felix.http.base.internal.runtime.ListenerInfo;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.runtime.dto.FailedListenerDTO;
 import org.osgi.service.http.runtime.dto.ListenerDTO;
 
@@ -54,6 +53,7 @@ public final class ListenerDTOBuilder
         final ListenerDTO dto = (reason == -1 ? new ListenerDTO() : new FailedListenerDTO());
 
         dto.serviceId = info.getServiceId();
+        dto.types = new String[] {info.getListenerName()};
 
         if ( reason != -1 )
         {
@@ -63,22 +63,10 @@ public final class ListenerDTOBuilder
         return dto;
     }
 
-    public static ListenerDTO build(final ServiceReference<?> listenerRef, final long servletContextId)
+    public static ListenerDTO build(final ListenerHandler<?> handler, final int reason)
     {
-        final ListenerDTO listenerDTO = new ListenerDTO();
-        listenerDTO.serviceId = (Long) listenerRef.getProperty(Constants.SERVICE_ID);
-        listenerDTO.servletContextId = servletContextId;
-
-        final String[] objectClass = (String[])listenerRef.getProperty(Constants.OBJECTCLASS);
-        final Set<String> names = new HashSet<String>();
-        for(final String name : objectClass)
-        {
-            if ( ALLOWED_INTERFACES.contains(name) )
-            {
-                names.add(name);
-            }
-        }
-        listenerDTO.types = names.toArray(new String[names.size()]);
-        return listenerDTO;
+        final ListenerDTO dto = build(handler.getListenerInfo(), reason);
+        dto.servletContextId = handler.getContextServiceId();
+        return dto;
     }
 }

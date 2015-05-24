@@ -30,6 +30,6 @@ public final class ServletContextAttributeListenerInfo extends ListenerInfo<Serv
 
     public ServletContextAttributeListenerInfo(final ServiceReference<ServletContextAttributeListener> ref)
     {
-        super(ref);
+        super(ref, ServletContextAttributeListener.class.getName());
     }
 }

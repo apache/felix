@@ -29,6 +29,6 @@ public final class ServletRequestAttributeListenerInfo extends ListenerInfo<Serv
 {
     public ServletRequestAttributeListenerInfo(final ServiceReference<ServletRequestAttributeListener> ref)
     {
-        super(ref);
+        super(ref, ServletRequestAttributeListener.class.getName());
     }
 }

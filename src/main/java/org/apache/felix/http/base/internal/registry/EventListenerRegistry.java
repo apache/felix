@@ -16,13 +16,10 @@
  */
 package org.apache.felix.http.base.internal.registry;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.annotation.Nonnull;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletContextAttributeEvent;
 import javax.servlet.ServletContextAttributeListener;
 import javax.servlet.ServletContextEvent;
@@ -37,19 +34,16 @@ import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionIdListener;
 import javax.servlet.http.HttpSessionListener;
 
+import org.apache.felix.http.base.internal.handler.ListenerHandler;
 import org.apache.felix.http.base.internal.runtime.HttpSessionAttributeListenerInfo;
 import org.apache.felix.http.base.internal.runtime.HttpSessionIdListenerInfo;
 import org.apache.felix.http.base.internal.runtime.HttpSessionListenerInfo;
+import org.apache.felix.http.base.internal.runtime.ListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextAttributeListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletRequestAttributeListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletRequestListenerInfo;
-import org.apache.felix.http.base.internal.runtime.dto.ListenerDTOBuilder;
-import org.apache.felix.http.base.internal.util.CollectionUtils;
-import org.apache.felix.http.base.internal.whiteboard.ContextHandler;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.runtime.dto.DTOConstants;
+import org.osgi.service.http.runtime.dto.FailedListenerDTO;
 import org.osgi.service.http.runtime.dto.ListenerDTO;
 import org.osgi.service.http.runtime.dto.ServletContextDTO;
 
@@ -65,87 +59,65 @@ public final class EventListenerRegistry implements
         ServletRequestAttributeListener
 {
     /** Servlet context listeners. */
-    private final Map<ServiceReference<ServletContextListener>, ServletContextListener> contextListeners = new ConcurrentSkipListMap<ServiceReference<ServletContextListener>, ServletContextListener>();
+    private final ListenerMap<ServletContextListener> contextListeners = new ListenerMap<ServletContextListener>();
 
     /** Servlet context attribute listeners. */
-    private final Map<ServiceReference<ServletContextAttributeListener>, ServletContextAttributeListener> contextAttributeListeners = new ConcurrentSkipListMap<ServiceReference<ServletContextAttributeListener>, ServletContextAttributeListener>();
+    private final ListenerMap<ServletContextAttributeListener> contextAttributeListeners = new ListenerMap<ServletContextAttributeListener>();
 
     /** Session attribute listeners. */
-    private final Map<ServiceReference<HttpSessionAttributeListener>, HttpSessionAttributeListener> sessionAttributeListeners = new ConcurrentSkipListMap<ServiceReference<HttpSessionAttributeListener>, HttpSessionAttributeListener>();
+    private final ListenerMap<HttpSessionAttributeListener> sessionAttributeListeners = new ListenerMap<HttpSessionAttributeListener>();
 
     /** Session listeners. */
-    private final Map<ServiceReference<HttpSessionListener>, HttpSessionListener> sessionListeners = new ConcurrentSkipListMap<ServiceReference<HttpSessionListener>, HttpSessionListener>();
+    private final ListenerMap<HttpSessionListener> sessionListeners = new ListenerMap<HttpSessionListener>();
 
     /** Session id listeners. */
-    private final Map<ServiceReference<HttpSessionIdListener>, HttpSessionIdListener> sessionIdListeners = new ConcurrentSkipListMap<ServiceReference<HttpSessionIdListener>, HttpSessionIdListener>();
+    private final ListenerMap<HttpSessionIdListener> sessionIdListeners = new ListenerMap<HttpSessionIdListener>();
 
     /** Request listeners. */
-    private final Map<ServiceReference<ServletRequestListener>, ServletRequestListener> requestListeners = new ConcurrentSkipListMap<ServiceReference<ServletRequestListener>, ServletRequestListener>();
+    private final ListenerMap<ServletRequestListener> requestListeners = new ListenerMap<ServletRequestListener>();
 
     /** Request attribute listeners. */
-    private final Map<ServiceReference<ServletRequestAttributeListener>, ServletRequestAttributeListener> requestAttributeListeners = new ConcurrentSkipListMap<ServiceReference<ServletRequestAttributeListener>, ServletRequestAttributeListener>();
+    private final ListenerMap<ServletRequestAttributeListener> requestAttributeListeners = new ListenerMap<ServletRequestAttributeListener>();
 
-    private final Bundle bundle;
-
-    public EventListenerRegistry(final Bundle bundle)
+    public synchronized void cleanup()
     {
-        this.bundle = bundle;
+        this.contextListeners.cleanup();
+        this.contextAttributeListeners.cleanup();
+        this.sessionAttributeListeners.cleanup();
+        this.sessionListeners.cleanup();
+        this.sessionIdListeners.cleanup();
+        this.requestListeners.cleanup();
+        this.requestAttributeListeners.cleanup();
     }
 
-    public int initialized(@Nonnull final ServletContextListenerInfo listenerInfo, @Nonnull final ContextHandler contextHandler)
+    /**
+     * Add servlet context listener
+     *
+     * @param handler
+     */
+    public void addServletContextListener(@Nonnull final ListenerHandler<ServletContextListener> handler)
     {
-        final ServletContextListener listener = listenerInfo.getService(bundle);
-        if (listener != null)
-        {
-            final ServletContext context = contextHandler
-                    .getServletContext(listenerInfo.getServiceReference()
-                            .getBundle());
-            if ( context != null )
-            {
-                this.contextListeners.put(listenerInfo.getServiceReference(), listener);
-
-                listener.contextInitialized(new ServletContextEvent(context));
-                return -1;
-            }
-            return DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
-        }
-        return DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
+        this.contextListeners.add(handler);
     }
 
-    public void destroyed(@Nonnull final ServletContextListenerInfo listenerInfo, @Nonnull final ContextHandler contextHandler)
+    /**
+     * Remove servlet context listener
+     *
+     * @param info
+     */
+    public void removeServletContextListener(@Nonnull final ServletContextListenerInfo info)
     {
-        final ServiceReference<ServletContextListener> listenerRef = listenerInfo
-                .getServiceReference();
-        final ServletContextListener listener = this.contextListeners
-                .remove(listenerRef);
-        if (listener != null)
-        {
-            final ServletContext context = contextHandler
-                    .getServletContext(listenerRef.getBundle());
-            listener.contextDestroyed(new ServletContextEvent(context));
-            // call unget twice, once for the call in initialized and once for
-            // the call in this method(!)
-            contextHandler.ungetServletContext(listenerRef.getBundle());
-            contextHandler.ungetServletContext(listenerRef.getBundle());
-            listenerInfo.ungetService(bundle, listener);
-        }
+        this.contextListeners.remove(info);
     }
 
     /**
      * Add servlet context attribute listener
      *
-     * @param info
+     * @param handler
      */
-    public int addListener(@Nonnull final ServletContextAttributeListenerInfo info)
+    public void addServletContextAttributeListener(@Nonnull final ListenerHandler<ServletContextAttributeListener> handler)
     {
-        final ServletContextAttributeListener service = info.getService(bundle);
-        if (service != null)
-        {
-            this.contextAttributeListeners.put(info.getServiceReference(),
-                    service);
-            return -1;
-        }
-        return DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
+        this.contextAttributeListeners.add(handler);
     }
 
     /**
@@ -153,31 +125,19 @@ public final class EventListenerRegistry implements
      *
      * @param info
      */
-    public void removeListener(@Nonnull final ServletContextAttributeListenerInfo info)
+    public void removeServletContextAttributeListener(@Nonnull final ServletContextAttributeListenerInfo info)
     {
-        final ServletContextAttributeListener service = this.contextAttributeListeners
-                .remove(info.getServiceReference());
-        if (service != null)
-        {
-            info.ungetService(bundle, service);
-        }
+        this.contextAttributeListeners.remove(info);
     }
 
     /**
      * Add session attribute listener
      *
-     * @param info
+     * @param handler
      */
-    public int addListener(@Nonnull final HttpSessionAttributeListenerInfo info)
+    public void addSessionAttributeListener(@Nonnull final ListenerHandler<HttpSessionAttributeListener> handler)
     {
-        final HttpSessionAttributeListener service = info.getService(bundle);
-        if (service != null)
-        {
-            this.sessionAttributeListeners.put(info.getServiceReference(),
-                    service);
-            return -1;
-        }
-        return DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
+        this.sessionAttributeListeners.add(handler);
     }
 
     /**
@@ -185,30 +145,19 @@ public final class EventListenerRegistry implements
      *
      * @param info
      */
-    public void removeListener(@Nonnull final HttpSessionAttributeListenerInfo info)
+    public void removeSessionAttributeListener(@Nonnull final HttpSessionAttributeListenerInfo info)
     {
-        final HttpSessionAttributeListener service = this.sessionAttributeListeners
-                .remove(info.getServiceReference());
-        if (service != null)
-        {
-            info.ungetService(bundle, service);
-        }
+        this.sessionAttributeListeners.remove(info);
     }
 
     /**
      * Add session listener
      *
-     * @param info
+     * @param handler
      */
-    public int addListener(@Nonnull final HttpSessionListenerInfo info)
+    public void addSessionListener(@Nonnull final ListenerHandler<HttpSessionListener> handler)
     {
-        final HttpSessionListener service = info.getService(bundle);
-        if (service != null)
-        {
-            this.sessionListeners.put(info.getServiceReference(), service);
-            return -1;
-        }
-        return DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
+        this.sessionListeners.add(handler);
     }
 
     /**
@@ -216,31 +165,19 @@ public final class EventListenerRegistry implements
      *
      * @param info
      */
-    public void removeListener(@Nonnull final HttpSessionListenerInfo info)
+    public void removeSessionListener(@Nonnull final HttpSessionListenerInfo info)
     {
-        final HttpSessionListener service = this.sessionListeners.remove(info
-                .getServiceReference());
-        if (service != null)
-        {
-            info.ungetService(bundle, service);
-        }
+        this.sessionListeners.remove(info);
     }
 
     /**
      * Add session id listener
      *
-     * @param info
+     * @param handler
      */
-    public  int addListener(@Nonnull final HttpSessionIdListenerInfo info)
+    public void addSessionIdListener(@Nonnull final ListenerHandler<HttpSessionIdListener> handler)
     {
-        final HttpSessionIdListener service = info.getService(bundle);
-        if (service != null)
-        {
-            this.sessionIdListeners.put(info.getServiceReference(),
-                    service);
-            return -1;
-        }
-        return DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
+        this.sessionIdListeners.add(handler);
     }
 
     /**
@@ -248,29 +185,19 @@ public final class EventListenerRegistry implements
      *
      * @param info
      */
-    public void removeListener(@Nonnull final HttpSessionIdListenerInfo info)
+    public void removeSessionIdListener(@Nonnull final HttpSessionIdListenerInfo info)
     {
-        final HttpSessionIdListener service = this.sessionIdListeners.remove(info.getServiceReference());
-        if (service != null)
-        {
-            info.ungetService(bundle, service);
-        }
+        this.sessionIdListeners.remove(info);
     }
 
     /**
      * Add request listener
      *
-     * @param info
+     * @param handler
      */
-    public int addListener(@Nonnull final ServletRequestListenerInfo info)
+    public void addServletRequestListener(@Nonnull final ListenerHandler<ServletRequestListener> handler)
     {
-        final ServletRequestListener service = info.getService(bundle);
-        if (service != null)
-        {
-            this.requestListeners.put(info.getServiceReference(), service);
-            return -1;
-        }
-        return DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
+        this.requestListeners.add(handler);
     }
 
     /**
@@ -278,31 +205,19 @@ public final class EventListenerRegistry implements
      *
      * @param info
      */
-    public void removeListener(@Nonnull final ServletRequestListenerInfo info)
+    public void removeServletRequestListener(@Nonnull final ServletRequestListenerInfo info)
     {
-        final ServletRequestListener service = this.requestListeners
-                .remove(info.getServiceReference());
-        if (service != null)
-        {
-            info.ungetService(bundle, service);
-        }
+        this.requestListeners.remove(info);
     }
 
     /**
      * Add request attribute listener
      *
-     * @param info
+     * @param handler
      */
-    public int addListener(@Nonnull final ServletRequestAttributeListenerInfo info)
+    public void addServletRequestAttributeListener(@Nonnull final ListenerHandler<ServletRequestAttributeListener> handler)
     {
-        final ServletRequestAttributeListener service = info.getService(bundle);
-        if (service != null)
-        {
-            this.requestAttributeListeners.put(info.getServiceReference(),
-                    service);
-            return -1;
-        }
-        return DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE;
+        this.requestAttributeListeners.add(handler);
     }
 
     /**
@@ -310,21 +225,42 @@ public final class EventListenerRegistry implements
      *
      * @param info
      */
-    public void removeListener(@Nonnull final ServletRequestAttributeListenerInfo info)
+    public void removeServletRequestAttributeListener(@Nonnull final ServletRequestAttributeListenerInfo info)
     {
-        final ServletRequestAttributeListener service = this.requestAttributeListeners
-                .remove(info.getServiceReference());
-        if (service != null)
+        this.requestAttributeListeners.remove(info);
+    }
+
+    public ListenerHandler<ServletContextListener> getServletContextListener(@Nonnull final ListenerInfo<ServletContextListener> info)
+    {
+        return this.contextListeners.getListenerHandler(info);
+    }
+
+    public void contextInitialized() {
+        for (final ListenerHandler<ServletContextListener> l : contextListeners.getActiveHandlers())
         {
-            info.ungetService(bundle, service);
+            final ServletContextListener listener = l.getListener();
+            if ( listener != null )
+            {
+                listener.contextInitialized(new ServletContextEvent(l.getContext()));
+            }
+        }
+    }
+
+    public void contextDestroyed() {
+        for (final ListenerHandler<ServletContextListener> l : contextListeners.getActiveHandlers())
+        {
+            final ServletContextListener listener = l.getListener();
+            if ( listener != null )
+            {
+                listener.contextDestroyed(new ServletContextEvent(l.getContext()));
+            }
         }
     }
 
     @Override
     public void attributeReplaced(final HttpSessionBindingEvent event)
     {
-        for (final HttpSessionAttributeListener l : sessionAttributeListeners
-                .values())
+        for (final HttpSessionAttributeListener l : sessionAttributeListeners.getActiveListeners())
         {
             l.attributeReplaced(event);
         }
@@ -333,8 +269,7 @@ public final class EventListenerRegistry implements
     @Override
     public void attributeRemoved(final HttpSessionBindingEvent event)
     {
-        for (final HttpSessionAttributeListener l : sessionAttributeListeners
-                .values())
+        for (final HttpSessionAttributeListener l : sessionAttributeListeners.getActiveListeners())
         {
             l.attributeReplaced(event);
         }
@@ -343,8 +278,7 @@ public final class EventListenerRegistry implements
     @Override
     public void attributeAdded(final HttpSessionBindingEvent event)
     {
-        for (final HttpSessionAttributeListener l : sessionAttributeListeners
-                .values())
+        for (final HttpSessionAttributeListener l : sessionAttributeListeners.getActiveListeners())
         {
             l.attributeReplaced(event);
         }
@@ -353,8 +287,7 @@ public final class EventListenerRegistry implements
     @Override
     public void attributeReplaced(final ServletContextAttributeEvent event)
     {
-        for (final ServletContextAttributeListener l : contextAttributeListeners
-                .values())
+        for (final ServletContextAttributeListener l : contextAttributeListeners.getActiveListeners())
         {
             l.attributeReplaced(event);
         }
@@ -363,8 +296,7 @@ public final class EventListenerRegistry implements
     @Override
     public void attributeRemoved(final ServletContextAttributeEvent event)
     {
-        for (final ServletContextAttributeListener l : contextAttributeListeners
-                .values())
+        for (final ServletContextAttributeListener l : contextAttributeListeners.getActiveListeners())
         {
             l.attributeReplaced(event);
         }
@@ -373,8 +305,7 @@ public final class EventListenerRegistry implements
     @Override
     public void attributeAdded(final ServletContextAttributeEvent event)
     {
-        for (final ServletContextAttributeListener l : contextAttributeListeners
-                .values())
+        for (final ServletContextAttributeListener l : contextAttributeListeners.getActiveListeners())
         {
             l.attributeReplaced(event);
         }
@@ -383,7 +314,7 @@ public final class EventListenerRegistry implements
     @Override
     public void sessionCreated(final HttpSessionEvent se)
     {
-        for (final HttpSessionListener l : sessionListeners.values())
+        for (final HttpSessionListener l : sessionListeners.getActiveListeners())
         {
             l.sessionCreated(se);
         }
@@ -392,7 +323,7 @@ public final class EventListenerRegistry implements
     @Override
     public void sessionDestroyed(final HttpSessionEvent se)
     {
-        for (final HttpSessionListener l : sessionListeners.values())
+        for (final HttpSessionListener l : sessionListeners.getActiveListeners())
         {
             l.sessionDestroyed(se);
         }
@@ -401,7 +332,7 @@ public final class EventListenerRegistry implements
     @Override
     public void requestDestroyed(final ServletRequestEvent sre)
     {
-        for (final ServletRequestListener l : requestListeners.values())
+        for (final ServletRequestListener l : requestListeners.getActiveListeners())
         {
             l.requestDestroyed(sre);
         }
@@ -410,7 +341,7 @@ public final class EventListenerRegistry implements
     @Override
     public void requestInitialized(final ServletRequestEvent sre)
     {
-        for (final ServletRequestListener l : requestListeners.values())
+        for (final ServletRequestListener l : requestListeners.getActiveListeners())
         {
             l.requestInitialized(sre);
         }
@@ -419,8 +350,7 @@ public final class EventListenerRegistry implements
     @Override
     public void attributeAdded(final ServletRequestAttributeEvent srae)
     {
-        for (final ServletRequestAttributeListener l : requestAttributeListeners
-                .values())
+        for (final ServletRequestAttributeListener l : requestAttributeListeners.getActiveListeners())
         {
             l.attributeAdded(srae);
         }
@@ -429,8 +359,7 @@ public final class EventListenerRegistry implements
     @Override
     public void attributeRemoved(final ServletRequestAttributeEvent srae)
     {
-        for (final ServletRequestAttributeListener l : requestAttributeListeners
-                .values())
+        for (final ServletRequestAttributeListener l : requestAttributeListeners.getActiveListeners())
         {
             l.attributeRemoved(srae);
         }
@@ -439,8 +368,7 @@ public final class EventListenerRegistry implements
     @Override
     public void attributeReplaced(final ServletRequestAttributeEvent srae)
     {
-        for (final ServletRequestAttributeListener l : requestAttributeListeners
-                .values())
+        for (final ServletRequestAttributeListener l : requestAttributeListeners.getActiveListeners())
         {
             l.attributeReplaced(srae);
         }
@@ -451,29 +379,26 @@ public final class EventListenerRegistry implements
      */
     @Override
     public void sessionIdChanged(@Nonnull final HttpSessionEvent event, @Nonnull final String oldSessionId) {
-        for (final HttpSessionIdListener l : sessionIdListeners.values())
+        for (final HttpSessionIdListener l : sessionIdListeners.getActiveListeners())
         {
             l.sessionIdChanged(event, oldSessionId);
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public void getRuntime(final ServletContextDTO dto)
+    public void getRuntimeInfo(final ServletContextDTO dto, final List<FailedListenerDTO> failedListenerDTOs)
     {
-        final Collection<ServiceReference<?>> col = CollectionUtils.<ServiceReference<?>>sortedUnion(
-                Collections.<ServiceReference<?>>reverseOrder(),
-                contextListeners.keySet(),
-                contextAttributeListeners.keySet(),
-                sessionAttributeListeners.keySet(),
-                sessionIdListeners.keySet(),
-                sessionListeners.keySet(),
-                requestAttributeListeners.keySet(),
-                requestListeners.keySet());
-        dto.listenerDTOs = new ListenerDTO[col.size()];
-        int index = 0;
-        for(final ServiceReference<?> ref : col)
+        final List<ListenerDTO> listenerDTOs = new ArrayList<ListenerDTO>();
+        this.contextListeners.getRuntimeInfo(listenerDTOs, failedListenerDTOs);
+        this.contextAttributeListeners.getRuntimeInfo(listenerDTOs, failedListenerDTOs);
+        this.requestListeners.getRuntimeInfo(listenerDTOs, failedListenerDTOs);
+        this.requestAttributeListeners.getRuntimeInfo(listenerDTOs, failedListenerDTOs);
+        this.sessionListeners.getRuntimeInfo(listenerDTOs, failedListenerDTOs);
+        this.sessionAttributeListeners.getRuntimeInfo(listenerDTOs, failedListenerDTOs);
+        this.sessionIdListeners.getRuntimeInfo(listenerDTOs, failedListenerDTOs);
+
+        if ( listenerDTOs.size() > 0 )
         {
-            dto.listenerDTOs[index++] = ListenerDTOBuilder.build(ref, dto.serviceId);
+            dto.listenerDTOs = listenerDTOs.toArray(new ListenerDTO[listenerDTOs.size()]);
         }
     }
 }

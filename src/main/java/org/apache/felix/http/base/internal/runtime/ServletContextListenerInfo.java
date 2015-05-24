@@ -29,6 +29,6 @@ public final class ServletContextListenerInfo extends ListenerInfo<ServletContex
 {
     public ServletContextListenerInfo(final ServiceReference<ServletContextListener> ref)
     {
-        super(ref);
+        super(ref, ServletContextListener.class.getName());
     }
 }

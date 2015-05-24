@@ -159,6 +159,11 @@ public final class FilterRegistry
         }
     }
 
+    public synchronized void cleanup()
+    {
+        this.filters = Collections.emptyList();
+    }
+
     /**
      * Get all filters handling the request.
      * Filters are applied to the url and/or the servlet

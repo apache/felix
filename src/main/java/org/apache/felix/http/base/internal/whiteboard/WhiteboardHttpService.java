@@ -17,17 +17,34 @@
 package org.apache.felix.http.base.internal.whiteboard;
 
 import javax.annotation.Nonnull;
+import javax.servlet.ServletContextAttributeListener;
+import javax.servlet.ServletContextListener;
+import javax.servlet.ServletRequestAttributeListener;
+import javax.servlet.ServletRequestListener;
+import javax.servlet.http.HttpSessionAttributeListener;
+import javax.servlet.http.HttpSessionIdListener;
+import javax.servlet.http.HttpSessionListener;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
+import org.apache.felix.http.base.internal.handler.ListenerHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.handler.WhiteboardFilterHandler;
+import org.apache.felix.http.base.internal.handler.WhiteboardListenerHandler;
 import org.apache.felix.http.base.internal.handler.WhiteboardServletHandler;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
+import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
+import org.apache.felix.http.base.internal.runtime.HttpSessionAttributeListenerInfo;
+import org.apache.felix.http.base.internal.runtime.HttpSessionIdListenerInfo;
+import org.apache.felix.http.base.internal.runtime.HttpSessionListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ResourceInfo;
+import org.apache.felix.http.base.internal.runtime.ServletContextAttributeListenerInfo;
+import org.apache.felix.http.base.internal.runtime.ServletContextListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.runtime.ServletRequestAttributeListenerInfo;
+import org.apache.felix.http.base.internal.runtime.ServletRequestListenerInfo;
 import org.apache.felix.http.base.internal.service.ResourceServlet;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.http.runtime.dto.DTOConstants;
@@ -114,6 +131,167 @@ public final class WhiteboardHttpService
         contextHandler.ungetServletContext(filterInfo.getServiceReference().getBundle());
     }
 
+    public int registerListener(@Nonnull final ContextHandler contextHandler,
+            @Nonnull final ServletContextListenerInfo info)
+    {
+        final ExtServletContext context = contextHandler.getServletContext(info.getServiceReference().getBundle());
+        if ( context == null )
+        {
+            return DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
+        }
+        final ListenerHandler<ServletContextListener> handler = new WhiteboardListenerHandler<ServletContextListener>(
+                contextHandler.getContextInfo().getServiceId(),
+                context,
+                info,
+                bundleContext);
+        contextHandler.getRegistry().getEventListenerRegistry().addServletContextListener(handler);
+        return -1;
+    }
+
+    public void unregisterListener(@Nonnull final ContextHandler contextHandler, @Nonnull final ServletContextListenerInfo info)
+    {
+        contextHandler.getRegistry().getEventListenerRegistry().removeServletContextListener(info);
+        contextHandler.ungetServletContext(info.getServiceReference().getBundle());
+    }
+
+    public int registerListener(@Nonnull final ContextHandler contextHandler,
+            @Nonnull final ServletContextAttributeListenerInfo info)
+    {
+        final ExtServletContext context = contextHandler.getServletContext(info.getServiceReference().getBundle());
+        if ( context == null )
+        {
+            return DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
+        }
+        final ListenerHandler<ServletContextAttributeListener> handler = new WhiteboardListenerHandler<ServletContextAttributeListener>(
+                contextHandler.getContextInfo().getServiceId(),
+                context,
+                info,
+                bundleContext);
+        contextHandler.getRegistry().getEventListenerRegistry().addServletContextAttributeListener(handler);
+        return -1;
+    }
+
+    public void unregisterListener(@Nonnull final ContextHandler contextHandler, @Nonnull final ServletContextAttributeListenerInfo info)
+    {
+        contextHandler.getRegistry().getEventListenerRegistry().removeServletContextAttributeListener(info);
+        contextHandler.ungetServletContext(info.getServiceReference().getBundle());
+    }
+
+    public int registerListener(@Nonnull final ContextHandler contextHandler,
+            @Nonnull final HttpSessionListenerInfo info)
+    {
+        final ExtServletContext context = contextHandler.getServletContext(info.getServiceReference().getBundle());
+        if ( context == null )
+        {
+            return DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
+        }
+        final ListenerHandler<HttpSessionListener> handler = new WhiteboardListenerHandler<HttpSessionListener>(
+                contextHandler.getContextInfo().getServiceId(),
+                context,
+                info,
+                bundleContext);
+        contextHandler.getRegistry().getEventListenerRegistry().addSessionListener(handler);
+        return -1;
+    }
+
+    public void unregisterListener(@Nonnull final ContextHandler contextHandler, @Nonnull final HttpSessionListenerInfo info)
+    {
+        contextHandler.getRegistry().getEventListenerRegistry().removeSessionListener(info);
+        contextHandler.ungetServletContext(info.getServiceReference().getBundle());
+    }
+
+    public int registerListener(@Nonnull final ContextHandler contextHandler,
+            @Nonnull final HttpSessionIdListenerInfo info)
+    {
+        final ExtServletContext context = contextHandler.getServletContext(info.getServiceReference().getBundle());
+        if ( context == null )
+        {
+            return DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
+        }
+        final ListenerHandler<HttpSessionIdListener> handler = new WhiteboardListenerHandler<HttpSessionIdListener>(
+                contextHandler.getContextInfo().getServiceId(),
+                context,
+                info,
+                bundleContext);
+        contextHandler.getRegistry().getEventListenerRegistry().addSessionIdListener(handler);
+        return -1;
+    }
+
+    public void unregisterListener(@Nonnull final ContextHandler contextHandler, @Nonnull final HttpSessionIdListenerInfo info)
+    {
+        contextHandler.getRegistry().getEventListenerRegistry().removeSessionIdListener(info);
+        contextHandler.ungetServletContext(info.getServiceReference().getBundle());
+    }
+
+    public int registerListener(@Nonnull final ContextHandler contextHandler,
+            @Nonnull final HttpSessionAttributeListenerInfo info)
+    {
+        final ExtServletContext context = contextHandler.getServletContext(info.getServiceReference().getBundle());
+        if ( context == null )
+        {
+            return DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
+        }
+        final ListenerHandler<HttpSessionAttributeListener> handler = new WhiteboardListenerHandler<HttpSessionAttributeListener>(
+                contextHandler.getContextInfo().getServiceId(),
+                context,
+                info,
+                bundleContext);
+        contextHandler.getRegistry().getEventListenerRegistry().addSessionAttributeListener(handler);
+        return -1;
+    }
+
+    public void unregisterListener(@Nonnull final ContextHandler contextHandler, @Nonnull final HttpSessionAttributeListenerInfo info)
+    {
+        contextHandler.getRegistry().getEventListenerRegistry().removeSessionAttributeListener(info);
+        contextHandler.ungetServletContext(info.getServiceReference().getBundle());
+    }
+
+    public int registerListener(@Nonnull final ContextHandler contextHandler,
+            @Nonnull final ServletRequestListenerInfo info)
+    {
+        final ExtServletContext context = contextHandler.getServletContext(info.getServiceReference().getBundle());
+        if ( context == null )
+        {
+            return DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
+        }
+        final ListenerHandler<ServletRequestListener> handler = new WhiteboardListenerHandler<ServletRequestListener>(
+                contextHandler.getContextInfo().getServiceId(),
+                context,
+                info,
+                bundleContext);
+        contextHandler.getRegistry().getEventListenerRegistry().addServletRequestListener(handler);
+        return -1;
+    }
+
+    public void unregisterListener(@Nonnull final ContextHandler contextHandler, @Nonnull final ServletRequestListenerInfo info)
+    {
+        contextHandler.getRegistry().getEventListenerRegistry().removeServletRequestListener(info);
+        contextHandler.ungetServletContext(info.getServiceReference().getBundle());
+    }
+
+    public int registerListener(@Nonnull final ContextHandler contextHandler,
+            @Nonnull final ServletRequestAttributeListenerInfo info)
+    {
+        final ExtServletContext context = contextHandler.getServletContext(info.getServiceReference().getBundle());
+        if ( context == null )
+        {
+            return DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
+        }
+        final ListenerHandler<ServletRequestAttributeListener> handler = new WhiteboardListenerHandler<ServletRequestAttributeListener>(
+                contextHandler.getContextInfo().getServiceId(),
+                context,
+                info,
+                bundleContext);
+        contextHandler.getRegistry().getEventListenerRegistry().addServletRequestAttributeListener(handler);
+        return -1;
+    }
+
+    public void unregisterListener(@Nonnull final ContextHandler contextHandler, @Nonnull final ServletRequestAttributeListenerInfo info)
+    {
+        contextHandler.getRegistry().getEventListenerRegistry().removeServletRequestAttributeListener(info);
+        contextHandler.ungetServletContext(info.getServiceReference().getBundle());
+    }
+
     /**
      * Register a resource.
      * @param contextInfo The servlet context helper info
@@ -151,9 +329,9 @@ public final class WhiteboardHttpService
         contextHandler.ungetServletContext(servletInfo.getServiceReference().getBundle());
     }
 
-    public void registerContext(@Nonnull final ContextHandler contextHandler)
+    public void registerContext(@Nonnull final PerContextHandlerRegistry registry)
     {
-        this.handlerRegistry.add(contextHandler.getContextInfo());
+        this.handlerRegistry.add(registry);
     }
 
     public void unregisterContext(@Nonnull final ContextHandler contextHandler)
