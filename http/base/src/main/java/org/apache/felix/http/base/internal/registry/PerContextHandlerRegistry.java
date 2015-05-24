@@ -55,6 +55,8 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
 
     private final ErrorPageRegistry errorPageRegistry = new ErrorPageRegistry();
 
+    private final EventListenerRegistry eventListenerRegistry = new EventListenerRegistry();
+
     /**
      * Default http service registry
      */
@@ -92,7 +94,10 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
 
     public void removeAll()
     {
-        // TODO - implement
+        this.errorPageRegistry.cleanup();
+        this.eventListenerRegistry.cleanup();
+        this.filterRegistry.cleanup();
+        this.servletRegistry.cleanup();
     }
 
     @Override
@@ -181,6 +186,11 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
         return this.errorPageRegistry.get(exception, code);
     }
 
+    public EventListenerRegistry getEventListenerRegistry()
+    {
+        return this.eventListenerRegistry;
+    }
+
     /**
      * Create all DTOs for servlets, filters, resources and error pages
      * @param dto The servlet context DTO
@@ -197,5 +207,8 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
 
         // collect servlets and resources
         this.servletRegistry.getRuntimeInfo(dto, failedDTOHolder.failedServletDTOs, failedDTOHolder.failedResourceDTOs);
+
+        // collect listeners
+        this.eventListenerRegistry.getRuntimeInfo(dto, failedDTOHolder.failedListenerDTOs);
     }
 }

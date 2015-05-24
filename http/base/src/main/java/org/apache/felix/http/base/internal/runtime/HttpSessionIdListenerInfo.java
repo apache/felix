@@ -29,6 +29,6 @@ public final class HttpSessionIdListenerInfo extends ListenerInfo<HttpSessionIdL
 {
     public HttpSessionIdListenerInfo(final ServiceReference<HttpSessionIdListener> ref)
     {
-        super(ref);
+        super(ref, HttpSessionIdListener.class.getName());
     }
 }

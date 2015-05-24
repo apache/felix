@@ -19,11 +19,12 @@ package org.apache.felix.http.base.internal.whiteboard;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.servlet.ServletContext;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.apache.felix.http.base.internal.registry.EventListenerRegistry;
+import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -35,8 +36,10 @@ public final class ContextHandler implements Comparable<ContextHandler>
     /** The info object for the context. */
     private final ServletContextHelperInfo info;
 
+    private final ServletContext webContext;
+
     /** The shared part of the servlet context. */
-    private final ServletContext sharedContext;
+    private volatile ServletContext sharedContext;
 
     /** The http bundle. */
     private final Bundle bundle;
@@ -44,20 +47,15 @@ public final class ContextHandler implements Comparable<ContextHandler>
     /** A map of all created servlet contexts. Each bundle gets it's own instance. */
     private final Map<Long, ContextHolder> perBundleContextMap = new HashMap<Long, ContextHolder>();
 
-    private final EventListenerRegistry eventListener;
+    private volatile PerContextHandlerRegistry registry;
 
     public ContextHandler(final ServletContextHelperInfo info,
             final ServletContext webContext,
             final Bundle bundle)
     {
+        this.webContext = webContext;
         this.info = info;
-        this.eventListener = new EventListenerRegistry(bundle);
         this.bundle = bundle;
-        this.sharedContext = new SharedServletContextImpl(webContext,
-                info.getName(),
-                info.getPath(),
-                info.getInitParameters(),
-                eventListener);
     }
 
     public ServletContextHelperInfo getContextInfo()
@@ -75,17 +73,37 @@ public final class ContextHandler implements Comparable<ContextHandler>
      * Activate this context.
      * @return {@code true} if it succeeded.
      */
-    public boolean activate()
+    public boolean activate(final WhiteboardHttpService httpService)
     {
-        return getServletContext(bundle) != null;
+        this.registry = new PerContextHandlerRegistry(this.info);
+        this.sharedContext = new SharedServletContextImpl(webContext,
+                info.getName(),
+                info.getPath(),
+                info.getInitParameters(),
+                this.registry.getEventListenerRegistry());
+        final boolean activate = getServletContext(bundle) != null;
+        if ( !activate )
+        {
+            this.registry = null;
+            this.sharedContext = null;
+        }
+        else
+        {
+            httpService.registerContext(this.registry);
+        }
+        return activate;
     }
 
     /**
      * Deactivate this context.
      */
-    public void deactivate()
+    public void deactivate(final WhiteboardHttpService httpService)
     {
+        httpService.unregisterContext(this);
+        this.registry = null;
+        this.sharedContext = null;
         this.ungetServletContext(bundle);
+        // TODO we should clear all state
     }
 
     public ServletContext getSharedContext()
@@ -93,8 +111,12 @@ public final class ContextHandler implements Comparable<ContextHandler>
         return sharedContext;
     }
 
-    public ExtServletContext getServletContext(@Nonnull final Bundle bundle)
+    public ExtServletContext getServletContext(@CheckForNull final Bundle bundle)
     {
+        if ( bundle == null )
+        {
+            return null;
+        }
         final Long key = bundle.getBundleId();
         synchronized ( this.perBundleContextMap )
         {
@@ -113,7 +135,7 @@ public final class ContextHandler implements Comparable<ContextHandler>
                         holder.servletContext = new PerBundleServletContextImpl(bundle,
                                 this.sharedContext,
                                 service,
-                                this.eventListener);
+                                this.registry.getEventListenerRegistry());
                         this.perBundleContextMap.put(key, holder);
                     }
                 }
@@ -161,7 +183,8 @@ public final class ContextHandler implements Comparable<ContextHandler>
         public ServletContextHelper servletContextHelper;
     }
 
-    public EventListenerRegistry getListenerRegistry() {
-        return this.eventListener;
+    public PerContextHandlerRegistry getRegistry()
+    {
+        return this.registry;
     }
 }

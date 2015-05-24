@@ -293,6 +293,14 @@ public final class ServletRegistry
         }
     }
 
+    public synchronized void cleanup()
+    {
+        this.activeServletMappings.clear();
+        this.inactiveServletMappings.clear();
+        this.servletsByName.clear();
+        this.statusMapping.clear();
+    }
+
     private void addToInactiveList(final String pattern, final ServletHandler handler, final ServletRegistrationStatus status)
     {
         List<ServletHandler> inactiveList = this.inactiveServletMappings.get(pattern);

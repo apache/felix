@@ -18,9 +18,6 @@
  */
 package org.apache.felix.http.base.internal.runtime;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
@@ -32,10 +29,13 @@ public abstract class ListenerInfo<T> extends WhiteboardServiceInfo<T>
 
     private final String enabled;
 
-    public ListenerInfo(final ServiceReference<T> ref)
+    private final String listenerName;
+
+    public ListenerInfo(final ServiceReference<T> ref, final String listenerName)
     {
         super(ref);
         this.enabled = this.getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER);
+        this.listenerName = listenerName;
     }
 
     @Override
@@ -44,37 +44,8 @@ public abstract class ListenerInfo<T> extends WhiteboardServiceInfo<T>
         return super.isValid() && "true".equalsIgnoreCase(this.enabled);
     }
 
-
-    public T getService(final Bundle bundle)
+    public String getListenerName()
     {
-        if (this.getServiceReference() != null)
-        {
-            final BundleContext bctx = bundle.getBundleContext();
-            if ( bctx != null )
-            {
-                final ServiceObjects<T> so = bctx.getServiceObjects(this.getServiceReference());
-                if (so != null)
-                {
-                    return so.getService();
-                }
-            }
-        }
-        return null;
-    }
-
-    public void ungetService(final Bundle bundle, final T service)
-    {
-        if (this.getServiceReference() != null)
-        {
-            final BundleContext bctx = bundle.getBundleContext();
-            if ( bctx != null )
-            {
-                final ServiceObjects<T> so = bctx.getServiceObjects(this.getServiceReference());
-                if (so != null)
-                {
-                    so.ungetService(service);
-                }
-            }
-        }
+        return this.listenerName;
     }
 }

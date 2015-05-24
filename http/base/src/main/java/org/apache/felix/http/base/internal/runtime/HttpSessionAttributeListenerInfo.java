@@ -29,6 +29,6 @@ public final class HttpSessionAttributeListenerInfo extends ListenerInfo<HttpSes
 {
     public HttpSessionAttributeListenerInfo(final ServiceReference<HttpSessionAttributeListener> ref)
     {
-        super(ref);
+        super(ref, HttpSessionAttributeListener.class.getName());
     }
 }

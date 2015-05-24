@@ -34,7 +34,7 @@ import org.osgi.service.http.runtime.dto.DTOConstants;
  * The filter handler handles the initialization and destruction of filter
  * objects.
  */
-public class FilterHandler implements Comparable<FilterHandler>
+public abstract class FilterHandler implements Comparable<FilterHandler>
 {
     private final long contextServiceId;
 

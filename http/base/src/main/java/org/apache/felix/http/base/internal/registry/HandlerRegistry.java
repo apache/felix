@@ -74,18 +74,6 @@ public final class HandlerRegistry
     }
 
     /**
-     * Add a context registration.
-     * @param info The servlet context helper info
-     */
-    public void add(@Nonnull ServletContextHelperInfo info)
-    {
-        synchronized ( this )
-        {
-            this.add(new PerContextHandlerRegistry(info));
-        }
-    }
-
-    /**
      * Remove a context registration.
      * @param info The servlet context helper info
      */
@@ -112,7 +100,7 @@ public final class HandlerRegistry
     /**
      * Add a new context registration.
      */
-    private void add(@Nonnull PerContextHandlerRegistry registry)
+    public void add(@Nonnull PerContextHandlerRegistry registry)
     {
         synchronized ( this )
         {
@@ -277,7 +265,7 @@ public final class HandlerRegistry
         return null;
     }
 
-    public boolean getRuntime(final ServletContextDTO dto,
+    public boolean getRuntimeInfo(final ServletContextDTO dto,
             final FailedDTOHolder failedDTOHolder)
     {
         final PerContextHandlerRegistry reg = this.getRegistry(dto.serviceId);

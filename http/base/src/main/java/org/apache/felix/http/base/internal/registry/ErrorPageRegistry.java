@@ -253,6 +253,12 @@ public final class ErrorPageRegistry
         }
     }
 
+    public synchronized void cleanup()
+    {
+        this.errorMapping.clear();
+        this.status = Collections.emptyList();
+    }
+
     private void addErrorHandling(final ServletHandler handler, final ErrorRegistrationStatus status, final long code, final String exception)
     {
         final String key = (exception != null ? exception : String.valueOf(code));
