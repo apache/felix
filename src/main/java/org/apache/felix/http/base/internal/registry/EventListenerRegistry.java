@@ -90,33 +90,35 @@ public final class EventListenerRegistry implements
      */
     public void addListeners(@Nonnull final ListenerHandler handler)
     {
+        final int reason = handler.init();
+
         if ( handler.getListenerInfo().isListenerType(ServletContextListener.class.getName()))
         {
-            this.contextListeners.add(handler);
+            this.contextListeners.add(handler, reason);
         }
         if ( handler.getListenerInfo().isListenerType(ServletContextAttributeListener.class.getName()))
         {
-            this.contextAttributeListeners.add(handler);
+            this.contextAttributeListeners.add(handler, reason);
         }
         if ( handler.getListenerInfo().isListenerType(HttpSessionListener.class.getName()))
         {
-            this.sessionListeners.add(handler);
+            this.sessionListeners.add(handler, reason);
         }
         if ( handler.getListenerInfo().isListenerType(HttpSessionIdListener.class.getName()))
         {
-            this.sessionIdListeners.add(handler);
+            this.sessionIdListeners.add(handler, reason);
         }
         if ( handler.getListenerInfo().isListenerType(HttpSessionAttributeListener.class.getName()))
         {
-            this.sessionAttributeListeners.add(handler);
+            this.sessionAttributeListeners.add(handler, reason);
         }
         if ( handler.getListenerInfo().isListenerType(ServletRequestListener.class.getName()))
         {
-            this.requestListeners.add(handler);
+            this.requestListeners.add(handler, reason);
         }
         if ( handler.getListenerInfo().isListenerType(ServletRequestAttributeListener.class.getName()))
         {
-            this.requestAttributeListeners.add(handler);
+            this.requestAttributeListeners.add(handler, reason);
         }
     }
 
@@ -127,33 +129,39 @@ public final class EventListenerRegistry implements
      */
     public void removeListeners(@Nonnull final ListenerInfo info)
     {
+        // each listener map returns the same handler, we just need it once to destory
+        ListenerHandler handler = null;
         if ( info.isListenerType(ServletContextListener.class.getName()))
         {
-            this.contextListeners.remove(info);
+            handler = this.contextListeners.remove(info);
         }
         if ( info.isListenerType(ServletContextAttributeListener.class.getName()))
         {
-            this.contextAttributeListeners.remove(info);
+            handler = this.contextAttributeListeners.remove(info);
         }
         if ( info.isListenerType(HttpSessionListener.class.getName()))
         {
-            this.sessionListeners.remove(info);
+            handler = this.sessionListeners.remove(info);
         }
         if ( info.isListenerType(HttpSessionIdListener.class.getName()))
         {
-            this.sessionIdListeners.remove(info);
+            handler = this.sessionIdListeners.remove(info);
         }
         if ( info.isListenerType(HttpSessionAttributeListener.class.getName()))
         {
-            this.sessionAttributeListeners.remove(info);
+            handler = this.sessionAttributeListeners.remove(info);
         }
         if ( info.isListenerType(ServletRequestListener.class.getName()))
         {
-            this.requestListeners.remove(info);
+            handler = this.requestListeners.remove(info);
         }
         if ( info.isListenerType(ServletRequestAttributeListener.class.getName()))
         {
-            this.requestAttributeListeners.remove(info);
+            handler = this.requestAttributeListeners.remove(info);
+        }
+        if ( handler != null )
+        {
+            handler.destroy();
         }
     }
 
