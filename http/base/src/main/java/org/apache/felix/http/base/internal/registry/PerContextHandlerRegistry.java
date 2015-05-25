@@ -20,13 +20,24 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.servlet.DispatcherType;
 
+import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
+import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
+import org.apache.felix.http.base.internal.handler.ListenerHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.handler.WhiteboardFilterHandler;
+import org.apache.felix.http.base.internal.handler.WhiteboardListenerHandler;
+import org.apache.felix.http.base.internal.handler.WhiteboardServletHandler;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
+import org.apache.felix.http.base.internal.runtime.ListenerInfo;
+import org.apache.felix.http.base.internal.runtime.ResourceInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
+import org.apache.felix.http.base.internal.service.ResourceServlet;
+import org.apache.felix.http.base.internal.whiteboard.ContextHandler;
+import org.osgi.service.http.runtime.dto.DTOConstants;
 import org.osgi.service.http.runtime.dto.ServletContextDTO;
 
 /**
@@ -145,33 +156,142 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     }
 
     /**
-     * Add a servlet
-     * @param handler The servlet handler
+     * Register a servlet.
+     * @param contextInfo The servlet context helper info
+     * @param servletInfo The servlet info
      */
-    public void addServlet(@Nonnull final ServletHandler handler)
+    public int registerServlet(@Nonnull final ContextHandler contextHandler,
+            @Nonnull final ServletInfo servletInfo)
     {
+        final ExtServletContext context = contextHandler.getServletContext(servletInfo.getServiceReference().getBundle());
+        if ( context == null )
+        {
+            return DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
+        }
+        final ServletHandler handler = new WhiteboardServletHandler(
+                contextHandler.getContextInfo().getServiceId(),
+                context,
+                servletInfo, contextHandler.getBundleContext());
         this.servletRegistry.addServlet(handler);
         this.errorPageRegistry.addServlet(handler);
+        return -1;
     }
 
     /**
-     * Remove a servlet
-     * @param info The servlet info
+     * Unregister a servlet
+     * @param contextInfo The servlet context helper info
+     * @param servletInfo The servlet info
      */
-    public void removeServlet(@Nonnull final ServletInfo info, final boolean destroy)
+    public void unregisterServlet(@Nonnull final ContextHandler contextHandler, @Nonnull final ServletInfo servletInfo)
     {
-        this.servletRegistry.removeServlet(info, destroy);
-        this.errorPageRegistry.removeServlet(info, destroy);
+        this.servletRegistry.removeServlet(servletInfo, true);
+        this.errorPageRegistry.removeServlet(servletInfo, true);
+        contextHandler.ungetServletContext(servletInfo.getServiceReference().getBundle());
     }
 
-    public void addFilter(@Nonnull final FilterHandler handler)
+    /**
+     * Register a filter
+     * @param contextInfo The servlet context helper info
+     * @param filterInfo The filter info
+     */
+    public int registerFilter(@Nonnull  final ContextHandler contextHandler,
+            @Nonnull final FilterInfo filterInfo)
     {
+        final ExtServletContext context = contextHandler.getServletContext(filterInfo.getServiceReference().getBundle());
+        if ( context == null )
+        {
+            return DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
+        }
+        final FilterHandler handler = new WhiteboardFilterHandler(
+                contextHandler.getContextInfo().getServiceId(),
+                context,
+                filterInfo, contextHandler.getBundleContext());
         this.filterRegistry.addFilter(handler);
+        return -1;
     }
 
-    public void removeFilter(@Nonnull final FilterInfo info, final boolean destroy)
+    /**
+     * Unregister a filter
+     * @param contextInfo The servlet context helper info
+     * @param filterInfo The filter info
+     */
+    public void unregisterFilter(@Nonnull final ContextHandler contextHandler, @Nonnull final FilterInfo filterInfo)
     {
-        this.filterRegistry.removeFilter(info, destroy);
+        this.filterRegistry.removeFilter(filterInfo, true);
+        contextHandler.ungetServletContext(filterInfo.getServiceReference().getBundle());
+    }
+
+    /**
+     * Register listeners
+     *
+     * @param contextHandler The context handler
+     * @param info The listener info
+     * @return {@code -1} on successful registration, failure code otherwise
+     */
+    public int registerListeners(@Nonnull final ContextHandler contextHandler,
+            @Nonnull final ListenerInfo info)
+    {
+        final ExtServletContext context = contextHandler.getServletContext(info.getServiceReference().getBundle());
+        if ( context == null )
+        {
+            return DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
+        }
+        final ListenerHandler handler = new WhiteboardListenerHandler(
+                contextHandler.getContextInfo().getServiceId(),
+                context,
+                info,
+                contextHandler.getBundleContext());
+        this.eventListenerRegistry.addListeners(handler);
+        return -1;
+    }
+
+    /**
+     * Unregister listeners
+     *
+     * @param contextHandler The context handler
+     * @param info The listener info
+     */
+    public void unregisterListeners(@Nonnull final ContextHandler contextHandler, @Nonnull final ListenerInfo info)
+    {
+        this.eventListenerRegistry.removeListeners(info);
+        contextHandler.ungetServletContext(info.getServiceReference().getBundle());
+    }
+
+    /**
+     * Register a resource.
+     * @param contextInfo The servlet context helper info
+     * @param resourceInfo The resource info
+     */
+    public int registerResource(@Nonnull final ContextHandler contextHandler,
+            @Nonnull final ResourceInfo resourceInfo)
+    {
+        final ServletInfo servletInfo = new ServletInfo(resourceInfo);
+
+        final ExtServletContext context = contextHandler.getServletContext(servletInfo.getServiceReference().getBundle());
+        if ( context == null )
+        {
+            return DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
+        }
+
+        final ServletHandler handler = new HttpServiceServletHandler(
+                contextHandler.getContextInfo().getServiceId(),
+                context,
+                servletInfo, new ResourceServlet(resourceInfo.getPrefix()));
+
+        this.servletRegistry.addServlet(handler);
+        return -1;
+    }
+
+    /**
+     * Unregister a resource.
+     * @param contextInfo The servlet context helper info
+     * @param resourceInfo The resource info
+     */
+    public void unregisterResource(@Nonnull final ContextHandler contextHandler, @Nonnull final ResourceInfo resourceInfo)
+    {
+        final ServletInfo servletInfo = new ServletInfo(resourceInfo);
+        this.servletRegistry.removeServlet(servletInfo, true);
+        contextHandler.ungetServletContext(servletInfo.getServiceReference().getBundle());
     }
 
     public FilterHandler[] getFilterHandlers(@CheckForNull final ServletHandler servletHandler,
@@ -210,5 +330,41 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
 
         // collect listeners
         this.eventListenerRegistry.getRuntimeInfo(dto, failedDTOHolder.failedListenerDTOs);
+    }
+
+    /**
+     * Add a filter for the http service.
+     * @param handler The filter handler
+     */
+    public void registerFilter(@Nonnull final FilterHandler handler) {
+        this.filterRegistry.addFilter(handler);
+    }
+
+    /**
+     * Add a servlet for the http service.
+     * @param handler The servlet handler
+     */
+    public void registerServlet(@Nonnull final ServletHandler handler) {
+        this.servletRegistry.addServlet(handler);
+        this.errorPageRegistry.addServlet(handler);
+    }
+
+    /**
+     * Remove a servlet for the http service.
+     * @param servletInfo The servlet info
+     * @param destroy Destroy the servlet
+     */
+    public void unregisterServlet(@Nonnull final ServletInfo servletInfo, final boolean destroy) {
+        this.servletRegistry.removeServlet(servletInfo, destroy);
+        this.errorPageRegistry.removeServlet(servletInfo, destroy);
+    }
+
+    /**
+     * Remove a filter for the http service.
+     * @param info The filter info
+     * @param destroy Destroy the filter
+     */
+    public void unregisterFilter(@Nonnull final FilterInfo info, final boolean destroy) {
+        this.filterRegistry.removeFilter(info, destroy);
     }
 }

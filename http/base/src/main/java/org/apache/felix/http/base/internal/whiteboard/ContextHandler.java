@@ -24,6 +24,7 @@ import javax.annotation.Nonnull;
 import javax.servlet.ServletContext;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
+import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.osgi.framework.Bundle;
@@ -58,6 +59,11 @@ public final class ContextHandler implements Comparable<ContextHandler>
         this.bundle = bundle;
     }
 
+    public BundleContext getBundleContext()
+    {
+        return this.bundle.getBundleContext();
+    }
+
     public ServletContextHelperInfo getContextInfo()
     {
         return this.info;
@@ -73,7 +79,7 @@ public final class ContextHandler implements Comparable<ContextHandler>
      * Activate this context.
      * @return {@code true} if it succeeded.
      */
-    public boolean activate(final WhiteboardHttpService httpService)
+    public boolean activate(final HandlerRegistry registry)
     {
         this.registry = new PerContextHandlerRegistry(this.info);
         this.sharedContext = new SharedServletContextImpl(webContext,
@@ -89,7 +95,7 @@ public final class ContextHandler implements Comparable<ContextHandler>
         }
         else
         {
-            httpService.registerContext(this.registry);
+            registry.add(this.registry);
         }
         return activate;
     }
@@ -97,9 +103,9 @@ public final class ContextHandler implements Comparable<ContextHandler>
     /**
      * Deactivate this context.
      */
-    public void deactivate(final WhiteboardHttpService httpService)
+    public void deactivate(final HandlerRegistry registry)
     {
-        httpService.unregisterContext(this);
+        registry.remove(this.info);
         this.registry = null;
         this.sharedContext = null;
         this.ungetServletContext(bundle);

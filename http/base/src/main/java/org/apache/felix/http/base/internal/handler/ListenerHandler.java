@@ -16,6 +16,8 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
+import java.util.EventListener;
+
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.runtime.ListenerInfo;
 import org.osgi.service.http.runtime.dto.DTOConstants;
@@ -24,21 +26,21 @@ import org.osgi.service.http.runtime.dto.DTOConstants;
  * The listener handler handles the initialization and destruction of listener
  * objects.
  */
-public abstract class ListenerHandler<T> implements Comparable<ListenerHandler<T>>
+public abstract class ListenerHandler implements Comparable<ListenerHandler>
 {
     private final long contextServiceId;
 
-    private final ListenerInfo<T> listenerInfo;
+    private final ListenerInfo listenerInfo;
 
     private final ExtServletContext context;
 
-    private T listener;
+    private EventListener listener;
 
     protected volatile int useCount;
 
     public ListenerHandler(final long contextServiceId,
             final ExtServletContext context,
-            final ListenerInfo<T> listenerInfo)
+            final ListenerInfo listenerInfo)
     {
         this.contextServiceId = contextServiceId;
         this.context = context;
@@ -46,7 +48,7 @@ public abstract class ListenerHandler<T> implements Comparable<ListenerHandler<T
     }
 
     @Override
-    public int compareTo(final ListenerHandler<T> other)
+    public int compareTo(final ListenerHandler other)
     {
         return this.listenerInfo.compareTo(other.listenerInfo);
     }
@@ -61,17 +63,17 @@ public abstract class ListenerHandler<T> implements Comparable<ListenerHandler<T
         return this.contextServiceId;
     }
 
-    public T getListener()
+    public EventListener getListener()
     {
         return listener;
     }
 
-    protected void setListener(final T f)
+    protected void setListener(final EventListener f)
     {
         this.listener = f;
     }
 
-    public ListenerInfo<T> getListenerInfo()
+    public ListenerInfo getListenerInfo()
     {
         return this.listenerInfo;
     }
@@ -138,7 +140,7 @@ public abstract class ListenerHandler<T> implements Comparable<ListenerHandler<T
         {
             return false;
         }
-        final ListenerHandler<T> other = (ListenerHandler<T>) obj;
+        final ListenerHandler other = (ListenerHandler) obj;
         return listenerInfo.equals(other.listenerInfo);
     }
 }

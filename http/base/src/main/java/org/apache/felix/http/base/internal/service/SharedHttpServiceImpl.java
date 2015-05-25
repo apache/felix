@@ -51,9 +51,9 @@ public final class SharedHttpServiceImpl
     /**
      * Register a filter
      */
-    public boolean registerFilter(@Nonnull final FilterHandler holder)
+    public boolean registerFilter(@Nonnull final FilterHandler handler)
     {
-        this.handlerRegistry.addFilter(holder);
+        this.handlerRegistry.getRegistry(handler.getContextServiceId()).registerFilter(handler);
         return true;
     }
 
@@ -65,7 +65,7 @@ public final class SharedHttpServiceImpl
             @Nonnull final Servlet servlet,
             @Nonnull final ServletInfo servletInfo) throws ServletException, NamespaceException
     {
-        final ServletHandler holder = new HttpServiceServletHandler(httpContext, servletInfo, servlet);
+        final ServletHandler handler = new HttpServiceServletHandler(httpContext, servletInfo, servlet);
 
         synchronized (this.aliasMap)
         {
@@ -73,9 +73,9 @@ public final class SharedHttpServiceImpl
             {
                 throw new NamespaceException("Alias " + alias + " is already in use.");
             }
-            this.handlerRegistry.addServlet(holder);
+            this.handlerRegistry.getRegistry(handler.getContextServiceId()).registerServlet(handler);
 
-            this.aliasMap.put(alias, holder);
+            this.aliasMap.put(alias, handler);
         }
     }
 
@@ -86,14 +86,14 @@ public final class SharedHttpServiceImpl
     {
         synchronized (this.aliasMap)
         {
-            final ServletHandler holder = this.aliasMap.remove(alias);
-            if (holder == null)
+            final ServletHandler handler = this.aliasMap.remove(alias);
+            if (handler == null)
             {
                 throw new IllegalArgumentException("Nothing registered at " + alias);
             }
 
-            final Servlet s = holder.getServlet();
-            this.handlerRegistry.removeServlet(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID, holder.getServletInfo(), true);
+            final Servlet s = handler.getServlet();
+            this.handlerRegistry.getRegistry(handler.getContextServiceId()).unregisterServlet(handler.getServletInfo(), true);
             return s;
         }
     }
@@ -110,7 +110,7 @@ public final class SharedHttpServiceImpl
                     final Map.Entry<String, ServletHandler> entry = i.next();
                     if (entry.getValue().getServlet() == servlet)
                     {
-                        this.handlerRegistry.removeServlet(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID, entry.getValue().getServletInfo(), destroy);
+                        this.handlerRegistry.getRegistry(entry.getValue().getContextServiceId()).unregisterServlet(entry.getValue().getServletInfo(), destroy);
 
                         i.remove();
                         break;
@@ -121,11 +121,11 @@ public final class SharedHttpServiceImpl
         }
     }
 
-    public void unregisterFilter(final FilterHandler filter, final boolean destroy)
+    public void unregisterFilter(final FilterHandler handler, final boolean destroy)
     {
-        if (filter != null)
+        if (handler != null)
         {
-            this.handlerRegistry.removeFilter(filter.getContextServiceId(), filter.getFilterInfo(), destroy);
+            this.handlerRegistry.getRegistry(handler.getContextServiceId()).unregisterFilter(handler.getFilterInfo(), destroy);
         }
     }
 }

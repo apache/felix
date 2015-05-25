@@ -18,6 +18,7 @@ package org.apache.felix.http.base.internal.registry;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EventListener;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -30,7 +31,7 @@ import org.apache.felix.http.base.internal.runtime.dto.ListenerDTOBuilder;
 import org.osgi.service.http.runtime.dto.FailedListenerDTO;
 import org.osgi.service.http.runtime.dto.ListenerDTO;
 
-public class ListenerMap<T> {
+public class ListenerMap<T extends EventListener> {
 
     private volatile List<ListenerRegistrationStatus<T>> handlers = Collections.emptyList();
 
@@ -44,9 +45,9 @@ public class ListenerMap<T> {
     private static final class ListenerRegistrationStatus<T> implements Comparable<ListenerRegistrationStatus<T>>
     {
         private final int result;
-        private final ListenerHandler<T> handler;
+        private final ListenerHandler handler;
 
-        public ListenerRegistrationStatus(@Nonnull final ListenerHandler<T> handler, final int result)
+        public ListenerRegistrationStatus(@Nonnull final ListenerHandler handler, final int result)
         {
             this.handler = handler;
             this.result = result;
@@ -57,7 +58,7 @@ public class ListenerMap<T> {
             return this.result;
         }
 
-        public @Nonnull ListenerHandler<T> getHandler()
+        public @Nonnull ListenerHandler getHandler()
         {
             return this.handler;
         }
@@ -79,7 +80,7 @@ public class ListenerMap<T> {
         this.handlers = Collections.emptyList();
     }
 
-    public synchronized void add(final ListenerHandler<T> handler)
+    public synchronized void add(final ListenerHandler handler)
     {
         final int reason = handler.init();
         final ListenerRegistrationStatus<T> status = new ListenerRegistrationStatus<T>(handler, reason);
@@ -90,7 +91,7 @@ public class ListenerMap<T> {
         this.handlers = newList;
     }
 
-    public synchronized void remove(final ListenerInfo<T> info)
+    public synchronized void remove(final ListenerInfo info)
     {
         final List<ListenerRegistrationStatus<T>> newList = new ArrayList<ListenerMap.ListenerRegistrationStatus<T>>(this.handlers);
         final Iterator<ListenerRegistrationStatus<T>> i = newList.iterator();
@@ -110,7 +111,7 @@ public class ListenerMap<T> {
         }
     }
 
-    public ListenerHandler<T> getListenerHandler(@Nonnull final ListenerInfo<T> info)
+    public ListenerHandler getListenerHandler(@Nonnull final ListenerInfo info)
     {
         final List<ListenerRegistrationStatus<T>> list = this.handlers;
         for(final ListenerRegistrationStatus<T> status : list)
@@ -123,14 +124,14 @@ public class ListenerMap<T> {
         return null;
     }
 
-    public Iterable<ListenerHandler<T>> getActiveHandlers()
+    public Iterable<ListenerHandler> getActiveHandlers()
     {
         final List<ListenerRegistrationStatus<T>> list = this.handlers;
         final Iterator<ListenerRegistrationStatus<T>> iter = list.iterator();
-        final Iterator<ListenerHandler<T>> newIter = new Iterator<ListenerHandler<T>>()
+        final Iterator<ListenerHandler> newIter = new Iterator<ListenerHandler>()
         {
 
-            private ListenerHandler<T> next;
+            private ListenerHandler next;
 
             {
                 peek();
@@ -156,13 +157,13 @@ public class ListenerMap<T> {
             }
 
             @Override
-            public ListenerHandler<T> next()
+            public ListenerHandler next()
             {
                 if ( this.next == null )
                 {
                     throw new NoSuchElementException();
                 }
-                final ListenerHandler<T> result = this.next;
+                final ListenerHandler result = this.next;
                 peek();
                 return result;
             }
@@ -173,11 +174,11 @@ public class ListenerMap<T> {
                 throw new UnsupportedOperationException();
             }
         };
-        return new Iterable<ListenerHandler<T>>()
+        return new Iterable<ListenerHandler>()
         {
 
             @Override
-            public Iterator<ListenerHandler<T>> iterator()
+            public Iterator<ListenerHandler> iterator()
             {
                 return newIter;
             }
@@ -186,7 +187,7 @@ public class ListenerMap<T> {
 
     public Iterable<T> getActiveListeners()
     {
-        final Iterator<ListenerHandler<T>> iter = this.getActiveHandlers().iterator();
+        final Iterator<ListenerHandler> iter = this.getActiveHandlers().iterator();
         final Iterator<T> newIter = new Iterator<T>()
         {
 
@@ -196,13 +197,14 @@ public class ListenerMap<T> {
                 peek();
             }
 
+            @SuppressWarnings("unchecked")
             private void peek()
             {
                 next = null;
                 while ( next == null && iter.hasNext() )
                 {
-                    final ListenerHandler<T> handler = iter.next();
-                    next = handler.getListener();
+                    final ListenerHandler handler = iter.next();
+                    next = (T)handler.getListener();
                 }
             }
 
@@ -260,10 +262,6 @@ public class ListenerMap<T> {
                     if ( dto.serviceId == status.getHandler().getListenerInfo().getServiceId() )
                     {
                         found = true;
-                        final String[] types = new String[dto.types.length + 1];
-                        System.arraycopy(dto.types, 0, types, 0, dto.types.length);
-                        types[dto.types.length] = status.getHandler().getListenerInfo().getListenerName();
-                        dto.types = types;
                     }
                     index++;
                 }
@@ -284,10 +282,6 @@ public class ListenerMap<T> {
                          && dto.failureReason == status.getResult() )
                     {
                         found = true;
-                        final String[] types = new String[dto.types.length + 1];
-                        System.arraycopy(dto.types, 0, types, 0, dto.types.length);
-                        types[dto.types.length] = status.getHandler().getListenerInfo().getListenerName();
-                        dto.types = types;
                     }
                     index++;
                 }

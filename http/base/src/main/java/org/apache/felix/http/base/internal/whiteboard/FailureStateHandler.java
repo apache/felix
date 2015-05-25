@@ -101,7 +101,7 @@ public class FailureStateHandler {
         return false;
     }
 
-    public void getRuntime(final FailedDTOHolder failedDTOHolder) {
+    public void getRuntimeInfo(final FailedDTOHolder failedDTOHolder) {
         for(final Map.Entry<AbstractInfo<?>, FailureStatus> entry : this.serviceFailures.entrySet() )
         {
             final Iterator<Map.Entry<Integer, Set<Long>>> i = entry.getValue().reasonToContextsMapping.entrySet().iterator();

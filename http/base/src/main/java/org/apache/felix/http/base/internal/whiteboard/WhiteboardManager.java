@@ -47,16 +47,10 @@ import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.AbstractInfo;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
-import org.apache.felix.http.base.internal.runtime.HttpSessionAttributeListenerInfo;
-import org.apache.felix.http.base.internal.runtime.HttpSessionIdListenerInfo;
-import org.apache.felix.http.base.internal.runtime.HttpSessionListenerInfo;
+import org.apache.felix.http.base.internal.runtime.ListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ResourceInfo;
-import org.apache.felix.http.base.internal.runtime.ServletContextAttributeListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
-import org.apache.felix.http.base.internal.runtime.ServletContextListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
-import org.apache.felix.http.base.internal.runtime.ServletRequestAttributeListenerInfo;
-import org.apache.felix.http.base.internal.runtime.ServletRequestListenerInfo;
 import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
 import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
 import org.apache.felix.http.base.internal.runtime.dto.RegistryRuntime;
@@ -65,14 +59,9 @@ import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.apache.felix.http.base.internal.service.HttpServiceRuntimeImpl;
 import org.apache.felix.http.base.internal.util.MimeTypes;
 import org.apache.felix.http.base.internal.whiteboard.tracker.FilterTracker;
-import org.apache.felix.http.base.internal.whiteboard.tracker.HttpSessionAttributeListenerTracker;
-import org.apache.felix.http.base.internal.whiteboard.tracker.HttpSessionListenerTracker;
+import org.apache.felix.http.base.internal.whiteboard.tracker.ListenersTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ResourceTracker;
-import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextAttributeListenerTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextHelperTracker;
-import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextListenerTracker;
-import org.apache.felix.http.base.internal.whiteboard.tracker.ServletRequestAttributeListenerTracker;
-import org.apache.felix.http.base.internal.whiteboard.tracker.ServletRequestListenerTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ServletTracker;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -104,7 +93,7 @@ public final class WhiteboardManager
     /** A map with all servlet/filter registrations, mapped by abstract info. */
     private final Map<WhiteboardServiceInfo<?>, List<ContextHandler>> servicesMap = new HashMap<WhiteboardServiceInfo<?>, List<ContextHandler>>();
 
-    private final WhiteboardHttpService httpService;
+    private final HandlerRegistry registry;
 
     private final FailureStateHandler failureStateHandler = new FailureStateHandler();
 
@@ -130,7 +119,7 @@ public final class WhiteboardManager
     {
         this.bundleContext = bundleContext;
         this.httpServiceFactory = httpServiceFactory;
-        this.httpService = new WhiteboardHttpService(this.bundleContext, registry);
+        this.registry = registry;
         this.serviceRuntime = new HttpServiceRuntimeImpl(registry, this);
         this.plugin = new HttpServicePlugin(bundleContext, this.serviceRuntime);
     }
@@ -182,18 +171,11 @@ public final class WhiteboardManager
                     }
                 }, props);
         addTracker(new FilterTracker(this.bundleContext, this));
-        addTracker(new ServletTracker(this.bundleContext, this));
+        addTracker(new ListenersTracker(this.bundleContext, this));
         addTracker(new ResourceTracker(this.bundleContext, this));
-
-        addTracker(new HttpSessionListenerTracker(this.bundleContext, this));
-        addTracker(new HttpSessionAttributeListenerTracker(this.bundleContext, this));
-
         addTracker(new ServletContextHelperTracker(this.bundleContext, this));
-        addTracker(new ServletContextListenerTracker(this.bundleContext, this));
-        addTracker(new ServletContextAttributeListenerTracker(this.bundleContext, this));
+        addTracker(new ServletTracker(this.bundleContext, this));
 
-        addTracker(new ServletRequestListenerTracker(this.bundleContext, this));
-        addTracker(new ServletRequestAttributeListenerTracker(this.bundleContext, this));
         this.plugin.register();
     }
 
@@ -284,7 +266,7 @@ public final class WhiteboardManager
      */
     private boolean activate(final ContextHandler handler)
     {
-        if ( !handler.activate(this.httpService) )
+        if ( !handler.activate(this.registry) )
         {
             return false;
         }
@@ -299,7 +281,7 @@ public final class WhiteboardManager
                 {
                     this.failureStateHandler.remove(entry.getKey());
                 }
-                if ( entry.getKey() instanceof ServletContextListenerInfo )
+                if ( entry.getKey() instanceof ListenerInfo && ((ListenerInfo)entry.getKey()).isListenerType(ServletContextListener.class.getName()) )
                 {
                     // servlet context listeners will be registered directly
                     this.registerWhiteboardService(handler, entry.getKey());
@@ -340,7 +322,7 @@ public final class WhiteboardManager
             {
                 if ( !this.failureStateHandler.remove(entry.getKey(), handler.getContextInfo().getServiceId()) )
                 {
-                    if ( entry.getKey() instanceof ServletContextListenerInfo )
+                    if ( entry.getKey() instanceof ListenerInfo && ((ListenerInfo)entry.getKey()).isListenerType(ServletContextListener.class.getName()) )
                     {
                         listeners.add(entry.getKey());
                     }
@@ -364,7 +346,7 @@ public final class WhiteboardManager
             this.unregisterWhiteboardService(handler, info);
         }
 
-        handler.deactivate(this.httpService);
+        handler.deactivate(this.registry);
     }
 
     /**
@@ -573,12 +555,12 @@ public final class WhiteboardManager
                         for(final ContextHandler h : handlerList)
                         {
                             this.registerWhiteboardService(h, info);
-                            if ( info instanceof ServletContextListenerInfo )
+                            if ( info instanceof ListenerInfo && ((ListenerInfo)info).isListenerType(ServletContextListener.class.getName()) )
                             {
-                                final ListenerHandler<ServletContextListener> handler = h.getRegistry().getEventListenerRegistry().getServletContextListener((ServletContextListenerInfo)info);
+                                final ListenerHandler handler = h.getRegistry().getEventListenerRegistry().getServletContextListener((ListenerInfo)info);
                                 if ( handler != null )
                                 {
-                                    final ServletContextListener listener = handler.getListener();
+                                    final ServletContextListener listener = (ServletContextListener)handler.getListener();
                                     if ( listener != null )
                                     {
                                         listener.contextInitialized(new ServletContextEvent(handler.getContext()));
@@ -618,12 +600,12 @@ public final class WhiteboardManager
                     {
                         if ( !failureStateHandler.remove(info, h.getContextInfo().getServiceId()) )
                         {
-                            if ( info instanceof ServletContextListenerInfo )
+                            if ( info instanceof ListenerInfo && ((ListenerInfo)info).isListenerType(ServletContextListener.class.getName()) )
                             {
-                                final ListenerHandler<ServletContextListener> handler = h.getRegistry().getEventListenerRegistry().getServletContextListener((ServletContextListenerInfo)info);
+                                final ListenerHandler handler = h.getRegistry().getEventListenerRegistry().getServletContextListener((ListenerInfo)info);
                                 if ( handler != null )
                                 {
-                                    final ServletContextListener listener = handler.getListener();
+                                    final ServletContextListener listener = (ServletContextListener) handler.getListener();
                                     if ( listener != null )
                                     {
                                         listener.contextDestroyed(new ServletContextEvent(handler.getContext()));
@@ -651,44 +633,20 @@ public final class WhiteboardManager
             int failureCode = -1;
             if ( info instanceof ServletInfo )
             {
-                failureCode = this.httpService.registerServlet(handler, (ServletInfo)info);
+                failureCode = handler.getRegistry().registerServlet(handler, (ServletInfo)info);
             }
             else if ( info instanceof FilterInfo )
             {
-                failureCode = this.httpService.registerFilter(handler, (FilterInfo)info);
+                failureCode = handler.getRegistry().registerFilter(handler, (FilterInfo)info);
             }
             else if ( info instanceof ResourceInfo )
             {
-                failureCode = this.httpService.registerResource(handler, (ResourceInfo)info);
+                failureCode = handler.getRegistry().registerResource(handler, (ResourceInfo)info);
             }
 
-            else if ( info instanceof ServletContextListenerInfo )
+            else if ( info instanceof ListenerInfo )
             {
-                failureCode = this.httpService.registerListener(handler, (ServletContextListenerInfo) info);
-            }
-            else if ( info instanceof ServletContextAttributeListenerInfo )
-            {
-                failureCode = this.httpService.registerListener(handler, (ServletContextAttributeListenerInfo) info);
-            }
-            else if ( info instanceof HttpSessionListenerInfo )
-            {
-                failureCode = this.httpService.registerListener(handler, (HttpSessionListenerInfo) info);
-            }
-            else if ( info instanceof HttpSessionAttributeListenerInfo )
-            {
-                failureCode = this.httpService.registerListener(handler, (HttpSessionAttributeListenerInfo) info);
-            }
-            else if ( info instanceof HttpSessionIdListenerInfo )
-            {
-                failureCode = this.httpService.registerListener(handler, (HttpSessionIdListenerInfo) info);
-            }
-            else if ( info instanceof ServletRequestListenerInfo )
-            {
-                failureCode = this.httpService.registerListener(handler, (ServletRequestListenerInfo) info);
-            }
-            else if ( info instanceof ServletRequestAttributeListenerInfo )
-            {
-                failureCode = this.httpService.registerListener(handler, (ServletRequestAttributeListenerInfo) info);
+                failureCode = handler.getRegistry().registerListeners(handler, (ListenerInfo) info);
             }
             else
             {
@@ -720,44 +678,20 @@ public final class WhiteboardManager
         {
             if ( info instanceof ServletInfo )
             {
-                this.httpService.unregisterServlet(handler, (ServletInfo)info);
+                handler.getRegistry().unregisterServlet(handler, (ServletInfo)info);
             }
             else if ( info instanceof FilterInfo )
             {
-                this.httpService.unregisterFilter(handler, (FilterInfo)info);
+                handler.getRegistry().unregisterFilter(handler, (FilterInfo)info);
             }
             else if ( info instanceof ResourceInfo )
             {
-                this.httpService.unregisterResource(handler, (ResourceInfo)info);
+                handler.getRegistry().unregisterResource(handler, (ResourceInfo)info);
             }
 
-            else if ( info instanceof ServletContextListenerInfo )
+            else if ( info instanceof ListenerInfo )
             {
-                this.httpService.unregisterListener(handler, (ServletContextListenerInfo) info);
-            }
-            else if ( info instanceof ServletContextAttributeListenerInfo )
-            {
-                this.httpService.unregisterListener(handler, (ServletContextAttributeListenerInfo) info);
-            }
-            else if ( info instanceof HttpSessionListenerInfo )
-            {
-                this.httpService.unregisterListener(handler, (HttpSessionListenerInfo) info);
-            }
-            else if ( info instanceof HttpSessionAttributeListenerInfo )
-            {
-                this.httpService.unregisterListener(handler, (HttpSessionAttributeListenerInfo) info);
-            }
-            else if ( info instanceof HttpSessionIdListenerInfo )
-            {
-                this.httpService.unregisterListener(handler, (HttpSessionIdListenerInfo) info);
-            }
-            else if ( info instanceof ServletRequestListenerInfo )
-            {
-                this.httpService.unregisterListener(handler, (ServletRequestListenerInfo) info);
-            }
-            else if ( info instanceof ServletRequestAttributeListenerInfo )
-            {
-                this.httpService.unregisterListener(handler, (ServletRequestAttributeListenerInfo) info);
+                handler.getRegistry().unregisterListeners(handler, (ListenerInfo) info);
             }
         }
         catch (final Exception e)
@@ -807,7 +741,7 @@ public final class WhiteboardManager
         return null;
     }
 
-    public RegistryRuntime getRuntimeInfo(final HandlerRegistry registry)
+    public RegistryRuntime getRuntimeInfo()
     {
         final FailedDTOHolder failedDTOHolder = new FailedDTOHolder();
 
@@ -833,7 +767,7 @@ public final class WhiteboardManager
                     contextHandlerList.add(list.get(0));
                 }
             }
-            this.failureStateHandler.getRuntime(failedDTOHolder);
+            this.failureStateHandler.getRuntimeInfo(failedDTOHolder);
         }
         Collections.sort(contextHandlerList);
 

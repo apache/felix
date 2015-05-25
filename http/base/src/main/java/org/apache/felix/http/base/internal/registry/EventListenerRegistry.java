@@ -35,14 +35,7 @@ import javax.servlet.http.HttpSessionIdListener;
 import javax.servlet.http.HttpSessionListener;
 
 import org.apache.felix.http.base.internal.handler.ListenerHandler;
-import org.apache.felix.http.base.internal.runtime.HttpSessionAttributeListenerInfo;
-import org.apache.felix.http.base.internal.runtime.HttpSessionIdListenerInfo;
-import org.apache.felix.http.base.internal.runtime.HttpSessionListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ListenerInfo;
-import org.apache.felix.http.base.internal.runtime.ServletContextAttributeListenerInfo;
-import org.apache.felix.http.base.internal.runtime.ServletContextListenerInfo;
-import org.apache.felix.http.base.internal.runtime.ServletRequestAttributeListenerInfo;
-import org.apache.felix.http.base.internal.runtime.ServletRequestListenerInfo;
 import org.osgi.service.http.runtime.dto.FailedListenerDTO;
 import org.osgi.service.http.runtime.dto.ListenerDTO;
 import org.osgi.service.http.runtime.dto.ServletContextDTO;
@@ -91,154 +84,88 @@ public final class EventListenerRegistry implements
     }
 
     /**
-     * Add servlet context listener
+     * Add  listeners
      *
-     * @param handler
+     * @param listener handler
      */
-    public void addServletContextListener(@Nonnull final ListenerHandler<ServletContextListener> handler)
+    public void addListeners(@Nonnull final ListenerHandler handler)
     {
-        this.contextListeners.add(handler);
+        if ( handler.getListenerInfo().isListenerType(ServletContextListener.class.getName()))
+        {
+            this.contextListeners.add(handler);
+        }
+        if ( handler.getListenerInfo().isListenerType(ServletContextAttributeListener.class.getName()))
+        {
+            this.contextAttributeListeners.add(handler);
+        }
+        if ( handler.getListenerInfo().isListenerType(HttpSessionListener.class.getName()))
+        {
+            this.sessionListeners.add(handler);
+        }
+        if ( handler.getListenerInfo().isListenerType(HttpSessionIdListener.class.getName()))
+        {
+            this.sessionIdListeners.add(handler);
+        }
+        if ( handler.getListenerInfo().isListenerType(HttpSessionAttributeListener.class.getName()))
+        {
+            this.sessionAttributeListeners.add(handler);
+        }
+        if ( handler.getListenerInfo().isListenerType(ServletRequestListener.class.getName()))
+        {
+            this.requestListeners.add(handler);
+        }
+        if ( handler.getListenerInfo().isListenerType(ServletRequestAttributeListener.class.getName()))
+        {
+            this.requestAttributeListeners.add(handler);
+        }
     }
 
     /**
-     * Remove servlet context listener
+     * Remove listeners
      *
      * @param info
      */
-    public void removeServletContextListener(@Nonnull final ServletContextListenerInfo info)
+    public void removeListeners(@Nonnull final ListenerInfo info)
     {
-        this.contextListeners.remove(info);
+        if ( info.isListenerType(ServletContextListener.class.getName()))
+        {
+            this.contextListeners.remove(info);
+        }
+        if ( info.isListenerType(ServletContextAttributeListener.class.getName()))
+        {
+            this.contextAttributeListeners.remove(info);
+        }
+        if ( info.isListenerType(HttpSessionListener.class.getName()))
+        {
+            this.sessionListeners.remove(info);
+        }
+        if ( info.isListenerType(HttpSessionIdListener.class.getName()))
+        {
+            this.sessionIdListeners.remove(info);
+        }
+        if ( info.isListenerType(HttpSessionAttributeListener.class.getName()))
+        {
+            this.sessionAttributeListeners.remove(info);
+        }
+        if ( info.isListenerType(ServletRequestListener.class.getName()))
+        {
+            this.requestListeners.remove(info);
+        }
+        if ( info.isListenerType(ServletRequestAttributeListener.class.getName()))
+        {
+            this.requestAttributeListeners.remove(info);
+        }
     }
 
-    /**
-     * Add servlet context attribute listener
-     *
-     * @param handler
-     */
-    public void addServletContextAttributeListener(@Nonnull final ListenerHandler<ServletContextAttributeListener> handler)
-    {
-        this.contextAttributeListeners.add(handler);
-    }
-
-    /**
-     * Remove servlet context attribute listener
-     *
-     * @param info
-     */
-    public void removeServletContextAttributeListener(@Nonnull final ServletContextAttributeListenerInfo info)
-    {
-        this.contextAttributeListeners.remove(info);
-    }
-
-    /**
-     * Add session attribute listener
-     *
-     * @param handler
-     */
-    public void addSessionAttributeListener(@Nonnull final ListenerHandler<HttpSessionAttributeListener> handler)
-    {
-        this.sessionAttributeListeners.add(handler);
-    }
-
-    /**
-     * Remove session attribute listener
-     *
-     * @param info
-     */
-    public void removeSessionAttributeListener(@Nonnull final HttpSessionAttributeListenerInfo info)
-    {
-        this.sessionAttributeListeners.remove(info);
-    }
-
-    /**
-     * Add session listener
-     *
-     * @param handler
-     */
-    public void addSessionListener(@Nonnull final ListenerHandler<HttpSessionListener> handler)
-    {
-        this.sessionListeners.add(handler);
-    }
-
-    /**
-     * Remove session listener
-     *
-     * @param info
-     */
-    public void removeSessionListener(@Nonnull final HttpSessionListenerInfo info)
-    {
-        this.sessionListeners.remove(info);
-    }
-
-    /**
-     * Add session id listener
-     *
-     * @param handler
-     */
-    public void addSessionIdListener(@Nonnull final ListenerHandler<HttpSessionIdListener> handler)
-    {
-        this.sessionIdListeners.add(handler);
-    }
-
-    /**
-     * Remove session id listener
-     *
-     * @param info
-     */
-    public void removeSessionIdListener(@Nonnull final HttpSessionIdListenerInfo info)
-    {
-        this.sessionIdListeners.remove(info);
-    }
-
-    /**
-     * Add request listener
-     *
-     * @param handler
-     */
-    public void addServletRequestListener(@Nonnull final ListenerHandler<ServletRequestListener> handler)
-    {
-        this.requestListeners.add(handler);
-    }
-
-    /**
-     * Remove request listener
-     *
-     * @param info
-     */
-    public void removeServletRequestListener(@Nonnull final ServletRequestListenerInfo info)
-    {
-        this.requestListeners.remove(info);
-    }
-
-    /**
-     * Add request attribute listener
-     *
-     * @param handler
-     */
-    public void addServletRequestAttributeListener(@Nonnull final ListenerHandler<ServletRequestAttributeListener> handler)
-    {
-        this.requestAttributeListeners.add(handler);
-    }
-
-    /**
-     * Remove request attribute listener
-     *
-     * @param info
-     */
-    public void removeServletRequestAttributeListener(@Nonnull final ServletRequestAttributeListenerInfo info)
-    {
-        this.requestAttributeListeners.remove(info);
-    }
-
-    public ListenerHandler<ServletContextListener> getServletContextListener(@Nonnull final ListenerInfo<ServletContextListener> info)
+    public ListenerHandler getServletContextListener(@Nonnull final ListenerInfo info)
     {
         return this.contextListeners.getListenerHandler(info);
     }
 
     public void contextInitialized() {
-        for (final ListenerHandler<ServletContextListener> l : contextListeners.getActiveHandlers())
+        for (final ListenerHandler l : contextListeners.getActiveHandlers())
         {
-            final ServletContextListener listener = l.getListener();
+            final ServletContextListener listener = (ServletContextListener)l.getListener();
             if ( listener != null )
             {
                 listener.contextInitialized(new ServletContextEvent(l.getContext()));
@@ -247,9 +174,9 @@ public final class EventListenerRegistry implements
     }
 
     public void contextDestroyed() {
-        for (final ListenerHandler<ServletContextListener> l : contextListeners.getActiveHandlers())
+        for (final ListenerHandler l : contextListeners.getActiveHandlers())
         {
-            final ServletContextListener listener = l.getListener();
+            final ServletContextListener listener = (ServletContextListener) l.getListener();
             if ( listener != null )
             {
                 listener.contextDestroyed(new ServletContextEvent(l.getContext()));

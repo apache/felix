@@ -25,7 +25,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 import org.osgi.util.tracker.ServiceTracker;
 
 /**
@@ -38,17 +37,6 @@ public abstract class WhiteboardServiceTracker<T> extends ServiceTracker<T, Serv
 {
     /** Map containing all info objects reported from the trackers. */
     private final Map<Long, WhiteboardServiceInfo<T>> allInfos = new ConcurrentHashMap<Long, WhiteboardServiceInfo<T>>();
-
-    /**
-     * Create a filter expression for the specific listener.
-     */
-    public static String createListenerFilterExpression(final Class<?> listenerClass)
-    {
-        return String.format("(&(objectClass=%s)(%s=*)(!(%s~=false)))",
-                listenerClass.getName(),
-                HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER,
-                HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER);
-    }
 
     private static org.osgi.framework.Filter createFilter(final BundleContext btx, final String expr)
     {

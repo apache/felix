@@ -18,24 +18,58 @@
  */
 package org.apache.felix.http.base.internal.runtime;
 
+import java.util.EventListener;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.annotation.Nonnull;
+import javax.servlet.ServletContextAttributeListener;
+import javax.servlet.ServletContextListener;
+import javax.servlet.ServletRequestAttributeListener;
+import javax.servlet.ServletRequestListener;
+import javax.servlet.http.HttpSessionAttributeListener;
+import javax.servlet.http.HttpSessionIdListener;
+import javax.servlet.http.HttpSessionListener;
+
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 /**
  * Info object for registered listeners.
  */
-public abstract class ListenerInfo<T> extends WhiteboardServiceInfo<T>
+public class ListenerInfo extends WhiteboardServiceInfo<EventListener>
 {
+    private static final Set<String> ALLOWED_INTERFACES;
+    static {
+        ALLOWED_INTERFACES = new HashSet<String>();
+        ALLOWED_INTERFACES.add(HttpSessionAttributeListener.class.getName());
+        ALLOWED_INTERFACES.add(HttpSessionIdListener.class.getName());
+        ALLOWED_INTERFACES.add(HttpSessionListener.class.getName());
+        ALLOWED_INTERFACES.add(ServletContextAttributeListener.class.getName());
+        ALLOWED_INTERFACES.add(ServletContextListener.class.getName());
+        ALLOWED_INTERFACES.add(ServletRequestAttributeListener.class.getName());
+        ALLOWED_INTERFACES.add(ServletRequestListener.class.getName());
+    }
 
     private final String enabled;
 
-    private final String listenerName;
+    private final String[] types;
 
-    public ListenerInfo(final ServiceReference<T> ref, final String listenerName)
+    public ListenerInfo(final ServiceReference<EventListener> ref)
     {
         super(ref);
         this.enabled = this.getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER);
-        this.listenerName = listenerName;
+        final String[] objectClass = (String[])ref.getProperty(Constants.OBJECTCLASS);
+        final Set<String> names = new HashSet<String>();
+        for(final String name : objectClass)
+        {
+            if ( ALLOWED_INTERFACES.contains(name) )
+            {
+                names.add(name);
+            }
+        }
+        this.types = names.toArray(new String[names.size()]);
     }
 
     @Override
@@ -44,8 +78,20 @@ public abstract class ListenerInfo<T> extends WhiteboardServiceInfo<T>
         return super.isValid() && "true".equalsIgnoreCase(this.enabled);
     }
 
-    public String getListenerName()
+    public String[] getListenerTypes()
     {
-        return this.listenerName;
+        return this.types;
+    }
+
+    public boolean isListenerType(@Nonnull final String className)
+    {
+        for(final String t : this.types)
+        {
+            if ( t.equals(className) )
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }
