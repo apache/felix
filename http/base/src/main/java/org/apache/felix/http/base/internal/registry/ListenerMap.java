@@ -80,9 +80,8 @@ public class ListenerMap<T extends EventListener> {
         this.handlers = Collections.emptyList();
     }
 
-    public synchronized void add(final ListenerHandler handler)
+    public synchronized void add(final ListenerHandler handler, final int reason)
     {
-        final int reason = handler.init();
         final ListenerRegistrationStatus<T> status = new ListenerRegistrationStatus<T>(handler, reason);
 
         final List<ListenerRegistrationStatus<T>> newList = new ArrayList<ListenerMap.ListenerRegistrationStatus<T>>(this.handlers);
@@ -91,7 +90,7 @@ public class ListenerMap<T extends EventListener> {
         this.handlers = newList;
     }
 
-    public synchronized void remove(final ListenerInfo info)
+    public synchronized ListenerHandler remove(final ListenerInfo info)
     {
         final List<ListenerRegistrationStatus<T>> newList = new ArrayList<ListenerMap.ListenerRegistrationStatus<T>>(this.handlers);
         final Iterator<ListenerRegistrationStatus<T>> i = newList.iterator();
@@ -100,15 +99,13 @@ public class ListenerMap<T extends EventListener> {
             final ListenerRegistrationStatus<T> status = i.next();
             if ( status.getHandler().getListenerInfo().equals(info) )
             {
-                if ( status.getResult() == - 1 )
-                {
-                    status.getHandler().destroy();
-                }
                 i.remove();
                 this.handlers = newList;
-                break;
+
+                return status.getResult() == -1 ? status.getHandler() : null;
             }
         }
+        return null;
     }
 
     public ListenerHandler getListenerHandler(@Nonnull final ListenerInfo info)
