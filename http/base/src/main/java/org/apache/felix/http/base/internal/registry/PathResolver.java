@@ -28,4 +28,6 @@ public interface PathResolver extends Comparable<PathResolver> {
     int getRanking();
 
     int getOrdering();
+
+    String getPattern();
 }

@@ -49,7 +49,7 @@ public abstract class PathResolverFactory {
         }
         else if ( pattern.startsWith("*.") )
         {
-            return new ExtensionMatcher(handler, pattern.substring(1));
+            return new ExtensionMatcher(handler, pattern);
         }
         else if ( pattern.endsWith("/*") )
         {
@@ -67,16 +67,20 @@ public abstract class PathResolverFactory {
     {
         private final int ranking;
 
+        private final String pattern;
+
         private final ServletHandler handler;
 
-        public AbstractMatcher(final ServletHandler handler, final int ranking)
+        public AbstractMatcher(final ServletHandler handler, final String pattern, final int ranking)
         {
             this.handler = handler;
             this.ranking = ranking;
+            this.pattern = pattern;
         }
 
         @Override
-        public int compareTo(final PathResolver o) {
+        public int compareTo(final PathResolver o)
+        {
             int result = o.getRanking() - this.ranking;
             if ( result == 0 )
             {
@@ -86,18 +90,47 @@ public abstract class PathResolverFactory {
         }
 
         @Override
-        public ServletHandler getServletHandler() {
+        public ServletHandler getServletHandler()
+        {
             return this.handler;
         }
 
         @Override
-        public int getRanking() {
+        public int getRanking()
+        {
             return this.ranking;
         }
 
         @Override
-        public int getOrdering() {
+        public int getOrdering()
+        {
             return 0;
+        }
+
+        @Override
+        public String getPattern()
+        {
+            return this.pattern;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return pattern.hashCode();
+        }
+
+        @Override
+        public boolean equals(final Object obj) {
+            if (this == obj)
+            {
+                return true;
+            }
+            if (obj == null || getClass() != obj.getClass())
+            {
+                return false;
+            }
+            final AbstractMatcher other = (AbstractMatcher) obj;
+            return this.pattern.equals(other.pattern);
         }
     }
 
@@ -105,7 +138,7 @@ public abstract class PathResolverFactory {
     {
         public RootMatcher(final ServletHandler handler)
         {
-            super(handler, 2);
+            super(handler, "", 2);
         }
 
         @Override
@@ -128,7 +161,7 @@ public abstract class PathResolverFactory {
     {
         public DefaultMatcher(final ServletHandler handler)
         {
-            super(handler, 1);
+            super(handler, "/", 1);
         }
 
         @Override
@@ -151,7 +184,7 @@ public abstract class PathResolverFactory {
 
         public ExactAndPathMatcher(final ServletHandler handler, final String pattern)
         {
-            super(handler, 4);
+            super(handler, pattern, 4);
             this.path = pattern;
             this.prefix = pattern.concat("/");
         }
@@ -194,7 +227,7 @@ public abstract class PathResolverFactory {
 
         public PathMatcher(final ServletHandler handler, final String pattern)
         {
-            super(handler, 4);
+            super(handler, pattern, 4);
             this.prefix = pattern.substring(0, pattern.length() - 1);
         }
 
@@ -224,10 +257,10 @@ public abstract class PathResolverFactory {
     {
         private final String extension;
 
-        public ExtensionMatcher(final ServletHandler handler, final String extension)
+        public ExtensionMatcher(final ServletHandler handler, final String pattern)
         {
-            super(handler, 3);
-            this.extension = extension;
+            super(handler, pattern, 3);
+            this.extension = pattern.substring(1);
         }
 
         @Override
@@ -258,7 +291,7 @@ public abstract class PathResolverFactory {
 
         public RegexMatcher(final String regex)
         {
-            super(null, 0);
+            super(null, regex, 0);
             this.pattern = Pattern.compile(regex);
         }
 
