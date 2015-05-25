@@ -49,7 +49,7 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
     @Override
     public RuntimeDTO getRuntimeDTO()
     {
-        final RuntimeDTOBuilder runtimeDTOBuilder = new RuntimeDTOBuilder(contextManager.getRuntimeInfo(registry),
+        final RuntimeDTOBuilder runtimeDTOBuilder = new RuntimeDTOBuilder(contextManager.getRuntimeInfo(),
                 this.serviceReference);
         return runtimeDTOBuilder.build();
     }

@@ -101,7 +101,7 @@ public final class FailedDTOHolder
         }
         else if (info instanceof ListenerInfo)
         {
-            final FailedListenerDTO dto = (FailedListenerDTO)ListenerDTOBuilder.build((ListenerInfo<?>)info, failureCode);
+            final FailedListenerDTO dto = (FailedListenerDTO)ListenerDTOBuilder.build((ListenerInfo)info, failureCode);
             dto.servletContextId = contextId;
             this.failedListenerDTOs.add(dto);
         }

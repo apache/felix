@@ -18,17 +18,6 @@
  */
 package org.apache.felix.http.base.internal.runtime.dto;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.servlet.ServletContextAttributeListener;
-import javax.servlet.ServletContextListener;
-import javax.servlet.ServletRequestAttributeListener;
-import javax.servlet.ServletRequestListener;
-import javax.servlet.http.HttpSessionAttributeListener;
-import javax.servlet.http.HttpSessionIdListener;
-import javax.servlet.http.HttpSessionListener;
-
 import org.apache.felix.http.base.internal.handler.ListenerHandler;
 import org.apache.felix.http.base.internal.runtime.ListenerInfo;
 import org.osgi.service.http.runtime.dto.FailedListenerDTO;
@@ -36,24 +25,12 @@ import org.osgi.service.http.runtime.dto.ListenerDTO;
 
 public final class ListenerDTOBuilder
 {
-    private static final Set<String> ALLOWED_INTERFACES;
-    static {
-        ALLOWED_INTERFACES = new HashSet<String>();
-        ALLOWED_INTERFACES.add(HttpSessionAttributeListener.class.getName());
-        ALLOWED_INTERFACES.add(HttpSessionIdListener.class.getName());
-        ALLOWED_INTERFACES.add(HttpSessionListener.class.getName());
-        ALLOWED_INTERFACES.add(ServletContextAttributeListener.class.getName());
-        ALLOWED_INTERFACES.add(ServletContextListener.class.getName());
-        ALLOWED_INTERFACES.add(ServletRequestAttributeListener.class.getName());
-        ALLOWED_INTERFACES.add(ServletRequestListener.class.getName());
-    }
-
-    public static ListenerDTO build(final ListenerInfo<?> info, final int reason)
+   public static ListenerDTO build(final ListenerInfo info, final int reason)
     {
         final ListenerDTO dto = (reason == -1 ? new ListenerDTO() : new FailedListenerDTO());
 
         dto.serviceId = info.getServiceId();
-        dto.types = new String[] {info.getListenerName()};
+        dto.types = info.getListenerTypes();
 
         if ( reason != -1 )
         {
@@ -63,7 +40,7 @@ public final class ListenerDTOBuilder
         return dto;
     }
 
-    public static ListenerDTO build(final ListenerHandler<?> handler, final int reason)
+    public static ListenerDTO build(final ListenerHandler handler, final int reason)
     {
         final ListenerDTO dto = build(handler.getListenerInfo(), reason);
         dto.servletContextId = handler.getContextServiceId();

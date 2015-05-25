@@ -16,6 +16,8 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
+import java.util.EventListener;
+
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.runtime.ListenerInfo;
 import org.osgi.framework.BundleContext;
@@ -25,13 +27,13 @@ import org.osgi.framework.ServiceReference;
 /**
  * Listener handler for listeners registered through the http whiteboard.
  */
-public final class WhiteboardListenerHandler<T> extends ListenerHandler<T>
+public final class WhiteboardListenerHandler extends ListenerHandler
 {
     private final BundleContext bundleContext;
 
     public WhiteboardListenerHandler(final long contextServiceId,
             final ExtServletContext context,
-            final ListenerInfo<T> listenerInfo,
+            final ListenerInfo listenerInfo,
             final BundleContext bundleContext)
     {
         super(contextServiceId, context, listenerInfo);
@@ -47,8 +49,8 @@ public final class WhiteboardListenerHandler<T> extends ListenerHandler<T>
             return -1;
         }
 
-        final ServiceReference<T> serviceReference = getListenerInfo().getServiceReference();
-        final ServiceObjects<T> so = this.bundleContext.getServiceObjects(serviceReference);
+        final ServiceReference<EventListener> serviceReference = getListenerInfo().getServiceReference();
+        final ServiceObjects<EventListener> so = this.bundleContext.getServiceObjects(serviceReference);
 
         this.setListener((so == null ? null : so.getService()));
 
@@ -67,13 +69,13 @@ public final class WhiteboardListenerHandler<T> extends ListenerHandler<T>
     @Override
     public boolean destroy()
     {
-        final T s = this.getListener();
+        final EventListener s = this.getListener();
         if ( s != null )
         {
             if ( super.destroy() )
             {
 
-                final ServiceObjects<T> so = this.bundleContext.getServiceObjects(getListenerInfo().getServiceReference());
+                final ServiceObjects<EventListener> so = this.bundleContext.getServiceObjects(getListenerInfo().getServiceReference());
                 if (so != null)
                 {
                     so.ungetService(s);
