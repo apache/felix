@@ -43,13 +43,10 @@ import org.osgi.service.http.runtime.dto.ServletDTO;
 /**
  * The servlet registry keeps the mappings for all servlets (by using their pattern)
  * for a single servlet context.
- *
- * TODO - sort active servlet mappings by pattern length, longest first (avoids looping over all)
- * TODO - we could collapse all three maps into a single map (activeServletMappings, inactiveServletMappings and statusMapping)
  */
 public final class ServletRegistry
 {
-    private final Map<String, PathResolver> activeServletMappings = new ConcurrentHashMap<String, PathResolver>();
+    private volatile List<PathResolver> activeResolvers = Collections.emptyList();
 
     private final Map<String, List<ServletHandler>> inactiveServletMappings = new HashMap<String, List<ServletHandler>>();
 
@@ -71,20 +68,30 @@ public final class ServletRegistry
      */
     public PathResolution resolve(@Nonnull final String relativeRequestURI)
     {
-        PathResolver resolver = null;
-        PathResolution candidate = null;
-        for(final Map.Entry<String, PathResolver> entry : this.activeServletMappings.entrySet())
+        final List<PathResolver> resolvers = this.activeResolvers;
+        for(final PathResolver entry : resolvers)
         {
-            final PathResolution pr = entry.getValue().resolve(relativeRequestURI);
-            if ( pr != null && (resolver == null || entry.getValue().compareTo(resolver) < 0) )
+            final PathResolution pr = entry.resolve(relativeRequestURI);
+            if ( pr != null )
             {
                 // TODO - we should have all patterns under which this servlet is actively registered
-                pr.patterns = new String[] {entry.getKey()};
-                candidate = pr;
-                resolver = entry.getValue();
+                pr.patterns = new String[] {entry.getPattern()};
+                return pr;
             }
         }
-        return candidate;
+        return null;
+    }
+
+    private PathResolver findResolver(final List<PathResolver> resolvers, final String pattern)
+    {
+        for(final PathResolver pr : resolvers)
+        {
+            if ( pr.getPattern().equals(pattern) )
+            {
+                return pr;
+            }
+        }
+        return null;
     }
 
     /**
@@ -98,6 +105,8 @@ public final class ServletRegistry
         // Can be null in case of error-handling servlets...
         if ( handler.getServletInfo().getPatterns() != null )
         {
+            final List<PathResolver> resolvers = new ArrayList<PathResolver>(this.activeResolvers);
+
             final ServletRegistrationStatus status = new ServletRegistrationStatus();
             status.handler = handler;
 
@@ -111,13 +120,13 @@ public final class ServletRegistry
                     continue;
                 }
                 patterns.add(pattern);
-                final PathResolver regHandler = this.activeServletMappings.get(pattern);
+                final PathResolver regHandler = findResolver(resolvers, pattern);
                 if ( regHandler != null )
                 {
                     if ( regHandler.getServletHandler().getServletInfo().compareTo(handler.getServletInfo()) > 0 )
                     {
                         // replace if no error with new servlet
-                        if ( this.tryToActivate(pattern, handler, status) )
+                        if ( this.tryToActivate(resolvers, pattern, handler, status, regHandler) )
                         {
                             isActive = true;
                             final String oldName = regHandler.getServletHandler().getName();
@@ -140,7 +149,7 @@ public final class ServletRegistry
                 else
                 {
                     // add to active
-                    if ( this.tryToActivate(pattern, handler, status) )
+                    if ( this.tryToActivate(resolvers, pattern, handler, status, null) )
                     {
                         isActive = true;
                     }
@@ -151,6 +160,8 @@ public final class ServletRegistry
             {
                 addToNameMapping(handler);
             }
+            Collections.sort(resolvers);
+            this.activeResolvers = resolvers;
         }
     }
 
@@ -213,6 +224,8 @@ public final class ServletRegistry
     {
         if ( info.getPatterns() != null )
         {
+            final List<PathResolver> resolvers = new ArrayList<PathResolver>(this.activeResolvers);
+
             this.statusMapping.remove(info);
             ServletHandler cleanupHandler = null;
 
@@ -225,7 +238,7 @@ public final class ServletRegistry
                     continue;
                 }
                 patterns.add(pattern);
-                final PathResolver regHandler = this.activeServletMappings.get(pattern);
+                final PathResolver regHandler = this.findResolver(resolvers, pattern);
                 if ( regHandler != null && regHandler.getServletHandler().getServletInfo().equals(info) )
                 {
                     cleanupHandler = regHandler.getServletHandler();
@@ -234,7 +247,7 @@ public final class ServletRegistry
                     final List<ServletHandler> inactiveList = this.inactiveServletMappings.get(pattern);
                     if ( inactiveList == null )
                     {
-                        this.activeServletMappings.remove(pattern);
+                        resolvers.remove(regHandler);
                     }
                     else
                     {
@@ -243,7 +256,7 @@ public final class ServletRegistry
                         {
                             final ServletHandler h = inactiveList.remove(0);
                             boolean activate = h.getServlet() == null;
-                            done = this.tryToActivate(pattern, h, this.statusMapping.get(h.getServletInfo()));
+                            done = this.tryToActivate(resolvers, pattern, h, this.statusMapping.get(h.getServletInfo()), regHandler);
                             if ( !done )
                             {
                                 done = inactiveList.isEmpty();
@@ -286,6 +299,9 @@ public final class ServletRegistry
                 }
             }
 
+            Collections.sort(resolvers);
+            this.activeResolvers = resolvers;
+
             if ( cleanupHandler != null )
             {
                 cleanupHandler.dispose();
@@ -295,7 +311,7 @@ public final class ServletRegistry
 
     public synchronized void cleanup()
     {
-        this.activeServletMappings.clear();
+        this.activeResolvers = Collections.emptyList();
         this.inactiveServletMappings.clear();
         this.servletsByName.clear();
         this.statusMapping.clear();
@@ -314,14 +330,22 @@ public final class ServletRegistry
         status.pathToStatus.put(pattern, DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
     }
 
-    private boolean tryToActivate(final String pattern, final ServletHandler handler, final ServletRegistrationStatus status)
+    private boolean tryToActivate(final List<PathResolver> resolvers,
+            final String pattern,
+            final ServletHandler handler,
+            final ServletRegistrationStatus status,
+            final PathResolver oldResolver)
     {
         // add to active
         final int result = handler.init();
         if ( result == -1 )
         {
-            final PathResolver reg = PathResolverFactory.createPatternMatcher(handler, pattern);
-            this.activeServletMappings.put(pattern, reg);
+            if ( oldResolver != null )
+            {
+                resolvers.remove(oldResolver);
+            }
+            final PathResolver resolver = PathResolverFactory.createPatternMatcher(handler, pattern);
+            resolvers.add(resolver);
 
             // add ok
             status.pathToStatus.put(pattern, result);
