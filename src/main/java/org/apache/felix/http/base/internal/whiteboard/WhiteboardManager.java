@@ -41,9 +41,10 @@ import javax.servlet.http.HttpSessionEvent;
 
 import org.apache.felix.http.base.internal.console.HttpServicePlugin;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.apache.felix.http.base.internal.handler.ContextHandler;
+import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.apache.felix.http.base.internal.handler.ListenerHandler;
+import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.AbstractInfo;
@@ -553,7 +554,7 @@ public final class WhiteboardManager
                     }
                     else
                     {
-                        for(final ContextHandler h : handlerList)
+                        for(final WhiteboardContextHandler h : handlerList)
                         {
                             this.registerWhiteboardService(h, info);
                             if ( info instanceof ListenerInfo && ((ListenerInfo)info).isListenerType(ServletContextListener.class.getName()) )
@@ -627,27 +628,61 @@ public final class WhiteboardManager
      * @param handler Context handler
      * @param info Whiteboard service info
      */
-    private void registerWhiteboardService(final ContextHandler handler, final WhiteboardServiceInfo<?> info)
+    private void registerWhiteboardService(final WhiteboardContextHandler handler, final WhiteboardServiceInfo<?> info)
     {
         try
         {
             int failureCode = -1;
             if ( info instanceof ServletInfo )
             {
-                failureCode = handler.getRegistry().registerServlet(handler, (ServletInfo)info);
+                final ServletHandler servletHandler = handler.getServletContextAndCreateServletHandler((ServletInfo)info);
+                if ( servletHandler == null )
+                {
+                    failureCode = DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
+                }
+                else
+                {
+                    handler.getRegistry().registerServlet(servletHandler);
+                }
             }
             else if ( info instanceof FilterInfo )
             {
-                failureCode = handler.getRegistry().registerFilter(handler, (FilterInfo)info);
+                final FilterHandler filterHandler = handler.getServletContextAndCreateFilterHandler((FilterInfo)info);
+                if ( filterHandler == null )
+                {
+                    failureCode = DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
+                }
+                else
+                {
+                    handler.getRegistry().registerFilter(filterHandler);
+                }
             }
             else if ( info instanceof ResourceInfo )
             {
-                failureCode = handler.getRegistry().registerResource(handler, (ResourceInfo)info);
+                final ServletInfo servletInfo = new ServletInfo((ResourceInfo)info);
+
+                final ServletHandler servleHandler = handler.getServletContextAndCreateServletHandler(servletInfo);
+                if ( servleHandler == null )
+                {
+                    failureCode = DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
+                }
+                else
+                {
+                    handler.getRegistry().registerServlet(servleHandler);
+                }
             }
 
             else if ( info instanceof ListenerInfo )
             {
-                failureCode = handler.getRegistry().registerListeners(handler, (ListenerInfo) info);
+                final ListenerHandler listenerHandler = handler.getServletContextAndCreateListenerHandler((ListenerInfo)info);
+                if ( listenerHandler == null )
+                {
+                    failureCode = DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
+                }
+                else
+                {
+                    handler.getRegistry().registerListeners(listenerHandler);
+                }
             }
             else
             {
@@ -679,20 +714,24 @@ public final class WhiteboardManager
         {
             if ( info instanceof ServletInfo )
             {
-                handler.getRegistry().unregisterServlet(handler, (ServletInfo)info);
+                handler.getRegistry().unregisterServlet((ServletInfo)info, true);
+                handler.ungetServletContext(info);
             }
             else if ( info instanceof FilterInfo )
             {
-                handler.getRegistry().unregisterFilter(handler, (FilterInfo)info);
+                handler.getRegistry().unregisterFilter((FilterInfo)info, true);
+                handler.ungetServletContext(info);
             }
             else if ( info instanceof ResourceInfo )
             {
-                handler.getRegistry().unregisterResource(handler, (ResourceInfo)info);
+                handler.getRegistry().unregisterServlet(new ServletInfo((ResourceInfo)info), true);
+                handler.ungetServletContext(info);
             }
 
             else if ( info instanceof ListenerInfo )
             {
-                handler.getRegistry().unregisterListeners(handler, (ListenerInfo) info);
+                handler.getRegistry().unregisterListeners((ListenerInfo) info);
+                handler.ungetServletContext(info);
             }
         }
         catch (final Exception e)

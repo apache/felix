@@ -201,7 +201,6 @@ public final class WhiteboardContextHandler implements ContextHandler, Comparabl
      * @param servletInfo The servlet info
      * @return {@code null} if the servlet context could not be created, a handler otherwise
      */
-    @Override
     public ServletHandler getServletContextAndCreateServletHandler(@Nonnull final ServletInfo servletInfo)
     {
         final ExtServletContext servletContext = this.getServletContext(servletInfo.getServiceReference().getBundle());
@@ -234,7 +233,6 @@ public final class WhiteboardContextHandler implements ContextHandler, Comparabl
      * @param info The filter info
      * @return {@code null} if the servlet context could not be created, a handler otherwise
      */
-    @Override
     public FilterHandler getServletContextAndCreateFilterHandler(@Nonnull final FilterInfo info)
     {
         final ExtServletContext servletContext = this.getServletContext(info.getServiceReference().getBundle());
@@ -255,7 +253,6 @@ public final class WhiteboardContextHandler implements ContextHandler, Comparabl
      * @param info The listener info
      * @return {@code null} if the servlet context could not be created, a handler otherwise
      */
-    @Override
     public ListenerHandler getServletContextAndCreateListenerHandler(@Nonnull final ListenerInfo info)
     {
         final ExtServletContext servletContext = this.getServletContext(info.getServiceReference().getBundle());
@@ -271,7 +268,6 @@ public final class WhiteboardContextHandler implements ContextHandler, Comparabl
         return handler;
     }
 
-    @Override
     public void ungetServletContext(@Nonnull final WhiteboardServiceInfo<?> info)
     {
         this.ungetServletContext(info.getServiceReference().getBundle());
