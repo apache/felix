@@ -108,7 +108,7 @@ public class HttpSessionWrapper implements HttpSession
                 final long lastAccess = (Long)session.getAttribute(name);
                 final Integer maxTimeout = (Integer)session.getAttribute(ATTR_MAX_INACTIVE + id);
 
-                if ( lastAccess + maxTimeout < now )
+                if ( maxTimeout > 0 && lastAccess + maxTimeout < now )
                 {
                     ids.add(Long.valueOf(id));
                 }
