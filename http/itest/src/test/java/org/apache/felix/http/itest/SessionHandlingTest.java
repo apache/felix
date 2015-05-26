@@ -21,6 +21,7 @@ package org.apache.felix.http.itest;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.osgi.framework.Constants.SERVICE_RANKING;
 import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME;
@@ -103,6 +104,11 @@ public class SessionHandlingTest extends BaseIntegrationTest
                 {
                     req.getSession();
                 }
+                final boolean destroy = req.getParameter("destroy") != null;
+                if ( destroy )
+                {
+                    req.getSession().invalidate();
+                }
                 final HttpSession s = req.getSession(false);
                 if ( s != null )
                 {
@@ -118,7 +124,6 @@ public class SessionHandlingTest extends BaseIntegrationTest
                 else
                 {
                     pw.println(" \"session\" : true,");
-                    pw.println(" \"isNew\" : " + s.isNew() + ",");
                     pw.println(" \"sessionId\" : \"" + s.getId() + "\",");
                     pw.println(" \"value\" : \"" + s.getAttribute("value") + "\"");
                 }
@@ -179,8 +184,8 @@ public class SessionHandlingTest extends BaseIntegrationTest
 
         setupLatches(2);
 
-        setupServlet("lowRankServlet", new String[] { "/foo" }, 1, "test1");
-        setupServlet("highRankServlet", new String[] { "/bar" }, 2, "test2" );
+        setupServlet("foo", new String[] { "/foo" }, 1, "test1");
+        setupServlet("bar", new String[] { "/bar" }, 2, "test2" );
 
         assertTrue(initLatch.await(5, TimeUnit.SECONDS));
 
@@ -191,29 +196,55 @@ public class SessionHandlingTest extends BaseIntegrationTest
                 .setDefaultCookieStore(new BasicCookieStore())
                 .build();
 
+        JSONObject json;
+
         // session should not be available
-        final JSONObject obj1 = getJSONResponse(httpclient, "/foo");
-        assertFalse(((Boolean)obj1.get("session")).booleanValue());
+        // check for foo servlet
+        json = getJSONResponse(httpclient, "/foo");
+        assertFalse(((Boolean)json.get("session")).booleanValue());
 
-        final JSONObject obj2 = getJSONResponse(httpclient, "/bar");
-        assertFalse(((Boolean)obj2.get("session")).booleanValue());
+        // check for bar servlet
+        json = getJSONResponse(httpclient, "/bar");
+        assertFalse(((Boolean)json.get("session")).booleanValue());
 
-        // create session for one context
-        final JSONObject obj3 = getJSONResponse(httpclient, "/foo?create=true");
-        assertTrue(((Boolean)obj3.get("session")).booleanValue());
-        assertEquals("test1", obj3.get("value"));
-        final JSONObject obj4 = getJSONResponse(httpclient, "/bar");
-        assertFalse(((Boolean)obj4.get("session")).booleanValue());
-        final JSONObject obj5 = getJSONResponse(httpclient, "/foo");
-        assertTrue(((Boolean)obj5.get("session")).booleanValue());
-        assertEquals("test1", obj5.get("value"));
+        // create session for  context of servlet foo
+        // check session and session attribute
+        json = getJSONResponse(httpclient, "/foo?create=true");
+        assertTrue(((Boolean)json.get("session")).booleanValue());
+        assertEquals("test1", json.get("value"));
+        final String sessionId1 = (String)json.get("sessionId");
+        assertNotNull(sessionId1);
+
+        // check session for servlet bar (= no session)
+        json = getJSONResponse(httpclient, "/bar");
+        assertFalse(((Boolean)json.get("session")).booleanValue());
+        // another request to servlet foo, still the same
+        json = getJSONResponse(httpclient, "/foo");
+        assertTrue(((Boolean)json.get("session")).booleanValue());
+        assertEquals("test1", json.get("value"));
+        assertEquals(sessionId1, json.get("sessionId"));
 
         // create session for second context
-        final JSONObject obj6 = getJSONResponse(httpclient, "/bar?create=true");
-        assertTrue(((Boolean)obj6.get("session")).booleanValue());
-        assertEquals("test2", obj6.get("value"));
-        final JSONObject obj7 = getJSONResponse(httpclient, "/foo");
-        assertTrue(((Boolean)obj7.get("session")).booleanValue());
-        assertEquals("test1", obj7.get("value"));
+        json = getJSONResponse(httpclient, "/bar?create=true");
+        assertTrue(((Boolean)json.get("session")).booleanValue());
+        assertEquals("test2", json.get("value"));
+        final String sessionId2 = (String)json.get("sessionId");
+        assertNotNull(sessionId2);
+        assertFalse(sessionId1.equals(sessionId2));
+
+        // and context foo is untouched
+        json = getJSONResponse(httpclient, "/foo");
+        assertTrue(((Boolean)json.get("session")).booleanValue());
+        assertEquals("test1", json.get("value"));
+        assertEquals(sessionId1, json.get("sessionId"));
+
+        // invalidate session for foo context
+        json = getJSONResponse(httpclient, "/foo?destroy=true");
+        assertFalse(((Boolean)json.get("session")).booleanValue());
+        // bar should be untouched
+        json = getJSONResponse(httpclient, "/bar");
+        assertTrue(((Boolean)json.get("session")).booleanValue());
+        assertEquals("test2", json.get("value"));
+        assertEquals(sessionId2, json.get("sessionId"));
     }
 }
