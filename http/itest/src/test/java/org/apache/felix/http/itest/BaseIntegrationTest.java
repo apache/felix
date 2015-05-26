@@ -336,6 +336,9 @@ public abstract class BaseIntegrationTest
 
             mavenBundle("org.mockito", "mockito-core").versionAsInProject().startLevel(START_LEVEL_SYSTEM_BUNDLES),
             mavenBundle("org.objenesis", "objenesis").versionAsInProject().startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("com.googlecode.json-simple", "json-simple").versionAsInProject().startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("org.apache.httpcomponents", "httpcore-osgi").versionAsInProject().startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("org.apache.httpcomponents", "httpclient-osgi").versionAsInProject().startLevel(START_LEVEL_SYSTEM_BUNDLES),
 
             junitBundles(), frameworkStartLevel(START_LEVEL_TEST_BUNDLE), felix());
     }
