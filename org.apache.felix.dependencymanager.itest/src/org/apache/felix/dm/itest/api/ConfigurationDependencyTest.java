@@ -133,7 +133,22 @@ public class ConfigurationDependencyTest extends TestBase {
         // ensure we executed all steps inside the component instance
         e.step(6);
     }
-
+        
+    public void testFELIX4907() {
+        // This test validates updated(null) is not invoked when a component that have a configuration dependency is stopped.
+        DependencyManager m = getDM();
+        Ensure e = new Ensure();
+        Component s1 = m.createComponent().setImplementation(new ConfigurationConsumer3(e)).add(m.createConfigurationDependency().setPid(PID));
+        Component s2 = m.createComponent().setImplementation(new ConfigurationCreator(e)).add(m.createServiceDependency().setService(ConfigurationAdmin.class).setRequired(true));
+        m.add(s1);
+        m.add(s2);
+        e.waitForStep(3, 5000);
+        m.remove(s1);
+        e.waitForStep(4, 5000);
+        m.remove(s2);
+        // ensure we executed all steps inside the component instance
+        e.step(6);
+    }
 
     class ConfigurationCreator {
         private volatile ConfigurationAdmin m_ca;
@@ -166,25 +181,18 @@ public class ConfigurationDependencyTest extends TestBase {
         }
     }
     
-    static class ConfigurationConsumer2 extends ConfigurationConsumer {
-        public ConfigurationConsumer2(Ensure e) {
-            super(e);
-        }
-    }
-
     static class ConfigurationConsumer implements ManagedService, Runnable {
-        private final Ensure m_ensure;
+        protected final Ensure m_ensure;
 
         public ConfigurationConsumer(Ensure e) {
             m_ensure = e;
         }
 
         public void updated(Dictionary props) throws ConfigurationException {
-            if (props != null) {
-                m_ensure.step(2);
-                if (!"testvalue".equals(props.get("testkey"))) {
-                    Assert.fail("Could not find the configured property.");
-                }
+            Assert.assertNotNull(props);
+            m_ensure.step(2);
+            if (!"testvalue".equals(props.get("testkey"))) {
+                Assert.fail("Could not find the configured property.");
             }
         }
         
@@ -193,6 +201,34 @@ public class ConfigurationDependencyTest extends TestBase {
         }
     }
     
+    static class ConfigurationConsumer2 extends ConfigurationConsumer {
+        public ConfigurationConsumer2(Ensure e) {
+            super(e);
+        }
+    }
+
+    static class ConfigurationConsumer3 extends ConfigurationConsumer {
+        public ConfigurationConsumer3(Ensure e) {
+            super(e);
+        }
+        
+        public void updated(Dictionary props) throws ConfigurationException {
+            Assert.assertNotNull(props);
+            if (!"testvalue".equals(props.get("testkey"))) {
+                Assert.fail("Could not find the configured property.");
+            }
+            m_ensure.step(2);
+        }
+        
+        public void start() {
+            m_ensure.step(3);
+        }
+        
+        public void stop() {
+            m_ensure.step(4);
+        }
+    }
+
     static class ConfigurationConsumerWithComponentArg extends ConfigurationConsumer {
         public ConfigurationConsumerWithComponentArg(Ensure e) {
             super(e);
@@ -212,12 +248,11 @@ public class ConfigurationDependencyTest extends TestBase {
         }
         
         public void updateConfiguration(Dictionary props) throws Exception {
-            if (props != null) {
-                m_ensure.step(2);
-                if (!"testvalue".equals(props.get("testkey"))) {
-                    Assert.fail("Could not find the configured property.");
-                }
-            } 
+            Assert.assertNotNull(props);
+            m_ensure.step(2);
+            if (!"testvalue".equals(props.get("testkey"))) {
+                Assert.fail("Could not find the configured property.");
+            }
         }
     }
     
