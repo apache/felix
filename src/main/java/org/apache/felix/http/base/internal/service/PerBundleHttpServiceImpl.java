@@ -202,7 +202,7 @@ public final class PerBundleHttpServiceImpl implements ExtHttpService
             this.localServlets.add(servlet);
         }
 
-        final ServletInfo servletInfo = new ServletInfo(String.format("%s_%d", servlet.getClass(), this.hashCode()), alias, 0, paramMap);
+        final ServletInfo servletInfo = new ServletInfo(String.format("%s_%d", servlet.getClass(), this.hashCode()), alias, paramMap);
         final ExtServletContext httpContext = getServletContext(context);
 
         boolean success = false;

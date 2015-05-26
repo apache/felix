@@ -20,14 +20,10 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.servlet.DispatcherType;
 
-import org.apache.felix.http.base.internal.context.ExtServletContext;
+import org.apache.felix.http.base.internal.handler.ContextHandler;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
-import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
 import org.apache.felix.http.base.internal.handler.ListenerHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
-import org.apache.felix.http.base.internal.handler.WhiteboardFilterHandler;
-import org.apache.felix.http.base.internal.handler.WhiteboardListenerHandler;
-import org.apache.felix.http.base.internal.handler.WhiteboardServletHandler;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ResourceInfo;
@@ -35,8 +31,6 @@ import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
-import org.apache.felix.http.base.internal.service.ResourceServlet;
-import org.apache.felix.http.base.internal.whiteboard.ContextHandler;
 import org.osgi.service.http.runtime.dto.DTOConstants;
 import org.osgi.service.http.runtime.dto.ServletContextDTO;
 
@@ -163,15 +157,11 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     public int registerServlet(@Nonnull final ContextHandler contextHandler,
             @Nonnull final ServletInfo servletInfo)
     {
-        final ExtServletContext context = contextHandler.getServletContext(servletInfo.getServiceReference().getBundle());
-        if ( context == null )
+        final ServletHandler handler = contextHandler.getServletContextAndCreateServletHandler(servletInfo);
+        if ( handler == null )
         {
             return DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
         }
-        final ServletHandler handler = new WhiteboardServletHandler(
-                contextHandler.getContextInfo().getServiceId(),
-                context,
-                servletInfo, contextHandler.getBundleContext());
         this.servletRegistry.addServlet(handler);
         this.errorPageRegistry.addServlet(handler);
         return -1;
@@ -186,7 +176,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     {
         this.servletRegistry.removeServlet(servletInfo, true);
         this.errorPageRegistry.removeServlet(servletInfo, true);
-        contextHandler.ungetServletContext(servletInfo.getServiceReference().getBundle());
+        contextHandler.ungetServletContext(servletInfo);
     }
 
     /**
@@ -197,15 +187,11 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     public int registerFilter(@Nonnull  final ContextHandler contextHandler,
             @Nonnull final FilterInfo filterInfo)
     {
-        final ExtServletContext context = contextHandler.getServletContext(filterInfo.getServiceReference().getBundle());
-        if ( context == null )
+        final FilterHandler handler = contextHandler.getServletContextAndCreateFilterHandler(filterInfo);
+        if ( handler == null )
         {
             return DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
         }
-        final FilterHandler handler = new WhiteboardFilterHandler(
-                contextHandler.getContextInfo().getServiceId(),
-                context,
-                filterInfo, contextHandler.getBundleContext());
         this.filterRegistry.addFilter(handler);
         return -1;
     }
@@ -218,7 +204,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     public void unregisterFilter(@Nonnull final ContextHandler contextHandler, @Nonnull final FilterInfo filterInfo)
     {
         this.filterRegistry.removeFilter(filterInfo, true);
-        contextHandler.ungetServletContext(filterInfo.getServiceReference().getBundle());
+        contextHandler.ungetServletContext(filterInfo);
     }
 
     /**
@@ -231,16 +217,11 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     public int registerListeners(@Nonnull final ContextHandler contextHandler,
             @Nonnull final ListenerInfo info)
     {
-        final ExtServletContext context = contextHandler.getServletContext(info.getServiceReference().getBundle());
-        if ( context == null )
+        final ListenerHandler handler = contextHandler.getServletContextAndCreateListenerHandler(info);
+        if ( handler == null )
         {
             return DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
         }
-        final ListenerHandler handler = new WhiteboardListenerHandler(
-                contextHandler.getContextInfo().getServiceId(),
-                context,
-                info,
-                contextHandler.getBundleContext());
         this.eventListenerRegistry.addListeners(handler);
         return -1;
     }
@@ -254,7 +235,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     public void unregisterListeners(@Nonnull final ContextHandler contextHandler, @Nonnull final ListenerInfo info)
     {
         this.eventListenerRegistry.removeListeners(info);
-        contextHandler.ungetServletContext(info.getServiceReference().getBundle());
+        contextHandler.ungetServletContext(info);
     }
 
     /**
@@ -267,17 +248,11 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     {
         final ServletInfo servletInfo = new ServletInfo(resourceInfo);
 
-        final ExtServletContext context = contextHandler.getServletContext(servletInfo.getServiceReference().getBundle());
-        if ( context == null )
+        final ServletHandler handler = contextHandler.getServletContextAndCreateServletHandler(servletInfo);
+        if ( handler == null )
         {
             return DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
         }
-
-        final ServletHandler handler = new HttpServiceServletHandler(
-                contextHandler.getContextInfo().getServiceId(),
-                context,
-                servletInfo, new ResourceServlet(resourceInfo.getPrefix()));
-
         this.servletRegistry.addServlet(handler);
         return -1;
     }
@@ -289,19 +264,31 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
      */
     public void unregisterResource(@Nonnull final ContextHandler contextHandler, @Nonnull final ResourceInfo resourceInfo)
     {
-        final ServletInfo servletInfo = new ServletInfo(resourceInfo);
-        this.servletRegistry.removeServlet(servletInfo, true);
-        contextHandler.ungetServletContext(servletInfo.getServiceReference().getBundle());
+        this.servletRegistry.removeServlet(new ServletInfo(resourceInfo), true);
+        contextHandler.ungetServletContext(resourceInfo);
     }
 
-    public FilterHandler[] getFilterHandlers(@CheckForNull final ServletHandler servletHandler,
+    /**
+     * Get filter handlers for the request uri
+     * @param servletHandler The servlet handler (might be null)
+     * @param dispatcherType The dispatcher type
+     * @param requestURI The request uri
+     * @return The array of filter handlers, the array might be empty.
+     */
+    public @Nonnull FilterHandler[] getFilterHandlers(@CheckForNull final ServletHandler servletHandler,
             @Nonnull final DispatcherType dispatcherType,
             @Nonnull final String requestURI)
     {
         return this.filterRegistry.getFilterHandlers(servletHandler, dispatcherType, requestURI);
     }
 
-    public ServletHandler getErrorHandler(int code, Throwable exception)
+    /**
+     * Get the servlet handling the error.
+     * @param code The error code
+     * @param exception The optional exception
+     * @return The servlet handler or {@code null}.
+     */
+    public @CheckForNull ServletHandler getErrorHandler(final int code, @CheckForNull final Throwable exception)
     {
         return this.errorPageRegistry.get(exception, code);
     }

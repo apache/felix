@@ -48,7 +48,7 @@ public class FailureStateHandlerTest {
 
     @Test public void testAddRemoveNoContext()
     {
-        final ServletInfo info = new ServletInfo("test", "/test", 3, Collections.<String, String> emptyMap());
+        final ServletInfo info = new ServletInfo("test", "/test", Collections.<String, String> emptyMap());
 
         final FailureStateHandler handler = new FailureStateHandler();
         handler.add(info, DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
@@ -69,8 +69,8 @@ public class FailureStateHandlerTest {
 
     @Test public void testAddRemoveContext()
     {
-        final ServletInfo info1 = new ServletInfo("test", "/test", 3, Collections.<String, String> emptyMap());
-        final ServletInfo info2 = new ServletInfo("test", "/test", 4, Collections.<String, String> emptyMap());
+        final ServletInfo info1 = new ServletInfo("test", "/test", Collections.<String, String> emptyMap());
+        final ServletInfo info2 = new ServletInfo("test", "/test", Collections.<String, String> emptyMap());
 
         final FailureStateHandler handler = new FailureStateHandler();
         handler.add(info1, 1L, DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);

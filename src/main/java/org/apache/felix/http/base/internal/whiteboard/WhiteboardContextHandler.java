@@ -24,46 +24,60 @@ import javax.annotation.Nonnull;
 import javax.servlet.ServletContext;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
+import org.apache.felix.http.base.internal.handler.ContextHandler;
+import org.apache.felix.http.base.internal.handler.FilterHandler;
+import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
+import org.apache.felix.http.base.internal.handler.ListenerHandler;
+import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.handler.WhiteboardFilterHandler;
+import org.apache.felix.http.base.internal.handler.WhiteboardListenerHandler;
+import org.apache.felix.http.base.internal.handler.WhiteboardServletHandler;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
+import org.apache.felix.http.base.internal.runtime.FilterInfo;
+import org.apache.felix.http.base.internal.runtime.ListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
+import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
+import org.apache.felix.http.base.internal.service.ResourceServlet;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceObjects;
 import org.osgi.service.http.context.ServletContextHelper;
 
-public final class ContextHandler implements Comparable<ContextHandler>
+public final class WhiteboardContextHandler implements ContextHandler, Comparable<ContextHandler>
 {
     /** The info object for the context. */
     private final ServletContextHelperInfo info;
 
     private final ServletContext webContext;
 
-    /** The shared part of the servlet context. */
-    private volatile ServletContext sharedContext;
-
     /** The http bundle. */
-    private final Bundle bundle;
+    private final Bundle httpBundle;
 
     /** A map of all created servlet contexts. Each bundle gets it's own instance. */
     private final Map<Long, ContextHolder> perBundleContextMap = new HashMap<Long, ContextHolder>();
 
     private volatile PerContextHandlerRegistry registry;
 
-    public ContextHandler(final ServletContextHelperInfo info,
+    /** The shared part of the servlet context. */
+    private volatile ServletContext sharedContext;
+
+    public WhiteboardContextHandler(final ServletContextHelperInfo info,
             final ServletContext webContext,
-            final Bundle bundle)
+            final Bundle httpBundle)
     {
         this.webContext = webContext;
         this.info = info;
-        this.bundle = bundle;
+        this.httpBundle = httpBundle;
     }
 
     public BundleContext getBundleContext()
     {
-        return this.bundle.getBundleContext();
+        return this.httpBundle.getBundleContext();
     }
 
+    @Override
     public ServletContextHelperInfo getContextInfo()
     {
         return this.info;
@@ -72,7 +86,7 @@ public final class ContextHandler implements Comparable<ContextHandler>
     @Override
     public int compareTo(final ContextHandler o)
     {
-        return this.info.compareTo(o.info);
+        return this.info.compareTo(o.getContextInfo());
     }
 
     /**
@@ -87,7 +101,7 @@ public final class ContextHandler implements Comparable<ContextHandler>
                 info.getPath(),
                 info.getInitParameters(),
                 this.registry.getEventListenerRegistry());
-        final boolean activate = getServletContext(bundle) != null;
+        final boolean activate = getServletContext(httpBundle) != null;
         if ( !activate )
         {
             this.registry = null;
@@ -108,8 +122,8 @@ public final class ContextHandler implements Comparable<ContextHandler>
         registry.remove(this.info);
         this.registry = null;
         this.sharedContext = null;
-        this.ungetServletContext(bundle);
-        // TODO we should clear all state
+        this.ungetServletContext(httpBundle);
+        this.perBundleContextMap.clear();
     }
 
     public ServletContext getSharedContext()
@@ -182,6 +196,87 @@ public final class ContextHandler implements Comparable<ContextHandler>
         }
     }
 
+    /**
+     * Create a servlet handler
+     * @param servletInfo The servlet info
+     * @return {@code null} if the servlet context could not be created, a handler otherwise
+     */
+    @Override
+    public ServletHandler getServletContextAndCreateServletHandler(@Nonnull final ServletInfo servletInfo)
+    {
+        final ExtServletContext servletContext = this.getServletContext(servletInfo.getServiceReference().getBundle());
+        if ( servletContext == null )
+        {
+            return null;
+        }
+        final ServletHandler handler;
+        if ( servletInfo.isResource() )
+        {
+            handler = new HttpServiceServletHandler(
+                    this.info.getServiceId(),
+                    servletContext,
+                    servletInfo,
+                    new ResourceServlet(servletInfo.getPrefix()));
+        }
+        else
+        {
+            handler = new WhiteboardServletHandler(
+                this.info.getServiceId(),
+                servletContext,
+                servletInfo,
+                this.httpBundle.getBundleContext());
+        }
+        return handler;
+    }
+
+    /**
+     * Create a filter handler
+     * @param info The filter info
+     * @return {@code null} if the servlet context could not be created, a handler otherwise
+     */
+    @Override
+    public FilterHandler getServletContextAndCreateFilterHandler(@Nonnull final FilterInfo info)
+    {
+        final ExtServletContext servletContext = this.getServletContext(info.getServiceReference().getBundle());
+        if ( servletContext == null )
+        {
+            return null;
+        }
+        final FilterHandler handler = new WhiteboardFilterHandler(
+                this.info.getServiceId(),
+                servletContext,
+                info,
+                this.httpBundle.getBundleContext());
+        return handler;
+    }
+
+    /**
+     * Create a listener handler
+     * @param info The listener info
+     * @return {@code null} if the servlet context could not be created, a handler otherwise
+     */
+    @Override
+    public ListenerHandler getServletContextAndCreateListenerHandler(@Nonnull final ListenerInfo info)
+    {
+        final ExtServletContext servletContext = this.getServletContext(info.getServiceReference().getBundle());
+        if ( servletContext == null )
+        {
+            return null;
+        }
+        final ListenerHandler handler = new WhiteboardListenerHandler(
+                this.info.getServiceId(),
+                servletContext,
+                info,
+                this.httpBundle.getBundleContext());
+        return handler;
+    }
+
+    @Override
+    public void ungetServletContext(@Nonnull final WhiteboardServiceInfo<?> info)
+    {
+        this.ungetServletContext(info.getServiceReference().getBundle());
+    }
+
     private static final class ContextHolder
     {
         public long counter;
@@ -189,6 +284,7 @@ public final class ContextHandler implements Comparable<ContextHandler>
         public ServletContextHelper servletContextHelper;
     }
 
+    @Override
     public PerContextHandlerRegistry getRegistry()
     {
         return this.registry;
