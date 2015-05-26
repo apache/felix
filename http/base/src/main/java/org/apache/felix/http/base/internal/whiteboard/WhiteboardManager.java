@@ -41,6 +41,7 @@ import javax.servlet.http.HttpSessionEvent;
 
 import org.apache.felix.http.base.internal.console.HttpServicePlugin;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
+import org.apache.felix.http.base.internal.handler.ContextHandler;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.apache.felix.http.base.internal.handler.ListenerHandler;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
@@ -81,17 +82,17 @@ import org.osgi.util.tracker.ServiceTracker;
 
 public final class WhiteboardManager
 {
-    private final BundleContext bundleContext;
+    private final BundleContext httpBundleContext;
 
     private final HttpServiceFactory httpServiceFactory;
 
     private final HttpServiceRuntimeImpl serviceRuntime;
 
     /** A map containing all servlet context registrations. Mapped by context name */
-    private final Map<String, List<ContextHandler>> contextMap = new HashMap<String, List<ContextHandler>>();
+    private final Map<String, List<WhiteboardContextHandler>> contextMap = new HashMap<String, List<WhiteboardContextHandler>>();
 
     /** A map with all servlet/filter registrations, mapped by abstract info. */
-    private final Map<WhiteboardServiceInfo<?>, List<ContextHandler>> servicesMap = new HashMap<WhiteboardServiceInfo<?>, List<ContextHandler>>();
+    private final Map<WhiteboardServiceInfo<?>, List<WhiteboardContextHandler>> servicesMap = new HashMap<WhiteboardServiceInfo<?>, List<WhiteboardContextHandler>>();
 
     private final HandlerRegistry registry;
 
@@ -117,30 +118,30 @@ public final class WhiteboardManager
             final HttpServiceFactory httpServiceFactory,
             final HandlerRegistry registry)
     {
-        this.bundleContext = bundleContext;
+        this.httpBundleContext = bundleContext;
         this.httpServiceFactory = httpServiceFactory;
         this.registry = registry;
         this.serviceRuntime = new HttpServiceRuntimeImpl(registry, this);
         this.plugin = new HttpServicePlugin(bundleContext, this.serviceRuntime);
     }
 
-    public void start(final ServletContext context)
+    public void start(final ServletContext containerContext)
     {
         this.serviceRuntime.setAttribute(HttpServiceRuntimeConstants.HTTP_SERVICE_ID,
                 Collections.singletonList(this.httpServiceFactory.getHttpServiceServiceId()));
-        this.runtimeServiceReg = this.bundleContext.registerService(HttpServiceRuntime.class,
+        this.runtimeServiceReg = this.httpBundleContext.registerService(HttpServiceRuntime.class,
                 serviceRuntime,
                 this.serviceRuntime.getAttributes());
         this.serviceRuntime.setServiceReference(this.runtimeServiceReg.getReference());
 
-        this.webContext = context;
+        this.webContext = containerContext;
 
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, HttpWhiteboardConstants.HTTP_WHITEBOARD_DEFAULT_CONTEXT_NAME);
         props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, "/");
         props.put(Constants.SERVICE_RANKING, Integer.MIN_VALUE);
 
-        this.defaultContextRegistration = bundleContext.registerService(
+        this.defaultContextRegistration = httpBundleContext.registerService(
                 ServletContextHelper.class,
                 new ServiceFactory<ServletContextHelper>()
                 {
@@ -170,11 +171,11 @@ public final class WhiteboardManager
                         // nothing to do
                     }
                 }, props);
-        addTracker(new FilterTracker(this.bundleContext, this));
-        addTracker(new ListenersTracker(this.bundleContext, this));
-        addTracker(new ResourceTracker(this.bundleContext, this));
-        addTracker(new ServletContextHelperTracker(this.bundleContext, this));
-        addTracker(new ServletTracker(this.bundleContext, this));
+        addTracker(new FilterTracker(this.httpBundleContext, this));
+        addTracker(new ListenersTracker(this.httpBundleContext, this));
+        addTracker(new ResourceTracker(this.httpBundleContext, this));
+        addTracker(new ServletContextHelperTracker(this.httpBundleContext, this));
+        addTracker(new ServletTracker(this.httpBundleContext, this));
 
         this.plugin.register();
     }
@@ -230,12 +231,12 @@ public final class WhiteboardManager
     {
         for(final Long contextId : contextIds)
         {
-            final ContextHandler handler = this.getContextHandler(contextId);
+            final WhiteboardContextHandler handler = this.getContextHandler(contextId);
             if ( handler != null )
             {
-                final ExtServletContext context = handler.getServletContext(this.bundleContext.getBundle());
+                final ExtServletContext context = handler.getServletContext(this.httpBundleContext.getBundle());
                 new HttpSessionWrapper(contextId, session, context, true).invalidate();
-                handler.ungetServletContext(this.bundleContext.getBundle());
+                handler.ungetServletContext(this.httpBundleContext.getBundle());
             }
         }
     }
@@ -250,7 +251,7 @@ public final class WhiteboardManager
     {
         for(final Long contextId : contextIds)
         {
-            final ContextHandler handler = this.getContextHandler(contextId);
+            final WhiteboardContextHandler handler = this.getContextHandler(contextId);
             if ( handler != null )
             {
                 handler.getRegistry().getEventListenerRegistry().sessionIdChanged(event, oldSessionId);
@@ -264,7 +265,7 @@ public final class WhiteboardManager
      * @param handler The context handler
      * @return {@code true} if activation succeeded.
      */
-    private boolean activate(final ContextHandler handler)
+    private boolean activate(final WhiteboardContextHandler handler)
     {
         if ( !handler.activate(this.registry) )
         {
@@ -272,7 +273,7 @@ public final class WhiteboardManager
         }
 
         final List<WhiteboardServiceInfo<?>> services = new ArrayList<WhiteboardServiceInfo<?>>();
-        for(final Map.Entry<WhiteboardServiceInfo<?>, List<ContextHandler>> entry : this.servicesMap.entrySet())
+        for(final Map.Entry<WhiteboardServiceInfo<?>, List<WhiteboardContextHandler>> entry : this.servicesMap.entrySet())
         {
             if ( entry.getKey().getContextSelectionFilter().match(handler.getContextInfo().getServiceReference()) )
             {
@@ -310,14 +311,14 @@ public final class WhiteboardManager
      *
      * @param handler A context handler
      */
-    private void deactivate(final ContextHandler handler)
+    private void deactivate(final WhiteboardContextHandler handler)
     {
         // services except context listeners first
         final List<WhiteboardServiceInfo<?>> listeners = new ArrayList<WhiteboardServiceInfo<?>>();
-        final Iterator<Map.Entry<WhiteboardServiceInfo<?>, List<ContextHandler>>> i = this.servicesMap.entrySet().iterator();
+        final Iterator<Map.Entry<WhiteboardServiceInfo<?>, List<WhiteboardContextHandler>>> i = this.servicesMap.entrySet().iterator();
         while ( i.hasNext() )
         {
-            final Map.Entry<WhiteboardServiceInfo<?>, List<ContextHandler>> entry = i.next();
+            final Map.Entry<WhiteboardServiceInfo<?>, List<WhiteboardContextHandler>> entry = i.next();
             if ( entry.getValue().remove(handler) )
             {
                 if ( !this.failureStateHandler.remove(entry.getKey(), handler.getContextInfo().getServiceId()) )
@@ -364,15 +365,15 @@ public final class WhiteboardManager
             {
                 synchronized ( this.contextMap )
                 {
-                    final ContextHandler handler = new ContextHandler(info,
+                    final WhiteboardContextHandler handler = new WhiteboardContextHandler(info,
                             this.webContext,
-                            this.bundleContext.getBundle());
+                            this.httpBundleContext.getBundle());
 
                     // check for activate/deactivate
-                    List<ContextHandler> handlerList = this.contextMap.get(info.getName());
+                    List<WhiteboardContextHandler> handlerList = this.contextMap.get(info.getName());
                     if ( handlerList == null )
                     {
-                        handlerList = new ArrayList<ContextHandler>();
+                        handlerList = new ArrayList<WhiteboardContextHandler>();
                     }
                     final boolean activate = handlerList.isEmpty() || handlerList.get(0).compareTo(handler) > 0;
                     if ( activate )
@@ -387,7 +388,7 @@ public final class WhiteboardManager
                             // check for deactivate
                             if ( handlerList.size() > 1 )
                             {
-                                ContextHandler oldHead = handlerList.get(1);
+                                final WhiteboardContextHandler oldHead = handlerList.get(1);
                                 this.deactivate(oldHead);
 
                                 final String type = info.getClass().getSimpleName().substring(0, info.getClass().getSimpleName().length() - 4);
@@ -436,15 +437,15 @@ public final class WhiteboardManager
         {
             synchronized ( this.contextMap )
             {
-                final List<ContextHandler> handlerList = this.contextMap.get(info.getName());
+                final List<WhiteboardContextHandler> handlerList = this.contextMap.get(info.getName());
                 if ( handlerList != null )
                 {
-                    final Iterator<ContextHandler> i = handlerList.iterator();
+                    final Iterator<WhiteboardContextHandler> i = handlerList.iterator();
                     boolean first = true;
                     boolean activateNext = false;
                     while ( i.hasNext() )
                     {
-                        final ContextHandler handler = i.next();
+                        final WhiteboardContextHandler handler = i.next();
                         if ( handler.getContextInfo().equals(info) )
                         {
                             i.remove();
@@ -468,7 +469,7 @@ public final class WhiteboardManager
                         boolean done = false;
                         while ( !handlerList.isEmpty() && !done)
                         {
-                            final ContextHandler newHead = handlerList.get(0);
+                            final WhiteboardContextHandler newHead = handlerList.get(0);
                             this.failureStateHandler.removeAll(newHead.getContextInfo());
 
                             if ( this.activate(newHead) )
@@ -494,12 +495,12 @@ public final class WhiteboardManager
     /**
      * Find the list of matching contexts for the whiteboard service
      */
-    private List<ContextHandler> getMatchingContexts(final WhiteboardServiceInfo<?> info)
+    private List<WhiteboardContextHandler> getMatchingContexts(final WhiteboardServiceInfo<?> info)
     {
-        final List<ContextHandler> result = new ArrayList<ContextHandler>();
-        for(final List<ContextHandler> handlerList : this.contextMap.values())
+        final List<WhiteboardContextHandler> result = new ArrayList<WhiteboardContextHandler>();
+        for(final List<WhiteboardContextHandler> handlerList : this.contextMap.values())
         {
-            final ContextHandler h = handlerList.get(0);
+            final WhiteboardContextHandler h = handlerList.get(0);
             // check whether the servlet context helper is visible to the whiteboard bundle
             // see chapter 140.2
             boolean visible = h.getContextInfo().getServiceId() < 0; // internal ones are always visible
@@ -542,7 +543,7 @@ public final class WhiteboardManager
             {
                 synchronized ( this.contextMap )
                 {
-                    final List<ContextHandler> handlerList = this.getMatchingContexts(info);
+                    final List<WhiteboardContextHandler> handlerList = this.getMatchingContexts(info);
                     this.servicesMap.put(info, handlerList);
                     if (handlerList.isEmpty())
                     {
@@ -593,10 +594,10 @@ public final class WhiteboardManager
         {
             if ( !failureStateHandler.remove(info) )
             {
-                final List<ContextHandler> handlerList = this.servicesMap.remove(info);
+                final List<WhiteboardContextHandler> handlerList = this.servicesMap.remove(info);
                 if ( handlerList != null )
                 {
-                    for(final ContextHandler h : handlerList)
+                    for(final WhiteboardContextHandler h : handlerList)
                     {
                         if ( !failureStateHandler.remove(info, h.getContextInfo().getServiceId()) )
                         {
@@ -672,7 +673,7 @@ public final class WhiteboardManager
      * @param handler Context handler
      * @param info Whiteboard service info
      */
-    private void unregisterWhiteboardService(final ContextHandler handler, final WhiteboardServiceInfo<?> info)
+    private void unregisterWhiteboardService(final WhiteboardContextHandler handler, final WhiteboardServiceInfo<?> info)
     {
         try
         {
@@ -712,7 +713,7 @@ public final class WhiteboardManager
         {
             try
             {
-                final Filter f = this.bundleContext.createFilter(target);
+                final Filter f = this.httpBundleContext.createFilter(target);
                 return f.match(this.runtimeServiceReg.getReference());
             }
             catch ( final InvalidSyntaxException ise)
@@ -725,13 +726,13 @@ public final class WhiteboardManager
         return true;
     }
 
-    private ContextHandler getContextHandler(final Long contextId)
+    private WhiteboardContextHandler getContextHandler(final Long contextId)
     {
         synchronized ( this.contextMap )
         {
-            for(final List<ContextHandler> handlerList : this.contextMap.values())
+            for(final List<WhiteboardContextHandler> handlerList : this.contextMap.values())
             {
-                final ContextHandler h = handlerList.get(0);
+                final WhiteboardContextHandler h = handlerList.get(0);
                 if ( h.getContextInfo().getServiceId() == contextId )
                 {
                     return h;
@@ -757,10 +758,10 @@ public final class WhiteboardManager
         }
 
         // get sort list of context handlers
-        final List<ContextHandler> contextHandlerList = new ArrayList<ContextHandler>();
+        final List<WhiteboardContextHandler> contextHandlerList = new ArrayList<WhiteboardContextHandler>();
         synchronized ( this.contextMap )
         {
-            for (final List<ContextHandler> list : this.contextMap.values())
+            for (final List<WhiteboardContextHandler> list : this.contextMap.values())
             {
                 if ( !list.isEmpty() )
                 {
@@ -771,7 +772,7 @@ public final class WhiteboardManager
         }
         Collections.sort(contextHandlerList);
 
-        for (final ContextHandler handler : contextHandlerList)
+        for (final WhiteboardContextHandler handler : contextHandlerList)
         {
             final ServletContextDTO scDTO = ServletContextDTOBuilder.build(handler.getContextInfo(), handler.getSharedContext(), -1);
 

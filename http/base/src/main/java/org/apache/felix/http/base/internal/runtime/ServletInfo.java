@@ -114,10 +114,9 @@ public class ServletInfo extends WhiteboardServiceInfo<Servlet>
      */
     public ServletInfo(final String name,
             final String pattern,
-            final int serviceRanking,
             final Map<String, String> initParams)
     {
-        super(serviceRanking);
+        super(Integer.MAX_VALUE);
         this.name = name;
         this.patterns = new String[] {pattern};
         this.initParams = Collections.unmodifiableMap(initParams);

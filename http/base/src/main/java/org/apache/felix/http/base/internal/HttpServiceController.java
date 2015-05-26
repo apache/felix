@@ -18,6 +18,7 @@ package org.apache.felix.http.base.internal;
 
 import java.util.Hashtable;
 
+import javax.annotation.Nonnull;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSessionAttributeListener;
 import javax.servlet.http.HttpSessionEvent;
@@ -106,12 +107,12 @@ public final class HttpServiceController
         this.whiteboardManager.setProperties(props);
     }
 
-    public void register(final ServletContext servletContext)
+    public void register(@Nonnull final ServletContext containerContext)
     {
         this.registry.init();
 
-        this.httpServiceFactory.start(servletContext);
-        this.whiteboardManager.start(servletContext);
+        this.httpServiceFactory.start(containerContext);
+        this.whiteboardManager.start(containerContext);
 
         this.dispatcher.setWhiteboardManager(this.whiteboardManager);
     }
@@ -120,15 +121,8 @@ public final class HttpServiceController
     {
         this.dispatcher.setWhiteboardManager(null);
 
-        if ( this.whiteboardManager != null )
-        {
-            this.whiteboardManager.stop();
-        }
-
-        if ( this.httpServiceFactory != null )
-        {
-            this.httpServiceFactory.stop();
-        }
+        this.httpServiceFactory.stop();
+        this.whiteboardManager.stop();
 
         this.registry.shutdown();
         this.httpSessionListener = null;
