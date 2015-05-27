@@ -21,6 +21,7 @@ package org.apache.felix.http.base.internal.runtime;
 import java.util.Collections;
 import java.util.Map;
 
+import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.apache.felix.http.base.internal.util.PatternUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.context.ServletContextHelper;
@@ -88,6 +89,7 @@ public final class ServletContextHelperInfo extends AbstractInfo<ServletContextH
     {
         return super.isValid()
                 && PatternUtil.isValidSymbolicName(this.name)
+                && !HttpServiceFactory.HTTP_SERVICE_CONTEXT_NAME.equals(this.name)
                 && isValidPath();
     }
 

@@ -24,28 +24,16 @@ import javax.annotation.Nonnull;
 import javax.servlet.ServletContext;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.apache.felix.http.base.internal.handler.ContextHandler;
-import org.apache.felix.http.base.internal.handler.FilterHandler;
-import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
-import org.apache.felix.http.base.internal.handler.ListenerHandler;
-import org.apache.felix.http.base.internal.handler.ServletHandler;
-import org.apache.felix.http.base.internal.handler.WhiteboardFilterHandler;
-import org.apache.felix.http.base.internal.handler.WhiteboardListenerHandler;
-import org.apache.felix.http.base.internal.handler.WhiteboardServletHandler;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
-import org.apache.felix.http.base.internal.runtime.FilterInfo;
-import org.apache.felix.http.base.internal.runtime.ListenerInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
-import org.apache.felix.http.base.internal.runtime.ServletInfo;
-import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
-import org.apache.felix.http.base.internal.service.ResourceServlet;
+import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceObjects;
 import org.osgi.service.http.context.ServletContextHelper;
 
-public final class WhiteboardContextHandler implements ContextHandler, Comparable<ContextHandler>
+public class WhiteboardContextHandler implements Comparable<WhiteboardContextHandler>
 {
     /** The info object for the context. */
     private final ServletContextHelperInfo info;
@@ -77,15 +65,26 @@ public final class WhiteboardContextHandler implements ContextHandler, Comparabl
         return this.httpBundle.getBundleContext();
     }
 
-    @Override
     public ServletContextHelperInfo getContextInfo()
     {
         return this.info;
     }
 
     @Override
-    public int compareTo(final ContextHandler o)
+    public int compareTo(final WhiteboardContextHandler o)
     {
+        if ( this.info.getName().equals(HttpServiceFactory.HTTP_SERVICE_CONTEXT_NAME) )
+        {
+            if ( o.info.getName().equals(HttpServiceFactory.HTTP_SERVICE_CONTEXT_NAME) )
+            {
+                return 0;
+            }
+            return -1;
+        }
+        if ( o.info.getName().equals(HttpServiceFactory.HTTP_SERVICE_CONTEXT_NAME) )
+        {
+            return 1;
+        }
         return this.info.compareTo(o.getContextInfo());
     }
 
@@ -196,81 +195,9 @@ public final class WhiteboardContextHandler implements ContextHandler, Comparabl
         }
     }
 
-    /**
-     * Create a servlet handler
-     * @param servletInfo The servlet info
-     * @return {@code null} if the servlet context could not be created, a handler otherwise
-     */
-    public ServletHandler getServletContextAndCreateServletHandler(@Nonnull final ServletInfo servletInfo)
+    public PerContextHandlerRegistry getRegistry()
     {
-        final ExtServletContext servletContext = this.getServletContext(servletInfo.getServiceReference().getBundle());
-        if ( servletContext == null )
-        {
-            return null;
-        }
-        final ServletHandler handler;
-        if ( servletInfo.isResource() )
-        {
-            handler = new HttpServiceServletHandler(
-                    this.info.getServiceId(),
-                    servletContext,
-                    servletInfo,
-                    new ResourceServlet(servletInfo.getPrefix()));
-        }
-        else
-        {
-            handler = new WhiteboardServletHandler(
-                this.info.getServiceId(),
-                servletContext,
-                servletInfo,
-                this.httpBundle.getBundleContext());
-        }
-        return handler;
-    }
-
-    /**
-     * Create a filter handler
-     * @param info The filter info
-     * @return {@code null} if the servlet context could not be created, a handler otherwise
-     */
-    public FilterHandler getServletContextAndCreateFilterHandler(@Nonnull final FilterInfo info)
-    {
-        final ExtServletContext servletContext = this.getServletContext(info.getServiceReference().getBundle());
-        if ( servletContext == null )
-        {
-            return null;
-        }
-        final FilterHandler handler = new WhiteboardFilterHandler(
-                this.info.getServiceId(),
-                servletContext,
-                info,
-                this.httpBundle.getBundleContext());
-        return handler;
-    }
-
-    /**
-     * Create a listener handler
-     * @param info The listener info
-     * @return {@code null} if the servlet context could not be created, a handler otherwise
-     */
-    public ListenerHandler getServletContextAndCreateListenerHandler(@Nonnull final ListenerInfo info)
-    {
-        final ExtServletContext servletContext = this.getServletContext(info.getServiceReference().getBundle());
-        if ( servletContext == null )
-        {
-            return null;
-        }
-        final ListenerHandler handler = new WhiteboardListenerHandler(
-                this.info.getServiceId(),
-                servletContext,
-                info,
-                this.httpBundle.getBundleContext());
-        return handler;
-    }
-
-    public void ungetServletContext(@Nonnull final WhiteboardServiceInfo<?> info)
-    {
-        this.ungetServletContext(info.getServiceReference().getBundle());
+        return this.registry;
     }
 
     private static final class ContextHolder
@@ -278,11 +205,5 @@ public final class WhiteboardContextHandler implements ContextHandler, Comparabl
         public long counter;
         public ExtServletContext servletContext;
         public ServletContextHelper servletContextHelper;
-    }
-
-    @Override
-    public PerContextHandlerRegistry getRegistry()
-    {
-        return this.registry;
     }
 }

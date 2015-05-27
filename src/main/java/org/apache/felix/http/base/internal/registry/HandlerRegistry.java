@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.servlet.DispatcherType;
 
@@ -123,7 +124,10 @@ public final class HandlerRegistry
         return null;
     }
 
-    public ServletResolution getErrorHandler(String requestURI, Long serviceId, int code, Throwable exception)
+    public @CheckForNull ServletResolution getErrorHandler(@Nonnull final String requestURI,
+            final Long serviceId,
+            final int code,
+            final Throwable exception)
     {
         final PerContextHandlerRegistry reg;
         if ( serviceId == null )
@@ -228,5 +232,22 @@ public final class HandlerRegistry
             return true;
         }
         return false;
+    }
+
+    public PerContextHandlerRegistry getBestMatchingRegistry(String requestURI)
+    {
+        // if the context is unknown, we use the first matching one!
+        PerContextHandlerRegistry found = null;
+        final List<PerContextHandlerRegistry> regs = this.registrations;
+        for(final PerContextHandlerRegistry r : regs)
+        {
+            final String path = r.isMatching(requestURI);
+            if ( path != null )
+            {
+                found = r;
+                break;
+            }
+        }
+        return found;
     }
 }

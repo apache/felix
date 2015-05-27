@@ -286,7 +286,7 @@ public final class PerBundleHttpServiceImpl implements ExtHttpService
         }
     }
 
-    private ExtServletContext getServletContext(HttpContext context)
+    public ExtServletContext getServletContext(HttpContext context)
     {
         if (context == null)
         {
