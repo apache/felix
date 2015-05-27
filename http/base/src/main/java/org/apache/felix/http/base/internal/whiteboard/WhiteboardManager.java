@@ -42,9 +42,13 @@ import javax.servlet.http.HttpSessionEvent;
 import org.apache.felix.http.base.internal.console.HttpServicePlugin;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
+import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.apache.felix.http.base.internal.handler.ListenerHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.handler.WhiteboardFilterHandler;
+import org.apache.felix.http.base.internal.handler.WhiteboardListenerHandler;
+import org.apache.felix.http.base.internal.handler.WhiteboardServletHandler;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.AbstractInfo;
@@ -59,6 +63,7 @@ import org.apache.felix.http.base.internal.runtime.dto.RegistryRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.ServletContextDTOBuilder;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.apache.felix.http.base.internal.service.HttpServiceRuntimeImpl;
+import org.apache.felix.http.base.internal.service.ResourceServlet;
 import org.apache.felix.http.base.internal.util.MimeTypes;
 import org.apache.felix.http.base.internal.whiteboard.tracker.FilterTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ListenersTracker;
@@ -141,6 +146,15 @@ public final class WhiteboardManager
         props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, HttpWhiteboardConstants.HTTP_WHITEBOARD_DEFAULT_CONTEXT_NAME);
         props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, "/");
         props.put(Constants.SERVICE_RANKING, Integer.MIN_VALUE);
+
+        // add context for http service
+        final List<WhiteboardContextHandler> list = new ArrayList<WhiteboardContextHandler>();
+        final ServletContextHelperInfo info = new ServletContextHelperInfo(Integer.MAX_VALUE,
+                HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID,
+                HttpServiceFactory.HTTP_SERVICE_CONTEXT_NAME, "/", null);
+        list.add(new HttpServiceContextHandler(info, registry.getRegistry(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID),
+                httpServiceFactory, webContext, this.httpBundleContext.getBundle()));
+        this.contextMap.put(HttpServiceFactory.HTTP_SERVICE_CONTEXT_NAME, list);
 
         this.defaultContextRegistration = httpBundleContext.registerService(
                 ServletContextHelper.class,
@@ -521,9 +535,25 @@ public final class WhiteboardManager
                     // we ignore this and treat it as an invisible service
                 }
             }
-            if ( visible && info.getContextSelectionFilter().match(h.getContextInfo().getServiceReference()) )
+            if ( visible )
             {
-                result.add(h);
+                if ( h.getContextInfo().getServiceReference() != null )
+                {
+                    if ( info.getContextSelectionFilter().match(h.getContextInfo().getServiceReference()) )
+                    {
+                        result.add(h);
+                    }
+                }
+                else
+                {
+                    final Map<String, String> props = new HashMap<String, String>();
+                    props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, h.getContextInfo().getName());
+                    props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, h.getContextInfo().getPath());
+                    if ( info.getContextSelectionFilter().matches(props) )
+                    {
+                        result.add(h);
+                    }
+                }
             }
         }
         return result;
@@ -635,52 +665,71 @@ public final class WhiteboardManager
             int failureCode = -1;
             if ( info instanceof ServletInfo )
             {
-                final ServletHandler servletHandler = handler.getServletContextAndCreateServletHandler((ServletInfo)info);
-                if ( servletHandler == null )
+                final ExtServletContext servletContext = handler.getServletContext(info.getServiceReference().getBundle());
+                if ( servletContext == null )
                 {
                     failureCode = DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
                 }
                 else
                 {
+                    final ServletHandler servletHandler = new WhiteboardServletHandler(
+                        handler.getContextInfo().getServiceId(),
+                        servletContext,
+                        (ServletInfo)info,
+                        handler.getBundleContext());
                     handler.getRegistry().registerServlet(servletHandler);
                 }
             }
             else if ( info instanceof FilterInfo )
             {
-                final FilterHandler filterHandler = handler.getServletContextAndCreateFilterHandler((FilterInfo)info);
-                if ( filterHandler == null )
+                final ExtServletContext servletContext = handler.getServletContext(info.getServiceReference().getBundle());
+                if ( servletContext == null )
                 {
                     failureCode = DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
                 }
                 else
                 {
+                    final FilterHandler filterHandler = new WhiteboardFilterHandler(
+                            handler.getContextInfo().getServiceId(),
+                            servletContext,
+                            (FilterInfo)info,
+                            handler.getBundleContext());
                     handler.getRegistry().registerFilter(filterHandler);
                 }
             }
             else if ( info instanceof ResourceInfo )
             {
                 final ServletInfo servletInfo = new ServletInfo((ResourceInfo)info);
-
-                final ServletHandler servleHandler = handler.getServletContextAndCreateServletHandler(servletInfo);
-                if ( servleHandler == null )
+                final ExtServletContext servletContext = handler.getServletContext(info.getServiceReference().getBundle());
+                if ( servletContext == null )
                 {
                     failureCode = DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
                 }
                 else
                 {
+                    final ServletHandler servleHandler = new HttpServiceServletHandler(
+                            handler.getContextInfo().getServiceId(),
+                            servletContext,
+                            servletInfo,
+                            new ResourceServlet(servletInfo.getPrefix()));
                     handler.getRegistry().registerServlet(servleHandler);
                 }
             }
 
             else if ( info instanceof ListenerInfo )
             {
-                final ListenerHandler listenerHandler = handler.getServletContextAndCreateListenerHandler((ListenerInfo)info);
-                if ( listenerHandler == null )
+                final ExtServletContext servletContext = handler.getServletContext(info.getServiceReference().getBundle());
+                if ( servletContext == null )
                 {
                     failureCode = DTOConstants.FAILURE_REASON_SERVLET_CONTEXT_FAILURE;
                 }
                 else
                 {
+                    final ListenerHandler listenerHandler = new WhiteboardListenerHandler(
+                            handler.getContextInfo().getServiceId(),
+                            servletContext,
+                            (ListenerInfo)info,
+                            handler.getBundleContext());
                     handler.getRegistry().registerListeners(listenerHandler);
                 }
             }
@@ -715,23 +764,23 @@ public final class WhiteboardManager
             if ( info instanceof ServletInfo )
             {
                 handler.getRegistry().unregisterServlet((ServletInfo)info, true);
-                handler.ungetServletContext(info);
+                handler.ungetServletContext(info.getServiceReference().getBundle());
             }
             else if ( info instanceof FilterInfo )
             {
                 handler.getRegistry().unregisterFilter((FilterInfo)info, true);
-                handler.ungetServletContext(info);
+                handler.ungetServletContext(info.getServiceReference().getBundle());
             }
             else if ( info instanceof ResourceInfo )
             {
                 handler.getRegistry().unregisterServlet(new ServletInfo((ResourceInfo)info), true);
-                handler.ungetServletContext(info);
+                handler.ungetServletContext(info.getServiceReference().getBundle());
             }
 
             else if ( info instanceof ListenerInfo )
             {
                 handler.getRegistry().unregisterListeners((ListenerInfo) info);
-                handler.ungetServletContext(info);
+                handler.ungetServletContext(info.getServiceReference().getBundle());
             }
         }
         catch (final Exception e)
@@ -786,6 +835,7 @@ public final class WhiteboardManager
         final FailedDTOHolder failedDTOHolder = new FailedDTOHolder();
 
         final Collection<ServletContextDTO> contextDTOs = new ArrayList<ServletContextDTO>();
+/*
         // add the context for the http service
         final ServletContextHelperInfo info = new ServletContextHelperInfo(Integer.MAX_VALUE,
                 HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID,
@@ -795,7 +845,7 @@ public final class WhiteboardManager
         {
             contextDTOs.add(dto);
         }
-
+*/
         // get sort list of context handlers
         final List<WhiteboardContextHandler> contextHandlerList = new ArrayList<WhiteboardContextHandler>();
         synchronized ( this.contextMap )

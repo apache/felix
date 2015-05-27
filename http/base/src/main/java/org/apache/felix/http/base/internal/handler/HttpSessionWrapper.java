@@ -35,7 +35,6 @@ import javax.servlet.http.HttpSessionContext;
 import javax.servlet.http.HttpSessionEvent;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 
 /**
  * The session wrapper keeps track of the internal session, manages their attributes
@@ -87,9 +86,9 @@ public class HttpSessionWrapper implements HttpSession
      */
     private final boolean isNew;
 
-    public static boolean hasSession(final Long contextId, final HttpSession session)
+    public static boolean hasSession(final long contextId, final HttpSession session)
     {
-        final String sessionId = contextId == null ? String.valueOf(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID) : String.valueOf(contextId);
+        final String sessionId = String.valueOf(contextId);
         return session.getAttribute(ATTR_CREATED + sessionId) != null;
     }
 
@@ -136,15 +135,15 @@ public class HttpSessionWrapper implements HttpSession
     /**
      * Creates a new {@link HttpSessionWrapper} instance.
      */
-    public HttpSessionWrapper(final Long contextId,
+    public HttpSessionWrapper(final long contextId,
             final HttpSession session,
             final ExtServletContext context,
             final boolean terminate)
     {
         this.delegate = session;
         this.context = context;
-        this.sessionId = contextId == null ? String.valueOf(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID) : String.valueOf(contextId);
-        this.keyPrefix = contextId == null ? null : ATTR_PREFIX + this.sessionId + ".";
+        this.sessionId = String.valueOf(contextId);
+        this.keyPrefix = ATTR_PREFIX + this.sessionId + ".";
 
         if ( this.keyPrefix != null )
         {
