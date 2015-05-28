@@ -200,7 +200,12 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
 	        return null;
 
 		ServiceReferenceDTO dto = new ServiceReferenceDTO();
-		dto.bundle = serviceRef.getBundle().getBundleId();
+		Bundle bundle = serviceRef.getBundle();
+		if (bundle != null)
+		    dto.bundle = bundle.getBundleId();
+		else
+		    dto.bundle = -1; // No bundle ever has -1 as ID, so this indicates no bundle.
+
 		dto.id = (Long) serviceRef.getProperty(Constants.SERVICE_ID);
 		dto.properties = deepCopy( serviceRef );
 		Bundle[] usingBundles = serviceRef.getUsingBundles();
