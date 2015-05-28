@@ -26,8 +26,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Map;
-
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -44,7 +42,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.runtime.dto.DTOConstants;
 import org.osgi.service.http.runtime.dto.FailedServletDTO;
 import org.osgi.service.http.runtime.dto.ServletContextDTO;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
@@ -74,10 +71,7 @@ public class ServletRegistryTest {
         final FailedDTOHolder holder = new FailedDTOHolder();
         final ServletContextDTO dto = new ServletContextDTO();
 
-        final Map<ServletInfo, ServletRegistry.ServletRegistrationStatus> status = reg.getServletStatusMapping();
         // empty reg
-        assertEquals(0, status.size());
-        // check DTO
         reg.getRuntimeInfo(dto, holder.failedServletDTOs, holder.failedResourceDTOs);
         assertEmpty(dto, holder);
 
@@ -88,12 +82,6 @@ public class ServletRegistryTest {
         verify(h1.getServlet()).init(Matchers.any(ServletConfig.class));
 
         // one entry in reg
-        assertEquals(1, status.size());
-        assertNotNull(status.get(h1.getServletInfo()));
-        assertNotNull(status.get(h1.getServletInfo()).pathToStatus.get("/foo"));
-        final int code = status.get(h1.getServletInfo()).pathToStatus.get("/foo");
-        assertEquals(-1, code);
-
         // check DTO
         clear(dto, holder);
         reg.getRuntimeInfo(dto, holder.failedServletDTOs, holder.failedResourceDTOs);
@@ -111,8 +99,6 @@ public class ServletRegistryTest {
         verify(s).destroy();
 
         // empty again
-        assertEquals(0, status.size());
-        // check DTO
         clear(dto, holder);
         reg.getRuntimeInfo(dto, holder.failedServletDTOs, holder.failedResourceDTOs);
         assertEmpty(dto, holder);
@@ -123,10 +109,7 @@ public class ServletRegistryTest {
         final FailedDTOHolder holder = new FailedDTOHolder();
         final ServletContextDTO dto = new ServletContextDTO();
 
-        final Map<ServletInfo, ServletRegistry.ServletRegistrationStatus> status = reg.getServletStatusMapping();
         // empty reg
-        assertEquals(0, status.size());
-        // check DTO
         reg.getRuntimeInfo(dto, holder.failedServletDTOs, holder.failedResourceDTOs);
         assertEmpty(dto, holder);
 
@@ -141,21 +124,8 @@ public class ServletRegistryTest {
         verify(h1.getServlet(), never()).destroy();
 
         // two entries in reg
-        assertEquals(2, status.size());
-        assertNotNull(status.get(h1.getServletInfo()));
-        assertNotNull(status.get(h2.getServletInfo()));
-
         // h1 is active
-        assertNotNull(status.get(h1.getServletInfo()).pathToStatus.get("/foo"));
-        final int code1 = status.get(h1.getServletInfo()).pathToStatus.get("/foo");
-        assertEquals(-1, code1);
-
         // h2 is hidden
-        assertNotNull(status.get(h2.getServletInfo()).pathToStatus.get("/foo"));
-        final int code2 = status.get(h2.getServletInfo()).pathToStatus.get("/foo");
-        assertEquals(DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE, code2);
-
-        // check DTO
         clear(dto, holder);
         reg.getRuntimeInfo(dto, holder.failedServletDTOs, holder.failedResourceDTOs);
         assertNull(dto.resourceDTOs);
@@ -179,12 +149,6 @@ public class ServletRegistryTest {
         verify(h2.getServlet()).init(Matchers.any(ServletConfig.class));
 
         // h2 is active
-        assertEquals(1, status.size());
-        assertNotNull(status.get(h2.getServletInfo()).pathToStatus.get("/foo"));
-        final int code3 = status.get(h2.getServletInfo()).pathToStatus.get("/foo");
-        assertEquals(-1, code3);
-
-        // check DTO
         clear(dto, holder);
         reg.getRuntimeInfo(dto, holder.failedServletDTOs, holder.failedResourceDTOs);
         assertNull(dto.resourceDTOs);
@@ -202,8 +166,6 @@ public class ServletRegistryTest {
         verify(s2).destroy();
 
         // empty again
-        assertEquals(0, status.size());
-        // check DTO
         clear(dto, holder);
         reg.getRuntimeInfo(dto, holder.failedServletDTOs, holder.failedResourceDTOs);
         assertEmpty(dto, holder);

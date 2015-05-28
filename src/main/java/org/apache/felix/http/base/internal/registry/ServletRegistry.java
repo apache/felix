@@ -60,6 +60,15 @@ public final class ServletRegistry
         public ServletHandler handler;
     }
 
+/*
+    public static final class RegistrationStatus
+    {
+        public ServletHandler handler;
+        public Map<Integer, String[]> statusToPath = new HashMap<Integer, String[]>();
+    }
+
+    public volatile Map<ServletInfo, RegistrationStatus> mapping = Collections.emptyMap();
+*/
     /**
      * Resolve a request uri
      *
@@ -357,11 +366,6 @@ public final class ServletRegistry
             status.pathToStatus.put(pattern, result);
             return false;
         }
-    }
-
-    Map<ServletInfo, ServletRegistrationStatus> getServletStatusMapping()
-    {
-        return this.statusMapping;
     }
 
     public ServletHandler resolveByName(final @Nonnull String name)
