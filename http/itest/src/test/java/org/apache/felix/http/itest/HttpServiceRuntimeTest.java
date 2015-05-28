@@ -1199,14 +1199,22 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
 
         assertEquals(3, runtimeDTO.servletContextDTOs.length);
 
-        assertEquals(secondContextId.longValue(), runtimeDTO.servletContextDTOs[1].serviceId);
-        assertEquals("test-context", runtimeDTO.servletContextDTOs[1].name);
-        assertEquals("/second", runtimeDTO.servletContextDTOs[1].contextPath);
-        assertEquals("default", runtimeDTO.servletContextDTOs[2].name);
-        assertEquals(HTTP_CONTEXT_NAME, runtimeDTO.servletContextDTOs[0].name);
+        final List<String> names = new ArrayList<String>();
+        for(final ServletContextDTO dto : runtimeDTO.servletContextDTOs)
+        {
+            names.add(dto.name);
+        }
+        final int httpContextIndex = names.indexOf(HTTP_CONTEXT_NAME);
+        final int secondContextIndex = names.indexOf("test-context");
+        final int defaultContextIndex = names.indexOf("default");
+        assertEquals(secondContextId.longValue(), runtimeDTO.servletContextDTOs[secondContextIndex].serviceId);
+        assertEquals("test-context", runtimeDTO.servletContextDTOs[secondContextIndex].name);
+        assertEquals("/second", runtimeDTO.servletContextDTOs[secondContextIndex].contextPath);
+        assertEquals("default", runtimeDTO.servletContextDTOs[defaultContextIndex].name);
+        assertEquals(HTTP_CONTEXT_NAME, runtimeDTO.servletContextDTOs[httpContextIndex].name);
 
-        assertEquals(1, runtimeDTO.servletContextDTOs[1].servletDTOs.length);
-        assertEquals("servlet", runtimeDTO.servletContextDTOs[1].servletDTOs[0].name);
+        assertEquals(1, runtimeDTO.servletContextDTOs[secondContextIndex].servletDTOs.length);
+        assertEquals("servlet", runtimeDTO.servletContextDTOs[secondContextIndex].servletDTOs[0].name);
 
         secondContext.unregister();
 

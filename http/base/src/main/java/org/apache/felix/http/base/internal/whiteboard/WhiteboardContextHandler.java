@@ -27,17 +27,21 @@ import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
-import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceObjects;
 import org.osgi.service.http.context.ServletContextHelper;
 
+/**
+ * The whiteboard context handler provides some information and functionality for
+ * handling servlet context (helpers).
+ */
 public class WhiteboardContextHandler implements Comparable<WhiteboardContextHandler>
 {
     /** The info object for the context. */
     private final ServletContextHelperInfo info;
 
+    /** The web context. */
     private final ServletContext webContext;
 
     /** The http bundle. */
@@ -46,45 +50,34 @@ public class WhiteboardContextHandler implements Comparable<WhiteboardContextHan
     /** A map of all created servlet contexts. Each bundle gets it's own instance. */
     private final Map<Long, ContextHolder> perBundleContextMap = new HashMap<Long, ContextHolder>();
 
+    /** The corresponding handler registry. */
     private volatile PerContextHandlerRegistry registry;
 
     /** The shared part of the servlet context. */
     private volatile ServletContext sharedContext;
 
-    public WhiteboardContextHandler(final ServletContextHelperInfo info,
-            final ServletContext webContext,
-            final Bundle httpBundle)
+    public WhiteboardContextHandler(@Nonnull final ServletContextHelperInfo info,
+            @Nonnull final ServletContext webContext,
+            @Nonnull final Bundle httpBundle)
     {
         this.webContext = webContext;
         this.info = info;
         this.httpBundle = httpBundle;
     }
 
-    public BundleContext getBundleContext()
+    public @Nonnull BundleContext getBundleContext()
     {
         return this.httpBundle.getBundleContext();
     }
 
-    public ServletContextHelperInfo getContextInfo()
+    public @Nonnull ServletContextHelperInfo getContextInfo()
     {
         return this.info;
     }
 
     @Override
-    public int compareTo(final WhiteboardContextHandler o)
+    public int compareTo(@Nonnull final WhiteboardContextHandler o)
     {
-        if ( this.info.getName().equals(HttpServiceFactory.HTTP_SERVICE_CONTEXT_NAME) )
-        {
-            if ( o.info.getName().equals(HttpServiceFactory.HTTP_SERVICE_CONTEXT_NAME) )
-            {
-                return 0;
-            }
-            return -1;
-        }
-        if ( o.info.getName().equals(HttpServiceFactory.HTTP_SERVICE_CONTEXT_NAME) )
-        {
-            return 1;
-        }
         return this.info.compareTo(o.getContextInfo());
     }
 
@@ -92,7 +85,7 @@ public class WhiteboardContextHandler implements Comparable<WhiteboardContextHan
      * Activate this context.
      * @return {@code true} if it succeeded.
      */
-    public boolean activate(final HandlerRegistry registry)
+    public boolean activate(@Nonnull final HandlerRegistry registry)
     {
         this.registry = new PerContextHandlerRegistry(this.info);
         this.sharedContext = new SharedServletContextImpl(webContext,
@@ -116,7 +109,7 @@ public class WhiteboardContextHandler implements Comparable<WhiteboardContextHan
     /**
      * Deactivate this context.
      */
-    public void deactivate(final HandlerRegistry registry)
+    public void deactivate(@Nonnull final HandlerRegistry registry)
     {
         registry.remove(this.info);
         this.registry = null;
@@ -125,12 +118,12 @@ public class WhiteboardContextHandler implements Comparable<WhiteboardContextHan
         this.perBundleContextMap.clear();
     }
 
-    public ServletContext getSharedContext()
+    public @CheckForNull ServletContext getSharedContext()
     {
         return sharedContext;
     }
 
-    public ExtServletContext getServletContext(@CheckForNull final Bundle bundle)
+    public @CheckForNull ExtServletContext getServletContext(@CheckForNull final Bundle bundle)
     {
         if ( bundle == null )
         {
@@ -195,7 +188,7 @@ public class WhiteboardContextHandler implements Comparable<WhiteboardContextHan
         }
     }
 
-    public PerContextHandlerRegistry getRegistry()
+    public @CheckForNull PerContextHandlerRegistry getRegistry()
     {
         return this.registry;
     }
