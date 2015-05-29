@@ -17,6 +17,7 @@
 package org.apache.felix.http.base.internal.registry;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -530,8 +531,8 @@ public final class ErrorPageRegistry
             for(final Map.Entry<Integer, ErrorRegistration> entry : status.reasonMapping.entrySet())
             {
                 final ErrorPageDTO state = ErrorPageDTOBuilder.build(status.getHandler(), entry.getKey());
-                state.errorCodes = entry.getValue().errorCodes;
-                state.exceptions = entry.getValue().exceptions;
+                state.errorCodes = Arrays.copyOf(entry.getValue().errorCodes, entry.getValue().errorCodes.length);
+                state.exceptions = Arrays.copyOf(entry.getValue().exceptions, entry.getValue().exceptions.length);
 
                 if ( entry.getKey() == -1 )
                 {
