@@ -589,12 +589,14 @@ class Candidates
         // as a mandatory revision.
         m_mandatoryResources.add(resource);
 
-        // Add the dynamic imports candidates.
-        add(req, candidates);
-
         // Process the candidates, removing any candidates that
         // cannot resolve.
         ResolutionException rethrow = processCandidates(rc, resource, candidates);
+
+        // Add the dynamic imports candidates.
+        // Make sure this is done after the call to processCandidates since we want to ensure
+        // fragment candidates are properly hosted before adding the candidates list which makes a copy
+        add(req, candidates);
 
         if (candidates.isEmpty())
         {

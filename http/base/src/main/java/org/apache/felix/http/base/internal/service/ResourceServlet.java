@@ -28,31 +28,29 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+/**
+ * The resource servlet
+ */
 public final class ResourceServlet extends HttpServlet
 {
-    private final String path;
+    private static final long serialVersionUID = 1L;
 
-    public ResourceServlet(String path)
+    /** The path of the resource registration. */
+    private final String prefix;
+
+    public ResourceServlet(final String prefix)
     {
-        this.path = path;
+        this.prefix = prefix;
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException
+    protected void doGet(final HttpServletRequest req, final HttpServletResponse res)
+            throws ServletException, IOException
     {
-        String target = req.getPathInfo();
-        if (target == null)
-        {
-            target = "";
-        }
+        final String target = req.getPathInfo();
+        final String resName = (target == null ? this.prefix : this.prefix + target);
 
-        if (!target.startsWith("/"))
-        {
-            target += "/" + target;
-        }
-
-        String resName = this.path + target;
-        URL url = getServletContext().getResource(resName);
+        final URL url = getServletContext().getResource(resName);
 
         if (url == null)
         {
@@ -64,15 +62,17 @@ public final class ResourceServlet extends HttpServlet
         }
     }
 
-    private void handle(HttpServletRequest req, HttpServletResponse res, URL url, String resName) throws IOException
+    private void handle(final HttpServletRequest req,
+            final HttpServletResponse res, final URL url, final String resName)
+    throws IOException
     {
-        String contentType = getServletContext().getMimeType(resName);
+        final String contentType = getServletContext().getMimeType(resName);
         if (contentType != null)
         {
             res.setContentType(contentType);
         }
 
-        long lastModified = getLastModified(url);
+        final long lastModified = getLastModified(url);
         if (lastModified != 0)
         {
             res.setDateHeader("Last-Modified", lastModified);
@@ -88,26 +88,26 @@ public final class ResourceServlet extends HttpServlet
         }
     }
 
-    private long getLastModified(URL url)
+    private long getLastModified(final URL url)
     {
         long lastModified = 0;
 
         try
         {
-            URLConnection conn = url.openConnection();
+            final URLConnection conn = url.openConnection();
             lastModified = conn.getLastModified();
         }
-        catch (Exception e)
+        catch (final Exception e)
         {
             // Do nothing
         }
 
         if (lastModified == 0)
         {
-            String filepath = url.getPath();
+            final String filepath = url.getPath();
             if (filepath != null)
             {
-                File f = new File(filepath);
+                final File f = new File(filepath);
                 if (f.exists())
                 {
                     lastModified = f.lastModified();
@@ -126,7 +126,7 @@ public final class ResourceServlet extends HttpServlet
         return resTimestamp == 0 || modSince == -1 || resTimestamp > modSince;
     }
 
-    private void copyResource(URL url, HttpServletResponse res) throws IOException
+    private void copyResource(final URL url, final HttpServletResponse res) throws IOException
     {
         URLConnection conn = null;
         OutputStream os = null;
@@ -138,7 +138,7 @@ public final class ResourceServlet extends HttpServlet
 
             is = conn.getInputStream();
             os = res.getOutputStream();
-            // FELIX-3987 content length should be set *before* any streaming is done 
+            // FELIX-3987 content length should be set *before* any streaming is done
             // as headers should be written before the content is actually written...
             int len = getContentLength(conn);
             if (len >= 0)
@@ -168,20 +168,20 @@ public final class ResourceServlet extends HttpServlet
         }
     }
 
-    private int getContentLength(URLConnection conn)
+    private int getContentLength(final URLConnection conn)
     {
         int length = -1;
 
         length = conn.getContentLength();
         if (length < 0)
         {
-            // Unknown, try whether it is a file, and if so, use the file 
+            // Unknown, try whether it is a file, and if so, use the file
             // API to get the length of the content...
             String path = conn.getURL().getPath();
             if (path != null)
             {
                 File f = new File(path);
-                // In case more than 2GB is streamed 
+                // In case more than 2GB is streamed
                 if (f.length() < Integer.MAX_VALUE)
                 {
                     length = (int) f.length();

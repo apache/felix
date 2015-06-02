@@ -157,7 +157,9 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
                 int j = 0;
                 for (ServiceReference<?> serviceRef : serviceRefs)
                 {
-                    srDTOs[j++] = serviceReferenceToDTO(serviceRef);
+                    ServiceReferenceDTO srefDTO = serviceReferenceToDTO(serviceRef);
+                    if (srefDTO != null)
+                        srDTOs[j++] = srefDTO;
                 }
                 dto.boundServices = srDTOs;
                 dtos.add(dto);
@@ -181,7 +183,9 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
                 int j = 0;
                 for (ServiceReference<?> serviceRef : serviceRefs)
                 {
-                    srDTOs[j++] = serviceReferenceToDTO(serviceRef);
+                    ServiceReferenceDTO srefDTO = serviceReferenceToDTO(serviceRef);
+                    if (srefDTO != null)
+                        srDTOs[j++] = srefDTO;
                 }
                 dto.targetServices = srDTOs;
                 dtos.add(dto);
@@ -192,8 +196,16 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
 
 	private ServiceReferenceDTO serviceReferenceToDTO( ServiceReference<?> serviceRef)
 	{
+	    if (serviceRef == null)
+	        return null;
+
 		ServiceReferenceDTO dto = new ServiceReferenceDTO();
-		dto.bundle = serviceRef.getBundle().getBundleId();
+		Bundle bundle = serviceRef.getBundle();
+		if (bundle != null)
+		    dto.bundle = bundle.getBundleId();
+		else
+		    dto.bundle = -1; // No bundle ever has -1 as ID, so this indicates no bundle.
+
 		dto.id = (Long) serviceRef.getProperty(Constants.SERVICE_ID);
 		dto.properties = deepCopy( serviceRef );
 		Bundle[] usingBundles = serviceRef.getUsingBundles();

@@ -25,8 +25,6 @@ import org.junit.Test;
 
 /**
  * Test cases for {@link PatternUtil}.
- *
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class PatternUtilTest
 {
@@ -39,5 +37,22 @@ public class PatternUtilTest
         assertTrue(PatternUtil.isValidSymbolicName("abcdefghijklmnopqrstuvwyz"));
         assertTrue(PatternUtil.isValidSymbolicName("ABCDEFGHIJKLMNOPQRSTUVWXYZ"));
         assertTrue(PatternUtil.isValidSymbolicName("0123456789-_"));
+    }
+
+    @Test public void testServletPattern()
+    {
+        assertFalse(PatternUtil.isValidPattern(null));
+        assertTrue(PatternUtil.isValidPattern(""));
+        assertTrue(PatternUtil.isValidPattern("*.html"));
+        assertTrue(PatternUtil.isValidPattern("/"));
+        assertTrue(PatternUtil.isValidPattern("/test"));
+        assertTrue(PatternUtil.isValidPattern("/test/*"));
+        assertTrue(PatternUtil.isValidPattern("/foo/bar"));
+        assertTrue(PatternUtil.isValidPattern("/foo/bar/*"));
+        assertFalse(PatternUtil.isValidPattern("/*.html"));
+        assertFalse(PatternUtil.isValidPattern("/*/foo"));
+        assertFalse(PatternUtil.isValidPattern("foo"));
+        assertFalse(PatternUtil.isValidPattern("foo/bla"));
+        assertFalse(PatternUtil.isValidPattern("/test/"));
     }
 }

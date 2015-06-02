@@ -137,8 +137,14 @@
                         <Bundle-SymbolicName>org.apache.felix.connect</Bundle-SymbolicName>
                         <Bundle-Name>Pojo Service Registry</Bundle-Name>
                         <Bundle-Vendor>Apache Software Foundation</Bundle-Vendor>
-                        <Private-Package>org.osgi.framework.*, org.osgi.service.url, org.osgi.service.packageadmin,
-                            org.osgi.service.startlevel, org.osgi.util.tracker, org.apache.felix.connect.*
+                        <Private-Package>
+                            org.osgi.framework.*,
+                            org.osgi.resource,
+                            org.osgi.service.url,
+                            org.osgi.service.packageadmin,
+                            org.osgi.service.startlevel,
+                            org.osgi.util.tracker,
+                            org.apache.felix.connect.*
                         </Private-Package>
                         <Import-Package>!*</Import-Package>
                         <Include-Resource>

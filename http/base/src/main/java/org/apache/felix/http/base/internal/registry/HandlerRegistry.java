@@ -21,14 +21,13 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.servlet.DispatcherType;
 
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
-import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
-import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
 import org.osgi.service.http.runtime.dto.ServletContextDTO;
 
@@ -74,18 +73,6 @@ public final class HandlerRegistry
     }
 
     /**
-     * Add a context registration.
-     * @param info The servlet context helper info
-     */
-    public void add(@Nonnull ServletContextHelperInfo info)
-    {
-        synchronized ( this )
-        {
-            this.add(new PerContextHandlerRegistry(info));
-        }
-    }
-
-    /**
      * Remove a context registration.
      * @param info The servlet context helper info
      */
@@ -112,7 +99,7 @@ public final class HandlerRegistry
     /**
      * Add a new context registration.
      */
-    private void add(@Nonnull PerContextHandlerRegistry registry)
+    public void add(@Nonnull PerContextHandlerRegistry registry)
     {
         synchronized ( this )
         {
@@ -124,29 +111,7 @@ public final class HandlerRegistry
         }
     }
 
-    public void addFilter(@Nonnull final FilterHandler handler)
-    {
-        final PerContextHandlerRegistry reg = this.getRegistry(handler.getContextServiceId());
-        // TODO - check whether we need to handle the null case as well
-        //        it shouldn't be required as we only get here if the context exists
-        if ( reg != null )
-        {
-            reg.addFilter(handler);
-        }
-    }
-
-    public void removeFilter(final long contextId, @Nonnull final FilterInfo info, final boolean destroy)
-    {
-        final PerContextHandlerRegistry reg = this.getRegistry(contextId);
-        // TODO - check whether we need to handle the null case as well
-        //        it shouldn't be required as we only get here if the context exists
-        if ( reg != null )
-        {
-            reg.removeFilter(info, destroy);
-        }
-    }
-
-    private PerContextHandlerRegistry getRegistry(final long key)
+    public PerContextHandlerRegistry getRegistry(final long key)
     {
         final List<PerContextHandlerRegistry> list = this.registrations;
         for(final PerContextHandlerRegistry r : list)
@@ -159,7 +124,10 @@ public final class HandlerRegistry
         return null;
     }
 
-    public ServletResolution getErrorHandler(String requestURI, Long serviceId, int code, Throwable exception)
+    public @CheckForNull ServletResolution getErrorHandler(@Nonnull final String requestURI,
+            final Long serviceId,
+            final int code,
+            final Throwable exception)
     {
         final PerContextHandlerRegistry reg;
         if ( serviceId == null )
@@ -208,29 +176,6 @@ public final class HandlerRegistry
         return EMPTY_FILTER_HANDLER;
     }
 
-    public void addServlet(final ServletHandler handler)
-    {
-        final PerContextHandlerRegistry reg = this.getRegistry(handler.getContextServiceId());
-        // TODO - check whether we need to handle the null case as well
-        //        it shouldn't be required as we only get here if the context exists
-        if ( reg != null )
-        {
-            reg.addServlet(handler);
-        }
-    }
-
-    public void removeServlet(final long contextId, final ServletInfo info, final boolean destroy)
-    {
-        final PerContextHandlerRegistry reg = this.getRegistry(contextId);
-        // TODO - check whether we need to handle the null case as well
-        //        it shouldn't be required as we only get here if the context exists
-        if ( reg != null )
-        {
-            reg.removeServlet(info, destroy);
-        }
-
-    }
-
     public PathResolution resolveServlet(@Nonnull final String requestURI)
     {
         final List<PerContextHandlerRegistry> regs = this.registrations;
@@ -277,8 +222,8 @@ public final class HandlerRegistry
         return null;
     }
 
-    public boolean getRuntime(final ServletContextDTO dto,
-            final FailedDTOHolder failedDTOHolder)
+    public boolean getRuntimeInfo(@Nonnull final ServletContextDTO dto,
+            @Nonnull final FailedDTOHolder failedDTOHolder)
     {
         final PerContextHandlerRegistry reg = this.getRegistry(dto.serviceId);
         if ( reg != null )
@@ -287,5 +232,22 @@ public final class HandlerRegistry
             return true;
         }
         return false;
+    }
+
+    public PerContextHandlerRegistry getBestMatchingRegistry(String requestURI)
+    {
+        // if the context is unknown, we use the first matching one!
+        PerContextHandlerRegistry found = null;
+        final List<PerContextHandlerRegistry> regs = this.registrations;
+        for(final PerContextHandlerRegistry r : regs)
+        {
+            final String path = r.isMatching(requestURI);
+            if ( path != null )
+            {
+                found = r;
+                break;
+            }
+        }
+        return found;
     }
 }

@@ -19,9 +19,7 @@
 package org.apache.felix.http.base.internal.runtime.dto;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.registry.ErrorPageRegistry;
@@ -41,27 +39,19 @@ import org.osgi.service.http.runtime.dto.FailedServletDTO;
 public final class FailedDTOHolder
 {
 
-    public Collection<FailedFilterDTO> failedFilterDTOs = new ArrayList<FailedFilterDTO>();
+    public final List<FailedFilterDTO> failedFilterDTOs = new ArrayList<FailedFilterDTO>();
 
-    public Collection<FailedListenerDTO> failedListenerDTOs = new ArrayList<FailedListenerDTO>();
+    public final List<FailedListenerDTO> failedListenerDTOs = new ArrayList<FailedListenerDTO>();
 
-    public Collection<FailedServletDTO> failedServletDTOs = new ArrayList<FailedServletDTO>();
+    public final List<FailedServletDTO> failedServletDTOs = new ArrayList<FailedServletDTO>();
 
-    public Collection<FailedResourceDTO> failedResourceDTOs = new ArrayList<FailedResourceDTO>();
+    public final List<FailedResourceDTO> failedResourceDTOs = new ArrayList<FailedResourceDTO>();
 
-    public Collection<FailedErrorPageDTO> failedErrorPageDTOs = new ArrayList<FailedErrorPageDTO>();
+    public final List<FailedErrorPageDTO> failedErrorPageDTOs = new ArrayList<FailedErrorPageDTO>();
 
-    public Collection<FailedServletContextDTO> failedServletContextDTO = new ArrayList<FailedServletContextDTO>();
+    public final List<FailedServletContextDTO> failedServletContextDTO = new ArrayList<FailedServletContextDTO>();
 
-    public void add(Map<AbstractInfo<?>, Integer> failureInfos)
-    {
-        for (Map.Entry<AbstractInfo<?>, Integer> failureEntry : failureInfos.entrySet())
-        {
-            add(failureEntry.getKey(), failureEntry.getValue());
-        }
-    }
-
-    private void add(final AbstractInfo<?> info, final int failureCode)
+    public void add(final AbstractInfo<?> info, final long contextId, final int failureCode)
     {
         if (info instanceof ServletContextHelperInfo)
         {
@@ -77,51 +67,42 @@ public final class FailedDTOHolder
                 final FailedErrorPageDTO dto = (FailedErrorPageDTO)ErrorPageDTOBuilder.build((ServletInfo)info, true);
                 dto.failureReason = failureCode;
                 final ErrorPageRegistry.ErrorRegistration  reg = ErrorPageRegistry.getErrorRegistration((ServletInfo)info);
-                if ( !reg.errorCodes.isEmpty() )
-                {
-                    final long[] codes = new long[reg.errorCodes.size()];
-                    int index = 0;
-                    final Iterator<Long> i = reg.errorCodes.iterator();
-                    while ( i.hasNext() )
-                    {
-                        codes[index++] = i.next();
-                    }
-                    dto.errorCodes = codes;
-                }
-                if ( !reg.exceptions.isEmpty() )
-                {
-                    dto.exceptions = reg.exceptions.toArray(new String[reg.exceptions.size()]);
-                }
+                dto.errorCodes = reg.errorCodes;
+                dto.exceptions = reg.exceptions;
+                dto.servletContextId = contextId;
                 this.failedErrorPageDTOs.add(dto);
             }
 
             if ( ((ServletInfo) info).getPatterns() != null || !isError )
             {
-                final FailedServletDTO dto = (FailedServletDTO)ServletDTOBuilder.build((ServletInfo) info, true);
-                dto.failureReason = failureCode;
+                final FailedServletDTO dto = (FailedServletDTO)ServletDTOBuilder.build((ServletInfo) info, failureCode);
                 if ( ((ServletInfo) info).getPatterns() != null )
                 {
                     dto.patterns = ((ServletInfo) info).getPatterns();
                 }
+                dto.servletContextId = contextId;
                 this.failedServletDTOs.add(dto);
             }
         }
         else if (info instanceof FilterInfo)
         {
-            final FailedFilterDTO dto = (FailedFilterDTO)FilterDTOBuilder.build((FilterInfo) info, true);
+            final FailedFilterDTO dto = (FailedFilterDTO)FilterDTOBuilder.build((FilterInfo) info, failureCode);
             dto.failureReason = failureCode;
 
+            dto.servletContextId = contextId;
             this.failedFilterDTOs.add(dto);
         }
         else if (info instanceof ResourceInfo)
         {
             final FailedResourceDTO dto = (FailedResourceDTO)ResourceDTOBuilder.build((ResourceInfo) info, true);
             dto.failureReason = failureCode;
+            dto.servletContextId = contextId;
             this.failedResourceDTOs.add(dto);
         }
         else if (info instanceof ListenerInfo)
         {
-            final FailedListenerDTO dto = (FailedListenerDTO)ListenerDTOBuilder.build((ListenerInfo<?>)info, failureCode);
+            final FailedListenerDTO dto = (FailedListenerDTO)ListenerDTOBuilder.build((ListenerInfo)info, failureCode);
+            dto.servletContextId = contextId;
             this.failedListenerDTOs.add(dto);
         }
         else

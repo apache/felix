@@ -21,6 +21,7 @@ package org.apache.felix.http.base.internal.runtime;
 import java.util.Collections;
 import java.util.Map;
 
+import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.apache.felix.http.base.internal.util.PatternUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.context.ServletContextHelper;
@@ -54,11 +55,11 @@ public final class ServletContextHelperInfo extends AbstractInfo<ServletContextH
         this.initParams = getInitParams(ref, CONTEXT_INIT_PREFIX);
     }
 
-    public ServletContextHelperInfo(int serviceRanking,
-            long serviceId,
-            String name,
-            String path,
-            Map<String, String> initParams)
+    public ServletContextHelperInfo(final int serviceRanking,
+            final long serviceId,
+            final String name,
+            final String path,
+            final Map<String, String> initParams)
     {
         super(serviceRanking, serviceId);
         this.name = name;
@@ -88,6 +89,7 @@ public final class ServletContextHelperInfo extends AbstractInfo<ServletContextH
     {
         return super.isValid()
                 && PatternUtil.isValidSymbolicName(this.name)
+                && !HttpServiceFactory.HTTP_SERVICE_CONTEXT_NAME.equals(this.name)
                 && isValidPath();
     }
 

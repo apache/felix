@@ -22,11 +22,54 @@ import java.util.StringTokenizer;
 
 /**
  * Some convenience utilities to deal with path patterns.
- *
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class PatternUtil
+public abstract class PatternUtil
 {
+
+    /**
+     * Check for valid servlet pattern
+     * @param pattern The pattern
+     * @return {@code true} if its valid
+     */
+    public static boolean isValidPattern(final String pattern)
+    {
+        if ( pattern == null )
+        {
+            return false;
+        }
+        if ( pattern.indexOf("?") != -1 )
+        {
+            return false;
+        }
+        // default and root
+        if ( pattern.length() == 0 || pattern.equals("/") )
+        {
+            return true;
+        }
+        // extension
+        if ( pattern.startsWith("*.") )
+        {
+            return pattern.indexOf("/") == -1;
+        }
+        if ( !pattern.startsWith("/") )
+        {
+            return false;
+        }
+        final int pos = pattern.indexOf('*');
+        if ( pos != -1 && pos < pattern.length() - 1 )
+        {
+            return false;
+        }
+        if ( pos != -1 && pattern.charAt(pos - 1) != '/')
+        {
+            return false;
+        }
+        if ( pattern.charAt(pattern.length() - 1) == '/')
+        {
+            return false;
+        }
+        return true;
+    }
 
     // check for valid symbolic name
     public static boolean isValidSymbolicName(final String name)

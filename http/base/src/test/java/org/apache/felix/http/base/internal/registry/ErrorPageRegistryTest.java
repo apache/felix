@@ -28,7 +28,6 @@ import static org.mockito.Mockito.when;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.Servlet;
@@ -52,8 +51,8 @@ import org.osgi.service.http.runtime.dto.FailedErrorPageDTO;
 import org.osgi.service.http.runtime.dto.ServletContextDTO;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
-public class ErrorPageRegistryTest {
-
+public class ErrorPageRegistryTest
+{
     private void assertEmpty(final ServletContextDTO dto, final FailedDTOHolder holder)
     {
         assertNull(dto.servletDTOs);
@@ -77,10 +76,7 @@ public class ErrorPageRegistryTest {
         final FailedDTOHolder holder = new FailedDTOHolder();
         final ServletContextDTO dto = new ServletContextDTO();
 
-        final Map<ServletInfo, ErrorPageRegistry.ErrorRegistrationStatus> status = reg.getStatusMapping();
         // empty reg
-        assertEquals(0, status.size());
-        // check DTO
         reg.getRuntimeInfo(dto, holder.failedErrorPageDTOs);
         assertEmpty(dto, holder);
 
@@ -91,22 +87,17 @@ public class ErrorPageRegistryTest {
         verify(h1.getServlet()).init(Matchers.any(ServletConfig.class));
 
         // one entry in reg
-        assertEquals(1, status.size());
-        assertNotNull(status.get(h1.getServletInfo()));
-        assertEquals(1, status.get(h1.getServletInfo()).exceptionMapping.size());
-        assertEquals(-1, (int)status.get(h1.getServletInfo()).exceptionMapping.get("java.io.IOException"));
-        assertEquals(1, status.get(h1.getServletInfo()).errorCodeMapping.size());
-        assertEquals(-1, (int)status.get(h1.getServletInfo()).errorCodeMapping.get(404L));
-
-        // check DTO
         clear(dto, holder);
         reg.getRuntimeInfo(dto, holder.failedErrorPageDTOs);
         assertNull(dto.resourceDTOs);
         assertNull(dto.servletDTOs);
         assertNotNull(dto.errorPageDTOs);
         assertEquals(1, dto.errorPageDTOs.length);
+        assertEquals(1L, dto.errorPageDTOs[0].serviceId);
         assertEquals(1, dto.errorPageDTOs[0].errorCodes.length);
         assertEquals(404, dto.errorPageDTOs[0].errorCodes[0]);
+        assertEquals(1, dto.errorPageDTOs[0].exceptions.length);
+        assertEquals("java.io.IOException", dto.errorPageDTOs[0].exceptions[0]);
         assertTrue(holder.failedErrorPageDTOs.isEmpty());
 
         // test error handling
@@ -122,8 +113,6 @@ public class ErrorPageRegistryTest {
         verify(s).destroy();
 
         // empty again
-        assertEquals(0, status.size());
-        // check DTO
         clear(dto, holder);
         reg.getRuntimeInfo(dto, holder.failedErrorPageDTOs);
         assertEmpty(dto, holder);
@@ -136,9 +125,6 @@ public class ErrorPageRegistryTest {
         final FailedDTOHolder holder = new FailedDTOHolder();
         final ServletContextDTO dto = new ServletContextDTO();
 
-        final Map<ServletInfo, ErrorPageRegistry.ErrorRegistrationStatus> status = reg.getStatusMapping();
-        // empty reg
-        assertEquals(0, status.size());
         // check DTO
         reg.getRuntimeInfo(dto, holder.failedErrorPageDTOs);
         assertEmpty(dto, holder);
@@ -152,53 +138,34 @@ public class ErrorPageRegistryTest {
         verify(h1.getServlet()).init(Matchers.any(ServletConfig.class));
         verify(h2.getServlet()).init(Matchers.any(ServletConfig.class));
 
-        // two entries in reg
-        assertEquals(2, status.size());
-        assertNotNull(status.get(h1.getServletInfo()));
-        assertEquals(1, status.get(h1.getServletInfo()).exceptionMapping.size());
-        assertEquals(-1, (int)status.get(h1.getServletInfo()).exceptionMapping.get("java.io.IOException"));
-        assertEquals(1, status.get(h1.getServletInfo()).errorCodeMapping.size());
-        assertEquals(DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE, (int)status.get(h1.getServletInfo()).errorCodeMapping.get(404L));
-        assertNotNull(status.get(h2.getServletInfo()));
-        assertEquals(1, status.get(h2.getServletInfo()).exceptionMapping.size());
-        assertEquals(-1, (int)status.get(h2.getServletInfo()).exceptionMapping.get("some.other.Exception"));
-        assertEquals(1, status.get(h2.getServletInfo()).errorCodeMapping.size());
-        assertEquals(-1, (int)status.get(h2.getServletInfo()).errorCodeMapping.get(404L));
-
-        // check DTO
+        // two entries in DTO
         clear(dto, holder);
         reg.getRuntimeInfo(dto, holder.failedErrorPageDTOs);
+
         assertNull(dto.resourceDTOs);
         assertNull(dto.servletDTOs);
         assertNotNull(dto.errorPageDTOs);
         assertEquals(2, dto.errorPageDTOs.length);
-        assertEquals(0, dto.errorPageDTOs[0].errorCodes.length);
-        assertEquals(1, dto.errorPageDTOs[1].errorCodes.length);
-        assertEquals(404, dto.errorPageDTOs[1].errorCodes[0]);
-        assertEquals(1, dto.errorPageDTOs[0].exceptions.length);
+        assertEquals(0, dto.errorPageDTOs[1].errorCodes.length);
+        assertEquals(1, dto.errorPageDTOs[0].errorCodes.length);
+        assertEquals(404, dto.errorPageDTOs[0].errorCodes[0]);
         assertEquals(1, dto.errorPageDTOs[1].exceptions.length);
-        assertEquals("java.io.IOException", dto.errorPageDTOs[0].exceptions[0]);
-        assertEquals("some.other.Exception", dto.errorPageDTOs[1].exceptions[0]);
+        assertEquals(1, dto.errorPageDTOs[0].exceptions.length);
+        assertEquals("java.io.IOException", dto.errorPageDTOs[1].exceptions[0]);
+        assertEquals("some.other.Exception", dto.errorPageDTOs[0].exceptions[0]);
         assertEquals(1, holder.failedErrorPageDTOs.size());
-        assertEquals(1L, holder.failedErrorPageDTOs.iterator().next().serviceId);
-        assertEquals(1, holder.failedErrorPageDTOs.iterator().next().errorCodes.length);
-        assertEquals(404, holder.failedErrorPageDTOs.iterator().next().errorCodes[0]);
-        assertEquals(0, holder.failedErrorPageDTOs.iterator().next().exceptions.length);
+        assertEquals(1L, holder.failedErrorPageDTOs.get(0).serviceId);
+        assertEquals(1, holder.failedErrorPageDTOs.get(0).errorCodes.length);
+        assertEquals(404, holder.failedErrorPageDTOs.get(0).errorCodes[0]);
+        assertEquals(0, holder.failedErrorPageDTOs.get(0).exceptions.length);
+        assertEquals(DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE, holder.failedErrorPageDTOs.get(0).failureReason);
 
         // remove second page
         final Servlet s2 = h2.getServlet();
         reg.removeServlet(h2.getServletInfo(), true);
         verify(s2).destroy();
 
-        // one entry in reg
-        assertEquals(1, status.size());
-        assertNotNull(status.get(h1.getServletInfo()));
-        assertEquals(1, status.get(h1.getServletInfo()).exceptionMapping.size());
-        assertEquals(-1, (int)status.get(h1.getServletInfo()).exceptionMapping.get("java.io.IOException"));
-        assertEquals(1, status.get(h1.getServletInfo()).errorCodeMapping.size());
-        assertEquals(-1, (int)status.get(h1.getServletInfo()).errorCodeMapping.get(404L));
-
-        // check DTO
+        // one entry in DTO
         clear(dto, holder);
         reg.getRuntimeInfo(dto, holder.failedErrorPageDTOs);
         assertNull(dto.resourceDTOs);
@@ -207,6 +174,8 @@ public class ErrorPageRegistryTest {
         assertEquals(1, dto.errorPageDTOs.length);
         assertEquals(1, dto.errorPageDTOs[0].errorCodes.length);
         assertEquals(404, dto.errorPageDTOs[0].errorCodes[0]);
+        assertEquals(1, dto.errorPageDTOs[0].exceptions.length);
+        assertEquals("java.io.IOException", dto.errorPageDTOs[0].exceptions[0]);
         assertTrue(holder.failedErrorPageDTOs.isEmpty());
 
         // test error handling
@@ -222,8 +191,6 @@ public class ErrorPageRegistryTest {
         verify(s1).destroy();
 
         // empty again
-        assertEquals(0, status.size());
-        // check DTO
         clear(dto, holder);
         reg.getRuntimeInfo(dto, holder.failedErrorPageDTOs);
         assertEmpty(dto, holder);
@@ -281,9 +248,9 @@ public class ErrorPageRegistryTest {
 
         assertEquals(1, holder.failedErrorPageDTOs.size());
         assertEquals(2, dto.errorPageDTOs.length);
-        assertEquals(98, dto.errorPageDTOs[0].errorCodes.length);
+        assertEquals(98, dto.errorPageDTOs[1].errorCodes.length);
         final Set<Long> codes4 = new HashSet<Long>();
-        for(final long c : dto.errorPageDTOs[0].errorCodes)
+        for(final long c : dto.errorPageDTOs[1].errorCodes)
         {
             assertTrue(c >= 400 && c < 500);
             codes4.add(c);
@@ -291,9 +258,9 @@ public class ErrorPageRegistryTest {
         assertEquals(98, codes4.size());
         assertFalse(codes4.contains(404L));
         assertFalse(codes4.contains(403L));
-        assertEquals(2, dto.errorPageDTOs[1].errorCodes.length);
+        assertEquals(2, dto.errorPageDTOs[0].errorCodes.length);
         final Set<Long> codes = new HashSet<Long>();
-        for(final long c : dto.errorPageDTOs[1].errorCodes)
+        for(final long c : dto.errorPageDTOs[0].errorCodes)
         {
             assertTrue(c >= 403 && c < 405);
             codes.add(c);

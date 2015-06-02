@@ -16,27 +16,27 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
-import javax.servlet.Servlet;
+import java.util.EventListener;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.runtime.ListenerInfo;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 
 /**
- * Servlet handler for servlets registered through the http whiteboard.
+ * Listener handler for listeners registered through the http whiteboard.
  */
-public final class WhiteboardServletHandler extends ServletHandler
+public final class WhiteboardListenerHandler extends ListenerHandler
 {
     private final BundleContext bundleContext;
 
-    public WhiteboardServletHandler(final long contextServiceId,
+    public WhiteboardListenerHandler(final long contextServiceId,
             final ExtServletContext context,
-            final ServletInfo servletInfo,
+            final ListenerInfo listenerInfo,
             final BundleContext bundleContext)
     {
-        super(contextServiceId, context, servletInfo);
+        super(contextServiceId, context, listenerInfo);
         this.bundleContext = bundleContext;
     }
 
@@ -49,19 +49,19 @@ public final class WhiteboardServletHandler extends ServletHandler
             return -1;
         }
 
-        final ServiceReference<Servlet> serviceReference = getServletInfo().getServiceReference();
-        final ServiceObjects<Servlet> so = this.bundleContext.getServiceObjects(serviceReference);
+        final ServiceReference<EventListener> serviceReference = getListenerInfo().getServiceReference();
+        final ServiceObjects<EventListener> so = this.bundleContext.getServiceObjects(serviceReference);
 
-        this.setServlet((so == null ? null : so.getService()));
+        this.setListener((so == null ? null : so.getService()));
 
         final int reason = super.init();
         if ( reason != -1 )
         {
             if ( so != null )
             {
-                so.ungetService(this.getServlet());
+                so.ungetService(this.getListener());
             }
-            this.setServlet(null);
+            this.setListener(null);
         }
         return reason;
     }
@@ -69,13 +69,13 @@ public final class WhiteboardServletHandler extends ServletHandler
     @Override
     public boolean destroy()
     {
-        final Servlet s = this.getServlet();
+        final EventListener s = this.getListener();
         if ( s != null )
         {
             if ( super.destroy() )
             {
 
-                final ServiceObjects<Servlet> so = this.bundleContext.getServiceObjects(getServletInfo().getServiceReference());
+                final ServiceObjects<EventListener> so = this.bundleContext.getServiceObjects(getListenerInfo().getServiceReference());
                 if (so != null)
                 {
                     so.ungetService(s);

@@ -17,12 +17,16 @@
 package org.apache.felix.http.base.internal.registry;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nonnull;
@@ -41,25 +45,22 @@ import org.osgi.service.http.runtime.dto.ServletDTO;
 /**
  * The servlet registry keeps the mappings for all servlets (by using their pattern)
  * for a single servlet context.
- *
- * TODO - sort active servlet mappings by pattern length, longest first (avoids looping over all)
- *
  */
 public final class ServletRegistry
 {
-    private final Map<String, PathResolver> activeServletMappings = new ConcurrentHashMap<String, PathResolver>();
+    private volatile List<PathResolver> activeResolvers = Collections.emptyList();
 
     private final Map<String, List<ServletHandler>> inactiveServletMappings = new HashMap<String, List<ServletHandler>>();
 
-    private final Map<ServletInfo, ServletRegistrationStatus> statusMapping = new ConcurrentHashMap<ServletInfo, ServletRegistry.ServletRegistrationStatus>();
-
     private final Map<String, List<ServletHandler>> servletsByName = new ConcurrentHashMap<String, List<ServletHandler>>();
 
-    public static final class ServletRegistrationStatus
+    private static final class RegistrationStatus
     {
-        public final Map<String, Integer> pathToStatus = new ConcurrentHashMap<String, Integer>();
         public ServletHandler handler;
+        public Map<Integer, String[]> statusToPath = new HashMap<Integer, String[]>();
     }
+
+    private volatile Map<ServletInfo, RegistrationStatus> mapping = Collections.emptyMap();
 
     /**
      * Resolve a request uri
@@ -69,20 +70,30 @@ public final class ServletRegistry
      */
     public PathResolution resolve(@Nonnull final String relativeRequestURI)
     {
-        PathResolver resolver = null;
-        PathResolution candidate = null;
-        for(final Map.Entry<String, PathResolver> entry : this.activeServletMappings.entrySet())
+        final List<PathResolver> resolvers = this.activeResolvers;
+        for(final PathResolver entry : resolvers)
         {
-            final PathResolution pr = entry.getValue().resolve(relativeRequestURI);
-            if ( pr != null && (resolver == null || entry.getValue().compareTo(resolver) < 0) )
+            final PathResolution pr = entry.resolve(relativeRequestURI);
+            if ( pr != null )
             {
                 // TODO - we should have all patterns under which this servlet is actively registered
-                pr.patterns = new String[] {entry.getKey()};
-                candidate = pr;
-                resolver = entry.getValue();
+                pr.patterns = new String[] {entry.getPattern()};
+                return pr;
             }
         }
-        return candidate;
+        return null;
+    }
+
+    private PathResolver findResolver(final List<PathResolver> resolvers, final String pattern)
+    {
+        for(final PathResolver pr : resolvers)
+        {
+            if ( pr.getPattern().equals(pattern) )
+            {
+                return pr;
+            }
+        }
+        return null;
     }
 
     /**
@@ -96,25 +107,41 @@ public final class ServletRegistry
         // Can be null in case of error-handling servlets...
         if ( handler.getServletInfo().getPatterns() != null )
         {
-            final ServletRegistrationStatus status = new ServletRegistrationStatus();
+            final Map<ServletInfo, RegistrationStatus> newMap = new TreeMap<ServletInfo, ServletRegistry.RegistrationStatus>(this.mapping);
+
+            final List<PathResolver> resolvers = new ArrayList<PathResolver>(this.activeResolvers);
+
+            final RegistrationStatus status = new RegistrationStatus();
             status.handler = handler;
 
             boolean isActive = false;
+            // used for detecting duplicates
+            final Set<String> patterns = new HashSet<String>();
             for(final String pattern : handler.getServletInfo().getPatterns())
             {
-                final PathResolver regHandler = this.activeServletMappings.get(pattern);
+                if ( patterns.contains(pattern) )
+                {
+                    continue;
+                }
+                patterns.add(pattern);
+                final PathResolver regHandler = findResolver(resolvers, pattern);
                 if ( regHandler != null )
                 {
                     if ( regHandler.getServletHandler().getServletInfo().compareTo(handler.getServletInfo()) > 0 )
                     {
                         // replace if no error with new servlet
-                        if ( this.tryToActivate(pattern, handler, status) )
+                        if ( this.tryToActivate(resolvers, pattern, handler, status, regHandler) )
                         {
                             isActive = true;
                             final String oldName = regHandler.getServletHandler().getName();
                             regHandler.getServletHandler().destroy();
 
-                            this.addToInactiveList(pattern, regHandler.getServletHandler(), this.statusMapping.get(regHandler.getServletHandler().getServletInfo()));
+                            final RegistrationStatus oldStatus = newMap.get(regHandler.getServletHandler().getServletInfo());
+                            final RegistrationStatus newOldStatus = new RegistrationStatus();
+                            newOldStatus.handler = oldStatus.handler;
+                            newOldStatus.statusToPath = new HashMap<Integer, String[]>(oldStatus.statusToPath);
+                            newMap.put(regHandler.getServletHandler().getServletInfo(), newOldStatus);
+                            this.addToInactiveList(pattern, regHandler.getServletHandler(), newOldStatus);
 
                             if ( regHandler.getServletHandler().getServlet() == null )
                             {
@@ -131,17 +158,20 @@ public final class ServletRegistry
                 else
                 {
                     // add to active
-                    if ( this.tryToActivate(pattern, handler, status) )
+                    if ( this.tryToActivate(resolvers, pattern, handler, status, null) )
                     {
                         isActive = true;
                     }
                 }
             }
-            this.statusMapping.put(handler.getServletInfo(), status);
+            newMap.put(handler.getServletInfo(), status);
             if ( isActive )
             {
                 addToNameMapping(handler);
             }
+            Collections.sort(resolvers);
+            this.activeResolvers = resolvers;
+            this.mapping = newMap;
         }
     }
 
@@ -204,12 +234,23 @@ public final class ServletRegistry
     {
         if ( info.getPatterns() != null )
         {
-            this.statusMapping.remove(info);
+            final List<PathResolver> resolvers = new ArrayList<PathResolver>(this.activeResolvers);
+
+            final Map<ServletInfo, RegistrationStatus> newMap = new TreeMap<ServletInfo, ServletRegistry.RegistrationStatus>(this.mapping);
+            newMap.remove(info);
+
             ServletHandler cleanupHandler = null;
 
+            // used for detecting duplicates
+            final Set<String> patterns = new HashSet<String>();
             for(final String pattern : info.getPatterns())
             {
-                final PathResolver regHandler = this.activeServletMappings.get(pattern);
+                if ( patterns.contains(pattern) )
+                {
+                    continue;
+                }
+                patterns.add(pattern);
+                final PathResolver regHandler = this.findResolver(resolvers, pattern);
                 if ( regHandler != null && regHandler.getServletHandler().getServletInfo().equals(info) )
                 {
                     cleanupHandler = regHandler.getServletHandler();
@@ -218,7 +259,7 @@ public final class ServletRegistry
                     final List<ServletHandler> inactiveList = this.inactiveServletMappings.get(pattern);
                     if ( inactiveList == null )
                     {
-                        this.activeServletMappings.remove(pattern);
+                        resolvers.remove(regHandler);
                     }
                     else
                     {
@@ -227,7 +268,13 @@ public final class ServletRegistry
                         {
                             final ServletHandler h = inactiveList.remove(0);
                             boolean activate = h.getServlet() == null;
-                            done = this.tryToActivate(pattern, h, this.statusMapping.get(h.getServletInfo()));
+                            final RegistrationStatus oldStatus = newMap.get(h.getServletInfo());
+                            final RegistrationStatus newOldStatus = new RegistrationStatus();
+                            newOldStatus.handler = oldStatus.handler;
+                            newOldStatus.statusToPath = new HashMap<Integer, String[]>(oldStatus.statusToPath);
+                            newMap.put(h.getServletInfo(), newOldStatus);
+                            removePattern(newOldStatus, DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE, pattern);
+                            done = this.tryToActivate(resolvers, pattern, h, newOldStatus, regHandler);
                             if ( !done )
                             {
                                 done = inactiveList.isEmpty();
@@ -270,6 +317,10 @@ public final class ServletRegistry
                 }
             }
 
+            Collections.sort(resolvers);
+            this.activeResolvers = resolvers;
+            this.mapping = newMap;
+
             if ( cleanupHandler != null )
             {
                 cleanupHandler.dispose();
@@ -277,7 +328,15 @@ public final class ServletRegistry
         }
     }
 
-    private void addToInactiveList(final String pattern, final ServletHandler handler, final ServletRegistrationStatus status)
+    public synchronized void cleanup()
+    {
+        this.activeResolvers = Collections.emptyList();
+        this.inactiveServletMappings.clear();
+        this.servletsByName.clear();
+        this.mapping = Collections.emptyMap();
+    }
+
+    private void addToInactiveList(final String pattern, final ServletHandler handler, final RegistrationStatus status)
     {
         List<ServletHandler> inactiveList = this.inactiveServletMappings.get(pattern);
         if ( inactiveList == null )
@@ -287,33 +346,66 @@ public final class ServletRegistry
         }
         inactiveList.add(handler);
         Collections.sort(inactiveList);
-        status.pathToStatus.put(pattern, DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
+        removePattern(status, -1, pattern);
+        addPattern(status, DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE, pattern);
     }
 
-    private boolean tryToActivate(final String pattern, final ServletHandler handler, final ServletRegistrationStatus status)
+    private boolean tryToActivate(final List<PathResolver> resolvers,
+            final String pattern,
+            final ServletHandler handler,
+            final RegistrationStatus status,
+            final PathResolver oldResolver)
     {
         // add to active
         final int result = handler.init();
         if ( result == -1 )
         {
-            final PathResolver reg = PathResolverFactory.createPatternMatcher(handler, pattern);
-            this.activeServletMappings.put(pattern, reg);
+            if ( oldResolver != null )
+            {
+                resolvers.remove(oldResolver);
+            }
+            final PathResolver resolver = PathResolverFactory.createPatternMatcher(handler, pattern);
+            resolvers.add(resolver);
+        }
+        // update status
+        addPattern(status, result, pattern);
+        return result == -1;
+    }
 
-            // add ok
-            status.pathToStatus.put(pattern, result);
-            return true;
+    private void addPattern(final RegistrationStatus status, final int failureCode, final String pattern)
+    {
+        String[] paths = status.statusToPath.get(failureCode);
+        if ( paths == null )
+        {
+            status.statusToPath.put(failureCode, new String[] {pattern});
         }
         else
         {
-            // add to failure
-            status.pathToStatus.put(pattern, result);
-            return false;
+            final String[] newPaths = new String[paths.length + 1];
+            System.arraycopy(paths, 0, newPaths, 0, paths.length);
+            newPaths[paths.length] = pattern;
+            status.statusToPath.put(failureCode, newPaths);
         }
     }
 
-    Map<ServletInfo, ServletRegistrationStatus> getServletStatusMapping()
+    private void removePattern(final RegistrationStatus status, final int failureCode, final String pattern)
     {
-        return this.statusMapping;
+        String[] paths = status.statusToPath.get(failureCode);
+        if ( paths != null )
+        {
+            final List<String> array = new ArrayList<String>(Arrays.asList(paths));
+            if ( array.remove(pattern) )
+            {
+                if ( array.isEmpty() )
+                {
+                    status.statusToPath.remove(failureCode);
+                }
+                else
+                {
+                    status.statusToPath.put(failureCode, array.toArray(new String[array.size()]));
+                }
+            }
+        }
     }
 
     public ServletHandler resolveByName(final @Nonnull String name)
@@ -337,66 +429,35 @@ public final class ServletRegistry
         final Map<Long, FailedServletDTO> failedServletDTOs = new HashMap<Long, FailedServletDTO>();
         final Map<Long, FailedResourceDTO> failedResourceDTOs = new HashMap<Long, FailedResourceDTO>();
 
-        // TODO we could already do some pre calculation in the ServletRegistrationStatus
-        for(final Map.Entry<ServletInfo, ServletRegistrationStatus> entry : statusMapping.entrySet())
+        for(final Map.Entry<ServletInfo, RegistrationStatus> entry : mapping.entrySet())
         {
             final long serviceId = entry.getKey().getServiceId();
-            for(final Map.Entry<String, Integer> map : entry.getValue().pathToStatus.entrySet())
+            for(final Map.Entry<Integer, String[]> map : entry.getValue().statusToPath.entrySet())
             {
-                if ( !entry.getKey().isResource() )
+                if ( entry.getKey().isResource() )
                 {
-                    ServletDTO state = (map.getValue() == -1 ? servletDTOs.get(serviceId) : failedServletDTOs.get(serviceId));
-                    if ( state == null )
+                    final ResourceDTO state = ResourceDTOBuilder.build(entry.getValue().handler, map.getKey());
+                    state.patterns = Arrays.copyOf(map.getValue(), map.getValue().length);
+                    if ( map.getKey() == -1 )
                     {
-                        state = ServletDTOBuilder.build(entry.getValue().handler, map.getValue());
-                        if ( map.getValue() == -1 )
-                        {
-                            servletDTOs.put(serviceId, state);
-                        }
-                        else
-                        {
-                            failedServletDTOs.put(serviceId, (FailedServletDTO)state);
-                        }
-                    }
-                    String[] patterns = state.patterns;
-                    if ( patterns.length ==  0 )
-                    {
-                        state.patterns = new String[] {map.getKey()};
+                        resourceDTOs.put(serviceId, state);
                     }
                     else
                     {
-                        patterns = new String[patterns.length + 1];
-                        System.arraycopy(state.patterns, 0, patterns, 0, patterns.length - 1);
-                        patterns[patterns.length - 1] = map.getKey();
-                        state.patterns = patterns;
+                        failedResourceDTOs.put(serviceId, (FailedResourceDTO)state);
                     }
                 }
                 else
                 {
-                    ResourceDTO state = (map.getValue() == -1 ? resourceDTOs.get(serviceId) : failedResourceDTOs.get(serviceId));
-                    if ( state == null )
+                    final ServletDTO state = ServletDTOBuilder.build(entry.getValue().handler, map.getKey());
+                    state.patterns = Arrays.copyOf(map.getValue(), map.getValue().length);
+                    if ( map.getKey() == -1 )
                     {
-                        state = ResourceDTOBuilder.build(entry.getValue().handler, map.getValue());
-                        if ( map.getValue() == -1 )
-                        {
-                            resourceDTOs.put(serviceId, state);
-                        }
-                        else
-                        {
-                            failedResourceDTOs.put(serviceId, (FailedResourceDTO)state);
-                        }
-                    }
-                    String[] patterns = state.patterns;
-                    if ( patterns.length ==  0 )
-                    {
-                        state.patterns = new String[] {map.getKey()};
+                        servletDTOs.put(serviceId, state);
                     }
                     else
                     {
-                        patterns = new String[patterns.length + 1];
-                        System.arraycopy(state.patterns, 0, patterns, 0, patterns.length - 1);
-                        patterns[patterns.length - 1] = map.getKey();
-                        state.patterns = patterns;
+                        failedServletDTOs.put(serviceId, (FailedServletDTO)state);
                     }
                 }
             }

@@ -93,10 +93,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 
     @Override
     public boolean needsInstance() {
-    	// we need the component instances even if there is a callback instance, which could need to access to
-    	// component instances while being invoked in the updated callback. So we return true here, even if there
-    	// is a configured callback instance.
-        return true; 
+        return m_callbackInstance == null;
     }
 
     @Override

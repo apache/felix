@@ -23,7 +23,7 @@ import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 
 /**
- * Servlet holder for filters registered through the ext http service.
+ * Servlet handler for filters registered through the ext http service.
  */
 public final class HttpServiceFilterHandler extends FilterHandler
 {

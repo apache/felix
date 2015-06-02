@@ -43,6 +43,7 @@ import javax.servlet.http.HttpSessionAttributeListener;
 import javax.servlet.http.HttpSessionListener;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
+import org.apache.felix.http.base.internal.registry.EventListenerRegistry;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.service.http.context.ServletContextHelper;
@@ -58,17 +59,17 @@ public class PerBundleServletContextImpl implements ExtServletContext {
     private final Bundle bundle;
     private final ServletContext delegatee;
     private final ServletContextHelper contextHelper;
-    private final PerContextEventListener eventListener;
+    private final EventListenerRegistry eventListenerRegistry;
 
     public PerBundleServletContextImpl(final Bundle bundle,
             final ServletContext sharedContext,
             final ServletContextHelper delegatee,
-            final PerContextEventListener eventListener)
+            final EventListenerRegistry eventListenerRegistry)
     {
         this.bundle = bundle;
         this.delegatee = sharedContext;
         this.contextHelper = delegatee;
-        this.eventListener = eventListener;
+        this.eventListenerRegistry = eventListenerRegistry;
     }
 
     @Override
@@ -82,25 +83,25 @@ public class PerBundleServletContextImpl implements ExtServletContext {
     @Override
     public HttpSessionListener getHttpSessionListener()
     {
-        return this.eventListener;
+        return this.eventListenerRegistry;
     }
 
     @Override
     public HttpSessionAttributeListener getHttpSessionAttributeListener()
     {
-        return this.eventListener;
+        return this.eventListenerRegistry;
     }
 
     @Override
     public ServletRequestListener getServletRequestListener()
     {
-        return this.eventListener;
+        return this.eventListenerRegistry;
     }
 
     @Override
     public ServletRequestAttributeListener getServletRequestAttributeListener()
     {
-        return this.eventListener;
+        return this.eventListenerRegistry;
     }
 
     @Override

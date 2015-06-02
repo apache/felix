@@ -34,6 +34,8 @@ import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import javax.servlet.AsyncContext;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterChain;
@@ -56,6 +58,7 @@ import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.registry.PathResolution;
+import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.registry.ServletResolution;
 import org.apache.felix.http.base.internal.util.UriUtils;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
@@ -133,25 +136,19 @@ public final class Dispatcher implements RequestDispatcherProvider
 
         private final AtomicInteger invocationCount = new AtomicInteger();
 
-        private final Long serviceId;
+        private final PerContextHandlerRegistry errorRegistry;
 
         private final String servletName;
 
-        public ServletResponseWrapper(final HttpServletRequest req, final HttpServletResponse res,
-                final ServletHandler servletHandler)
+        public ServletResponseWrapper(@Nonnull final HttpServletRequest req,
+                @Nonnull final HttpServletResponse res,
+                @CheckForNull final String servletName,
+                @CheckForNull final PerContextHandlerRegistry errorRegistry)
         {
             super(res);
             this.request = req;
-            if ( servletHandler != null )
-            {
-                this.serviceId = servletHandler.getContextServiceId();
-                this.servletName = servletHandler.getName();
-            }
-            else
-            {
-                this.serviceId = null;
-                this.servletName = null;
-            }
+            this.servletName = servletName;
+            this.errorRegistry = errorRegistry;
         }
 
         @Override
@@ -178,7 +175,8 @@ public final class Dispatcher implements RequestDispatcherProvider
                     code >= SC_OK)
                 {
                     final Throwable exception = (Throwable)request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
-                    final ServletResolution errorResolution = handlerRegistry.getErrorHandler(request.getRequestURI(), this.serviceId, code, exception);
+                    final ServletHandler errorResolution = (errorRegistry == null ? null :
+                            errorRegistry.getErrorHandler(code, exception));
 
                     if ( errorResolution != null )
                     {
@@ -201,10 +199,10 @@ public final class Dispatcher implements RequestDispatcherProvider
 
                             final RequestInfo requestInfo = new RequestInfo(servletPath, pathInfo, queryString);
 
-                            final FilterHandler[] filterHandlers = handlerRegistry.getFilters(errorResolution, DispatcherType.ERROR, request.getRequestURI());
+                            final FilterHandler[] filterHandlers = errorRegistry.getFilterHandlers(errorResolution, DispatcherType.ERROR, request.getRequestURI());
 
                             // TODO - is async = false correct?
-                            invokeChain(errorResolution.handler, filterHandlers, new ServletRequestWrapper(request, errorResolution.handler.getContext(), requestInfo, this.serviceId, false), this);
+                            invokeChain(errorResolution, filterHandlers, new ServletRequestWrapper(request, errorResolution.getContext(), requestInfo, errorResolution.getContextServiceId(), false), this);
 
                             invokeSuper = false;
                         }
@@ -236,10 +234,10 @@ public final class Dispatcher implements RequestDispatcherProvider
         private final DispatcherType type;
         private final RequestInfo requestInfo;
         private final ExtServletContext servletContext;
-        private final Long contextId;
+        private final long contextId;
         private final boolean asyncSupported;
 
-        public ServletRequestWrapper(HttpServletRequest req, ExtServletContext servletContext, RequestInfo requestInfo, final Long contextId,
+        public ServletRequestWrapper(HttpServletRequest req, ExtServletContext servletContext, RequestInfo requestInfo, final long contextId,
                 final boolean asyncSupported)
         {
             this(req, servletContext, requestInfo, null /* type */, contextId, asyncSupported);
@@ -370,10 +368,6 @@ public final class Dispatcher implements RequestDispatcherProvider
         @Override
         public RequestDispatcher getRequestDispatcher(String path)
         {
-            if ( this.contextId == null )
-            {
-                return null;
-            }
             // See section 9.1 of Servlet 3.0 specification...
             if (path == null)
             {
@@ -592,8 +586,9 @@ public final class Dispatcher implements RequestDispatcherProvider
         // Determine which servlet we should forward the request to...
         final PathResolution pr = this.handlerRegistry.resolveServlet(requestURI);
 
-        final HttpServletResponse wrappedResponse = new ServletResponseWrapper(req, res,
-                pr == null ? null : pr.handler);
+        final PerContextHandlerRegistry errorRegistry = (pr != null ? pr.handlerRegistry : this.handlerRegistry.getBestMatchingRegistry(requestURI));
+        final String servletName = (pr != null ? pr.handler.getName() : null);
+        final HttpServletResponse wrappedResponse = new ServletResponseWrapper(req, res, servletName, errorRegistry);
         if ( pr == null )
         {
             wrappedResponse.sendError(404);
@@ -634,14 +629,14 @@ public final class Dispatcher implements RequestDispatcherProvider
     }
 
     @Override
-    public RequestDispatcher getNamedDispatcher(final Long contextId, final String name)
+    public RequestDispatcher getNamedDispatcher(final long contextId, final String name)
     {
         final ServletResolution resolution = this.handlerRegistry.resolveServletByName(contextId, name);
         return resolution != null ? new RequestDispatcherImpl(resolution, null) : null;
     }
 
     @Override
-    public RequestDispatcher getRequestDispatcher(final Long contextId, String path)
+    public RequestDispatcher getRequestDispatcher(final long contextId, String path)
     {
         // See section 9.1 of Servlet 3.x specification...
         if (path == null || (!path.startsWith("/") && !"".equals(path)))

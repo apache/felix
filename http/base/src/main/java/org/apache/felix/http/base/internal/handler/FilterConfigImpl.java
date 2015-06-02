@@ -23,6 +23,9 @@ import java.util.Map;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletContext;
 
+/**
+ * Implementation of the filter configuration.
+ */
 public final class FilterConfigImpl implements FilterConfig
 {
     private final String name;
@@ -49,7 +52,7 @@ public final class FilterConfigImpl implements FilterConfig
     }
 
     @Override
-    public String getInitParameter(String name)
+    public String getInitParameter(final String name)
     {
         return this.initParams.get(name);
     }

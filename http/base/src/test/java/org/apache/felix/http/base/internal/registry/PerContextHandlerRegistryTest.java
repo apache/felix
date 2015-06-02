@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
-import org.apache.felix.http.base.internal.runtime.WhiteboardServiceHelper;
 import org.junit.Test;
 
 /**
@@ -111,6 +110,6 @@ public class PerContextHandlerRegistryTest
 
     private ServletContextHelperInfo createServletContextHelperInfo(final String path, final long serviceId, final int ranking)
     {
-        return WhiteboardServiceHelper.createContextInfo(ranking, serviceId, "", path, null);
+        return new ServletContextHelperInfo(ranking, serviceId, "", path, null);
     }
 }

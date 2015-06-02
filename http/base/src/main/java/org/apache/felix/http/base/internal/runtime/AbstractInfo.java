@@ -204,28 +204,21 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
     @Override
     public int hashCode()
     {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ranking;
-        result = prime * result + (int) (serviceId ^ (serviceId >>> 32));
-        return result;
+        return 31 + (int) (serviceId ^ (serviceId >>> 32));
     }
 
     @Override
     public boolean equals(final Object obj)
     {
         if (this == obj)
+        {
             return true;
-        if (obj == null)
+        }
+        if (obj == null || getClass() != obj.getClass())
+        {
             return false;
-        if (getClass() != obj.getClass())
-            return false;
-        @SuppressWarnings("unchecked")
-        final AbstractInfo<T> other = (AbstractInfo<T>) obj;
-        if (ranking != other.ranking)
-            return false;
-        if (serviceId != other.serviceId)
-            return false;
-        return true;
+        }
+        final AbstractInfo<?> other = (AbstractInfo<?>) obj;
+        return serviceId == other.serviceId;
     }
 }

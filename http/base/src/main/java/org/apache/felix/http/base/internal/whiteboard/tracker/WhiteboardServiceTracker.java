@@ -16,12 +16,15 @@
  */
 package org.apache.felix.http.base.internal.whiteboard.tracker;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 import org.osgi.util.tracker.ServiceTracker;
 
 /**
@@ -32,16 +35,8 @@ import org.osgi.util.tracker.ServiceTracker;
  */
 public abstract class WhiteboardServiceTracker<T> extends ServiceTracker<T, ServiceReference<T>>
 {
-    /**
-     * Create a filter expression for the specific listener.
-     */
-    public static String createListenerFilterExpression(final Class<?> listenerClass)
-    {
-        return String.format("(&(objectClass=%s)(%s=*)(!(%s~=false)))",
-                listenerClass.getName(),
-                HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER,
-                HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER);
-    }
+    /** Map containing all info objects reported from the trackers. */
+    private final Map<Long, WhiteboardServiceInfo<T>> allInfos = new ConcurrentHashMap<Long, WhiteboardServiceInfo<T>>();
 
     private static org.osgi.framework.Filter createFilter(final BundleContext btx, final String expr)
     {
@@ -73,6 +68,12 @@ public abstract class WhiteboardServiceTracker<T> extends ServiceTracker<T, Serv
     }
 
     @Override
+    public void close() {
+        super.close();
+        this.allInfos.clear();
+    }
+
+    @Override
     public final ServiceReference<T> addingService(final ServiceReference<T> ref)
     {
         this.added(ref);
@@ -100,13 +101,19 @@ public abstract class WhiteboardServiceTracker<T> extends ServiceTracker<T, Serv
     private void added(final ServiceReference<T> ref)
     {
         final WhiteboardServiceInfo<T> info = this.getServiceInfo(ref);
-        this.contextManager.addWhiteboardService(info);
+        if ( this.contextManager.addWhiteboardService(info) )
+        {
+            this.allInfos.put((Long)ref.getProperty(Constants.SERVICE_ID), info);
+        }
     }
 
     private void removed(final ServiceReference<T> ref)
     {
-        final WhiteboardServiceInfo<T> info = this.getServiceInfo(ref);
-        this.contextManager.removeWhiteboardService(info);
+        final WhiteboardServiceInfo<T> info = this.allInfos.get(ref.getProperty(Constants.SERVICE_ID));
+        if ( info != null )
+        {
+            this.contextManager.removeWhiteboardService(info);
+        }
     }
 
     /**

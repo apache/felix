@@ -45,7 +45,9 @@ public class CompositionManager {
      * @return The "main" object providing the "Provider" service.
      */
     Object create() {
-        // Here, we can instantiate our object composition and configure them using the injected Configuration ...
+        // Here, we can instantiate our objects composition and configure them using the injected Configuration ...
+        // Notice that we can also instantiate some different implementation objects, based on the what we find 
+        // from the configuration.
         m_participant1 = new ProviderParticipant1(); // possibly configure this object using our configuration
         m_participant2 = new ProviderParticipant2(); // possibly configure this object using our configuration
         m_providerImpl = new ProviderImpl(m_participant1, m_participant2);

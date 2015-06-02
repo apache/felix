@@ -18,13 +18,12 @@
  */
 package org.apache.felix.http.base.internal.runtime;
 
+import org.apache.felix.http.base.internal.util.PatternUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 /**
- *
- *
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ * Info object for a resource registration
  */
 public final class ResourceInfo extends WhiteboardServiceInfo<Object>
 {
@@ -48,8 +47,19 @@ public final class ResourceInfo extends WhiteboardServiceInfo<Object>
     @Override
     public boolean isValid()
     {
-        // TODO - do we need to check the values?
-        return super.isValid() && !isEmpty(this.patterns) && !isEmpty(this.prefix);
+        // TODO - do we need to check the prefix?
+        boolean valid = super.isValid() && !isEmpty(this.patterns) && !isEmpty(this.prefix);
+        if ( valid ) {
+            for(final String p : patterns)
+            {
+                if ( !PatternUtil.isValidPattern(p) )
+                {
+                    valid = false;
+                    break;
+                }
+            }
+        }
+        return valid;
     }
 
     public String getPrefix()

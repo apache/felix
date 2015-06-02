@@ -20,10 +20,13 @@ package org.apache.felix.http.base.internal.runtime;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.Filter;
 
+import org.apache.felix.http.base.internal.util.PatternUtil;
 import org.osgi.dto.DTO;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.runtime.dto.FilterDTO;
@@ -34,8 +37,6 @@ import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
  * <p>
  * This class only provides information used at registration time, and as such differs slightly from {@link DTO}s like, {@link FilterDTO}.
  * </p>
- *
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public final class FilterInfo extends WhiteboardServiceInfo<Filter>
 {
@@ -110,7 +111,15 @@ public final class FilterInfo extends WhiteboardServiceInfo<Filter>
             DispatcherType[] dispatchers = new DispatcherType[dispatcherNames.length];
             for (int i = 0; i < dispatchers.length; i++)
             {
-                dispatchers[i] = DispatcherType.valueOf(dispatcherNames[i].toUpperCase());
+                try
+                {
+                    dispatchers[i] = DispatcherType.valueOf(dispatcherNames[i].toUpperCase());
+                }
+                catch ( final IllegalArgumentException iae)
+                {
+                    dispatchers = null;
+                    break;
+                }
             }
             this.dispatcher = dispatchers;
         }
@@ -138,30 +147,47 @@ public final class FilterInfo extends WhiteboardServiceInfo<Filter>
         this.dispatcher = new DispatcherType[] {DispatcherType.REQUEST};
     }
 
-    FilterInfo(int serviceRanking,
-            long serviceId,
-            String name,
-            String[] patterns,
-            String[] servletNames,
-            String[] regexs,
-            boolean asyncSupported,
-            DispatcherType[] dispatcher,
-            Map<String, String> initParams)
-    {
-        super(serviceRanking, serviceId);
-        this.name = name;
-        this.patterns = patterns;
-        this.servletNames = servletNames;
-        this.regexs = regexs;
-        this.asyncSupported = asyncSupported;
-        this.dispatcher = dispatcher;
-        this.initParams = Collections.unmodifiableMap(initParams);
-    }
-
     @Override
     public boolean isValid()
     {
-        return super.isValid() && (!isEmpty(this.patterns) || !isEmpty(this.regexs) || !isEmpty(this.servletNames));
+        boolean valid = super.isValid() && (!isEmpty(this.patterns) || !isEmpty(this.regexs) || !isEmpty(this.servletNames));
+        if ( valid )
+        {
+            if ( this.patterns != null )
+            {
+                for(final String p : this.patterns)
+                {
+                    if ( !PatternUtil.isValidPattern(p) )
+                    {
+                        valid = false;
+                        break;
+                    }
+                }
+            }
+            if ( valid && this.regexs != null )
+            {
+                for(final String p : this.regexs)
+                {
+                    try
+                    {
+                        Pattern.compile(p);
+                    }
+                    catch ( final PatternSyntaxException pse)
+                    {
+                        valid = false;
+                        break;
+                    }
+                }
+            }
+        }
+        if ( valid )
+        {
+            if ( this.dispatcher == null || this.dispatcher.length == 0 )
+            {
+                valid = false;
+            }
+        }
+        return valid;
     }
 
     public String getName()

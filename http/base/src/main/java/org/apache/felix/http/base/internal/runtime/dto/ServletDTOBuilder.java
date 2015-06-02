@@ -33,14 +33,9 @@ public final class ServletDTOBuilder extends BaseServletDTOBuilder
      */
     public static ServletDTO build(final ServletHandler handler, final int reason)
     {
-        final ServletDTO dto = build(handler.getServletInfo(), reason != -1);
+        final ServletDTO dto = build(handler.getServletInfo(), reason);
 
         BaseServletDTOBuilder.fill(dto, handler);
-
-        if ( reason != -1 )
-        {
-            ((FailedServletDTO)dto).failureReason = reason;
-        }
 
         return dto;
     }
@@ -50,11 +45,16 @@ public final class ServletDTOBuilder extends BaseServletDTOBuilder
      * @param info The servlet info
      * @return A servlet DTO
      */
-    public static ServletDTO build(final ServletInfo info, final boolean failed)
+    public static ServletDTO build(final ServletInfo info, final int reason)
     {
-        final ServletDTO dto = (failed ? new FailedServletDTO() : new ServletDTO());
+        final ServletDTO dto = (reason != -1 ? new FailedServletDTO() : new ServletDTO());
 
         BaseServletDTOBuilder.fill(dto, info);
+
+        if ( reason != -1 )
+        {
+            ((FailedServletDTO)dto).failureReason = reason;
+        }
 
         dto.patterns = BuilderConstants.EMPTY_STRING_ARRAY;
 
