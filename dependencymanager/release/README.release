@@ -18,6 +18,7 @@ To create a release you must:
 
 Before you can start staging a release candidate, you must:
 
+* increment the ext.dmRelease parameter in release/build.gradle, if not already done.
 * make sure there are no dependencies on snapshots/unreleased versions;
 * create a tagged version of the sources in preparation of the release candidate.
 
