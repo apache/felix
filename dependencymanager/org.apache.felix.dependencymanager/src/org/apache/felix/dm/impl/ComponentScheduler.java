@@ -114,7 +114,7 @@ public class ComponentScheduler {
             // But if the "parallel" system property is specified, the component will use the threadpool only if it's
             // classname is starting with one of the prefixes specified in the property.
             if (parallel == null || requiresThreadPool(c, parallel)) {
-                ((ComponentContext) c).setThreadPool(execFactory.getExecutorFor(c));
+		createComponentExecutor(execFactory, c);
             }
             return true; // start the component now, possibly using the threadpool (see above).
         }
