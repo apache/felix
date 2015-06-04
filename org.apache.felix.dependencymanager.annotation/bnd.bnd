@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-Bundle-Version: 4.0.1
+Bundle-Version: 4.0.2
 -buildpath:  \
 	osgi.core;version=4.2,\
 	de.twentyeleven.skysail.org.json-osgi;version=20080701.0,\
