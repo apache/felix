@@ -71,3 +71,9 @@ javac.target:          1.7
 # Git-Descriptor:       ${system-allow-fail;git describe --dirty --always}
 # Git-SHA:              ${system-allow-fail;git rev-list -1 HEAD}
 # -diffignore:          Git-Descriptor,Git-SHA
+
+##
+# Removes some headers in order to reduce binary diff between same bundles that are not changed between subsequent releases.
+# see FELIX-4915
+#
+-removeheaders: Bnd-LastModified,Tool,Created-By
