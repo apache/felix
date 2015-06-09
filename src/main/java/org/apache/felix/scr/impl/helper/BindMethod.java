@@ -89,7 +89,7 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
     {
         /* 112.3.1 The method is searched for using the following priority
          1 - ServiceReference single parameter
-         2 - ServiceObjects single parameter (DS 1.3+ only)
+         2 - ComponentServiceObjects single parameter (DS 1.3+ only)
          3 - Service object single parameter
          4 - Service interface assignment compatible single parameter
          5 - two parameters, first the type of or assignment compatible with the service, the second Map (DS 1.1, 1.2 only)
@@ -128,7 +128,7 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
         //case 2 ComponentServiceObjects parameter
         try
         {
-            method = getServiceObjectsMethod( targetClass, acceptPrivate, acceptPackage, logger );
+            method = getComponentObjectsMethod( targetClass, acceptPrivate, acceptPackage, logger );
             if ( method != null )
             {
                 if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
@@ -346,7 +346,7 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
             { ClassUtils.SERVICE_REFERENCE_CLASS }, acceptPrivate, acceptPackage, logger );
     }
 
-    private Method getServiceObjectsMethod( final Class<?> targetClass, boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger )
+    private Method getComponentObjectsMethod( final Class<?> targetClass, boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger )
         throws SuitableMethodNotAccessibleException, InvocationTargetException
     {
         if ( m_referenceScope == ReferenceMetadata.ReferenceScope.prototype )

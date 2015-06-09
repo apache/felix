@@ -25,7 +25,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.scr.component.ExtComponentContext;
 import org.apache.felix.scr.impl.BundleComponentActivator;
-import org.apache.felix.scr.impl.helper.ClassUtils;
 import org.apache.felix.scr.impl.helper.ComponentServiceObjectsHelper;
 import org.apache.felix.scr.impl.helper.ReadOnlyDictionary;
 import org.osgi.framework.Bundle;
@@ -55,7 +54,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
 
     private final CountDownLatch accessibleLatch = new CountDownLatch(1);
 
-    private final Object serviceObjectsHelper;
+    private final ComponentServiceObjectsHelper serviceObjectsHelper;
 
     public ComponentContextImpl( SingleComponentManager<S> componentManager, Bundle usingBundle )
     {
@@ -66,22 +65,12 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         {
             edgeInfos[i] = new EdgeInfo();
         }
-        if ( ClassUtils.COMPONENTS_SERVICE_OBJECTS_CLASS != null )
-        {
-            this.serviceObjectsHelper = new ComponentServiceObjectsHelper(usingBundle.getBundleContext());
-        }
-        else
-        {
-            this.serviceObjectsHelper = null;
-        }
+        this.serviceObjectsHelper = new ComponentServiceObjectsHelper(usingBundle.getBundleContext());
     }
 
     public void cleanup()
     {
-        if ( this.serviceObjectsHelper != null )
-        {
-            ((ComponentServiceObjectsHelper)this.serviceObjectsHelper).cleanup();
-        }
+        this.serviceObjectsHelper.cleanup();
     }
 
     public Object getComponentServiceObjectsHelper()
