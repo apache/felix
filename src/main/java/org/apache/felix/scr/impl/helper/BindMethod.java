@@ -84,19 +84,23 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
      *      trying to find the requested method.
      */
     @Override
-    protected Method doFindMethod( Class<?> targetClass, boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger )
+    protected Method doFindMethod( final Class<?> targetClass, 
+    		final boolean acceptPrivate, 
+    		final boolean acceptPackage, 
+    		final SimpleLogger logger )
         throws SuitableMethodNotAccessibleException, InvocationTargetException
     {
-        /* 112.3.1 The method is searched for using the following priority
-         1 - ServiceReference single parameter
-         2 - ComponentServiceObjects single parameter (DS 1.3+ only)
-         3 - Service object single parameter
-         4 - Service interface assignment compatible single parameter
-         5 - two parameters, first the type of or assignment compatible with the service, the second Map (DS 1.1, 1.2 only)
-         6 - one or more parameters of types ServiceReference, ServiceObjects, interface type, or assignment compatible to interface type, in any order. (DS 1.3+ only)
-         */
+        // 112.3.1 The method is searched for using the following priority
+        //  1 - ServiceReference single parameter
+        //  2 - DS 1.3+ : ComponentServiceObjects single parameter
+        //  3 - Service object single parameter
+        //  4 - Service interface assignment compatible single parameter
+        //  5 - DS 1.3+ : Single argument with Map
+        //  6 - DS 1.1/DS 1.2 : two parameters, first the type of or assignment compatible with the service, the second Map
+        //  7 - DS 1.3+ : one or more parameters of types ServiceReference, ServiceObjects, interface type, 
+    	//                or assignment compatible to interface type, in any order.
 
-        // flag indicating a suitable but inaccessible method has been found
+    	// flag indicating a suitable but inaccessible method has been found
         boolean suitableMethodNotAccessible = false;
 
         if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
@@ -125,25 +129,28 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
             suitableMethodNotAccessible = true;
         }
 
-        //case 2 ComponentServiceObjects parameter
-        try
+        // Case 2 - ComponentServiceObjects parameter
+        if ( getDSVersion().isDS13() )
         {
-            method = getComponentObjectsMethod( targetClass, acceptPrivate, acceptPackage, logger );
-            if ( method != null )
-            {
-                if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
-                {
-                    logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
-                }
-                m_paramTypes = Collections.singletonList(ParamType.serviceObjects);
-                return method;
-            }
+	        try
+	        {
+	            method = getComponentObjectsMethod( targetClass, acceptPrivate, acceptPackage, logger );
+	            if ( method != null )
+	            {
+	                if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+	                {
+	                    logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
+	                }
+	                m_paramTypes = Collections.singletonList(ParamType.serviceObjects);
+	                return method;
+	            }
+	        }
+	        catch ( SuitableMethodNotAccessibleException ex )
+	        {
+	            suitableMethodNotAccessible = true;
+	        }
         }
-        catch ( SuitableMethodNotAccessibleException ex )
-        {
-            suitableMethodNotAccessible = true;
-        }
-
+        
         // for further methods we need the class of the service object
         final Class<?> parameterClass = ClassUtils.getClassFromComponentClassLoader( targetClass, m_referenceClassName, logger );
         if ( parameterClass != null )
@@ -157,13 +164,17 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
                         + parameterClass.getName(), null );
             }
 
-            // Case 2 - Service object parameter
+            // Case 3 - Service object parameter
             try
             {
                 method = getServiceObjectMethod( targetClass, parameterClass, acceptPrivate, acceptPackage, logger );
                 if ( method != null )
                 {
-                    m_paramTypes = Collections.singletonList(ParamType.serviceType);
+	                if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+	                {
+	                    logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
+	                }
+	                m_paramTypes = Collections.singletonList(ParamType.serviceType);
                     return method;
                 }
             }
@@ -172,12 +183,16 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
                 suitableMethodNotAccessible = true;
             }
 
-            // Case 3 - Service interface assignement compatible methods
+            // Case 4 - Service interface assignment compatible methods
             try
             {
                 method = getServiceObjectAssignableMethod( targetClass, parameterClass, acceptPrivate, acceptPackage, logger );
                 if ( method != null )
                 {
+	                if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+	                {
+	                    logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
+	                }
                     m_paramTypes = Collections.singletonList(ParamType.serviceType);
                     return method;
                 }
@@ -187,16 +202,42 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
                 suitableMethodNotAccessible = true;
             }
 
+            // Case 5 - DS 1.3+ : Single argument with Map
+            if ( getDSVersion().isDS13() )
+            {
+                try
+                {
+                    method = getMapMethod( targetClass, parameterClass, acceptPrivate, acceptPackage, logger );
+                    if ( method != null )
+                    {
+    	                if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+    	                {
+    	                    logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
+    	                }
+                        m_paramTypes = Collections.singletonList(ParamType.map);
+                        return method;
+                    }
+                }
+                catch ( SuitableMethodNotAccessibleException ex )
+                {
+                    suitableMethodNotAccessible = true;
+                }            	
+            }
+            
             // signatures taking a map are only supported starting with DS 1.1
             if ( getDSVersion().isDS11() && !getDSVersion().isDS13() )
             {
 
-                // Case 4 - same as case 2, but + Map param (DS 1.1 only)
+                // Case 6 - same as case 3, but + Map param (DS 1.1 only)
                 try
                 {
                     method = getServiceObjectWithMapMethod( targetClass, parameterClass, acceptPrivate, acceptPackage, logger );
                     if ( method != null )
                     {
+    	                if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+    	                {
+    	                    logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
+    	                }
                         List<ParamType> paramTypes = new ArrayList<ParamType>(2);
                         paramTypes.add(ParamType.serviceType);
                         paramTypes.add(ParamType.map);
@@ -209,13 +250,17 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
                     suitableMethodNotAccessible = true;
                 }
 
-                // Case 5 - same as case 3, but + Map param (DS 1.1 only)
+                // Case 6 - same as case 4, but + Map param (DS 1.1 only)
                 try
                 {
                     method = getServiceObjectAssignableWithMapMethod( targetClass, parameterClass, acceptPrivate,
                         acceptPackage );
                     if ( method != null )
                     {
+    	                if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+    	                {
+    	                    logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
+    	                }
                         List<ParamType> paramTypes = new ArrayList<ParamType>(2);
                         paramTypes.add(ParamType.serviceType);
                         paramTypes.add(ParamType.map);
@@ -229,6 +274,7 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
                 }
 
             }
+            // Case 7 - Multiple parameters
             if ( getDSVersion().isDS13() )
             {
                 for (Method m: targetClass.getDeclaredMethods())
@@ -289,6 +335,10 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
                         {
                             if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
                             {
+            	                if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
+            	                {
+            	                    logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + m, null );
+            	                }
                                 m_paramTypes = paramTypes;
                                 return m;
                             }
@@ -349,13 +399,9 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
     private Method getComponentObjectsMethod( final Class<?> targetClass, boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger )
         throws SuitableMethodNotAccessibleException, InvocationTargetException
     {
-        if ( m_referenceScope == ReferenceMetadata.ReferenceScope.prototype )
-        {
-            return getMethod(targetClass, getMethodName(),
-                new Class[] { ClassUtils.COMPONENTS_SERVICE_OBJECTS_CLASS }, acceptPrivate, acceptPackage,
-                logger);
-        }
-        return null;
+        return getMethod(targetClass, getMethodName(),
+            new Class[] { ClassUtils.COMPONENTS_SERVICE_OBJECTS_CLASS }, acceptPrivate, acceptPackage,
+            logger);
     }
 
 
@@ -565,6 +611,33 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
 
         // no method with assignment compatible argument found
         return null;
+    }
+
+    /**
+     * Returns a method taking a single map parameter
+     * or <code>null</code> if no such method exists.
+     *
+     *
+     * @param targetClass The class in which to look for the method. Only this
+     *      class is searched for the method.
+     * @param acceptPrivate <code>true</code> if private methods should be
+     *      considered.
+     * @param acceptPackage <code>true</code> if package private methods should
+     *      be considered.
+     * @param logger
+     * @return The requested method or <code>null</code> if no acceptable method
+     *      can be found in the target class.
+     * @throws SuitableMethodNotAccessibleException If a suitable method was
+     *      found which is not accessible
+     * @throws InvocationTargetException If an unexpected Throwable is caught
+     *      trying to find the requested method.
+     */
+    private Method getMapMethod( final Class<?> targetClass, final Class<?> parameterClass,
+            boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger ) throws SuitableMethodNotAccessibleException,
+        InvocationTargetException
+    {
+        return getMethod( targetClass, getMethodName(), new Class[]
+            { ClassUtils.MAP_CLASS }, acceptPrivate, acceptPackage, logger );
     }
 
     public <S, T> boolean getServiceObject( ComponentContextImpl<S> key, RefPair<S, T> refPair, BundleContext context, SimpleLogger logger )
