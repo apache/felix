@@ -419,7 +419,8 @@ public class ServiceRegistry
             {
                 if (count == 0)
                 {
-                    Object svc = usage.m_svcHolderRef.getAndSet(null).m_service;
+                    ServiceHolder holder = usage.m_svcHolderRef.getAndSet(null);
+                    Object svc = holder != null ? holder.m_service : null;
 
                     // Remove reference from usages array.
                     ((ServiceRegistrationImpl.ServiceReferenceImpl) ref)
