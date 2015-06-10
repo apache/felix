@@ -414,9 +414,10 @@ public class ServiceRegistry
 
             // If usage count will go to zero, then unget the service
             // from the registration.
+            int count = usage.m_count.decrementAndGet();
             try
             {
-                if (usage.m_count.get() == 1)
+                if (count == 0)
                 {
                     // Remove reference from usages array.
                     ((ServiceRegistrationImpl.ServiceReferenceImpl) ref)
@@ -428,13 +429,9 @@ public class ServiceRegistry
                 // Finally, decrement usage count and flush if it goes to zero or
                 // the registration became invalid.
 
-                // Decrement usage count, which spec says should happen after
-                // ungetting the service object.
-                int c = usage.m_count.decrementAndGet();
-
                 // If the registration is invalid or the usage count has reached
                 // zero, then flush it.
-                if ((c <= 0) || !reg.isValid())
+                if ((count <= 0) || !reg.isValid())
                 {
                     usage.m_svcHolderRef.set(null);
                     flushUsageCount(bundle, ref, usage);
