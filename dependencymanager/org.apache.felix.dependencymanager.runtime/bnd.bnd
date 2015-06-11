@@ -31,7 +31,7 @@ Provide-Capability: osgi.extender; osgi.extender="org.apache.felix.dependencyman
 Include-Resource: META-INF/=resources/LICENSE,\
 	META-INF/=resources/NOTICE,\
 	META-INF/=resources/DEPENDENCIES,\
-	META-INF/=resources/changelog.txt
+	META-INF/=${workspace}/release/resources/changelog.txt
 
 Bundle-Name: Apache Felix Dependency Manager Runtime
 Bundle-Description: Loads Apache Felix Dependency Manager component descriptors from active \
