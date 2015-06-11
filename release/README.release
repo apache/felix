@@ -18,9 +18,22 @@ To create a release you must:
 
 Before you can start staging a release candidate, you must:
 
-* increment the ext.dmRelease parameter in release/build.gradle, if not already done.
 * make sure there are no dependencies on snapshots/unreleased versions;
+* increment the ext.dmRelease parameter in release/build.gradle, if not already done, and commit.
+* check if release notes are up-to-date, in release/resources/changelog.txt
+* under bndtools, release (only) the bundles that needs to be released (using "Release workspace bundles" menu).
 * create a tagged version of the sources in preparation of the release candidate.
+
+Realease only the necessary bundles
+===================================
+
+Click on the bndtools "Release workspace bundles", and release the bundles that have been modified and need to be released.
+Don't release other unmodified bundles.
+Once done, under the shell prompt, svn remove the previous old released bundles, svn add the new released bundles, 
+refresh the repositories under bndtools, and commit.  
+
+Create a tagged version
+=======================
 
 Creating a tagged version of the sources can be done directly through svn (replace r<n> by the actual release number, like "r1"):
 

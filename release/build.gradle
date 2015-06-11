@@ -109,8 +109,8 @@ task makeStaging << {
     logger.lifecycle("    Packaging binary distribution.")    
     ant.zip(destfile: "staging/"+topdir+"-bin.zip") {
         ant.mappedresources() {
-            // don't include itests, samples, and benchmark in the convenience binary release.
-        	ant.fileset(dir: '..', includes: '*/generated/*.jar', excludes: '*.itest/generated/*.jar,*.benchmark/generated/*.jar,*.samples/generated/*.jar')
+            // simply include all released bundle.
+        	ant.fileset(dir: '..', includes: 'cnf/releaserepo/*/*.jar')
             ant.chainedmapper() {
                 ant.flattenmapper()
                 ant.globmapper(from: '*', to: topdir+'-bin/*')
