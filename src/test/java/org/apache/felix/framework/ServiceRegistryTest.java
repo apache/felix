@@ -526,7 +526,10 @@ public class ServiceRegistryTest extends TestCase
                 (ConcurrentMap<Bundle, UsageCount[]>) getPrivateField(sr, "m_inUseMap");
 
         UsageCount uc = new UsageCount(ref, false);
-        uc.m_svcHolderRef.set(new ServiceHolder());
+        ServiceHolder sh = new ServiceHolder();
+        Object svc = new Object();
+        sh.m_service = svc;
+        uc.m_svcHolderRef.set(sh);
         uc.m_count.incrementAndGet();
 
         Mockito.verify(reg, Mockito.never()).
@@ -538,7 +541,7 @@ public class ServiceRegistryTest extends TestCase
         assertNull(inUseMap.get(b));
 
         Mockito.verify(reg, Mockito.times(1)).
-        ungetService(Mockito.isA(Bundle.class), Mockito.any());
+            ungetService(Mockito.isA(Bundle.class), Mockito.eq(svc));
     }
 
     @SuppressWarnings("unchecked")
