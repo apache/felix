@@ -417,26 +417,37 @@ public class ServiceRegistry
             int count = usage.m_count.decrementAndGet();
             try
             {
-                if (count == 0)
+                if (count <= 0)
                 {
-                    ServiceHolder holder = usage.m_svcHolderRef.getAndSet(null);
+                    ServiceHolder holder = usage.m_svcHolderRef.get();
                     Object svc = holder != null ? holder.m_service : null;
 
-                    // Remove reference from usages array.
-                    ((ServiceRegistrationImpl.ServiceReferenceImpl) ref)
-                        .getRegistration().ungetService(bundle, svc);
+                    if (svc != null)
+                    {
+                        if (usage.m_svcHolderRef.compareAndSet(holder, null))
+                        {
+                            holder.m_service = null;
+
+                            // Remove reference from usages array.
+                            ((ServiceRegistrationImpl.ServiceReferenceImpl) ref)
+                                .getRegistration().ungetService(bundle, svc);
+
+                        }
+
+                    }
                 }
             }
             finally
             {
-                // Finally, decrement usage count and flush if it goes to zero or
-                // the registration became invalid.
+                if (!reg.isValid())
+                {
+                    usage.m_svcHolderRef.set(null);
+                }
 
                 // If the registration is invalid or the usage count has reached
                 // zero, then flush it.
-                if ((count <= 0) || !reg.isValid())
+                if (count <= 0 || !reg.isValid())
                 {
-                    usage.m_svcHolderRef.set(null);
                     flushUsageCount(bundle, ref, usage);
                 }
             }
