@@ -32,7 +32,7 @@ Export-Package:  \
 Include-Resource: META-INF/=resources/LICENSE,\
 	META-INF/=resources/NOTICE,\
 	META-INF/=resources/DEPENDENCIES,\
-	META-INF/=resources/changelog.txt
+	META-INF/=${workspace}/release/resources/changelog.txt
 Import-Package: !org.junit,!org.mockito.*,*
 Bundle-Activator: org.apache.felix.dm.impl.Activator
 Bundle-Version: 4.1.1
