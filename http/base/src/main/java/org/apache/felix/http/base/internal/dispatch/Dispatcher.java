@@ -31,8 +31,6 @@ import static org.apache.felix.http.base.internal.util.UriUtils.decodePath;
 import static org.apache.felix.http.base.internal.util.UriUtils.removeDotSegments;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -580,28 +578,22 @@ public final class Dispatcher implements RequestDispatcherProvider
             this.whiteboardManager.sessionDestroyed(session, ids);
         }
 
-        // get full requested path
-        // we can't use req.getRequestURI() as this is returning the encoded path
-        String path = "";
-        try
+        // get full path
+        // we can't use req.getRequestURI() or req.getRequestURL() as these are returning the encoded path
+        String path = req.getServletPath();
+        if ( path == null )
         {
-            final URL url = new URL(req.getRequestURL().toString());
-            path = UriUtils.relativePath(req.getContextPath(), url.getPath());
-
+            path = "";
         }
-        catch (final MalformedURLException mue)
+        if ( req.getPathInfo() != null )
         {
-            // we ignore this and revert to servlet path and path info
-            path = req.getServletPath();
-            if ( path == null )
-            {
-                path = "";
-            }
-            if ( req.getPathInfo() != null )
-            {
-                path = path.concat(req.getPathInfo());
-            }
-
+            path = path.concat(req.getPathInfo());
+        }
+        // Workaround to get path parameters (FELIX-4925)
+        // This fails if the path part contains encoded characters!
+        if ( req.getRequestURI().contains(";") )
+        {
+            path = UriUtils.relativePath(req.getContextPath(), req.getRequestURI());
         }
         final String requestURI = path;
 
