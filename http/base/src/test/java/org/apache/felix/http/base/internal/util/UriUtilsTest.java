@@ -50,10 +50,10 @@ public class UriUtilsTest
     @Test
     public void testRelativePath()
     {
-        assertEquals(null, relativePath("/foo", null));
-        assertEquals(null, relativePath("/foo", ""));
-        assertEquals(null, relativePath("/foo", "/foo"));
-        assertEquals(null, relativePath("/foo", "/foo/")); // XXX or "/"?
+        assertEquals("", relativePath("/foo", null));
+        assertEquals("", relativePath("/foo", ""));
+        assertEquals("", relativePath("/foo", "/foo"));
+        assertEquals("", relativePath("/foo", "/foo/")); // XXX or "/"?
         assertEquals("/foo", relativePath("/", "/foo"));
         assertEquals("/foo/", relativePath("/", "/foo/"));
         assertEquals("/foo/", relativePath(null, "/foo/"));

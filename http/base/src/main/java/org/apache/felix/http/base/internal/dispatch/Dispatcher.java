@@ -31,6 +31,8 @@ import static org.apache.felix.http.base.internal.util.UriUtils.decodePath;
 import static org.apache.felix.http.base.internal.util.UriUtils.removeDotSegments;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -577,11 +579,31 @@ public final class Dispatcher implements RequestDispatcherProvider
             final Set<Long> ids = HttpSessionWrapper.getExpiredSessionContextIds(session);
             this.whiteboardManager.sessionDestroyed(session, ids);
         }
-        String requestURI = getRequestURI(req);
-        if ( requestURI == null )
+
+        // get full requested path
+        // we can't use req.getRequestURI() as this is returning the encoded path
+        String path = "";
+        try
         {
-            requestURI = "";
+            final URL url = new URL(req.getRequestURL().toString());
+            path = UriUtils.relativePath(req.getContextPath(), url.getPath());
+
         }
+        catch (final MalformedURLException mue)
+        {
+            // we ignore this and revert to servlet path and path info
+            path = req.getServletPath();
+            if ( path == null )
+            {
+                path = "";
+            }
+            if ( req.getPathInfo() != null )
+            {
+                path = path.concat(req.getPathInfo());
+            }
+
+        }
+        final String requestURI = path;
 
         // Determine which servlet we should forward the request to...
         final PathResolution pr = this.handlerRegistry.resolveServlet(requestURI);
@@ -694,7 +716,7 @@ public final class Dispatcher implements RequestDispatcherProvider
         invokeChain(resolution.handler, filterHandlers, request, response);
     }
 
-    private String getRequestURI(HttpServletRequest req)
+    private String getRequestURI(final HttpServletRequest req)
     {
         return UriUtils.relativePath(req.getContextPath(), req.getRequestURI());
     }
