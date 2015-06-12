@@ -106,6 +106,7 @@
             <exclude>src/**/packageinfo</exclude>
             <exclude>src/main/appended-resources/**</exclude>
 			<exclude>src/test/resources/resolution.json</exclude>
+            <exclude>src/test/resources/felix-4914.json</exclude>
           </excludes>
         </configuration>
       </plugin>
