@@ -84,10 +84,10 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
         {
             // Service id's can be negative. Negative id's follow the reverse natural ordering of integers.
             int reverseOrder = ( this.serviceId >= 0 && other.serviceId >= 0 ) ? 1 : -1;
-            return reverseOrder * Long.compare(this.serviceId, other.serviceId);
+            return reverseOrder * new Long(this.serviceId).compareTo(other.serviceId);
         }
 
-        return Integer.compare(other.ranking, this.ranking);
+        return new Integer(other.ranking).compareTo(this.ranking);
     }
 
     protected boolean isEmpty(final String value)
