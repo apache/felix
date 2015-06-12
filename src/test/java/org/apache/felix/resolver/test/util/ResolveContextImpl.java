@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.resolver.test;
+package org.apache.felix.resolver.test.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,7 +29,7 @@ import org.osgi.resource.Wiring;
 import org.osgi.service.resolver.HostedCapability;
 import org.osgi.service.resolver.ResolveContext;
 
-class ResolveContextImpl extends ResolveContext
+public class ResolveContextImpl extends ResolveContext
 {
     private final Map<Resource, Wiring> m_wirings;
     private final Map<Requirement, List<Capability>> m_candMap;

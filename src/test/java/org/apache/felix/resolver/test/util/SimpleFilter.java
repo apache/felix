@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.resolver.test;
+package org.apache.felix.resolver.test.util;
 
 import java.util.ArrayList;
 import java.util.List;

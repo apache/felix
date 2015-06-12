@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.resolver.test;
+package org.apache.felix.resolver.test.util;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -286,7 +286,7 @@ public class ClauseParser {
     }
 
 
-    static class ParsedHeaderClause {
+    public static class ParsedHeaderClause {
         public final List<String> paths = new ArrayList<String>();
         public final Map<String, String> dirs = new LinkedHashMap<String, String>();
         public final Map<String, Object> attrs = new LinkedHashMap<String, Object>();
