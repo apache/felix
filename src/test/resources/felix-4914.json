@@ -1,0 +1,59 @@
+{
+  "repository": [
+    {
+      "capabilities": [
+        "osgi.identity; osgi.identity=root; type=karaf.subsystem; version:Version=0.0.0"
+      ],
+      "requirements": [
+        "osgi.identity; osgi.identity=org.apache.activemq.activemq-blueprint; type=osgi.fragment",
+        "osgi.identity; osgi.identity=org.apache.aries.blueprint.core.compatibility; type=osgi.fragment",
+        "osgi.identity; osgi.identity=org.apache.aries.blueprint.core; type=osgi.bundle"
+      ]
+    },
+    {
+      "capabilities": [
+        "osgi.identity; osgi.identity=org.apache.activemq.activemq-blueprint; type=osgi.fragment; version:Version=5.11.1"
+      ],
+      "requirements": [
+        "osgi.wiring.host; osgi.wiring.host=org.apache.activemq.activemq-osgi; filter:=\"(osgi.wiring.host=org.apache.activemq.activemq-osgi)\"",
+        "osgi.wiring.package; filter:=\"(osgi.wiring.package=org.apache.aries.blueprint)\"",
+        "osgi.wiring.package; filter:=\"(osgi.wiring.package=org.apache.xbean.blueprint.context.impl)\""
+      ]
+    },
+    {
+      "capabilities": [
+        "osgi.identity; osgi.identity=org.apache.activemq.activemq-osgi; type=osgi.bundle; version:Version=5.11.1",
+        "osgi.wiring.host; osgi.wiring.host=org.apache.activemq.activemq-osgi"
+      ],
+      "requirements": [
+        "osgi.wiring.package; filter:=\"(osgi.wiring.package=org.osgi.service.blueprint)\""
+      ]
+    },
+    {
+      "capabilities": [
+        "osgi.identity; osgi.identity=org.apache.xbean.blueprint; type=osgi.bundle; version:Version=3.18.0",
+        "osgi.wiring.package; osgi.wiring.package=org.apache.xbean.blueprint.context.impl; uses:=\"org.apache.aries.blueprint\""
+      ],
+      "requirements": [
+        "osgi.wiring.package; filter:=\"(osgi.wiring.package=org.apache.aries.blueprint)\""
+      ]
+    },
+    {
+      "capabilities": [
+        "osgi.identity; osgi.identity=org.apache.aries.blueprint.core.compatibility; type=osgi.fragment; version:Version=1.0.0"
+      ],
+      "requirements": [
+        "osgi.wiring.host; osgi.wiring.host=org.apache.aries.blueprint.core; filter:=\"(osgi.wiring.host=org.apache.aries.blueprint.core)\""
+      ]
+    },
+    {
+      "capabilities": [
+        "osgi.identity; osgi.identity=org.apache.aries.blueprint.core; type=osgi.bundle; version:Version=1.4.3",
+        "osgi.wiring.host; osgi.wiring.host=org.apache.aries.blueprint.core",
+        "osgi.wiring.package; osgi.wiring.package=org.apache.aries.blueprint; uses:=\"org.apache.aries.blueprint.services,org.osgi.service.blueprint.reflect\"",
+        "osgi.wiring.package; osgi.wiring.package=org.osgi.service.blueprint"
+      ]
+    }
+  ],
+  "exception": "org.osgi.service.resolver.ResolutionException: Uses constraint violation. Unable to resolve resource org.apache.activemq.activemq-blueprint [org.apache.activemq.activemq-blueprint/5.11.1] because it is exposed to package 'org.apache.aries.blueprint' from resources org.apache.aries.blueprint.core [org.apache.aries.blueprint.core/1.4.3] and org.apache.aries.blueprint.core [org.apache.aries.blueprint.core/1.4.3] via two dependency chains.\n\nChain 1:\n  org.apache.activemq.activemq-blueprint [org.apache.activemq.activemq-blueprint/5.11.1]\n    import: (&(osgi.wiring.package=org.apache.aries.blueprint)(version>=1.0.0)(!(version>=2.0.0)))\n     |\n    export: osgi.wiring.package: org.apache.aries.blueprint\n  org.apache.aries.blueprint.core [org.apache.aries.blueprint.core/1.4.3]\n\nChain 2:\n  org.apache.activemq.activemq-blueprint [org.apache.activemq.activemq-blueprint/5.11.1]\n    import: (&(osgi.wiring.package=org.apache.xbean.blueprint.context.impl)(version>=3.13.0)(!(version>=4.0.0)))\n     |\n    export: osgi.wiring.package=org.apache.xbean.blueprint.context.impl; uses:=org.apache.aries.blueprint\n  org.apache.xbean.blueprint [org.apache.xbean.blueprint/3.18.0]\n    import: (&(osgi.wiring.package=org.apache.aries.blueprint)(version>=1.0.0)(!(version>=2.0.0)))\n     |\n    export: osgi.wiring.package: org.apache.aries.blueprint\n  org.apache.aries.blueprint.core [org.apache.aries.blueprint.core/1.4.3]"
+}
