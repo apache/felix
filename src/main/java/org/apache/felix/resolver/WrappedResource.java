@@ -70,13 +70,7 @@ class WrappedResource implements Resource
                 {
                     for (Capability cap : fragment.getCapabilities(namespace))
                     {
-                        // Filter out identity capabilities, since they
-                        // are not part of the fragment payload.
-                        if (!cap.getNamespace()
-                            .equals(IdentityNamespace.IDENTITY_NAMESPACE))
-                        {
-                            caps.add(new WrappedCapability(this,  cap));
-                        }
+                        caps.add(new WrappedCapability(this,  cap));
                     }
                 }
             }
