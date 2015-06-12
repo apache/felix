@@ -84,7 +84,7 @@ public class AbstractListenerManager<ListenerType> extends ServiceTracker<Listen
         if ( result != null ) {
             SystemLogger.warning("Deprecation warning: " +
                 "Listener registered through Apache Felix whiteboard service: " + reference +
-                ". Please change your code to the OSGi Whiteboard Service.", null);
+                ". Please change your code to the OSGi Http Whiteboard Service.", null);
         }
         synchronized (lock)
         {
