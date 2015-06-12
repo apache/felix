@@ -38,7 +38,7 @@ public final class HttpContextTracker
     {
         SystemLogger.warning("Deprecation warning: " +
                 "HttpContext registered through Apache Felix whiteboard service: " + ref +
-                ". Please change your code to the OSGi Whiteboard Service.", null);
+                ". Please change your code to the OSGi Http Whiteboard Service.", null);
 
         this.manager.add(service, ref);
     }
