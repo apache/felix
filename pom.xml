@@ -57,7 +57,7 @@
           <instructions>
             <Bundle-SymbolicName>org.apache.felix.framework</Bundle-SymbolicName>
             <Bundle-Name>Apache Felix Framework</Bundle-Name>
-            <Bundle-Description>OSGi R5 framework implementation.</Bundle-Description>
+            <Bundle-Description>OSGi R6 framework implementation.</Bundle-Description>
             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
             <Export-Package>
                 org.osgi.framework.*;-split-package:=merge-first,
