@@ -16,47 +16,40 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.resolver.test;
+package org.apache.felix.resolver.test.util;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import org.osgi.framework.Version;
+import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Resource;
 
-class GenericCapability implements Capability
+public class IdentityCapability implements Capability
 {
     private final Resource m_resource;
-    private final String m_namespace;
     private final Map<String, String> m_dirs;
     private final Map<String, Object> m_attrs;
 
-    public GenericCapability(Resource resource, String namespace)
+    public IdentityCapability(Resource resource, String name, String type)
     {
         m_resource = resource;
-        m_namespace = namespace.intern();
         m_dirs = new HashMap<String, String>();
         m_attrs = new HashMap<String, Object>();
+        m_attrs.put(IdentityNamespace.IDENTITY_NAMESPACE, name);
+        m_attrs.put(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE, type);
+        m_attrs.put(IdentityNamespace.CAPABILITY_VERSION_ATTRIBUTE, Version.emptyVersion);
     }
 
     public String getNamespace()
     {
-        return m_namespace;
-    }
-
-    public void addDirective(String name, String value)
-    {
-        m_dirs.put(name.intern(), value);
+        return IdentityNamespace.IDENTITY_NAMESPACE;
     }
 
     public Map<String, String> getDirectives()
     {
         return m_dirs;
-    }
-
-    public void addAttribute(String name, Object value)
-    {
-        m_attrs.put(name.intern(), value);
     }
 
     public Map<String, Object> getAttributes()
@@ -73,6 +66,6 @@ class GenericCapability implements Capability
     public String toString()
     {
         return getNamespace() + "; "
-            + getAttributes();
+            + getAttributes().get(IdentityNamespace.IDENTITY_NAMESPACE).toString();
     }
 }

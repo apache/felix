@@ -31,6 +31,15 @@ import java.util.Set;
 
 import org.apache.felix.resolver.Logger;
 import org.apache.felix.resolver.ResolverImpl;
+import org.apache.felix.resolver.test.util.CandidateComparator;
+import org.apache.felix.resolver.test.util.CapabilitySet;
+import org.apache.felix.resolver.test.util.ClauseParser;
+import org.apache.felix.resolver.test.util.GenericCapability;
+import org.apache.felix.resolver.test.util.GenericRequirement;
+import org.apache.felix.resolver.test.util.IterativeResolver;
+import org.apache.felix.resolver.test.util.JsonReader;
+import org.apache.felix.resolver.test.util.ResourceImpl;
+import org.apache.felix.resolver.test.util.SimpleFilter;
 import org.apache.felix.utils.version.VersionRange;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -193,18 +202,24 @@ public class BigResolutionTest {
     }
 
     @SuppressWarnings("unchecked")
-    private Resource parseResource(Object resource) throws BundleException {
+    public static Resource parseResource(Object resource) throws BundleException {
         ResourceImpl res = new ResourceImpl();
-        for (String s : (Collection<String>) ((Map) resource).get("capabilities")) {
-            parseCapability(res, s);
+        Collection<String> caps = (Collection<String>) ((Map) resource).get("capabilities");
+        if (caps != null) {
+            for (String s : caps) {
+                parseCapability(res, s);
+            }
         }
-        for (String s : (Collection<String>) ((Map) resource).get("requirements")) {
-            parseRequirement(res, s);
+        Collection<String> reqs = (Collection<String>) ((Map) resource).get("requirements");
+        if (reqs != null) {
+            for (String s : reqs) {
+                parseRequirement(res, s);
+            }
         }
         return res;
     }
 
-    private void parseRequirement(ResourceImpl res, String s) throws BundleException {
+    private static void parseRequirement(ResourceImpl res, String s) throws BundleException {
         List<ClauseParser.ParsedHeaderClause> clauses = ClauseParser.parseStandardHeader(s);
         normalizeRequirementClauses(clauses);
         for (ClauseParser.ParsedHeaderClause clause : clauses) {
@@ -221,7 +236,7 @@ public class BigResolutionTest {
         }
     }
 
-    private void parseCapability(ResourceImpl res, String s) throws BundleException {
+    private static void parseCapability(ResourceImpl res, String s) throws BundleException {
         List<ClauseParser.ParsedHeaderClause> clauses = ClauseParser.parseStandardHeader(s);
         normalizeCapabilityClauses(clauses);
         for (ClauseParser.ParsedHeaderClause clause : clauses) {
