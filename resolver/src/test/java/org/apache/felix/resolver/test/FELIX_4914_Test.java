@@ -33,7 +33,6 @@ import org.apache.felix.resolver.test.util.CapabilitySet;
 import org.apache.felix.resolver.test.util.JsonReader;
 import org.apache.felix.resolver.test.util.ResolveContextImpl;
 import org.apache.felix.resolver.test.util.SimpleFilter;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
@@ -47,7 +46,6 @@ import org.osgi.service.resolver.Resolver;
 public class FELIX_4914_Test extends TestCase {
 
     @Test
-    @Ignore
     public void testResolution() throws Exception {
         BufferedReader reader = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/felix-4914.json")));
         Map<String, Object> resolution = (Map<String, Object>) JsonReader.read(reader);
