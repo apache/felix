@@ -56,6 +56,7 @@ import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.registry.PathResolution;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
@@ -622,6 +623,7 @@ public final class Dispatcher implements RequestDispatcherProvider
         }
         catch ( final Exception e)
         {
+            SystemLogger.error("Exception while processing request to " + requestURI, e);
             req.setAttribute(RequestDispatcher.ERROR_EXCEPTION, e);
             req.setAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE, e.getClass().getName());
 
@@ -683,8 +685,8 @@ public final class Dispatcher implements RequestDispatcherProvider
      */
     void forward(final ServletResolution resolution, HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
     {
-        String requestURI = getRequestURI(request);
-        FilterHandler[] filterHandlers = this.handlerRegistry.getFilters(resolution, DispatcherType.FORWARD, requestURI);
+        final String requestURI = getRequestURI(request);
+        final FilterHandler[] filterHandlers = this.handlerRegistry.getFilters(resolution, DispatcherType.FORWARD, requestURI);
 
         invokeChain(resolution.handler, filterHandlers, request, response);
     }
@@ -696,8 +698,8 @@ public final class Dispatcher implements RequestDispatcherProvider
      */
     void include(final ServletResolution resolution, HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
     {
-        String requestURI = getRequestURI(request);
-        FilterHandler[] filterHandlers = this.handlerRegistry.getFilters(resolution, DispatcherType.INCLUDE, requestURI);
+        final String requestURI = getRequestURI(request);
+        final FilterHandler[] filterHandlers = this.handlerRegistry.getFilters(resolution, DispatcherType.INCLUDE, requestURI);
 
         invokeChain(resolution.handler, filterHandlers, request, response);
     }
