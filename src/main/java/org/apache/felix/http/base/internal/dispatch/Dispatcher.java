@@ -589,12 +589,6 @@ public final class Dispatcher implements RequestDispatcherProvider
         {
             path = path.concat(req.getPathInfo());
         }
-        // Workaround to get path parameters (FELIX-4925)
-        // This fails if the path part contains encoded characters!
-        if ( req.getRequestURI().contains(";") )
-        {
-            path = UriUtils.relativePath(req.getContextPath(), req.getRequestURI());
-        }
         final String requestURI = path;
 
         // Determine which servlet we should forward the request to...
