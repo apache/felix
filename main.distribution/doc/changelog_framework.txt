@@ -1,3 +1,14 @@
+Changes from 5.0.0 to 5.0.1
+---------------------------
+** Bug
+    * [FELIX-4867] - Stale bundle revisions don't get cleaned up when last using bundle is gone
+    * [FELIX-4905] - Framework does not export org.osgi.service.resolver
+    * [FELIX-4914] - Resolution problem with identity requirements on fragments
+    * [FELIX-4927] - Felix reports itself as an OSGi R4/R5 Framework
+
+** Improvement
+    * [FELIX-4866] - Improve service registry
+
 Changes from 4.6.1 to 5.0.0
 ---------------------------
 ** Bug
