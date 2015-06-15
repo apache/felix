@@ -426,8 +426,6 @@ public class ServiceRegistry
                     {
                         if (usage.m_svcHolderRef.compareAndSet(holder, null))
                         {
-                            holder.m_service = null;
-
                             // Remove reference from usages array.
                             ((ServiceRegistrationImpl.ServiceReferenceImpl) ref)
                                 .getRegistration().ungetService(bundle, svc);
