@@ -47,6 +47,7 @@ import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.security.HashLoginService;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ConnectorStatistics;
+import org.eclipse.jetty.server.ForwardedRequestCustomizer;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.SecureRequestCustomizer;
@@ -317,6 +318,12 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         configureHttpConnectionFactory(connFactory);
         ServerConnector connector = new ServerConnector(server, connFactory);
         configureConnector(connector, this.config.getHttpPort());
+        
+        if (this.config.isProxyLoadBalancerConnection())
+        {
+            connFactory.getHttpConfiguration().addCustomizer(new ForwardedRequestCustomizer());
+        }
+        
         return startConnector(connector);
     }
 
@@ -329,7 +336,14 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         configureSslContextFactory(sslContextFactory);
 
         ServerConnector connector = new ServerConnector(server, new SslConnectionFactory(sslContextFactory, HttpVersion.HTTP_1_1.toString()), connFactory);
-        connFactory.getHttpConfiguration().addCustomizer(new SecureRequestCustomizer());
+        HttpConfiguration httpConfiguration = connFactory.getHttpConfiguration();
+        httpConfiguration.addCustomizer(new SecureRequestCustomizer());
+        
+        if (this.config.isProxyLoadBalancerConnection())
+        {
+            httpConfiguration.addCustomizer(new ForwardedRequestCustomizer());
+        }
+        
         configureConnector(connector, this.config.getHttpsPort());
         return startConnector(connector);
     }
