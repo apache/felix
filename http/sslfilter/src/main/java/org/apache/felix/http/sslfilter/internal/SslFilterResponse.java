@@ -28,6 +28,8 @@ import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HTTP_P
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 import javax.servlet.http.HttpServletRequest;
@@ -96,7 +98,12 @@ class SslFilterResponse extends HttpServletResponseWrapper
     {
         if (HDR_LOCATION.equalsIgnoreCase(name))
         {
-            URL rewritten = rewriteUrlIfNeeded(value);
+        	URL rewritten = null;
+        	try {
+        		rewritten = rewriteUrlIfNeeded(value);
+        	} catch (URISyntaxException e) {
+        		// ignore
+        	}
             // Trying to set a redirect location to the original client-side URL, which should be https...
             if (rewritten != null)
             {
@@ -109,7 +116,12 @@ class SslFilterResponse extends HttpServletResponseWrapper
     @Override
     public void sendRedirect(String location) throws IOException
     {
-        URL rewritten = rewriteUrlIfNeeded(location);
+    	URL rewritten = null;
+    	try {
+    		rewritten = rewriteUrlIfNeeded(location);
+    	} catch (URISyntaxException e) {
+    		throw new IOException (e);
+    	}
         if (rewritten != null)
         {
             location = rewritten.toExternalForm();
@@ -130,7 +142,7 @@ class SslFilterResponse extends HttpServletResponseWrapper
         return HTTP_PORT;
     }
 
-    private URL rewriteUrlIfNeeded(String value)
+    private URL rewriteUrlIfNeeded(String value) throws URISyntaxException
     {
         if (value == null)
         {
@@ -139,38 +151,48 @@ class SslFilterResponse extends HttpServletResponseWrapper
 
         try
         {
-            URL url;
+            URI uri;
             if (value.startsWith(this.serverProto.concat("://")))
             {
-                url = new URL(value);
+  
+                uri = new URI (value);
             }
             else
             {
-                url = new URL(this.requestURL, value);
+                URL url = new URL(this.requestURL, value);
+                uri = url.toURI();
             }
 
-            String actualProto = url.getProtocol();
+            String actualProto = uri.getScheme();
 
+            
             if (!this.serverProto.equalsIgnoreCase(actualProto))
             {
+                // protocol is already correct
                 return null;
             }
 
-            if (!this.serverName.equals(url.getHost()))
+            if (!this.serverName.equals(uri.getHost()))
             {
+                // going to a different host
                 return null;
             }
 
-            if (normalizePort(this.serverProto, this.serverPort) != normalizePort(actualProto, url.getPort()))
+            if (normalizePort(this.serverProto, this.serverPort) != normalizePort(actualProto, uri.getPort()))
             {
+                // not to default port
                 return null;
             }
 
-            return new URL(this.clientProto, this.serverName, this.clientPort, url.getFile());
+         
+            return new URI(this.clientProto,null, this.serverName, this.clientPort, uri.getPath(),uri.getQuery(),uri.getFragment()).toURL();
         }
         catch (MalformedURLException e)
         {
             return null;
         }
     }
+    
+    
+    
 }
