@@ -23,15 +23,24 @@ package org.apache.felix.dm;
  * it, specify a PID for the configuration. The dependency is always required, because if it is
  * not, it does not make sense to use the dependency manager. In that scenario, simply register
  * your component as a <code>ManagedService(Factory)</code> and handle everything yourself. Also,
- * only managed services are supported, not factories. There are a couple of things you need to
- * be aware of when implementing the <code>updated(Dictionary)</code> method:
+ * only managed services are supported, not factories. If you need support for factories, then
+ * you can use 
+ * {@link DependencyManager#createFactoryConfigurationAdapterService(String, String, boolean)}.
+ * There are a couple of things you need to be aware of when implementing the 
+ * <code>updated(Dictionary)</code> method:
  * <ul>
- * <li>Make sure it throws a <code>ConfigurationException</code> when you get a configuration
- * that is invalid. In this case, the dependency will not change: if it was not available, it
- * will still not be. If it was available, it will remain available and implicitly assume you
- * keep working with your old configuration.</li>
+ * <li>Make sure it throws a <code>ConfigurationException</code> or any other exception when you 
+ * get a configuration that is invalid. In this case, the dependency will not change: 
+ * if it was not available, it will still not be. If it was available, it will remain available 
+ * and implicitly assume you keep working with your old configuration.</li>
  * <li>This method will be called before all required dependencies are available. Make sure you
  * do not depend on these to parse your settings.</li>
+ * <li>unlike all other DM dependency callbacks, the update method is called from the CM configuration
+ * update thread, and is not serialized with the internal queue maintained by the DM component.
+ * So, take care to concurrent calls between updated callback and your other lifecycle callbacks.
+ * <li>When the configuration is lost, updated callback is invoked with a null dictionary parameter,
+ * and then the component stop lifecycle callback is invoked.
+ * <li>When the DM component is stopped, then updated(null) is not invoked.
  * </ul>
  * 
  * The callback invoked when a configuration dependency is updated can supports the following signatures:<p>
@@ -46,6 +55,7 @@ public interface ConfigurationDependency extends Dependency, ComponentDependency
      * Sets the name of the callback method that should be invoked when a configuration
      * is available. The contract for this method is identical to that of
      * <code>ManagedService.updated(Dictionary) throws ConfigurationException</code>.
+     * By default, if this method is not called, the callback name is "updated".
      * 
      * @param callback the name of the callback method
      */

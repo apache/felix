@@ -75,7 +75,7 @@ public class ListenerMap<T extends EventListener> {
         }
     }
 
-    public void cleanup()
+    public synchronized void cleanup()
     {
         this.handlers = Collections.emptyList();
     }

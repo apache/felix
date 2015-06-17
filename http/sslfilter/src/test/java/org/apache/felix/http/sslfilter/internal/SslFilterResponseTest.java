@@ -100,6 +100,26 @@ public class SslFilterResponseTest
 
         assertEquals(expected, resp.getHeader(LOCATION));
     }
+    
+    
+    @Test
+    public void testSetHttpLocationHeaderToOriginalRequestURIWithFragment() throws Exception
+    {
+        String location, expected;
+        
+        TestHttpServletResponse resp = createServletResponse();
+        HttpServletRequest req = createServletRequest(BACKEND_SERVER, PATH);
+        
+        SslFilterResponse sresp = new SslFilterResponse(resp, req);
+        
+        location = HTTP + "://" + BACKEND_SERVER + "/foo#abc";
+        expected = HTTPS + "://" + BACKEND_SERVER + "/foo#abc";
+        
+        sresp.setHeader(LOCATION, location);
+        
+        assertEquals(expected, resp.getHeader(LOCATION));
+    }
+    
 
     @Test
     public void testSetHttpLocationHeaderToOriginalRequestWithExplicitPort() throws Exception

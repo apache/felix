@@ -242,6 +242,12 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 2147483647,
                 null, null,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_EXCLUDED_PROTOCOLS)));
+        
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_PROXY_LOAD_BALANCER_CONNECTION_ENABLE,
+                "Enable Proxy/Load Balancer Connection",
+                "Whether or not the Proxy/Load Balancer Connection is enabled. Defaults to false thus disabled.",
+                false,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_PROXY_LOAD_BALANCER_CONNECTION_ENABLE)));
 
         return new ObjectClassDefinition()
         {

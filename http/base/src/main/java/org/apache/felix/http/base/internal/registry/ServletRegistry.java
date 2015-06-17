@@ -101,7 +101,7 @@ public final class ServletRegistry
      *
      * @param handler The servlet handler
      */
-    public void addServlet(@Nonnull final ServletHandler handler)
+    public synchronized void addServlet(@Nonnull final ServletHandler handler)
     {
         // we have to check for every pattern in the info
         // Can be null in case of error-handling servlets...
@@ -196,7 +196,7 @@ public final class ServletRegistry
         }
     }
 
-    private synchronized void removeFromNameMapping(final String servletName, final ServletHandler handler)
+    private void removeFromNameMapping(final String servletName, final ServletHandler handler)
     {
         if ( !handler.getServletInfo().isResource() )
         {
@@ -269,22 +269,20 @@ public final class ServletRegistry
                             final ServletHandler h = inactiveList.remove(0);
                             boolean activate = h.getServlet() == null;
                             final RegistrationStatus oldStatus = newMap.get(h.getServletInfo());
-                            final RegistrationStatus newOldStatus = new RegistrationStatus();
-                            newOldStatus.handler = oldStatus.handler;
-                            newOldStatus.statusToPath = new HashMap<Integer, String[]>(oldStatus.statusToPath);
-                            newMap.put(h.getServletInfo(), newOldStatus);
-                            removePattern(newOldStatus, DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE, pattern);
-                            done = this.tryToActivate(resolvers, pattern, h, newOldStatus, regHandler);
+                            if ( oldStatus != null ) {
+                                final RegistrationStatus newOldStatus = new RegistrationStatus();
+                                newOldStatus.handler = oldStatus.handler;
+                                newOldStatus.statusToPath = new HashMap<Integer, String[]>(oldStatus.statusToPath);
+                                removePattern(newOldStatus, DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE, pattern);
+                                newMap.put(h.getServletInfo(), newOldStatus);
+                                done = this.tryToActivate(resolvers, pattern, h, newOldStatus, regHandler);
+                                if ( done && activate ) {
+                                    this.addToNameMapping(h);
+                                }
+                            }
                             if ( !done )
                             {
                                 done = inactiveList.isEmpty();
-                            }
-                            else
-                            {
-                                if ( activate )
-                                {
-                                    this.addToNameMapping(h);
-                                }
                             }
                         }
                         if ( inactiveList.isEmpty() )

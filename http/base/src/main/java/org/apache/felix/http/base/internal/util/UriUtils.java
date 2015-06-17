@@ -26,6 +26,9 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
 import java.nio.charset.CodingErrorAction;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+
 /**
  * Some convenience methods for handling URI(-parts).
  */
@@ -63,11 +66,11 @@ public abstract class UriUtils
         return sb.toString();
     }
 
-    public static String relativePath(String base, String path)
+    public static @Nonnull String relativePath(@CheckForNull String base, @CheckForNull String path)
     {
         if (path == null)
         {
-            return null;
+            return "";
         }
         if (base == null)
         {
@@ -90,7 +93,7 @@ public abstract class UriUtils
         }
         if ("".equals(path) || "/".equals(path))
         {
-            return null;
+            return "";
         }
         return path;
     }

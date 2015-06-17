@@ -23,7 +23,7 @@
 import aQute.bnd.build.Workspace
 
 // Our release number, which has to be monotonically incremented each time we make a new release.
-ext.dmRelease = "r3"
+ext.dmRelease = "r5"
 
 // Our Apache svn Staging repo
 ext.svnStagingPath = "https://dist.apache.org/repos/dist/dev/felix"
@@ -109,8 +109,8 @@ task makeStaging << {
     logger.lifecycle("    Packaging binary distribution.")    
     ant.zip(destfile: "staging/"+topdir+"-bin.zip") {
         ant.mappedresources() {
-            // don't include itests, samples, and benchmark in the convenience binary release.
-        	ant.fileset(dir: '..', includes: '*/generated/*.jar', excludes: '*.itest/generated/*.jar,*.benchmark/generated/*.jar,*.samples/generated/*.jar')
+            // simply include all released bundle.
+        	ant.fileset(dir: '..', includes: 'cnf/releaserepo/*/*.jar')
             ant.chainedmapper() {
                 ant.flattenmapper()
                 ant.globmapper(from: '*', to: topdir+'-bin/*')

@@ -1,4 +1,0 @@
-Release org.apache.felix.dependencymanager.r1:
----------------------------------------------
-
-FELIX-4816: bndtools-ify Dependency Manager

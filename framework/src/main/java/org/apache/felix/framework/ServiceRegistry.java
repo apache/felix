@@ -422,29 +422,38 @@ public class ServiceRegistry
 
             // If usage count will go to zero, then unget the service
             // from the registration.
+            int count = usage.m_count.decrementAndGet();
             try
             {
-                if (usage.m_count.get() == 1)
+                if (count <= 0)
                 {
-                    // Remove reference from usages array.
-                    ((ServiceRegistrationImpl.ServiceReferenceImpl) ref)
-                        .getRegistration().ungetService(bundle, usage.getService());
+                    ServiceHolder holder = usage.m_svcHolderRef.get();
+                    Object svc = holder != null ? holder.m_service : null;
+
+                    if (svc != null)
+                    {
+                        if (usage.m_svcHolderRef.compareAndSet(holder, null))
+                        {
+                            // Remove reference from usages array.
+                            ((ServiceRegistrationImpl.ServiceReferenceImpl) ref)
+                                .getRegistration().ungetService(bundle, svc);
+
+                        }
+
+                    }
                 }
             }
             finally
             {
-                // Finally, decrement usage count and flush if it goes to zero or
-                // the registration became invalid.
-
-                // Decrement usage count, which spec says should happen after
-                // ungetting the service object.
-                int c = usage.m_count.decrementAndGet();
+                if (!reg.isValid())
+                {
+                    usage.m_svcHolderRef.set(null);
+                }
 
                 // If the registration is invalid or the usage count has reached
                 // zero, then flush it.
-                if ((c <= 0) || !reg.isValid())
+                if (count <= 0 || !reg.isValid())
                 {
-                    usage.m_svcHolderRef.set(null);
                     flushUsageCount(bundle, ref, usage);
                 }
             }

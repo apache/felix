@@ -16,34 +16,35 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.resolver.test;
+package org.apache.felix.resolver.test.util;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.osgi.framework.namespace.BundleNamespace;
 import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.framework.namespace.PackageNamespace;
 import org.osgi.resource.Requirement;
 import org.osgi.resource.Resource;
 
-class PackageRequirement implements Requirement
+public class BundleRequirement implements Requirement
 {
     private final Resource m_resource;
     private final Map<String, String> m_dirs;
     private final Map<String, Object> m_attrs;
 
-    public PackageRequirement(Resource resource, String name)
+    public BundleRequirement(Resource resource, String name)
     {
         m_resource = resource;
         m_dirs = new HashMap<String, String>();
         m_dirs.put(
-            PackageNamespace.REQUIREMENT_FILTER_DIRECTIVE,
-            "(" + PackageNamespace.PACKAGE_NAMESPACE + "=" + name + ")");
+            BundleNamespace.REQUIREMENT_FILTER_DIRECTIVE.intern(),
+            "(" + BundleNamespace.BUNDLE_NAMESPACE + "=" + name + ")");
         m_attrs = new HashMap<String, Object>();
     }
 
     public String getNamespace()
     {
-        return PackageNamespace.PACKAGE_NAMESPACE;
+        return BundleNamespace.BUNDLE_NAMESPACE.intern();
     }
 
     public Map<String, String> getDirectives()
@@ -65,6 +66,6 @@ class PackageRequirement implements Requirement
     public String toString()
     {
         return getNamespace() + "; "
-            + getDirectives().get(PackageNamespace.REQUIREMENT_FILTER_DIRECTIVE).toString();
+            + getDirectives().get(BundleNamespace.REQUIREMENT_FILTER_DIRECTIVE).toString();
     }
 }

@@ -329,45 +329,6 @@ public class HttpJettyTest extends BaseIntegrationTest
     }
 
     /**
-     * Tests the handling of URI path parameters.
-     */
-    @Test
-    public void testHandleUriPathParametersOk() throws Exception
-    {
-        CountDownLatch initLatch = new CountDownLatch(1);
-        CountDownLatch destroyLatch = new CountDownLatch(1);
-
-        TestServlet servlet = new TestServlet(initLatch, destroyLatch)
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
-            {
-                assertEquals("", request.getContextPath());
-                assertEquals("/foo", request.getServletPath());
-                assertEquals("/a;b/c;d/e;f;g/h", request.getPathInfo());
-                assertEquals("/foo/a;b/c;d/e;f;g/h", request.getRequestURI());
-                assertEquals("i=j+k&l=m", request.getQueryString());
-            }
-        };
-
-        register("/foo", servlet);
-
-        URL testURL = createURL("/foo/a;b/c;d/e;f;g/h?i=j+k&l=m");
-
-        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
-
-        assertResponseCode(SC_OK, testURL);
-
-        unregister(servlet);
-
-        assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
-
-        assertResponseCode(SC_NOT_FOUND, testURL);
-    }
-
-    /**
      * Tests that we can register a filter with Jetty and that its lifecycle is correctly controlled.
      */
     @Test

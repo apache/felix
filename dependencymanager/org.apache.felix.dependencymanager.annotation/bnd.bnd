@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-Bundle-Version: 4.0.1
+Bundle-Version: 4.0.3
 -buildpath:  \
 	osgi.core;version=4.2,\
 	de.twentyeleven.skysail.org.json-osgi;version=20080701.0,\
@@ -27,7 +27,7 @@ Export-Package: \
 Include-Resource: META-INF/=resources/LICENSE,\
 	META-INF/=resources/NOTICE,\
 	META-INF/=resources/DEPENDENCIES,\
-	META-INF/=resources/changelog.txt
+	META-INF/=${workspace}/release/resources/changelog.txt
 
 Bundle-Name: Apache Felix Dependency Manager Annotations
 Bundle-Description: Annotations for Apache Felix Dependency Manager

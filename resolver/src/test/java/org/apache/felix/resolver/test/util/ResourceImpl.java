@@ -16,10 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.resolver.test;
+package org.apache.felix.resolver.test.util;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+
+import org.apache.felix.resolver.test.util.IdentityCapability;
 import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
@@ -92,5 +95,17 @@ public class ResourceImpl implements Resource
     public String toString()
     {
         return getCapabilities(IdentityNamespace.IDENTITY_NAMESPACE).get(0).toString();
+    }
+
+    public void addCapabilities(Collection<Capability> caps) {
+        for (Capability cap : caps) {
+            addCapability(cap);
+        }
+    }
+
+    public void addRequirements(Collection<Requirement> reqs) {
+        for (Requirement req : reqs) {
+            addRequirement(req);
+        }
     }
 }

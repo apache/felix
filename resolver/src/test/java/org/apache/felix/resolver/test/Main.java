@@ -27,6 +27,14 @@ import java.util.Map;
 
 import org.apache.felix.resolver.Logger;
 import org.apache.felix.resolver.ResolverImpl;
+import org.apache.felix.resolver.test.util.BundleCapability;
+import org.apache.felix.resolver.test.util.BundleRequirement;
+import org.apache.felix.resolver.test.util.GenericCapability;
+import org.apache.felix.resolver.test.util.GenericRequirement;
+import org.apache.felix.resolver.test.util.PackageCapability;
+import org.apache.felix.resolver.test.util.PackageRequirement;
+import org.apache.felix.resolver.test.util.ResolveContextImpl;
+import org.apache.felix.resolver.test.util.ResourceImpl;
 import org.osgi.framework.namespace.BundleNamespace;
 import org.osgi.framework.namespace.HostNamespace;
 import org.osgi.framework.namespace.IdentityNamespace;

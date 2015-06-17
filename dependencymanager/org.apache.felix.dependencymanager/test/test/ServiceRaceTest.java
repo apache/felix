@@ -178,6 +178,7 @@ public class ServiceRaceTest extends TestBase {
         m_threadpool.execute(new Runnable() {
             public void run() {
                 try {
+                    // simulate a configuration suppression.
                     confDependency.updated(null);
                 }
                 catch (ConfigurationException e) {
@@ -189,11 +190,9 @@ public class ServiceRaceTest extends TestBase {
         // Ensure that client has been stopped, then destroyed, then unbound from all dependencies
         expectedStep += 2; // stop/destroy
         expectedStep += DEPENDENCIES; // removed all dependencies
-        expectedStep += 1; // removed configuration
         step.waitForStep(expectedStep, STEP_WAIT);
         step.ensure();
         Assert.assertEquals(0, theClient.getDependencies());
-        Assert.assertNull(theClient.getConfiguration());
 
         debug("finished one test loop");
         if ((loop + 1) % 100 == 0) {
@@ -213,12 +212,11 @@ public class ServiceRaceTest extends TestBase {
         }
 
         public void updated(Dictionary conf) throws ConfigurationException {
-            m_conf = conf;
             if (conf != null) {
+                Assert.assertNotNull(conf);
                 Assert.assertEquals("bar", conf.get("foo"));
+                m_conf = conf;
                 m_step.step(1);
-            } else {
-                m_step.step();
             }
         }
         

@@ -46,7 +46,7 @@ public class InvocationChain implements FilterChain
     }
 
     @Override
-    public final void doFilter(ServletRequest req, ServletResponse res) throws IOException, ServletException
+    public final void doFilter(@Nonnull final ServletRequest req, @Nonnull final  ServletResponse res) throws IOException, ServletException
     {
         if ( this.index == -1 )
         {

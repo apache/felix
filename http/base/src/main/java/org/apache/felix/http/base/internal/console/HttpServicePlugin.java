@@ -362,17 +362,21 @@ public class HttpServicePlugin extends HttpServlet
         for(final String val : columns)
         {
             pw.print("<td>");
-            String text = escapeXml(val).replace("\n", "<br/>");
-            int pos;
-            while ( (pos = text.indexOf("${#link:")) != -1) {
-                final int endPos = text.indexOf("}", pos);
-                final int bundleId = Integer.valueOf(text.substring(pos + 8, endPos));
-                final int tokenEndPos = text.indexOf("${link#}", pos);
+            if ( val != null )
+            {
+                String text = escapeXml(val).replace("\n", "<br/>");
+                int pos;
+                while ( (pos = text.indexOf("${#link:")) != -1)
+                {
+                    final int endPos = text.indexOf("}", pos);
+                    final int bundleId = Integer.valueOf(text.substring(pos + 8, endPos));
+                    final int tokenEndPos = text.indexOf("${link#}", pos);
 
-                text = text.substring(0, pos) + "<a href=\"${appRoot}/bundles/" + String.valueOf(bundleId) + "\">" +
-                       text.substring(endPos + 1, tokenEndPos) + "</a>" + text.substring(tokenEndPos + 8);
+                    text = text.substring(0, pos) + "<a href=\"${appRoot}/bundles/" + String.valueOf(bundleId) + "\">" +
+                           text.substring(endPos + 1, tokenEndPos) + "</a>" + text.substring(tokenEndPos + 8);
+                }
+                pw.print(text);
             }
-            pw.print(text);
             pw.println("</td>");
         }
 

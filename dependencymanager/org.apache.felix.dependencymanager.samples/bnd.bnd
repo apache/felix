@@ -34,7 +34,7 @@ Bundle-Version: 1.0.0
 	org.apache.felix.gogo.shell;version=0.10.0,\
 	org.apache.felix.dependencymanager.shell;version=latest,\
 	org.apache.felix.dependencymanager.runtime;version=latest,\
-	org.apache.felix.configadmin;version=1.8.0,\
+	org.apache.felix.configadmin;version=1.8.6,\
 	org.apache.felix.eventadmin;version=1.4.3,\
 	biz.aQute.bndlib;version=2.3.0,\
 	org.apache.felix.webconsole;version=4.2.2,\
@@ -60,7 +60,7 @@ Bundle-Version: 1.0.0
 Include-Resource: META-INF/=resources/LICENSE,\
 	META-INF/=resources/NOTICE,\
 	META-INF/=resources/DEPENDENCIES,\
-	META-INF/=resources/changelog.txt
+	META-INF/=${workspace}/release/resources/changelog.txt
 Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.txt
 Bundle-DocURL: http://felix.apache.org/documentation/subprojects/apache-felix-dependency-manager.html
 Bundle-Vendor: The Apache Software Foundation

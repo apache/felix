@@ -48,7 +48,7 @@ public class ConfigurationDependencyTest extends TestBase {
         Ensure e = new Ensure();
         // create a service provider and consumer
         Component s1 = m.createComponent().setImplementation(new ConfigurationConsumer(e)).setInterface(Runnable.class.getName(), null).add(m.createConfigurationDependency().setPid(PID).setPropagate(true));
-        Component s2 = m.createComponent().setImplementation(new ConfigurationCreator(e)).add(m.createServiceDependency().setService(ConfigurationAdmin.class).setRequired(true));
+        Component s2 = m.createComponent().setImplementation(new ConfigurationCreator(e, PID)).add(m.createServiceDependency().setService(ConfigurationAdmin.class).setRequired(true));
         Component s3 = m.createComponent().setImplementation(new ConfiguredServiceConsumer(e)).add(m.createServiceDependency().setService(Runnable.class, ("(testkey=testvalue)")).setRequired(true));
         m.add(s1);
         m.add(s2);
@@ -67,7 +67,7 @@ public class ConfigurationDependencyTest extends TestBase {
         Ensure e = new Ensure();
         // create a service provider and consumer
         Component s1 = m.createComponent().setImplementation(new ConfigurationConsumerWithComponentArg(e)).setInterface(Runnable.class.getName(), null).add(m.createConfigurationDependency().setPid(PID).setPropagate(true));
-        Component s2 = m.createComponent().setImplementation(new ConfigurationCreator(e)).add(m.createServiceDependency().setService(ConfigurationAdmin.class).setRequired(true));
+        Component s2 = m.createComponent().setImplementation(new ConfigurationCreator(e, PID)).add(m.createServiceDependency().setService(ConfigurationAdmin.class).setRequired(true));
         Component s3 = m.createComponent().setImplementation(new ConfiguredServiceConsumer(e)).add(m.createServiceDependency().setService(Runnable.class, ("(testkey=testvalue)")).setRequired(true));
         m.add(s1);
         m.add(s2);
@@ -99,7 +99,7 @@ public class ConfigurationDependencyTest extends TestBase {
         Component s1 = m.createComponent().setImplementation(new ConfigurationConsumerWithCallbackInstance(e))
             .setInterface(Runnable.class.getName(), null)
             .add(m.createConfigurationDependency().setPid(PID).setPropagate(true).setCallback(callbackInstance, updateMethod));
-        Component s2 = m.createComponent().setImplementation(new ConfigurationCreator(e))
+        Component s2 = m.createComponent().setImplementation(new ConfigurationCreator(e, PID))
             .add(m.createServiceDependency().setService(ConfigurationAdmin.class).setRequired(true));
         Component s3 = m.createComponent().setImplementation(new ConfiguredServiceConsumer(e))
             .add(m.createServiceDependency().setService(Runnable.class, ("(testkey=testvalue)")).setRequired(true));
@@ -121,7 +121,7 @@ public class ConfigurationDependencyTest extends TestBase {
         Ensure e = new Ensure();
         // create a service provider and consumer
         Component s1 = m.createComponent().setImplementation(new ConfigurationConsumer2(e)).setInterface(Runnable.class.getName(), null).add(m.createConfigurationDependency().setPid(PID).setPropagate(true));
-        Component s2 = m.createComponent().setImplementation(new ConfigurationCreator(e)).add(m.createServiceDependency().setService(ConfigurationAdmin.class).setRequired(true));
+        Component s2 = m.createComponent().setImplementation(new ConfigurationCreator(e, PID)).add(m.createServiceDependency().setService(ConfigurationAdmin.class).setRequired(true));
         Component s3 = m.createComponent().setImplementation(new ConfiguredServiceConsumer(e)).add(m.createServiceDependency().setService(Runnable.class, ("(testkey=testvalue)")).setRequired(true));
         m.add(s1);
         m.add(s2);
@@ -139,7 +139,7 @@ public class ConfigurationDependencyTest extends TestBase {
         DependencyManager m = getDM();
         Ensure e = new Ensure();
         Component s1 = m.createComponent().setImplementation(new ConfigurationConsumer3(e)).add(m.createConfigurationDependency().setPid(PID));
-        Component s2 = m.createComponent().setImplementation(new ConfigurationCreator(e)).add(m.createServiceDependency().setService(ConfigurationAdmin.class).setRequired(true));
+        Component s2 = m.createComponent().setImplementation(new ConfigurationCreator(e, PID)).add(m.createServiceDependency().setService(ConfigurationAdmin.class).setRequired(true));
         m.add(s1);
         m.add(s2);
         e.waitForStep(3, 5000);
@@ -149,14 +149,34 @@ public class ConfigurationDependencyTest extends TestBase {
         // ensure we executed all steps inside the component instance
         e.step(6);
     }
+    
+    public void testFELIX4907_updated_with_null_dictionary_called_when_configuration_is_lost() {
+        DependencyManager m = getDM();
+        Ensure e = new Ensure();
+        Component s1 = m.createComponent().setImplementation(new ConfigurationConsumer4(e)).add(m.createConfigurationDependency().setPid(PID));
+        Component s2 = m.createComponent().setImplementation(new ConfigurationCreator(e, PID)).add(m.createServiceDependency().setService(ConfigurationAdmin.class).setRequired(true));
+        m.add(s1);
+        m.add(s2);
+        e.waitForStep(3, 5000); // component configured and started.
+        m.remove(s2); // configuration will be removed
+        e.waitForStep(4, 5000); // configuration creator destroyed
+
+        e.waitForStep(5, 5000); // consumer called in updated(null)
+        e.waitForStep(6, 5000); // consumer des
+        m.remove(s1);
+        // ensure we executed all steps inside the component instance
+        e.step(7);
+    }
 
     class ConfigurationCreator {
         private volatile ConfigurationAdmin m_ca;
         private final Ensure m_ensure;
         Configuration m_conf;
+        final String m_pid;
         
-        public ConfigurationCreator(Ensure e) {
+        public ConfigurationCreator(Ensure e, String pid) {
             m_ensure = e;
+            m_pid = pid;
         }
 
         public void init() {
@@ -164,7 +184,7 @@ public class ConfigurationDependencyTest extends TestBase {
                 warn("ConfigurationCreator.init");
             	Assert.assertNotNull(m_ca);
                 m_ensure.step(1);
-                m_conf = m_ca.getConfiguration(PID, null);
+                m_conf = m_ca.getConfiguration(m_pid, null);
                 Hashtable props = new Properties();
                 props.put("testkey", "testvalue");
                 m_conf.update(props);
@@ -176,8 +196,8 @@ public class ConfigurationDependencyTest extends TestBase {
         
         public void destroy() throws IOException {
             warn("ConfigurationCreator.destroy");
-        	m_conf.delete();  
         	m_ensure.step();
+        	m_conf.delete();  
         }
     }
     
@@ -208,16 +228,16 @@ public class ConfigurationDependencyTest extends TestBase {
     }
 
     static class ConfigurationConsumer3 extends ConfigurationConsumer {
-        public ConfigurationConsumer3(Ensure e) {
+    	public ConfigurationConsumer3(Ensure e) {
             super(e);
         }
         
         public void updated(Dictionary props) throws ConfigurationException {
-            Assert.assertNotNull(props);
-            if (!"testvalue".equals(props.get("testkey"))) {
-                Assert.fail("Could not find the configured property.");
-            }
-            m_ensure.step(2);
+			Assert.assertNotNull(props);
+			if (!"testvalue".equals(props.get("testkey"))) {
+				Assert.fail("Could not find the configured property.");
+			}
+			m_ensure.step(2);
         }
         
         public void start() {
@@ -226,6 +246,35 @@ public class ConfigurationDependencyTest extends TestBase {
         
         public void stop() {
             m_ensure.step(4);
+        }
+    }
+    
+    static class ConfigurationConsumer4 extends ConfigurationConsumer {
+    	volatile boolean m_configured;
+    	
+        public ConfigurationConsumer4(Ensure e) {
+            super(e);
+        }
+        
+        public void updated(Dictionary props) throws ConfigurationException {
+        	if (! m_configured) {
+                Assert.assertNotNull(props);
+                if (!"testvalue".equals(props.get("testkey"))) {
+                    Assert.fail("Could not find the configured property.");
+                }
+                m_configured = true;
+                m_ensure.step(2);
+        	} else {
+        		m_ensure.step(5); // loosing configuration
+        	}
+        }
+        
+        public void start() {
+            m_ensure.step(3);
+        }
+        
+        public void stop() {
+            m_ensure.step(6); // stopped after configuration is lost
         }
     }
 

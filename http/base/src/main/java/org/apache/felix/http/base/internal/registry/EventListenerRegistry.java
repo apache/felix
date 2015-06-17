@@ -72,7 +72,7 @@ public final class EventListenerRegistry implements
     /** Request attribute listeners. */
     private final ListenerMap<ServletRequestAttributeListener> requestAttributeListeners = new ListenerMap<ServletRequestAttributeListener>();
 
-    public synchronized void cleanup()
+    public void cleanup()
     {
         this.contextListeners.cleanup();
         this.contextAttributeListeners.cleanup();

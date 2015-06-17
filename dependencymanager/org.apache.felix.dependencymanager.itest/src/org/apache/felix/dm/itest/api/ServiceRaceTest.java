@@ -221,11 +221,9 @@ public class ServiceRaceTest extends TestBase {
         // Ensure that client has been stopped, then destroyed, then unbound from all dependencies
         expectedStep += 2; // stop/destroy
         expectedStep += DEPENDENCIES; // removed all dependencies
-        expectedStep += 1; // removed configuration
         step.waitForStep(expectedStep, STEP_WAIT);
         step.ensure();
         Assert.assertEquals(0, clientImpl.getDependencies());
-        Assert.assertNull(clientImpl.getConfiguration());                
 
         if (super.errorsLogged()) {
             throw new IllegalStateException("Race test interrupted (some error occured, see previous logs)");
@@ -258,29 +256,27 @@ public class ServiceRaceTest extends TestBase {
         }
 
         public void updated(Dictionary conf) throws ConfigurationException {
-            m_conf = conf;
-            try {
-                if (conf != null) {
+            if (conf != null) {
+                try {
                     Assert.assertEquals("bar", conf.get("foo"));
+                    m_conf = conf;
                     m_step.step(1);
-                } else {
-                    m_step.step();
+                } catch (Throwable t) {
+                    m_step.throwable(t);
                 }
-            } catch (Throwable t) {
-                m_step.throwable(t);
             }
         }
         
         void add(Dep d) {
             Assert.assertNotNull(d);
-            m_step.step();
             m_dependencies ++;
+            m_step.step();
         }
         
         void remove(Dep d) {
             Assert.assertNotNull(d);
-            m_step.step();
             m_dependencies --;
+            m_step.step();
         }
                 
         void start() {

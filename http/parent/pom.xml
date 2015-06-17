@@ -103,6 +103,25 @@
                     <compilerVersion>1.${http.java.version}</compilerVersion>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>animal-sniffer-maven-plugin</artifactId>
+                <configuration>
+                    <signature>
+                        <groupId>org.codehaus.mojo.signature</groupId>
+                        <artifactId>java1${http.java.version}</artifactId>
+                        <version>1.0</version>
+                    </signature>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
         <pluginManagement>
             <plugins>
@@ -132,7 +151,12 @@
                             <Bundle-RequiredExecutionEnvironment>${http.bree}</Bundle-RequiredExecutionEnvironment>
                         </instructions>                        
                     </configuration>
-                 </plugin>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>animal-sniffer-maven-plugin</artifactId>
+                    <version>1.14</version>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>

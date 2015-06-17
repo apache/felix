@@ -32,8 +32,8 @@ import org.osgi.framework.ServiceReference;
 
 /**
  * The <code>ReadOnlyDictionary</code> is both a <code>Dictionary</code> and
- * a <code>Map</code> whose modificaiton methods (like {@link #put(Object, Object)},
- * {@link #remove(Object)}, etc.) have no effect.
+ * a <code>Map</code> whose modification methods (like {@link #put(Object, Object)},
+ * {@link #remove(Object)}, etc.) throw an {@link UnsupportedOperationException}.
  */
 public class ReadOnlyDictionary<S, T> extends Dictionary<S, T>
     implements Map<S, T>, Comparable<ReadOnlyDictionary<S, T>>
@@ -122,7 +122,7 @@ public class ReadOnlyDictionary<S, T> extends Dictionary<S, T>
     @Override
     public T put( final S key, final T value )
     {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
 
@@ -133,7 +133,7 @@ public class ReadOnlyDictionary<S, T> extends Dictionary<S, T>
     @Override
     public T remove( final Object key )
     {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
 
@@ -155,7 +155,7 @@ public class ReadOnlyDictionary<S, T> extends Dictionary<S, T>
 
     public void clear()
     {
-        // nop, this map is read only
+        throw new UnsupportedOperationException();
     }
 
 
@@ -185,7 +185,7 @@ public class ReadOnlyDictionary<S, T> extends Dictionary<S, T>
 
     public void putAll( Map<? extends S, ? extends T> m )
     {
-        // nop, this map is read only
+        throw new UnsupportedOperationException();
     }
 
 
@@ -195,7 +195,7 @@ public class ReadOnlyDictionary<S, T> extends Dictionary<S, T>
     }
 
 
-    public int compareTo(ReadOnlyDictionary<S, T> o)
+    public int compareTo(final ReadOnlyDictionary<S, T> o)
     {
         if ( m_serviceReference == null )
         {

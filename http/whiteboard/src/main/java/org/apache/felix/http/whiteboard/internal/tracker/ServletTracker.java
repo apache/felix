@@ -56,7 +56,7 @@ public final class ServletTracker
     {
         SystemLogger.warning("Deprecation warning: " +
                 "Servlet registered through Apache Felix whiteboard service: " + ref +
-                ". Please change your code to the OSGi Whiteboard Service.", null);
+                ". Please change your code to the OSGi Http Whiteboard Service.", null);
         this.manager.add(service, ref);
     }
 
