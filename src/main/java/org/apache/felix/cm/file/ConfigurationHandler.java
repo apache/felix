@@ -75,6 +75,8 @@ public class ConfigurationHandler
     protected static final int TOKEN_VAL_OPEN = '"'; // '{';
     protected static final int TOKEN_VAL_CLOS = '"'; // '}';
 
+    protected static final int TOKEN_COMMENT = '#';
+
     // simple types (string & primitive wrappers)
     protected static final int TOKEN_SIMPLE_STRING = 'T';
     protected static final int TOKEN_SIMPLE_INTEGER = 'I';
@@ -290,12 +292,12 @@ public class ConfigurationHandler
 
         Hashtable configuration = new Hashtable();
         token = 0;
-        while ( nextToken( pr ) == TOKEN_NAME )
+        while ( nextToken( pr, true ) == TOKEN_NAME )
         {
             String key = tokenValue;
 
             // expect equal sign
-            if ( nextToken( pr ) != TOKEN_EQ )
+            if ( nextToken( pr, false ) != TOKEN_EQ )
             {
                 throw readFailure( token, TOKEN_EQ );
             }
@@ -566,8 +568,7 @@ public class ConfigurationHandler
         }
     }
 
-
-    private int nextToken( PushbackReader pr ) throws IOException
+    private int nextToken( PushbackReader pr, final boolean newLine ) throws IOException
     {
         int c = ignorableWhiteSpace( pr );
 
@@ -575,6 +576,22 @@ public class ConfigurationHandler
         if ( c < 0 )
         {
             return ( token = c );
+        }
+
+        // check for comment
+        if ( newLine && c == TOKEN_COMMENT )
+        {
+            // skip everything until end of line
+            do
+            {
+                c = read( pr );
+            } while ( c != -1 && c != '\n' );
+            if ( c == -1 )
+            {
+                return ( token = c);
+            }
+            // and start over
+            return nextToken( pr, true );
         }
 
         // check whether there is a name
