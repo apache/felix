@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,6 +19,7 @@
 package org.apache.felix.eventadmin.bridge.configuration;
 
 import java.util.Arrays;
+import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.osgi.framework.BundleContext;
@@ -49,72 +50,77 @@ public class ConfigurationEventToEventAdminBridge implements
 
     public void configurationEvent(final ConfigurationEvent event)
     {
-        final ServiceReference ref = m_context
-            .getServiceReference(EventAdmin.class.getName());
+        final ServiceReference ref = m_context.getServiceReference(EventAdmin.class.getName());
 
-        if(null != ref)
+        if (null != ref)
         {
-            final EventAdmin eventAdmin = (EventAdmin) m_context
-                .getService(ref);
+            final EventAdmin eventAdmin = (EventAdmin) m_context.getService(ref);
 
-            if(null != eventAdmin)
+            if (null != eventAdmin)
             {
-                final String topic;
-
-                switch(event.getType())
+                try
                 {
-                    case ConfigurationEvent.CM_UPDATED:
-                        topic = "org/osgi/service/cm/ConfigurationEvent/CM_UPDATED";
-                        break;
-                    case ConfigurationEvent.CM_DELETED:
-                        topic = "org/osgi/service/cm/ConfigurationEvent/CM_DELETED";
-                        break;
-                    default:
-                        m_context.ungetService(ref);
-                        return;
+                    final String topic;
+
+                    switch (event.getType())
+                    {
+                        case ConfigurationEvent.CM_UPDATED:
+                            topic = "org/osgi/service/cm/ConfigurationEvent/CM_UPDATED";
+                            break;
+                        case ConfigurationEvent.CM_DELETED:
+                            topic = "org/osgi/service/cm/ConfigurationEvent/CM_DELETED";
+                            break;
+                        case ConfigurationEvent.CM_LOCATION_CHANGED:
+                            topic = "org/osgi/service/cm/ConfigurationEvent/CM_LOCATION_CHANGED";
+                            break;
+                        default:
+                            return;
+                    }
+
+                    final Hashtable properties = new Hashtable();
+
+                    if (null != event.getFactoryPid())
+                    {
+                        properties.put("cm.factoryPid", event.getFactoryPid());
+                    }
+
+                    properties.put("cm.pid", event.getPid());
+
+                    final ServiceReference eventRef = event.getReference();
+
+                    if (null == eventRef)
+                    {
+                        throw new IllegalArgumentException(
+                            "ConfigurationEvent.getReference() may not be null");
+                    }
+
+                    properties.put(EventConstants.SERVICE, eventRef);
+
+                    properties.put(EventConstants.SERVICE_ID, eventRef.getProperty(
+                        EventConstants.SERVICE_ID));
+
+                    final Object objectClass = eventRef.getProperty(
+                        Constants.OBJECTCLASS);
+
+                    if(!(objectClass instanceof String[])
+                        || !Arrays.asList((String[]) objectClass).contains(
+                        ConfigurationAdmin.class.getName()))
+                    {
+                        throw new IllegalArgumentException(
+                            "Bad objectclass: " + objectClass);
+                    }
+
+                    properties.put(EventConstants.SERVICE_OBJECTCLASS, objectClass);
+
+                    properties.put(EventConstants.SERVICE_PID, eventRef.getProperty(
+                        EventConstants.SERVICE_PID));
+
+                    eventAdmin.postEvent(new Event(topic, (Dictionary)properties));
                 }
-                
-                final Hashtable properties = new Hashtable();
-                
-                if(null != event.getFactoryPid())
+                finally
                 {
-                    properties.put("cm.factoryPid", event.getFactoryPid());
+                    m_context.ungetService(ref);
                 }
-                
-                properties.put("cm.pid", event.getPid());
-                
-                final ServiceReference eventRef = event.getReference();
-
-                if(null == eventRef)
-                {
-                    throw new IllegalArgumentException(
-                        "ConfigurationEvent.getReference() may not be null");
-                }
-
-                properties.put(EventConstants.SERVICE, eventRef);
-
-                properties.put(EventConstants.SERVICE_ID, eventRef.getProperty(
-                    EventConstants.SERVICE_ID));
-
-                final Object objectClass = eventRef.getProperty(
-                    Constants.OBJECTCLASS);
-
-                if(!(objectClass instanceof String[])
-                    || !Arrays.asList((String[]) objectClass).contains(
-                    ConfigurationAdmin.class.getName()))
-                {
-                    throw new IllegalArgumentException(
-                        "Bad objectclass: " + objectClass);
-                }
-
-                properties.put(EventConstants.SERVICE_OBJECTCLASS, objectClass);
-
-                properties.put(EventConstants.SERVICE_PID, eventRef.getProperty(
-                    EventConstants.SERVICE_PID));
-                
-                eventAdmin.postEvent(new Event(topic, properties));
-
-                m_context.ungetService(ref);
             }
         }
     }
