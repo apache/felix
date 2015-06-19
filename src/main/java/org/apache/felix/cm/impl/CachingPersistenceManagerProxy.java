@@ -28,6 +28,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.felix.cm.NotCachablePersistenceManager;
 import org.apache.felix.cm.PersistenceManager;
 import org.osgi.framework.Constants;
 
@@ -130,6 +131,11 @@ class CachingPersistenceManagerProxy implements PersistenceManager
         try
         {
             lock.lock();
+            boolean fullyLoaded = this.fullyLoaded;
+            if ( pm instanceof NotCachablePersistenceManager )
+            {
+                fullyLoaded = false;
+            }
             // if not fully loaded, call back to the underlying persistence
             // manager and cach all dictionaries whose service.pid is set
             if ( !fullyLoaded )
@@ -158,7 +164,7 @@ class CachingPersistenceManagerProxy implements PersistenceManager
                             }
                         }
                     }
-                    fullyLoaded = true;
+                    this.fullyLoaded = true;
                 }
             }
 
