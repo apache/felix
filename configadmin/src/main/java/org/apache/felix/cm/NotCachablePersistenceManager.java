@@ -16,13 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-@Version("1.1")
-@Export(optional = "provide:=true")
 package org.apache.felix.cm;
 
 
-import aQute.bnd.annotation.Export;
-import aQute.bnd.annotation.Version;
-
-
+/**
+ * <code>NotCachablePersistenceManager</code> is a marker interface which
+ * extends {@link PersistenceManager} to inform that no cache should be applied
+ * around this persistence manager. This gives the opportunity for the
+ * persistence manager to implement it's own caching heuristics.
+ * <p>
+ * To make implementations of this interface available to the Configuration
+ * Admin Service they must be registered as service for interface
+ * {@link PersistenceManager}.
+ * <p>
+ * See also {@link PersistenceManager}
+ *
+ * @since 1.1
+ */
+public interface NotCachablePersistenceManager extends PersistenceManager
+{
+}
