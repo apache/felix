@@ -20,6 +20,7 @@ package org.apache.felix.resolver;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.osgi.framework.Version;
 import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.framework.namespace.PackageNamespace;
@@ -27,6 +28,7 @@ import org.osgi.resource.Capability;
 import org.osgi.resource.Namespace;
 import org.osgi.resource.Requirement;
 import org.osgi.resource.Resource;
+import org.osgi.service.resolver.HostedCapability;
 
 public class Util
 {
@@ -107,5 +109,32 @@ public class Util
             }
         }
         return result;
+    }
+    
+    public static Resource getDeclaredResource(Resource resource)
+    {
+        if (resource instanceof WrappedResource)
+        {
+            return ((WrappedResource) resource).getDeclaredResource();
+        }
+        return resource;
+    }
+
+    public static Capability getDeclaredCapability(Capability c)
+    {
+        if (c instanceof HostedCapability)
+        {
+            return ((HostedCapability) c).getDeclaredCapability();
+        }
+        return c;
+    }
+
+    public static Requirement getDeclaredRequirement(Requirement r)
+    {
+        if (r instanceof WrappedRequirement)
+        {
+            return ((WrappedRequirement) r).getDeclaredRequirement();
+        }
+        return r;
     }
 }
