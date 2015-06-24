@@ -200,13 +200,13 @@ public final class HandlerRegistry
 
     /**
      * Get the servlet handler for a servlet by name
-     * @param contextId The context id or {@code null}
+     * @param contextId The context id
      * @param name The servlet name
      * @return The servlet handler or {@code null}
      */
-    public ServletResolution resolveServletByName(final Long contextId, @Nonnull final String name)
+    public ServletResolution resolveServletByName(final long contextId, @Nonnull final String name)
     {
-        final PerContextHandlerRegistry reg = (contextId == null ? null : this.getRegistry(contextId));
+        final PerContextHandlerRegistry reg = this.getRegistry(contextId);
         if ( reg != null )
         {
             final ServletHandler handler = reg.resolveServletByName(name);
