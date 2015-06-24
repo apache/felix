@@ -313,14 +313,14 @@ public abstract class BaseIntegrationTest
             when( localRepo.length() > 0 ).useOptions(
                     systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo)
             ),
-//                        CoreOptions.vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8787"),
+//            CoreOptions.vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8787"),
+
+            mavenBundle("org.slf4j", "slf4j-api", "1.7.5"),
+            mavenBundle("org.slf4j", "jcl-over-slf4j", "1.7.5"),
+            mavenBundle("org.slf4j", "log4j-over-slf4j", "1.7.5"),
 
             mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "4.0.0"),
             mavenBundle("org.apache.sling", "org.apache.sling.commons.logservice", "1.0.2"),
-
-            mavenBundle("org.slf4j", "slf4j-api", "1.6.4"),
-            mavenBundle("org.slf4j", "jcl-over-slf4j", "1.6.4"),
-            mavenBundle("org.slf4j", "log4j-over-slf4j", "1.6.4"),
 
             mavenBundle("org.apache.felix", "org.apache.felix.http.api").startLevel(START_LEVEL_SYSTEM_BUNDLES),
             mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api").startLevel(START_LEVEL_SYSTEM_BUNDLES),
