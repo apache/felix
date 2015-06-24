@@ -68,7 +68,6 @@ import org.osgi.framework.BundleEvent;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.cm.ManagedService;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.http.runtime.HttpServiceRuntimeConstants;
@@ -96,7 +95,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
     private final Map<String, Deployment> deployments;
     private final ExecutorService executor;
 
-    private ServiceRegistration configServiceReg;
+    private ServiceRegistration<?> configServiceReg;
     private Server server;
     private ContextHandlerCollection parent;
     private EventDispatcher eventDispatcher;
@@ -133,7 +132,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 
         Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(Constants.SERVICE_PID, PID);
-        this.configServiceReg = this.context.registerService(ManagedService.class.getName(), new JettyManagedService(this), props);
+        this.configServiceReg = this.context.registerService("org.osgi.service.cm.ManagedService", new JettyManagedService(this), props);
 
         this.eventAdmintTracker = new ServiceTracker(this.context, EventAdmin.class.getName(), this);
         this.eventAdmintTracker.open();
@@ -217,6 +216,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             {
                 this.server.stop();
                 this.server = null;
+                SystemLogger.info("Stopped Jetty.");
             }
             catch (Exception e)
             {
@@ -263,7 +263,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             this.server.setHandler(this.parent);
             this.server.start();
 
-            StringBuffer message = new StringBuffer("Started Jetty ").append(version).append(" at port(s)");
+            final StringBuilder message = new StringBuilder("Started Jetty ").append(version).append(" at port(s)");
 
             if (this.config.isUseHttp() && initializeHttp())
             {
@@ -318,12 +318,12 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         configureHttpConnectionFactory(connFactory);
         ServerConnector connector = new ServerConnector(server, connFactory);
         configureConnector(connector, this.config.getHttpPort());
-        
+
         if (this.config.isProxyLoadBalancerConnection())
         {
             connFactory.getHttpConfiguration().addCustomizer(new ForwardedRequestCustomizer());
         }
-        
+
         return startConnector(connector);
     }
 
@@ -338,12 +338,12 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         ServerConnector connector = new ServerConnector(server, new SslConnectionFactory(sslContextFactory, HttpVersion.HTTP_1_1.toString()), connFactory);
         HttpConfiguration httpConfiguration = connFactory.getHttpConfiguration();
         httpConfiguration.addCustomizer(new SecureRequestCustomizer());
-        
+
         if (this.config.isProxyLoadBalancerConnection())
         {
             httpConfiguration.addCustomizer(new ForwardedRequestCustomizer());
         }
-        
+
         configureConnector(connector, this.config.getHttpsPort());
         return startConnector(connector);
     }

@@ -129,7 +129,7 @@ public final class JettyConfig
 
     /** Felix specific property to control whether to enable Proxy/Load Balancer Connection */
     public static final String FELIX_PROXY_LOAD_BALANCER_CONNECTION_ENABLE = "org.apache.felix.proxy.load.balancer.connection.enable";
-    
+
     private static String validateContextPath(String ctxPath)
     {
         // undefined, empty, or root context path
@@ -362,7 +362,7 @@ public final class JettyConfig
         boolean useHttps = getBooleanProperty(FELIX_HTTPS_ENABLE, getBooleanProperty(OSCAR_HTTPS_ENABLE, false));
         return useHttps && getHttpsPort() > 0;
     }
-    
+
     public boolean isProxyLoadBalancerConnection()
     {
         return getBooleanProperty(FELIX_PROXY_LOAD_BALANCER_CONNECTION_ENABLE, false);

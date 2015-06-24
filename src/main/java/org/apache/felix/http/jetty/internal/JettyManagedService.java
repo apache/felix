@@ -25,7 +25,7 @@ import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ManagedService;
 
-public class JettyManagedService implements ServiceFactory
+public class JettyManagedService implements ServiceFactory<ManagedService>
 {
 
     private final JettyService jettyService;
@@ -35,10 +35,12 @@ public class JettyManagedService implements ServiceFactory
         this.jettyService = jettyService;
     }
 
-    public Object getService(Bundle bundle, ServiceRegistration registration)
+    @Override
+    public ManagedService getService(Bundle bundle, ServiceRegistration registration)
     {
         return new ManagedService()
         {
+            @Override
             public void updated(Dictionary properties)
             {
                 jettyService.updated(properties);
@@ -46,7 +48,8 @@ public class JettyManagedService implements ServiceFactory
         };
     }
 
-    public void ungetService(Bundle bundle, ServiceRegistration registration, Object service)
+    @Override
+    public void ungetService(Bundle bundle, ServiceRegistration registration, ManagedService service)
     {
         // just have the reference dropped, nothing to cleanup
     }
