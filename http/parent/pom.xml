@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>2.1</version>
+        <version>3</version>
         <relativePath>../../pom/pom.xml</relativePath>
     </parent>
 
@@ -34,7 +34,7 @@
     <packaging>pom</packaging>
 
     <prerequisites>
-        <maven>2.2.1</maven>
+        <maven>3.0.5</maven>
     </prerequisites>
 
     <properties>
@@ -50,7 +50,7 @@
             Using anything else causes the set-bundle-required-execution-environment
             to fail the build with an exception
         -->
-        <http.java.version>6</http.java.version>
+        <felix.java.version>6</felix.java.version>
     </properties>
 
     <scm>
@@ -60,69 +60,6 @@
     </scm>
 
     <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>set-bundle-required-execution-environment</id>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <phase>initialize</phase>
-                        <configuration>
-                            <exportAntProperties>true</exportAntProperties>
-                            <target>
-                                <script language="javascript"> <![CDATA[
-                                    var System = java.lang.System;
-                                    var bree = "J2SE-1.6";
-                                    var httpJavaVersion = System.getProperty("http.java.version");
-                                    if (!httpJavaVersion) {
-                                        httpJavaVersion = project.getProperty("http.java.version");
-                                    }
-                                    if (httpJavaVersion == "7") {
-                                        bree = "JavaSE-1.7";
-	                                    System.out.println("Setting Bundle-RequiredExecutionEnvironment=" + bree + " from http.java.version=" + httpJavaVersion);
-                                    } else if (httpJavaVersion != "6") {
-                                        System.out.println("Unsupported http.java.version=" + httpJavaVersion + "; must be 6 or 7.");
-                                        throw "http.java.version must be 6 or 7";
-                                    }
-                                    project.setProperty("http.bree", bree);
-                                ]]></script>
-                            </target>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-	                <source>1.${http.java.version}</source>
-                    <target>1.${http.java.version}</target>
-                    <compilerVersion>1.${http.java.version}</compilerVersion>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>animal-sniffer-maven-plugin</artifactId>
-                <configuration>
-                    <signature>
-                        <groupId>org.codehaus.mojo.signature</groupId>
-                        <artifactId>java1${http.java.version}</artifactId>
-                        <version>1.0</version>
-                    </signature>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -148,14 +85,9 @@
                         <instructions>
                             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                             <Bundle-Version>${project.version}</Bundle-Version>
-                            <Bundle-RequiredExecutionEnvironment>${http.bree}</Bundle-RequiredExecutionEnvironment>
+                            <Bundle-RequiredExecutionEnvironment>${felix.bree}</Bundle-RequiredExecutionEnvironment>
                         </instructions>                        
                     </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>animal-sniffer-maven-plugin</artifactId>
-                    <version>1.14</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -167,18 +99,6 @@
             <artifactId>bndlib</artifactId>
             <version>1.50.0</version>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.8.2</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <version>1.8.2</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 

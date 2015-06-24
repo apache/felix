@@ -19,18 +19,17 @@
 package org.apache.felix.http.itest;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.ops4j.pax.exam.Constants.START_LEVEL_SYSTEM_BUNDLES;
 import static org.ops4j.pax.exam.Constants.START_LEVEL_TEST_BUNDLE;
-import static org.ops4j.pax.exam.CoreOptions.bootDelegationPackage;
-import static org.ops4j.pax.exam.CoreOptions.cleanCaches;
-import static org.ops4j.pax.exam.CoreOptions.felix;
 import static org.ops4j.pax.exam.CoreOptions.frameworkStartLevel;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
-import static org.ops4j.pax.exam.CoreOptions.url;
+import static org.ops4j.pax.exam.CoreOptions.systemProperty;
+import static org.ops4j.pax.exam.CoreOptions.when;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -61,9 +60,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.felix.http.api.ExtHttpService;
 import org.junit.After;
 import org.junit.Before;
-import org.ops4j.pax.exam.CoreOptions;
+import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.Configuration;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -175,7 +173,7 @@ public abstract class BaseIntegrationTest
 
     protected static final int DEFAULT_TIMEOUT = 10000;
 
-    protected static final String ORG_APACHE_FELIX_HTTP_JETTY = "org.apache.felix.http.jetty";
+    private static final String ORG_APACHE_FELIX_HTTP_JETTY = "org.apache.felix.http.jetty";
 
     protected static void assertContent(int expectedRC, String expected, URL url) throws IOException
     {
@@ -309,38 +307,34 @@ public abstract class BaseIntegrationTest
     @Configuration
     public Option[] config()
     {
+        final String localRepo = System.getProperty("maven.repo.local", "");
+
         return options(
-            bootDelegationPackage("sun.*"),
-            cleanCaches(),
-            CoreOptions.systemProperty("logback.configurationFile").value("file:src/test/resources/logback.xml"), //
+            when( localRepo.length() > 0 ).useOptions(
+                    systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo)
+            ),
 //                        CoreOptions.vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8787"),
 
-            mavenBundle("org.slf4j", "slf4j-api").version("1.6.5").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("ch.qos.logback", "logback-core").version("1.0.6").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("ch.qos.logback", "logback-classic").version("1.0.6").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "4.0.0"),
+            mavenBundle("org.apache.sling", "org.apache.sling.commons.logservice", "1.0.2"),
 
-            url("link:classpath:META-INF/links/org.ops4j.pax.exam.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            url("link:classpath:META-INF/links/org.ops4j.pax.exam.inject.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            url("link:classpath:META-INF/links/org.ops4j.pax.extender.service.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            url("link:classpath:META-INF/links/org.ops4j.base.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            url("link:classpath:META-INF/links/org.ops4j.pax.swissbox.core.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            url("link:classpath:META-INF/links/org.ops4j.pax.swissbox.extender.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            url("link:classpath:META-INF/links/org.ops4j.pax.swissbox.lifecycle.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            url("link:classpath:META-INF/links/org.ops4j.pax.swissbox.framework.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            url("link:classpath:META-INF/links/org.apache.geronimo.specs.atinject.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("org.slf4j", "slf4j-api", "1.6.4"),
+            mavenBundle("org.slf4j", "jcl-over-slf4j", "1.6.4"),
+            mavenBundle("org.slf4j", "log4j-over-slf4j", "1.6.4"),
 
-            mavenBundle("org.apache.felix", "org.apache.felix.http.api").versionAsInProject().startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api").versionAsInProject().startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("org.apache.felix", ORG_APACHE_FELIX_HTTP_JETTY).versionAsInProject().startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("org.apache.felix", "org.apache.felix.configadmin").versionAsInProject().startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("org.apache.felix", "org.apache.felix.http.api").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("org.apache.felix", ORG_APACHE_FELIX_HTTP_JETTY).startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("org.apache.felix", "org.apache.felix.configadmin").version("1.8.6"),
 
-            mavenBundle("org.mockito", "mockito-core").versionAsInProject().startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("org.objenesis", "objenesis").versionAsInProject().startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("com.googlecode.json-simple", "json-simple").versionAsInProject().startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("org.apache.httpcomponents", "httpcore-osgi").versionAsInProject().startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("org.apache.httpcomponents", "httpclient-osgi").versionAsInProject().startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("org.apache.httpcomponents", "httpcore-osgi").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("org.apache.httpcomponents", "httpclient-osgi").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("org.mockito", "mockito-all").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("org.objenesis", "objenesis").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("com.googlecode.json-simple", "json-simple").startLevel(START_LEVEL_SYSTEM_BUNDLES),
 
-            junitBundles(), frameworkStartLevel(START_LEVEL_TEST_BUNDLE), felix());
+            junitBundles(),
+            frameworkStartLevel(START_LEVEL_TEST_BUNDLE));
     }
 
     private final Map<String, ServiceTracker<?, ?>> trackers = new HashMap<String, ServiceTracker<?, ?>>();
@@ -416,10 +410,11 @@ public abstract class BaseIntegrationTest
     {
         final String pid = "org.apache.felix.http";
 
-        Collection<ServiceReference<ManagedService>> serviceRefs = m_context.getServiceReferences(ManagedService.class, String.format("(%s=%s)", Constants.SERVICE_PID, pid));
+        final Collection<ServiceReference<ManagedService>> serviceRefs = m_context.getServiceReferences(ManagedService.class, String.format("(%s=%s)", Constants.SERVICE_PID, pid));
         assertNotNull("Unable to obtain managed configuration for " + pid, serviceRefs);
+        assertFalse("Unable to obtain managed configuration for " + pid, serviceRefs.isEmpty());
 
-        for (ServiceReference<ManagedService> serviceRef : serviceRefs)
+        for (final ServiceReference<ManagedService> serviceRef : serviceRefs)
         {
             ManagedService service = m_context.getService(serviceRef);
             try

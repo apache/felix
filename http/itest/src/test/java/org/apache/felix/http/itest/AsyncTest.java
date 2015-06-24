@@ -35,12 +35,15 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerMethod;
 
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
+@ExamReactorStrategy(PerMethod.class)
 public class AsyncTest extends BaseIntegrationTest
 {
 
@@ -64,6 +67,7 @@ public class AsyncTest extends BaseIntegrationTest
                 asyncContext.setTimeout(2000);
                 asyncContext.start(new Runnable()
                 {
+                    @Override
                     public void run()
                     {
                         try
@@ -125,6 +129,7 @@ public class AsyncTest extends BaseIntegrationTest
                     final AsyncContext asyncContext = req.startAsync(req, resp);
                     asyncContext.start(new Runnable()
                     {
+                        @Override
                         public void run()
                         {
                             try

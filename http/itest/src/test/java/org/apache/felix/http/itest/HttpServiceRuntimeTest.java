@@ -19,12 +19,12 @@
 package org.apache.felix.http.itest;
 
 import static java.util.Arrays.asList;
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.fail;
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.osgi.framework.Constants.SERVICE_RANKING;
 import static org.osgi.service.http.runtime.HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT;
@@ -75,9 +75,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.ExamReactorStrategy;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
-import org.ops4j.pax.exam.spi.reactors.EagerSingleStagedReactorFactory;
+import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -92,8 +92,8 @@ import org.osgi.service.http.runtime.dto.RuntimeDTO;
 import org.osgi.service.http.runtime.dto.ServletContextDTO;
 import org.osgi.service.http.runtime.dto.ServletDTO;
 
-@RunWith(JUnit4TestRunner.class)
-@ExamReactorStrategy( EagerSingleStagedReactorFactory.class )
+@RunWith(PaxExam.class)
+@ExamReactorStrategy(PerMethod.class)
 public class HttpServiceRuntimeTest extends BaseIntegrationTest
 {
     private static final String HTTP_CONTEXT_NAME = "org.osgi.service.http";
@@ -385,9 +385,13 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
         contextDTO = assertDefaultContext(runtimeDTOWithBothResources);
         assertEquals(2, contextDTO.resourceDTOs.length);
         assertEquals("/resources", contextDTO.resourceDTOs[0].prefix);
-        assertArrayEquals(new String[] { "/resource_1/*" }, contextDTO.resourceDTOs[0].patterns);
-        assertEquals("/resources", contextDTO.resourceDTOs[1].prefix);
-        assertArrayEquals(new String[] { "/resource_2/*" }, contextDTO.resourceDTOs[1].patterns);
+        assertEquals(1, contextDTO.resourceDTOs[0].patterns.length);
+        assertEquals(1, contextDTO.resourceDTOs[1].patterns.length);
+        final Set<String> patterns = new HashSet<String>();
+        patterns.add(contextDTO.resourceDTOs[0].patterns[0]);
+        patterns.add(contextDTO.resourceDTOs[1].patterns[0]);
+        assertTrue(patterns.contains("/resource_1/*"));
+        assertTrue(patterns.contains("/resource_2/*"));
     }
 
     @Test

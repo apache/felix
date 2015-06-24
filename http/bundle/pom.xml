@@ -38,7 +38,7 @@
     </scm>
 
     <properties>
-        <http.java.version>7</http.java.version>
+        <felix.java.version>7</felix.java.version>
     </properties>
 
     <build>
