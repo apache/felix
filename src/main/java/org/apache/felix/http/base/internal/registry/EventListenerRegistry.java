@@ -206,7 +206,7 @@ public final class EventListenerRegistry implements
     {
         for (final HttpSessionAttributeListener l : sessionAttributeListeners.getActiveListeners())
         {
-            l.attributeReplaced(event);
+            l.attributeRemoved(event);
         }
     }
 
@@ -215,7 +215,7 @@ public final class EventListenerRegistry implements
     {
         for (final HttpSessionAttributeListener l : sessionAttributeListeners.getActiveListeners())
         {
-            l.attributeReplaced(event);
+            l.attributeAdded(event);
         }
     }
 
@@ -233,7 +233,7 @@ public final class EventListenerRegistry implements
     {
         for (final ServletContextAttributeListener l : contextAttributeListeners.getActiveListeners())
         {
-            l.attributeReplaced(event);
+            l.attributeRemoved(event);
         }
     }
 
@@ -242,7 +242,7 @@ public final class EventListenerRegistry implements
     {
         for (final ServletContextAttributeListener l : contextAttributeListeners.getActiveListeners())
         {
-            l.attributeReplaced(event);
+            l.attributeAdded(event);
         }
     }
 
