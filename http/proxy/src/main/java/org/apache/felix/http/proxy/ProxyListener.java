@@ -18,8 +18,6 @@
  */
 package org.apache.felix.http.proxy;
 
-import java.util.EventListener;
-
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -29,12 +27,10 @@ import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionIdListener;
 import javax.servlet.http.HttpSessionListener;
 
+import org.apache.felix.http.proxy.impl.EventDispatcherTracker;
+import org.apache.felix.http.proxy.impl.ProxyServletContextListener;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
-import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * The <code>ProxyListener</code> implements a Servlet API listener for HTTP
@@ -42,7 +38,9 @@ import org.osgi.util.tracker.ServiceTracker;
  * and forwarded to the event dispatcher.
  *
  * @since 2.1.0
+ * @deprecated Use the {@link ProxyServletContextListener} instead.
  */
+@Deprecated
 public class ProxyListener
     implements HttpSessionAttributeListener,
                HttpSessionListener,
@@ -50,15 +48,9 @@ public class ProxyListener
                ServletContextListener
 {
 
-    private ServletContext servletContext;
+    private volatile ServletContext servletContext;
 
-    private ServiceTracker eventDispatcherTracker;
-
-    private HttpSessionListener sessionDispatcher;
-
-    private HttpSessionIdListener sessionIdDispatcher;
-
-    private HttpSessionAttributeListener attributeDispatcher;
+    private volatile EventDispatcherTracker eventDispatcherTracker;
 
     // ---------- ServletContextListener
 
@@ -162,18 +154,7 @@ public class ProxyListener
             try
             {
                 BundleContext bundleContext = (BundleContext) bundleContextAttr;
-                Filter filter = createFilter(bundleContext, null);
-                this.eventDispatcherTracker = new ServiceTracker(bundleContext, filter, null)
-                {
-                    @Override
-                    public void removedService(ServiceReference reference, Object service)
-                    {
-                        ProxyListener.this.sessionDispatcher = null;
-                        ProxyListener.this.attributeDispatcher = null;
-                        ProxyListener.this.sessionIdDispatcher = null;
-                        super.removedService(reference, service);
-                    }
-                };
+                this.eventDispatcherTracker = new EventDispatcherTracker(bundleContext);
                 this.eventDispatcherTracker.open();
             }
             catch (InvalidSyntaxException e)
@@ -187,49 +168,28 @@ public class ProxyListener
 
     private HttpSessionListener getSessionDispatcher()
     {
-        if (this.sessionDispatcher == null)
+        if (this.eventDispatcherTracker != null)
         {
-            final Object dispatcher = getDispatcher();
-            if (dispatcher instanceof HttpSessionListener)
-            {
-                this.sessionDispatcher = (HttpSessionListener) dispatcher;
-            }
+            return this.eventDispatcherTracker.getHttpSessionListener();
         }
-        return this.sessionDispatcher;
+        return null;
     }
 
     private HttpSessionIdListener getSessionIdDispatcher()
     {
-        if (this.sessionIdDispatcher == null)
+        if (this.eventDispatcherTracker != null)
         {
-            final Object dispatcher = getDispatcher();
-            if (dispatcher instanceof HttpSessionIdListener)
-            {
-                this.sessionIdDispatcher = (HttpSessionIdListener) dispatcher;
-            }
+            return this.eventDispatcherTracker.getHttpSessionIdListener();
         }
-        return this.sessionIdDispatcher;
+        return null;
     }
 
     private HttpSessionAttributeListener getAttributeDispatcher()
     {
-        if (this.attributeDispatcher == null)
+        if (this.eventDispatcherTracker != null)
         {
-            final Object dispatcher = getDispatcher();
-            if (dispatcher instanceof HttpSessionAttributeListener)
-            {
-                this.attributeDispatcher = (HttpSessionAttributeListener) dispatcher;
-            }
+            return this.eventDispatcherTracker.getHttpSessionAttributeListener();
         }
-        return this.attributeDispatcher;
-    }
-
-    private static Filter createFilter(BundleContext context, String filter) throws InvalidSyntaxException
-    {
-        StringBuffer str = new StringBuffer();
-        str.append("(&(").append(Constants.OBJECTCLASS).append("=");
-        str.append(EventListener.class.getName()).append(")");
-        str.append(filter != null ? filter : DispatcherTracker.DEFAULT_FILTER).append(")");
-        return context.createFilter(str.toString());
+        return null;
     }
 }

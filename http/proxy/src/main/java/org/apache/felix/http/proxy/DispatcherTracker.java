@@ -16,14 +16,19 @@
  */
 package org.apache.felix.http.proxy;
 
-import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.Filter;
-import org.osgi.framework.Constants;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.ServletConfig;
+import javax.servlet.http.HttpServlet;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.Filter;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
+
+/**
+ * @deprecated
+ */
+@Deprecated
 public final class DispatcherTracker
     extends ServiceTracker
 {
