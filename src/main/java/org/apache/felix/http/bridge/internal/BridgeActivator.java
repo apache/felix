@@ -36,24 +36,27 @@ public final class BridgeActivator extends AbstractHttpActivator
 
     private static final String VENDOR = "The Apache Software Foundation";
 
+    private static final String MARKER_PROP = "http.felix.dispatcher";
+
     @Override
     protected void doStart() throws Exception
     {
         super.doStart();
 
         // dispatcher servlet
+        final Object servlet = getDispatcherServlet();
         Hashtable<String, Object> props = new Hashtable<String, Object>();
-        props.put("http.felix.dispatcher", getDispatcherServlet().getClass().getName());
-        props.put(Constants.SERVICE_DESCRIPTION, "Dispatcher for bridged request handling");
+        props.put(MARKER_PROP, servlet.getClass().getName());
+        props.put(Constants.SERVICE_DESCRIPTION, "Apache Felix Http Dispatcher for bridged request handling");
         props.put(Constants.SERVICE_VENDOR, VENDOR);
-        getBundleContext().registerService(HttpServlet.class.getName(), getDispatcherServlet(), props);
+        getBundleContext().registerService(HttpServlet.class.getName(), servlet, props);
 
         // Http Session event dispatcher
         final EventDispatcher dispatcher = getEventDispatcher();
         dispatcher.setActive(true);
         props = new Hashtable<String, Object>();
-        props.put("http.felix.dispatcher", dispatcher.getClass().getName());
-        props.put(Constants.SERVICE_DESCRIPTION, "Dispatcher for bridged HttpSession events");
+        props.put(MARKER_PROP, dispatcher.getClass().getName());
+        props.put(Constants.SERVICE_DESCRIPTION, "Apache Felix Http Dispatcher for bridged event handling");
         props.put(Constants.SERVICE_VENDOR, VENDOR);
         getBundleContext().registerService(EventListener.class.getName(), dispatcher, props);
 
@@ -66,6 +69,6 @@ public final class BridgeActivator extends AbstractHttpActivator
             this.getHttpServiceController().setProperties(serviceRegProps);
         }
 
-        SystemLogger.info("Started bridged http service");
+        SystemLogger.info("Started bridged http services");
     }
 }
