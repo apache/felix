@@ -105,7 +105,10 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
     private ServiceTracker connectorTracker;
     private EventAdmin eventAdmin;
 
-    public JettyService(BundleContext context, DispatcherServlet dispatcher, EventDispatcher eventDispatcher, HttpServiceController controller)
+    public JettyService(final BundleContext context,
+            final DispatcherServlet dispatcher,
+            final EventDispatcher eventDispatcher,
+            final HttpServiceController controller)
     {
         this.context = context;
         this.config = new JettyConfig(this.context);
@@ -207,6 +210,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
     {
         if (this.server != null)
         {
+            this.eventDispatcher.setActive(false);
             if (this.connectorTracker != null)
             {
                 this.connectorTracker.close();
@@ -246,6 +250,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             ServletContextHandler context = new ServletContextHandler(this.parent, this.config.getContextPath(), ServletContextHandler.SESSIONS);
 
             configureSessionManager(context);
+            this.eventDispatcher.setActive(true);
             context.addEventListener(eventDispatcher);
             context.getSessionHandler().addEventListener(eventDispatcher);
             final ServletHolder holder = new ServletHolder(this.dispatcher);
