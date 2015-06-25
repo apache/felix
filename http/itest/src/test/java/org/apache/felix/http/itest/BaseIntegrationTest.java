@@ -322,16 +322,16 @@ public abstract class BaseIntegrationTest
             mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "4.0.0"),
             mavenBundle("org.apache.sling", "org.apache.sling.commons.logservice", "1.0.2"),
 
-            mavenBundle("org.apache.felix", "org.apache.felix.http.api").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("org.apache.felix", ORG_APACHE_FELIX_HTTP_JETTY).startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("org.apache.felix", "org.apache.felix.http.api", System.getProperty("http.api.version")).startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", System.getProperty("http.servlet.api.version")).startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("org.apache.felix", ORG_APACHE_FELIX_HTTP_JETTY, System.getProperty("http.jetty.version")).startLevel(START_LEVEL_SYSTEM_BUNDLES),
             mavenBundle("org.apache.felix", "org.apache.felix.configadmin").version("1.8.6"),
 
-            mavenBundle("org.apache.httpcomponents", "httpcore-osgi").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("org.apache.httpcomponents", "httpclient-osgi").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("org.mockito", "mockito-all").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("org.objenesis", "objenesis").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("com.googlecode.json-simple", "json-simple").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("org.apache.httpcomponents", "httpcore-osgi", "4.3.2").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("org.apache.httpcomponents", "httpclient-osgi", "4.3.4").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("org.mockito", "mockito-all", "1.10.19").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("org.objenesis", "objenesis", "2.1").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("com.googlecode.json-simple", "json-simple", "1.1.1").startLevel(START_LEVEL_SYSTEM_BUNDLES),
 
             junitBundles(),
             frameworkStartLevel(START_LEVEL_TEST_BUNDLE));
