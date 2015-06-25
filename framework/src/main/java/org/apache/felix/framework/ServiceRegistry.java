@@ -316,6 +316,14 @@ public class ServiceRegistry
                 // prototype, the we'll alway create a new one.
                 usage = obtainUsageCount(bundle, ref, null, isPrototype);
 
+                // Checks the service usage count to avoid overflow.
+                if (usage.m_count.get() == Integer.MAX_VALUE) {
+                    throw new ServiceException(
+                            "The use count for the service overflowed.",
+                            ServiceException.FACTORY_ERROR,
+                            null);
+                }
+
                 // Increment the usage count and grab the already retrieved
                 // service object, if one exists.
                 usage.m_count.incrementAndGet();
