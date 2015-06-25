@@ -26,6 +26,7 @@ import javax.servlet.ServletContextListener;
 import javax.servlet.http.HttpSessionAttributeListener;
 import javax.servlet.http.HttpSessionBindingEvent;
 import javax.servlet.http.HttpSessionEvent;
+import javax.servlet.http.HttpSessionIdListener;
 import javax.servlet.http.HttpSessionListener;
 
 import org.osgi.framework.BundleContext;
@@ -42,7 +43,11 @@ import org.osgi.util.tracker.ServiceTracker;
  *
  * @since 2.1.0
  */
-public class ProxyListener implements HttpSessionAttributeListener, HttpSessionListener, ServletContextListener
+public class ProxyListener
+    implements HttpSessionAttributeListener,
+               HttpSessionListener,
+               HttpSessionIdListener,
+               ServletContextListener
 {
 
     private ServletContext servletContext;
@@ -51,15 +56,19 @@ public class ProxyListener implements HttpSessionAttributeListener, HttpSessionL
 
     private HttpSessionListener sessionDispatcher;
 
+    private HttpSessionIdListener sessionIdDispatcher;
+
     private HttpSessionAttributeListener attributeDispatcher;
 
     // ---------- ServletContextListener
 
+    @Override
     public void contextInitialized(final ServletContextEvent sce)
     {
         this.servletContext = sce.getServletContext();
     }
 
+    @Override
     public void contextDestroyed(final ServletContextEvent sce)
     {
         if (this.eventDispatcherTracker != null)
@@ -72,6 +81,7 @@ public class ProxyListener implements HttpSessionAttributeListener, HttpSessionL
 
     // ---------- HttpSessionListener
 
+    @Override
     public void sessionCreated(final HttpSessionEvent se)
     {
         final HttpSessionListener sessionDispatcher = getSessionDispatcher();
@@ -81,6 +91,7 @@ public class ProxyListener implements HttpSessionAttributeListener, HttpSessionL
         }
     }
 
+    @Override
     public void sessionDestroyed(final HttpSessionEvent se)
     {
         final HttpSessionListener sessionDispatcher = getSessionDispatcher();
@@ -90,8 +101,21 @@ public class ProxyListener implements HttpSessionAttributeListener, HttpSessionL
         }
     }
 
+    // ---------- HttpSessionIdListener
+
+    @Override
+    public void sessionIdChanged(final HttpSessionEvent event, final String oldSessionId)
+    {
+        final HttpSessionIdListener sessionIdDispatcher = getSessionIdDispatcher();
+        if (sessionIdDispatcher != null)
+        {
+            sessionIdDispatcher.sessionIdChanged(event, oldSessionId);
+        }
+    }
+
     // ---------- HttpSessionAttributeListener
 
+    @Override
     public void attributeAdded(final HttpSessionBindingEvent se)
     {
         final HttpSessionAttributeListener attributeDispatcher = getAttributeDispatcher();
@@ -101,6 +125,7 @@ public class ProxyListener implements HttpSessionAttributeListener, HttpSessionL
         }
     }
 
+    @Override
     public void attributeRemoved(final HttpSessionBindingEvent se)
     {
         final HttpSessionAttributeListener attributeDispatcher = getAttributeDispatcher();
@@ -110,6 +135,7 @@ public class ProxyListener implements HttpSessionAttributeListener, HttpSessionL
         }
     }
 
+    @Override
     public void attributeReplaced(final HttpSessionBindingEvent se)
     {
         final HttpSessionAttributeListener attributeDispatcher = getAttributeDispatcher();
@@ -139,10 +165,12 @@ public class ProxyListener implements HttpSessionAttributeListener, HttpSessionL
                 Filter filter = createFilter(bundleContext, null);
                 this.eventDispatcherTracker = new ServiceTracker(bundleContext, filter, null)
                 {
+                    @Override
                     public void removedService(ServiceReference reference, Object service)
                     {
                         ProxyListener.this.sessionDispatcher = null;
                         ProxyListener.this.attributeDispatcher = null;
+                        ProxyListener.this.sessionIdDispatcher = null;
                         super.removedService(reference, service);
                     }
                 };
@@ -168,6 +196,19 @@ public class ProxyListener implements HttpSessionAttributeListener, HttpSessionL
             }
         }
         return this.sessionDispatcher;
+    }
+
+    private HttpSessionIdListener getSessionIdDispatcher()
+    {
+        if (this.sessionIdDispatcher == null)
+        {
+            final Object dispatcher = getDispatcher();
+            if (dispatcher instanceof HttpSessionIdListener)
+            {
+                this.sessionIdDispatcher = (HttpSessionIdListener) dispatcher;
+            }
+        }
+        return this.sessionIdDispatcher;
     }
 
     private HttpSessionAttributeListener getAttributeDispatcher()
