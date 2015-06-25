@@ -28,7 +28,7 @@
 
     <name>Apache Felix Http Bridge</name>
     <artifactId>org.apache.felix.http.bridge</artifactId>
-    <version>2.4.0-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <scm>
