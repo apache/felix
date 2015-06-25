@@ -36,6 +36,7 @@ import javax.servlet.http.HttpSessionListener;
  */
 public class EventDispatcher implements HttpSessionAttributeListener, HttpSessionListener, HttpSessionIdListener
 {
+    private volatile boolean active = false;
 
     private final HttpServiceController controller;
 
@@ -44,38 +45,61 @@ public class EventDispatcher implements HttpSessionAttributeListener, HttpSessio
         this.controller = controller;
     }
 
+    public void setActive(final boolean flag)
+    {
+        this.active = flag;
+    }
+
     @Override
     public void sessionCreated(final HttpSessionEvent se)
     {
-        controller.getSessionListener().sessionCreated(se);
+        if ( this.active )
+        {
+            controller.getSessionListener().sessionCreated(se);
+        }
     }
 
     @Override
     public void sessionDestroyed(final HttpSessionEvent se)
     {
-        controller.getSessionListener().sessionDestroyed(se);
+        if ( this.active )
+        {
+            controller.getSessionListener().sessionDestroyed(se);
+        }
     }
 
     @Override
     public void attributeAdded(final HttpSessionBindingEvent se)
     {
-        controller.getSessionAttributeListener().attributeAdded(se);
+        if ( this.active )
+        {
+            controller.getSessionAttributeListener().attributeAdded(se);
+        }
     }
 
     @Override
     public void attributeRemoved(final HttpSessionBindingEvent se)
     {
-        controller.getSessionAttributeListener().attributeRemoved(se);
+        if ( this.active )
+        {
+            controller.getSessionAttributeListener().attributeRemoved(se);
+        }
     }
 
     @Override
     public void attributeReplaced(final HttpSessionBindingEvent se)
     {
-        controller.getSessionAttributeListener().attributeReplaced(se);
+        if ( this.active )
+        {
+            controller.getSessionAttributeListener().attributeReplaced(se);
+        }
     }
 
     @Override
     public void sessionIdChanged(final HttpSessionEvent event, final String oldSessionId) {
-        controller.getSessionIdListener().sessionIdChanged(event, oldSessionId);
+        if ( this.active )
+        {
+            controller.getSessionIdListener().sessionIdChanged(event, oldSessionId);
+        }
     }
 }
