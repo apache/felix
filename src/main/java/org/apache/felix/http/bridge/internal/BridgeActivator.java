@@ -24,6 +24,7 @@ import java.util.Hashtable;
 import javax.servlet.http.HttpServlet;
 
 import org.apache.felix.http.base.internal.AbstractHttpActivator;
+import org.apache.felix.http.base.internal.EventDispatcher;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.osgi.framework.Constants;
 import org.osgi.service.http.runtime.HttpServiceRuntimeConstants;
@@ -48,11 +49,13 @@ public final class BridgeActivator extends AbstractHttpActivator
         getBundleContext().registerService(HttpServlet.class.getName(), getDispatcherServlet(), props);
 
         // Http Session event dispatcher
+        final EventDispatcher dispatcher = getEventDispatcher();
+        dispatcher.setActive(true);
         props = new Hashtable<String, Object>();
-        props.put("http.felix.dispatcher", getEventDispatcher().getClass().getName());
+        props.put("http.felix.dispatcher", dispatcher.getClass().getName());
         props.put(Constants.SERVICE_DESCRIPTION, "Dispatcher for bridged HttpSession events");
         props.put(Constants.SERVICE_VENDOR, VENDOR);
-        getBundleContext().registerService(EventListener.class.getName(), getEventDispatcher(), props);
+        getBundleContext().registerService(EventListener.class.getName(), dispatcher, props);
 
         // check for endpoint registration property
         if ( getBundleContext().getProperty(FELIX_HTTP_SERVICE_ENDPOINTS) != null )
