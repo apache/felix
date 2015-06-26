@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -318,11 +317,12 @@ public class ServiceRegistry
 
                 // Increment the usage count and grab the already retrieved
                 // service object, if one exists.
-                usage.m_count.incrementAndGet();
+                checkCountOverflow(usage.m_count.incrementAndGet());
+
                 svcObj = usage.getService();
                 if ( isServiceObjects )
                 {
-                    usage.m_serviceObjectsCount.incrementAndGet();
+                    checkCountOverflow(usage.m_serviceObjectsCount.incrementAndGet());
                 }
 
                 // If we have a usage count, but no service object, then we haven't
@@ -379,6 +379,17 @@ public class ServiceRegistry
         return (S) svcObj;
     }
 
+    private void checkCountOverflow(long c)
+    {
+        if (c == Long.MAX_VALUE)
+        {
+            throw new ServiceException(
+                    "The use count for the service overflowed.",
+                    ServiceException.UNSPECIFIED,
+                    null);
+        }
+    }
+
     public boolean ungetService(final Bundle bundle, final ServiceReference<?> ref, final Object svcObj)
     {
         final ServiceRegistrationImpl reg =
@@ -414,7 +425,7 @@ public class ServiceRegistry
 
             // If usage count will go to zero, then unget the service
             // from the registration.
-            int count = usage.m_count.decrementAndGet();
+            long count = usage.m_count.decrementAndGet();
             try
             {
                 if (count <= 0)
@@ -668,8 +679,8 @@ public class ServiceRegistry
         final ServiceReference<?> m_ref;
         final boolean m_prototype;
 
-        final AtomicInteger m_count = new AtomicInteger();
-        final AtomicInteger m_serviceObjectsCount = new AtomicInteger();
+        final AtomicLong m_count = new AtomicLong();
+        final AtomicLong m_serviceObjectsCount = new AtomicLong();
         final AtomicReference<ServiceHolder> m_svcHolderRef = new AtomicReference<ServiceHolder>();
 
         UsageCount(final ServiceReference<?> ref, final boolean isPrototype)
