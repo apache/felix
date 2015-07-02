@@ -17,10 +17,14 @@
 
 
 function renderData( subsystemData ) {
+	$('.statline').html(i18n.status.msgFormat(subsystemData.data.length));
+	
 	tableBody.empty();
 	for (var idx in subsystemData.data) {
 		entry( subsystemData.data[idx] );
 	}	
+
+	initStaticWidgets();
 }
 
 function entry( dataEntry ) {
