@@ -146,6 +146,7 @@ public class WebConsolePlugin extends SimpleWebConsolePlugin
         @SuppressWarnings("rawtypes")
         Map params = (Map) req.getAttribute( AbstractWebConsolePlugin.ATTR_FILEUPLOAD );
 
+        final boolean start = getParameter(params, "subsystemstart") != null;
         FileItem[] subsystemItems = getFileItems(params, "subsystemfile");
 
         for (final FileItem subsystemItem : subsystemItems)
@@ -187,7 +188,9 @@ public class WebConsolePlugin extends SimpleWebConsolePlugin
                             InputStream is = new FileInputStream(file);
                             try
                             {
-                                ss.install("inputstream:" + subsystemItem.getName(), is);
+                                Subsystem nss = ss.install("inputstream:" + subsystemItem.getName(), is);
+                                if (start)
+                                    nss.start();
                             }
                             finally
                             {
@@ -277,13 +280,32 @@ public class WebConsolePlugin extends SimpleWebConsolePlugin
     }
 
     @SuppressWarnings("rawtypes")
+    private FileItem getParameter(Map params, String name)
+    {
+        FileItem[] items = (FileItem[]) params.get(name);
+        if (items != null)
+        {
+            for (int i = 0; i < items.length; i++)
+            {
+                if (items[i].isFormField())
+                {
+                    return items[i];
+                }
+            }
+        }
+
+        // nothing found, fail
+        return null;
+    }
+
+    @SuppressWarnings("rawtypes")
     private FileItem[] getFileItems(Map params, String name)
     {
         final List<FileItem> files = new ArrayList<FileItem>();
-        FileItem[] items = (FileItem[]) params.get( name );
-        if ( items != null )
+        FileItem[] items = (FileItem[]) params.get(name);
+        if (items != null)
         {
-            for ( int i = 0; i < items.length; i++ )
+            for (int i = 0; i < items.length; i++)
             {
                 if (!items[i].isFormField() && items[i].getSize() > 0)
                 {
@@ -292,7 +314,7 @@ public class WebConsolePlugin extends SimpleWebConsolePlugin
             }
         }
 
-        return files.toArray( new FileItem[files.size()] );
+        return files.toArray(new FileItem[files.size()]);
     }
 
     @Override
