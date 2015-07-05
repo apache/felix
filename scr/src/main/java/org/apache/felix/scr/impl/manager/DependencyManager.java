@@ -1873,11 +1873,40 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             }
         }
         m_target = target;
-        String filterString = "(" + Constants.OBJECTCLASS + "=" + m_dependencyMetadata.getInterface() + ")";
-        if (m_target != null)
+        final boolean multipleExpr = m_target != null || m_dependencyMetadata.getScope() == ReferenceScope.prototype_required;
+        final StringBuilder filterSB = new StringBuilder();
+        if (multipleExpr )
         {
-            filterString = "(&" + filterString + m_target + ")";
+            filterSB.append("(&");
         }
+        // "(" + Constants.OBJECTCLASS + "=" + m_dependencyMetadata.getInterface() + ")"
+        filterSB.append('(');
+        filterSB.append(Constants.OBJECTCLASS);
+        filterSB.append('=');
+        filterSB.append(m_dependencyMetadata.getInterface());
+        filterSB.append(')');
+
+        // if reference scope is prototype_required, we simply add
+        // service.scope=prototype to the filter
+        if ( m_dependencyMetadata.getScope() == ReferenceScope.prototype_required )
+        {
+            filterSB.append('(');
+            filterSB.append(Constants.SERVICE_SCOPE);
+            filterSB.append('=');
+            filterSB.append(Constants.SCOPE_PROTOTYPE);
+            filterSB.append(')');
+        }
+
+        // append target
+        if ( m_target != null )
+        {
+            filterSB.append(m_target);
+        }
+        if (multipleExpr )
+        {
+            filterSB.append(')');
+        }
+        String filterString = filterSB.toString();
 
         final ServiceTracker<T, RefPair<S, T>> oldTracker = m_tracker;
         AtomicInteger trackingCount = new AtomicInteger();
