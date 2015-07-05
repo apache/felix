@@ -29,7 +29,7 @@ import org.apache.felix.scr.impl.helper.Logger;
  */
 public class ReferenceMetadata
 {
-	public enum ReferenceScope {bundle, prototype}
+	public enum ReferenceScope {bundle, prototype, prototype_required}
 
     // constant for option single reference - 0..1
     public static final String CARDINALITY_0_1 = "0..1";
