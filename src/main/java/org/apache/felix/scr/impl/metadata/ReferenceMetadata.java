@@ -659,7 +659,7 @@ public class ReferenceMetadata
         	{
         		m_scope = ReferenceScope.valueOf(m_scopeName);
         	}
-        	catch (IllegalArgumentException e)
+        	catch (final IllegalArgumentException e)
         	{
         		throw componentMetadata.validationFailure( "reference scope must be 'bundle' or 'prototype' not " + m_scopeName);
 
