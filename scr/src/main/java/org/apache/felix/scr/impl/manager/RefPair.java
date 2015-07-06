@@ -22,10 +22,11 @@ package org.apache.felix.scr.impl.manager;
 
 import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 
 /**
- * @version $Rev:$ $Date:$
+ * @version $Rev$ $Date$
  */
 public abstract class RefPair<S, T>
 {
@@ -44,7 +45,7 @@ public abstract class RefPair<S, T>
         return ref;
     }
 
-    public Object getServiceObjects()
+    public ServiceObjects<T> getServiceObjects()
     {
         return null;
     }

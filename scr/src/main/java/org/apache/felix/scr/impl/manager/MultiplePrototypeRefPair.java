@@ -44,12 +44,10 @@ public class MultiplePrototypeRefPair<S, T> extends RefPair<S, T>
     }
 
     @Override
-    public Object getServiceObjects()
+    public ServiceObjects<T> getServiceObjects()
     {
         return serviceObjects;
     }
-
-
 
     @Override
     public T getServiceObject(ComponentContextImpl<S> key)
@@ -79,7 +77,7 @@ public class MultiplePrototypeRefPair<S, T> extends RefPair<S, T>
     public boolean getServiceObject(ComponentContextImpl<S> key, BundleContext context,
         SimpleLogger logger)
     {
-        T service = serviceObjects.getService();
+    	final T service = key.getComponentServiceObjectsHelper().getPrototypeRefInstance(this.getRef(), serviceObjects);
         if ( service == null )
         {
             setFailed();
@@ -95,6 +93,4 @@ public class MultiplePrototypeRefPair<S, T> extends RefPair<S, T>
         }
         return true;
     }
-
-
 }
