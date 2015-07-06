@@ -214,7 +214,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
 	    }
 	    else 
 	    {
-	        pidWithout = Collections.singletonList(pid + ".description");
+	        pidWithout = pid + ".description";
 	        pidWith = Arrays.asList(new String[] {pid + ".description", pid});
 	    }
         deleteConfig( pid );

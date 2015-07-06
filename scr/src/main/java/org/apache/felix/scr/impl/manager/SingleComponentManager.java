@@ -443,16 +443,29 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 props.putAll(m_factoryProperties);
                 if (getComponentMetadata().getDSVersion().isDS13() && m_factoryProperties.containsKey(Constants.SERVICE_PID))
                 {
-                    List<String> servicePids = (List<String>) m_configurationProperties.get(Constants.SERVICE_PID);
-                    if (servicePids == null)
-                    {
-                        servicePids = new ArrayList<String>();
-                    }
+                	final List<String> servicePids = new ArrayList<String>();
+                	final Object configPropServicePids = m_configurationProperties.get(Constants.SERVICE_PID);
+                	if ( configPropServicePids instanceof List )
+                	{
+                		servicePids.addAll((List)configPropServicePids);
+                	}
+                	else 
+                	{
+                		servicePids.add(configPropServicePids.toString());
+                	}
                     if (m_factoryProperties.get(Constants.SERVICE_PID) instanceof String)
                     {
                         servicePids.add((String)m_factoryProperties.get(Constants.SERVICE_PID));
                     }
-                    props.put(Constants.SERVICE_PID, servicePids);
+                    
+                	if ( servicePids.size() == 1 )
+                	{
+                		props.put(Constants.SERVICE_PID, servicePids.get(0));
+                	}
+                	else
+                	{
+                		props.put(Constants.SERVICE_PID, servicePids);
+                	}
                 }
             }
 
