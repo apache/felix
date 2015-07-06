@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceObjects;
@@ -31,7 +33,8 @@ import org.osgi.service.component.ComponentServiceObjects;
 
 
 /**
- * Utility methods for class handling used by method and field references.
+ * Utility class for handling references using a ComponentServiceObjects
+ * to get services.
  */
 public class ComponentServiceObjectsHelper
 {
@@ -40,6 +43,8 @@ public class ComponentServiceObjectsHelper
     private final Map<ServiceReference, ServiceObjects> serviceObjectsMap = new HashMap<ServiceReference, ServiceObjects>();
 
     private final Map<ServiceObjects, List<Object>> services = new HashMap<ServiceObjects, List<Object>>();
+
+    private final ConcurrentMap<ServiceReference, Object> prototypeInstances = new ConcurrentHashMap<ServiceReference, Object>();
 
     public ComponentServiceObjectsHelper(final BundleContext bundleContext)
     {
@@ -60,6 +65,7 @@ public class ComponentServiceObjectsHelper
             services.clear();
             serviceObjectsMap.clear();
         }
+        prototypeInstances.clear();
     }
 
     public ComponentServiceObjects getServiceObjects(final ServiceReference<?> ref)
@@ -87,9 +93,11 @@ public class ComponentServiceObjectsHelper
                 final ServiceObjects serviceObjects = so;
                 final List<Object> serviceList = services;
 
-                return new ComponentServiceObjects() {
+                return new ComponentServiceObjects() 
+                {
 
-                    public Object getService() {
+                    public Object getService() 
+                    {
                         final Object service = serviceObjects.getService();
                         if ( service != null )
                         {
@@ -101,7 +109,8 @@ public class ComponentServiceObjectsHelper
                         return service;
                     }
 
-                    public void ungetService(final Object service) {
+                    public void ungetService(final Object service) 
+                    {
                         boolean remove;
                         synchronized ( serviceList )
                         {
@@ -112,7 +121,8 @@ public class ComponentServiceObjectsHelper
                         }
                     }
 
-                    public ServiceReference<?> getServiceReference() {
+                    public ServiceReference<?> getServiceReference() 
+                    {
                         return ref;
                     }
                 };
@@ -120,4 +130,23 @@ public class ComponentServiceObjectsHelper
         }
         return null;
     }
-}
+
+    
+    public <T> T getPrototypeRefInstance(final ServiceReference<T> ref, ServiceObjects<T> serviceObjects) 
+    {
+    	T service = (T) prototypeInstances.get(ref);
+    	if ( service == null )
+    	{
+    		service = serviceObjects.getService();
+    		T oldService = (T)prototypeInstances.putIfAbsent(ref, service);
+    		if ( oldService != null )
+    		{
+    			// another thread created the instance already
+    			serviceObjects.ungetService(service);
+    			service = oldService;
+    		}
+    	}
+    	return service;
+    }
+   
+ }

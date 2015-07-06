@@ -20,6 +20,8 @@ package org.apache.felix.scr.impl.manager;
 
 
 import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -29,6 +31,7 @@ import org.apache.felix.scr.impl.helper.ComponentServiceObjectsHelper;
 import org.apache.felix.scr.impl.helper.ReadOnlyDictionary;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentInstance;
 import org.osgi.service.log.LogService;
@@ -44,11 +47,11 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
 
     private final EdgeInfo[] edgeInfos;
 
-    private final ComponentInstance m_componentInstance = new ComponentInstanceImpl(this);
+    private final ComponentInstance m_componentInstance = new ComponentInstanceImpl<S>(this);
 
     private final Bundle m_usingBundle;
 
-    private S m_implementationObject;
+    private volatile S m_implementationObject;
 
     private volatile boolean m_implementationAccessible;
 
@@ -56,7 +59,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
 
     private final ComponentServiceObjectsHelper serviceObjectsHelper;
 
-    public ComponentContextImpl( SingleComponentManager<S> componentManager, Bundle usingBundle )
+    public ComponentContextImpl( final SingleComponentManager<S> componentManager, final Bundle usingBundle )
     {
         m_componentManager = componentManager;
         m_usingBundle = usingBundle;
@@ -73,7 +76,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         this.serviceObjectsHelper.cleanup();
     }
 
-    public Object getComponentServiceObjectsHelper()
+    public ComponentServiceObjectsHelper getComponentServiceObjectsHelper()
     {
         return this.serviceObjectsHelper;
     }
@@ -99,7 +102,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         return edgeInfos[index];
     }
 
-    protected SingleComponentManager<S> getComponentManager()
+   protected SingleComponentManager<S> getComponentManager()
     {
         return m_componentManager;
     }

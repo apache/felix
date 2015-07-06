@@ -40,7 +40,7 @@ public class SinglePrototypeRefPair<S, T> extends SingleRefPair<S, T>
     }
 
     @Override
-    public Object getServiceObjects()
+    public ServiceObjects<T> getServiceObjects()
     {
         return serviceObjects;
     }
@@ -55,7 +55,7 @@ public class SinglePrototypeRefPair<S, T> extends SingleRefPair<S, T>
     public boolean getServiceObject(ComponentContextImpl<S> key, BundleContext context,
         SimpleLogger logger)
     {
-        T service = serviceObjects.getService();
+    	final T service = key.getComponentServiceObjectsHelper().getPrototypeRefInstance(this.getRef(), serviceObjects);
         if ( service == null )
         {
             setFailed();
