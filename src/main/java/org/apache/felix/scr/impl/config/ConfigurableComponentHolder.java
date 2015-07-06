@@ -469,7 +469,14 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
         }
         if (isDS13 && !pids.isEmpty())
         {
-            properties.put(Constants.SERVICE_PID, pids);
+        	if ( pids.size() == 1 )
+        	{
+        		properties.put(Constants.SERVICE_PID, pids.get(0));
+        	}
+        	else
+        	{
+        		properties.put(Constants.SERVICE_PID, pids);
+        	}
         }
         return properties;
     }
