@@ -25,7 +25,7 @@ import org.osgi.framework.Version;
 
 /**
  * Copied with modifications from felix configadmin.
- * 
+ *
  * The <code>TargetedPID</code> class represents a targeted PID as read
  * from a configuration object.
  * <p>
@@ -50,7 +50,7 @@ public class TargetedPID
      * <li><code>0</code> -- this PID is not targeted at all</li>
      * <li><code>1</code> -- this PID is targeted by the symbolic name</li>
      * <li><code>2</code> -- this PID is targeted by the symbolic name and version</li>
-     * <li><code>3</code> -- this PID is targeted by the symoblic name, version, and location</li>
+     * <li><code>3</code> -- this PID is targeted by the symbolic name, version, and location</li>
      * </ul>
      */
     private final short bindingLevel;
