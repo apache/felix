@@ -121,15 +121,15 @@ public class ConfigurationSupport implements ConfigurationListener
                         if ( cao instanceof ConfigurationAdmin )
                         {
                             final ConfigurationAdmin ca = ( ConfigurationAdmin ) cao;
-                            for (String confPid: confPids )
+                            for (final String confPid : confPids )
                             {
                                 final Collection<Configuration> factory = findFactoryConfigurations( ca, confPid,
                                         bundleContext.getBundle() );
                                 if ( !factory.isEmpty() )
                                 {
-                                    boolean created = false;
                                     for ( Configuration config: factory )
                                     {
+                                        boolean created = false;
                                         Activator.log( LogService.LOG_DEBUG, null,
                                                 "Configuring holder {0} with factory configuration {1}", new Object[] {
                                                         holder, config }, null );
@@ -142,8 +142,11 @@ public class ConfigurationSupport implements ConfigurationListener
                                                     config.getProperties(),
                                                     changeCount );
                                         }
+                                        if ( !created ) 
+                                        {
+                                        	return false;
+                                        }
                                     }
-                                    return created;
                                 }
                                 else
                                 {
@@ -162,11 +165,19 @@ public class ConfigurationSupport implements ConfigurationListener
                                             long changeCount = changeCounter.getChangeCount( singleton, false, -1 );
                                             holder.configurationUpdated( new TargetedPID( singleton.getPid() ), null,
                                                     singleton.getProperties(), changeCount );
-                                            return true;
                                         }
+                                        else
+                                        {
+                                        	return false;
+                                        }
+                                    }
+                                    else 
+                                    {
+                                    	return false;
                                     }
                                 }
                             }
+                            return !confPids.isEmpty();
                         }
                         else
                         {
