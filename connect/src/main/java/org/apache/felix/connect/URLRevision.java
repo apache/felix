@@ -50,7 +50,7 @@ class URLRevision implements Revision
     @Override
     public Enumeration<String> getEntries()
     {
-        return Collections.emptyEnumeration();
+        return Collections.enumeration(Collections.EMPTY_LIST);
     }
 
     @Override
