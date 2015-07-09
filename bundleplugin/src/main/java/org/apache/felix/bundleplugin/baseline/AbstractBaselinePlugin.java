@@ -512,7 +512,7 @@ abstract class AbstractBaselinePlugin
         for ( Iterator<ArtifactVersion> versionIterator = versions.iterator(); versionIterator.hasNext(); )
         {
             ArtifactVersion version = versionIterator.next();
-            if ( "SNAPSHOT".equals( version.getQualifier() ) )
+            if ( version.getQualifier().endsWith( "SNAPSHOT" ) )
             {
                 versionIterator.remove();
             }
