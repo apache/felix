@@ -20,9 +20,11 @@ package org.apache.felix.bundleplugin;
 
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -31,6 +33,8 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.jar.Manifest;
 
+import aQute.bnd.osgi.Instructions;
+import aQute.lib.collections.ExtList;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -65,10 +69,10 @@ public class ManifestPlugin extends BundlePlugin
     protected void execute( MavenProject project, DependencyNode dependencyGraph, Map<String, String> instructions, Properties properties, Jar[] classpath )
         throws MojoExecutionException
     {
-        Manifest manifest;
+        Analyzer analyzer;
         try
         {
-            manifest = getManifest( project, dependencyGraph, instructions, properties, classpath );
+            analyzer = getAnalyzer(project, dependencyGraph, instructions, properties, classpath);
         }
         catch ( FileNotFoundException e )
         {
@@ -94,11 +98,15 @@ public class ManifestPlugin extends BundlePlugin
 
         try
         {
-            writeManifest( manifest, outputFile, niceManifest );
+            writeManifest( analyzer, outputFile, niceManifest );
         }
-        catch ( IOException e )
+        catch ( Exception e )
         {
             throw new MojoExecutionException( "Error trying to write Manifest to file " + outputFile, e );
+        }
+        finally
+        {
+            analyzer.close();
         }
     }
 
@@ -113,36 +121,9 @@ public class ManifestPlugin extends BundlePlugin
     public Manifest getManifest( MavenProject project, DependencyNode dependencyGraph, Map<String, String> instructions, Properties properties, Jar[] classpath )
         throws IOException, MojoFailureException, MojoExecutionException, Exception
     {
-        Analyzer analyzer = getAnalyzer( project, dependencyGraph, instructions, properties, classpath );
-        boolean hasErrors = reportErrors( "Manifest " + project.getArtifact(), analyzer );
-        if ( hasErrors )
-        {
-            String failok = analyzer.getProperty( "-failok" );
-            if ( null == failok || "false".equalsIgnoreCase( failok ) )
-            {
-                throw new MojoFailureException( "Error(s) found in manifest configuration" );
-            }
-        }
+        Analyzer analyzer = getAnalyzer(project, dependencyGraph, instructions, properties, classpath);
 
-        Jar jar = analyzer.getJar();
-
-        if ( unpackBundle )
-        {
-            File outputFile = getOutputDirectory();
-            for ( Entry<String, Resource> entry : jar.getResources().entrySet() )
-            {
-                File entryFile = new File( outputFile, entry.getKey() );
-                if ( !entryFile.exists() || entry.getValue().lastModified() == 0 )
-                {
-                    entryFile.getParentFile().mkdirs();
-                    OutputStream os = new FileOutputStream( entryFile );
-                    entry.getValue().write( os );
-                    os.close();
-                }
-            }
-        }
-
-        Manifest manifest = jar.getManifest();
+        Manifest manifest = analyzer.getJar().getManifest();
 
         // cleanup...
         analyzer.close();
@@ -217,7 +198,64 @@ public class ManifestPlugin extends BundlePlugin
 
         mergeMavenManifest( project, dependencyGraph, analyzer );
 
+        boolean hasErrors = reportErrors( "Manifest " + project.getArtifact(), analyzer );
+        if ( hasErrors )
+        {
+            String failok = analyzer.getProperty( "-failok" );
+            if ( null == failok || "false".equalsIgnoreCase( failok ) )
+            {
+                throw new MojoFailureException( "Error(s) found in manifest configuration" );
+            }
+        }
+
+        Jar jar = analyzer.getJar();
+
+        if ( unpackBundle )
+        {
+            File outputFile = getOutputDirectory();
+            for ( Entry<String, Resource> entry : jar.getResources().entrySet() )
+            {
+                File entryFile = new File( outputFile, entry.getKey() );
+                if ( !entryFile.exists() || entry.getValue().lastModified() == 0 )
+                {
+                    entryFile.getParentFile().mkdirs();
+                    OutputStream os = new FileOutputStream( entryFile );
+                    entry.getValue().write( os );
+                    os.close();
+                }
+            }
+        }
+
         return analyzer;
+    }
+
+
+    public static void writeManifest( Analyzer analyzer, File outputFile, boolean niceManifest ) throws Exception
+    {
+        Properties properties = analyzer.getProperties();
+        Manifest manifest = analyzer.getJar().getManifest();
+        if ( outputFile.exists() && properties.containsKey( "Merge-Headers" ) )
+        {
+            Manifest analyzerManifest = manifest;
+            manifest = new Manifest();
+            InputStream inputStream = new FileInputStream( outputFile );
+            try
+            {
+                manifest.read( inputStream );
+            }
+            finally
+            {
+                inputStream.close();
+            }
+            Instructions instructions = new Instructions( ExtList.from( analyzer.getProperty("Merge-Headers") ) );
+            mergeManifest( instructions, manifest, analyzerManifest );
+        }
+        else
+        {
+            File parentFile = outputFile.getParentFile();
+            parentFile.mkdirs();
+        }
+        writeManifest( manifest, outputFile, niceManifest );
     }
 
 
