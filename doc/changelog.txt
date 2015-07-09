@@ -3,6 +3,9 @@ Changes from 2.5.4 to 2.5.5
 
 ** Bug
     * [FELIX-4882] - Correctly use Maven Plugin Tools Java 5 annotations instead of javadoc tags
+	* [FELIX-4892] NPE in maven-bundle-plugin
+	* [FELIX-4874] IllegalArgumentException: Invalid syntax for version: 0.1-SNAPSHOT
+	* [FELIX-4956] Embed latest bndlib
 
 
 Changes from 2.5.3 to 2.5.4
