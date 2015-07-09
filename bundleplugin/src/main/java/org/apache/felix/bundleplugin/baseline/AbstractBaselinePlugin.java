@@ -106,10 +106,28 @@ abstract class AbstractBaselinePlugin
     private ArtifactMetadataSource metadataSource;
 
     /**
+     * Group id to compare the current code against.
+     */
+    @Parameter( defaultValue = "${project.groupId}", property="comparisonGroupId" )
+    protected String comparisonGroupId;
+
+    /**
+     * Artifact to compare the current code against.
+     */
+    @Parameter( defaultValue = "${project.artifactId}", property="comparisonArtifactId" )
+    protected String comparisonArtifactId;
+
+    /**
      * Version to compare the current code against.
      */
     @Parameter( defaultValue = "(,${project.version})", property="comparisonVersion" )
     protected String comparisonVersion;
+
+    /**
+     * Artifact to compare the current code against.
+     */
+    @Parameter( defaultValue = "${project.packaging}", property="comparisonPackaging" )
+    protected String comparisonPackaging;
 
     /**
      * Classifier for the artifact to compare the current code against.
@@ -434,10 +452,10 @@ abstract class AbstractBaselinePlugin
         try
         {
             previousArtifact =
-                factory.createDependencyArtifact( project.getGroupId(),
-                                                  project.getArtifactId(),
+                factory.createDependencyArtifact( comparisonGroupId,
+                                                  comparisonArtifactId,
                                                   range,
-                                                  project.getPackaging(),
+                                                  comparisonPackaging,
                                                   comparisonClassifier,
                                                   Artifact.SCOPE_COMPILE );
 
