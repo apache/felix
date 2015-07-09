@@ -33,7 +33,9 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.jar.Manifest;
 
+import aQute.bnd.header.Parameters;
 import aQute.bnd.osgi.Instructions;
+import aQute.bnd.osgi.Processor;
 import aQute.lib.collections.ExtList;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -64,6 +66,18 @@ public class ManifestPlugin extends BundlePlugin
     @Parameter( property = "rebuildBundle" )
     protected boolean rebuildBundle;
 
+    /**
+     * Directory where the SCR files will be written
+     *
+     * @parameter expression="${scrLocation}" default-value="${project.build.outputDirectory}"
+     */
+    protected File scrLocation;
+
+    /**
+     * When true, dump the generated SCR files
+     * @parameter
+     */
+    protected boolean exportScr;
 
     @Override
     protected void execute( MavenProject project, DependencyNode dependencyGraph, Map<String, String> instructions, Properties properties, Jar[] classpath )
@@ -123,7 +137,38 @@ public class ManifestPlugin extends BundlePlugin
     {
         Analyzer analyzer = getAnalyzer(project, dependencyGraph, instructions, properties, classpath);
 
-        Manifest manifest = analyzer.getJar().getManifest();
+        Jar jar = analyzer.getJar();
+        Manifest manifest = jar.getManifest();
+
+        if (exportScr)
+        {
+            scrLocation.mkdirs();
+
+            String bpHeader = analyzer.getProperty(Analyzer.SERVICE_COMPONENT);
+            Parameters map = Processor.parseHeader(bpHeader, null);
+            for (String root : map.keySet())
+            {
+                Map<String, Resource> dir = jar.getDirectories().get(root);
+                File location = new File(scrLocation, root);
+                if (dir == null || dir.isEmpty())
+                {
+                    Resource resource = jar.getResource(root);
+                    if (resource != null)
+                    {
+                        writeSCR(resource, location);
+                    }
+                }
+                else
+                {
+                    for (Map.Entry<String, Resource> entry : dir.entrySet())
+                    {
+                        String path = entry.getKey();
+                        Resource resource = entry.getValue();
+                        writeSCR(resource, new File(location, path));
+                    }
+                }
+            }
+        }
 
         // cleanup...
         analyzer.close();
@@ -131,6 +176,19 @@ public class ManifestPlugin extends BundlePlugin
         return manifest;
     }
 
+    protected void writeSCR(Resource resource, File destination) throws Exception
+    {
+        destination.getParentFile().mkdirs();
+        OutputStream os = new FileOutputStream(destination);
+        try
+        {
+            resource.write(os);
+        }
+        finally
+        {
+            os.close();
+        }
+    }
 
     protected Analyzer getAnalyzer( MavenProject project, DependencyNode dependencyGraph, Jar[] classpath ) throws IOException, MojoExecutionException,
         Exception
