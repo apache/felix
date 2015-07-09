@@ -329,7 +329,7 @@ public class BundleAllPlugin extends ManifestPlugin
             instructions.put( Analyzer.IMPORT_PACKAGE, wrapImportPackage );
 
             project.getArtifact().setFile( getFile( artifact ) );
-            File outputFile = getOutputFile( artifact );
+            File outputFile = getOutputFile(artifact);
 
             if ( project.getArtifact().getFile().equals( outputFile ) )
             {
@@ -342,7 +342,8 @@ public class BundleAllPlugin extends ManifestPlugin
                 //                    + " to the same file, try cleaning: " + outputFile );
             }
 
-            Analyzer analyzer = getAnalyzer( project, instructions, new Properties(), getClasspath( project ) );
+            org.apache.maven.shared.dependency.graph.DependencyNode dependencyGraph = buildDependencyGraph( project );
+            Analyzer analyzer = getAnalyzer( project, dependencyGraph, instructions, new Properties(), getClasspath( project, dependencyGraph ) );
 
             Jar osgiJar = new Jar( project.getArtifactId(), project.getArtifact().getFile() );
 

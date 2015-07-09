@@ -64,6 +64,9 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
+import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
+import org.apache.maven.shared.dependency.graph.DependencyGraphBuilderException;
+import org.apache.maven.shared.dependency.graph.DependencyNode;
 import org.apache.maven.shared.osgi.DefaultMaven2OsgiConverter;
 import org.apache.maven.shared.osgi.Maven2OsgiConverter;
 import org.codehaus.plexus.archiver.UnArchiver;
@@ -160,6 +163,9 @@ public class BundlePlugin extends AbstractMojo
     @Component
     private ArtifactHandlerManager m_artifactHandlerManager;
 
+    @Component
+    private DependencyGraphBuilder m_dependencyGraphBuilder;
+
     /**
      * Project types which this plugin supports.
      */
@@ -233,6 +239,19 @@ public class BundlePlugin extends AbstractMojo
         return project;
     }
 
+    protected DependencyNode buildDependencyGraph( MavenProject mavenProject ) throws MojoExecutionException
+    {
+        DependencyNode dependencyGraph;
+        try
+        {
+            dependencyGraph = m_dependencyGraphBuilder.buildDependencyGraph( mavenProject, null );
+        }
+        catch ( DependencyGraphBuilderException e )
+        {
+            throw new MojoExecutionException( e.getMessage(), e );
+        }
+        return dependencyGraph;
+    }
 
     /**
      * @see org.apache.maven.plugin.AbstractMojo#execute()
@@ -250,16 +269,16 @@ public class BundlePlugin extends AbstractMojo
             return;
         }
 
-        execute( getProject(), instructions, properties );
+        execute( getProject(), buildDependencyGraph(getProject()), instructions, properties );
     }
 
 
-    protected void execute( MavenProject currentProject, Map<String, String> originalInstructions, Properties properties )
+    protected void execute( MavenProject currentProject, DependencyNode dependencyGraph, Map<String, String> originalInstructions, Properties properties )
         throws MojoExecutionException
     {
         try
         {
-            execute( currentProject, originalInstructions, properties, getClasspath( currentProject ) );
+            execute( currentProject, dependencyGraph, originalInstructions, properties, getClasspath( currentProject, dependencyGraph ) );
         }
         catch ( IOException e )
         {
@@ -336,13 +355,13 @@ public class BundlePlugin extends AbstractMojo
     }
 
 
-    protected void execute( MavenProject currentProject, Map<String, String> originalInstructions, Properties properties,
+    protected void execute( MavenProject currentProject, DependencyNode dependencyGraph, Map<String, String> originalInstructions, Properties properties,
         Jar[] classpath ) throws MojoExecutionException
     {
         try
         {
             File jarFile = new File( getBuildDirectory(), getBundleName( currentProject ) );
-            Builder builder = buildOSGiBundle( currentProject, originalInstructions, properties, classpath );
+            Builder builder = buildOSGiBundle( currentProject, dependencyGraph, originalInstructions, properties, classpath );
             boolean hasErrors = reportErrors( "Bundle " + currentProject.getArtifact(), builder );
             if ( hasErrors )
             {
@@ -572,7 +591,7 @@ public class BundlePlugin extends AbstractMojo
     }
 
 
-    protected void addMavenInstructions( MavenProject currentProject, Builder builder ) throws Exception
+    protected void addMavenInstructions( MavenProject currentProject, DependencyNode dependencyGraph, Builder builder ) throws Exception
     {
         if ( currentProject.getBasedir() != null )
         {
@@ -587,8 +606,8 @@ public class BundlePlugin extends AbstractMojo
         }
 
         // update BND instructions to embed selected Maven dependencies
-        Collection<Artifact> embeddableArtifacts = getEmbeddableArtifacts( currentProject, builder );
-        new DependencyEmbedder( getLog(), embeddableArtifacts ).processHeaders( builder );
+        Collection<Artifact> embeddableArtifacts = getEmbeddableArtifacts( currentProject, dependencyGraph, builder );
+        new DependencyEmbedder( getLog(), dependencyGraph, embeddableArtifacts ).processHeaders( builder );
 
         if ( dumpInstructions != null || getLog().isDebugEnabled() )
         {
@@ -616,16 +635,16 @@ public class BundlePlugin extends AbstractMojo
     }
 
 
-    protected Builder buildOSGiBundle( MavenProject currentProject, Map<String, String> originalInstructions, Properties properties,
+    protected Builder buildOSGiBundle( MavenProject currentProject, DependencyNode dependencyGraph, Map<String, String> originalInstructions, Properties properties,
         Jar[] classpath ) throws Exception
     {
         Builder builder = getOSGiBuilder( currentProject, originalInstructions, properties, classpath );
 
-        addMavenInstructions( currentProject, builder );
+        addMavenInstructions( currentProject, dependencyGraph, builder );
 
         builder.build();
 
-        mergeMavenManifest( currentProject, builder );
+        mergeMavenManifest( currentProject, dependencyGraph, builder );
 
         return builder;
     }
@@ -736,7 +755,7 @@ public class BundlePlugin extends AbstractMojo
     }
 
 
-    protected void mergeMavenManifest( MavenProject currentProject, Builder builder ) throws Exception
+    protected void mergeMavenManifest( MavenProject currentProject, DependencyNode dependencyGraph, Builder builder ) throws Exception
     {
         Jar jar = builder.getJar();
 
@@ -831,7 +850,7 @@ public class BundlePlugin extends AbstractMojo
             String importPackages = bundleManifest.getMainAttributes().getValue( "Import-Package" );
             if ( importPackages != null )
             {
-                Set optionalPackages = getOptionalPackages( currentProject );
+                Set optionalPackages = getOptionalPackages( currentProject, dependencyGraph );
 
                 Map<String, ? extends Map<String, String>> values = new Analyzer().parseHeader( importPackages );
                 for ( Map.Entry<String, ? extends Map<String, String>> entry : values.entrySet() )
@@ -868,19 +887,16 @@ public class BundlePlugin extends AbstractMojo
     }
 
 
-    protected Set<String> getOptionalPackages( MavenProject currentProject ) throws IOException, MojoExecutionException
+    protected Set<String> getOptionalPackages( MavenProject currentProject, DependencyNode dependencyGraph ) throws IOException, MojoExecutionException
     {
         ArrayList<Artifact> inscope = new ArrayList<Artifact>();
-        final Collection<Artifact> artifacts = getSelectedDependencies( currentProject.getArtifacts() );
+        final Collection<Artifact> artifacts = getSelectedDependencies( dependencyGraph, currentProject.getArtifacts() );
         for ( Iterator<Artifact> it = artifacts.iterator(); it.hasNext(); )
         {
             Artifact artifact = it.next();
             if ( artifact.getArtifactHandler().isAddedToClasspath() )
             {
-                if ( !Artifact.SCOPE_TEST.equals( artifact.getScope() ) )
-                {
-                    inscope.add( artifact );
-                }
+                inscope.add( artifact );
             }
         }
 
@@ -1077,7 +1093,7 @@ public class BundlePlugin extends AbstractMojo
     }
 
 
-    protected Jar[] getClasspath( MavenProject currentProject ) throws IOException, MojoExecutionException
+    protected Jar[] getClasspath( MavenProject currentProject, DependencyNode dependencyGraph ) throws IOException, MojoExecutionException
     {
         List<Jar> list = new ArrayList<Jar>();
 
@@ -1086,25 +1102,22 @@ public class BundlePlugin extends AbstractMojo
             list.add( new Jar( ".", getOutputDirectory() ) );
         }
 
-        final Collection<Artifact> artifacts = getSelectedDependencies( currentProject.getArtifacts() );
+        final Collection<Artifact> artifacts = getSelectedDependencies( dependencyGraph, currentProject.getArtifacts() );
         for ( Iterator<Artifact> it = artifacts.iterator(); it.hasNext(); )
         {
             Artifact artifact = it.next();
             if ( artifact.getArtifactHandler().isAddedToClasspath() )
             {
-                if ( !Artifact.SCOPE_TEST.equals( artifact.getScope() ) )
+                File file = getFile( artifact );
+                if ( file == null )
                 {
-                    File file = getFile( artifact );
-                    if ( file == null )
-                    {
-                        getLog().warn(
-                            "File is not available for artifact " + artifact + " in project "
-                                + currentProject.getArtifact() );
-                        continue;
-                    }
-                    Jar jar = new Jar( artifact.getArtifactId(), file );
-                    list.add( jar );
+                    getLog().warn(
+                        "File is not available for artifact " + artifact + " in project "
+                            + currentProject.getArtifact() );
+                    continue;
                 }
+                Jar jar = new Jar( artifact.getArtifactId(), file );
+                list.add( jar );
             }
         }
         Jar[] cp = new Jar[list.size()];
@@ -1113,7 +1126,7 @@ public class BundlePlugin extends AbstractMojo
     }
 
 
-    private Collection<Artifact> getSelectedDependencies( Collection<Artifact> artifacts ) throws MojoExecutionException
+    private Collection<Artifact> getSelectedDependencies( DependencyNode dependencyGraph, Collection<Artifact> artifacts ) throws MojoExecutionException
     {
         if ( null == excludeDependencies || excludeDependencies.length() == 0 )
         {
@@ -1125,7 +1138,7 @@ public class BundlePlugin extends AbstractMojo
         }
 
         Collection<Artifact> selectedDependencies = new LinkedHashSet<Artifact>( artifacts );
-        DependencyExcluder excluder = new DependencyExcluder( artifacts );
+        DependencyExcluder excluder = new DependencyExcluder( dependencyGraph, artifacts );
         excluder.processHeaders( excludeDependencies );
         selectedDependencies.removeAll( excluder.getExcludedArtifacts() );
 
@@ -1539,7 +1552,7 @@ public class BundlePlugin extends AbstractMojo
     }
 
 
-    protected Collection<Artifact> getEmbeddableArtifacts( MavenProject currentProject, Analyzer analyzer )
+    protected Collection<Artifact> getEmbeddableArtifacts( MavenProject currentProject, DependencyNode dependencyGraph, Analyzer analyzer )
         throws MojoExecutionException
     {
         final Collection<Artifact> artifacts;
@@ -1556,7 +1569,7 @@ public class BundlePlugin extends AbstractMojo
             artifacts = currentProject.getDependencyArtifacts();
         }
 
-        return getSelectedDependencies( artifacts );
+        return getSelectedDependencies( dependencyGraph, artifacts );
     }
 
 

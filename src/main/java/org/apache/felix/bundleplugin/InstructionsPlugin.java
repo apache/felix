@@ -32,6 +32,7 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
 import aQute.bnd.osgi.Jar;
+import org.apache.maven.shared.dependency.graph.DependencyNode;
 
 
 /**
@@ -41,7 +42,7 @@ import aQute.bnd.osgi.Jar;
 public class InstructionsPlugin extends BundlePlugin
 {
     @Override
-    protected void execute( MavenProject project, Map<String, String> instructions, Properties properties, Jar[] classpath )
+    protected void execute( MavenProject project, DependencyNode dependencyGraph, Map<String, String> instructions, Properties properties, Jar[] classpath )
         throws MojoExecutionException
     {
         if ( dumpInstructions == null )
@@ -51,7 +52,7 @@ public class InstructionsPlugin extends BundlePlugin
 
         try
         {
-            addMavenInstructions( project, getOSGiBuilder( project, instructions, properties, classpath ) );
+            addMavenInstructions( project, dependencyGraph, getOSGiBuilder(project, instructions, properties, classpath) );
         }
         catch ( FileNotFoundException e )
         {

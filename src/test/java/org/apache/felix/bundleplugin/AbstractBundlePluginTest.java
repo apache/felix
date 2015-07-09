@@ -22,8 +22,20 @@ package org.apache.felix.bundleplugin;
 
 import java.io.File;
 
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.DefaultArtifact;
+import org.apache.maven.artifact.handler.ArtifactHandler;
+import org.apache.maven.artifact.handler.DefaultArtifactHandler;
+import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.artifact.repository.DefaultArtifactRepository;
+import org.apache.maven.artifact.repository.layout.ArtifactRepositoryLayout;
+import org.apache.maven.artifact.repository.layout.LegacyRepositoryLayout;
+import org.apache.maven.artifact.versioning.VersionRange;
+import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 import org.apache.maven.plugin.testing.stubs.ArtifactStub;
 import org.apache.maven.plugin.testing.stubs.MavenProjectStub;
+import org.apache.maven.project.DefaultProjectBuilderConfiguration;
+import org.apache.maven.project.ProjectBuilderConfiguration;
 import org.codehaus.plexus.PlexusTestCase;
 
 
@@ -33,15 +45,28 @@ import org.codehaus.plexus.PlexusTestCase;
  * @author <a href="mailto:carlos@apache.org">Carlos Sanchez</a>
  * @version $Id$
  */
-public abstract class AbstractBundlePluginTest extends PlexusTestCase
+public abstract class AbstractBundlePluginTest extends AbstractMojoTestCase
 {
 
     protected MavenProjectStub getMavenProjectStub()
     {
         MavenProjectStub project = new MavenProjectStub();
-        project.setGroupId( "group" );
-        project.setArtifactId( "project" );
+        project.setGroupId("group");
+        project.setArtifactId("project");
         project.setVersion( "1.2.3.4" );
+
+        VersionRange versionRange = VersionRange.createFromVersion( project.getVersion() );
+        ArtifactHandler artifactHandler = new DefaultArtifactHandler("pom");
+        Artifact artifact =
+            new DefaultArtifact( project.getGroupId(), project.getArtifactId(),
+                                 versionRange, null, "pom", null, artifactHandler );
+        artifact.setResolved( true );
+        project.setArtifact( artifact );
+        ProjectBuilderConfiguration projectBuilderConfiguration = new DefaultProjectBuilderConfiguration();
+        ArtifactRepositoryLayout layout = new LegacyRepositoryLayout();
+        ArtifactRepository artifactRepository = new DefaultArtifactRepository( "scratch", new File( getBasedir(), "target" + File.separatorChar + "scratch" ).toURI().toString(), layout );
+        projectBuilderConfiguration.setLocalRepository( artifactRepository );
+        project.setProjectBuilderConfiguration( projectBuilderConfiguration );
         return project;
     }
 

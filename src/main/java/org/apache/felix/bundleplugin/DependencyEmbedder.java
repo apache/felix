@@ -27,6 +27,7 @@ import java.util.LinkedHashSet;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.shared.dependency.graph.DependencyNode;
 import org.codehaus.plexus.util.StringUtils;
 
 import aQute.bnd.osgi.Analyzer;
@@ -64,9 +65,9 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
     private final Collection<Artifact> m_embeddedArtifacts;
 
 
-    public DependencyEmbedder( Log log, Collection<Artifact> dependencyArtifacts )
+    public DependencyEmbedder( Log log, DependencyNode dependencyGraph, Collection<Artifact> dependencyArtifacts )
     {
-        super( dependencyArtifacts );
+        super( dependencyGraph, dependencyArtifacts );
 
         m_inlinedPaths = new LinkedHashSet<String>();
         m_embeddedArtifacts = new LinkedHashSet<Artifact>();
