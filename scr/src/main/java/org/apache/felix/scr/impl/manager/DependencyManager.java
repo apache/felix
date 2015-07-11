@@ -1621,7 +1621,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
      */
     void invokeUpdatedMethod( ComponentContextImpl<S> componentContext, final RefPair<S, T> refPair, int trackingCount, EdgeInfo info )
     {
-        if ( m_dependencyMetadata.getUpdated() == null )
+        if ( m_dependencyMetadata.getUpdated() == null && m_dependencyMetadata.getField() == null )
         {
             return;
         }

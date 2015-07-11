@@ -30,9 +30,9 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
 {
 
     public UpdatedMethod( final String methodName,
-            final Class<?> componentClass, final String referenceClassName, final DSVersion dsVersion, final boolean configurableServiceProperties, ReferenceMetadata.ReferenceScope referenceScope )
+            final Class<?> componentClass, final String referenceClassName, final DSVersion dsVersion, final boolean configurableServiceProperties )
     {
-        super( methodName, componentClass, referenceClassName, dsVersion, configurableServiceProperties, referenceScope );
+        super( methodName, componentClass, referenceClassName, dsVersion, configurableServiceProperties );
     }
 
 
