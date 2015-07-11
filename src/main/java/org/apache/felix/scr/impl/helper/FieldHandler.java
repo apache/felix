@@ -531,7 +531,8 @@ public class FieldHandler
         if ( !this.metadata.isMultiple() )
         {
             // unary references
-            // unbind needs only be done, if reference is dynamic and optional
+            
+        	// unbind needs only be done, if reference is dynamic and optional
             if ( mType == METHOD_TYPE.UNBIND )
             {
                 if ( this.metadata.isOptional() && !this.metadata.isStatic() )
@@ -544,18 +545,16 @@ public class FieldHandler
                 }
                 this.boundValues.remove(refPair);
             }
-            // updated needs only be done, if reference is dynamic and optional
+            // updated needs only be done, if reference is dynamic
             // and the value type is map or tuple
             else if ( mType == METHOD_TYPE.UPDATED )
             {
-                if ( this.metadata.isOptional() && !this.metadata.isStatic() )
+                if ( !this.metadata.isStatic() 
+                	 && ( this.valueType == ParamType.map || this.valueType == ParamType.tuple ) )
                 {
-                    if ( this.valueType == ParamType.map || this.valueType == ParamType.tuple )
-                    {
-                        final Object obj = getValue(key, refPair);
-                        this.setFieldValue(componentInstance, obj);
-                        this.boundValues.put(refPair, obj);
-                    }
+                    final Object obj = getValue(key, refPair);
+                    this.setFieldValue(componentInstance, obj);
+                    this.boundValues.put(refPair, obj);
                 }
             }
             // bind needs always be done

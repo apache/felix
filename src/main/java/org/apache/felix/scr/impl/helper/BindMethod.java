@@ -43,8 +43,6 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
 {
     private final String m_referenceClassName;
 
-    private final ReferenceMetadata.ReferenceScope m_referenceScope;
-
     private enum ParamType {
         serviceReference,
         serviceObjects,
@@ -57,11 +55,10 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
 
 
     public BindMethod( final String methodName,
-            final Class<?> componentClass, final String referenceClassName, final DSVersion dsVersion, final boolean configurableServiceProperties, ReferenceScope referenceScope )
+            final Class<?> componentClass, final String referenceClassName, final DSVersion dsVersion, final boolean configurableServiceProperties )
     {
         super( methodName, componentClass, dsVersion, configurableServiceProperties );
         m_referenceClassName = referenceClassName;
-        m_referenceScope = referenceScope;
     }
 
 

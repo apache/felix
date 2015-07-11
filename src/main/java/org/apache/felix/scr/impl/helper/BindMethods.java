@@ -36,24 +36,23 @@ public class BindMethods implements ReferenceMethods
     public BindMethods( ReferenceMetadata m_dependencyMetadata, Class<?> instanceClass,
             final DSVersion dsVersion, final boolean configurableServiceProperties )
     {
-        ReferenceMetadata.ReferenceScope referenceScope = m_dependencyMetadata.getScope();
         m_bind = new org.apache.felix.scr.impl.helper.BindMethod(
                 m_dependencyMetadata.getBind(),
                 instanceClass,
                 m_dependencyMetadata.getInterface(),
-                dsVersion, configurableServiceProperties, referenceScope
+                dsVersion, configurableServiceProperties
         );
         m_updated = new org.apache.felix.scr.impl.helper.UpdatedMethod(
                 m_dependencyMetadata.getUpdated(),
                 instanceClass,
                 m_dependencyMetadata.getInterface(),
-                dsVersion, configurableServiceProperties, referenceScope
+                dsVersion, configurableServiceProperties
         );
         m_unbind = new org.apache.felix.scr.impl.helper.UnbindMethod(
                 m_dependencyMetadata.getUnbind(),
                 instanceClass,
                 m_dependencyMetadata.getInterface(),
-                dsVersion, configurableServiceProperties, referenceScope
+                dsVersion, configurableServiceProperties
         );
     }
 
