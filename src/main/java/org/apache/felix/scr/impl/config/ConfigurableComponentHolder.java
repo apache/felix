@@ -91,7 +91,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
      * the index in metadata.getConfigurationPid() of the base factory pid, if any.  Each component created from a factory configuration
      * might have a different targeted pid.
      */
-    private Integer m_factoryPidIndex;
+    private volatile Integer m_factoryPidIndex;
 
     /**
      * the non-factory configurations shared between all instances.
@@ -132,7 +132,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
      * by this field is also contained in the map</li>
      * <ul>
      */
-    private AbstractComponentManager<S> m_singleComponent;
+    private volatile AbstractComponentManager<S> m_singleComponent;
 
     /**
      * Whether components have already been enabled by calling the
@@ -143,8 +143,8 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
      */
     private volatile boolean m_enabled;
     private final Object enableLock = new Object();
-    private Promise<Void> m_enablePromise;
-    private Promise<Void> m_disablePromise = Promises.resolved(null);
+    private volatile Promise<Void> m_enablePromise;
+    private volatile Promise<Void> m_disablePromise = Promises.resolved(null);
 
     private final ComponentMethods m_componentMethods;
 

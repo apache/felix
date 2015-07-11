@@ -50,7 +50,8 @@ public class FieldHandler
         serviceObjects,
         serviceType,
         map,
-        tuple
+        tuple,
+        ignore
     }
 
     /** The reference metadata. */
@@ -304,66 +305,23 @@ public class FieldHandler
                 return null;
             }
 
-            // if the field is dynamic and optional it has to be volatile
-            if ( !metadata.isStatic() && metadata.isOptional() )
-            {
-                if ( !Modifier.isVolatile(f.getModifiers()) )
-                {
-                    logger.log( LogService.LOG_ERROR, "Field {0} in component {1} must be declared volatile to handle a dynamic reference", new Object[]
-                            {metadata.getField(), this.componentClass}, null );
-                    return null;
-                }
+            // if the field is dynamic, it has to be volatile (field is ignored, case logged) (112.3.8.1)
+            if ( !metadata.isStatic() && !Modifier.isVolatile(f.getModifiers()) ) {
+                logger.log( LogService.LOG_ERROR, "Field {0} in component {1} must be declared volatile to handle a dynamic reference", new Object[]
+                        {metadata.getField(), this.componentClass}, null );
+                valueType = ParamType.ignore;
             }
 
-            // the field must not be final
+            // the field must not be final (field is ignored, case logged) (112.3.8.1)
             if ( Modifier.isFinal(f.getModifiers()) )
             {
                 logger.log( LogService.LOG_ERROR, "Field {0} in component {1} must not be declared as final", new Object[]
                         {metadata.getField(), this.componentClass}, null );
-                return null;
+                valueType = ParamType.ignore;
             }
         }
         else
         {
-            // multiple cardinality, field type must be collection or subtype
-            if ( !ClassUtils.COLLECTION_CLASS.isAssignableFrom(fieldType) )
-            {
-                logger.log( LogService.LOG_ERROR, "Field {0} in component {1} has unsupported type {2}", new Object[]
-                        {metadata.getField(), this.componentClass, fieldType.getName()}, null );
-                return null;
-            }
-
-            // if the field is dynamic with the replace strategy it has to be volatile
-            if ( !metadata.isStatic() && metadata.isReplace() )
-            {
-                if ( !Modifier.isVolatile(f.getModifiers()) )
-                {
-                    logger.log( LogService.LOG_ERROR, "Field {0} in component {1} must be declared volatile to handle a dynamic reference", new Object[]
-                            {metadata.getField(), this.componentClass}, null );
-                    return null;
-                }
-            }
-
-            // replace strategy: field must not be final
-            //                   only collection and list allowed
-            if ( metadata.isReplace()  )
-            {
-                if ( Modifier.isFinal(f.getModifiers()) )
-                {
-                    logger.log( LogService.LOG_ERROR, "Field {0} in component {1} must not be declared as final", new Object[]
-                            {metadata.getField(), this.componentClass}, null );
-                    return null;
-                }
-                if ( fieldType != ClassUtils.LIST_CLASS && fieldType != ClassUtils.COLLECTION_CLASS )
-                {
-                    logger.log( LogService.LOG_ERROR, "Field {0} in component {1} has unsupported type {2}."+
-                    " It must be one of java.util.Collection or java.util.List.",
-                    new Object[] {metadata.getField(), this.componentClass, fieldType.getName()}, null );
-                    return null;
-
-                }
-            }
-
             if ( ReferenceMetadata.FIELD_VALUE_TYPE_SERVICE.equals(metadata.getFieldCollectionType()) )
             {
                 valueType = ParamType.serviceType;
@@ -383,6 +341,45 @@ public class FieldHandler
             else if ( ReferenceMetadata.FIELD_VALUE_TYPE_TUPLE.equals(metadata.getFieldCollectionType()) )
             {
                 valueType = ParamType.tuple;
+            }
+
+            // multiple cardinality, field type must be collection or subtype
+            if ( !ClassUtils.COLLECTION_CLASS.isAssignableFrom(fieldType) )
+            {
+                logger.log( LogService.LOG_ERROR, "Field {0} in component {1} has unsupported type {2}", new Object[]
+                        {metadata.getField(), this.componentClass, fieldType.getName()}, null );
+                return null;
+            }
+
+            // if the field is dynamic with the replace strategy it has to be volatile (field is ignored, case logged) (112.3.8.1)
+            if ( !metadata.isStatic() && metadata.isReplace() )
+            {
+                if ( !Modifier.isVolatile(f.getModifiers()) )
+                {
+                    logger.log( LogService.LOG_ERROR, "Field {0} in component {1} must be declared volatile to handle a dynamic reference", new Object[]
+                            {metadata.getField(), this.componentClass}, null );
+                    valueType = ParamType.ignore;
+                }
+            }
+
+            // replace strategy: field must not be final (field is ignored, case logged) (112.3.8.1)
+            //                   only collection and list allowed
+            if ( metadata.isReplace()  )
+            {
+                if ( fieldType != ClassUtils.LIST_CLASS && fieldType != ClassUtils.COLLECTION_CLASS )
+                {
+                    logger.log( LogService.LOG_ERROR, "Field {0} in component {1} has unsupported type {2}."+
+                    " It must be one of java.util.Collection or java.util.List.",
+                    new Object[] {metadata.getField(), this.componentClass, fieldType.getName()}, null );
+                    return null;
+
+                }
+                if ( Modifier.isFinal(f.getModifiers()) )
+                {
+                    logger.log( LogService.LOG_ERROR, "Field {0} in component {1} must not be declared as final", new Object[]
+                            {metadata.getField(), this.componentClass}, null );
+                    valueType = ParamType.ignore;
+                }
             }
         }
         return f;
@@ -452,7 +449,7 @@ public class FieldHandler
         {
             case serviceType : obj = refPair.getServiceObject(key); break;
             case serviceReference : obj = refPair.getRef(); break;
-            case serviceObjects : obj = ((ComponentServiceObjectsHelper)key.getComponentServiceObjectsHelper()).getServiceObjects(refPair.getRef()); break;
+            case serviceObjects : obj = key.getComponentServiceObjectsHelper().getServiceObjects(refPair.getRef()); break;
             case map : obj = new ReadOnlyDictionary<String, Object>( refPair.getRef() ); break;
             case tuple : final Object tupleKey = new ReadOnlyDictionary<String, Object>( refPair.getRef() );
                          final Object tupleValue = refPair.getServiceObject(key);
@@ -889,6 +886,11 @@ public class FieldHandler
                 final MethodResult methodCallFailureResult,
                 final SimpleLogger logger)
         {
+            if ( handler.valueType == ParamType.ignore )
+            {
+                return MethodResult.VOID;
+            }
+
             try
             {
                 return handler.state.invoke( handler,
@@ -923,8 +925,8 @@ public class FieldHandler
             }
             return true;
         }
-
     }
+
     public ReferenceMethod getBind()
     {
         return new ReferenceMethodImpl(METHOD_TYPE.BIND, this);
@@ -942,6 +944,10 @@ public class FieldHandler
 
     public InitReferenceMethod getInit()
     {
+        if ( valueType == ParamType.ignore )
+        {
+            return null;
+        }
         return new InitReferenceMethod()
         {
 
