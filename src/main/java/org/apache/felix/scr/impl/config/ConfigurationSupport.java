@@ -300,11 +300,14 @@ public class ConfigurationSupport implements ConfigurationListener
                         final ConfigurationInfo configInfo = getConfigurationInfo( pid, targetedPid, componentHolder, bundleContext );
                         if ( checkBundleLocation( configInfo.getBundleLocation(), bundleContext.getBundle() ) )
                         {
-                            //If this is replacing a weaker targetedPID delete the old one.
-                            if ( factoryPid == null && !targetedPid.equals(oldTargetedPID) && oldTargetedPID != null)
-                            {
-                                componentHolder.configurationDeleted( pid, factoryPid );
-                            }
+                        	// The below seems to be unnecessary - and if put in, the behaviour is not spec compliant anymore:
+                        	// if a component has a required configuration and a modified method, the component must not be
+                        	// reactivated
+                            // If this is replacing a weaker targetedPID delete the old one.
+                            // if ( factoryPid == null && !targetedPid.equals(oldTargetedPID) && oldTargetedPID != null)
+                            //{
+                                //componentHolder.configurationDeleted( pid, factoryPid );
+                            //}
                             componentHolder.configurationUpdated( pid, factoryPid, configInfo.getProps(), configInfo.getChangeCount() );
                         }
                     }
