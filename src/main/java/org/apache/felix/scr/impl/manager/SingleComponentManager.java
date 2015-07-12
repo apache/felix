@@ -897,7 +897,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         }
     }
 
-    void ungetService( )
+    private void ungetService( )
     {
         deleteComponent( ComponentConstants.DEACTIVATION_REASON_UNSPECIFIED );
     }

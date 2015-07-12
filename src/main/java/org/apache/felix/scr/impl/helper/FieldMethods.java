@@ -16,16 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-
 package org.apache.felix.scr.impl.helper;
-
 
 import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 
 /**
- * @version $Rev$ $Date$
+ * FieldMethods provides implementations for bind/unbind/updated
+ * which handle manipulation of fields.
  */
 public class FieldMethods implements ReferenceMethods
 {
