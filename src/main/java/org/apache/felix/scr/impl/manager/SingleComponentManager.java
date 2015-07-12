@@ -372,14 +372,15 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     }
 
     @Override
-    <T> void invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> refPair, int trackingCount )
+    <T> boolean invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> refPair, int trackingCount )
     {
-        ComponentContextImpl<S> componentContext = m_componentContext;
+        final ComponentContextImpl<S> componentContext = m_componentContext;
         if ( componentContext != null )
         {
-            EdgeInfo info = componentContext.getEdgeInfo( dependencyManager );
-            dependencyManager.invokeUpdatedMethod( componentContext, refPair, trackingCount, info );
+            final EdgeInfo info = componentContext.getEdgeInfo( dependencyManager );
+            return dependencyManager.invokeUpdatedMethod( componentContext, refPair, trackingCount, info );
         }
+        return false;
     }
 
     @Override

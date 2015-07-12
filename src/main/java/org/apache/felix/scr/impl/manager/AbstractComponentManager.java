@@ -993,7 +993,11 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         return true;
     }
 
-    abstract <T> void invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> refPair, int trackingCount );
+    /**
+     * Invoke updated method
+     * @return {@code true} if the component needs reactivation, {@code false} otherwise.
+     */
+    abstract <T> boolean invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> refPair, int trackingCount );
 
     abstract <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> refPair, int trackingCount );
 

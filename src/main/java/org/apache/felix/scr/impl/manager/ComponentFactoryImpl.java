@@ -300,8 +300,9 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         return true;
     }
 
-    <T> void invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> ref, int trackingCount )
+    <T> boolean invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> ref, int trackingCount )
     {
+    	return false;
     }
 
     <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> reference, int trackingCount )
