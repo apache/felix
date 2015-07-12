@@ -932,17 +932,31 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         {
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic modified {2} (enter)", new Object[] {getName(), trackingCount, serviceReference}, null );
             boolean invokeUpdated;
-            synchronized (getTracker().tracked())
+            final Object sync = getTracker().tracked();
+            synchronized (sync)
             {
                 invokeUpdated = isActive() && refPair == this.refPair;
             }
+            boolean reactivate = false;
             if ( invokeUpdated )
             {
-                m_componentManager.invokeUpdatedMethod( DependencyManager.this, refPair, trackingCount );
+                reactivate = m_componentManager.invokeUpdatedMethod( DependencyManager.this, refPair, trackingCount );
             }
             this.trackingCount = trackingCount;
-            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic modified {2} (exit)", new Object[] {getName(), trackingCount, serviceReference}, null );
             tracked( trackingCount );
+            if ( reactivate )
+            {
+                m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, false );
+                synchronized ( sync )
+                {
+                    if (refPair == this.refPair)
+                    {
+                        this.refPair = null;
+                    }
+                }
+                m_componentManager.activateInternal( trackingCount );            	
+            }
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic modified {2} (exit)", new Object[] {getName(), trackingCount, serviceReference}, null );            
         }
 
         public void removedService( ServiceReference<T> serviceReference, RefPair<S, T> refPair, int trackingCount )
@@ -1617,13 +1631,14 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
      *
      * @param componentContext instance we are calling updated on.
      * @param refPair A service reference corresponding to the service whose service
-     * @param edgeInfo EdgeInfo for the comibination of this instance and this dependency manager.
+     * @param edgeInfo EdgeInfo for the combination of this instance and this dependency manager.
+     * @return {@code true} if reactivation is required.
      */
-    void invokeUpdatedMethod( ComponentContextImpl<S> componentContext, final RefPair<S, T> refPair, int trackingCount, EdgeInfo info )
+    boolean invokeUpdatedMethod( ComponentContextImpl<S> componentContext, final RefPair<S, T> refPair, int trackingCount, EdgeInfo info )
     {
         if ( m_dependencyMetadata.getUpdated() == null && m_dependencyMetadata.getField() == null )
         {
-            return;
+            return false;
         }
         // The updated method is only invoked if the implementation object is not
         // null. This is valid for both immediate and delayed components
@@ -1634,7 +1649,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 if (info.outOfRange( trackingCount ) )
                 {
                     //ignore events after close started or we will have duplicate unbinds.
-                    return;
+                    return false;
                 }
             }
             info.waitForOpen( m_componentManager, getName(), "invokeUpdatedMethod" );
@@ -1643,15 +1658,16 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 m_componentManager.log( LogService.LOG_WARNING,
                         "DependencyManager : invokeUpdatedMethod : Service not available from service registry for ServiceReference {0} for reference {1}",
                         new Object[] {refPair.getRef(), getName()}, null );
-                return;
+                return false;
 
             }
-            BindParameters bp = new BindParameters(componentContext, refPair);
-            MethodResult methodResult = m_bindMethods.getUpdated().invoke( componentContext.getImplementationObject( false ), bp, MethodResult.VOID, m_componentManager );
+            final BindParameters bp = new BindParameters(componentContext, refPair);
+            final MethodResult methodResult = m_bindMethods.getUpdated().invoke( componentContext.getImplementationObject( false ), bp, MethodResult.VOID, m_componentManager );
             if ( methodResult != null)
             {
                 m_componentManager.setServiceProperties( methodResult );
             }
+            return methodResult == MethodResult.REACTIVATE;
         }
         else
         {
@@ -1661,6 +1677,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             m_componentManager.log( LogService.LOG_DEBUG,
                     "DependencyManager : Component not set, no need to call updated method", null );
         }
+        return false;
     }
 
 

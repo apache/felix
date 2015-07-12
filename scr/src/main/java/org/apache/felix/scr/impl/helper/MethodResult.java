@@ -34,9 +34,14 @@ public class MethodResult
 {
 
     /**
-     * Predefined instance indicating a successfull call to a void method.
+     * Predefined instance indicating a successful call to a void method.
      */
     public static final MethodResult VOID = new MethodResult(false, null);
+
+    /**
+     * Predefined instance indicating to reactivate the component.
+     */
+    public static final MethodResult REACTIVATE = new MethodResult(false, null);
 
     /**
      * The actual result from the method, which may be <code>null</code>.

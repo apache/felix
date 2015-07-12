@@ -176,12 +176,19 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
         }
     }
 
-    <T> void invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> refPair, int trackingCount )
+    <T> boolean invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> refPair, int trackingCount )
     {
+    	// as all instances are treated the same == have the same updated signatures for methods/fields
+    	// we just need one result
+    	boolean reactivate = false;
         for ( ComponentContextImpl<S> cc : getComponentContexts() )
         {
-            dependencyManager.invokeUpdatedMethod( cc, refPair, trackingCount, cc.getEdgeInfo( dependencyManager ) );
+            if ( dependencyManager.invokeUpdatedMethod( cc, refPair, trackingCount, cc.getEdgeInfo( dependencyManager ) ) ) 
+            {
+            	reactivate = true;
+            }
         }
+        return reactivate;
     }
 
     <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> oldRefPair, int trackingCount )

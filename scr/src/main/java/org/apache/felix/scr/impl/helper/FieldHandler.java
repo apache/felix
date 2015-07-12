@@ -551,17 +551,21 @@ public class FieldHandler
                 }
                 this.boundValues.remove(refPair);
             }
-            // updated needs only be done, if reference is dynamic
-            // and the value type is map or tuple
+            // updated needs only be done, if the value type is map or tuple
+            // If it's a dynamic reference, the value can be updated
+            // for a static reference we need a reactivation
             else if ( mType == METHOD_TYPE.UPDATED )
             {
-                if ( !this.metadata.isStatic() 
-                	 && ( this.valueType == ParamType.map || this.valueType == ParamType.tuple ) )
-                {
+            	if ( this.valueType == ParamType.map || this.valueType == ParamType.tuple )
+            	{
+            		if ( this.metadata.isStatic() )
+            		{
+            			return MethodResult.REACTIVATE;
+            		}
                     final Object obj = getValue(key, refPair);
                     this.setFieldValue(componentInstance, obj);
                     this.boundValues.put(refPair, obj);
-                }
+            	}
             }
             // bind needs always be done
             else
