@@ -498,6 +498,12 @@ public class FieldHandler
                     }
                 }
             }
+            
+            // null the field if optional and unary
+            if ( !metadata.isMultiple() && metadata.isOptional() )
+            {
+            	this.setFieldValue(componentInstance, null);
+            }
         }
         catch ( final InvocationTargetException ite)
         {
