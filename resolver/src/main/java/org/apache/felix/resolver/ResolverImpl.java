@@ -1002,7 +1002,7 @@ public class ResolverImpl implements Resolver
 //            else
             {
                 String s = candSourceCap.getDirectives().get(Namespace.CAPABILITY_USES_DIRECTIVE);
-                if (s != null && !s.isEmpty())
+                if (s != null && s.length() > 0)
                 {
                     // Parse these uses directive.
                     uses = session.getUsesCache().get(s);
@@ -1710,7 +1710,7 @@ public class ResolverImpl implements Resolver
                 // uses constraints so they are included for consistency
                 // checking.
                 String uses = sourceCap.getDirectives().get(Namespace.CAPABILITY_USES_DIRECTIVE);
-                if ((uses != null) && !uses.isEmpty())
+                if ((uses != null) && uses.length() > 0)
                 {
                     sources.put(sourceCap, Collections.singleton(sourceCap));
                 }

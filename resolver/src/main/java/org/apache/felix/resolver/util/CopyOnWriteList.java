@@ -18,6 +18,7 @@
  */
 package org.apache.felix.resolver.util;
 
+import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
@@ -52,7 +53,7 @@ public class CopyOnWriteList<E> implements List<E>, Cloneable {
 
     @SuppressWarnings("unchecked")
     public E set(int index, E element) {
-        data = Arrays.copyOf(data, data.length);
+        data = CopyOnWriteSet.copyOf(data, data.length);
         E prev = (E) data[index];
         data[index] = element;
         return prev;
@@ -123,7 +124,7 @@ public class CopyOnWriteList<E> implements List<E>, Cloneable {
         int size = data.length;
         if (a.length < size)
             // Make a new array of a's runtime type, but my contents:
-            return (T[]) Arrays.copyOf(data, size, a.getClass());
+            return (T[]) CopyOnWriteSet.copyOf(data, size, a.getClass());
         System.arraycopy(data, 0, a, 0, size);
         if (a.length > size)
             a[size] = null;
@@ -191,7 +192,7 @@ public class CopyOnWriteList<E> implements List<E>, Cloneable {
             }
         }
         if (modified) {
-            data = Arrays.copyOf(d, idx);
+            data = CopyOnWriteSet.copyOf(d, idx);
         }
         return modified;
     }
