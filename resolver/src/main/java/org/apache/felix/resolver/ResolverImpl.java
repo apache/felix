@@ -1592,82 +1592,77 @@ public class ResolverImpl implements Resolver
     private static Set<Capability> getPackageSources(
         ResolveSession session, Capability cap, Map<Resource, Packages> resourcePkgMap)
     {
-        Map<Capability, Set<Capability>> packageSourcesCache = resourcePkgMap.get(cap.getResource()).m_sources;
-        // If it is a package, then calculate sources for it.
-        if (cap.getNamespace().equals(PackageNamespace.PACKAGE_NAMESPACE))
+        Set<Capability> sources = resourcePkgMap.get(cap.getResource()).m_sources.get(cap);
+        if (sources == null)
         {
-            Set<Capability> sources = packageSourcesCache.get(cap);
-            if (sources == null)
-            {
-                sources = getPackageSourcesInternal(
-                    session.getContext(), cap, resourcePkgMap,
-                    new HashSet<Capability>(64), new HashSet<Capability>(64));
-                packageSourcesCache.put(cap, sources);
-            }
-            return sources;
+            getPackageSourcesInternal(session, resourcePkgMap, cap.getResource());
+            sources = resourcePkgMap.get(cap.getResource()).m_sources.get(cap);
         }
-
-        // Otherwise, need to return generic capabilies that have
-        // uses constraints so they are included for consistency
-        // checking.
-        String uses = cap.getDirectives().get(Namespace.CAPABILITY_USES_DIRECTIVE);
-        if ((uses != null) && (uses.length() > 0))
-        {
-            return Collections.singleton(cap);
-        }
-
-        return Collections.emptySet();
+        return sources;
     }
 
-    private static Set<Capability> getPackageSourcesInternal(
-        ResolveContext rc, Capability cap, Map<Resource, Packages> resourcePkgMap,
-        Set<Capability> sources, Set<Capability> cycleMap)
+    private static void getPackageSourcesInternal(
+        ResolveSession session, Map<Resource, Packages> resourcePkgMap, Resource resource)
     {
-        if (cap.getNamespace().equals(PackageNamespace.PACKAGE_NAMESPACE))
-        {
-            if (!cycleMap.add(cap))
-            {
-                return sources;
-            }
-
-            // Get the package name associated with the capability.
-            String pkgName = cap.getAttributes()
-                .get(PackageNamespace.PACKAGE_NAMESPACE).toString();
-
-            // Since a resource can export the same package more than once, get
-            // all package capabilities for the specified package name.
-            Wiring wiring = rc.getWirings().get(cap.getResource());
-            List<Capability> caps = (wiring != null)
+        Wiring wiring = session.getContext().getWirings().get(resource);
+        List<Capability> caps = (wiring != null)
                 ? wiring.getResourceCapabilities(null)
-                : cap.getResource().getCapabilities(null);
-            for (Capability sourceCap : caps)
-            {
-                if (sourceCap.getNamespace().equals(PackageNamespace.PACKAGE_NAMESPACE)
-                    && sourceCap.getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE).equals(pkgName))
-                {
-                    // Since capabilities may come from fragments, we need to check
-                    // for that case and wrap them.
-                    if (!cap.getResource().equals(sourceCap.getResource()))
-                    {
-                        sourceCap = new WrappedCapability(cap.getResource(), sourceCap);
-                    }
-                    sources.add(sourceCap);
-                }
+                : resource.getCapabilities(null);
+        OpenHashMap<String, Set<Capability>> pkgs = new OpenHashMap<String, Set<Capability>>(caps.size()) {
+            public Set<Capability> compute(String pkgName) {
+                return new HashSet<Capability>();
             }
-
-            // Then get any addition sources for the package from required bundles.
-            Packages pkgs = resourcePkgMap.get(cap.getResource());
-            List<Blame> required = pkgs.m_requiredPkgs.get(pkgName);
-            if (required != null)
+        };
+        Map<Capability, Set<Capability>> sources = resourcePkgMap.get(resource).m_sources;
+        for (Capability sourceCap : caps)
+        {
+            if (sourceCap.getNamespace().equals(PackageNamespace.PACKAGE_NAMESPACE))
             {
-                for (Blame blame : required)
+                String pkgName = (String) sourceCap.getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE);
+                Set<Capability> pkgCaps = pkgs.getOrCompute(pkgName);
+                sources.put(sourceCap, pkgCaps);
+                // Since capabilities may come from fragments, we need to check
+                // for that case and wrap them.
+                if (!resource.equals(sourceCap.getResource()))
                 {
-                    getPackageSourcesInternal(rc, blame.m_cap, resourcePkgMap, sources, cycleMap);
+                    sourceCap = new WrappedCapability(resource, sourceCap);
+                }
+                pkgCaps.add(sourceCap);
+            }
+            else
+            {
+                // Otherwise, need to return generic capabilities that have
+                // uses constraints so they are included for consistency
+                // checking.
+                String uses = sourceCap.getDirectives().get(Namespace.CAPABILITY_USES_DIRECTIVE);
+                if ((uses != null) && !uses.isEmpty())
+                {
+                    sources.put(sourceCap, Collections.singleton(sourceCap));
+                }
+                else
+                {
+                    sources.put(sourceCap, Collections.<Capability>emptySet());
                 }
             }
         }
-
-        return sources;
+        for (Map.Entry<String, Set<Capability>> pkg : pkgs.fast())
+        {
+            String pkgName = pkg.getKey();
+            List<Blame> required = resourcePkgMap.get(resource).m_requiredPkgs.get(pkgName);
+            if (required != null)
+            {
+                Set<Capability> srcs = pkg.getValue();
+                for (Blame blame : required)
+                {
+                    Capability bcap = blame.m_cap;
+                    if (srcs.add(bcap))
+                    {
+                        Set<Capability> additional = getPackageSources(session, bcap, resourcePkgMap);
+                        srcs.addAll(additional);
+                    }
+                }
+            }
+        }
     }
 
     private static Resource getDeclaredResource(Resource resource)
