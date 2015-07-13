@@ -211,6 +211,8 @@ public class ResolverImpl implements Resolver
                 // Holds candidate permutations based on permutating requirement candidates.
                 // These permutations represent backtracking on previous decisions.
                 List<Candidates> importPermutations = new ArrayList<Candidates>();
+                // Holds candidate permutations based on substituted packages
+                List<Candidates> substPermutations = new ArrayList<Candidates>();
 
                 // Record the initial candidate permutation.
                 usesPermutations.add(allCandidates);
@@ -241,6 +243,10 @@ public class ResolverImpl implements Resolver
                     {
                         allCandidates = importPermutations.remove(0);
                     }
+                    else if (!substPermutations.isEmpty())
+                    {
+                        allCandidates = substPermutations.remove(0);
+                    }
                     else
                     {
                         break;
@@ -261,7 +267,7 @@ public class ResolverImpl implements Resolver
 
 //allCandidates.dump();
 
-                    rethrow = allCandidates.checkSubstitutes(importPermutations);
+                    rethrow = allCandidates.checkSubstitutes(substPermutations);
                     if (rethrow != null)
                     {
                         continue;
@@ -290,15 +296,22 @@ public class ResolverImpl implements Resolver
                     }
 
                     Map<Resource, ResolutionError> currentFaultyResources = new HashMap<Resource, ResolutionError>();
+
+                    List<Candidates> newUses = new ArrayList<Candidates>();
+                    List<Candidates> newImports = new ArrayList<Candidates>();
+
                     rethrow = checkConsistency(
                             executor,
                             session,
-                            usesPermutations,
-                            importPermutations,
+                            newUses,
+                            newImports,
                             allCandidates,
                             currentFaultyResources,
                             hosts,
                             false);
+
+                    usesPermutations.addAll(0, newUses);
+                    importPermutations.addAll(0, newImports);
 
                     if (!currentFaultyResources.isEmpty())
                     {
