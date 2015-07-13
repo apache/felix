@@ -64,6 +64,8 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
     static final String CONFIGURATION_ADMIN_NAME = "org.osgi.service.cm.ConfigurationAdmin"; //$NON-NLS-1$
     static final String META_TYPE_NAME = "org.osgi.service.metatype.MetaTypeService"; //$NON-NLS-1$
 
+    public static final String UNBOUND_LOCATION = "??unbound:bundle/location";
+
     // templates
     private final String TEMPLATE;
 
@@ -182,17 +184,8 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         {
             if ( config != null && config.getBundleLocation() != null )
             {
-                config.setBundleLocation( null );
+                config.setBundleLocation( UNBOUND_LOCATION ); //$NON-NLS-1$
 
-                // workaround for Felix Config Admin 1.2.8 not clearing dynamic
-                // bundle location when clearing static bundle location. In
-                // this case we first set the static bundle location to the
-                // dynamic bundle location and then try to set both to null
-                if ( config.getBundleLocation() != null )
-                {
-                    config.setBundleLocation( "??invalid:bundle/location" ); //$NON-NLS-1$
-                    config.setBundleLocation( null );
-                }
             }
             response.setContentType( "application/json" ); //$NON-NLS-1$
             response.setCharacterEncoding( "UTF-8" ); //$NON-NLS-1$
