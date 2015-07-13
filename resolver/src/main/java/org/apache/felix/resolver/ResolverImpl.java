@@ -1695,13 +1695,13 @@ public class ResolverImpl implements Resolver
             {
                 String pkgName = (String) sourceCap.getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE);
                 Set<Capability> pkgCaps = pkgs.getOrCompute(pkgName);
-                sources.put(sourceCap, pkgCaps);
                 // Since capabilities may come from fragments, we need to check
                 // for that case and wrap them.
                 if (!resource.equals(sourceCap.getResource()))
                 {
                     sourceCap = new WrappedCapability(resource, sourceCap);
                 }
+                sources.put(sourceCap, pkgCaps);
                 pkgCaps.add(sourceCap);
             }
             else

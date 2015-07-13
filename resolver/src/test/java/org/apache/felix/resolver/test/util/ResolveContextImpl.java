@@ -61,7 +61,12 @@ public class ResolveContextImpl extends ResolveContext
     @Override
     public List<Capability> findProviders(Requirement r)
     {
-        return new ArrayList<Capability>(m_candMap.get(r));
+        List<Capability> cs = m_candMap.get(r);
+        if (cs != null) {
+            return new ArrayList<Capability>(cs);
+        } else {
+            return new ArrayList<Capability>();
+        }
     }
 
     @Override
