@@ -18,6 +18,7 @@
  */
 package org.apache.felix.resolver.util;
 
+import java.lang.reflect.Array;
 import java.util.AbstractSet;
 import java.util.Arrays;
 import java.util.Collection;
@@ -102,7 +103,7 @@ public class CopyOnWriteSet<E> implements Set<E>, Cloneable {
         int size = data.length;
         if (a.length < size)
             // Make a new array of a's runtime type, but my contents:
-            return (T[]) Arrays.copyOf(data, size, a.getClass());
+            return (T[]) copyOf(data, size, a.getClass());
         System.arraycopy(data, 0, a, 0, size);
         if (a.length > size)
             a[size] = null;
@@ -211,7 +212,7 @@ public class CopyOnWriteSet<E> implements Set<E>, Cloneable {
                 cs[added++] = e;
         }
         if (added > 0) {
-            Object[] newElements = Arrays.copyOf(elements, len + added);
+            Object[] newElements = copyOf(elements, len + added);
             System.arraycopy(cs, 0, newElements, len, added);
             data = newElements;
             return true;
@@ -231,4 +232,20 @@ public class CopyOnWriteSet<E> implements Set<E>, Cloneable {
         throw new UnsupportedOperationException();
     }
 
+    @SuppressWarnings("unchecked")
+    public static <T> T[] copyOf(T[] original, int newLength) {
+        return (T[]) copyOf(original, newLength, original.getClass());
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T,U> T[] copyOf(U[] original, int newLength, Class<? extends T[]> newType) {
+        T[] copy;
+        if ((Object) newType == Object[].class) {
+            copy = (T[]) new Object[newLength];
+        } else {
+            copy = (T[]) Array.newInstance(newType.getComponentType(), newLength);
+        }
+        System.arraycopy(original, 0, copy, 0, Math.min(original.length, newLength));
+        return copy;
+    }
 }

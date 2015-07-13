@@ -19,7 +19,6 @@
 package org.apache.felix.resolver.util;
 
 import java.util.*;
-import java.util.function.Function;
 
 @SuppressWarnings("NullableProblems")
 public class ArrayMap<K, V> extends AbstractMap<K, V> {
@@ -90,23 +89,6 @@ public class ArrayMap<K, V> extends AbstractMap<K, V> {
 
     protected V compute(K key) {
         throw new UnsupportedOperationException();
-    }
-
-    @SuppressWarnings("unchecked")
-    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
-        for (int i = 0, l = size << 1; i < l; i += 2) {
-            if (key.equals(table[i])) {
-                return (V) table[i + 1];
-            }
-        }
-        if (size << 1 == table.length) {
-            Object[] n = new Object[table.length << 1];
-            System.arraycopy(table, 0, n, 0, table.length);
-            table = n;
-        }
-        int i = size++ << 1;
-        table[i++] = key;
-        return (V) (table[i] = mappingFunction.apply(key));
     }
 
     @Override
