@@ -791,8 +791,8 @@ public class ResolverImpl implements Resolver
                 if (!req.getNamespace().equals(BundleNamespace.BUNDLE_NAMESPACE)
                     && !req.getNamespace().equals(PackageNamespace.PACKAGE_NAMESPACE))
                 {
-                    List<Requirement> blameReqs = new ArrayList<Requirement>();
-                    blameReqs.add(req);
+                    List<Requirement> blameReqs =
+                            Collections.singletonList(req);
 
                     mergeUses(
                         session,
@@ -806,15 +806,15 @@ public class ResolverImpl implements Resolver
                 }
             }
             // Merge uses constraints from imported packages.
-            for (Entry<String, List<Blame>> entry : resourcePkgs.m_importedPkgs.fast())
+            for (List<Blame> blames : resourcePkgs.m_importedPkgs.values())
             {
-                for (Blame blame : entry.getValue())
+                for (Blame blame : blames)
                 {
                     // Ignore resources that import from themselves.
                     if (!blame.m_cap.getResource().equals(resource))
                     {
-                        List<Requirement> blameReqs = new ArrayList<Requirement>();
-                        blameReqs.add(blame.m_reqs.get(0));
+                        List<Requirement> blameReqs =
+                            Collections.singletonList(blame.m_reqs.get(0));
 
                         mergeUses(
                             session,
@@ -829,12 +829,12 @@ public class ResolverImpl implements Resolver
                 }
             }
             // Merge uses constraints from required bundles.
-            for (Entry<String, List<Blame>> entry : resourcePkgs.m_requiredPkgs.fast())
+            for (List<Blame> blames : resourcePkgs.m_requiredPkgs.values())
             {
-                for (Blame blame : entry.getValue())
+                for (Blame blame : blames)
                 {
-                    List<Requirement> blameReqs = new ArrayList<Requirement>();
-                    blameReqs.add(blame.m_reqs.get(0));
+                    List<Requirement> blameReqs =
+                        Collections.singletonList(blame.m_reqs.get(0));
 
                     mergeUses(
                         session,
