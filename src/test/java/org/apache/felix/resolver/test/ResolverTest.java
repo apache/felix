@@ -400,6 +400,35 @@ public class ResolverTest
         assertEquals(3, wireMap.size());
     }
 
+    @Test
+    public void testScenario9() throws Exception
+    {
+        Resolver resolver = new ResolverImpl(new Logger(Logger.LOG_DEBUG), 1);
+
+        Map<Resource, Wiring> wirings = new HashMap<Resource, Wiring>();
+        Map<Requirement, List<Capability>> candMap = new HashMap<Requirement, List<Capability>>();
+        List<Resource> mandatory = populateScenario9(wirings, candMap);
+        ResolveContextImpl rci = new ResolveContextImpl(wirings, candMap, mandatory, Collections.<Resource> emptyList());
+
+        Map<Resource, List<Wire>> wireMap = resolver.resolve(rci);
+
+        Resource resB = findResource("B", wireMap.keySet());
+        Resource resA = findResource("A", wirings.keySet());
+        Resource resC1 = findResource("C1", wirings.keySet());
+
+        assertNotNull(resB);
+        assertNotNull(resC1);
+
+        assertEquals(1, wireMap.size());
+
+        List<Wire> wiresB = wireMap.get(resB);
+        assertEquals(2, wiresB.size());
+        // should be wired to A and C1
+        assertEquals(resA, wiresB.get(0).getProvider());
+        assertEquals(resC1, wiresB.get(1).getProvider());
+
+    }
+
     private static String getResourceName(Resource r)
     {
         return r.getCapabilities(IdentityNamespace.IDENTITY_NAMESPACE).get(0).getAttributes()
@@ -721,10 +750,65 @@ public class ResolverTest
         return Arrays.<Resource>asList(res2);
     }
 
+    private static List<Resource> populateScenario9(Map<Resource, Wiring> wirings, Map<Requirement, List<Capability>> candMap) {
+        ResourceImpl c1 = new ResourceImpl("C1");
+        Capability c1_pkgCap  = addCap(c1, PackageNamespace.PACKAGE_NAMESPACE, "org.foo.c");
+
+        ResourceImpl c2 = new ResourceImpl("C2");
+        Capability c2_pkgCap  = addCap(c2, PackageNamespace.PACKAGE_NAMESPACE, "org.foo.c");
+
+        ResourceImpl a1 = new ResourceImpl("A");
+        Capability a1_hostCap = addCap(a1, HostNamespace.HOST_NAMESPACE, "A");
+
+        ResourceImpl f1 = new ResourceImpl("F1", IdentityNamespace.TYPE_FRAGMENT);
+        Requirement f1_hostReq = addReq(f1, HostNamespace.HOST_NAMESPACE, "A");
+        Requirement f1_pkgReq = addReq(f1, PackageNamespace.PACKAGE_NAMESPACE, "org.foo.c");
+        Capability f1_pkgCap = addCap(f1, PackageNamespace.PACKAGE_NAMESPACE, "org.foo.a", "org.foo.c");
+
+        ResourceImpl b1 = new ResourceImpl("B");
+        Requirement b_pkgReq1 = addReq(b1, PackageNamespace.PACKAGE_NAMESPACE, "org.foo.a");
+        Requirement b_pkgReq2 = addReq(b1, PackageNamespace.PACKAGE_NAMESPACE, "org.foo.c");
+
+        candMap.put(b_pkgReq1, Collections.singletonList(f1_pkgCap));
+        candMap.put(b_pkgReq2, Arrays.asList(c2_pkgCap, c1_pkgCap));
+
+        Map<Resource, List<Wire>> wires = new HashMap<Resource, List<Wire>>();
+        wires.put(c1, new ArrayList<Wire>());
+        wires.put(c2, new ArrayList<Wire>());
+        wires.put(a1, new ArrayList<Wire>());
+        wires.put(f1, new ArrayList<Wire>());
+        wires.get(f1).add(new SimpleWire(f1_hostReq, a1_hostCap));
+        wires.get(a1).add(new SimpleWire(f1_pkgReq, c1_pkgCap, a1, c1));
+
+        Map<Resource, List<Wire>> invertedWires = new HashMap<Resource, List<Wire>>();
+        invertedWires.put(c1, new ArrayList<Wire>());
+        invertedWires.put(c2, new ArrayList<Wire>());
+        invertedWires.put(a1, new ArrayList<Wire>());
+        invertedWires.put(f1, new ArrayList<Wire>());
+        invertedWires.get(a1).add(new SimpleWire(f1_hostReq, a1_hostCap));
+        invertedWires.get(c1).add(new SimpleWire(f1_pkgReq, c1_pkgCap, a1, c1));
+
+        wirings.put(a1, new SimpleWiring(a1, Arrays.asList(a1_hostCap, f1_pkgCap), wires, invertedWires));
+        wirings.put(f1, new SimpleWiring(f1, Collections.<Capability>emptyList(), wires, invertedWires));
+        wirings.put(c1, new SimpleWiring(c1, Collections.singletonList(c1_pkgCap), wires, invertedWires));
+        wirings.put(c2, new SimpleWiring(c2, Collections.singletonList(c2_pkgCap), wires, invertedWires));
+
+        return Collections.<Resource>singletonList(b1);
+    }
+
     private static Capability addCap(ResourceImpl res, String namespace, String value)
+    {
+        return addCap(res, namespace, value, null);
+    }
+
+    private static Capability addCap(ResourceImpl res, String namespace, String value, String uses)
     {
         GenericCapability cap = new GenericCapability(res, namespace);
         cap.addAttribute(namespace, value);
+        if (uses != null)
+        {
+            cap.addDirective("uses", uses);
+        }
         res.addCapability(cap);
         return cap;
     }
@@ -743,5 +827,128 @@ public class ResolverTest
         }
         res.addRequirement(req);
         return req;
+    }
+
+    private static class SimpleWire implements Wire {
+        final Requirement requirement;
+        final Capability capability;
+        final Resource requirer;
+        final Resource provider;
+
+        public SimpleWire(Requirement requirement, Capability capability) {
+            this(requirement, capability, requirement.getResource(), capability.getResource());
+        }
+
+        public SimpleWire(Requirement requirement, Capability capability, Resource requirer, Resource provider) {
+            this.requirement = requirement;
+            this.capability = capability;
+            this.requirer = requirer;
+            this.provider = provider;
+        }
+
+        public Capability getCapability() {
+            return capability;
+        }
+
+        public Requirement getRequirement() {
+            return requirement;
+        }
+
+        public Resource getRequirer() {
+            return requirer;
+        }
+
+        public Resource getProvider() {
+            return provider;
+        }
+    }
+
+    private static class SimpleWiring implements Wiring {
+        final Resource resource;
+        final Map<Resource, List<Wire>> wires;
+        final Map<Resource, List<Wire>> invertedWires;
+        List<Capability> resourceCapabilities;
+        List<Requirement> resourceRequirements;
+
+        private SimpleWiring(Resource resource, List<Capability> resourceCapabilities, Map<Resource, List<Wire>> wires, Map<Resource, List<Wire>> invertedWires) {
+            this.resource = resource;
+            this.wires = wires;
+            this.invertedWires = invertedWires;
+            this.resourceCapabilities = resourceCapabilities;
+        }
+
+        public List<Capability> getResourceCapabilities(String namespace) {
+            if (resourceCapabilities == null) {
+                resourceCapabilities = new ArrayList<Capability>();
+                for (Wire wire : invertedWires.get(resource)) {
+                    if (!resourceCapabilities.contains(wire.getCapability())) {
+                        resourceCapabilities.add(wire.getCapability());
+                    }
+                }
+            }
+            if (namespace != null) {
+                List<Capability> caps = new ArrayList<Capability>();
+                for (Capability cap : resourceCapabilities) {
+                    if (namespace.equals(cap.getNamespace())) {
+                        caps.add(cap);
+                    }
+                }
+                return caps;
+            }
+            return resourceCapabilities;
+        }
+
+        public List<Requirement> getResourceRequirements(String namespace) {
+            if (resourceRequirements == null) {
+                resourceRequirements = new ArrayList<Requirement>();
+                for (Wire wire : wires.get(resource)) {
+                    if (!resourceRequirements.contains(wire.getRequirement())) {
+                        resourceRequirements.add(wire.getRequirement());
+                    }
+                }
+            }
+            if (namespace != null) {
+                List<Requirement> reqs = new ArrayList<Requirement>();
+                for (Requirement req : resourceRequirements) {
+                    if (namespace.equals(req.getNamespace())) {
+                        reqs.add(req);
+                    }
+                }
+                return reqs;
+            }
+            return resourceRequirements;
+        }
+
+        public List<Wire> getProvidedResourceWires(String namespace) {
+            List<Wire> providedWires = invertedWires.get(resource);
+            if (namespace != null) {
+                List<Wire> wires = new ArrayList<Wire>();
+                for (Wire wire : providedWires) {
+                    if (namespace.equals(wire.getRequirement().getNamespace())) {
+                        wires.add(wire);
+                    }
+                }
+                return wires;
+            }
+            return providedWires;
+        }
+
+        public List<Wire> getRequiredResourceWires(String namespace) {
+            List<Wire> requiredWires = wires.get(resource);
+            if (namespace != null) {
+                List<Wire> wires = new ArrayList<Wire>();
+                for (Wire wire : requiredWires) {
+                    if (namespace.equals(wire.getCapability().getNamespace())) {
+                        wires.add(wire);
+                    }
+                }
+                return wires;
+            }
+            return requiredWires;
+        }
+
+        public Resource getResource() {
+            return resource;
+        }
     }
 }
