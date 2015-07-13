@@ -531,6 +531,10 @@ class Candidates
                 {
                     if (result.error != null)
                     {
+                        if (rethrow == null)
+                        {
+                            rethrow = result.error;
+                        }
                         // Remove the candidate since we weren't able to
                         // populate its candidates.
                         itCandCap.remove();
@@ -1090,7 +1094,7 @@ class Candidates
                         PopulateResult result = m_populateResultCache.get(r.getResource());
                         result.success = false;
                         result.error =
-                            new MissingRequirementError(r);
+                            new MissingRequirementError(r, m_populateResultCache.get(c.getResource()).error);
                         unresolvedResources.add(r.getResource());
                     }
                 }
