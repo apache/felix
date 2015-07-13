@@ -8,6 +8,7 @@ Changes from 2.5.4 to 2.5.5
     * [FELIX-4956] Embed latest bndlib
     * [FELIX-3565] Embed-Transitive leaks transitive dependencies of excluded artifacts
     * [FELIX-4823] Filtering snapshots is failing if version qualifier contains more than "SNAPSHOT"
+    * [FELIX-4691] Empty string value for property causes build failure
 
 ** Improvement
     * [FELIX-4809] More flexibility for selecting the comparison artifact

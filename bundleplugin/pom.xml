@@ -84,6 +84,7 @@
     <configuration>
      <excludes>
       <exclude>**/*.mf</exclude>
+      <exclude>src/repo/**/*.pom</exclude>
      </excludes>
     </configuration>
    </plugin>
@@ -127,7 +128,7 @@
   <dependency>
     <groupId>biz.aQute.bnd</groupId>
     <artifactId>biz.aQute.bndlib</artifactId>
-    <version>20150709</version>
+    <version>20150713</version>
   </dependency>
   <dependency>
     <groupId>org.apache.felix</groupId>
