@@ -673,15 +673,13 @@ public class ResolverImpl implements Resolver
                 {
                     continue;
                 }
-                // Get the candidates for the current requirement.
-                List<Capability> candCaps = allCandidates.getCandidates(req);
+                // Grab first (i.e., highest priority) candidate.
+                Capability cap = allCandidates.getFirstCandidate(req);
                 // Optional requirements may not have any candidates.
-                if (candCaps == null)
+                if (cap == null)
                 {
                     continue;
                 }
-                // Grab first (i.e., highest priority) candidate.
-                Capability cap = candCaps.get(0);
                 reqs.add(req);
                 caps.add(cap);
                 isDynamicImporting = true;
