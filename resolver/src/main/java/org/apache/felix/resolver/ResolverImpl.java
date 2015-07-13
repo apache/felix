@@ -1226,7 +1226,7 @@ public class ResolverImpl implements Resolver
             }
             for (UsedBlames usedBlames : pkgBlames.values())
             {
-                if (!isCompatible(resourcePkgMap, exportBlame, usedBlames.m_cap))
+                if (!isCompatible(session, exportBlame, usedBlames.m_cap, resourcePkgMap))
                 {
                     for (Blame usedBlame : usedBlames.m_blames)
                     {
@@ -1323,7 +1323,7 @@ public class ResolverImpl implements Resolver
 
             for (UsedBlames usedBlames : pkgBlames.values())
             {
-                if (!isCompatible(resourcePkgMap, requirementBlames, usedBlames.m_cap))
+                if (!isCompatible(session, requirementBlames, usedBlames.m_cap, resourcePkgMap))
                 {
                     // Split packages, need to think how to get a good message for split packages (sigh)
                     // For now we just use the first requirement that brings in the package that conflicts
@@ -1551,57 +1551,45 @@ public class ResolverImpl implements Resolver
         resourcePkgMap.put(resource, packages);
     }
 
-    private boolean isCompatible(
+    private static boolean isCompatible(
+        ResolveSession session, Blame currentBlame, Capability candCap,
+        Map<Resource, Packages> resourcePkgMap)
+    {
+        if (currentBlame.m_cap.equals(candCap))
+        {
+            return true;
+        }
+        Set<Capability> candSources = getPackageSources(session, candCap, resourcePkgMap);
+        Set<Capability> currentSources = getPackageSources(session, currentBlame.m_cap, resourcePkgMap);
+        return currentSources.containsAll(candSources)
+                || candSources.containsAll(currentSources);
+    }
+
+    private static boolean isCompatible(
         ResolveSession session, List<Blame> currentBlames, Capability candCap,
         Map<Resource, Packages> resourcePkgMap)
     {
-        if ((!currentBlames.isEmpty()) && (candCap != null))
+        int size = currentBlames.size();
+        switch (size)
         {
-            Set<Capability> currentSources;
-            // quick check for single source package
-            if (currentBlames.size() == 1)
+        case 0:
+            return true;
+        case 1:
+            return isCompatible(session, currentBlames.get(0), candCap, resourcePkgMap);
+        default:
+            Set<Capability> currentSources = new HashSet<Capability>(currentBlames.size());
+            for (Blame currentBlame : currentBlames)
             {
-                Capability currentCap = currentBlames.get(0).m_cap;
-                if (currentCap.equals(candCap))
-                {
-                    return true;
-                }
-                currentSources =
-                    getPackageSources(
-                        session,
-                        currentCap,
-                        resourcePkgMap);
+                Set<Capability> blameSources = getPackageSources(session, currentBlame.m_cap, resourcePkgMap);
+                currentSources.addAll(blameSources);
             }
-            else
-            {
-                currentSources = new HashSet<Capability>(currentBlames.size());
-                for (Blame currentBlame : currentBlames)
-                {
-                    Set<Capability> blameSources =
-                        getPackageSources(
-                            session,
-                            currentBlame.m_cap,
-                            resourcePkgMap);
-                    for (Capability blameSource : blameSources)
-                    {
-                        currentSources.add(blameSource);
-                    }
-                }
-            }
-
-            Set<Capability> candSources =
-                getPackageSources(
-                    session,
-                    candCap,
-                    resourcePkgMap);
-
+            Set<Capability> candSources = getPackageSources(session, candCap, resourcePkgMap);
             return currentSources.containsAll(candSources)
                 || candSources.containsAll(currentSources);
         }
-        return true;
     }
 
-    private Set<Capability> getPackageSources(
+    private static Set<Capability> getPackageSources(
         ResolveSession session, Capability cap, Map<Resource, Packages> resourcePkgMap)
     {
         Map<Capability, Set<Capability>> packageSourcesCache = resourcePkgMap.get(cap.getResource()).m_sources;
