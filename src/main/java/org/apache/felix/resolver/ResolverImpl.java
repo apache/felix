@@ -873,7 +873,8 @@ public class ResolverImpl implements Resolver
         if (candCap.getNamespace().equals(PackageNamespace.PACKAGE_NAMESPACE))
         {
             mergeCandidatePackage(
-                current, false, currentReq, candCap, resourcePkgMap);
+                resourcePkgMap.get(current).m_importedPkgs,
+                currentReq, candCap);
         }
         else if (candCap.getNamespace().equals(BundleNamespace.BUNDLE_NAMESPACE))
         {
@@ -898,11 +899,9 @@ public class ResolverImpl implements Resolver
                 for (Entry<String, Blame> entry : candPkgs.m_exportedPkgs.fast())
                 {
                     mergeCandidatePackage(
-                        current,
-                        true,
+                        resourcePkgMap.get(current).m_requiredPkgs,
                         currentReq,
-                        entry.getValue().m_cap,
-                        resourcePkgMap);
+                        entry.getValue().m_cap);
                 }
             }
 
@@ -959,10 +958,9 @@ public class ResolverImpl implements Resolver
         cycles.remove(current);
     }
 
-    private void mergeCandidatePackage(
-        Resource current, boolean requires,
-        Requirement currentReq, Capability candCap,
-        Map<Resource, Packages> resourcePkgMap)
+    private static void mergeCandidatePackage(
+        OpenHashMap<String, List<Blame>> packages,
+        Requirement currentReq, Capability candCap)
     {
         if (candCap.getNamespace().equals(PackageNamespace.PACKAGE_NAMESPACE))
         {
@@ -971,14 +969,8 @@ public class ResolverImpl implements Resolver
 
             String pkgName = (String) candCap.getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE);
 
-            List<Requirement> blameReqs = new ArrayList<Requirement>();
-            blameReqs.add(currentReq);
+            List<Requirement> blameReqs = Collections.singletonList(currentReq);
 
-            Packages currentPkgs = resourcePkgMap.get(current);
-
-            OpenHashMap<String, List<Blame>> packages = (requires)
-                ? currentPkgs.m_requiredPkgs
-                : currentPkgs.m_importedPkgs;
             List<Blame> blames = packages.getOrCompute(pkgName);
             blames.add(new Blame(candCap, blameReqs));
 
