@@ -144,7 +144,28 @@ public class CopyOnWriteList<E> implements List<E>, Cloneable {
     }
 
     public boolean containsAll(Collection<?> c) {
-        throw new UnsupportedOperationException();
+        Object[] elements = data;
+        int len = elements.length;
+        for (Object e : c) {
+            if (indexOf(e, elements, len) < 0)
+                return false;
+        }
+        return true;
+    }
+
+    private static int indexOf(Object o, Object[] d, int len) {
+        if (o == null) {
+            for (int i = len; i-- > 0;) {
+                if (d[i] == null)
+                    return i;
+            }
+        } else {
+            for (int i = len; i-- > 0;) {
+                if (o.equals(d[i]))
+                    return i;
+            }
+        }
+        return -1;
     }
 
     public boolean addAll(Collection<? extends E> c) {
@@ -184,20 +205,7 @@ public class CopyOnWriteList<E> implements List<E>, Cloneable {
     }
 
     public int indexOf(Object o) {
-        if (o == null) {
-            Object[] d = data;
-            for (int i = d.length; i-- > 0;) {
-                if (d[i] == null)
-                    return i;
-            }
-        } else {
-            Object[] d = data;
-            for (int i = d.length; i-- > 0;) {
-                if (o.equals(d[i]))
-                    return i;
-            }
-        }
-        return -1;
+        return indexOf(o, data, data.length);
     }
 
     public int lastIndexOf(Object o) {

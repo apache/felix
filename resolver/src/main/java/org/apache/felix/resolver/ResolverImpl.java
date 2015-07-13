@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.felix.resolver.util.ArrayMap;
 import org.apache.felix.resolver.util.OpenHashMap;
+
 import org.osgi.framework.namespace.BundleNamespace;
 import org.osgi.framework.namespace.ExecutionEnvironmentNamespace;
 import org.osgi.framework.namespace.HostNamespace;
@@ -168,40 +168,31 @@ public class ResolverImpl implements Resolver
                 // Create object to hold all candidates.
                 Candidates allCandidates = new Candidates(validOnDemandResources);
 
+                List<Resource> mandatory = new ArrayList<Resource>();
+                List<Resource> toPopulate = new ArrayList<Resource>();
+
                 // Populate mandatory resources; since these are mandatory
                 // resources, failure throws a resolve exception.
-                for (Iterator<Resource> it = mandatoryResources.iterator();
-                    it.hasNext();)
+                for (Resource resource : mandatoryResources)
                 {
-                    Resource resource = it.next();
                     if (Util.isFragment(resource) || (rc.getWirings().get(resource) == null))
                     {
-                        ResolutionError error = allCandidates.populate(rc, resource, Candidates.MANDATORY);
-                        if (error != null)
-                        {
-                            throw error.toException();
-                        }
-                    }
-                    else
-                    {
-                        it.remove();
+                        mandatory.add(resource);
+                        toPopulate.add(resource);
                     }
                 }
-
                 // Populate optional resources; since these are optional
                 // resources, failure does not throw a resolve exception.
                 for (Resource resource : optionalResources)
                 {
-                    boolean isFragment = Util.isFragment(resource);
-                    if (isFragment || (rc.getWirings().get(resource) == null))
+                    if (Util.isFragment(resource) || (rc.getWirings().get(resource) == null))
                     {
-                        ResolutionError error = allCandidates.populate(rc, resource, Candidates.OPTIONAL);
-                        if (error != null)
-                        {
-                            throw error.toException();
-                        }
+                        toPopulate.add(resource);
                     }
                 }
+
+                allCandidates.addMandatoryResources(mandatory);
+                allCandidates.populate(rc, toPopulate);
 
                 // Merge any fragments into hosts.
                 ResolutionError rethrow = allCandidates.prepare(rc);
@@ -226,6 +217,7 @@ public class ResolverImpl implements Resolver
 
                 List<Candidates> usesPermutations = session.getUsesPermutations();
                 List<Candidates> importPermutations = session.getImportPermutations();
+                List<Candidates> substPermutations = new ArrayList<Candidates>();
 
                 // Record the initial candidate permutation.
                 usesPermutations.add(allCandidates);
@@ -248,15 +240,23 @@ public class ResolverImpl implements Resolver
                 Map<Resource, ResolutionError> faultyResources = null;
                 do
                 {
-                    allCandidates = (usesPermutations.size() > 0)
-                            ? usesPermutations.remove(0)
-                            : (importPermutations.size() > 0
-                                    ? importPermutations.remove(0)
-                                    : null);
-                    if (allCandidates == null)
+                    if (!usesPermutations.isEmpty())
+                    {
+                        allCandidates = usesPermutations.remove(0);
+                    }
+                    else if (!importPermutations.isEmpty())
+                    {
+                        allCandidates = importPermutations.remove(0);
+                    }
+                    else if (!substPermutations.isEmpty())
+                    {
+                        allCandidates = substPermutations.remove(0);
+                    }
+                    else
                     {
                         break;
                     }
+
                     // The delta is used to detect that we have already processed this particular permutation
                     if (!processedDeltas.add(allCandidates.getDelta()))
                     {
@@ -272,7 +272,7 @@ public class ResolverImpl implements Resolver
 
 //allCandidates.dump();
 
-                    rethrow = allCandidates.checkSubstitutes(importPermutations);
+                    rethrow = allCandidates.checkSubstitutes( /*substPermutations*/ importPermutations);
                     if (rethrow != null)
                     {
                         continue;
