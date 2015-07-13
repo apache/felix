@@ -71,8 +71,6 @@ public class ResolverImpl implements Resolver
         // removed the offending capabilities
         private Candidates m_multipleCardCandidates = null;
 
-        private final Map<Capability, Set<Capability>> m_packageSourcesCache = new HashMap<Capability, Set<Capability>>(256);
-
         private final Map<String, List<String>> m_usesCache = new HashMap<String, List<String>>();
 
         ResolveSession(ResolveContext resolveContext)
@@ -98,11 +96,6 @@ public class ResolverImpl implements Resolver
         void setMultipleCardCandidates(Candidates multipleCardCandidates)
         {
             m_multipleCardCandidates = multipleCardCandidates;
-        }
-
-        Map<Capability, Set<Capability>> getPackageSourcesCache()
-        {
-            return m_packageSourcesCache;
         }
 
         ResolveContext getContext()
@@ -239,7 +232,6 @@ public class ResolverImpl implements Resolver
                         continue;
                     }
 
-                    session.getPackageSourcesCache().clear();
                     // Null out each time a new permutation is attempted.
                     // We only use this to store a valid permutation which is a
                     // delta of the current permutation.
@@ -372,8 +364,6 @@ public class ResolverImpl implements Resolver
                 session.getUsesPermutations().clear();
                 session.getImportPermutations().clear();
                 session.setMultipleCardCandidates(null);
-                // TODO this was not cleared out before; but it seems it should be
-                session.getPackageSourcesCache().clear();
             }
         }
         while (retry);
@@ -513,7 +503,6 @@ public class ResolverImpl implements Resolver
                     do
                     {
                         resourcePkgMap.clear();
-                        session.getPackageSourcesCache().clear();
 
                         allCandidates = (usesPermutations.size() > 0)
                             ? usesPermutations.remove(0)
@@ -599,7 +588,6 @@ public class ResolverImpl implements Resolver
                     session.getImportPermutations().clear();
                     // TODO these were not cleared out before; but it seems they should be
                     session.setMultipleCardCandidates(null);
-                    session.getPackageSourcesCache().clear();
                 }
             }
             while (retry);
@@ -1614,7 +1602,7 @@ public class ResolverImpl implements Resolver
     private Set<Capability> getPackageSources(
         ResolveSession session, Capability cap, Map<Resource, Packages> resourcePkgMap)
     {
-        Map<Capability, Set<Capability>> packageSourcesCache = session.getPackageSourcesCache();
+        Map<Capability, Set<Capability>> packageSourcesCache = resourcePkgMap.get(cap.getResource()).m_sources;
         // If it is a package, then calculate sources for it.
         if (cap.getNamespace().equals(PackageNamespace.PACKAGE_NAMESPACE))
         {
@@ -1950,6 +1938,7 @@ public class ResolverImpl implements Resolver
         public final OpenHashMap<String, List<Blame>> m_importedPkgs;
         public final OpenHashMap<String, List<Blame>> m_requiredPkgs;
         public final OpenHashMap<String, ArrayMap<Capability, UsedBlames>> m_usedPkgs;
+        public final OpenHashMap<Capability, Set<Capability>> m_sources;
         public boolean m_isCalculated = false;
 
         public Packages(Resource resource)
@@ -1979,6 +1968,7 @@ public class ResolverImpl implements Resolver
                     };
                 }
             };
+            m_sources = new OpenHashMap<Capability, Set<Capability>>(nbCaps);
         }
     }
 
