@@ -983,7 +983,7 @@ public class ResolverImpl implements Resolver
             return;
         }
 
-        for (Capability candSourceCap : getPackageSources(session, mergeCap, resourcePkgMap))
+        for (Capability candSourceCap : getPackageSources(mergeCap, resourcePkgMap))
         {
             List<String> uses;
 // TODO: RFC-112 - Need impl-specific type
@@ -1109,7 +1109,7 @@ public class ResolverImpl implements Resolver
         }
 
         // Parallel get all exported packages
-        final Map<Resource, Packages> allPackages = new OpenHashMap<Resource, Packages>(allCandidates.getNbResources());
+        final OpenHashMap<Resource, Packages> allPackages = new OpenHashMap<Resource, Packages>(allCandidates.getNbResources());
         for (final Resource resource : allWireCandidates.keySet())
         {
             final Packages packages = new Packages(resource);
@@ -1137,12 +1137,37 @@ public class ResolverImpl implements Resolver
         }
         executor.await();
 
-        // Sequential compute package sources
-        // TODO: make that parallel
-        for (Resource resource : allWireCandidates.keySet())
+        // Compute package sources
+        // First, sequentially compute packages for resources
+        // that have required packages, so that all recursive
+        // calls can be done without threading problems
+        for (Map.Entry<Resource, Packages> entry : allPackages.fast())
         {
-            getPackageSourcesInternal(session, allPackages, resource);
+            final Resource resource = entry.getKey();
+            final Packages packages = entry.getValue();
+            if (!packages.m_requiredPkgs.isEmpty())
+            {
+                getPackageSourcesInternal(session, allPackages, resource, packages);
+            }
         }
+        // Next, for all remaining resources, we can compute them
+        // in parallel, as they won't refer to other resource packages
+        for (Map.Entry<Resource, Packages> entry : allPackages.fast())
+        {
+            final Resource resource = entry.getKey();
+            final Packages packages = entry.getValue();
+            if (packages.m_sources.isEmpty())
+            {
+                executor.execute(new Runnable()
+                {
+                    public void run()
+                    {
+                        getPackageSourcesInternal(session, allPackages, resource, packages);
+                    }
+                });
+            }
+        }
+        executor.await();
 
         // Parallel compute uses
         for (final Resource resource : allWireCandidates.keySet())
@@ -1290,7 +1315,7 @@ public class ResolverImpl implements Resolver
             }
             for (UsedBlames usedBlames : pkgBlames.values())
             {
-                if (!isCompatible(session, exportBlame, usedBlames.m_cap, resourcePkgMap))
+                if (!isCompatible(exportBlame, usedBlames.m_cap, resourcePkgMap))
                 {
                     for (Blame usedBlame : usedBlames.m_blames)
                     {
@@ -1387,7 +1412,7 @@ public class ResolverImpl implements Resolver
 
             for (UsedBlames usedBlames : pkgBlames.values())
             {
-                if (!isCompatible(session, requirementBlames, usedBlames.m_cap, resourcePkgMap))
+                if (!isCompatible(requirementBlames, usedBlames.m_cap, resourcePkgMap))
                 {
                     // Split packages, need to think how to get a good message for split packages (sigh)
                     // For now we just use the first requirement that brings in the package that conflicts
@@ -1600,21 +1625,21 @@ public class ResolverImpl implements Resolver
     }
 
     private static boolean isCompatible(
-        ResolveSession session, Blame currentBlame, Capability candCap,
+        Blame currentBlame, Capability candCap,
         Map<Resource, Packages> resourcePkgMap)
     {
         if (currentBlame.m_cap.equals(candCap))
         {
             return true;
         }
-        Set<Capability> candSources = getPackageSources(session, candCap, resourcePkgMap);
-        Set<Capability> currentSources = getPackageSources(session, currentBlame.m_cap, resourcePkgMap);
+        Set<Capability> candSources = getPackageSources(candCap, resourcePkgMap);
+        Set<Capability> currentSources = getPackageSources(currentBlame.m_cap, resourcePkgMap);
         return currentSources.containsAll(candSources)
                 || candSources.containsAll(currentSources);
     }
 
     private static boolean isCompatible(
-        ResolveSession session, List<Blame> currentBlames, Capability candCap,
+        List<Blame> currentBlames, Capability candCap,
         Map<Resource, Packages> resourcePkgMap)
     {
         int size = currentBlames.size();
@@ -1623,34 +1648,29 @@ public class ResolverImpl implements Resolver
         case 0:
             return true;
         case 1:
-            return isCompatible(session, currentBlames.get(0), candCap, resourcePkgMap);
+            return isCompatible(currentBlames.get(0), candCap, resourcePkgMap);
         default:
             Set<Capability> currentSources = new HashSet<Capability>(currentBlames.size());
             for (Blame currentBlame : currentBlames)
             {
-                Set<Capability> blameSources = getPackageSources(session, currentBlame.m_cap, resourcePkgMap);
+                Set<Capability> blameSources = getPackageSources(currentBlame.m_cap, resourcePkgMap);
                 currentSources.addAll(blameSources);
             }
-            Set<Capability> candSources = getPackageSources(session, candCap, resourcePkgMap);
+            Set<Capability> candSources = getPackageSources(candCap, resourcePkgMap);
             return currentSources.containsAll(candSources)
                 || candSources.containsAll(currentSources);
         }
     }
 
     private static Set<Capability> getPackageSources(
-        ResolveSession session, Capability cap, Map<Resource, Packages> resourcePkgMap)
+            Capability cap, Map<Resource, Packages> resourcePkgMap)
     {
-        Set<Capability> sources = resourcePkgMap.get(cap.getResource()).m_sources.get(cap);
-        if (sources == null)
-        {
-            getPackageSourcesInternal(session, resourcePkgMap, cap.getResource());
-            sources = resourcePkgMap.get(cap.getResource()).m_sources.get(cap);
-        }
-        return sources;
+        return resourcePkgMap.get(cap.getResource()).m_sources.get(cap);
     }
 
     private static void getPackageSourcesInternal(
-        ResolveSession session, Map<Resource, Packages> resourcePkgMap, Resource resource)
+        ResolveSession session, Map<Resource, Packages> resourcePkgMap,
+        Resource resource, Packages packages)
     {
         Wiring wiring = session.getContext().getWirings().get(resource);
         List<Capability> caps = (wiring != null)
@@ -1661,7 +1681,7 @@ public class ResolverImpl implements Resolver
                 return new HashSet<Capability>();
             }
         };
-        Map<Capability, Set<Capability>> sources = resourcePkgMap.get(resource).m_sources;
+        Map<Capability, Set<Capability>> sources = packages.m_sources;
         for (Capability sourceCap : caps)
         {
             if (sourceCap.getNamespace().equals(PackageNamespace.PACKAGE_NAMESPACE))
@@ -1696,7 +1716,7 @@ public class ResolverImpl implements Resolver
         for (Map.Entry<String, Set<Capability>> pkg : pkgs.fast())
         {
             String pkgName = pkg.getKey();
-            List<Blame> required = resourcePkgMap.get(resource).m_requiredPkgs.get(pkgName);
+            List<Blame> required = packages.m_requiredPkgs.get(pkgName);
             if (required != null)
             {
                 Set<Capability> srcs = pkg.getValue();
@@ -1705,7 +1725,14 @@ public class ResolverImpl implements Resolver
                     Capability bcap = blame.m_cap;
                     if (srcs.add(bcap))
                     {
-                        Set<Capability> additional = getPackageSources(session, bcap, resourcePkgMap);
+                        Resource capResource = bcap.getResource();
+                        Packages capPackages = resourcePkgMap.get(capResource);
+                        Set<Capability> additional = capPackages.m_sources.get(bcap);
+                        if (additional == null)
+                        {
+                            getPackageSourcesInternal(session, resourcePkgMap, capResource, capPackages);
+                            additional = capPackages.m_sources.get(bcap);
+                        }
                         srcs.addAll(additional);
                     }
                 }
