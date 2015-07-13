@@ -1486,7 +1486,7 @@ public class ResolverImpl implements Resolver
         List<Capability> caps = (wiring != null)
             ? wiring.getResourceCapabilities(null)
             : resource.getCapabilities(null);
-        Map<String, Capability> exports = new HashMap<String, Capability>(caps.size());
+        Map<String, Blame> exports = packages.m_exportedPkgs;
         for (Capability cap : caps)
         {
             if (cap.getNamespace().equals(PackageNamespace.PACKAGE_NAMESPACE))
@@ -1497,7 +1497,7 @@ public class ResolverImpl implements Resolver
                 }
                 exports.put(
                     (String) cap.getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE),
-                    cap);
+                    new Blame(cap, null));
             }
         }
         // Remove substitutable exports that were imported.
@@ -1521,13 +1521,6 @@ public class ResolverImpl implements Resolver
                         }
                     }
                 }
-            }
-
-            // Add all non-substituted exports to the resources's package space.
-            for (Entry<String, Capability> entry : exports.entrySet())
-            {
-                packages.m_exportedPkgs.put(
-                    entry.getKey(), new Blame(entry.getValue(), null));
             }
         }
 
