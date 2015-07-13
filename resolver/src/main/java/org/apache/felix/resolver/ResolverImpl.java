@@ -268,7 +268,7 @@ public class ResolverImpl implements Resolver
                     }
 
                     Map<Resource, ResolutionError> currentFaultyResources = new HashMap<Resource, ResolutionError>();
-                    rethrow = checkConsistency(session, allCandidates, currentFaultyResources, hosts);
+                    rethrow = checkConsistency(session, allCandidates, currentFaultyResources, hosts, false);
 
                     if (!currentFaultyResources.isEmpty())
                     {
@@ -375,7 +375,8 @@ public class ResolverImpl implements Resolver
         ResolveSession session,
         Candidates allCandidates,
         Map<Resource, ResolutionError> currentFaultyResources,
-        Map<Resource, Resource> hosts)
+        Map<Resource, Resource> hosts,
+        boolean dynamic)
     {
         Map<Resource, Packages> resourcePkgMap =
                 new HashMap<Resource, Packages>(allCandidates.getNbResources());
@@ -397,7 +398,7 @@ public class ResolverImpl implements Resolver
 
             ResolutionError rethrow = checkPackageSpaceConsistency(
                     session, entry.getValue(),
-                    allCandidates, false, resourcePkgMap, resultCache);
+                    allCandidates, dynamic, resourcePkgMap, resultCache);
             if (rethrow != null)
             {
                 Resource faultyResource = entry.getKey();
@@ -518,18 +519,11 @@ public class ResolverImpl implements Resolver
                         // will never be a fragment since fragments never
                         // execute code, so we don't need to check for
                         // this case like we do for a normal resolve.
-
-                        calculatePackageSpaces(session,
-                            allCandidates.getWrappedHost(host), allCandidates,
-                            resourcePkgMap, new HashMap<Capability, Set<Resource>>(256),
-                            new HashSet<Resource>(64));
-//System.out.println("+++ PACKAGE SPACES START +++");
-//dumpResourcePkgMap(resourcePkgMap);
-//System.out.println("+++ PACKAGE SPACES END +++");
-
-                        rethrow = checkPackageSpaceConsistency(session,
-                                allCandidates.getWrappedHost(host),
-                                allCandidates, true, resourcePkgMap, new HashMap<Resource, Object>(64));
+                        rethrow = checkConsistency(
+                                session, allCandidates,
+                                new OpenHashMap<Resource, ResolutionError>(resourcePkgMap.size()),
+                                Collections.singletonMap(host, allCandidates.getWrappedHost(host)),
+                                true);
                     }
                     while ((rethrow != null)
                         && ((usesPermutations.size() > 0) || (importPermutations.size() > 0)));
