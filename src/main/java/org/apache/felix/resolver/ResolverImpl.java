@@ -123,8 +123,6 @@ public class ResolverImpl implements Resolver
         ResolveSession session = new ResolveSession(rc);
         Map<Resource, List<Wire>> wireMap =
             new HashMap<Resource, List<Wire>>();
-        Map<Resource, Packages> resourcePkgMap =
-            new HashMap<Resource, Packages>();
 
         // Make copies of arguments in case we want to modify them.
         Collection<Resource> mandatoryResources = new ArrayList<Resource>(rc.getMandatoryResources());
@@ -239,7 +237,6 @@ public class ResolverImpl implements Resolver
                         continue;
                     }
 
-                    resourcePkgMap.clear();
                     session.getPackageSourcesCache().clear();
                     // Null out each time a new permutation is attempted.
                     // We only use this to store a valid permutation which is a
@@ -248,22 +245,16 @@ public class ResolverImpl implements Resolver
 
 //allCandidates.dump();
 
-                    Map<Resource, ResolutionError> currentFaultyResources = null;
                     rethrow = allCandidates.checkSubstitutes(importPermutations);
                     if (rethrow != null)
                     {
                         continue;
                     }
 
-                    // Reuse a resultCache map for checking package consistency
-                    // for all resources.
-                    Map<Resource, Object> resultCache =
-                        new HashMap<Resource, Object>(allResources.size());
-                    // Check the package space consistency for all 'root' resources.
+                    // Compute the list of hosts
+                    Map<Resource, Resource> hosts = new LinkedHashMap<Resource, Resource>();
                     for (Resource resource : allResources)
                     {
-                        Resource target = resource;
-
                         // If we are resolving a fragment, then get its
                         // host candidate and verify it instead.
                         Requirement hostReq = hostReqs.get(resource);
@@ -277,42 +268,15 @@ public class ResolverImpl implements Resolver
                             {
                                 continue;
                             }
-                            target = hostCap.getResource();
+                            resource = hostCap.getResource();
                         }
-
-                        calculatePackageSpaces(
-                            session, allCandidates.getWrappedHost(target), allCandidates,
-                            resourcePkgMap, new HashMap<Capability, Set<Resource>>(256),
-                            new HashSet<Resource>(64));
-//System.out.println("+++ PACKAGE SPACES START +++");
-//dumpResourcePkgMap(resourcePkgMap);
-//System.out.println("+++ PACKAGE SPACES END +++");
-
-                        rethrow = checkPackageSpaceConsistency(
-                                session, allCandidates.getWrappedHost(target),
-                                allCandidates, resourcePkgMap, resultCache);
-                        if (rethrow != null)
-                        {
-                            if (currentFaultyResources == null)
-                            {
-                                currentFaultyResources = new HashMap<Resource, ResolutionError>();
-                            }
-                            Resource faultyResource = resource;
-                            // check that the faulty requirement is not from a fragment
-                            for (Requirement faultyReq : rethrow.getUnresolvedRequirements())
-                            {
-                                if (faultyReq instanceof WrappedRequirement)
-                                {
-                                    faultyResource =
-                                        ((WrappedRequirement) faultyReq)
-                                        .getDeclaredRequirement().getResource();
-                                    break;
-                                }
-                            }
-                            currentFaultyResources.put(faultyResource, rethrow);
-                        }
+                        hosts.put(resource, allCandidates.getWrappedHost(resource));
                     }
-                    if (currentFaultyResources != null)
+
+                    Map<Resource, ResolutionError> currentFaultyResources = new HashMap<Resource, ResolutionError>();
+                    rethrow = checkConsistency(session, allCandidates, currentFaultyResources, hosts);
+
+                    if (!currentFaultyResources.isEmpty())
                     {
                         if (faultyResources == null)
                         {
@@ -413,6 +377,54 @@ public class ResolverImpl implements Resolver
         while (retry);
 
         return wireMap;
+    }
+
+    private ResolutionError checkConsistency(
+        ResolveSession session,
+        Candidates allCandidates,
+        Map<Resource, ResolutionError> currentFaultyResources,
+        Map<Resource, Resource> hosts)
+    {
+        Map<Resource, Packages> resourcePkgMap =
+                new HashMap<Resource, Packages>(allCandidates.getNbResources());
+        // Reuse a resultCache map for checking package consistency
+        // for all resources.
+        Map<Resource, Object> resultCache =
+                new HashMap<Resource, Object>();
+        // Check the package space consistency for all 'root' resources.
+        ResolutionError error = null;
+        for (Entry<Resource, Resource> entry : hosts.entrySet())
+        {
+            calculatePackageSpaces(
+                    session, entry.getValue(), allCandidates,
+                    resourcePkgMap, new HashMap<Capability, Set<Resource>>(256),
+                    new HashSet<Resource>(64));
+//System.out.println("+++ PACKAGE SPACES START +++");
+//dumpResourcePkgMap(resourcePkgMap);
+//System.out.println("+++ PACKAGE SPACES END +++");
+
+            ResolutionError rethrow = checkPackageSpaceConsistency(
+                    session, entry.getValue(),
+                    allCandidates, resourcePkgMap, resultCache);
+            if (rethrow != null)
+            {
+                Resource faultyResource = entry.getKey();
+                // check that the faulty requirement is not from a fragment
+                for (Requirement faultyReq : rethrow.getUnresolvedRequirements())
+                {
+                    if (faultyReq instanceof WrappedRequirement)
+                    {
+                        faultyResource =
+                                ((WrappedRequirement) faultyReq)
+                                        .getDeclaredRequirement().getResource();
+                        break;
+                    }
+                }
+                currentFaultyResources.put(faultyResource, rethrow);
+                error = rethrow;
+            }
+        }
+        return error;
     }
 
     /**
