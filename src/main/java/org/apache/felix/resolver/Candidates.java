@@ -1087,8 +1087,8 @@ class Candidates
 
         populateSubstitutables();
 
-        m_candidateMap.concat();
-        m_dependentMap.concat();
+        m_candidateMap.trim();
+        m_dependentMap.trim();
     }
 
     // Maps a host capability to a map containing its potential fragments;
@@ -1099,8 +1099,7 @@ class Candidates
     {
         Map<Capability, Map<String, Map<Version, List<Requirement>>>> hostFragments =
             new HashMap<Capability, Map<String, Map<Version, List<Requirement>>>>();
-        for (Entry<Requirement, CopyOnWriteList<Capability>> entry : m_candidateMap.entrySet())
-        {
+        for (Entry<Requirement, CopyOnWriteList<Capability>> entry : m_candidateMap.entrySet()) {
             Requirement req = entry.getKey();
             List<Capability> caps = entry.getValue();
             for (Capability cap : caps)

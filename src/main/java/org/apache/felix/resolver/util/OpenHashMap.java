@@ -18,604 +18,1882 @@
  */
 package org.apache.felix.resolver.util;
 
-import java.util.AbstractMap;
-import java.util.AbstractSet;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.lang.reflect.Array;
+import java.util.AbstractCollection;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
 
 /**
- * An open addressing map.
- * Low memory consumption compared to a HashMap.
- *
- * Based on the mahout collection classes.
+ * Based on fastutil Object2ObjectLinkedOpenHashMap
  */
-public class OpenHashMap<K, V> extends AbstractMap<K, V> implements Cloneable {
+@SuppressWarnings("NullableProblems")
+public class OpenHashMap<K, V> implements Serializable, Cloneable, SortedMap<K, V> {
 
-    static final int[] primeCapacities = {
-            3, 5, 7, 11, 17, 23, 31, 37, 43, 47, 67, 79, 89, 97, 137, 163, 179, 197, 277, 311,
-            331, 359, 379, 397, 433, 557, 599, 631, 673, 719, 761, 797, 877, 953, 1039, 1117,
-            1201, 1277, 1361, 1439, 1523, 1597, 1759, 1907, 2081, 2237, 2411, 2557, 2729, 2879,
-            3049, 3203, 3527, 3821, 4177, 4481, 4831, 5119, 5471, 5779, 6101, 6421, 7057, 7643,
-            8363, 8963, 9677, 10243, 10949, 11579, 12203, 12853, 14143, 15287, 16729, 17929,
-            19373, 20507, 21911, 23159, 24407, 25717, 28289, 30577, 33461, 35863, 38747, 41017,
-            43853, 46327, 48817, 51437, 56591, 61169, 66923, 71741, 77509, 82037, 87719, 92657,
-            97649, 102877, 113189, 122347, 133853, 143483, 155027, 164089, 175447, 185323,
-            195311, 205759, 226379, 244703, 267713, 286973, 310081, 328213, 350899, 370661,
-            390647, 411527, 452759, 489407, 535481, 573953, 620171, 656429, 701819, 741337,
-            781301, 823117, 905551, 978821, 1070981, 1147921, 1240361, 1312867, 1403641, 1482707,
-            1562611, 1646237, 1811107, 1957651, 2141977, 2295859, 2480729, 2625761, 2807303,
-            2965421, 3125257, 3292489, 3622219, 3915341, 4283963, 4591721, 4961459, 5251529,
-            5614657, 5930887, 6250537, 6584983, 7244441, 7830701, 8567929, 9183457, 9922933,
-            10503061, 11229331, 11861791, 12501169, 13169977, 14488931, 15661423, 17135863,
-            18366923, 19845871, 21006137, 22458671, 23723597, 25002389, 26339969, 28977863,
-            31322867, 34271747, 36733847, 39691759, 42012281, 44917381, 47447201, 50004791,
-            52679969, 57955739, 62645741, 68543509, 73467739, 79383533, 84024581, 89834777,
-            94894427, 100009607, 105359939, 115911563, 125291483, 137087021, 146935499,
-            158767069, 168049163, 179669557, 189788857, 200019221, 210719881, 231823147,
-            250582987, 274174111, 293871013, 317534141, 336098327, 359339171, 379577741,
-            400038451, 421439783, 463646329, 501165979, 548348231, 587742049, 635068283,
-            672196673, 718678369, 759155483, 800076929, 842879579, 927292699, 1002331963,
-            1096696463, 1175484103, 1270136683, 1344393353, 1437356741, 1518310967,
-            1600153859, 1685759167, 1854585413, 2004663929, 2147483647
-    };
-    static final int largestPrime = primeCapacities[primeCapacities.length - 1];
+    private static final long serialVersionUID = 0L;
+    protected transient Object[] key;
+    protected transient Object[] value;
+    protected transient int mask;
+    protected transient boolean containsNullKey;
+    protected transient int first;
+    protected transient int last;
+    protected transient long[] link;
+    protected transient int n;
+    protected transient int maxFill;
+    protected int size;
+    protected final float f;
+    protected V defRetValue;
 
-    protected static final int defaultCapacity = 277;
-    protected static final double defaultMinLoadFactor = 0.2;
-    protected static final double defaultMaxLoadFactor = 0.5;
+    protected transient volatile Iterable<Map.Entry<K, V>> fast;
+    protected transient volatile OpenHashMap.MapEntrySet entries;
+    protected transient volatile SortedSet<K> keys;
+    protected transient volatile Collection<V> values;
 
-    protected static final Object FREE = null;
-    protected static final Object REMOVED = new Object();
-
-    /** The number of distinct associations in the map; its "size()". */
-    protected int distinct;
-
-    /**
-     * The table capacity c=table.length always satisfies the invariant <tt>c * minLoadFactor <= s <= c *
-     * maxLoadFactor</tt>, where s=size() is the number of associations currently contained. The term "c * minLoadFactor"
-     * is called the "lowWaterMark", "c * maxLoadFactor" is called the "highWaterMark". In other words, the table capacity
-     * (and proportionally the memory used by this class) oscillates within these constraints. The terms are precomputed
-     * and cached to avoid recalculating them each time put(..) or removeKey(...) is called.
-     */
-    protected int lowWaterMark;
-    protected int highWaterMark;
-
-    /** The minimum load factor for the hashtable. */
-    protected double minLoadFactor;
-
-    /** The maximum load factor for the hashtable. */
-    protected double maxLoadFactor;
-
-    /** The hash table keys. */
-    protected Object[] table;
-
-    /** The hash table values. */
-    protected Object[] values;
-
-    /** The number of table entries in state==FREE. */
-    protected int freeEntries;
-
-
-    /** Constructs an empty map with default capacity and default load factors. */
-    public OpenHashMap() {
-        this(defaultCapacity);
-    }
-
-    /**
-     * Constructs an empty map with the specified initial capacity and default load factors.
-     *
-     * @param initialCapacity the initial capacity of the map.
-     * @throws IllegalArgumentException if the initial capacity is less than zero.
-     */
-    public OpenHashMap(int initialCapacity) {
-        this(initialCapacity, defaultMinLoadFactor, defaultMaxLoadFactor);
-    }
-
-    /**
-     * Constructs an empty map with the specified initial capacity and the specified minimum and maximum load factor.
-     *
-     * @param initialCapacity the initial capacity.
-     * @param minLoadFactor   the minimum load factor.
-     * @param maxLoadFactor   the maximum load factor.
-     * @throws IllegalArgumentException if <tt>initialCapacity < 0 || (minLoadFactor < 0.0 || minLoadFactor >= 1.0) ||
-     *                                  (maxLoadFactor <= 0.0 || maxLoadFactor >= 1.0) || (minLoadFactor >=
-     *                                  maxLoadFactor)</tt>.
-     */
-    public OpenHashMap(int initialCapacity, double minLoadFactor, double maxLoadFactor) {
-        setUp(initialCapacity, minLoadFactor, maxLoadFactor);
-    }
-
-    /** Removes all (key,value) associations from the receiver. Implicitly calls <tt>trimToSize()</tt>. */
-    @Override
-    public void clear() {
-        Arrays.fill(this.table, FREE);
-        Arrays.fill(this.values, null);
-        distinct = 0;
-        freeEntries = table.length; // delta
-        trimToSize();
-    }
-
-    /**
-     * Returns a deep copy of the receiver.
-     *
-     * @return a deep copy of the receiver.
-     */
-    @Override
-    @SuppressWarnings("unchecked")
-    public OpenHashMap<K, V> clone() {
-        try {
-            OpenHashMap<K,V> copy = (OpenHashMap<K,V>) super.clone();
-            copy.table = copy.table.clone();
-            copy.values = copy.values.clone();
-            return copy;
-        } catch (CloneNotSupportedException exc) {
-            InternalError e = new InternalError();
-            e.initCause(exc);
-            throw e; //should never happen since we are cloneable
-        }
-    }
-
-    /**
-     * Returns <tt>true</tt> if the receiver contains the specified key.
-     *
-     * @return <tt>true</tt> if the receiver contains the specified key.
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public boolean containsKey(Object key) {
-        return indexOfKey((K) key) >= 0;
-    }
-
-    /**
-     * Returns <tt>true</tt> if the receiver contains the specified value.
-     *
-     * @return <tt>true</tt> if the receiver contains the specified value.
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public boolean containsValue(Object value) {
-        return indexOfValue((V)value) >= 0;
-    }
-
-    /**
-     * Ensures that the receiver can hold at least the specified number of associations without needing to allocate new
-     * internal memory. If necessary, allocates new internal memory and increases the capacity of the receiver. <p> This
-     * method never need be called; it is for performance tuning only. Calling this method before <tt>put()</tt>ing a
-     * large number of associations boosts performance, because the receiver will grow only once instead of potentially
-     * many times and hash collisions get less probable.
-     *
-     * @param minCapacity the desired minimum capacity.
-     */
-    public void ensureCapacity(int minCapacity) {
-        if (table.length < minCapacity) {
-            int newCapacity = nextPrime(minCapacity);
-            rehash(newCapacity);
-        }
-    }
-
-    /**
-     * Returns the value associated with the specified key. It is often a good idea to first check with {@link
-     * #containsKey(Object)} whether the given key has a value associated or not, i.e. whether there exists an association
-     * for the given key or not.
-     *
-     * @param key the key to be searched for.
-     * @return the value associated with the specified key; <tt>0</tt> if no such key is present.
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public V get(Object key) {
-        int i = indexOfKey((K)key);
-        if (i < 0) {
-            return null;
-        } //not contained
-        return (V)values[i];
-    }
-
-    /**
-     * @param key the key to be added to the receiver.
-     * @return the index where the key would need to be inserted, if it is not already contained. Returns -index-1 if the
-     *         key is already contained at slot index. Therefore, if the returned index < 0, then it is already contained
-     *         at slot -index-1. If the returned index >= 0, then it is NOT already contained and should be inserted at
-     *         slot index.
-     */
-    protected int indexOfInsertion(K key) {
-        Object[] tab = table;
-        int length = tab.length;
-
-        int hash = key.hashCode() & 0x7FFFFFFF;
-        int i = hash % length;
-        int decrement = hash % (length - 2); // double hashing, see http://www.eece.unm.edu/faculty/heileman/hash/node4.html
-        //int decrement = (hash / length) % length;
-        if (decrement == 0) {
-            decrement = 1;
-        }
-
-        // stop if we find a removed or free slot, or if we find the key itself
-        // do NOT skip over removed slots (yes, open addressing is like that...)
-        while (table[i] != FREE && table[i] != REMOVED && !equalsMindTheNull(key, tab[i])) {
-            i -= decrement;
-            //hashCollisions++;
-            if (i < 0) {
-                i += length;
+    public OpenHashMap(int expected, float f) {
+        this.first = -1;
+        this.last = -1;
+        if (f > 0.0F && f <= 1.0F) {
+            if (expected < 0) {
+                throw new IllegalArgumentException("The expected number of elements must be nonnegative");
+            } else {
+                this.f = f;
+                this.n = arraySize(expected, f);
+                this.mask = this.n - 1;
+                this.maxFill = maxFill(this.n, f);
+                this.key = new Object[this.n + 1];
+                this.value = new Object[this.n + 1];
+                this.link = new long[this.n + 1];
             }
+        } else {
+            throw new IllegalArgumentException("Load factor must be greater than 0 and smaller than or equal to 1");
         }
+    }
 
-        if (table[i] == REMOVED) {
-            // stop if we find a free slot, or if we find the key itself.
-            // do skip over removed slots (yes, open addressing is like that...)
-            // assertion: there is at least one FREE slot.
-            int j = i;
-            while (table[i] != FREE && (table[i] == REMOVED || tab[i] != key)) {
-                i -= decrement;
-                //hashCollisions++;
-                if (i < 0) {
-                    i += length;
+    public OpenHashMap(int expected) {
+        this(expected, 0.75F);
+    }
+
+    public OpenHashMap() {
+        this(16, 0.75F);
+    }
+
+    public OpenHashMap(Map<? extends K, ? extends V> m, float f) {
+        this(m.size(), f);
+        this.putAll(m);
+    }
+
+    public OpenHashMap(Map<? extends K, ? extends V> m) {
+        this(m, 0.75F);
+    }
+
+    public OpenHashMap(K[] k, V[] v, float f) {
+        this(k.length, f);
+        if (k.length != v.length) {
+            throw new IllegalArgumentException("The key array and the value array have different lengths (" + k.length + " and " + v.length + ")");
+        } else {
+            for (int i = 0; i < k.length; ++i) {
+                this.put(k[i], v[i]);
+            }
+
+        }
+    }
+
+    public OpenHashMap(K[] k, V[] v) {
+        this(k, v, 0.75F);
+    }
+
+    public void defaultReturnValue(V rv) {
+        this.defRetValue = rv;
+    }
+
+    public V defaultReturnValue() {
+        return this.defRetValue;
+    }
+
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        } else if (!(o instanceof Map)) {
+            return false;
+        } else {
+            Map m = (Map) o;
+            int n = m.size();
+            if (this.size() != n) {
+                return false;
+            }
+            Iterator<? extends Entry<?, ?>> i = this.fast().iterator();
+            while (n-- > 0) {
+                Entry e = i.next();
+                Object k = e.getKey();
+                Object v = e.getValue();
+                Object v2 = m.get(k);
+                if (v == null) {
+                    if (v2 != null) {
+                        return false;
+                    }
+                } else if (!v.equals(v2)) {
+                    return false;
                 }
             }
-            if (table[i] == FREE) {
-                i = j;
+            return true;
+        }
+    }
+
+    public String toString() {
+        StringBuilder s = new StringBuilder();
+        Iterator<Map.Entry<K, V>> i = this.fast().iterator();
+        int n = this.size();
+        boolean first = true;
+        s.append("{");
+
+        while (n-- != 0) {
+            if (first) {
+                first = false;
+            } else {
+                s.append(", ");
+            }
+
+            Map.Entry<K, V> e = i.next();
+            if (this == e.getKey()) {
+                s.append("(this map)");
+            } else {
+                s.append(String.valueOf(e.getKey()));
+            }
+
+            s.append("=>");
+            if (this == e.getValue()) {
+                s.append("(this map)");
+            } else {
+                s.append(String.valueOf(e.getValue()));
             }
         }
 
-
-        if (table[i] != FREE && table[i] != REMOVED) {
-            // key already contained at slot i.
-            // return a negative number identifying the slot.
-            return -i - 1;
-        }
-        // not already contained, should be inserted at slot i.
-        // return a number >= 0 identifying the slot.
-        return i;
+        s.append("}");
+        return s.toString();
     }
 
-    /**
-     * @param key the key to be searched in the receiver.
-     * @return the index where the key is contained in the receiver, returns -1 if the key was not found.
-     */
-    protected int indexOfKey(K key) {
-        Object[] tab = table;
-        int length = tab.length;
-
-        int hash = key.hashCode() & 0x7FFFFFFF;
-        int i = hash % length;
-        int decrement = hash % (length - 2); // double hashing, see http://www.eece.unm.edu/faculty/heileman/hash/node4.html
-        //int decrement = (hash / length) % length;
-        if (decrement == 0) {
-            decrement = 1;
-        }
-
-        // stop if we find a free slot, or if we find the key itself.
-        // do skip over removed slots (yes, open addressing is like that...)
-        while (tab[i] != FREE && (tab[i] == REMOVED || !equalsMindTheNull(key, tab[i]))) {
-            i -= decrement;
-            //hashCollisions++;
-            if (i < 0) {
-                i += length;
-            }
-        }
-
-        if (tab[i] == FREE) {
-            return -1;
-        } // not found
-        return i; //found, return index where key is contained
+    private int realSize() {
+        return this.containsNullKey ? this.size - 1 : this.size;
     }
 
-    /**
-     * @param value the value to be searched in the receiver.
-     * @return the index where the value is contained in the receiver, returns -1 if the value was not found.
-     */
-    protected int indexOfValue(V value) {
-        Object[] val = values;
-
-        for (int i = values.length; --i >= 0;) {
-            if (table[i] != FREE && table[i] != REMOVED && equalsMindTheNull(val[i], value)) {
-                return i;
-            }
+    private void ensureCapacity(int capacity) {
+        int needed = arraySize(capacity, this.f);
+        if (needed > this.n) {
+            this.rehash(needed);
         }
 
-        return -1; // not found
     }
 
-    /**
-     * Associates the given key with the given value. Replaces any old <tt>(key,someOtherValue)</tt> association, if
-     * existing.
-     *
-     * @param key   the key the value shall be associated with.
-     * @param value the value to be associated.
-     * @return <tt>true</tt> if the receiver did not already contain such a key; <tt>false</tt> if the receiver did
-     *         already contain such a key - the new value has now replaced the formerly associated value.
-     */
+    private void tryCapacity(long capacity) {
+        int needed = (int) Math.min(1073741824L, Math.max(2L, nextPowerOfTwo((long) Math.ceil((double) ((float) capacity / this.f)))));
+        if (needed > this.n) {
+            this.rehash(needed);
+        }
+
+    }
+
     @SuppressWarnings("unchecked")
-    @Override
-    public V put(K key, V value) {
-        int i = indexOfInsertion(key);
-        if (i < 0) { //already contained
-            i = -i - 1;
-            V previous = (V) this.values[i];
-            this.values[i] = value;
-            return previous;
+    private V removeEntry(int pos) {
+        Object oldValue = this.value[pos];
+        this.value[pos] = null;
+        --this.size;
+        this.fixPointers(pos);
+        this.shiftKeys(pos);
+        if (this.size < this.maxFill / 4 && this.n > 16) {
+            this.rehash(this.n / 2);
         }
 
-        if (this.distinct > this.highWaterMark) {
-            int newCapacity = chooseGrowCapacity(this.distinct + 1, this.minLoadFactor, this.maxLoadFactor);
-            rehash(newCapacity);
-            return put(key, value);
+        return (V) oldValue;
+    }
+
+    @SuppressWarnings("unchecked")
+    private V removeNullEntry() {
+        this.containsNullKey = false;
+        Object oldValue = this.value[this.n];
+        this.value[this.n] = null;
+        --this.size;
+        this.fixPointers(this.n);
+        if (this.size < this.maxFill / 4 && this.n > 16) {
+            this.rehash(this.n / 2);
         }
 
-        if (this.table[i] == FREE) {
-            this.freeEntries--;
-        }
-        this.table[i] = key;
-        this.values[i] = value;
-        this.distinct++;
+        return (V) oldValue;
+    }
 
-        if (this.freeEntries < 1) { //delta
-            int newCapacity = chooseGrowCapacity(this.distinct + 1, this.minLoadFactor, this.maxLoadFactor);
-            rehash(newCapacity);
+    public void putAll(Map<? extends K, ? extends V> m) {
+        if ((double) this.f <= 0.5D) {
+            this.ensureCapacity(m.size());
+        } else {
+            this.tryCapacity((long) (this.size() + m.size()));
         }
 
+        int n = m.size();
+        if (m instanceof OpenHashMap) {
+            Iterator<? extends Map.Entry<? extends K, ? extends V>> i = ((OpenHashMap) m).fast().iterator();
+            while (n-- != 0) {
+                Map.Entry<? extends K, ? extends V> e = i.next();
+                this.put(e.getKey(), e.getValue());
+            }
+        } else {
+            Iterator<? extends Map.Entry<? extends K, ? extends V>> i = m.entrySet().iterator();
+            while (n-- != 0) {
+                Map.Entry<? extends K, ? extends V> e = i.next();
+                this.put(e.getKey(), e.getValue());
+            }
+        }
+    }
+
+    private int insert(K k, V v) {
+        int pos;
+        if (k == null) {
+            if (this.containsNullKey) {
+                return this.n;
+            }
+
+            this.containsNullKey = true;
+            pos = this.n;
+        } else {
+            Object[] key = this.key;
+            Object curr;
+            if ((curr = key[pos = mix(k.hashCode()) & this.mask]) != null) {
+                if (curr.equals(k)) {
+                    return pos;
+                }
+
+                while ((curr = key[pos = pos + 1 & this.mask]) != null) {
+                    if (curr.equals(k)) {
+                        return pos;
+                    }
+                }
+            }
+
+            key[pos] = k;
+        }
+
+        this.value[pos] = v;
+        if (this.size == 0) {
+            this.first = this.last = pos;
+            this.link[pos] = -1L;
+        } else {
+            this.link[this.last] ^= (this.link[this.last] ^ (long) pos & 0xFFFFFFFFL) & 0xFFFFFFFFL;
+            this.link[pos] = ((long) this.last & 0xFFFFFFFFL) << 32 | 0xFFFFFFFFL;
+            this.last = pos;
+        }
+
+        if (this.size++ >= this.maxFill) {
+            this.rehash(arraySize(this.size + 1, this.f));
+        }
+
+        return -1;
+    }
+
+    @SuppressWarnings("unchecked")
+    public V put(K k, V v) {
+        int pos = this.insert(k, v);
+        if (pos < 0) {
+            return this.defRetValue;
+        } else {
+            Object oldValue = this.value[pos];
+            this.value[pos] = v;
+            return (V) oldValue;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public V getOrCompute(K k) {
+        int pos;
+        if (k == null) {
+            if (this.containsNullKey) {
+                return (V) this.value[this.n];
+            }
+
+            this.containsNullKey = true;
+            pos = this.n;
+        } else {
+            Object[] key = this.key;
+            Object curr;
+            if ((curr = key[pos = mix(k.hashCode()) & this.mask]) != null) {
+                if (curr.equals(k)) {
+                    return (V) this.value[pos];
+                }
+
+                while ((curr = key[pos = pos + 1 & this.mask]) != null) {
+                    if (curr.equals(k)) {
+                        return (V) this.value[pos];
+                    }
+                }
+            }
+
+            key[pos] = k;
+        }
+
+        Object v;
+        this.value[pos] = (v = compute(k));
+        if (this.size == 0) {
+            this.first = this.last = pos;
+            this.link[pos] = -1L;
+        } else {
+            this.link[this.last] ^= (this.link[this.last] ^ (long) pos & 0xFFFFFFFFL) & 0xFFFFFFFFL;
+            this.link[pos] = ((long) this.last & 0xFFFFFFFFL) << 32 | 0xFFFFFFFFL;
+            this.last = pos;
+        }
+
+        if (this.size++ >= this.maxFill) {
+            this.rehash(arraySize(this.size + 1, this.f));
+        }
+
+        return (V) v;
+    }
+
+    protected V compute(K k) {
+        throw new UnsupportedOperationException();
+    }
+
+    protected final void shiftKeys(int pos) {
+        Object[] key = this.key;
+
+        label32:
+        while (true) {
+            int last = pos;
+
+            Object curr;
+            for (pos = pos + 1 & this.mask; (curr = key[pos]) != null; pos = pos + 1 & this.mask) {
+                int slot = mix(curr.hashCode()) & this.mask;
+                if (last <= pos) {
+                    if (last < slot && slot <= pos) {
+                        continue;
+                    }
+                } else if (last < slot || slot <= pos) {
+                    continue;
+                }
+
+                key[last] = curr;
+                this.value[last] = this.value[pos];
+                this.fixPointers(pos, last);
+                continue label32;
+            }
+
+            key[last] = null;
+            this.value[last] = null;
+            return;
+        }
+    }
+
+    public V remove(Object k) {
+        if (k == null) {
+            return this.containsNullKey ? this.removeNullEntry() : this.defRetValue;
+        } else {
+            Object[] key = this.key;
+            Object curr;
+            int pos;
+            if ((curr = key[pos = mix(k.hashCode()) & this.mask]) == null) {
+                return this.defRetValue;
+            } else if (k.equals(curr)) {
+                return this.removeEntry(pos);
+            } else {
+                while ((curr = key[pos = pos + 1 & this.mask]) != null) {
+                    if (k.equals(curr)) {
+                        return this.removeEntry(pos);
+                    }
+                }
+
+                return this.defRetValue;
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private V setValue(int pos, V v) {
+        Object oldValue = this.value[pos];
+        this.value[pos] = v;
+        return (V) oldValue;
+    }
+
+    @SuppressWarnings("unchecked")
+    public V removeFirst() {
+        if (this.size == 0) {
+            throw new NoSuchElementException();
+        } else {
+            int pos = this.first;
+            this.first = (int) this.link[pos];
+            if (0 <= this.first) {
+                this.link[this.first] |= 0xFFFFFFFF00000000L;
+            }
+
+            --this.size;
+            Object v = this.value[pos];
+            if (pos == this.n) {
+                this.containsNullKey = false;
+                this.value[this.n] = null;
+            } else {
+                this.shiftKeys(pos);
+            }
+
+            if (this.size < this.maxFill / 4 && this.n > 16) {
+                this.rehash(this.n / 2);
+            }
+
+            return (V) v;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public V removeLast() {
+        if (this.size == 0) {
+            throw new NoSuchElementException();
+        } else {
+            int pos = this.last;
+            this.last = (int) (this.link[pos] >>> 32);
+            if (0 <= this.last) {
+                this.link[this.last] |= 0xFFFFFFFFL;
+            }
+
+            --this.size;
+            Object v = this.value[pos];
+            if (pos == this.n) {
+                this.containsNullKey = false;
+                this.value[this.n] = null;
+            } else {
+                this.shiftKeys(pos);
+            }
+
+            if (this.size < this.maxFill / 4 && this.n > 16) {
+                this.rehash(this.n / 2);
+            }
+
+            return (V) v;
+        }
+    }
+
+    private void moveIndexToFirst(int i) {
+        if (this.size != 1 && this.first != i) {
+            if (this.last == i) {
+                this.last = (int) (this.link[i] >>> 32);
+                this.link[this.last] |= 0xFFFFFFFFL;
+            } else {
+                long linki = this.link[i];
+                int prev = (int) (linki >>> 32);
+                int next = (int) linki;
+                this.link[prev] ^= (this.link[prev] ^ linki & 0xFFFFFFFFL) & 0xFFFFFFFFL;
+                this.link[next] ^= (this.link[next] ^ linki & 0xFFFFFFFF00000000L) & 0xFFFFFFFF00000000L;
+            }
+
+            this.link[this.first] ^= (this.link[this.first] ^ ((long) i & 0xFFFFFFFFL) << 32) & 0xFFFFFFFF00000000L;
+            this.link[i] = 0xFFFFFFFF00000000L | (long) this.first & 0xFFFFFFFFL;
+            this.first = i;
+        }
+    }
+
+    private void moveIndexToLast(int i) {
+        if (this.size != 1 && this.last != i) {
+            if (this.first == i) {
+                this.first = (int) this.link[i];
+                this.link[this.first] |= 0xFFFFFFFF00000000L;
+            } else {
+                long linki = this.link[i];
+                int prev = (int) (linki >>> 32);
+                int next = (int) linki;
+                this.link[prev] ^= (this.link[prev] ^ linki & 0xFFFFFFFFL) & 0xFFFFFFFFL;
+                this.link[next] ^= (this.link[next] ^ linki & 0xFFFFFFFF00000000L) & 0xFFFFFFFF00000000L;
+            }
+
+            this.link[this.last] ^= (this.link[this.last] ^ (long) i & 0xFFFFFFFFL) & 0xFFFFFFFFL;
+            this.link[i] = ((long) this.last & 0xFFFFFFFFL) << 32 | 0xFFFFFFFFL;
+            this.last = i;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public V getAndMoveToFirst(K k) {
+        if (k == null) {
+            if (this.containsNullKey) {
+                this.moveIndexToFirst(this.n);
+                return (V) this.value[this.n];
+            } else {
+                return this.defRetValue;
+            }
+        } else {
+            Object[] key = this.key;
+            Object curr;
+            int pos;
+            if ((curr = key[pos = mix(k.hashCode()) & this.mask]) == null) {
+                return this.defRetValue;
+            } else if (k.equals(curr)) {
+                this.moveIndexToFirst(pos);
+                return (V) this.value[pos];
+            } else {
+                while ((curr = key[pos = pos + 1 & this.mask]) != null) {
+                    if (k.equals(curr)) {
+                        this.moveIndexToFirst(pos);
+                        return (V) this.value[pos];
+                    }
+                }
+
+                return this.defRetValue;
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public V getAndMoveToLast(K k) {
+        if (k == null) {
+            if (this.containsNullKey) {
+                this.moveIndexToLast(this.n);
+                return (V) this.value[this.n];
+            } else {
+                return this.defRetValue;
+            }
+        } else {
+            Object[] key = this.key;
+            Object curr;
+            int pos;
+            if ((curr = key[pos = mix(k.hashCode()) & this.mask]) == null) {
+                return this.defRetValue;
+            } else if (k.equals(curr)) {
+                this.moveIndexToLast(pos);
+                return (V) this.value[pos];
+            } else {
+                while ((curr = key[pos = pos + 1 & this.mask]) != null) {
+                    if (k.equals(curr)) {
+                        this.moveIndexToLast(pos);
+                        return (V) this.value[pos];
+                    }
+                }
+
+                return this.defRetValue;
+            }
+        }
+    }
+
+    public V putAndMoveToFirst(K k, V v) {
+        int pos;
+        if (k == null) {
+            if (this.containsNullKey) {
+                this.moveIndexToFirst(this.n);
+                return this.setValue(this.n, v);
+            }
+
+            this.containsNullKey = true;
+            pos = this.n;
+        } else {
+            Object[] key = this.key;
+            Object curr;
+            if ((curr = key[pos = mix(k.hashCode()) & this.mask]) != null) {
+                if (curr.equals(k)) {
+                    this.moveIndexToFirst(pos);
+                    return this.setValue(pos, v);
+                }
+
+                while ((curr = key[pos = pos + 1 & this.mask]) != null) {
+                    if (curr.equals(k)) {
+                        this.moveIndexToFirst(pos);
+                        return this.setValue(pos, v);
+                    }
+                }
+            }
+
+            key[pos] = k;
+        }
+
+        this.value[pos] = v;
+        if (this.size == 0) {
+            this.first = this.last = pos;
+            this.link[pos] = -1L;
+        } else {
+            this.link[this.first] ^= (this.link[this.first] ^ ((long) pos & 0xFFFFFFFFL) << 32) & 0xFFFFFFFF00000000L;
+            this.link[pos] = 0xFFFFFFFF00000000L | (long) this.first & 0xFFFFFFFFL;
+            this.first = pos;
+        }
+
+        if (this.size++ >= this.maxFill) {
+            this.rehash(arraySize(this.size, this.f));
+        }
+
+        return this.defRetValue;
+    }
+
+    public V putAndMoveToLast(K k, V v) {
+        int pos;
+        if (k == null) {
+            if (this.containsNullKey) {
+                this.moveIndexToLast(this.n);
+                return this.setValue(this.n, v);
+            }
+
+            this.containsNullKey = true;
+            pos = this.n;
+        } else {
+            Object[] key = this.key;
+            Object curr;
+            if ((curr = key[pos = mix(k.hashCode()) & this.mask]) != null) {
+                if (curr.equals(k)) {
+                    this.moveIndexToLast(pos);
+                    return this.setValue(pos, v);
+                }
+
+                while ((curr = key[pos = pos + 1 & this.mask]) != null) {
+                    if (curr.equals(k)) {
+                        this.moveIndexToLast(pos);
+                        return this.setValue(pos, v);
+                    }
+                }
+            }
+
+            key[pos] = k;
+        }
+
+        this.value[pos] = v;
+        if (this.size == 0) {
+            this.first = this.last = pos;
+            this.link[pos] = -1L;
+        } else {
+            this.link[this.last] ^= (this.link[this.last] ^ (long) pos & 0xFFFFFFFFL) & 0xFFFFFFFFL;
+            this.link[pos] = ((long) this.last & 0xFFFFFFFFL) << 32 | 0xFFFFFFFFL;
+            this.last = pos;
+        }
+
+        if (this.size++ >= this.maxFill) {
+            this.rehash(arraySize(this.size, this.f));
+        }
+
+        return this.defRetValue;
+    }
+
+    @SuppressWarnings("unchecked")
+    public V get(Object k) {
+        if (k == null) {
+            return this.containsNullKey ? (V) this.value[this.n] : this.defRetValue;
+        } else {
+            Object[] key = this.key;
+            Object curr;
+            int pos;
+            if ((curr = key[pos = mix(k.hashCode()) & this.mask]) == null) {
+                return this.defRetValue;
+            } else if (k.equals(curr)) {
+                return (V) this.value[pos];
+            } else {
+                while ((curr = key[pos = pos + 1 & this.mask]) != null) {
+                    if (k.equals(curr)) {
+                        return (V) this.value[pos];
+                    }
+                }
+
+                return this.defRetValue;
+            }
+        }
+    }
+
+    public boolean containsKey(Object k) {
+        if (k == null) {
+            return this.containsNullKey;
+        } else {
+            Object[] key = this.key;
+            Object curr;
+            int pos;
+            if ((curr = key[pos = mix(k.hashCode()) & this.mask]) == null) {
+                return false;
+            } else if (k.equals(curr)) {
+                return true;
+            } else {
+                while ((curr = key[pos = pos + 1 & this.mask]) != null) {
+                    if (k.equals(curr)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+    }
+
+    public boolean containsValue(Object v) {
+        Object[] value = this.value;
+        Object[] key = this.key;
+        if (containsNullKey && (value[n] == null && v == null) || value[n].equals(v)) {
+            return true;
+        }
+        for (int i = n; i-- != 0;) {
+            if (!(key[i] == null) && (value[i] == null && v == null) || value[i].equals(v)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void clear() {
+        if (size != 0) {
+            size = 0;
+            containsNullKey = false;
+            Arrays.fill(key, (Object) null);
+            Arrays.fill(value, (Object) null);
+            first = last = -1;
+        }
+    }
+
+    public int size() {
+        return this.size;
+    }
+
+    public boolean isEmpty() {
+        return this.size == 0;
+    }
+
+    protected void fixPointers(int i) {
+        if (size == 0) {
+            first = last = -1;
+        } else if (first == i) {
+            first = (int) link[i];
+            if (0 <= first) {
+                link[first] |= 0xFFFFFFFF00000000L;
+            }
+        } else if (last == i) {
+            last = (int) (link[i] >>> 32);
+            if (0 <= last) {
+                link[last] |= 0xFFFFFFFFL;
+            }
+        } else {
+            long linki = link[i];
+            int prev = (int) (linki >>> 32);
+            int next = (int) linki;
+            link[prev] ^= (link[prev] ^ linki & 0xFFFFFFFFL) & 0xFFFFFFFFL;
+            link[next] ^= (link[next] ^ linki & 0xFFFFFFFF00000000L) & 0xFFFFFFFF00000000L;
+        }
+    }
+
+    protected void fixPointers(int s, int d) {
+        if (size == 1) {
+            first = last = d;
+            link[d] = -1L;
+        } else if (first == s) {
+            first = d;
+            link[(int) link[s]] ^= (link[(int) link[s]] ^ ((long) d & 0xFFFFFFFFL) << 32) & 0xFFFFFFFF00000000L;
+            link[d] = link[s];
+        } else if (last == s) {
+            last = d;
+            link[(int) (link[s] >>> 32)] ^= (link[(int) (link[s] >>> 32)] ^ (long) d & 0xFFFFFFFFL) & 0xFFFFFFFFL;
+            link[d] = link[s];
+        } else {
+            long links = link[s];
+            int prev = (int) (links >>> 32);
+            int next = (int) links;
+            link[prev] ^= (link[prev] ^ (long) d & 0xFFFFFFFFL) & 0xFFFFFFFFL;
+            link[next] ^= (link[next] ^ ((long) d & 0xFFFFFFFFL) << 32) & 0xFFFFFFFF00000000L;
+            link[d] = links;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public K firstKey() {
+        if (size == 0) {
+            throw new NoSuchElementException();
+        } else {
+            return (K) key[first];
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public K lastKey() {
+        if (size == 0) {
+            throw new NoSuchElementException();
+        } else {
+            return (K) key[last];
+        }
+    }
+
+    public Comparator<? super K> comparator() {
         return null;
     }
 
-    /**
-     * Rehashes the contents of the receiver into a new table with a smaller or larger capacity. This method is called
-     * automatically when the number of keys in the receiver exceeds the high water mark or falls below the low water
-     * mark.
+    public SortedMap<K, V> tailMap(K from) {
+        throw new UnsupportedOperationException();
+    }
+
+    public SortedMap<K, V> headMap(K to) {
+        throw new UnsupportedOperationException();
+    }
+
+    public SortedMap<K, V> subMap(K from, K to) {
+        throw new UnsupportedOperationException();
+    }
+
+    public Iterable<Map.Entry<K, V>> fast() {
+        if (fast == null) {
+            fast = new Iterable<Entry<K, V>>() {
+                public Iterator<Entry<K, V>> iterator() {
+                    return new FastEntryIterator();
+                }
+            };
+        }
+
+        return fast;
+    }
+
+    public SortedSet<Map.Entry<K, V>> entrySet() {
+        if (entries == null) {
+            entries = new OpenHashMap.MapEntrySet();
+        }
+
+        return this.entries;
+    }
+
+    public SortedSet<K> keySet() {
+        if (keys == null) {
+            keys = new OpenHashMap.KeySet();
+        }
+
+        return keys;
+    }
+
+    public Collection<V> values() {
+        if (values == null) {
+            values = new AbstractObjectCollection<V>() {
+                public Iterator<V> iterator() {
+                    return new ValueIterator();
+                }
+
+                public int size() {
+                    return size;
+                }
+
+                public boolean contains(Object v) {
+                    return containsValue(v);
+                }
+
+                public void clear() {
+                    OpenHashMap.this.clear();
+                }
+            };
+        }
+
+        return values;
+    }
+
+    /** Rehashes the map, making the table as small as possible.
+     *
+     * <P>This method rehashes the table to the smallest size satisfying the
+     * load factor. It can be used when the set will not be changed anymore, so
+     * to optimize access speed and size.
+     *
+     * <P>If the table size is already the minimum possible, this method
+     * does nothing.
+     *
+     * @return true if there was enough memory to trim the map.
+     * @see #trim(int)
      */
-    @SuppressWarnings("unchecked")
-    protected void rehash(int newCapacity) {
-        int oldCapacity = table.length;
-        //if (oldCapacity == newCapacity) return;
-
-        Object[] oldTable = table;
-        Object[] oldValues = values;
-
-        Object[] newTable = new Object[newCapacity];
-        Object[] newValues = new Object[newCapacity];
-
-        this.lowWaterMark = chooseLowWaterMark(newCapacity, this.minLoadFactor);
-        this.highWaterMark = chooseHighWaterMark(newCapacity, this.maxLoadFactor);
-
-        this.table = newTable;
-        this.values = newValues;
-        this.freeEntries = newCapacity - this.distinct; // delta
-
-        for (int i = oldCapacity; i-- > 0;) {
-            if (oldTable[i] != FREE && oldTable[i] != REMOVED) {
-                Object element = oldTable[i];
-                int index = indexOfInsertion((K)element);
-                newTable[index] = element;
-                newValues[index] = oldValues[i];
+    public boolean trim() {
+        int l = arraySize(size, f);
+        if (l >= n) {
+            return true;
+        } else {
+            try {
+                rehash(l);
+                return true;
+            } catch (OutOfMemoryError cantDoIt) {
+                return false;
             }
         }
     }
 
-    /**
-     * Removes the given key with its associated element from the receiver, if present.
+    /** Rehashes this map if the table is too large.
      *
-     * @param key the key to be removed from the receiver.
-     * @return <tt>true</tt> if the receiver contained the specified key, <tt>false</tt> otherwise.
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public V remove(Object key) {
-        int i = indexOfKey((K)key);
-        if (i < 0) {
-            return null;
-        }
-        // key not contained
-        V removed = (V) values[i];
-
-        this.table[i] = REMOVED;
-        this.values[i] = null;
-        this.distinct--;
-
-        if (this.distinct < this.lowWaterMark) {
-            int newCapacity = chooseShrinkCapacity(this.distinct, this.minLoadFactor, this.maxLoadFactor);
-            rehash(newCapacity);
-        }
-
-        return removed;
-    }
-
-    /**
-     * Initializes the receiver.
+     * <P>Let <var>N</var> be the smallest table size that can hold
+     * <code>max(n,{@link #size()})</code> entries, still satisfying the load factor. If the current
+     * table size is smaller than or equal to <var>N</var>, this method does
+     * nothing. Otherwise, it rehashes this map in a table of size
+     * <var>N</var>.
      *
-     * @param initialCapacity the initial capacity of the receiver.
-     * @param minLoadFactor   the minLoadFactor of the receiver.
-     * @param maxLoadFactor   the maxLoadFactor of the receiver.
-     * @throws IllegalArgumentException if <tt>initialCapacity < 0 || (minLoadFactor < 0.0 || minLoadFactor >= 1.0) ||
-     *                                  (maxLoadFactor <= 0.0 || maxLoadFactor >= 1.0) || (minLoadFactor >=
-     *                                  maxLoadFactor)</tt>.
-     */
-    protected void setUp(int initialCapacity, double minLoadFactor, double maxLoadFactor) {
-        if (initialCapacity < 0) {
-            throw new IllegalArgumentException("Initial Capacity must not be less than zero: " + initialCapacity);
-        }
-        if (minLoadFactor < 0.0 || minLoadFactor >= 1.0) {
-            throw new IllegalArgumentException("Illegal minLoadFactor: " + minLoadFactor);
-        }
-        if (maxLoadFactor <= 0.0 || maxLoadFactor >= 1.0) {
-            throw new IllegalArgumentException("Illegal maxLoadFactor: " + maxLoadFactor);
-        }
-        if (minLoadFactor >= maxLoadFactor) {
-            throw new IllegalArgumentException(
-                    "Illegal minLoadFactor: " + minLoadFactor + " and maxLoadFactor: " + maxLoadFactor);
-        }
-        int capacity = initialCapacity;
-        capacity = nextPrime(capacity);
-        if (capacity == 0) {
-            capacity = 1;
-        } // open addressing needs at least one FREE slot at any time.
-
-        this.table = new Object[capacity];
-        this.values = new Object[capacity];
-
-        // memory will be exhausted long before this pathological case happens, anyway.
-        this.minLoadFactor = minLoadFactor;
-        if (capacity == largestPrime) {
-            this.maxLoadFactor = 1.0;
-        } else {
-            this.maxLoadFactor = maxLoadFactor;
-        }
-
-        this.distinct = 0;
-        this.freeEntries = capacity; // delta
-
-        // lowWaterMark will be established upon first expansion.
-        // establishing it now (upon instance construction) would immediately make the table shrink upon first put(...).
-        // After all the idea of an "initialCapacity" implies violating lowWaterMarks when an object is young.
-        // See ensureCapacity(...)
-        this.lowWaterMark = 0;
-        this.highWaterMark = chooseHighWaterMark(capacity, this.maxLoadFactor);
-    }
-
-    /**
-     * Trims the capacity of the receiver to be the receiver's current size. Releases any superfluous internal memory. An
-     * application can use this operation to minimize the storage of the receiver.
-     */
-    public void trimToSize() {
-        // * 1.2 because open addressing's performance exponentially degrades beyond that point
-        // so that even rehashing the table can take very long
-        int newCapacity = nextPrime((int) (1 + 1.2 * size()));
-        if (table.length > newCapacity) {
-            rehash(newCapacity);
-        }
-    }
-
-    public void concat() {
-        int newCap = nextPrime(size() + 1); // +1 as we always need a free slot
-        if (newCap != table.length) {
-            rehash(newCap);
-        }
-    }
-
-    /**
-     * Allocate a set to contain Map.Entry objects for the pairs and return it.
-     */
-    @Override
-    public Set<Entry<K,V>> entrySet() {
-        return new EntrySet();
-    }
-
-    /**
-     * Chooses a new prime table capacity optimized for growing that (approximately) satisfies the invariant <tt>c *
-     * minLoadFactor <= size <= c * maxLoadFactor</tt> and has at least one FREE slot for the given size.
-     */
-    protected int chooseGrowCapacity(int size, double minLoad, double maxLoad) {
-        return nextPrime(Math.max(size + 1, (int) ((4 * size / (3 * minLoad + maxLoad)))));
-    }
-
-    /**
-     * Returns new high water mark threshold based on current capacity and maxLoadFactor.
+     * <P>This method is useful when reusing maps.  {@linkplain #clear() Clearing a
+     * map} leaves the table size untouched. If you are reusing a map
+     * many times, you can call this method with a typical
+     * size to avoid keeping around a very large table just
+     * because of a few large transient maps.
      *
-     * @return int the new threshold.
+     * @param n the threshold for the trimming.
+     * @return true if there was enough memory to trim the map.
+     * @see #trim()
      */
-    protected int chooseHighWaterMark(int capacity, double maxLoad) {
-        return Math.min(capacity - 2, (int) (capacity * maxLoad)); //makes sure there is always at least one FREE slot
-    }
-
-    /**
-     * Returns new low water mark threshold based on current capacity and minLoadFactor.
-     *
-     * @return int the new threshold.
-     */
-    protected int chooseLowWaterMark(int capacity, double minLoad) {
-        return (int) (capacity * minLoad);
-    }
-
-    /**
-     * Chooses a new prime table capacity optimized for shrinking that (approximately) satisfies the invariant <tt>c *
-     * minLoadFactor <= size <= c * maxLoadFactor</tt> and has at least one FREE slot for the given size.
-     */
-    protected int chooseShrinkCapacity(int size, double minLoad, double maxLoad) {
-        return nextPrime(Math.max(size + 1, (int) ((4 * size / (minLoad + 3 * maxLoad)))));
-    }
-
-    /**
-     * Returns a prime number which is <code>&gt;= desiredCapacity</code> and very close to <code>desiredCapacity</code>
-     * (within 11% if <code>desiredCapacity &gt;= 1000</code>).
-     *
-     * @param desiredCapacity the capacity desired by the user.
-     * @return the capacity which should be used for a hashtable.
-     */
-    protected int nextPrime(int desiredCapacity) {
-        int i = java.util.Arrays.binarySearch(primeCapacities, desiredCapacity);
-        if (i < 0) {
-            // desired capacity not found, choose next prime greater than desired capacity
-            i = -i - 1; // remember the semantics of binarySearch...
-        }
-        return primeCapacities[i];
-    }
-
-    /**
-     * Returns the number of (key,value) associations currently contained.
-     *
-     * @return the number of (key,value) associations currently contained.
-     */
-    public int size() {
-        return distinct;
-    }
-
-    protected static boolean equalsMindTheNull(Object a, Object b) {
-        if (a == null && b == null) {
+    public boolean trim(int n) {
+        int l = nextPowerOfTwo((int) Math.ceil((double) ((float) n / f)));
+        if (n <= l) {
             return true;
-        }
-        if (a == null || b == null) {
-            return false;
-        }
-        return a.equals(b);
-    }
-
-    private class EntrySet extends AbstractSet<Entry<K, V>> {
-        @Override
-        public Iterator<Entry<K, V>> iterator() {
-            return new EntrySetIterator();
-        }
-
-        @Override
-        public int size() {
-            return OpenHashMap.this.size();
+        } else {
+            try {
+                rehash(l);
+                return true;
+            } catch (OutOfMemoryError cantDoIt) {
+                return false;
+            }
         }
     }
 
-    private class EntrySetIterator implements Iterator<Entry<K, V>> {
-        int idx = -1;
-        Entry<K,V> next;
+    /** Rehashes the map.
+     *
+     * <P>This method implements the basic rehashing strategy, and may be
+     * overriden by subclasses implementing different rehashing strategies (e.g.,
+     * disk-based rehashing). However, you should not override this method
+     * unless you understand the internal workings of this class.
+     *
+     * @param newN the new size
+     */
+    protected void rehash(int newN) {
+        Object[] key = this.key;
+        Object[] value = this.value;
 
-        EntrySetIterator() {
-            forward();
+        int mask = newN - 1;
+        Object[] newKey = new Object[newN + 1];
+        Object[] newValue = new Object[newN + 1];
+
+        int i = first, prev = -1, newPrev = -1, t, pos;
+        final long[] link = this.link;
+        final long[] newLink = new long[newN + 1];
+        first = -1;
+
+        for (int j = size; j-- != 0;) {
+            if (key[i] == null) {
+                pos = newN;
+            } else {
+                pos = mix(key[i].hashCode()) & mask;
+                while (newKey[pos] != null) {
+                    pos = ( pos + 1 ) & mask;
+                }
+                newKey[pos] = key[i];
+            }
+
+            newValue[pos] = value[i];
+
+            if (prev != -1) {
+                newLink[newPrev] ^= (newLink[newPrev] ^ (long) pos & 0xFFFFFFFFL) & 0xFFFFFFFFL;
+                newLink[pos] ^= (newLink[pos] ^ ((long) newPrev & 0xFFFFFFFFL) << 32) & 0xFFFFFFFF00000000L;
+                newPrev = pos;
+            } else {
+                newPrev = first = pos;
+                newLink[pos] = -1L;
+            }
+
+            t = i;
+            i = (int) link[i];
+            prev = t;
+        }
+
+        this.link = newLink;
+        this.last = newPrev;
+        if (newPrev != -1) {
+            newLink[newPrev] |= -1 & 0xFFFFFFFFL;
+        }
+
+        n = newN;
+        this.mask = mask;
+        maxFill = maxFill(n, f);
+        this.key = newKey;
+        this.value = newValue;
+    }
+
+    @SuppressWarnings("unchecked")
+    public OpenHashMap<K, V> clone() {
+        OpenHashMap<K, V> c;
+        try {
+            c = (OpenHashMap<K, V>) super.clone();
+        } catch (CloneNotSupportedException cantHappen) {
+            throw new InternalError();
+        }
+
+        c.fast = null;
+        c.keys = null;
+        c.values = null;
+        c.entries = null;
+        c.containsNullKey = containsNullKey;
+        c.key = key.clone();
+        c.value = value.clone();
+        c.link = link.clone();
+        return c;
+    }
+
+    public int hashCode() {
+        int h = 0;
+        for( int j = realSize(), i = 0, t = 0; j-- != 0; ) {
+            while (key[i] == null) {
+                ++i;
+            }
+
+            if (this != key[i]) {
+                t = key[i].hashCode();
+            }
+
+            if (this != value[i]) {
+                t ^= value[i] == null ? 0 : value[i].hashCode();
+            }
+
+            h += t;
+            i++;
+        }
+
+        if (containsNullKey) {
+            h += value[n] == null ? 0 : value[n].hashCode();
+        }
+
+        return h;
+    }
+
+    private void writeObject(ObjectOutputStream s) throws IOException {
+        Object[] key = this.key;
+        Object[] value = this.value;
+        OpenHashMap.MapIterator i = new OpenHashMap.MapIterator(null);
+        s.defaultWriteObject();
+        int j = this.size;
+
+        while (j-- != 0) {
+            int e = i.nextEntry();
+            s.writeObject(key[e]);
+            s.writeObject(value[e]);
+        }
+
+    }
+
+    private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
+        s.defaultReadObject();
+        this.n = arraySize(this.size, this.f);
+        this.maxFill = maxFill(this.n, this.f);
+        this.mask = this.n - 1;
+        Object[] key = this.key = new Object[this.n + 1];
+        Object[] value = this.value = new Object[this.n + 1];
+        long[] link = this.link = new long[this.n + 1];
+        int prev = -1;
+        this.first = this.last = -1;
+        int i = this.size;
+
+        while (i-- != 0) {
+            Object k = s.readObject();
+            Object v = s.readObject();
+            int pos;
+            if (k == null) {
+                pos = this.n;
+                this.containsNullKey = true;
+            } else {
+                for (pos = mix(k.hashCode()) & this.mask; key[pos] != null; pos = pos + 1 & this.mask) {
+                    ;
+                }
+
+                key[pos] = k;
+            }
+
+            value[pos] = v;
+            if (this.first != -1) {
+                link[prev] ^= (link[prev] ^ (long) pos & 0xFFFFFFFFL) & 0xFFFFFFFFL;
+                link[pos] ^= (link[pos] ^ ((long) prev & 0xFFFFFFFFL) << 32) & 0xFFFFFFFF00000000L;
+                prev = pos;
+            } else {
+                prev = this.first = pos;
+                link[pos] |= 0xFFFFFFFF00000000L;
+            }
+        }
+
+        this.last = prev;
+        if (prev != -1) {
+            link[prev] |= 0xFFFFFFFFL;
+        }
+
+    }
+
+    private void checkTable() {
+    }
+
+    private final class ValueIterator extends MapIterator implements Iterator<V> {
+        @SuppressWarnings("unchecked")
+        public V previous() {
+            return (V) value[this.previousEntry()];
+        }
+
+        public void set(V v) {
+            throw new UnsupportedOperationException();
+        }
+
+        public void add(V v) {
+            throw new UnsupportedOperationException();
+        }
+
+        public ValueIterator() {
+            super();
         }
 
         @SuppressWarnings("unchecked")
-        private void forward() {
-            next = null;
-            while (next == null && ++idx < table.length) {
-                if (table[idx] != FREE && table[idx] != REMOVED) {
-                    next = new SimpleImmutableEntry<K, V>((K) table[idx], (V) values[idx]);
+        public V next() {
+            return (V) value[this.nextEntry()];
+        }
+    }
+
+    private final class KeySet extends AbstractObjectSet<K> implements SortedSet<K> {
+        private KeySet() {
+        }
+
+        public Iterator<K> iterator(K from) {
+            return new KeyIterator(from);
+        }
+
+        public Iterator<K> iterator() {
+            return new KeyIterator();
+        }
+
+        public int size() {
+            return size;
+        }
+
+        public boolean contains(Object k) {
+            return containsKey(k);
+        }
+
+        public boolean remove(Object k) {
+            int oldSize = size;
+            OpenHashMap.this.remove(k);
+            return size != oldSize;
+        }
+
+        public void clear() {
+            OpenHashMap.this.clear();
+        }
+
+        @SuppressWarnings("unchecked")
+        public K first() {
+            if (size == 0) {
+                throw new NoSuchElementException();
+            } else {
+                return (K) key[first];
+            }
+        }
+
+        @SuppressWarnings("unchecked")
+        public K last() {
+            if (size == 0) {
+                throw new NoSuchElementException();
+            } else {
+                return (K) key[last];
+            }
+        }
+
+        public Comparator<? super K> comparator() {
+            return null;
+        }
+
+        public final SortedSet<K> tailSet(K from) {
+            throw new UnsupportedOperationException();
+        }
+
+        public final SortedSet<K> headSet(K to) {
+            throw new UnsupportedOperationException();
+        }
+
+        public final SortedSet<K> subSet(K from, K to) {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    private final class KeyIterator extends MapIterator implements Iterator<K> {
+        public KeyIterator(Object k) {
+            super(k);
+        }
+
+        @SuppressWarnings("unchecked")
+        public K previous() {
+            return (K) key[this.previousEntry()];
+        }
+
+        public void set(K k) {
+            throw new UnsupportedOperationException();
+        }
+
+        public void add(K k) {
+            throw new UnsupportedOperationException();
+        }
+
+        public KeyIterator() {
+            super();
+        }
+
+        @SuppressWarnings("unchecked")
+        public K next() {
+            return (K) key[this.nextEntry()];
+        }
+    }
+
+    private final class MapEntrySet extends AbstractObjectSet<Entry<K, V>> implements SortedSet<Entry<K, V>> {
+        private MapEntrySet() {
+        }
+
+        public EntryIterator iterator() {
+            return new EntryIterator();
+        }
+
+        public Comparator<? super Entry<K, V>> comparator() {
+            return null;
+        }
+
+        public SortedSet<Entry<K, V>> subSet(Entry<K, V> fromElement, Entry<K, V> toElement) {
+            throw new UnsupportedOperationException();
+        }
+
+        public SortedSet<Entry<K, V>> headSet(Entry<K, V> toElement) {
+            throw new UnsupportedOperationException();
+        }
+
+        public SortedSet<Entry<K, V>> tailSet(Entry<K, V> fromElement) {
+            throw new UnsupportedOperationException();
+        }
+
+        public Entry<K, V> first() {
+            if (size == 0) {
+                throw new NoSuchElementException();
+            } else {
+                return new MapEntry(first);
+            }
+        }
+
+        public Entry<K, V> last() {
+            if (size == 0) {
+                throw new NoSuchElementException();
+            } else {
+                return new MapEntry(last);
+            }
+        }
+
+        public boolean contains(Object o) {
+            if (!(o instanceof java.util.Map.Entry)) {
+                return false;
+            } else {
+                java.util.Map.Entry e = (java.util.Map.Entry) o;
+                Object k = e.getKey();
+                if (k == null) {
+                    if (containsNullKey) {
+                        if (value[n] == null) {
+                            if (e.getValue() != null) {
+                                return false;
+                            }
+                        } else if (!value[n].equals(e.getValue())) {
+                            return false;
+                        }
+
+                        return true;
+                    }
+
+                    return false;
+                } else {
+                    Object[] key = OpenHashMap.this.key;
+                    Object curr;
+                    int pos;
+                    if ((curr = key[pos = mix(k.hashCode()) & mask]) == null) {
+                        return false;
+                    } else if (k.equals(curr)) {
+                        return value[pos] == null ? e.getValue() == null : value[pos].equals(e.getValue());
+                    } else {
+                        while ((curr = key[pos = pos + 1 & mask]) != null) {
+                            if (k.equals(curr)) {
+                                return value[pos] == null ? e.getValue() == null : value[pos].equals(e.getValue());
+                            }
+                        }
+
+                        return false;
+                    }
+                }
+            }
+        }
+
+        public boolean remove(Object o) {
+            if (!(o instanceof java.util.Map.Entry)) {
+                return false;
+            } else {
+                java.util.Map.Entry e = (java.util.Map.Entry) o;
+                Object k = e.getKey();
+                Object v = e.getValue();
+                if (k == null) {
+                    if (containsNullKey) {
+                        if (value[n] == null) {
+                            if (v != null) {
+                                return false;
+                            }
+                        } else if (!value[n].equals(v)) {
+                            return false;
+                        }
+
+                        removeNullEntry();
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    Object[] key = OpenHashMap.this.key;
+                    Object curr;
+                    int pos;
+                    if ((curr = key[pos = mix(k.hashCode()) & mask]) == null) {
+                        return false;
+                    } else if (curr.equals(k)) {
+                        if (value[pos] == null) {
+                            if (v != null) {
+                                return false;
+                            }
+                        } else if (!value[pos].equals(v)) {
+                            return false;
+                        }
+
+                        removeEntry(pos);
+                        return true;
+                    } else {
+                        while (true) {
+                            do {
+                                if ((curr = key[pos = pos + 1 & mask]) == null) {
+                                    return false;
+                                }
+                            } while (!curr.equals(k));
+
+                            if (value[pos] == null) {
+                                if (v == null) {
+                                    break;
+                                }
+                            } else if (value[pos].equals(v)) {
+                                break;
+                            }
+                        }
+
+                        removeEntry(pos);
+                        return true;
+                    }
+                }
+            }
+        }
+
+        public int size() {
+            return size;
+        }
+
+        public void clear() {
+            OpenHashMap.this.clear();
+        }
+
+        public EntryIterator iterator(Entry<K, V> from) {
+            return new EntryIterator(from.getKey());
+        }
+
+        public FastEntryIterator fastIterator() {
+            return new FastEntryIterator();
+        }
+
+        public FastEntryIterator fastIterator(Entry<K, V> from) {
+            return new FastEntryIterator(from.getKey());
+        }
+    }
+
+    private class FastEntryIterator extends MapIterator implements Iterator<Entry<K, V>> {
+        final MapEntry entry;
+
+        public FastEntryIterator() {
+            super();
+            this.entry = new MapEntry();
+        }
+
+        public FastEntryIterator(Object from) {
+            super(from);
+            this.entry = new MapEntry();
+        }
+
+        public OpenHashMap.MapEntry next() {
+            this.entry.index = this.nextEntry();
+            return this.entry;
+        }
+
+        public OpenHashMap.MapEntry previous() {
+            this.entry.index = this.previousEntry();
+            return this.entry;
+        }
+
+        public void set(Entry<K, V> ok) {
+            throw new UnsupportedOperationException();
+        }
+
+        public void add(Entry<K, V> ok) {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    private class EntryIterator extends MapIterator implements Iterator<Entry<K, V>> {
+        private OpenHashMap.MapEntry entry;
+
+        public EntryIterator() {
+            super();
+        }
+
+        public EntryIterator(Object from) {
+            super(from);
+        }
+
+        public OpenHashMap.MapEntry next() {
+            return this.entry = new MapEntry(this.nextEntry());
+        }
+
+        public OpenHashMap.MapEntry previous() {
+            return this.entry = new MapEntry(this.previousEntry());
+        }
+
+        public void remove() {
+            super.remove();
+            this.entry.index = -1;
+        }
+
+        public void set(Entry<K, V> ok) {
+            throw new UnsupportedOperationException();
+        }
+
+        public void add(Entry<K, V> ok) {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    public static abstract class AbstractObjectSet<K> extends AbstractObjectCollection<K> implements Cloneable {
+        public boolean equals(Object o) {
+            if (o == this) {
+                return true;
+            } else if (!(o instanceof Set)) {
+                return false;
+            } else {
+                Set s = (Set) o;
+                return s.size() == this.size() && this.containsAll(s);
+            }
+        }
+
+        public int hashCode() {
+            int h = 0;
+            int n = this.size();
+
+            Object k;
+            for (Iterator i = this.iterator(); n-- != 0; h += k == null ? 0 : k.hashCode()) {
+                k = i.next();
+            }
+
+            return h;
+        }
+    }
+
+    private class MapIterator {
+        /**
+         * The entry that will be returned by the next call to {@link java.util.ListIterator#previous()} (or <code>null</code> if no previous entry exists).
+         */
+        int prev = -1;
+        /**
+         * The entry that will be returned by the next call to {@link java.util.ListIterator#next()} (or <code>null</code> if no next entry exists).
+         */
+        int next = -1;
+        /**
+         * The last entry that was returned (or -1 if we did not iterate or used {@link java.util.Iterator#remove()}).
+         */
+        int curr = -1;
+        /**
+         * The current index (in the sense of a {@link java.util.ListIterator}). Note that this value is not meaningful when this iterator has been created using the nonempty constructor.
+         */
+        int index = -1;
+
+        private MapIterator() {
+            this.next = first;
+            this.index = 0;
+        }
+
+        private MapIterator(Object from) {
+            if (from == null) {
+                if (containsNullKey) {
+                    this.next = (int) link[n];
+                    this.prev = n;
+                } else {
+                    throw new NoSuchElementException("The key " + from + " does not belong to this map.");
+                }
+            } else {
+                if (key[last] == null ? from == null : (key[last].equals(from))) {
+                    this.prev = last;
+                    this.index = size;
+                } else {
+                    for (int pos = mix(from.hashCode()) & mask; key[pos] != null; pos = pos + 1 & mask) {
+                        if (key[pos].equals(from)) {
+                            this.next = (int) link[pos];
+                            this.prev = pos;
+                            return;
+                        }
+                    }
+                    throw new NoSuchElementException("The key " + from + " does not belong to this map.");
                 }
             }
         }
 
         public boolean hasNext() {
-            return next != null;
+            return this.next != -1;
         }
 
-        public Entry<K, V> next() {
-            if (next == null) {
-                throw new NoSuchElementException();
+        public boolean hasPrevious() {
+            return this.prev != -1;
+        }
+
+        private void ensureIndexKnown() {
+            if (index < 0) {
+                if (prev == -1) {
+                    index = 0;
+                } else if (next == -1) {
+                    index = size;
+                } else {
+                    int pos = first;
+                    for (index = 1; pos != prev; ++index) {
+                        pos = (int) link[pos];
+                    }
+                }
             }
-            Entry<K,V> n = next;
-            forward();
-            return n;
+        }
+
+        public int nextIndex() {
+            ensureIndexKnown();
+            return index;
+        }
+
+        public int previousIndex() {
+            ensureIndexKnown();
+            return index - 1;
+        }
+
+        public int nextEntry() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            } else {
+                curr = next;
+                next = (int) link[curr];
+                prev = curr;
+                if (index >= 0) {
+                    ++index;
+                }
+                return curr;
+            }
+        }
+
+        public int previousEntry() {
+            if (!hasPrevious()) {
+                throw new NoSuchElementException();
+            } else {
+                curr = prev;
+                prev = (int) (link[curr] >>> 32);
+                next = curr;
+                if (index >= 0) {
+                    --index;
+                }
+                return curr;
+            }
         }
 
         public void remove() {
+            this.ensureIndexKnown();
+            if (curr == -1) throw new IllegalStateException();
+
+            if (curr == prev) {
+                    /* If the last operation was a next(), we are removing an entry that preceeds
+				       the current index, and thus we must decrement it. */
+                index--;
+                prev = (int) (link[curr] >>> 32);
+            } else {
+                next = (int) link[curr];
+            }
+
+            size--;
+    			/* Now we manually fix the pointers. Because of our knowledge of next
+	    		   and prev, this is going to be faster than calling fixPointers(). */
+            if (prev == -1) {
+                first = next;
+            } else {
+                link[prev] ^= (link[prev] ^ (long) next & 0xFFFFFFFFL) & 0xFFFFFFFFL;
+            }
+            if (next == -1) {
+                last = prev;
+            } else {
+                link[next] ^= (link[next] ^ ((long) prev & 0xFFFFFFFFL) << 32) & 0xFFFFFFFF00000000L;
+            }
+
+            int last, slot, pos = curr;
+            curr = -1;
+
+            if (pos == n) {
+                containsNullKey = false;
+                value[n] = null;
+            } else {
+                Object curr;
+                Object[] key = OpenHashMap.this.key;
+                // We have to horribly duplicate the shiftKeys() code because we need to update next/prev.
+                for (; ; ) {
+                    pos = ((last = pos) + 1) & mask;
+                    for (; ; ) {
+                        if ((curr = key[pos]) == null) {
+                            key[last] = null;
+                            value[last] = null;
+                            return;
+                        }
+                        slot = mix(curr.hashCode()) & mask;
+                        if (last <= pos ? last >= slot || slot > pos : last >= slot && slot > pos) break;
+                        pos = (pos + 1) & mask;
+                    }
+                    key[last] = curr;
+                    value[last] = value[pos];
+                    if (next == pos) next = last;
+                    if (prev == pos) prev = last;
+                    fixPointers(pos, last);
+                }
+            }
+        }
+
+        public int skip(final int n) {
+            int i = n;
+            while (i-- != 0 && hasNext()) nextEntry();
+            return n - i - 1;
+        }
+
+        public int back(final int n) {
+            int i = n;
+            while (i-- != 0 && hasPrevious()) previousEntry();
+            return n - i - 1;
+        }
+    }
+
+    final class MapEntry implements Entry<K, V> {
+        int index;
+
+        MapEntry(int index) {
+            this.index = index;
+        }
+
+        MapEntry() {
+        }
+
+        @SuppressWarnings("unchecked")
+        public K getKey() {
+            return (K) key[this.index];
+        }
+
+        @SuppressWarnings("unchecked")
+        public V getValue() {
+            return (V) value[this.index];
+        }
+
+        @SuppressWarnings("unchecked")
+        public V setValue(V v) {
+            Object oldValue = value[this.index];
+            value[this.index] = v;
+            return (V) oldValue;
+        }
+
+        public boolean equals(Object o) {
+            if (!(o instanceof Entry)) {
+                return false;
+            } else {
+                Entry e = (Entry) o;
+                if (key[this.index] == null) {
+                    if (e.getKey() != null) {
+                        return false;
+                    }
+                } else if (!key[this.index].equals(e.getKey())) {
+                    return false;
+                }
+
+                if (value[this.index] == null) {
+                    if (e.getValue() != null) {
+                        return false;
+                    }
+                } else if (!value[this.index].equals(e.getValue())) {
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
+        public int hashCode() {
+            return (key[this.index] == null ? 0 :
+                    key[this.index].hashCode()) ^ (value[this.index] == null ? 0 :
+                    value[this.index].hashCode());
+        }
+
+        public String toString() {
+            return key[this.index] + "=>" + value[this.index];
+        }
+    }
+
+
+    public static abstract class AbstractObjectCollection<K> extends AbstractCollection<K> {
+        protected AbstractObjectCollection() {
+        }
+
+        public Object[] toArray() {
+            Object[] a = new Object[this.size()];
+            unwrap(this.iterator(), a);
+            return a;
+        }
+
+        @SuppressWarnings("unchecked")
+        public <T> T[] toArray(T[] a) {
+            if (a.length < this.size()) {
+                a = (T[]) Array.newInstance(a.getClass().getComponentType(), this.size());
+            }
+            unwrap(this.iterator(), a);
+            return a;
+        }
+
+        public boolean addAll(Collection<? extends K> c) {
+            boolean retVal = false;
+            Iterator<? extends K> i = c.iterator();
+            int n = c.size();
+
+            while (n-- != 0) {
+                if (this.add(i.next())) {
+                    retVal = true;
+                }
+            }
+
+            return retVal;
+        }
+
+        public boolean add(K k) {
             throw new UnsupportedOperationException();
         }
 
+        public boolean containsAll(Collection<?> c) {
+            int n = c.size();
+            Iterator i = c.iterator();
+
+            do {
+                if (n-- == 0) {
+                    return true;
+                }
+            } while (this.contains(i.next()));
+
+            return false;
+        }
+
+        public boolean retainAll(Collection<?> c) {
+            boolean retVal = false;
+            int n = this.size();
+            Iterator i = this.iterator();
+
+            while (n-- != 0) {
+                if (!c.contains(i.next())) {
+                    i.remove();
+                    retVal = true;
+                }
+            }
+
+            return retVal;
+        }
+
+        public boolean removeAll(Collection<?> c) {
+            boolean retVal = false;
+            int n = c.size();
+            Iterator i = c.iterator();
+
+            while (n-- != 0) {
+                if (this.remove(i.next())) {
+                    retVal = true;
+                }
+            }
+
+            return retVal;
+        }
+
+        public boolean isEmpty() {
+            return this.size() == 0;
+        }
+
+        public String toString() {
+            StringBuilder s = new StringBuilder();
+            Iterator i = this.iterator();
+            int n = this.size();
+            boolean first = true;
+            s.append("{");
+
+            while (n-- != 0) {
+                if (first) {
+                    first = false;
+                } else {
+                    s.append(", ");
+                }
+
+                Object k = i.next();
+                if (this == k) {
+                    s.append("(this collection)");
+                } else {
+                    s.append(String.valueOf(k));
+                }
+            }
+
+            s.append("}");
+            return s.toString();
+        }
     }
 
+    private static int arraySize(int expected, float f) {
+        long s = Math.max(2L, nextPowerOfTwo((long) Math.ceil((double) ((float) expected / f))));
+        if (s > 0x40000000L) {
+            throw new IllegalArgumentException("Too large (" + expected + " expected elements with load factor " + f + ")");
+        } else {
+            return (int) s;
+        }
+    }
+
+    private static int maxFill(int n, float f) {
+        return Math.min((int) Math.ceil((double) ((float) n * f)), n - 1);
+    }
+
+    private static int nextPowerOfTwo(int x) {
+        if (x == 0) {
+            return 1;
+        } else {
+            --x;
+            x |= x >> 1;
+            x |= x >> 2;
+            x |= x >> 4;
+            x |= x >> 8;
+            return (x | x >> 16) + 1;
+        }
+    }
+
+    private static long nextPowerOfTwo(long x) {
+        if (x == 0L) {
+            return 1L;
+        } else {
+            --x;
+            x |= x >> 1;
+            x |= x >> 2;
+            x |= x >> 4;
+            x |= x >> 8;
+            x |= x >> 16;
+            return (x | x >> 32) + 1L;
+        }
+    }
+
+    private static int mix(int x) {
+        int h = x * -1640531527;
+        return h ^ h >>> 16;
+    }
+
+    private static <K> int unwrap(Iterator<? extends K> i, K[] array, int offset, int max) {
+        if (max < 0) {
+            throw new IllegalArgumentException("The maximum number of elements (" + max + ") is negative");
+        } else if (offset >= 0 && offset + max <= array.length) {
+            int j;
+            for (j = max; j-- != 0 && i.hasNext(); array[offset++] = i.next()) {
+                ;
+            }
+
+            return max - j - 1;
+        } else {
+            throw new IllegalArgumentException();
+        }
+    }
+
+    private static <K> int unwrap(Iterator<? extends K> i, K[] array) {
+        return unwrap(i, array, 0, array.length);
+    }
 }
