@@ -805,7 +805,6 @@ public class ResolverImpl implements Resolver
                         blameReqs,
                         cap,
                         resourcePkgMap,
-                        allCandidates,
                         usesCycleMap);
                 }
             }
@@ -828,7 +827,6 @@ public class ResolverImpl implements Resolver
                             blameReqs,
                             null,
                             resourcePkgMap,
-                            allCandidates,
                             usesCycleMap);
                     }
                 }
@@ -849,7 +847,6 @@ public class ResolverImpl implements Resolver
                         blameReqs,
                         null,
                         resourcePkgMap,
-                        allCandidates,
                         usesCycleMap);
                 }
             }
@@ -989,11 +986,10 @@ public class ResolverImpl implements Resolver
         }
     }
 
-    private void mergeUses(
+    private static void mergeUses(
         ResolveSession session, Resource current, Packages currentPkgs,
         Capability mergeCap, List<Requirement> blameReqs, Capability matchingCap,
         Map<Resource, Packages> resourcePkgMap,
-        Candidates allCandidates,
         Map<Capability, Set<Resource>> cycleMap)
     {
         // If there are no uses, then just return.
@@ -1028,7 +1024,7 @@ public class ResolverImpl implements Resolver
 //            else
             {
                 String s = candSourceCap.getDirectives().get(Namespace.CAPABILITY_USES_DIRECTIVE);
-                if (s != null)
+                if (s != null && !s.isEmpty())
                 {
                     // Parse these uses directive.
                     uses = session.getUsesCache().get(s);
@@ -1040,19 +1036,18 @@ public class ResolverImpl implements Resolver
                 }
                 else
                 {
-                    uses = Collections.emptyList();
+                    continue;
                 }
             }
+            Packages candSourcePkgs = resourcePkgMap.get(candSourceCap.getResource());
             for (String usedPkgName : uses)
             {
-                Packages candSourcePkgs = resourcePkgMap.get(candSourceCap.getResource());
                 List<Blame> candSourceBlames;
                 // Check to see if the used package is exported.
                 Blame candExportedBlame = candSourcePkgs.m_exportedPkgs.get(usedPkgName);
                 if (candExportedBlame != null)
                 {
-                    candSourceBlames = new ArrayList<Blame>(1);
-                    candSourceBlames.add(candExportedBlame);
+                    candSourceBlames = Collections.singletonList(candExportedBlame);
                 }
                 else
                 {
@@ -1061,8 +1056,10 @@ public class ResolverImpl implements Resolver
                     candSourceBlames = candSourcePkgs.m_requiredPkgs.get(usedPkgName);
                     // Lastly, if the used package is not required, check to see if it
                     // is imported.
-                    candSourceBlames = (candSourceBlames != null)
-                        ? candSourceBlames : candSourcePkgs.m_importedPkgs.get(usedPkgName);
+                    if (candSourceBlames == null)
+                    {
+                        candSourceBlames = candSourcePkgs.m_importedPkgs.get(usedPkgName);
+                    }
                 }
 
                 // If the used package cannot be found, then just ignore it
@@ -1077,19 +1074,20 @@ public class ResolverImpl implements Resolver
                 {
                     if (blame.m_reqs != null)
                     {
-                        List<Requirement> blameReqs2 = new ArrayList<Requirement>(blameReqs);
+                        List<Requirement> blameReqs2 = new ArrayList<Requirement>(blameReqs.size() + 1);
+                        blameReqs2.addAll(blameReqs);
                         // Only add the last requirement in blame chain because
                         // that is the requirement wired to the blamed capability
                         blameReqs2.add(blame.m_reqs.get(blame.m_reqs.size() - 1));
                         addUsedBlame(usedPkgBlames, blame.m_cap, blameReqs2, matchingCap);
                         mergeUses(session, current, currentPkgs, blame.m_cap, blameReqs2, matchingCap,
-                            resourcePkgMap, allCandidates, cycleMap);
+                            resourcePkgMap, cycleMap);
                     }
                     else
                     {
                         addUsedBlame(usedPkgBlames, blame.m_cap, blameReqs, matchingCap);
                         mergeUses(session, current, currentPkgs, blame.m_cap, blameReqs, matchingCap,
-                            resourcePkgMap, allCandidates, cycleMap);
+                            resourcePkgMap, cycleMap);
                     }
                 }
             }
