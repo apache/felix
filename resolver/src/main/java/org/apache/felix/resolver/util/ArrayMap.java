@@ -21,11 +21,12 @@ package org.apache.felix.resolver.util;
 import java.util.*;
 import java.util.function.Function;
 
+@SuppressWarnings("NullableProblems")
 public class ArrayMap<K, V> extends AbstractMap<K, V> {
 
     private Object[] table;
     private int size;
-    protected transient volatile Collection<V> values;
+    protected transient Collection<V> values;
 
     public ArrayMap() {
         this(32);
@@ -121,6 +122,7 @@ public class ArrayMap<K, V> extends AbstractMap<K, V> {
                             return index < size;
                         }
 
+                        @SuppressWarnings("unchecked")
                         public V next() {
                             if (index >= size) {
                                 throw new NoSuchElementException();
@@ -152,7 +154,7 @@ public class ArrayMap<K, V> extends AbstractMap<K, V> {
                         return index < size;
                     }
 
-                    public Entry<K, V> next() {
+                    public FastEntry next() {
                         if (index >= size) {
                             throw new NoSuchElementException();
                         }

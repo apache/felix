@@ -28,10 +28,14 @@ public class OpenHashMapList<K, V> extends OpenHashMap<K, CopyOnWriteList<V>> {
         super(initialCapacity);
     }
 
+<<<<<<< HEAD
+=======
+    @SuppressWarnings("unchecked")
+>>>>>>> d6bbce6... Speed up collections a bit
     public OpenHashMapList<K, V> deepClone() {
         OpenHashMapList<K, V> copy = (OpenHashMapList<K, V>) super.clone();
         Object[] values = copy.value;
-        for (int i = 0, l = values.length; i < l; i++) {
+        for (int i = values.length; i-- > 0;) {
             if (values[i] != null) {
                 values[i] = new CopyOnWriteList<V>((CopyOnWriteList<V>) values[i]);
             }

@@ -31,7 +31,7 @@ public class OpenHashMapSet<K, V> extends OpenHashMap<K, CopyOnWriteSet<V>> {
     public OpenHashMapSet<K, V> deepClone() {
         OpenHashMapSet<K, V> copy = (OpenHashMapSet<K, V>) super.clone();
         Object[] values = copy.value;
-        for (int i = 0, l = values.length; i < l; i++) {
+        for (int i = values.length; i-- > 0;) {
             if (values[i] != null) {
                 values[i] = new CopyOnWriteSet<V>((CopyOnWriteSet<V>) values[i]);
             }

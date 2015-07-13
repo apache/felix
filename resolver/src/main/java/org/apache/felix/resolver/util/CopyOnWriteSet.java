@@ -22,8 +22,10 @@ import java.util.AbstractSet;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Set;
 
-public class CopyOnWriteSet<E> extends AbstractSet<E> {
+@SuppressWarnings("NullableProblems")
+public class CopyOnWriteSet<E> implements Set<E>, Cloneable {
 
     Object[] data;
 
@@ -31,15 +33,14 @@ public class CopyOnWriteSet<E> extends AbstractSet<E> {
         data = new Object[0];
     }
 
-    public CopyOnWriteSet(Collection<E> col) {
-        if (col instanceof CopyOnWriteSet) {
-            data = ((CopyOnWriteSet) col).data;
-        } else {
-            data = col.toArray(new Object[col.size()]);
-        }
+    public CopyOnWriteSet(CopyOnWriteSet<? extends E> col) {
+        data = col.data;
     }
 
-    @Override
+    public CopyOnWriteSet(Collection<? extends E> col) {
+        data = col.toArray(new Object[col.size()]);
+    }
+
     public Iterator<E> iterator() {
         return new Iterator<E>() {
             int idx = 0;
@@ -56,12 +57,10 @@ public class CopyOnWriteSet<E> extends AbstractSet<E> {
         };
     }
 
-    @Override
     public int size() {
         return data.length;
     }
 
-    @Override
     public boolean add(E e) {
         Object[] d = data;
         if (d.length == 0) {
@@ -94,17 +93,142 @@ public class CopyOnWriteSet<E> extends AbstractSet<E> {
         data = a;
     }
 
+    public Object[] toArray() {
+        return data.clone();
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T[] toArray(T[] a) {
+        int size = data.length;
+        if (a.length < size)
+            // Make a new array of a's runtime type, but my contents:
+            return (T[]) Arrays.copyOf(data, size, a.getClass());
+        System.arraycopy(data, 0, a, 0, size);
+        if (a.length > size)
+            a[size] = null;
+        return a;
+    }
+
     @Override
     public boolean equals(Object o) {
-        if (o instanceof CopyOnWriteSet && ((CopyOnWriteSet) o).data == data) {
+        if (!(o instanceof CopyOnWriteSet)) {
+            return false;
+        }
+        Object[] o1 = data;
+        Object[] o2 = ((CopyOnWriteSet) o).data;
+        if (o1 == o2) {
             return true;
         }
-        return super.equals(o);
+        int l = o1.length;
+        if (l != o2.length) {
+            return false;
+        }
+        loop:
+        for (int i = l; i-- > 0;) {
+            Object v1 = o1[i];
+            for (int j = l; j-- > 0;) {
+                Object v2 = o2[j];
+                if (v1 == v2)
+                    continue loop;
+                if (v1 != null && v1.equals(v2))
+                    continue loop;
+            }
+            return false;
+        }
+        return true;
     }
 
     @Override
     public int hashCode() {
         return Arrays.hashCode(data);
+    }
+
+    /**
+     * Clone this object
+     *
+     * @return a cloned object.
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    public CopyOnWriteSet<E> clone() {
+        try {
+            return (CopyOnWriteSet<E>) super.clone();
+        } catch (CloneNotSupportedException exc) {
+            InternalError e = new InternalError();
+            e.initCause(exc);
+            throw e; //should never happen since we are cloneable
+        }
+    }
+
+    public boolean isEmpty() {
+        return size() == 0;
+    }
+
+    public boolean contains(Object o) {
+        throw new UnsupportedOperationException();
+    }
+
+    public boolean remove(Object o) {
+        int index;
+        if ((index = indexOf(o, data, data.length)) >= 0) {
+            remove(index);
+            return true;
+        }
+        return false;
+    }
+
+    private static int indexOf(Object o, Object[] d, int len) {
+        if (o == null) {
+            for (int i = len; i-- > 0;) {
+                if (d[i] == null)
+                    return i;
+            }
+        } else {
+            for (int i = len; i-- > 0;) {
+                if (o.equals(d[i]))
+                    return i;
+            }
+        }
+        return -1;
+    }
+
+    public boolean containsAll(Collection<?> c) {
+        throw new UnsupportedOperationException();
+    }
+
+    public boolean addAll(Collection<? extends E> c) {
+        Object[] cs = c.toArray();
+        if (cs.length == 0)
+            return false;
+        Object[] elements = data;
+        int len = elements.length;
+        int added = 0;
+        // uniquify and compact elements in cs
+        for (int i = 0; i < cs.length; ++i) {
+            Object e = cs[i];
+            if (indexOf(e, elements, len) < 0 &&
+                    indexOf(e, cs, added) < 0)
+                cs[added++] = e;
+        }
+        if (added > 0) {
+            Object[] newElements = Arrays.copyOf(elements, len + added);
+            System.arraycopy(cs, 0, newElements, len, added);
+            data = newElements;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean retainAll(Collection<?> c) {
+        throw new UnsupportedOperationException();
+    }
+
+    public boolean removeAll(Collection<?> c) {
+        throw new UnsupportedOperationException();
+    }
+
+    public void clear() {
+        throw new UnsupportedOperationException();
     }
 
 }
