@@ -810,22 +810,18 @@ public class ResolverImpl implements Resolver
             {
                 for (Blame blame : blames)
                 {
-                    // Ignore resources that import from themselves.
-                    if (!blame.m_cap.getResource().equals(resource))
-                    {
-                        List<Requirement> blameReqs =
-                            Collections.singletonList(blame.m_reqs.get(0));
+                    List<Requirement> blameReqs =
+                        Collections.singletonList(blame.m_reqs.get(0));
 
-                        mergeUses(
-                            session,
-                            resource,
-                            resourcePkgs,
-                            blame.m_cap,
-                            blameReqs,
-                            null,
-                            resourcePkgMap,
-                            usesCycleMap);
-                    }
+                    mergeUses(
+                        session,
+                        resource,
+                        resourcePkgs,
+                        blame.m_cap,
+                        blameReqs,
+                        null,
+                        resourcePkgMap,
+                        usesCycleMap);
                 }
             }
             // Merge uses constraints from required bundles.
