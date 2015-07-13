@@ -76,25 +76,4 @@ public class GenericCapability implements Capability
             + getAttributes();
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        GenericCapability that = (GenericCapability) o;
-
-        if (!m_attrs.equals(that.m_attrs)) return false;
-        if (!m_dirs.equals(that.m_dirs)) return false;
-        if (!m_namespace.equals(that.m_namespace)) return false;
-
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = m_namespace.hashCode();
-        result = 31 * result + m_dirs.hashCode();
-        result = 31 * result + m_attrs.hashCode();
-        return result;
-    }
 }
