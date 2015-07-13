@@ -85,16 +85,6 @@ public class ResolverImpl implements Resolver
             m_resolveContext = resolveContext;
         }
 
-        List<Candidates> getUsesPermutations()
-        {
-            return m_usesPermutations;
-        }
-
-        List<Candidates> getImportPermutations()
-        {
-            return m_importPermutations;
-        }
-
         Candidates getMultipleCardCandidates()
         {
             return m_multipleCardCandidates;
@@ -215,9 +205,12 @@ public class ResolverImpl implements Resolver
                     }
                 }
 
-                List<Candidates> usesPermutations = session.getUsesPermutations();
-                List<Candidates> importPermutations = session.getImportPermutations();
-                List<Candidates> substPermutations = new ArrayList<Candidates>();
+                // Holds candidate permutations based on permutating "uses" chains.
+                // These permutations are given higher priority.
+                List<Candidates> usesPermutations = new ArrayList<Candidates>();
+                // Holds candidate permutations based on permutating requirement candidates.
+                // These permutations represent backtracking on previous decisions.
+                List<Candidates> importPermutations = new ArrayList<Candidates>();
 
                 // Record the initial candidate permutation.
                 usesPermutations.add(allCandidates);
@@ -248,10 +241,6 @@ public class ResolverImpl implements Resolver
                     {
                         allCandidates = importPermutations.remove(0);
                     }
-                    else if (!substPermutations.isEmpty())
-                    {
-                        allCandidates = substPermutations.remove(0);
-                    }
                     else
                     {
                         break;
@@ -272,7 +261,7 @@ public class ResolverImpl implements Resolver
 
 //allCandidates.dump();
 
-                    rethrow = allCandidates.checkSubstitutes( /*substPermutations*/ importPermutations);
+                    rethrow = allCandidates.checkSubstitutes(importPermutations);
                     if (rethrow != null)
                     {
                         continue;
@@ -301,7 +290,15 @@ public class ResolverImpl implements Resolver
                     }
 
                     Map<Resource, ResolutionError> currentFaultyResources = new HashMap<Resource, ResolutionError>();
-                    rethrow = checkConsistency(executor, session, allCandidates, currentFaultyResources, hosts, false);
+                    rethrow = checkConsistency(
+                            executor,
+                            session,
+                            usesPermutations,
+                            importPermutations,
+                            allCandidates,
+                            currentFaultyResources,
+                            hosts,
+                            false);
 
                     if (!currentFaultyResources.isEmpty())
                     {
@@ -394,8 +391,6 @@ public class ResolverImpl implements Resolver
             finally
             {
                 // Always clear the state.
-                session.getUsesPermutations().clear();
-                session.getImportPermutations().clear();
                 session.setMultipleCardCandidates(null);
             }
         }
@@ -407,6 +402,8 @@ public class ResolverImpl implements Resolver
     private ResolutionError checkConsistency(
         Executor executor,
         ResolveSession session,
+        List<Candidates> usesPermutations,
+        List<Candidates> importPermutations,
         Candidates allCandidates,
         Map<Resource, ResolutionError> currentFaultyResources,
         Map<Resource, Resource> hosts,
@@ -422,7 +419,7 @@ public class ResolverImpl implements Resolver
         for (Entry<Resource, Resource> entry : hosts.entrySet())
         {
             ResolutionError rethrow = checkPackageSpaceConsistency(
-                    session, entry.getValue(),
+                    session, usesPermutations, importPermutations, entry.getValue(),
                     allCandidates, dynamic, resourcePkgMap, resultCache);
             if (rethrow != null)
             {
@@ -520,8 +517,8 @@ public class ResolverImpl implements Resolver
                         throw rethrow.toException();
                     }
 
-                    List<Candidates> usesPermutations = session.getUsesPermutations();
-                    List<Candidates> importPermutations = session.getImportPermutations();
+                    List<Candidates> usesPermutations = new ArrayList<Candidates>();
+                    List<Candidates> importPermutations = new ArrayList<Candidates>();
 
                     // Record the initial candidate permutation.
                     usesPermutations.add(allCandidates);
@@ -546,7 +543,7 @@ public class ResolverImpl implements Resolver
                         // this case like we do for a normal resolve.
                         rethrow = checkConsistency(
                                 new DumbExecutor(),
-                                session, allCandidates,
+                                session, usesPermutations, importPermutations, allCandidates,
                                 new OpenHashMap<Resource, ResolutionError>(resourcePkgMap.size()),
                                 Collections.singletonMap(host, allCandidates.getWrappedHost(host)),
                                 true);
@@ -604,8 +601,6 @@ public class ResolverImpl implements Resolver
                 finally
                 {
                     // Always clear the state.
-                    session.getUsesPermutations().clear();
-                    session.getImportPermutations().clear();
                     session.setMultipleCardCandidates(null);
                 }
             }
@@ -1237,6 +1232,8 @@ public class ResolverImpl implements Resolver
 
     private ResolutionError checkPackageSpaceConsistency(
         ResolveSession session,
+        List<Candidates> usesPermutations,
+        List<Candidates> importPermutations,
         Resource resource,
         Candidates allCandidates,
         boolean dynamic,
@@ -1258,9 +1255,6 @@ public class ResolverImpl implements Resolver
         ResolutionError rethrow = null;
         Candidates permutation = null;
         Set<Requirement> mutated = null;
-
-        List<Candidates> importPermutations = session.getImportPermutations();
-        List<Candidates> usesPermutations = session.getUsesPermutations();
 
         // Check for conflicting imports from fragments.
         // TODO: Is this only needed for imports or are generic and bundle requirements also needed?
@@ -1527,7 +1521,7 @@ public class ResolverImpl implements Resolver
                 if (!resource.equals(cap.getResource()))
                 {
                     rethrow = checkPackageSpaceConsistency(
-                            session, cap.getResource(),
+                            session, usesPermutations, importPermutations, cap.getResource(),
                             allCandidates, false, resourcePkgMap, resultCache);
                     if (rethrow != null)
                     {
