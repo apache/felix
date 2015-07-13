@@ -671,9 +671,12 @@ public class ResolverImpl implements Resolver
             // the dynamic import is added here last to the parallel reqs/caps
             // list is used later when checking to see if the package being
             // dynamically imported shadows an existing provider.
-            for (Requirement req
-                : Util.getDynamicRequirements(wiring.getResourceRequirements(null)))
+            for (Requirement req : wiring.getResourceRequirements(null))
             {
+                if (!Util.isDynamic(req))
+                {
+                    continue;
+                }
                 // Get the candidates for the current requirement.
                 List<Capability> candCaps = allCandidates.getCandidates(req);
                 // Optional requirements may not have any candidates.
