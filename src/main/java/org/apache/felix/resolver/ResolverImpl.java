@@ -1179,10 +1179,12 @@ public class ResolverImpl implements Resolver
         //       host imports, which is not allowed in normal metadata.
         for (Entry<String, List<Blame>> entry : pkgs.m_importedPkgs.fast())
         {
-            if (entry.getValue().size() > 1)
+            String pkgName = entry.getKey();
+            List<Blame> blames = entry.getValue();
+            if (blames.size() > 1)
             {
                 Blame sourceBlame = null;
-                for (Blame blame : entry.getValue())
+                for (Blame blame : blames)
                 {
                     if (sourceBlame == null)
                     {
@@ -1197,7 +1199,7 @@ public class ResolverImpl implements Resolver
                         // Report conflict.
                         rethrow = new UseConstraintError(
                                 session.getContext(), allCandidates,
-                                resource, entry.getKey(),
+                                resource, pkgName,
                                 sourceBlame, blame);
                         if (m_logger.isDebugEnabled())
                         {
@@ -1217,13 +1219,14 @@ public class ResolverImpl implements Resolver
         {
             String pkgName = entry.getKey();
             Blame exportBlame = entry.getValue();
-            if (!pkgs.m_usedPkgs.containsKey(pkgName))
+            ArrayMap<Capability, UsedBlames> pkgBlames = pkgs.m_usedPkgs.get(pkgName);
+            if (pkgBlames == null)
             {
                 continue;
             }
-            for (UsedBlames usedBlames : pkgs.m_usedPkgs.get(pkgName).values())
+            for (UsedBlames usedBlames : pkgBlames.values())
             {
-                if (!isCompatible(session, Collections.singletonList(exportBlame), usedBlames.m_cap, resourcePkgMap))
+                if (!isCompatible(resourcePkgMap, exportBlame, usedBlames.m_cap))
                 {
                     for (Blame usedBlame : usedBlames.m_blames)
                     {
@@ -1296,26 +1299,35 @@ public class ResolverImpl implements Resolver
         // We combine the imported and required packages here into one map.
         // Imported packages are added after required packages because they shadow or override
         // the packages from required bundles.
-        OpenHashMap<String, List<Blame>> allImportRequirePkgs =
-            new OpenHashMap<String, List<Blame>>(pkgs.m_requiredPkgs.size() + pkgs.m_importedPkgs.size());
-        allImportRequirePkgs.putAll(pkgs.m_requiredPkgs);
-        allImportRequirePkgs.putAll(pkgs.m_importedPkgs);
-
-        for (Entry<String, List<Blame>> requirementBlames : allImportRequirePkgs.fast())
+        OpenHashMap<String, List<Blame>> allImportRequirePkgs;
+        if (pkgs.m_requiredPkgs.isEmpty())
         {
-            String pkgName = requirementBlames.getKey();
-            if (!pkgs.m_usedPkgs.containsKey(pkgName))
+            allImportRequirePkgs = pkgs.m_importedPkgs;
+        }
+        else
+        {
+            allImportRequirePkgs = new OpenHashMap<String, List<Blame>>(pkgs.m_requiredPkgs.size() + pkgs.m_importedPkgs.size());
+            allImportRequirePkgs.putAll(pkgs.m_requiredPkgs);
+            allImportRequirePkgs.putAll(pkgs.m_importedPkgs);
+        }
+
+        for (Entry<String, List<Blame>> entry : allImportRequirePkgs.fast())
+        {
+            String pkgName = entry.getKey();
+            ArrayMap<Capability, UsedBlames> pkgBlames = pkgs.m_usedPkgs.get(pkgName);
+            if (pkgBlames == null)
             {
                 continue;
             }
+            List<Blame> requirementBlames = entry.getValue();
 
-            for (UsedBlames usedBlames : pkgs.m_usedPkgs.get(pkgName).values())
+            for (UsedBlames usedBlames : pkgBlames.values())
             {
-                if (!isCompatible(session, requirementBlames.getValue(), usedBlames.m_cap, resourcePkgMap))
+                if (!isCompatible(resourcePkgMap, requirementBlames, usedBlames.m_cap))
                 {
                     // Split packages, need to think how to get a good message for split packages (sigh)
                     // For now we just use the first requirement that brings in the package that conflicts
-                    Blame requirementBlame = requirementBlames.getValue().get(0);
+                    Blame requirementBlame = requirementBlames.get(0);
                     for (Blame usedBlame : usedBlames.m_blames)
                     {
                         if (checkMultiple(session, usedBlames, usedBlame, allCandidates))
@@ -1386,7 +1398,7 @@ public class ResolverImpl implements Resolver
                     // Try to permutate the candidate for the original
                     // import requirement; only permutate it if we haven't
                     // done so already.
-                    for (Blame requirementBlame : requirementBlames.getValue())
+                    for (Blame requirementBlame : requirementBlames)
                     {
                         Requirement req = requirementBlame.m_reqs.get(0);
                         if (!mutated.contains(req))
