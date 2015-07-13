@@ -2355,6 +2355,7 @@ public class ResolverImpl implements Resolver
     {
         private final Executor executor;
         private final AtomicInteger count = new AtomicInteger();
+        private Throwable throwable;
 
         public EnhancedExecutor(Executor executor)
         {
@@ -2371,6 +2372,16 @@ public class ResolverImpl implements Resolver
                     try
                     {
                         runnable.run();
+                    }
+                    catch (Throwable t)
+                    {
+                        synchronized (count)
+                        {
+                            if (throwable == null)
+                            {
+                                throwable = t;
+                            }
+                        }
                     }
                     finally
                     {
@@ -2399,6 +2410,21 @@ public class ResolverImpl implements Resolver
                     catch (InterruptedException e)
                     {
                         throw new IllegalStateException(e);
+                    }
+                    if (throwable != null)
+                    {
+                        if (throwable instanceof RuntimeException)
+                        {
+                            throw (RuntimeException) throwable;
+                        }
+                        else if (throwable instanceof Error)
+                        {
+                            throw (Error) throwable;
+                        }
+                        else
+                        {
+                            throw new RuntimeException(throwable);
+                        }
                     }
                 }
             }
