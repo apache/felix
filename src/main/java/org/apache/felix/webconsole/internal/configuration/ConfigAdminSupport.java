@@ -70,7 +70,7 @@ class ConfigAdminSupport
         CONFIG_PROPERTIES_HIDE.add(PROPERTY_FACTORYCONFIG_NAMEHINT);
     }
     private static final Pattern NAMEHINT_PLACEHOLER_REGEXP = Pattern.compile("\\{([^\\{\\}]*)}");
-    
+
     private final BundleContext bundleContext;
     private final ConfigurationAdmin service;
 
@@ -311,7 +311,7 @@ class ConfigAdminSupport
             }
 
             final String location = request.getParameter(ConfigManager.LOCATION);
-            if ( location == null || location.trim().length() == 0 )
+            if ( location == null || location.trim().length() == 0 || ConfigManager.UNBOUND_LOCATION.equals(location) )
             {
                 if ( config.getBundleLocation() != null )
                 {
@@ -451,8 +451,13 @@ class ConfigAdminSupport
             json.value( config.getFactoryPid() );
         }
 
+        String bundleLocation = config.getBundleLocation();
+        if ( ConfigManager.UNBOUND_LOCATION.equals(bundleLocation) )
+        {
+            bundleLocation = null;
+        }
         String location;
-        if ( config.getBundleLocation() == null )
+        if ( bundleLocation == null )
         {
             location = ""; //$NON-NLS-1$
         }
@@ -461,10 +466,10 @@ class ConfigAdminSupport
             // if the configuration is bound to a bundle location which
             // is not related to an installed bundle, we just print the
             // raw bundle location binding
-            Bundle bundle = MetaTypeServiceSupport.getBundle( this.getBundleContext(), config.getBundleLocation() );
+            Bundle bundle = MetaTypeServiceSupport.getBundle( this.getBundleContext(), bundleLocation );
             if ( bundle == null )
             {
-                location = config.getBundleLocation();
+                location = bundleLocation;
             }
             else
             {
@@ -504,7 +509,7 @@ class ConfigAdminSupport
             configManager.log( "Error getting service associated with configuration " + pid, t );
         }
         json.key( "bundle_location" ); //$NON-NLS-1$
-        json.value ( config.getBundleLocation() );
+        json.value ( bundleLocation );
         json.key( "service_location" ); //$NON-NLS-1$
         json.value ( serviceLocation );
     }
@@ -638,7 +643,7 @@ class ConfigAdminSupport
         {
             return null;
         }
-        
+
         // search for all variable patterns in name hint and replace them with configured/default values
         Matcher matcher = NAMEHINT_PLACEHOLER_REGEXP.matcher(nameHint);
         StringBuffer sb = new StringBuffer();
@@ -652,7 +657,7 @@ class ConfigAdminSupport
             matcher.appendReplacement(sb, matcherQuoteReplacement(value));
         }
         matcher.appendTail(sb);
-        
+
         // make sure name hint does not only contain whitespaces
         nameHint = sb.toString().trim();
         if (nameHint.length() == 0) {
@@ -662,7 +667,7 @@ class ConfigAdminSupport
             return nameHint;
         }
     }
-    
+
     /**
      * Gets configured service property value, or default value if no value is configured.
      * @param propertyName Property name
@@ -673,7 +678,7 @@ class ConfigAdminSupport
     private static String getConfigurationPropertyValueOrDefault(String propertyName, Dictionary props, Map adMap) {
         // get configured property value
         Object value = props.get(propertyName);
-        
+
         if (value != null)
         {
             // if set convert to string
@@ -701,10 +706,10 @@ class ConfigAdminSupport
                 return ad.getDefaultValue()[0];
             }
         }
-        
+
         return null;
     }
-    
+
     /**
      * Replacement for Matcher.quoteReplacement which is only available in JDK 1.5 and up.
      * @param str Unquoted string
@@ -722,7 +727,7 @@ class ConfigAdminSupport
         }
         return sb.toString();
     }
-    
+
     final void listFactoryConfigurations(JSONObject json, String pidFilter,
         String locale)
     {
