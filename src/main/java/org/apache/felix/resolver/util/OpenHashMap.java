@@ -54,10 +54,10 @@ public class OpenHashMap<K, V> implements Serializable, Cloneable, SortedMap<K, 
     protected final float f;
     protected V defRetValue;
 
-    protected transient volatile Iterable<Map.Entry<K, V>> fast;
-    protected transient volatile OpenHashMap.MapEntrySet entries;
-    protected transient volatile SortedSet<K> keys;
-    protected transient volatile Collection<V> values;
+    protected transient Iterable<Map.Entry<K, V>> fast;
+    protected transient SortedSet<Map.Entry<K, V>> entries;
+    protected transient SortedSet<K> keys;
+    protected transient Collection<V> values;
 
     public OpenHashMap(int expected, float f) {
         this.first = -1;
@@ -672,23 +672,28 @@ public class OpenHashMap<K, V> implements Serializable, Cloneable, SortedMap<K, 
     @SuppressWarnings("unchecked")
     public V get(Object k) {
         if (k == null) {
-            return this.containsNullKey ? (V) this.value[this.n] : this.defRetValue;
-        } else {
-            Object[] key = this.key;
-            Object curr;
-            int pos;
-            if ((curr = key[pos = mix(k.hashCode()) & this.mask]) == null) {
-                return this.defRetValue;
-            } else if (k.equals(curr)) {
-                return (V) this.value[pos];
-            } else {
-                while ((curr = key[pos = pos + 1 & this.mask]) != null) {
-                    if (k.equals(curr)) {
-                        return (V) this.value[pos];
-                    }
-                }
+            return containsNullKey ? (V) value[n] : defRetValue;
+        }
 
-                return this.defRetValue;
+        final Object[] key = this.key;
+        Object curr;
+        int pos;
+
+        // The starting point
+        if ((curr = key[pos = mix(k.hashCode()) & mask]) == null) {
+            return defRetValue;
+        }
+        if (k.equals(curr)) {
+            return (V) value[pos];
+        }
+
+        // There's always an usused entry
+        while (true) {
+            if ((curr = key[pos = (pos + 1) & mask]) == null) {
+                return defRetValue;
+            }
+            if (k.equals(curr)) {
+                return (V) value[pos];
             }
         }
     }

@@ -18,11 +18,14 @@
  */
 package org.apache.felix.resolver.util;
 
-import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 
-public class CopyOnWriteList<T> extends AbstractList<T> {
+@SuppressWarnings("NullableProblems")
+public class CopyOnWriteList<E> implements List<E>, Cloneable {
 
     Object[] data;
 
@@ -30,33 +33,32 @@ public class CopyOnWriteList<T> extends AbstractList<T> {
         data = new Object[0];
     }
 
-    public CopyOnWriteList(Collection<T> col) {
-        if (col instanceof CopyOnWriteList) {
-            data = ((CopyOnWriteList) col).data;
-        } else {
-            data = col.toArray(new Object[col.size()]);
-        }
+    public CopyOnWriteList(CopyOnWriteList<? extends E> col) {
+        data = col.data;
     }
 
-    @Override
+    public CopyOnWriteList(Collection<? extends E> col) {
+        data = col.toArray(new Object[col.size()]);
+    }
+
     public int size() {
         return data.length;
     }
 
-    public T get(int index) {
-        return (T) data[index];
+    @SuppressWarnings("unchecked")
+    public E get(int index) {
+        return (E) data[index];
     }
 
-    @Override
-    public T set(int index, T element) {
+    @SuppressWarnings("unchecked")
+    public E set(int index, E element) {
         data = Arrays.copyOf(data, data.length);
-        T prev = (T) data[index];
+        E prev = (E) data[index];
         data[index] = element;
         return prev;
     }
 
-    @Override
-    public void add(int index, T element) {
+    public void add(int index, E element) {
         Object[] elements = data;
         int len = elements.length;
         Object[] newElements = new Object[len + 1];
@@ -71,10 +73,11 @@ public class CopyOnWriteList<T> extends AbstractList<T> {
         data = newElements;
     }
 
-    public T remove(int index) {
+    @SuppressWarnings("unchecked")
+    public E remove(int index) {
         Object[] elements = data;
         int len = elements.length;
-        T oldValue = (T) elements[index];
+        E oldValue = (E) elements[index];
         Object[] newElements = new Object[len - 1];
         int numMoved = len - index - 1;
         if (index > 0) {
@@ -87,8 +90,174 @@ public class CopyOnWriteList<T> extends AbstractList<T> {
         return oldValue;
     }
 
+    public boolean isEmpty() {
+        return size() == 0;
+    }
+
+    public boolean contains(Object o) {
+        return indexOf(o) >= 0;
+    }
+
+    public Iterator<E> iterator() {
+        return new Iterator<E>() {
+            int idx = 0;
+            public boolean hasNext() {
+                return idx < data.length;
+            }
+            @SuppressWarnings("unchecked")
+            public E next() {
+                return (E) data[idx++];
+            }
+            public void remove() {
+                CopyOnWriteList.this.remove(--idx);
+            }
+        };
+    }
+
+    public Object[] toArray() {
+        return data.clone();
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T[] toArray(T[] a) {
+        int size = data.length;
+        if (a.length < size)
+            // Make a new array of a's runtime type, but my contents:
+            return (T[]) Arrays.copyOf(data, size, a.getClass());
+        System.arraycopy(data, 0, a, 0, size);
+        if (a.length > size)
+            a[size] = null;
+        return a;
+    }
+
+    public boolean add(E e) {
+        throw new UnsupportedOperationException();
+    }
+
+    public boolean remove(Object o) {
+        int index;
+        if ((index = indexOf(o)) >= 0) {
+            remove(index);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean containsAll(Collection<?> c) {
+        throw new UnsupportedOperationException();
+    }
+
+    public boolean addAll(Collection<? extends E> c) {
+        throw new UnsupportedOperationException();
+    }
+
+    public boolean addAll(int index, Collection<? extends E> c) {
+        throw new UnsupportedOperationException();
+    }
+
+    public boolean removeAll(Collection<?> c) {
+        boolean modified = false;
+        Object[] d = data, o = data;
+        int idx = 0;
+        for (int i = 0, l = o.length; i < l; i++) {
+            if (c.contains(o[i])) {
+                modified = true;
+            } else if (modified) {
+                if (idx == 0) {
+                    d = o.clone();
+                }
+                d[idx++] = o[i];
+            }
+        }
+        if (modified) {
+            data = Arrays.copyOf(d, idx);
+        }
+        return modified;
+    }
+
+    public boolean retainAll(Collection<?> c) {
+        throw new UnsupportedOperationException();
+    }
+
+    public void clear() {
+        data = new Object[0];
+    }
+
+    public int indexOf(Object o) {
+        if (o == null) {
+            Object[] d = data;
+            for (int i = d.length; i-- > 0;) {
+                if (d[i] == null)
+                    return i;
+            }
+        } else {
+            Object[] d = data;
+            for (int i = d.length; i-- > 0;) {
+                if (o.equals(d[i]))
+                    return i;
+            }
+        }
+        return -1;
+    }
+
+    public int lastIndexOf(Object o) {
+        throw new UnsupportedOperationException();
+    }
+
+    public ListIterator<E> listIterator() {
+        throw new UnsupportedOperationException();
+    }
+
+    public ListIterator<E> listIterator(int index) {
+        throw new UnsupportedOperationException();
+    }
+
+    public List<E> subList(int fromIndex, int toIndex) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Clone this object
+     *
+     * @return a cloned object.
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    public CopyOnWriteList<E> clone() {
+        try {
+            return (CopyOnWriteList<E>) super.clone();
+        } catch (CloneNotSupportedException exc) {
+            InternalError e = new InternalError();
+            e.initCause(exc);
+            throw e; //should never happen since we are cloneable
+        }
+    }
+
     @Override
     public int hashCode() {
         return Arrays.hashCode(data);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof CopyOnWriteList)) {
+            return false;
+        }
+        Object[] o1 = data;
+        Object[] o2 = ((CopyOnWriteList) o).data;
+        if (o1 == o2) {
+            return true;
+        }
+        int i;
+        if ((i = o1.length) != o2.length) {
+            return false;
+        }
+        while (i-- > 0) {
+            Object v1 = o1[i];
+            Object v2 = o2[i];
+            if (!(v1 == null ? v2 == null : v1.equals(v2)))
+                return false;
+        }
+        return true;
     }
 }
