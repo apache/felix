@@ -614,10 +614,12 @@ public class ResolverTest
         ResourceImpl c1 = new ResourceImpl("C");
         c1.addCapability(new BundleCapability(c1, "C"));
         Capability c1_p1 = new PackageCapability(c1, "p1");
+        c1.addCapability(c1_p1);
 
         ResourceImpl c2 = new ResourceImpl("C");
         c2.addCapability(new BundleCapability(c2, "C"));
         Capability c2_p1 = new PackageCapability(c2, "p1");
+        c2.addCapability(c2_p1);
 
         ResourceImpl d1 = new ResourceImpl("D");
         GenericCapability d1_generic = new GenericCapability(d1, "generic");
