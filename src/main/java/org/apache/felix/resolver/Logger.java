@@ -75,14 +75,23 @@ public class Logger
         _log(level, msg, throwable);
     }
 
+    public boolean isDebugEnabled()
+    {
+        return m_logLevel >= LOG_DEBUG;
+    }
+
+    public final void debug(String msg)
+    {
+        _log(LOG_DEBUG, msg, null);
+    }
+
     protected void doLog(int level, String msg, Throwable throwable)
     {
         if (level > m_logLevel)
         {
             return;
         }
-        String s = "";
-        s = s + msg;
+        String s = msg;
         if (throwable != null)
         {
             s = s + " (" + throwable + ")";
