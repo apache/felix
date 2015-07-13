@@ -878,12 +878,12 @@ public class ResolverImpl implements Resolver
             {
                 // We have to merge all exported packages from the candidate,
                 // since the current resource requires it.
-                for (Entry<String, Blame> entry : candPkgs.m_exportedPkgs.fast())
+                for (Blame blame : candPkgs.m_exportedPkgs.values())
                 {
                     mergeCandidatePackage(
                         resourcePkgMap.get(current).m_requiredPkgs,
                         currentReq,
-                        entry.getValue().m_cap);
+                        blame.m_cap);
                 }
             }
 
