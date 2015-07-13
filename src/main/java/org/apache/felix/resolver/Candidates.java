@@ -47,7 +47,6 @@ import org.osgi.resource.Resource;
 import org.osgi.resource.Wire;
 import org.osgi.resource.Wiring;
 import org.osgi.service.resolver.HostedCapability;
-import org.osgi.service.resolver.ResolutionException;
 import org.osgi.service.resolver.ResolveContext;
 
 class Candidates
@@ -140,21 +139,21 @@ class Candidates
      * @param resource the resource whose candidates should be populated.
      * @param resolution indicates the resolution type.
      */
-    public final void populate(
-        ResolveContext rc, Resource resource, int resolution) throws ResolutionException
+    public final ResolutionError populate(
+        ResolveContext rc, Resource resource, int resolution)
     {
         // Get the current result cache value, to make sure the revision
         // hasn't already been populated.
         Object cacheValue = m_populateResultCache.get(resource);
         // Has been unsuccessfully populated.
-        if (cacheValue instanceof ResolutionException)
+        if (cacheValue instanceof ResolutionError)
         {
-            return;
+            return null;
         }
         // Has been successfully populated.
         else if (cacheValue instanceof Boolean)
         {
-            return;
+            return null;
         }
 
         // We will always attempt to populate fragments, since this is necessary
@@ -164,26 +163,21 @@ class Candidates
         boolean isFragment = Util.isFragment(resource);
         if (!isFragment && rc.getWirings().containsKey(resource))
         {
-            return;
+            return null;
         }
 
         if (resolution == MANDATORY)
         {
             m_mandatoryResources.add(resource);
         }
-        try
+        // Try to populate candidates for the optional revision.
+        ResolutionError error = populateResource(rc, resource);
+        // Only throw an exception if resolution is mandatory.
+        if (error != null && resolution == MANDATORY)
         {
-            // Try to populate candidates for the optional revision.
-            populateResource(rc, resource);
+            return error;
         }
-        catch (ResolutionException ex)
-        {
-            // Only throw an exception if resolution is mandatory.
-            if (resolution == MANDATORY)
-            {
-                throw ex;
-            }
-        }
+        return null;
     }
 
     /**
@@ -194,7 +188,7 @@ class Candidates
      */
 // TODO: FELIX3 - Modify to not be recursive.
     @SuppressWarnings("unchecked")
-    private void populateResource(ResolveContext rc, Resource resource) throws ResolutionException
+    private ResolutionError populateResource(ResolveContext rc, Resource resource)
     {
         // Determine if we've already calculated this revision's candidates.
         // The result cache will have one of three values:
@@ -226,14 +220,14 @@ class Candidates
         Object cacheValue = m_populateResultCache.get(resource);
 
         // This is case 1.
-        if (cacheValue instanceof ResolutionException)
+        if (cacheValue instanceof ResolutionError)
         {
-            throw (ResolutionException) cacheValue;
+            return (ResolutionError) cacheValue;
         }
         // This is case 2.
         else if (cacheValue instanceof Boolean)
         {
-            return;
+            return null;
         }
         // This is case 3.
         else if (cacheValue != null)
@@ -286,14 +280,14 @@ class Candidates
             // Process the candidates, removing any candidates that
             // cannot resolve.
             List<Capability> candidates = rc.findProviders(req);
-            ResolutionException rethrow = processCandidates(rc, resource, candidates);
+            ResolutionError rethrow = processCandidates(rc, resource, candidates);
 
             // First, due to cycles, makes sure we haven't already failed in
             // a deeper recursion.
             Object result = m_populateResultCache.get(resource);
-            if (result instanceof ResolutionException)
+            if (result instanceof ResolutionError)
             {
-                throw (ResolutionException) result;
+                return (ResolutionError) result;
             }
             // Next, if are no candidates remaining and the requirement is not
             // not optional, then record and throw a resolve exception.
@@ -303,17 +297,11 @@ class Candidates
                 {
                     // This is a fragment that is already resolved and there is no unresolved hosts to attach it to.
                     m_populateResultCache.put(resource, Boolean.TRUE);
-                    return;
+                    return null;
                 }
-                String msg = "Unable to resolve " + resource
-                    + ": missing requirement " + req;
-                if (rethrow != null)
-                {
-                    msg = msg + " [caused by: " + rethrow.getMessage() + "]";
-                }
-                rethrow = new ResolutionException(msg, null, Collections.singleton(req));
+                rethrow = new MissingRequirementError(req, rethrow);
                 m_populateResultCache.put(resource, rethrow);
-                throw rethrow;
+                return rethrow;
             }
             // Otherwise, if we actually have candidates for the requirement, then
             // add them to the local candidate map.
@@ -339,7 +327,7 @@ class Candidates
                 Map.Entry<Requirement, List<Capability>> entry = it.next();
                 for (Iterator<Capability> it2 = entry.getValue().iterator(); it2.hasNext();)
                 {
-                    if (m_populateResultCache.get(it2.next().getResource()) instanceof ResolutionException)
+                    if (m_populateResultCache.get(it2.next().getResource()) instanceof ResolutionError)
                     {
                         it2.remove();
                     }
@@ -375,6 +363,7 @@ class Candidates
                 }
             }
         }
+        return null;
     }
 
     private void populateSubstitutables()
@@ -447,7 +436,7 @@ class Candidates
     private static final int SUBSTITUTED = 2;
     private static final int EXPORTED = 3;
 
-    void checkSubstitutes(List<Candidates> importPermutations) throws ResolutionException
+    ResolutionError checkSubstitutes(List<Candidates> importPermutations)
     {
         Map<Capability, Integer> substituteStatuses = new LinkedHashMap<Capability, Integer>(m_subtitutableMap.size());
         for (Capability substitutable : m_subtitutableMap.keySet())
@@ -516,15 +505,14 @@ class Candidates
                             }
                             else
                             {
-                                String msg = "Unable to resolve " + dependent.getResource()
-                                        + ": missing requirement " + dependent;
-                                throw new ResolutionException(msg, null, Collections.singleton(dependent));
+                                return new MissingRequirementError(dependent);
                             }
                         }
                     }
                 }
             }
         }
+        return null;
     }
 
     private boolean isSubstituted(Capability substitutableCap, Map<Capability, Integer> substituteStatuses)
@@ -581,9 +569,9 @@ class Candidates
         return false;
     }
 
-    public void populateDynamic(
+    public ResolutionError populateDynamic(
         ResolveContext rc, Resource resource,
-        Requirement req, List<Capability> candidates) throws ResolutionException
+        Requirement req, List<Capability> candidates)
     {
         // Record the revision associated with the dynamic require
         // as a mandatory revision.
@@ -591,7 +579,7 @@ class Candidates
 
         // Process the candidates, removing any candidates that
         // cannot resolve.
-        ResolutionException rethrow = processCandidates(rc, resource, candidates);
+        ResolutionError rethrow = processCandidates(rc, resource, candidates);
 
         // Add the dynamic imports candidates.
         // Make sure this is done after the call to processCandidates since we want to ensure
@@ -602,13 +590,13 @@ class Candidates
         {
             if (rethrow == null)
             {
-                rethrow = new ResolutionException(
-                    "Dynamic import failed.", null, Collections.singleton(req));
+                rethrow = new DynamicImportFailed(req);
             }
-            throw rethrow;
+            return rethrow;
         }
 
         m_populateResultCache.put(resource, Boolean.TRUE);
+        return null;
     }
 
     /**
@@ -623,13 +611,13 @@ class Candidates
      * @param candidates the candidates to process.
      * @return a resolve exception to be re-thrown, if any, or null.
      */
-    private ResolutionException processCandidates(
+    private ResolutionError processCandidates(
         ResolveContext rc,
         Resource resource,
         List<Capability> candidates)
     {
         // Get satisfying candidates and populate their candidates if necessary.
-        ResolutionException rethrow = null;
+        ResolutionError rethrow = null;
         Set<Capability> fragmentCands = null;
         for (Iterator<Capability> itCandCap = candidates.iterator();
             itCandCap.hasNext();)
@@ -665,15 +653,12 @@ class Candidates
             if ((isFragment || !rc.getWirings().containsKey(candCap.getResource()))
                 && !candCap.getResource().equals(resource))
             {
-                try
-                {
-                    populateResource(rc, candCap.getResource());
-                }
-                catch (ResolutionException ex)
+                ResolutionError error = populateResource(rc, candCap.getResource());
+                if (error != null)
                 {
                     if (rethrow == null)
                     {
-                        rethrow = ex;
+                        rethrow = error;
                     }
                     // Remove the candidate since we weren't able to
                     // populate its candidates.
@@ -747,11 +732,11 @@ class Candidates
         return ((value != null) && (value instanceof Boolean));
     }
 
-    public ResolutionException getResolveException(Resource resource)
+    public ResolutionError getResolutionError(Resource resource)
     {
         Object value = m_populateResultCache.get(resource);
-        return ((value != null) && (value instanceof ResolutionException))
-            ? (ResolutionException) value : null;
+        return ((value != null) && (value instanceof ResolutionError))
+            ? (ResolutionError) value : null;
     }
 
     /**
@@ -881,7 +866,7 @@ class Candidates
      * @throws org.osgi.service.resolver.ResolutionException if the removal of any unselected fragments
      * result in the root module being unable to resolve.
      */
-    public void prepare(ResolveContext rc) throws ResolutionException
+    public ResolutionError prepare(ResolveContext rc)
     {
         // Maps a host capability to a map containing its potential fragments;
         // the fragment map maps a fragment symbolic name to a map that maps
@@ -962,9 +947,7 @@ class Candidates
         // Step 3
         for (Resource fragment : unselectedFragments)
         {
-            removeResource(fragment,
-                new ResolutionException(
-                    "Fragment was not selected for attachment: " + fragment));
+            removeResource(fragment, new FragmentNotSelectedError(fragment));
         }
 
         // Step 4
@@ -1081,7 +1064,7 @@ class Candidates
         {
             if (!isPopulated(resource))
             {
-                throw getResolveException(resource);
+                return getResolutionError(resource);
             }
         }
 
@@ -1089,6 +1072,8 @@ class Candidates
 
         m_candidateMap.trim();
         m_dependentMap.trim();
+
+        return null;
     }
 
     // Maps a host capability to a map containing its potential fragments;
@@ -1155,11 +1140,9 @@ class Candidates
      * is no other candidate.
      *
      * @param resource the module to remove.
-     * @throws ResolutionException if removing the module caused the resolve to
-     * fail.
+     * @param ex the resolution error
      */
-    private void removeResource(Resource resource, ResolutionException ex)
-        throws ResolutionException
+    private void removeResource(Resource resource, ResolutionError ex)
     {
         // Add removal reason to result cache.
         m_populateResultCache.put(resource, ex);
@@ -1185,11 +1168,8 @@ class Candidates
      * @param unresolvedResources a list to containing any additional modules
      * that that became unresolved as a result of removing this module and will
      * also need to be removed.
-     * @throws ResolutionException if removing the module caused the resolve to
-     * fail.
      */
     private void remove(Resource resource, Set<Resource> unresolvedResources)
-        throws ResolutionException
     {
         for (Requirement r : resource.getRequirements(null))
         {
@@ -1231,11 +1211,8 @@ class Candidates
      * @param unresolvedResources a list to containing any additional modules
      * that that became unresolved as a result of removing this module and will
      * also need to be removed.
-     * @throws ResolutionException if removing the module caused the resolve to
-     * fail.
      */
     private void remove(Capability c, Set<Resource> unresolvedResources)
-        throws ResolutionException
     {
         Set<Requirement> dependents = m_dependentMap.remove(c);
         if (dependents != null)
@@ -1249,11 +1226,9 @@ class Candidates
                     m_candidateMap.remove(r);
                     if (!Util.isOptional(r))
                     {
-                        String msg = "Unable to resolve " + r.getResource()
-                            + ": missing requirement " + r;
                         m_populateResultCache.put(
                             r.getResource(),
-                            new ResolutionException(msg, null, Collections.singleton(r)));
+                            new MissingRequirementError(r));
                         unresolvedResources.add(r.getResource());
                     }
                 }
@@ -1367,6 +1342,68 @@ class Candidates
                 permutate(req, permutations);
             }
         }
+    }
+
+    static class DynamicImportFailed extends ResolutionError {
+
+        private final Requirement requirement;
+
+        public DynamicImportFailed(Requirement requirement) {
+            this.requirement = requirement;
+        }
+
+        public String getMessage() {
+            return "Dynamic import failed.";
+        }
+
+        public Collection<Requirement> getUnresolvedRequirements() {
+            return Collections.singleton(requirement);
+        }
+
+    }
+
+    static class FragmentNotSelectedError extends ResolutionError {
+
+        private final Resource resource;
+
+        public FragmentNotSelectedError(Resource resource) {
+            this.resource = resource;
+        }
+
+        public String getMessage() {
+            return "Fragment was not selected for attachment: " + resource;
+        }
+
+    }
+
+    static class MissingRequirementError extends ResolutionError {
+
+        private final Requirement requirement;
+        private final ResolutionError cause;
+
+        public MissingRequirementError(Requirement requirement) {
+            this(requirement, null);
+        }
+
+        public MissingRequirementError(Requirement requirement, ResolutionError cause) {
+            this.requirement = requirement;
+            this.cause = cause;
+        }
+
+        public String getMessage() {
+            String msg = "Unable to resolve " + requirement.getResource()
+                    + ": missing requirement " + requirement;
+            if (cause != null)
+            {
+                msg = msg + " [caused by: " + cause.getMessage() + "]";
+            }
+            return msg;
+        }
+
+        public Collection<Requirement> getUnresolvedRequirements() {
+            return Collections.singleton(requirement);
+        }
+
     }
 
 }
