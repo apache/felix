@@ -618,12 +618,9 @@ public class ResolverImpl implements Resolver
             }
         }
 
-        // Create parallel lists for requirement and proposed candidate
+        // Create a list for requirement and proposed candidate
         // capability or actual capability if resource is resolved or not.
-        // We use parallel lists so we can calculate the packages spaces for
-        // resolved and unresolved resources in an identical fashion.
-        List<Requirement> reqs = new ArrayList<Requirement>();
-        List<Capability> caps = new ArrayList<Capability>();
+        List<WireCandidate> wireCandidates = new ArrayList<WireCandidate>();
         boolean isDynamicImporting = false;
         Wiring wiring = session.getContext().getWirings().get(resource);
         if (wiring != null)
@@ -649,8 +646,7 @@ public class ResolverImpl implements Resolver
                 {
                     c = new WrappedCapability(wire.getProvider(), c);
                 }
-                reqs.add(r);
-                caps.add(c);
+                wireCandidates.add(new WireCandidate(r, c));
             }
 
             // Since the resource is resolved, it could be dynamically importing,
@@ -658,7 +654,7 @@ public class ResolverImpl implements Resolver
             // imports.
             //
             // NOTE: If the resource is dynamically importing, the fact that
-            // the dynamic import is added here last to the parallel reqs/caps
+            // the dynamic import is added here last to the
             // list is used later when checking to see if the package being
             // dynamically imported shadows an existing provider.
             for (Requirement req : wiring.getResourceRequirements(null))
@@ -674,8 +670,7 @@ public class ResolverImpl implements Resolver
                 {
                     continue;
                 }
-                reqs.add(req);
-                caps.add(cap);
+                wireCandidates.add(new WireCandidate(req, cap));
                 isDynamicImporting = true;
                 // Can only dynamically import one at a time, so break
                 // out of the loop after the first.
@@ -703,16 +698,14 @@ public class ResolverImpl implements Resolver
                         // Use the same requirement, but list each capability separately
                         for (Capability cap : candCaps)
                         {
-                            reqs.add(req);
-                            caps.add(cap);
+                            wireCandidates.add(new WireCandidate(req, cap));
                         }
                     }
                     // Grab first (i.e., highest priority) candidate
                     else
                     {
                         Capability cap = candCaps.get(0);
-                        reqs.add(req);
-                        caps.add(cap);
+                        wireCandidates.add(new WireCandidate(req, cap));
                     }
                 }
             }
@@ -723,10 +716,11 @@ public class ResolverImpl implements Resolver
         resourcePkgs = resourcePkgMap.get(resource);
 
         // Second, add all imported packages to the target resource's package space.
-        for (int i = 0; i < reqs.size(); i++)
+        for (int i = 0; i < wireCandidates.size(); i++)
         {
-            Requirement req = reqs.get(i);
-            Capability cap = caps.get(i);
+            WireCandidate wireCandidate = wireCandidates.get(i);
+            Requirement req = wireCandidate.requirement;
+            Capability cap = wireCandidate.capability;
             calculateExportedPackages(
                 session.getContext(), cap.getResource(), allCandidates, resourcePkgMap);
 
@@ -735,7 +729,7 @@ public class ResolverImpl implements Resolver
             // parallel lists above. For the dynamically imported package, make
             // sure that the resource doesn't already have a provider for that
             // package, which would be illegal and shouldn't be allowed.
-            if (isDynamicImporting && ((i + 1) == reqs.size()))
+            if (isDynamicImporting && ((i + 1) == wireCandidates.size()))
             {
                 String pkgName = (String) cap.getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE);
                 if (resourcePkgs.m_exportedPkgs.containsKey(pkgName)
@@ -757,8 +751,9 @@ public class ResolverImpl implements Resolver
         }
 
         // Third, have all candidates to calculate their package spaces.
-        for (Capability cap : caps)
+        for (WireCandidate w : wireCandidates)
         {
+            Capability cap = w.capability;
             calculatePackageSpaces(
                 session, cap.getResource(), allCandidates, resourcePkgMap,
                 usesCycleMap, cycle);
@@ -776,10 +771,10 @@ public class ResolverImpl implements Resolver
         if ((wiring == null) || isDynamicImporting)
         {
             // Merge uses constraints from required capabilities.
-            for (int i = 0; i < reqs.size(); i++)
+            for (WireCandidate w : wireCandidates)
             {
-                Requirement req = reqs.get(i);
-                Capability cap = caps.get(i);
+                Requirement req = w.requirement;
+                Capability cap = w.capability;
                 // Ignore bundle/package requirements, since they are
                 // considered below.
                 if (!req.getNamespace().equals(BundleNamespace.BUNDLE_NAMESPACE)
@@ -1884,6 +1879,18 @@ public class ResolverImpl implements Resolver
         for (Entry<String, ArrayMap<Capability, UsedBlames>> entry : packages.m_usedPkgs.entrySet())
         {
             System.out.println("    " + entry.getKey() + " - " + entry.getValue().values());
+        }
+    }
+
+    private static final class WireCandidate
+    {
+        public final Requirement requirement;
+        public final Capability capability;
+
+        public WireCandidate(Requirement requirement, Capability capability)
+        {
+            this.requirement = requirement;
+            this.capability = capability;
         }
     }
 
