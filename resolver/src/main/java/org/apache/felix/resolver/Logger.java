@@ -129,7 +129,7 @@ public class Logger
         }
     }
 
-    public void logUsesConstraintViolation(Resource resource, ResolutionException error)
+    public void logUsesConstraintViolation(Resource resource, ResolutionError error)
     {
         // do nothing by default
     }
