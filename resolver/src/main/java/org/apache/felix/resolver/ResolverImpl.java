@@ -925,11 +925,7 @@ public class ResolverImpl implements Resolver
                     if (w.getRequirement().getNamespace()
                         .equals(BundleNamespace.BUNDLE_NAMESPACE))
                     {
-                        String value = w.getRequirement()
-                            .getDirectives()
-                            .get(BundleNamespace.REQUIREMENT_VISIBILITY_DIRECTIVE);
-                        if ((value != null)
-                            && value.equals(BundleNamespace.VISIBILITY_REEXPORT))
+                        if (Util.isReexport(w.getRequirement()))
                         {
                             mergeCandidatePackages(
                                 rc,
@@ -949,11 +945,7 @@ public class ResolverImpl implements Resolver
                 {
                     if (req.getNamespace().equals(BundleNamespace.BUNDLE_NAMESPACE))
                     {
-                        String value =
-                            req.getDirectives()
-                            .get(BundleNamespace.REQUIREMENT_VISIBILITY_DIRECTIVE);
-                        if ((value != null)
-                            && value.equals(BundleNamespace.VISIBILITY_REEXPORT))
+                        if (Util.isReexport(req))
                         {
                             Capability cap = allCandidates.getFirstCandidate(req);
                             if (cap != null) {
