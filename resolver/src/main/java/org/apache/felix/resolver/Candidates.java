@@ -113,6 +113,11 @@ class Candidates
         m_delta = new OpenHashMapSet<Requirement, Capability>(3);
     }
 
+    public int getNbResources()
+    {
+        return m_populateResultCache.size();
+    }
+
     /**
      * Returns the delta which is the differences in the candidates from the
      * original Candidates permutation.
