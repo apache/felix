@@ -397,7 +397,7 @@ public class ResolverImpl implements Resolver
 
             ResolutionError rethrow = checkPackageSpaceConsistency(
                     session, entry.getValue(),
-                    allCandidates, resourcePkgMap, resultCache);
+                    allCandidates, false, resourcePkgMap, resultCache);
             if (rethrow != null)
             {
                 Resource faultyResource = entry.getKey();
@@ -527,9 +527,9 @@ public class ResolverImpl implements Resolver
 //dumpResourcePkgMap(resourcePkgMap);
 //System.out.println("+++ PACKAGE SPACES END +++");
 
-                        rethrow = checkDynamicPackageSpaceConsistency(session,
+                        rethrow = checkPackageSpaceConsistency(session,
                                 allCandidates.getWrappedHost(host),
-                                allCandidates, resourcePkgMap, new HashMap<Resource, Object>(64));
+                                allCandidates, true, resourcePkgMap, new HashMap<Resource, Object>(64));
                     }
                     while ((rethrow != null)
                         && ((usesPermutations.size() > 0) || (importPermutations.size() > 0)));
@@ -1150,24 +1150,14 @@ public class ResolverImpl implements Resolver
         ResolveSession session,
         Resource resource,
         Candidates allCandidates,
+        boolean dynamic,
         Map<Resource, Packages> resourcePkgMap,
         Map<Resource, Object> resultCache)
     {
-        if (session.getContext().getWirings().containsKey(resource))
+        if (!dynamic && session.getContext().getWirings().containsKey(resource))
         {
             return null;
         }
-        return checkDynamicPackageSpaceConsistency(
-            session, resource, allCandidates, resourcePkgMap, resultCache);
-    }
-
-    private ResolutionError checkDynamicPackageSpaceConsistency(
-        ResolveSession session,
-        Resource resource,
-        Candidates allCandidates,
-        Map<Resource, Packages> resourcePkgMap,
-        Map<Resource, Object> resultCache)
-    {
         Object cache = resultCache.get(resource);
         if (cache != null)
         {
@@ -1437,7 +1427,7 @@ public class ResolverImpl implements Resolver
                 {
                     rethrow = checkPackageSpaceConsistency(
                             session, cap.getResource(),
-                            allCandidates, resourcePkgMap, resultCache);
+                            allCandidates, false, resourcePkgMap, resultCache);
                     if (rethrow != null)
                     {
                         // If the lower level check didn't create any permutations,
