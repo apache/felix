@@ -395,7 +395,7 @@ public class ResolverImpl implements Resolver
                             wireMap =
                                 populateWireMap(
                                     rc, allCandidates.getWrappedHost(target),
-                                    resourcePkgMap, wireMap, allCandidates);
+                                    wireMap, allCandidates);
                         }
                     }
                 }
@@ -575,7 +575,7 @@ public class ResolverImpl implements Resolver
                             allCandidates = session.getMultipleCardCandidates();
                         }
                         wireMap = populateDynamicWireMap(rc,
-                            host, dynamicReq, resourcePkgMap, wireMap, allCandidates);
+                            host, dynamicReq, wireMap, allCandidates);
                     }
                 }
                 finally
@@ -1722,7 +1722,7 @@ public class ResolverImpl implements Resolver
     }
 
     private static Map<Resource, List<Wire>> populateWireMap(
-        ResolveContext rc, Resource resource, Map<Resource, Packages> resourcePkgMap,
+        ResolveContext rc, Resource resource,
         Map<Resource, List<Wire>> wireMap, Candidates allCandidates)
     {
         Resource unwrappedResource = getDeclaredResource(resource);
@@ -1750,7 +1750,7 @@ public class ResolverImpl implements Resolver
                         {
                             // Populate wires for the candidate
                             populateWireMap(rc, cand.getResource(),
-                                    resourcePkgMap, wireMap, allCandidates);
+                                    wireMap, allCandidates);
 
                             Resource provider;
                             if (req.getNamespace().equals(IdentityNamespace.IDENTITY_NAMESPACE)) {
@@ -1880,7 +1880,6 @@ public class ResolverImpl implements Resolver
 
     private static Map<Resource, List<Wire>> populateDynamicWireMap(
         ResolveContext rc, Resource resource, Requirement dynReq,
-        Map<Resource, Packages> resourcePkgMap,
         Map<Resource, List<Wire>> wireMap, Candidates allCandidates)
     {
         wireMap.put(resource, Collections.<Wire>emptyList());
@@ -1893,7 +1892,7 @@ public class ResolverImpl implements Resolver
 
         if (!rc.getWirings().containsKey(dynCand.getResource()))
         {
-            populateWireMap(rc, dynCand.getResource(), resourcePkgMap,
+            populateWireMap(rc, dynCand.getResource(),
                 wireMap, allCandidates);
         }
 
