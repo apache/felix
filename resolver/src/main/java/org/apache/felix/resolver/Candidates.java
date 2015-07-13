@@ -24,15 +24,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.apache.felix.resolver.util.CopyOnWriteSet;
 import org.apache.felix.resolver.util.CopyOnWriteList;
+import org.apache.felix.resolver.util.CopyOnWriteSet;
 import org.apache.felix.resolver.util.OpenHashMap;
 import org.apache.felix.resolver.util.OpenHashMapList;
 import org.apache.felix.resolver.util.OpenHashMapSet;
@@ -63,7 +62,7 @@ class Candidates
     // when a revision being resolved has fragments to attach to it.
     private final Map<Resource, WrappedResource> m_allWrappedHosts;
     // Map used when populating candidates to hold intermediate and final results.
-    private final Map<Resource, Object> m_populateResultCache;
+    private final OpenHashMap<Resource, Object> m_populateResultCache;
 
     // Flag to signal if fragments are present in the candidate map.
     private boolean m_fragmentsPresent = false;
@@ -81,7 +80,8 @@ class Candidates
         Set<Resource> mandatoryResources,
         OpenHashMapSet<Capability, Requirement> dependentMap,
         OpenHashMapList<Requirement, Capability> candidateMap,
-        Map<Resource, WrappedResource> wrappedHosts, Map<Resource, Object> populateResultCache,
+        Map<Resource, WrappedResource> wrappedHosts,
+        OpenHashMap<Resource, Object> populateResultCache,
         boolean fragmentsPresent,
         Map<Resource, Boolean> onDemandResources,
         Map<Capability, Requirement> substitutableMap,
@@ -107,9 +107,9 @@ class Candidates
         m_dependentMap = new OpenHashMapSet<Capability, Requirement>();
         m_candidateMap = new OpenHashMapList<Requirement, Capability>();
         m_allWrappedHosts = new HashMap<Resource, WrappedResource>();
-        m_populateResultCache = new LinkedHashMap<Resource, Object>();
+        m_populateResultCache = new OpenHashMap<Resource, Object>();
         m_validOnDemandResources = validOnDemandResources;
-        m_subtitutableMap = new LinkedHashMap<Capability, Requirement>();
+        m_subtitutableMap = new OpenHashMap<Capability, Requirement>();
         m_delta = new OpenHashMapSet<Requirement, Capability>(3);
     }
 
@@ -373,7 +373,7 @@ class Candidates
 
     private void populateSubstitutables()
     {
-        for (Map.Entry<Resource, Object> populated : m_populateResultCache.entrySet())
+        for (Map.Entry<Resource, Object> populated : m_populateResultCache.fast())
         {
             if (populated.getValue() instanceof Boolean)
             {
@@ -395,16 +395,16 @@ class Candidates
         {
             return;
         }
-        Map<String, List<Capability>> exportNames = new LinkedHashMap<String, List<Capability>>();
+        OpenHashMap<String, List<Capability>> exportNames = new OpenHashMap<String, List<Capability>>() {
+            @Override
+            protected List<Capability> compute(String s) {
+                return new ArrayList<Capability>(1);
+            }
+        };
         for (Capability packageExport : packageExports)
         {
             String packageName = (String) packageExport.getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE);
-            List<Capability> caps = exportNames.get(packageName);
-            if (caps == null)
-            {
-                caps = new ArrayList<Capability>(1);
-                exportNames.put(packageName, caps);
-            }
+            List<Capability> caps = exportNames.getOrCompute(packageName);
             caps.add(packageExport);
         }
         // Check if any requirements substitute one of the exported packages
@@ -413,18 +413,13 @@ class Candidates
             List<Capability> substitutes = m_candidateMap.get(req);
             if (substitutes != null && !substitutes.isEmpty())
             {
-                String packageName = (String) substitutes.iterator().next().getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE);
+                String packageName = (String) substitutes.get(0).getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE);
                 List<Capability> exportedPackages = exportNames.get(packageName);
                 if (exportedPackages != null)
                 {
                     // The package is exported;
                     // Check if the requirement only has the bundle's own export as candidates
-                    substitutes = new ArrayList<Capability>(substitutes);
-                    for (Capability exportedPackage : exportedPackages)
-                    {
-                        substitutes.remove(exportedPackage);
-                    }
-                    if (!substitutes.isEmpty())
+                    if (!exportedPackages.containsAll(substitutes))
                     {
                         for (Capability exportedPackage : exportedPackages)
                         {
@@ -443,7 +438,7 @@ class Candidates
 
     ResolutionError checkSubstitutes(List<Candidates> importPermutations)
     {
-        Map<Capability, Integer> substituteStatuses = new LinkedHashMap<Capability, Integer>(m_subtitutableMap.size());
+        OpenHashMap<Capability, Integer> substituteStatuses = new OpenHashMap<Capability, Integer>(m_subtitutableMap.size());
         for (Capability substitutable : m_subtitutableMap.keySet())
         {
             // initialize with unprocessed
@@ -456,7 +451,7 @@ class Candidates
         }
 
         // Remove any substituted exports from candidates
-        for (Map.Entry<Capability, Integer> substituteStatus : substituteStatuses.entrySet())
+        for (Map.Entry<Capability, Integer> substituteStatus : substituteStatuses.fast())
         {
             if (substituteStatus.getValue() == SUBSTITUTED)
             {
@@ -817,7 +812,7 @@ class Candidates
         List<Capability> candidates = m_candidateMap.get(req);
         if (candidates != null && !candidates.isEmpty())
         {
-            return m_candidateMap.get(req).get(0);
+            return candidates.get(0);
         }
         return null;
     }
@@ -832,11 +827,7 @@ class Candidates
             m_candidateMap.remove(req);
         }
         // Update the delta with the removed capability
-        CopyOnWriteSet<Capability> capPath = m_delta.get(req);
-        if (capPath == null) {
-            capPath = new CopyOnWriteSet<Capability>();
-            m_delta.put(req, capPath);
-        }
+        CopyOnWriteSet<Capability> capPath = m_delta.getOrCompute(req);
         capPath.add(cap);
     }
 
@@ -845,11 +836,7 @@ class Candidates
         List<Capability> l = m_candidateMap.get(req);
         l.removeAll(caps);
         // Update candidates delta with the removed capabilities.
-        CopyOnWriteSet<Capability> capPath = m_delta.get(req);
-        if (capPath == null) {
-            capPath = new CopyOnWriteSet<Capability>();
-            m_delta.put(req, capPath);
-        }
+        CopyOnWriteSet<Capability> capPath = m_delta.getOrCompute(req);
         capPath.addAll(caps);
         return l;
     }
@@ -1089,18 +1076,14 @@ class Candidates
     {
         Map<Capability, Map<String, Map<Version, List<Requirement>>>> hostFragments =
             new HashMap<Capability, Map<String, Map<Version, List<Requirement>>>>();
-        for (Entry<Requirement, CopyOnWriteList<Capability>> entry : m_candidateMap.entrySet()) {
+        for (Entry<Requirement, CopyOnWriteList<Capability>> entry : m_candidateMap.fast())
+        {
             Requirement req = entry.getKey();
             List<Capability> caps = entry.getValue();
             for (Capability cap : caps)
             {
                 // Record the requirement as dependent on the capability.
-                CopyOnWriteSet<Requirement> dependents = m_dependentMap.get(cap);
-                if (dependents == null)
-                {
-                    dependents = new CopyOnWriteSet<Requirement>();
-                    m_dependentMap.put(cap, dependents);
-                }
+                CopyOnWriteSet<Requirement> dependents = m_dependentMap.getOrCompute(cap);
                 dependents.add(req);
 
                 // Keep track of hosts and associated fragments.
