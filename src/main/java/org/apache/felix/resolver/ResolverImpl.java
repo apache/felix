@@ -31,6 +31,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.felix.resolver.util.ArrayMap;
+import org.apache.felix.resolver.util.OpenHashMap;
 import org.osgi.framework.namespace.BundleNamespace;
 import org.osgi.framework.namespace.ExecutionEnvironmentNamespace;
 import org.osgi.framework.namespace.HostNamespace;
@@ -820,7 +822,7 @@ public class ResolverImpl implements Resolver
                 }
             }
             // Merge uses constraints from imported packages.
-            for (Entry<String, List<Blame>> entry : resourcePkgs.m_importedPkgs.entrySet())
+            for (Entry<String, List<Blame>> entry : resourcePkgs.m_importedPkgs.fast())
             {
                 for (Blame blame : entry.getValue())
                 {
@@ -844,7 +846,7 @@ public class ResolverImpl implements Resolver
                 }
             }
             // Merge uses constraints from required bundles.
-            for (Entry<String, List<Blame>> entry : resourcePkgs.m_requiredPkgs.entrySet())
+            for (Entry<String, List<Blame>> entry : resourcePkgs.m_requiredPkgs.fast())
             {
                 for (Blame blame : entry.getValue())
                 {
@@ -908,7 +910,7 @@ public class ResolverImpl implements Resolver
             {
                 // We have to merge all exported packages from the candidate,
                 // since the current resource requires it.
-                for (Entry<String, Blame> entry : candPkgs.m_exportedPkgs.entrySet())
+                for (Entry<String, Blame> entry : candPkgs.m_exportedPkgs.fast())
                 {
                     mergeCandidatePackage(
                         current,
@@ -989,15 +991,10 @@ public class ResolverImpl implements Resolver
 
             Packages currentPkgs = resourcePkgMap.get(current);
 
-            Map<String, List<Blame>> packages = (requires)
+            OpenHashMap<String, List<Blame>> packages = (requires)
                 ? currentPkgs.m_requiredPkgs
                 : currentPkgs.m_importedPkgs;
-            List<Blame> blames = packages.get(pkgName);
-            if (blames == null)
-            {
-                blames = new ArrayList<Blame>();
-                packages.put(pkgName, blames);
-            }
+            List<Blame> blames = packages.getOrCompute(pkgName);
             blames.add(new Blame(candCap, blameReqs));
 
 //dumpResourcePkgs(current, currentPkgs);
@@ -1087,12 +1084,7 @@ public class ResolverImpl implements Resolver
                     continue;
                 }
 
-                Map<Capability, UsedBlames> usedPkgBlames = currentPkgs.m_usedPkgs.get(usedPkgName);
-                if (usedPkgBlames == null)
-                {
-                    usedPkgBlames = new LinkedHashMap<Capability, UsedBlames>();
-                    currentPkgs.m_usedPkgs.put(usedPkgName, usedPkgBlames);
-                }
+                ArrayMap<Capability, UsedBlames> usedPkgBlames = currentPkgs.m_usedPkgs.getOrCompute(usedPkgName);
                 for (Blame blame : candSourceBlames)
                 {
                     if (blame.m_reqs != null)
@@ -1153,20 +1145,14 @@ public class ResolverImpl implements Resolver
     }
 
     private static void addUsedBlame(
-        Map<Capability, UsedBlames> usedBlames, Capability usedCap,
+        ArrayMap<Capability, UsedBlames> usedBlames, Capability usedCap,
         List<Requirement> blameReqs, Capability matchingCap)
     {
         // Create a new Blame based off the used capability and the
         // blame chain requirements.
         Blame newBlame = new Blame(usedCap, blameReqs);
         // Find UsedBlame that uses the same capablity as the new blame.
-        UsedBlames addToBlame = usedBlames.get(usedCap);
-        if (addToBlame == null)
-        {
-            // If none exist create a new UsedBlame for the capability.
-            addToBlame = new UsedBlames(usedCap);
-            usedBlames.put(usedCap, addToBlame);
-        }
+        UsedBlames addToBlame = usedBlames.getOrCompute(usedCap);
         // Add the new Blame and record the matching capability cause
         // in case the root requirement has multiple cardinality.
         addToBlame.addBlame(newBlame, matchingCap);
@@ -1213,7 +1199,7 @@ public class ResolverImpl implements Resolver
         // TODO: Is this only needed for imports or are generic and bundle requirements also needed?
         //       I think this is only a special case for fragment imports because they can overlap
         //       host imports, which is not allowed in normal metadata.
-        for (Entry<String, List<Blame>> entry : pkgs.m_importedPkgs.entrySet())
+        for (Entry<String, List<Blame>> entry : pkgs.m_importedPkgs.fast())
         {
             if (entry.getValue().size() > 1)
             {
@@ -1249,7 +1235,7 @@ public class ResolverImpl implements Resolver
         }
 
         // Check if there are any uses conflicts with exported packages.
-        for (Entry<String, Blame> entry : pkgs.m_exportedPkgs.entrySet())
+        for (Entry<String, Blame> entry : pkgs.m_exportedPkgs.fast())
         {
             String pkgName = entry.getKey();
             Blame exportBlame = entry.getValue();
@@ -1332,12 +1318,12 @@ public class ResolverImpl implements Resolver
         // We combine the imported and required packages here into one map.
         // Imported packages are added after required packages because they shadow or override
         // the packages from required bundles.
-        Map<String, List<Blame>> allImportRequirePkgs =
-            new LinkedHashMap<String, List<Blame>>(pkgs.m_requiredPkgs.size() + pkgs.m_importedPkgs.size());
+        OpenHashMap<String, List<Blame>> allImportRequirePkgs =
+            new OpenHashMap<String, List<Blame>>(pkgs.m_requiredPkgs.size() + pkgs.m_importedPkgs.size());
         allImportRequirePkgs.putAll(pkgs.m_requiredPkgs);
         allImportRequirePkgs.putAll(pkgs.m_importedPkgs);
 
-        for (Entry<String, List<Blame>> requirementBlames : allImportRequirePkgs.entrySet())
+        for (Entry<String, List<Blame>> requirementBlames : allImportRequirePkgs.fast())
         {
             String pkgName = requirementBlames.getKey();
             if (!pkgs.m_usedPkgs.containsKey(pkgName))
@@ -1952,7 +1938,7 @@ public class ResolverImpl implements Resolver
             System.out.println("    " + entry.getKey() + " - " + entry.getValue());
         }
         System.out.println("  USED");
-        for (Entry<String, Map<Capability, UsedBlames>> entry : packages.m_usedPkgs.entrySet())
+        for (Entry<String, ArrayMap<Capability, UsedBlames>> entry : packages.m_usedPkgs.entrySet())
         {
             System.out.println("    " + entry.getKey() + " - " + entry.getValue().values());
         }
@@ -2099,16 +2085,39 @@ public class ResolverImpl implements Resolver
 
     private static class Packages
     {
-        private final Resource m_resource;
-        public final Map<String, Blame> m_exportedPkgs = new LinkedHashMap<String, Blame>(32);
-        public final Map<String, List<Blame>> m_importedPkgs = new LinkedHashMap<String, List<Blame>>(32);
-        public final Map<String, List<Blame>> m_requiredPkgs = new LinkedHashMap<String, List<Blame>>(32);
-        public final Map<String, Map<Capability, UsedBlames>> m_usedPkgs = new LinkedHashMap<String, Map<Capability, UsedBlames>>(32);
+        public final OpenHashMap<String, Blame> m_exportedPkgs;
+        public final OpenHashMap<String, List<Blame>> m_importedPkgs;
+        public final OpenHashMap<String, List<Blame>> m_requiredPkgs;
+        public final OpenHashMap<String, ArrayMap<Capability, UsedBlames>> m_usedPkgs;
         public boolean m_isCalculated = false;
 
         public Packages(Resource resource)
         {
-            m_resource = resource;
+            int nbCaps = resource.getCapabilities(null).size();
+            int nbReqs = resource.getRequirements(null).size();
+
+            m_exportedPkgs = new OpenHashMap<String, Blame>(nbCaps);
+            m_importedPkgs = new OpenHashMap<String, List<Blame>>(nbReqs) {
+                public List<Blame> compute(String s) {
+                    return new ArrayList<Blame>();
+                }
+            };
+            m_requiredPkgs = new OpenHashMap<String, List<Blame>>(nbReqs) {
+                public List<Blame> compute(String s) {
+                    return new ArrayList<Blame>();
+                }
+            };
+            m_usedPkgs = new OpenHashMap<String, ArrayMap<Capability, UsedBlames>>(128) {
+                @Override
+                protected ArrayMap<Capability, UsedBlames> compute(String s) {
+                    return new ArrayMap<Capability, UsedBlames>() {
+                        @Override
+                        protected UsedBlames compute(Capability key) {
+                            return new UsedBlames(key);
+                        }
+                    };
+                }
+            };
         }
     }
 
