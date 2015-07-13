@@ -644,11 +644,7 @@ public class ResolverImpl implements Resolver
                 // matching dynamic imports.
                 Requirement r = wire.getRequirement();
                 if (!r.getResource().equals(wire.getRequirer())
-                    || ((r.getDirectives()
-                    .get(PackageNamespace.REQUIREMENT_RESOLUTION_DIRECTIVE) != null)
-                    && r.getDirectives()
-                    .get(PackageNamespace.REQUIREMENT_RESOLUTION_DIRECTIVE)
-                    .equals(PackageNamespace.RESOLUTION_DYNAMIC)))
+                    || Util.isDynamic(r))
                 {
                     r = new WrappedRequirement(wire.getRequirer(), r);
                 }
