@@ -129,7 +129,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         // enable
         cm.enableInternal();
         //activate immediately
-        cm.activateInternal( getTrackingCount().get() );
+        cm.activateInternal( );
 
         ComponentInstance instance;
         if ( getComponentMetadata().isPersistentFactoryComponent() ) 
