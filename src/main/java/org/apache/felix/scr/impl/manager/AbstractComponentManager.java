@@ -396,7 +396,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
             enableInternal();
             if ( !async )
             {
-                activateInternal( m_trackingCount.get() );
+                activateInternal( );
             }
         }
         finally
@@ -419,7 +419,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
                 {
                     try
                     {
-                        activateInternal( m_trackingCount.get() );
+                        activateInternal( );
                     }
                     finally
                     {
@@ -644,7 +644,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         log( LogService.LOG_DEBUG, "Component enabled", null );
     }
 
-    final void activateInternal( int trackingCount )
+    final void activateInternal( )
     {
         log( LogService.LOG_DEBUG, "ActivateInternal",
                 null );

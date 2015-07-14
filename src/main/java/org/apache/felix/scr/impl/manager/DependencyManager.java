@@ -68,7 +68,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
 
     private final int m_index;
 
-    private final Customizer<S, T> m_customizer;
+    private volatile Customizer<S, T> m_customizer;
 
     //only set once, but it's not clear there is enough other synchronization to get the correct object before it's used.
     private volatile ReferenceMethods m_bindMethods;
@@ -260,7 +260,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         {
             if ( cardinalityJustSatisfied( serviceCount ) )
             {
-                m_componentManager.activateInternal( trackingCount );
+                m_componentManager.activateInternal( );
             }
         }
 
@@ -330,7 +330,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                     m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic, activating", new Object[] {getName(), trackingCount}, null );
                     tracked( trackingCount );
                     tracked = true;
-                    m_componentManager.activateInternal( trackingCount );
+                    m_componentManager.activateInternal( );
                 }
                 else
                 {
@@ -449,12 +449,12 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                         "Dependency Manager: Static dependency on {0}/{1} is broken", new Object[]
                         {getName(), m_dependencyMetadata.getInterface()}, null );
                 m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, false );
-                m_componentManager.activateInternal( trackingCount );
+                m_componentManager.activateInternal( );
 
             }
             else if ( isTrackerOpened() && cardinalityJustSatisfied( serviceCount ) )
             {
-                m_componentManager.activateInternal( trackingCount );
+                m_componentManager.activateInternal( );
             }
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticGreedy added {2} (exit)", new Object[] {getName(), trackingCount, serviceReference}, null );
         }
@@ -483,7 +483,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                         {getName(), m_dependencyMetadata.getInterface()}, null );
                 m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, false );
                 //try to reactivate after ref is no longer tracked.
-                m_componentManager.activateInternal( trackingCount );
+                m_componentManager.activateInternal( );
             }
             else if ( !cardinalitySatisfied( getTracker().getServiceCount() ) ) //may be called from an old tracker, so getTracker() may give a different answer
             {
@@ -555,7 +555,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             tracked( trackingCount );
             if ( isTrackerOpened() && cardinalityJustSatisfied( serviceCount ) && !isActive())
             {
-                m_componentManager.activateInternal( trackingCount );
+                m_componentManager.activateInternal( );
             }
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticReluctant added {2} (exit)", new Object[] {getName(), trackingCount, serviceReference}, null );
         }
@@ -589,7 +589,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                     m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, false );
 
                     // FELIX-2368: immediately try to reactivate
-                    m_componentManager.activateInternal( trackingCount );
+                    m_componentManager.activateInternal( );
 
                 }
             }
@@ -721,7 +721,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 {
                     tracked( trackingCount );
                     tracked = true;
-                    m_componentManager.activateInternal( trackingCount );
+                    m_componentManager.activateInternal( );
                 }
             }
             this.trackingCount = trackingCount;
@@ -910,7 +910,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 if ( reactivate )
                 {
                     m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, false );
-                    m_componentManager.activateInternal( trackingCount );
+                    m_componentManager.activateInternal( );
                 }
                 else
                 {
@@ -919,7 +919,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             }
             else if (isTrackerOpened() && cardinalityJustSatisfied( serviceCount ) )
             {
-                m_componentManager.activateInternal( trackingCount );
+                m_componentManager.activateInternal( );
             }
             else
             {
@@ -954,7 +954,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                         this.refPair = null;
                     }
                 }
-                m_componentManager.activateInternal( trackingCount );            	
+                m_componentManager.activateInternal( );            	
             }
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic modified {2} (exit)", new Object[] {getName(), trackingCount, serviceReference}, null );            
         }
@@ -984,7 +984,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                         this.refPair = null;
                     }
                 }
-                m_componentManager.activateInternal( trackingCount );
+                m_componentManager.activateInternal( );
             }
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic removed {2} (exit)", new Object[] {getName(), trackingCount, serviceReference}, null );
         }

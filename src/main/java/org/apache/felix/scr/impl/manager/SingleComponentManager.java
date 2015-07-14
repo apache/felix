@@ -595,7 +595,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                     log( LogService.LOG_DEBUG, "Attempting to activate unsatisfied component", null );
                     updateTargets( getProperties() );
                     releaseActivationWriteeLock( "reconfigure.unsatisfied" );
-                    activateInternal( getTrackingCount().get() );
+                    activateInternal( );
                     return;
                 }
 
@@ -624,7 +624,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                         {
                             releaseActivationWriteeLock("reconfigure.deactivate.activate");
                         }
-                        activateInternal(getTrackingCount().get());
+                        activateInternal();
                     }
                 }
             }
