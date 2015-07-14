@@ -18,10 +18,12 @@
  */
 package org.apache.felix.scr.impl.manager;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
 import java.lang.reflect.Field;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.felix.scr.impl.config.ComponentContainer;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
@@ -67,10 +69,15 @@ public class SingleComponentManagerTest
 
         scm.m_internalEnabled = true;
         assertSame(implObj, scm.getService(null, null));
+
+        Field u = SingleComponentManager.class.getDeclaredField("m_useCount");
+        u.setAccessible(true);
+        AtomicInteger use = (AtomicInteger) u.get(scm);
+        assertEquals(1, use.get());
     }
 
     @Test
-    public void testGetServiceWithNullComponentContext()
+    public void testGetServiceWithNullComponentContext() throws Exception
     {
         ComponentMetadata cm = new ComponentMetadata(DSVersion.DS13);
         cm.setImplementationClassName("foo.bar.SomeClass");
@@ -90,5 +97,10 @@ public class SingleComponentManagerTest
         scm.m_internalEnabled = true;
         assertNull("m_componentContext is null, this should not cause an NPE",
                 scm.getService(null, null));
+
+        Field u = SingleComponentManager.class.getDeclaredField("m_useCount");
+        u.setAccessible(true);
+        AtomicInteger use = (AtomicInteger) u.get(scm);
+        assertEquals(0, use.get());
     }
 }
