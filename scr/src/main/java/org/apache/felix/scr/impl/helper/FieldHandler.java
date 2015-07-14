@@ -302,7 +302,7 @@ public class FieldHandler
             {
                 logger.log( LogService.LOG_ERROR, "Field {0} in component {1} has unsupported type {2}", new Object[]
                         {metadata.getField(), this.componentClass, fieldType.getName()}, null );
-                return null;
+                valueType = ParamType.ignore;
             }
 
             // if the field is dynamic, it has to be volatile (field is ignored, case logged) (112.3.8.1)
@@ -348,30 +348,28 @@ public class FieldHandler
             {
                 logger.log( LogService.LOG_ERROR, "Field {0} in component {1} has unsupported type {2}", new Object[]
                         {metadata.getField(), this.componentClass, fieldType.getName()}, null );
-                return null;
+                valueType = ParamType.ignore;
             }
 
-            // if the field is dynamic with the replace strategy it has to be volatile (field is ignored, case logged) (112.3.8.1)
-            if ( !metadata.isStatic() && metadata.isReplace() )
+            // additional checks for replace strategy:
+            if ( metadata.isReplace()  )
             {
-                if ( !Modifier.isVolatile(f.getModifiers()) )
+                // if the field is dynamic wit has to be volatile (field is ignored, case logged) (112.3.8.1)
+                if ( !metadata.isStatic() && !Modifier.isVolatile(f.getModifiers()) )
                 {
                     logger.log( LogService.LOG_ERROR, "Field {0} in component {1} must be declared volatile to handle a dynamic reference", new Object[]
                             {metadata.getField(), this.componentClass}, null );
                     valueType = ParamType.ignore;
                 }
-            }
 
-            // replace strategy: field must not be final (field is ignored, case logged) (112.3.8.1)
-            //                   only collection and list allowed
-            if ( metadata.isReplace()  )
-            {
+                // replace strategy: field must not be final (field is ignored, case logged) (112.3.8.1)
+                //                   only collection and list allowed
                 if ( fieldType != ClassUtils.LIST_CLASS && fieldType != ClassUtils.COLLECTION_CLASS )
                 {
                     logger.log( LogService.LOG_ERROR, "Field {0} in component {1} has unsupported type {2}."+
-                    " It must be one of java.util.Collection or java.util.List.",
-                    new Object[] {metadata.getField(), this.componentClass, fieldType.getName()}, null );
-                    return null;
+                        " It must be one of java.util.Collection or java.util.List.",
+                        new Object[] {metadata.getField(), this.componentClass, fieldType.getName()}, null );
+                    valueType = ParamType.ignore;
 
                 }
                 if ( Modifier.isFinal(f.getModifiers()) )
@@ -465,44 +463,48 @@ public class FieldHandler
     {
         try
         {
-            if ( metadata.isMultiple()
-                 && !metadata.isStatic() )
-            {
-                if ( metadata.isReplace()  )
-                {
-                    this.setFieldValue(componentInstance, Collections.emptyList());
-                }
-                else
-                {
-                    final Class<?> fieldType = this.field.getType();
-
-                    // update strategy: if DS implementation provides collection implementation
-                    //                  only list and collection are allowed, field must not be final
-                    final Object providedImpl = this.getFieldValue(componentInstance);
-                    if ( providedImpl == null)
-                    {
-                        if ( Modifier.isFinal(this.field.getModifiers()) )
-                        {
-                            logger.log( LogService.LOG_ERROR, "Field {0} in component {1} must not be declared as final", new Object[]
-                                    {metadata.getField(), this.componentClass}, null );
-                            return false;
-                        }
-                        if ( fieldType != ClassUtils.LIST_CLASS && fieldType != ClassUtils.COLLECTION_CLASS )
-                        {
-                            logger.log( LogService.LOG_ERROR, "Field {0} in component {1} has unsupported type {2}."+
-                            " It must be one of java.util.Collection or java.util.List.",
-                                new Object[] {metadata.getField(), this.componentClass, fieldType.getName()}, null );
-                            return false;
-                        }
-                        this.setFieldValue(componentInstance, new CopyOnWriteArraySet<Object>());
-                    }
-                }
-            }
-            
-            // null the field if optional and unary
-            if ( !metadata.isMultiple() && metadata.isOptional() )
-            {
-            	this.setFieldValue(componentInstance, null);
+        	// only optional field need initialization
+        	if ( metadata.isOptional() )
+        	{
+	            if ( metadata.isMultiple() )
+	            {
+	                if ( metadata.isReplace()  )
+	                {
+	                    this.setFieldValue(componentInstance, new ArrayList<Object>());
+	                }
+	                else
+	                {
+	                    final Class<?> fieldType = this.field.getType();
+	
+	                    // update strategy: if DS implementation provides collection implementation
+	                    //                  only list and collection are allowed, field must not be final
+	                    final Object providedImpl = this.getFieldValue(componentInstance);
+	                    if ( providedImpl == null)
+	                    {
+	                        if ( Modifier.isFinal(this.field.getModifiers()) )
+	                        {
+	                            logger.log( LogService.LOG_ERROR, "Field {0} in component {1} must not be declared as final", new Object[]
+	                                    {metadata.getField(), this.componentClass}, null );
+	                            valueType = ParamType.ignore;
+	                            return true;
+	                        }
+	                        if ( fieldType != ClassUtils.LIST_CLASS && fieldType != ClassUtils.COLLECTION_CLASS )
+	                        {
+	                            logger.log( LogService.LOG_ERROR, "Field {0} in component {1} has unsupported type {2}."+
+	                                " It must be one of java.util.Collection or java.util.List.",
+	                                new Object[] {metadata.getField(), this.componentClass, fieldType.getName()}, null );
+	                            valueType = ParamType.ignore;
+	                            return true;
+	                        }
+	                        this.setFieldValue(componentInstance, new CopyOnWriteArraySet<Object>());
+	                    }
+	                }
+	            }
+	            else
+	            {
+	            	// null the field if optional and unary
+	            	this.setFieldValue(componentInstance, null);
+	            }
             }
         }
         catch ( final InvocationTargetException ite)
