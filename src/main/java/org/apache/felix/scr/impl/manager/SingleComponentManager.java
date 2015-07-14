@@ -450,7 +450,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 	{
                 		servicePids.addAll((List)configPropServicePids);
                 	}
-                	else 
+                	else
                 	{
                 		servicePids.add(configPropServicePids.toString());
                 	}
@@ -458,7 +458,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                     {
                         servicePids.add((String)m_factoryProperties.get(Constants.SERVICE_PID));
                     }
-                    
+
                 	if ( servicePids.size() == 1 )
                 	{
                 		props.put(Constants.SERVICE_PID, servicePids.get(0));
@@ -761,10 +761,11 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     public S getService( Bundle bundle, ServiceRegistration<S> serviceRegistration )
     {
         boolean success = getServiceInternal();
-        if ( success )
+        ComponentContextImpl<S> componentContext = m_componentContext;
+        if ( success && componentContext != null)
         {
             m_useCount.incrementAndGet();
-            return m_componentContext.getImplementationObject( true );
+            return componentContext.getImplementationObject( true );
         }
         else
         {
