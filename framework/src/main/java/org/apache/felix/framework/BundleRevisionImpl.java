@@ -202,7 +202,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
 
     static List<Capability> asCapabilityList(List reqs)
     {
-        return (List<Capability>) reqs;
+        return reqs;
     }
 
     public List<BundleCapability> getDeclaredCapabilities(String namespace)
@@ -229,7 +229,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
 
     static List<Requirement> asRequirementList(List reqs)
     {
-        return (List<Requirement>) reqs;
+        return reqs;
     }
 
     public List<BundleRequirement> getDeclaredRequirements(String namespace)
@@ -517,6 +517,9 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         // each bundle class path entry...this isn't very
         // clean or meaningful, but the Spring guys want it.
         final List<Content> contentPath = getContentPath();
+        if (contentPath == null)
+            return Collections.emptyEnumeration();
+
         if (name.equals("/"))
         {
             for (int i = 0; i < contentPath.size(); i++)
