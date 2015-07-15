@@ -721,15 +721,6 @@ public class ReferenceMetadata
                     throw componentMetadata.validationFailure( "Field value type must be one of " + FIELD_VALUE_TYPE_VALID );
                 }
             }
-
-            // static references only allow replace strategy
-            if ( m_isStatic )
-            {
-                if ( ! m_field_option.equals(FIELD_STRATEGY_REPLACE) )
-                {
-                    throw componentMetadata.validationFailure( "Field strategy update not allowed for static field references." );
-                }
-            }
         }
 
         m_validated = true;
