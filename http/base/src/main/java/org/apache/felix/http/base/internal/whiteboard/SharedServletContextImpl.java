@@ -194,7 +194,7 @@ public class SharedServletContextImpl implements ServletContext
     @Override
     public void declareRoles(final String... roleNames)
     {
-        this.context.declareRoles(roleNames);
+        throw new UnsupportedOperationException();
     }
 
     @Override
