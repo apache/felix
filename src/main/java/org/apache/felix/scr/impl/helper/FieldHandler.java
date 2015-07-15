@@ -478,6 +478,10 @@ public class FieldHandler
     private boolean initField(final Object componentInstance,
             final SimpleLogger logger )
     {
+    	if ( valueType == ParamType.ignore ) 
+    	{
+    		return true;
+    	}
         try
         {
             if ( metadata.isMultiple() )
@@ -990,7 +994,7 @@ public class FieldHandler
 
             public boolean init(final Object componentInstance, final SimpleLogger logger)
             {
-                if ( fieldExists( logger) )
+                if ( fieldExists( logger ) )
                 {
                     return initField(componentInstance, logger);
                 }
