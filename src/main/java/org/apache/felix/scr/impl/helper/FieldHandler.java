@@ -31,6 +31,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
@@ -479,45 +480,52 @@ public class FieldHandler
     {
         try
         {
-        	// only optional field need initialization
-        	if ( metadata.isOptional() )
-        	{
-	            if ( metadata.isMultiple() )
-	            {
-	                if ( metadata.isReplace()  )
-	                {
-	                    this.setFieldValue(componentInstance, new ArrayList<Object>());
-	                }
-	                else
-	                {
-	                    final Class<?> fieldType = this.field.getType();
-	
-	                    // update strategy: if DS implementation provides collection implementation
-	                    //                  only list and collection are allowed, field must not be final
-	                    final Object providedImpl = this.getFieldValue(componentInstance);
-	                    if ( providedImpl == null)
-	                    {
-	                        if ( Modifier.isFinal(this.field.getModifiers()) )
-	                        {
-	                            logger.log( LogService.LOG_ERROR, "Field {0} in component {1} must not be declared as final", new Object[]
-	                                    {metadata.getField(), this.componentClass}, null );
-	                            valueType = ParamType.ignore;
-	                            return true;
-	                        }
-	                        if ( fieldType != ClassUtils.LIST_CLASS && fieldType != ClassUtils.COLLECTION_CLASS )
-	                        {
-	                            logger.log( LogService.LOG_ERROR, "Field {0} in component {1} has unsupported type {2}."+
-	                                " It must be one of java.util.Collection or java.util.List.",
-	                                new Object[] {metadata.getField(), this.componentClass, fieldType.getName()}, null );
-	                            valueType = ParamType.ignore;
-	                            return true;
-	                        }
-	                        this.setFieldValue(componentInstance, new CopyOnWriteArraySet<Object>());
-	                    }
-	                }
-	            }
-	            else
-	            {
+            if ( metadata.isMultiple() )
+            {
+                if ( metadata.isReplace()  )
+                {
+                    this.setFieldValue(componentInstance, new CopyOnWriteArrayList<Object>());
+                }
+                else
+                {
+                    final Class<?> fieldType = this.field.getType();
+
+                    // update strategy: if DS implementation provides collection implementation
+                    //                  only list and collection are allowed, field must not be final
+                    final Object providedImpl = this.getFieldValue(componentInstance);
+                    if ( providedImpl == null)
+                    {
+                        if ( Modifier.isFinal(this.field.getModifiers()) )
+                        {
+                            logger.log( LogService.LOG_ERROR, "Field {0} in component {1} must not be declared as final", new Object[]
+                                    {metadata.getField(), this.componentClass}, null );
+                            valueType = ParamType.ignore;
+                            return true;
+                        }
+                        if ( fieldType != ClassUtils.LIST_CLASS && fieldType != ClassUtils.COLLECTION_CLASS )
+                        {
+                            logger.log( LogService.LOG_ERROR, "Field {0} in component {1} has unsupported type {2}."+
+                                " It must be one of java.util.Collection or java.util.List.",
+                                new Object[] {metadata.getField(), this.componentClass, fieldType.getName()}, null );
+                            valueType = ParamType.ignore;
+                            return true;
+                        }
+                        if ( fieldType == ClassUtils.LIST_CLASS ) 
+                        {
+                        	this.setFieldValue(componentInstance, new CopyOnWriteArrayList<Object>());
+                        } 
+                        else
+                        {
+                        	this.setFieldValue(componentInstance, new CopyOnWriteArraySet<Object>());
+                        }
+                    }
+                }
+            }
+            else
+            {
+            	// only optional field need initialization
+            	if ( metadata.isOptional() )
+            	{
 	            	// null the field if optional and unary
 	            	this.setFieldValue(componentInstance, null);
 	            }
@@ -525,6 +533,8 @@ public class FieldHandler
         }
         catch ( final InvocationTargetException ite)
         {
+            valueType = ParamType.ignore;
+
             logger.log( LogService.LOG_ERROR, "Field {0} in component {1} can't be initialized.",
                     new Object[] {metadata.getField(), this.componentClass}, ite );
             return false;
