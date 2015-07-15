@@ -64,7 +64,6 @@ import org.apache.felix.http.base.internal.runtime.dto.ServletContextDTOBuilder;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.apache.felix.http.base.internal.service.HttpServiceRuntimeImpl;
 import org.apache.felix.http.base.internal.service.ResourceServlet;
-import org.apache.felix.http.base.internal.util.MimeTypes;
 import org.apache.felix.http.base.internal.whiteboard.tracker.FilterTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ListenersTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ResourceTracker;
@@ -168,12 +167,7 @@ public final class WhiteboardManager
                     {
                         return new ServletContextHelper(bundle)
                         {
-
-                            @Override
-                            public String getMimeType(final String file)
-                            {
-                                return MimeTypes.get().getByFile(file);
-                            }
+                            // nothing to override
                         };
                     }
 
