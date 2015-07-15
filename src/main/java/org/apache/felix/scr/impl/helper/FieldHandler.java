@@ -275,6 +275,15 @@ public class FieldHandler
         final Class<?> referenceType = ClassUtils.getClassFromComponentClassLoader(
                 this.componentClass, metadata.getInterface(), logger);
 
+        // ignore static fields
+        if ( Modifier.isStatic(f.getModifiers()))
+        {
+            logger.log( LogService.LOG_ERROR, "Field {0} in component {1} must not be static", new Object[]
+                    {metadata.getField(), this.componentClass}, null );
+        	valueType = ParamType.ignore;
+        	return f;
+        }
+
         // unary reference
         if ( !metadata.isMultiple() )
         {
@@ -379,6 +388,13 @@ public class FieldHandler
                     valueType = ParamType.ignore;
                 }
             }
+        }
+        // static references only allowed for replace strategy
+        if ( metadata.isStatic() && !metadata.isReplace() )
+        {
+            logger.log( LogService.LOG_ERROR, "Update strategy for field {0} in component {1} only allowed for non static field references.", new Object[]
+                    {metadata.getField(), this.componentClass}, null );
+            valueType = ParamType.ignore;
         }
         return f;
     }
@@ -706,7 +722,7 @@ public class FieldHandler
         // no static fields
         if ( Modifier.isStatic( mod ) )
         {
-            return false;
+            return true;
         }
 
         // accept public and protected fields
