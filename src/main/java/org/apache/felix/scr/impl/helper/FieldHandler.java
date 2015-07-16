@@ -645,26 +645,32 @@ public class FieldHandler
                     }
                 }
             }
-            // updated needs only be done, if reference is dynamic
-            // and the value type is map or tuple
+            // updated needs only be done, if the value type is map or tuple
             else if ( mType == METHOD_TYPE.UPDATED)
             {
-                if ( !this.metadata.isStatic()
-                     && (this.valueType == ParamType.map || this.valueType == ParamType.tuple ) )
-                {
-                    final Object obj = getValue(key, refPair);
-                    final Object oldObj = this.boundValues.put(refPair, obj);
-
-                    if ( metadata.isReplace() )
+            	if ( this.valueType == ParamType.map || this.valueType == ParamType.tuple ) 
+            	{
+                    if ( !this.metadata.isStatic() )
                     {
-                        this.setFieldValue(componentInstance, getReplaceCollection());
+	                    final Object obj = getValue(key, refPair);
+	                    final Object oldObj = this.boundValues.put(refPair, obj);
+	
+	                    if ( metadata.isReplace() )
+	                    {
+	                        this.setFieldValue(componentInstance, getReplaceCollection());
+	                    }
+	                    else
+	                    {
+	                        @SuppressWarnings("unchecked")
+	                        final Collection<Object> col = (Collection<Object>)this.getFieldValue(componentInstance);
+	                        col.add(obj);
+	                        col.remove(oldObj);
+	                    }
                     }
                     else
                     {
-                        @SuppressWarnings("unchecked")
-                        final Collection<Object> col = (Collection<Object>)this.getFieldValue(componentInstance);
-                        col.add(obj);
-                        col.remove(oldObj);
+                    	// if it's static we need to reactivate
+                    	return MethodResult.REACTIVATE;
                     }
                 }
             }
