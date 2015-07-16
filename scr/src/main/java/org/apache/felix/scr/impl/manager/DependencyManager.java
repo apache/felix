@@ -462,12 +462,18 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         public void modifiedService( ServiceReference<T> serviceReference, RefPair<S, T> refPair, int trackingCount )
         {
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticGreedy modified {2} (enter)", new Object[] {getName(), trackingCount, serviceReference}, null );
+            boolean reactivate = false;
             if (isActive())
             {
-                m_componentManager.invokeUpdatedMethod( DependencyManager.this, refPair, trackingCount );
+            	reactivate = m_componentManager.invokeUpdatedMethod( DependencyManager.this, refPair, trackingCount );
+            }
+            tracked( trackingCount );
+            if ( reactivate )
+            {
+                m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, false );
+                m_componentManager.activateInternal( );
             }
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticGreedy modified {2} (exit)", new Object[] {getName(), trackingCount, serviceReference}, null );
-            tracked( trackingCount );
         }
 
         public void removedService( ServiceReference<T> serviceReference, RefPair<S, T> refPair, int trackingCount )
@@ -563,13 +569,19 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         public void modifiedService( ServiceReference<T> serviceReference, RefPair<S, T> refPair, int trackingCount )
         {
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticReluctant modified {2} (enter)", new Object[] {getName(), trackingCount, serviceReference}, null );
+            boolean reactivate = false;
             Collection<RefPair<S, T>> refs = this.refs.get();
             if (isActive() && refs.contains( refPair ))
             {
-                m_componentManager.invokeUpdatedMethod( DependencyManager.this, refPair, trackingCount );
+                reactivate = m_componentManager.invokeUpdatedMethod( DependencyManager.this, refPair, trackingCount );
+            }
+            tracked( trackingCount );
+            if ( reactivate )
+            {
+                m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, false );
+                m_componentManager.activateInternal( );
             }
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticReluctant modified {2} (exit)", new Object[] {getName(), trackingCount, serviceReference}, null );
-            tracked( trackingCount );
         }
 
         public void removedService( ServiceReference<T> serviceReference, RefPair<S, T> refPair, int trackingCount )
