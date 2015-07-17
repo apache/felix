@@ -309,18 +309,7 @@ public class SharedServletContextImpl implements ServletContext
     @Override
     public InputStream getResourceAsStream(final String path)
     {
-        final URL res = getResource(path);
-        if (res != null)
-        {
-            try
-            {
-                return res.openStream();
-            }
-            catch (IOException e)
-            {
-                // Do nothing
-            }
-        }
+        // This is implemented by the ServletContext wrapper created in the Dispatcher
         return null;
     }
 

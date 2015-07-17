@@ -174,13 +174,25 @@ public class PerBundleServletContextImpl implements ExtServletContext {
     }
 
     @Override
-    public InputStream getResourceAsStream(String path)
+    public InputStream getResourceAsStream(final String path)
     {
-        return delegatee.getResourceAsStream(path);
+        final URL res = getResource(path);
+        if (res != null)
+        {
+            try
+            {
+                return res.openStream();
+            }
+            catch (IOException e)
+            {
+                // Do nothing
+            }
+        }
+        return null;
     }
 
     @Override
-    public RequestDispatcher getRequestDispatcher(String path)
+    public RequestDispatcher getRequestDispatcher(final String path)
     {
         return delegatee.getRequestDispatcher(path);
     }
