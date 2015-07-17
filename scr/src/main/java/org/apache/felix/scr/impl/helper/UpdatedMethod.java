@@ -19,7 +19,6 @@
 package org.apache.felix.scr.impl.helper;
 
 import org.apache.felix.scr.impl.metadata.DSVersion;
-import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 
 
 /**
