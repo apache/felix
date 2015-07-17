@@ -128,4 +128,9 @@ public final class SharedHttpServiceImpl
             this.handlerRegistry.getRegistry(handler.getContextServiceId()).unregisterFilter(handler.getFilterInfo(), destroy);
         }
     }
+
+	public HandlerRegistry getHandlerRegistry() 
+	{
+		return this.handlerRegistry;
+	}
 }

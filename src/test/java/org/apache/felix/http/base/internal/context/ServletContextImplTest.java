@@ -452,7 +452,7 @@ public class ServletContextImplTest
         this.httpContext = Mockito.mock(HttpContext.class);
         this.listener = new AttributeListener();
         this.context = new ServletContextImpl(this.bundle, globalContext, this.httpContext, this.listener, false,
-                null, null, null, null);
+                null, null, null, null, null);
     }
 
     @Test
@@ -587,9 +587,9 @@ public class ServletContextImplTest
     {
         ServletContext globalContext = new MockServletContext();
         ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, httpContext, listener, true,
-                null, null, null, null);
+                null, null, null, null, null);
         ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, httpContext, listener, true,
-                null, null, null, null);
+                null, null, null, null, null);
 
         Assert.assertNull(ctx1.getAttribute("key1"));
         Assert.assertNull(ctx2.getAttribute("key1"));
@@ -698,9 +698,9 @@ public class ServletContextImplTest
     {
         ServletContext globalContext = new MockServletContext();
         ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, httpContext, listener, true,
-                null, null, null, null);
+                null, null, null, null, null);
         ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, httpContext, listener, true,
-                null, null, null, null);
+                null, null, null, null, null);
 
         Enumeration e = ctx1.getAttributeNames();
         Assert.assertNotNull(e);
@@ -736,9 +736,9 @@ public class ServletContextImplTest
     {
         ServletContext globalContext = new MockServletContext();
         ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, httpContext, listener, false,
-                null, null, null, null);
+                null, null, null, null, null);
         ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, httpContext, listener, false,
-                null, null, null, null);
+                null, null, null, null, null);
 
         Assert.assertNull(ctx1.getAttribute("key1"));
         Assert.assertNull(ctx2.getAttribute("key1"));
@@ -784,9 +784,9 @@ public class ServletContextImplTest
     {
         ServletContext globalContext = new MockServletContext();
         ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, httpContext, listener, false,
-                null, null, null, null);
+                null, null, null, null, null);
         ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, httpContext, listener, false,
-                null, null, null, null);
+                null, null, null, null, null);
 
         Enumeration e = ctx1.getAttributeNames();
         Assert.assertNotNull(e);

@@ -16,6 +16,9 @@
  */
 package org.apache.felix.http.base.internal.whiteboard;
 
+import static org.apache.felix.http.base.internal.util.UriUtils.decodePath;
+import static org.apache.felix.http.base.internal.util.UriUtils.removeDotSegments;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -40,7 +43,13 @@ import javax.servlet.SessionCookieConfig;
 import javax.servlet.SessionTrackingMode;
 import javax.servlet.descriptor.JspConfigDescriptor;
 
+import org.apache.felix.http.base.internal.dispatch.RequestDispatcherImpl;
+import org.apache.felix.http.base.internal.dispatch.RequestInfo;
+import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
+import org.apache.felix.http.base.internal.registry.PathResolution;
+import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
+import org.apache.felix.http.base.internal.registry.ServletResolution;
 
 /**
  * This servlet context implementation represents the shared
@@ -55,6 +64,7 @@ public class SharedServletContextImpl implements ServletContext
     private final Map<String, Object> attributes = new ConcurrentHashMap<String, Object>();
     private final String contextPath;
     private final String name;
+    private final PerContextHandlerRegistry registry;
     private final ServletContextAttributeListener attributeListener;
     private final Map<String, String> initParameters = new HashMap<String, String>();
 
@@ -62,7 +72,7 @@ public class SharedServletContextImpl implements ServletContext
             final String name,
             final String path,
             final Map<String, String> initParameters,
-            final ServletContextAttributeListener servletContextAttributeListener)
+            final PerContextHandlerRegistry registry)
     {
         this.context = webContext;
         if ( path.equals("/") )
@@ -78,7 +88,8 @@ public class SharedServletContextImpl implements ServletContext
         {
             this.initParameters.putAll(initParameters);
         }
-        this.attributeListener = servletContextAttributeListener;
+        this.attributeListener = registry.getEventListenerRegistry();
+        this.registry = registry;
     }
 
     @Override
@@ -295,21 +306,73 @@ public class SharedServletContextImpl implements ServletContext
     @Override
     public RequestDispatcher getNamedDispatcher(final String name)
     {
-        // This is implemented by the ServletContext wrapper created in the Dispatcher
-        return null;
+        if (name == null)
+        {
+            return null;
+        }
+
+        final RequestDispatcher dispatcher;
+        final ServletHandler servletHandler = this.registry.resolveServletByName(name);
+        if ( servletHandler != null ) 
+        {
+        	final ServletResolution resolution = new ServletResolution();
+        	resolution.handler = servletHandler;
+            resolution.handlerRegistry = this.registry;
+            // TODO - what is the path of a named servlet?
+            final RequestInfo requestInfo = new RequestInfo("", null, null);
+            dispatcher = new RequestDispatcherImpl(resolution, requestInfo);
+        }
+        else 
+        {
+        	dispatcher = null;
+        }
+        return dispatcher;
     }
 
     @Override
-    public RequestDispatcher getRequestDispatcher(final String uri)
+    public RequestDispatcher getRequestDispatcher(String path)
     {
-        // This is implemented by the ServletContext wrapper created in the Dispatcher
-        return null;
+        // See section 9.1 of Servlet 3.x specification...
+        if (path == null || (!path.startsWith("/") && !"".equals(path)))
+        {
+            return null;
+        }
+
+        String query = null;
+        int q = 0;
+        if ((q = path.indexOf('?')) > 0)
+        {
+            query = path.substring(q + 1);
+            path = path.substring(0, q);
+        }
+        // TODO remove path parameters...
+        String requestURI = decodePath(removeDotSegments(path));
+        if ( requestURI == null )
+        {
+            requestURI = "";
+        }
+
+        final RequestDispatcher dispatcher;
+        final PathResolution pathResolution = this.registry.resolve(requestURI);
+        if ( pathResolution != null ) 
+        {
+        	final ServletResolution resolution = new ServletResolution();
+        	resolution.handler = pathResolution.handler;
+            resolution.handlerRegistry = this.registry;
+            final RequestInfo requestInfo = new RequestInfo(pathResolution.servletPath, pathResolution.pathInfo, query);
+            dispatcher = new RequestDispatcherImpl(resolution, requestInfo);
+        }
+        else 
+        {
+        	dispatcher = null;
+        }
+        return dispatcher;
     }
 
     @Override
     public InputStream getResourceAsStream(final String path)
     {
-        // This is implemented by the ServletContext wrapper created in the Dispatcher
+        // is implemented by {@link PerBundleServletContextImpl}.
         return null;
     }
 

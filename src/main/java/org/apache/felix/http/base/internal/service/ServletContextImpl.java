@@ -16,6 +16,9 @@
  */
 package org.apache.felix.http.base.internal.service;
 
+import static org.apache.felix.http.base.internal.util.UriUtils.decodePath;
+import static org.apache.felix.http.base.internal.util.UriUtils.removeDotSegments;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -47,7 +50,14 @@ import javax.servlet.http.HttpSessionAttributeListener;
 import javax.servlet.http.HttpSessionListener;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
+import org.apache.felix.http.base.internal.dispatch.RequestDispatcherImpl;
+import org.apache.felix.http.base.internal.dispatch.RequestInfo;
+import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
+import org.apache.felix.http.base.internal.registry.HandlerRegistry;
+import org.apache.felix.http.base.internal.registry.PathResolution;
+import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
+import org.apache.felix.http.base.internal.registry.ServletResolution;
 import org.apache.felix.http.base.internal.util.MimeTypes;
 import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpContext;
@@ -64,7 +74,8 @@ public class ServletContextImpl implements ExtServletContext
     private final HttpSessionListener httpSessionListener;
     private final ServletRequestListener servletRequestListener;
     private final ServletRequestAttributeListener servletRequestAttributeListener;
-
+    private final PerContextHandlerRegistry handlerRegistry;
+    
     public ServletContextImpl(final Bundle bundle,
             final ServletContext context,
             final HttpContext httpContext,
@@ -73,7 +84,8 @@ public class ServletContextImpl implements ExtServletContext
             final HttpSessionAttributeListener httpSessionAttributeListener,
             final HttpSessionListener httpSessionListener,
             final ServletRequestListener servletRequestListener,
-            final ServletRequestAttributeListener servletRequestAttributeListener)
+            final ServletRequestAttributeListener servletRequestAttributeListener,
+            final PerContextHandlerRegistry registry)
     {
         this.bundle = bundle;
         this.context = context;
@@ -84,6 +96,7 @@ public class ServletContextImpl implements ExtServletContext
         this.httpSessionListener = httpSessionListener;
         this.servletRequestAttributeListener = servletRequestAttributeListener;
         this.servletRequestListener = servletRequestListener;
+        this.handlerRegistry = registry;
     }
 
     @Override
@@ -278,12 +291,6 @@ public class ServletContextImpl implements ExtServletContext
     }
 
     @Override
-    public RequestDispatcher getNamedDispatcher(String name)
-    {
-        return this.context.getNamedDispatcher(name);
-    }
-
-    @Override
     public String getRealPath(String name)
     {
         URL url = getResource(name);
@@ -292,12 +299,6 @@ public class ServletContextImpl implements ExtServletContext
             return null;
         }
         return url.toExternalForm();
-    }
-
-    @Override
-    public RequestDispatcher getRequestDispatcher(String uri)
-    {
-        return this.context.getRequestDispatcher(uri);
     }
 
     @Override
@@ -501,6 +502,72 @@ public class ServletContextImpl implements ExtServletContext
         this.context.setSessionTrackingModes(modes);
     }
 
+    @Override
+    public RequestDispatcher getNamedDispatcher(final String name)
+    {
+        if (name == null)
+        {
+            return null;
+        }
+
+        final RequestDispatcher dispatcher;
+        final ServletHandler servletHandler = this.handlerRegistry.resolveServletByName(name);
+        if ( servletHandler != null ) 
+        {
+        	final ServletResolution resolution = new ServletResolution();
+        	resolution.handler = servletHandler;
+            resolution.handlerRegistry = this.handlerRegistry;
+            // TODO - what is the path of a named servlet?
+            final RequestInfo requestInfo = new RequestInfo("", null, null);
+            dispatcher = new RequestDispatcherImpl(resolution, requestInfo);
+        }
+        else 
+        {
+        	dispatcher = null;
+        }
+        return dispatcher;
+    }
+
+    @Override
+    public RequestDispatcher getRequestDispatcher(String path)
+    {
+        // See section 9.1 of Servlet 3.x specification...
+        if (path == null || (!path.startsWith("/") && !"".equals(path)))
+        {
+            return null;
+        }
+
+        String query = null;
+        int q = 0;
+        if ((q = path.indexOf('?')) > 0)
+        {
+            query = path.substring(q + 1);
+            path = path.substring(0, q);
+        }
+        // TODO remove path parameters...
+        String requestURI = decodePath(removeDotSegments(path));
+        if ( requestURI == null )
+        {
+            requestURI = "";
+        }
+
+        final RequestDispatcher dispatcher;
+        final PathResolution pathResolution = this.handlerRegistry.resolve(requestURI);
+        if ( pathResolution != null ) 
+        {
+        	final ServletResolution resolution = new ServletResolution();
+        	resolution.handler = pathResolution.handler;
+            resolution.handlerRegistry = this.handlerRegistry;
+            final RequestInfo requestInfo = new RequestInfo(pathResolution.servletPath, pathResolution.pathInfo, query);
+            dispatcher = new RequestDispatcherImpl(resolution, requestInfo);
+        }
+        else 
+        {
+        	dispatcher = null;
+        }
+        return dispatcher;
+    }
+    
     private String normalizePath(String path)
     {
         if (path == null)

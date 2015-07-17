@@ -75,7 +75,13 @@ public final class PerBundleHttpServiceImpl implements ExtHttpService
         }
 
         this.bundle = bundle;
-        this.contextManager = new ServletContextManager(this.bundle, context, servletAttributeListener, sharedContextAttributes, reqListener, reqAttrListener);
+        this.contextManager = new ServletContextManager(this.bundle, 
+        		context, 
+        		servletAttributeListener, 
+        		sharedContextAttributes, 
+        		reqListener, 
+        		reqAttrListener,
+        		sharedHttpService.getHandlerRegistry().getRegistry(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID));
         this.sharedHttpService = sharedHttpService;
     }
 
