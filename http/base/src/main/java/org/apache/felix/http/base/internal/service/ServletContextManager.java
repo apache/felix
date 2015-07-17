@@ -25,6 +25,8 @@ import javax.servlet.ServletRequestAttributeListener;
 import javax.servlet.ServletRequestListener;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
+import org.apache.felix.http.base.internal.registry.HandlerRegistry;
+import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpContext;
 
@@ -37,6 +39,7 @@ public final class ServletContextManager
     private final boolean sharedAttributes;
     private final ServletRequestListener servletRequestListener;
     private final ServletRequestAttributeListener servletRequestAttributeListener;
+    private final PerContextHandlerRegistry handlerRegistry;
 
     public ServletContextManager(
             final Bundle bundle,
@@ -44,7 +47,8 @@ public final class ServletContextManager
             final ServletContextAttributeListener attributeListener,
             final boolean sharedAttributes,
             final ServletRequestListener servletRequestListener,
-            final ServletRequestAttributeListener servletRequestAttributeListener)
+            final ServletRequestAttributeListener servletRequestAttributeListener,
+            final PerContextHandlerRegistry registry)
     {
         this.bundle = bundle;
         this.context = context;
@@ -56,6 +60,7 @@ public final class ServletContextManager
         // drops to zero.
         this.contextMap = new WeakHashMap<HttpContext, ExtServletContext>();
         this.sharedAttributes = sharedAttributes;
+        this.handlerRegistry = registry;
     }
 
     public ExtServletContext getServletContext(HttpContext httpContext)
@@ -82,7 +87,8 @@ public final class ServletContextManager
                 null,
                 null,
                 servletRequestListener,
-                servletRequestAttributeListener);
+                servletRequestAttributeListener,
+                handlerRegistry);
         this.contextMap.put(httpContext, context);
         return context;
     }

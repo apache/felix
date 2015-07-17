@@ -92,7 +92,7 @@ public class WhiteboardContextHandler implements Comparable<WhiteboardContextHan
                 info.getName(),
                 info.getPath(),
                 info.getInitParameters(),
-                this.registry.getEventListenerRegistry());
+                this.registry);
         final boolean activate = getServletContext(httpBundle) != null;
         if ( !activate )
         {
