@@ -40,9 +40,7 @@ public class ComponentServiceObjectsHelper
 {
     private final BundleContext bundleContext;
 
-    private final Map<ServiceReference, ServiceObjects> serviceObjectsMap = new HashMap<ServiceReference, ServiceObjects>();
-
-    private final Map<ServiceObjects, List<Object>> services = new HashMap<ServiceObjects, List<Object>>();
+    private final Map<ServiceReference<?>, ComponentServiceObjectsImpl> services = new HashMap<ServiceReference<?>, ComponentServiceObjectsImpl>();
 
     private final ConcurrentMap<ServiceReference, Object> prototypeInstances = new ConcurrentHashMap<ServiceReference, Object>();
 
@@ -55,15 +53,11 @@ public class ComponentServiceObjectsHelper
     {
         synchronized ( this )
         {
-            for(final Map.Entry<ServiceObjects, List<Object>> entry : services.entrySet())
+            for(final Map.Entry<ServiceReference<?>, ComponentServiceObjectsImpl> entry : services.entrySet())
             {
-                for(final Object service : entry.getValue())
-                {
-                    entry.getKey().ungetService(service);
-                }
+                entry.getValue().close();
             }
             services.clear();
-            serviceObjectsMap.clear();
         }
         prototypeInstances.clear();
     }
@@ -72,67 +66,33 @@ public class ComponentServiceObjectsHelper
     {
         synchronized ( this )
         {
-            ServiceObjects<?> so = this.serviceObjectsMap.get(ref);
-            if ( so == null )
+            ComponentServiceObjectsImpl cso = this.services.get(ref);
+            if ( cso == null )
             {
-                so = this.bundleContext.getServiceObjects(ref);
-                if ( so != null )
+                final ServiceObjects serviceObjects = this.bundleContext.getServiceObjects(ref);
+                if ( serviceObjects != null )
                 {
-                    this.serviceObjectsMap.put(ref, so);
+                    cso = new ComponentServiceObjectsImpl(serviceObjects);
+                    this.services.put(ref, cso);
                 }
             }
-
-            if ( so != null )
-            {
-                List<Object> services = this.services.get(so);
-                if ( services == null )
-                {
-                    services = new ArrayList<Object>();
-                    this.services.put(so, services);
-                }
-                final ServiceObjects serviceObjects = so;
-                final List<Object> serviceList = services;
-
-                return new ComponentServiceObjects() 
-                {
-
-                    public Object getService() 
-                    {
-                        final Object service = serviceObjects.getService();
-                        if ( service != null )
-                        {
-                            synchronized ( serviceList )
-                            {
-                                serviceList.add(service);
-                            }
-                        }
-                        return service;
-                    }
-
-                    public void ungetService(final Object service) 
-                    {
-                        boolean remove;
-                        synchronized ( serviceList )
-                        {
-                            remove = serviceList.remove(service);
-                        }
-                        if ( remove ) {
-                            serviceObjects.ungetService(service);
-                        }
-                    }
-
-                    public ServiceReference<?> getServiceReference() 
-                    {
-                        return ref;
-                    }
-                };
-            }
+            return cso;
         }
-        return null;
     }
 
-    
-    public <T> T getPrototypeRefInstance(final ServiceReference<T> ref, ServiceObjects<T> serviceObjects) 
+    public void closeServiceObjects(final ServiceReference<?> ref) {
+        ComponentServiceObjectsImpl cso;
+        synchronized ( this )
+        {
+            cso = this.services.remove(ref);
+        }
+        if ( cso != null )
+        {
+            cso.close();
+        }
+    }
+
+    public <T> T getPrototypeRefInstance(final ServiceReference<T> ref, ServiceObjects<T> serviceObjects)
     {
     	T service = (T) prototypeInstances.get(ref);
     	if ( service == null )
@@ -148,5 +108,91 @@ public class ComponentServiceObjectsHelper
     	}
     	return service;
     }
-   
+
+    private static final class ComponentServiceObjectsImpl implements ComponentServiceObjects
+    {
+        private final List<Object> instances = new ArrayList<Object>();
+
+        private volatile ServiceObjects serviceObjects;
+
+        public ComponentServiceObjectsImpl(final ServiceObjects so)
+        {
+            this.serviceObjects = so;
+        }
+
+        /**
+         * Close this instance and unget all services.
+         */
+        public void close()
+        {
+            final ServiceObjects so = this.serviceObjects;
+            this.serviceObjects = null;
+            if ( so != null )
+            {
+                synchronized ( this.instances )
+                {
+                    for(final Object obj : instances)
+                    {
+                        try
+                        {
+                            so.ungetService(obj);
+                        }
+                        catch ( final IllegalStateException ise )
+                        {
+                            // ignore (this happens if the bundle is not valid anymore)
+                        }
+                        catch ( final IllegalArgumentException iae )
+                        {
+                            // ignore (this happens if the service has not been returned by the service objects)
+                        }
+                    }
+                    this.instances.clear();
+                }
+            }
+        }
+
+        public Object getService()
+        {
+            final ServiceObjects so = this.serviceObjects;
+            Object service = null;
+            if ( so != null )
+            {
+                service = so.getService();
+                if ( service != null )
+                {
+                    synchronized ( this.instances )
+                    {
+                        this.instances.add(service);
+                    }
+                }
+            }
+            return service;
+        }
+
+        public void ungetService(final Object service)
+        {
+            final ServiceObjects so = this.serviceObjects;
+            if ( so != null )
+            {
+                boolean remove;
+                synchronized ( instances )
+                {
+                    remove = instances.remove(service);
+                }
+                if ( remove ) {
+                    so.ungetService(service);
+                }
+            }
+        }
+
+        public ServiceReference<?> getServiceReference()
+        {
+            final ServiceObjects so = this.serviceObjects;
+            if ( so != null )
+            {
+                return so.getServiceReference();
+            }
+            return null;
+        }
+    }
  }

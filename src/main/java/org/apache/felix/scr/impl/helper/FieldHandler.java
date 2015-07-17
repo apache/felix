@@ -26,7 +26,6 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -478,7 +477,7 @@ public class FieldHandler
     private boolean initField(final Object componentInstance,
             final SimpleLogger logger )
     {
-    	if ( valueType == ParamType.ignore ) 
+    	if ( valueType == ParamType.ignore )
     	{
     		return true;
     	}
@@ -514,10 +513,10 @@ public class FieldHandler
                             valueType = ParamType.ignore;
                             return true;
                         }
-                        if ( fieldType == ClassUtils.LIST_CLASS ) 
+                        if ( fieldType == ClassUtils.LIST_CLASS )
                         {
                         	this.setFieldValue(componentInstance, new CopyOnWriteArrayList<Object>());
-                        } 
+                        }
                         else
                         {
                         	this.setFieldValue(componentInstance, new CopyOnWriteArraySet<Object>());
@@ -569,7 +568,7 @@ public class FieldHandler
         if ( !this.metadata.isMultiple() )
         {
             // unary references
-            
+
         	// unbind needs only be done, if reference is dynamic and optional
             if ( mType == METHOD_TYPE.UNBIND )
             {
@@ -648,13 +647,13 @@ public class FieldHandler
             // updated needs only be done, if the value type is map or tuple
             else if ( mType == METHOD_TYPE.UPDATED)
             {
-            	if ( this.valueType == ParamType.map || this.valueType == ParamType.tuple ) 
+            	if ( this.valueType == ParamType.map || this.valueType == ParamType.tuple )
             	{
                     if ( !this.metadata.isStatic() )
                     {
 	                    final Object obj = getValue(key, refPair);
 	                    final Object oldObj = this.boundValues.put(refPair, obj);
-	
+
 	                    if ( metadata.isReplace() )
 	                    {
 	                        this.setFieldValue(componentInstance, getReplaceCollection());

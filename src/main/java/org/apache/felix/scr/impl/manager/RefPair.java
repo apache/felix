@@ -51,11 +51,11 @@ public abstract class RefPair<S, T>
     }
 
     public abstract boolean getServiceObject( ComponentContextImpl<S> key, BundleContext context, SimpleLogger logger );
- 
+
     public abstract T getServiceObject(ComponentContextImpl<S> key);
 
     public abstract boolean setServiceObject( ComponentContextImpl<S> key, T serviceObject );
-    
+
     public abstract T unsetServiceObject(ComponentContextImpl<S> key);
 
     public void setFailed( )
@@ -73,10 +73,8 @@ public abstract class RefPair<S, T>
         return deleted;
     }
 
-    public void setDeleted(boolean deleted)
+    public void markDeleted()
     {
-        this.deleted = deleted;
+        this.deleted = true;
     }
-
-
 }
