@@ -97,6 +97,7 @@ public class ComponentServiceObjectsHelper
         	}
             cso.close();
         }
+        prototypeInstances.remove(ref);
     }
 
     public <T> T getPrototypeRefInstance(final ServiceReference<T> ref, ServiceObjects<T> serviceObjects)
