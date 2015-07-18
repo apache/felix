@@ -374,7 +374,7 @@ public abstract class ComponentTestBase
         Collection<ServiceReference<S>> srs;
         try {
             srs = bundleContext.getServiceReferences(clazz, filter);
-            Assert.assertEquals(1, srs.size());
+            Assert.assertEquals("Nothing for filter: " + filter, 1, srs.size());
             ServiceReference<S> sr = srs.iterator().next();
             S s = bundleContext.getService(sr);
             Assert.assertNotNull(s);

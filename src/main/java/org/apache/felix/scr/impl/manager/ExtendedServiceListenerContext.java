@@ -16,29 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.integration.components.deadlock;
+package org.apache.felix.scr.impl.manager;
 
-import org.osgi.framework.ServiceReference;
-import org.osgi.service.component.ComponentContext;
+import org.osgi.framework.Filter;
+import org.osgi.framework.ServiceEvent;
 
-public class Consumer
+public interface ExtendedServiceListenerContext<U extends ServiceEvent>
 {
-    
-    private ComponentContext cc;
-    
-    protected void activate(ComponentContext cc) 
-    {
-        this.cc = cc;
-    }
-    
-    protected void setTestComponent(TestComponent tc)
-    {
-        tc.doIt( );       
-    }
-    
-    protected void unsetTestComponent(ServiceReference<TestComponent> sr)
-    {
-        
-    }    
 
+    void addServiceListener(String className, Filter filter,
+        ExtendedServiceListener<U> listener);
+
+    void removeServiceListener(String className, Filter filter,
+        ExtendedServiceListener<U> listener);
 }

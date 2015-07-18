@@ -16,6 +16,7 @@
 
 package org.apache.felix.scr.impl.manager;
 
+import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -47,7 +48,7 @@ import org.osgi.framework.ServiceReference;
  * @ThreadSafe
  * @version $Id: c14b8d47026b6bd4ba1f2db7bf7e755d00fc6f6a $
  */
-public interface ServiceTrackerCustomizer<S, T> {
+public interface ServiceTrackerCustomizer<S, T, U extends ServiceEvent> {
 	/**
 	 * A service is being added to the {@code ServiceTracker}.
 	 * 
@@ -69,7 +70,7 @@ public interface ServiceTrackerCustomizer<S, T> {
 	 */
 	public T addingService( ServiceReference<S> reference );
 
-    public void addedService( ServiceReference<S> reference, T service, int trackingCount, int serviceCount );
+    public void addedService( ServiceReference<S> reference, T service, int trackingCount, int serviceCount, U event );
 
 	/**
 	 * A service tracked by the {@code ServiceTracker} has been modified.
@@ -79,10 +80,11 @@ public interface ServiceTrackerCustomizer<S, T> {
 	 * {@code ServiceTracker} has had it properties modified.
 	 *
      * @param reference The reference to the service that has been modified.
-     * @param service The service object for the specified referenced service.
-     * @param trackingCount
+	 * @param service The service object for the specified referenced service.
+	 * @param trackingCount
+	 * @param event TODO
      */
-	public void modifiedService( ServiceReference<S> reference, T service, int trackingCount );
+	public void modifiedService( ServiceReference<S> reference, T service, int trackingCount, U event );
 
 	/**
 	 * A service tracked by the {@code ServiceTracker} has been removed.
@@ -94,7 +96,8 @@ public interface ServiceTrackerCustomizer<S, T> {
      * @param reference The reference to the service that has been removed.
 	 * @param service The service object for the specified referenced service.
 	 * @param trackingCount
+	 * @param event TODO
      */
-	public void removedService( ServiceReference<S> reference, T service, int trackingCount );
+	public void removedService( ServiceReference<S> reference, T service, int trackingCount, U event );
 
 }
