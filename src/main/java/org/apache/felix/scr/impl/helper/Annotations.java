@@ -31,6 +31,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.osgi.framework.Bundle;
+import org.osgi.service.component.ComponentException;
 
 public class Annotations
 {
@@ -70,37 +71,42 @@ public class Annotations
             m.put( name, cooked );
         }
         if (!complexFields.isEmpty())
-        {
-            if (!supportsInterfaces )
+        { 
+            if (supportsInterfaces )
             {
-            //error
-                return null;//??
-            }
-            Map<String, List<Map<String, Object>>> nested = extractSubMaps(complexFields.keySet(), props);
-            for (Map.Entry<String, Method> entry: complexFields.entrySet())
-            {
-                List<Map<String, Object>> proplist = nested.get(entry.getKey());
-                Method method = entry.getValue();
-                Class<?> returnType  = method.getReturnType();
-                if (returnType.isArray())
+                Map<String, List<Map<String, Object>>> nested = extractSubMaps(complexFields.keySet(), props);
+                for (Map.Entry<String, Method> entry: complexFields.entrySet())
                 {
-                    Class<?> componentType = returnType.getComponentType();
-                    Object result = Array.newInstance(componentType, proplist.size());
-                    for (int i = 0; i < proplist.size(); i++)
+                    List<Map<String, Object>> proplist = nested.get(entry.getKey());
+                    Method method = entry.getValue();
+                    Class<?> returnType  = method.getReturnType();
+                    if (returnType.isArray())
                     {
-                        Map<String, Object> rawElement = proplist.get(i);
-                        Object cooked = toObject(componentType, rawElement, b, supportsInterfaces);
-                        Array.set(result, i, cooked);
+                        Class<?> componentType = returnType.getComponentType();
+                        Object result = Array.newInstance(componentType, proplist.size());
+                        for (int i = 0; i < proplist.size(); i++)
+                        {
+                            Map<String, Object> rawElement = proplist.get(i);
+                            Object cooked = toObject(componentType, rawElement, b, supportsInterfaces);
+                            Array.set(result, i, cooked);
+                        }
+                        m.put(method.getName(), result);
                     }
-                    m.put(method.getName(), result);
+                    else
+                    {
+                        if (!proplist.isEmpty())
+                        {
+                            Object cooked = toObject(returnType, proplist.get(0), b, supportsInterfaces);
+                            m.put(method.getName(), cooked);
+                        }
+                    }
                 }
-                else
+            }
+            else
+            {
+                for (Method method: complexFields.values())
                 {
-                    if (!proplist.isEmpty())
-                    {
-                        Object cooked = toObject(returnType, proplist.get(0), b, supportsInterfaces);
-                        m.put(method.getName(), cooked);
-                    }
+                    m.put(method.getName(), Handler.INVALID);
                 }
             }
         }
@@ -209,7 +215,7 @@ public class Annotations
 
     private static class Handler implements InvocationHandler 
     {
-        
+        private final static Object INVALID = new Object();
         private final Map<String, Object> values;
        
         public Handler(Map<String, Object> values)
@@ -219,7 +225,13 @@ public class Annotations
 
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable
         {
-            return values.get(method.getName());
+            Object value = values.get(method.getName());
+            if (INVALID == value)
+            {
+                throw new ComponentException(
+                    "Invalid annotation member type" + method.getReturnType().getName() + " for member: " + method.getName());
+            }
+            return value;
         }
         
     }
