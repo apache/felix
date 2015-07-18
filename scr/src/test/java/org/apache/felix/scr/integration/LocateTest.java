@@ -46,18 +46,20 @@ public class LocateTest extends ComponentTestBase
     {
         bundleContext.registerService( Object.class, new Object(), null );
         
-        findComponentConfigurationByName( "AsyncLocate", ComponentConfigurationDTO.ACTIVE );
+        findComponentConfigurationByName( "Consumer", ComponentConfigurationDTO.ACTIVE );
         
-        final String pid = "SimpleComponent";
+        final String pid = "TestComponent";
         Configuration config = getConfigurationAdmin().getConfiguration( pid, null );
         final Hashtable props = new Hashtable();
+        //wrong target property, will not bind
         props.put( "target", "bar" );
         config.update(props);
         delay();
         
         //when deadlock is present the state is actually unsatisfied.
-        ComponentConfigurationDTO cc = findComponentConfigurationByName( pid, ComponentConfigurationDTO.ACTIVE );
-        delay();
+        ComponentConfigurationDTO cc = findComponentConfigurationByName( pid, ComponentConfigurationDTO.SATISFIED );
+//        delay();
+        //correct target property: will bind as new properties are propagated.
         props.put( "target", "foo" );
         config.update(props);
         delay();
