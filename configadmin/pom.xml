@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>2.1</version>
+        <version>3</version>
         <relativePath>../pom/pom.xml</relativePath>
     </parent>
 
@@ -74,10 +74,6 @@
         <bundle.file.name>
             ${bundle.build.name}/${project.build.finalName}.jar
         </bundle.file.name>
-
-        <felix.build.source>5</felix.build.source>
-        <felix.build.target>5</felix.build.target>
-        <felix.java.signature.artifactId>java15</felix.java.signature.artifactId>
     </properties>
 
     <dependencies>
@@ -222,33 +218,6 @@
                             org.osgi.core;inline=org/osgi/util/tracker/ServiceTracker*|org/osgi/util/tracker/AbstractTracked.class
                         </Embed-Dependency>
                     </instructions>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>animal-sniffer-maven-plugin</artifactId>
-                <version>1.7</version>
-                <configuration>
-                    <signature>
-                        <groupId>org.codehaus.mojo.signature</groupId>
-                        <artifactId>java15</artifactId>
-                        <version>1.0</version>
-                    </signature>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.5</source>
-                    <target>1.5</target>
                 </configuration>
             </plugin>
             <!--
