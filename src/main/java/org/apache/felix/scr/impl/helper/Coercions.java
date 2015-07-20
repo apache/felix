@@ -37,6 +37,7 @@ public class Coercions
 //    | Double | Byte | Short
 //| Character | Boolean
     private static final byte byte0 = 0;
+    private static final char char0 = 0;
     private static final double double0 = 0;
     private static final float float0 = 0;
     private static final int int0 = 0;
@@ -52,6 +53,10 @@ public class Coercions
         if (type == Boolean.class || type == boolean.class)
         {
             return coerceToBoolean(raw);
+        }
+        if (type == Character.class || type == char.class)
+        {
+            return coerceToChar(raw);
         }
         if (type == Class.class)
         {
@@ -123,7 +128,37 @@ public class Coercions
         {
             return 0;
         }
-        throw new ComponentException( "Unrecognized input type: " + o);
+        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass());
+    }
+    
+    public static char coerceToChar(Object o)
+    {
+        o = multipleToSingle( o, byte0 );
+        if (o instanceof Character)
+        {
+            return (Character)o;
+        }
+        if (o instanceof String)
+        {
+            if (((String)o).length() > 0) 
+            {
+                return ((String)o).charAt(0);
+            }
+            return char0;
+        }
+        if (o instanceof Boolean)
+        {
+            return (Boolean)o? 1: char0;
+        }
+        if (o instanceof Number)
+        {
+            return (char)((Number)o).intValue();
+        }
+        if (o == null) 
+        {
+            return char0;
+        }
+        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass());
     }
     
     public static double coerceToDouble(Object o)
@@ -160,7 +195,7 @@ public class Coercions
         {
             return 0;
         }
-        throw new ComponentException( "Unrecognized input type: " + o);
+        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass());
     }
     
     public static float coerceToFloat(Object o)
@@ -197,7 +232,7 @@ public class Coercions
         {
             return 0;
         }
-        throw new ComponentException( "Unrecognized input type: " + o);
+        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass());
     }
     
     public static int coerceToInteger(Object o)
@@ -234,7 +269,7 @@ public class Coercions
         {
             return 0;
         }
-        throw new ComponentException( "Unrecognized input type: " + o);
+        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass());
     }
     
     public static long coerceToLong(Object o)
@@ -271,7 +306,7 @@ public class Coercions
         {
             return 0;
         }
-        throw new ComponentException( "Unrecognized input type: " + o);
+        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass());
     }
     
     public static short coerceToShort(Object o)
@@ -308,7 +343,7 @@ public class Coercions
         {
             return 0;
         }
-        throw new ComponentException( "Unrecognized input type: " + o);
+        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass());
     }
     
     public static String coerceToString(Object o)
@@ -350,13 +385,13 @@ public class Coercions
         }
         if (o instanceof Number)
         {
-            return ((Number)o).intValue() != 0;
+            return ((Number)o).doubleValue() != 0D;
         }
         if (o == null) 
         {
             return false;
         }
-        throw new ComponentException( "Unrecognized input type: " + o);
+        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass());
     }
     
     public static Class<?> coerceToClass(Object o, Bundle b)
@@ -377,7 +412,7 @@ public class Coercions
                 throw new ComponentException(e);
             }
         }
-        throw new ComponentException( "Unrecognized input type: " + o);
+        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass());
     }
     
     public static <T extends Enum<T>> T coerceToEnum(Object o, Class<T> clazz)
@@ -398,7 +433,7 @@ public class Coercions
         {
             return null;
         }
-        throw new ComponentException( "Unrecognized input type: " + o);
+        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass());
     }
     
     private static Object multipleToSingle(Object o, Object defaultValue)
