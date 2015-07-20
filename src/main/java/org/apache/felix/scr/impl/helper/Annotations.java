@@ -54,19 +54,26 @@ public class Annotations
                 complexFields.put(key, method);
                 continue;
             }
-            if (returnType.isArray())
+            try
             {
-                Class<?> componentType = returnType.getComponentType();
-                if ( componentType.isInterface() || componentType.isAnnotation())
+                if (returnType.isArray())
                 {
-                    complexFields.put(key, method);
-                    continue;
+                    Class<?> componentType = returnType.getComponentType();
+                    if (componentType.isInterface() || componentType.isAnnotation())
+                    {
+                        complexFields.put(key, method);
+                        continue;
+                    }
+                    cooked = coerceToArray(componentType, raw, b);
                 }
-                cooked = coerceToArray(componentType, raw, b);
+                else
+                {
+                    cooked = Coercions.coerce(returnType, raw, b);
+                }
             }
-            else
+            catch (ComponentException e)
             {
-                cooked = Coercions.coerce( returnType, raw, b );
+                cooked = new Invalid(e);
             }
             m.put( name, cooked );
         }
@@ -106,7 +113,7 @@ public class Annotations
             {
                 for (Method method: complexFields.values())
                 {
-                    m.put(method.getName(), Handler.INVALID);
+                    m.put(method.getName(), new Invalid("Invalid annotation member type" + method.getReturnType().getName() + " for member: " + method.getName()));
                 }
             }
         }
@@ -213,9 +220,8 @@ public class Annotations
         return b.toString();
     }
 
-    private static class Handler implements InvocationHandler 
+    private final static class Handler implements InvocationHandler 
     {
-        private final static Object INVALID = new Object();
         private final Map<String, Object> values;
        
         public Handler(Map<String, Object> values)
@@ -226,14 +232,33 @@ public class Annotations
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable
         {
             Object value = values.get(method.getName());
-            if (INVALID == value)
+            if (value instanceof Invalid)
             {
-                throw new ComponentException(
-                    "Invalid annotation member type" + method.getReturnType().getName() + " for member: " + method.getName());
+                throw new ComponentException(((Invalid)value).getMessage());
             }
             return value;
         }
         
+    }
+    
+    private final static class Invalid 
+    {
+        private final String message;
+        
+        public Invalid(ComponentException e)
+        {
+            this.message = e.getMessage();
+        }
+        
+        public Invalid(String message)
+        {
+            this.message = message;
+        }
+
+        public String getMessage()
+        {
+            return message;
+        }
     }
 
 }
