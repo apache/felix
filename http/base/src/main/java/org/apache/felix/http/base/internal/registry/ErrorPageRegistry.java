@@ -75,9 +75,14 @@ public final class ErrorPageRegistry
         private final ServletHandler handler;
         public final Map<Integer, ErrorRegistration> reasonMapping = new HashMap<Integer, ErrorRegistration>();
 
+        public final boolean usesClientErrorCodes;
+        public final boolean usesServerErrorCodes;
+        
         public ErrorRegistrationStatus(final ServletHandler handler)
         {
             this.handler = handler;
+            this.usesClientErrorCodes = hasErrorCode(handler, CLIENT_ERROR);
+            this.usesServerErrorCodes = hasErrorCode(handler, SERVER_ERROR);
         }
 
         public ServletHandler getHandler()
@@ -92,6 +97,18 @@ public final class ErrorPageRegistry
         }
     }
 
+    private static boolean hasErrorCode(final ServletHandler handler, final String key) 
+    {
+    	for(final String val : handler.getServletInfo().getErrorPage())
+    	{
+    		if ( key.equals(val) ) 
+    		{
+    			return true;
+    		}
+    	}
+    	return false;
+    }
+    
     private static List<Long> hundredOf(final int start)
     {
         List<Long> result = new ArrayList<Long>();
@@ -301,7 +318,22 @@ public final class ErrorPageRegistry
                     if ( oldStatus != null )
                     {
                         removeReason(oldStatus, code, exception, -1);
-                        addReason(oldStatus, code, exception, DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
+                    	boolean addReason = true;
+                    	if ( exception == null )
+                    	{
+                    		if ( code >= 400 && code < 500 && oldStatus.usesClientErrorCodes && !status.usesClientErrorCodes )
+                    		{
+                    			addReason = false;
+                    		} 
+                    		else if ( code >= 500 && code < 600 && oldStatus.usesServerErrorCodes && !status.usesServerErrorCodes )
+                    		{
+                    			addReason = false;
+                    		}
+                    	}
+                    	if ( addReason )
+                    	{
+                    		addReason(oldStatus, code, exception, DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
+                    	}
                     }
                 }
                 else
@@ -313,12 +345,37 @@ public final class ErrorPageRegistry
         else
         {
             // failure
-            addReason(status, code, exception, DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
+        	boolean addReason = true;
+        	if ( exception == null )
+        	{
+        		if ( code >= 400 && code < 500 && status.usesClientErrorCodes && !hasErrorCode(newList.get(0), CLIENT_ERROR) )
+        		{
+        			addReason = false;
+        		} 
+        		else if ( code >= 500 && code < 600 && status.usesServerErrorCodes && !hasErrorCode(newList.get(0), SERVER_ERROR) )
+        		{
+        			addReason = false;
+        		}
+        	}
+        	if ( addReason )
+        	{
+        		addReason(status, code, exception, DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
+        	}
             errorMapping.put(key, newList);
         }
     }
 
-    private void addReason(final ErrorRegistrationStatus status, final long code, final String exception, final int reason)
+    /**
+     * Make an entry in the status object (which are used to create the DTOs)
+     * @param status The status object
+     * @param code Either the code
+     * @param exception or the exception
+     * @param reason The code for the failure reason or {@code -1} for success.	
+     */
+    private void addReason(final ErrorRegistrationStatus status, 
+    		final long code, 
+    		final String exception, 
+    		final int reason)
     {
         ErrorRegistration reg = status.reasonMapping.get(reason);
         if ( reg == null )

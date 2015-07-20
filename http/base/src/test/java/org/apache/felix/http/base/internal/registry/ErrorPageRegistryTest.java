@@ -246,9 +246,9 @@ public class ErrorPageRegistryTest
         // check DTO
         reg.getRuntimeInfo(dto, holder.failedErrorPageDTOs);
 
-        assertEquals(1, holder.failedErrorPageDTOs.size());
-        assertEquals(2, dto.errorPageDTOs.length);
-        assertEquals(98, dto.errorPageDTOs[1].errorCodes.length);
+        // a 4xx is only registered as failure DTO if overlayed by a 4xx!
+        // -> no failure in this case
+        assertEquals(0, holder.failedErrorPageDTOs.size());
         final Set<Long> codes4 = new HashSet<Long>();
         for(final long c : dto.errorPageDTOs[1].errorCodes)
         {
@@ -261,16 +261,6 @@ public class ErrorPageRegistryTest
         assertEquals(2, dto.errorPageDTOs[0].errorCodes.length);
         final Set<Long> codes = new HashSet<Long>();
         for(final long c : dto.errorPageDTOs[0].errorCodes)
-        {
-            assertTrue(c >= 403 && c < 405);
-            codes.add(c);
-        }
-        assertEquals(2, codes.size());
-
-        final FailedErrorPageDTO fep = holder.failedErrorPageDTOs.iterator().next();
-        assertEquals(2, fep.errorCodes.length);
-        codes.clear();
-        for(final long c : fep.errorCodes)
         {
             assertTrue(c >= 403 && c < 405);
             codes.add(c);
