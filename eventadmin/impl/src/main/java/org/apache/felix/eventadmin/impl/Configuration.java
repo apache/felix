@@ -18,6 +18,9 @@
  */
 package org.apache.felix.eventadmin.impl;
 
+import java.security.AccessControlContext;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -172,9 +175,13 @@ public class Configuration
 
     private ServiceRegistration m_managedServiceReg;
 
+    // the access control context
+    private final AccessControlContext acc;
+
     public Configuration( BundleContext bundleContext )
     {
         m_bundleContext = bundleContext;
+        this.acc = AccessController.getContext();
 
         // default configuration
         configure( null );
@@ -219,15 +226,37 @@ public class Configuration
             @Override
             public void run()
             {
-                synchronized ( Configuration.this )
+                if (System.getSecurityManager() != null)
                 {
-                    Configuration.this.configure( config );
-                    Configuration.this.startOrUpdate();
+                    AccessController.doPrivileged(
+                        new PrivilegedAction<Void>() {
+
+                            @Override
+                            public Void run() {
+                                updateFromConfigAdmin0( config );
+                                return null;
+                            }
+
+                        },
+                        acc
+                    );
+                }
+                else
+                {
+                    updateFromConfigAdmin0( config );
                 }
             }
 
         }.start();
 
+    }
+
+    void updateFromConfigAdmin0(final Dictionary<String, ?> config) {
+        synchronized ( Configuration.this )
+        {
+            Configuration.this.configure( config );
+            Configuration.this.startOrUpdate();
+        }
     }
 
     /**
