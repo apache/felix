@@ -56,6 +56,7 @@ public class AnnotationTest extends TestCase
     public @interface A1 {
         boolean bool();
         byte byt();
+        char cha();
         Class<?> clas();
         E1 e1();
         double doubl();
@@ -90,6 +91,7 @@ public class AnnotationTest extends TestCase
     {
         assertEquals(true, a.bool());
         assertEquals((byte)12, a.byt());
+        assertEquals('c', a.cha());
         assertEquals(String.class, a.clas());
         assertEquals(E1.a, a.e1());
         assertEquals(3.14d, a.doubl());
@@ -122,9 +124,10 @@ public class AnnotationTest extends TestCase
 
     private Map<String, Object> allValues()
     {
-        Map<String, Object> values = new HashMap();
+        Map<String, Object> values = new HashMap<String, Object>();
         values.put("bool", "true");
         values.put("byt", 12l);
+        values.put("cha", 'c');
         values.put("clas", String.class.getName());
         values.put("e1", E1.a.toString());
         values.put("doubl", "3.14");
@@ -146,6 +149,7 @@ public class AnnotationTest extends TestCase
         A1 a = (A1) o;
         assertEquals(false, a.bool());
         assertEquals((byte)0, a.byt());
+        assertEquals((char)0, a.cha());
         assertEquals(null, a.clas());
         assertEquals(null, a.e1());
         assertEquals(0d, a.doubl());
@@ -159,6 +163,7 @@ public class AnnotationTest extends TestCase
     public @interface A2 {
         boolean bool() default true;
         byte byt() default 5;
+        char cha() default 'a';
         Class<?> clas() default Integer.class;
         E1 e1() default E1.b;
         double doubl() default -2;
@@ -179,6 +184,7 @@ public class AnnotationTest extends TestCase
         A2 a = (A2) o;
         assertEquals(true, a.bool());
         assertEquals((byte)12, a.byt());
+        assertEquals('c', a.cha());
         assertEquals(String.class, a.clas());
         assertEquals(E1.a, a.e1());
         assertEquals(3.14d, a.doubl());
@@ -192,6 +198,7 @@ public class AnnotationTest extends TestCase
     public @interface A1Arrays {
         boolean[] bool();
         byte[] byt();
+        char[] cha();
         Class<?>[] clas();
         E1[] e1();
         double[] doubl();
@@ -212,6 +219,7 @@ public class AnnotationTest extends TestCase
         A1Arrays a = (A1Arrays) o;
         assertEquals(null, a.bool());
         assertEquals(null, a.byt());
+        assertEquals(null, a.cha());
         assertEquals(null, a.clas());
         assertEquals(null, a.e1());
         assertEquals(null, a.doubl());
@@ -232,6 +240,7 @@ public class AnnotationTest extends TestCase
         A1Arrays a = (A1Arrays) o;
         assertArrayEquals(new boolean[] {true}, a.bool());
         assertArrayEquals(new byte[] {(byte)12}, a.byt());
+        assertArrayEquals(new char[] {'c'}, a.cha());
         assertArrayEquals(new Class<?>[] {String.class}, a.clas());
         assertArrayEquals(new E1[] {E1.a}, a.e1());
         assertArrayEquals(new double[] {3.14d}, a.doubl());
@@ -260,6 +269,7 @@ public class AnnotationTest extends TestCase
         Map<String, Object> values = new HashMap();
         values.put("bool", new boolean[] {true, false});
         values.put("byt", new byte[] {12, 3});
+        values.put("cha", new char[] {'c', 'h', 'a', 'r'});
         values.put("clas", new String[] {String.class.getName(), Integer.class.getName()});
         values.put("e1", new String[] {E1.a.name(), E1.b.name()});
         values.put("doubl", new double[] {3.14, 2.78, 9});
@@ -308,6 +318,7 @@ public class AnnotationTest extends TestCase
         A1Arrays a = (A1Arrays) o;
         assertArrayEquals(new boolean[] {true, false}, a.bool());
         assertArrayEquals(new byte[] {12, 3}, a.byt());
+        assertArrayEquals(new char[] {'c', 'h', 'a', 'r'}, a.cha());
         assertArrayEquals(new Class<?>[] {String.class, Integer.class}, a.clas());
         assertArrayEquals(new E1[] {E1.a, E1.b}, a.e1());
         assertArrayEquals(new double[] {3.14, 2.78, 9}, a.doubl());
