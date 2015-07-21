@@ -109,7 +109,7 @@ public abstract class WhiteboardServiceTracker<T> extends ServiceTracker<T, Serv
 
     private void removed(final ServiceReference<T> ref)
     {
-        final WhiteboardServiceInfo<T> info = this.allInfos.get(ref.getProperty(Constants.SERVICE_ID));
+        final WhiteboardServiceInfo<T> info = this.allInfos.remove(ref.getProperty(Constants.SERVICE_ID));
         if ( info != null )
         {
             this.contextManager.removeWhiteboardService(info);
