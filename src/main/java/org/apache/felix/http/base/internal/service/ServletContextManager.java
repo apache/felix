@@ -25,7 +25,6 @@ import javax.servlet.ServletRequestAttributeListener;
 import javax.servlet.ServletRequestListener;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpContext;

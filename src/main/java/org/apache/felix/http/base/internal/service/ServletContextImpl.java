@@ -54,7 +54,6 @@ import org.apache.felix.http.base.internal.dispatch.RequestDispatcherImpl;
 import org.apache.felix.http.base.internal.dispatch.RequestInfo;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
-import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.registry.PathResolution;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.registry.ServletResolution;
@@ -75,7 +74,7 @@ public class ServletContextImpl implements ExtServletContext
     private final ServletRequestListener servletRequestListener;
     private final ServletRequestAttributeListener servletRequestAttributeListener;
     private final PerContextHandlerRegistry handlerRegistry;
-    
+
     public ServletContextImpl(final Bundle bundle,
             final ServletContext context,
             final HttpContext httpContext,
@@ -512,7 +511,7 @@ public class ServletContextImpl implements ExtServletContext
 
         final RequestDispatcher dispatcher;
         final ServletHandler servletHandler = this.handlerRegistry.resolveServletByName(name);
-        if ( servletHandler != null ) 
+        if ( servletHandler != null )
         {
         	final ServletResolution resolution = new ServletResolution();
         	resolution.handler = servletHandler;
@@ -521,7 +520,7 @@ public class ServletContextImpl implements ExtServletContext
             final RequestInfo requestInfo = new RequestInfo("", null, null);
             dispatcher = new RequestDispatcherImpl(resolution, requestInfo);
         }
-        else 
+        else
         {
         	dispatcher = null;
         }
@@ -553,7 +552,7 @@ public class ServletContextImpl implements ExtServletContext
 
         final RequestDispatcher dispatcher;
         final PathResolution pathResolution = this.handlerRegistry.resolve(requestURI);
-        if ( pathResolution != null ) 
+        if ( pathResolution != null )
         {
         	final ServletResolution resolution = new ServletResolution();
         	resolution.handler = pathResolution.handler;
@@ -561,13 +560,13 @@ public class ServletContextImpl implements ExtServletContext
             final RequestInfo requestInfo = new RequestInfo(pathResolution.servletPath, pathResolution.pathInfo, query);
             dispatcher = new RequestDispatcherImpl(resolution, requestInfo);
         }
-        else 
+        else
         {
         	dispatcher = null;
         }
         return dispatcher;
     }
-    
+
     private String normalizePath(String path)
     {
         if (path == null)
