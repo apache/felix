@@ -29,7 +29,6 @@ import org.apache.felix.http.base.internal.dispatch.Dispatcher;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
-import org.apache.felix.http.base.internal.service.listener.ServletContextAttributeListenerManager;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
 import org.osgi.framework.BundleContext;
 
@@ -57,11 +56,6 @@ public final class HttpServiceController
         return this.dispatcher;
     }
 
-    ServletContextAttributeListenerManager getContextAttributeListener()
-    {
-        return this.httpServiceFactory.getContextAttributeListener();
-    }
-
     HttpSessionListener getSessionListener()
     {
         // we don't need to sync here, if the object gets created several times
@@ -85,6 +79,10 @@ public final class HttpServiceController
         return httpSessionListener;
     }
 
+    /**
+     * TODO : we should try to remove this, it's only needed for
+     *        the proprietary support of the Felix implementation
+     */
     HttpSessionAttributeListener getSessionAttributeListener()
     {
         return httpServiceFactory.getSessionAttributeListener();
@@ -107,6 +105,10 @@ public final class HttpServiceController
         this.whiteboardManager.setProperties(props);
     }
 
+    /**
+     * Start the http and http whiteboard service in the provided context.
+     * @param containerContext The container context.
+     */
     public void register(@Nonnull final ServletContext containerContext)
     {
         this.registry.init();
@@ -117,6 +119,9 @@ public final class HttpServiceController
         this.dispatcher.setWhiteboardManager(this.whiteboardManager);
     }
 
+    /**
+     * Stops the http and http whiteboard service.
+     */
     public void unregister()
     {
         this.dispatcher.setWhiteboardManager(null);
