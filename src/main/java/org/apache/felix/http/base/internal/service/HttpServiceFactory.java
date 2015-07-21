@@ -65,7 +65,7 @@ public final class HttpServiceFactory
      */
     private static final String FELIX_HTTP_SHARED_SERVLET_CONTEXT_ATTRIBUTES = "org.apache.felix.http.shared_servlet_context_attributes";
 
-    /** Compatiblity property for previous versions. */
+    /** Compatibility property with previous versions. */
     private static final String OBSOLETE_REG_PROPERTY_ENDPOINTS = "osgi.http.service.endpoints";
 
     private final BundleContext bundleContext;

@@ -18,7 +18,8 @@ package org.apache.felix.http.base.internal.dispatch;
 
 import java.io.IOException;
 import java.util.Set;
-import javax.servlet.DispatcherType;
+
+import javax.annotation.CheckForNull;
 import javax.servlet.FilterChain;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -32,27 +33,28 @@ import javax.servlet.http.HttpSession;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
-import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.registry.PathResolution;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
-import org.apache.felix.http.base.internal.registry.ServletResolution;
-import org.apache.felix.http.base.internal.util.UriUtils;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
 
 public final class Dispatcher
 {
     private final HandlerRegistry handlerRegistry;
 
-    private WhiteboardManager whiteboardManager;
+    private volatile WhiteboardManager whiteboardManager;
 
     public Dispatcher(final HandlerRegistry handlerRegistry)
     {
         this.handlerRegistry = handlerRegistry;
     }
 
-    public void setWhiteboardManager(final WhiteboardManager service)
+    /**
+     * Set or unset the whiteboard manager.
+     * @param service The whiteboard manager or {@code null}
+     */
+    public void setWhiteboardManager(@CheckForNull final WhiteboardManager service)
     {
         this.whiteboardManager = service;
     }
@@ -72,7 +74,11 @@ public final class Dispatcher
         if ( session != null )
         {
             final Set<Long> ids = HttpSessionWrapper.getExpiredSessionContextIds(session);
-            this.whiteboardManager.sessionDestroyed(session, ids);
+            final WhiteboardManager mgr = this.whiteboardManager;
+            if ( mgr != null )
+            {
+                this.whiteboardManager.sessionDestroyed(session, ids);
+            }
         }
 
         // get full path
@@ -100,7 +106,6 @@ public final class Dispatcher
             return;
         }
 
-
         final ExtServletContext servletContext = pr.handler.getContext();
         final RequestInfo requestInfo = new RequestInfo(pr.servletPath, pr.pathInfo, null);
 
@@ -115,7 +120,9 @@ public final class Dispatcher
             {
                 servletContext.getServletRequestListener().requestInitialized(new ServletRequestEvent(servletContext, wrappedRequest));
             }
-            invokeChain(pr.handler, filterHandlers, wrappedRequest, wrappedResponse);
+            final FilterChain filterChain = new InvocationChain(pr.handler, filterHandlers);
+            filterChain.doFilter(wrappedRequest, wrappedResponse);
+
         }
         catch ( final Exception e)
         {
@@ -132,41 +139,5 @@ public final class Dispatcher
                 servletContext.getServletRequestListener().requestDestroyed(new ServletRequestEvent(servletContext, wrappedRequest));
             }
         }
-    }
-
-    /**
-     * @param servletHandler the servlet that should handle the forward request;
-     * @param request the {@link HttpServletRequest};
-     * @param response the {@link HttpServletResponse};
-     */
-    public void forward(final ServletResolution resolution, HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
-    {
-        final String requestURI = UriUtils.relativePath(request.getContextPath(), request.getRequestURI());
-        final FilterHandler[] filterHandlers = this.handlerRegistry.getFilters(resolution, DispatcherType.FORWARD, requestURI);
-
-        invokeChain(resolution.handler, filterHandlers, request, response);
-    }
-
-    /**
-     * @param servletHandler the servlet that should handle the include request;
-     * @param request the {@link HttpServletRequest};
-     * @param response the {@link HttpServletResponse};
-     */
-    public void include(final ServletResolution resolution, HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
-    {
-        final String requestURI = UriUtils.relativePath(request.getContextPath(), request.getRequestURI());
-        final FilterHandler[] filterHandlers = this.handlerRegistry.getFilters(resolution, DispatcherType.INCLUDE, requestURI);
-
-        invokeChain(resolution.handler, filterHandlers, request, response);
-    }
-
-    private void invokeChain(final ServletHandler servletHandler,
-            final FilterHandler[] filterHandlers,
-            final HttpServletRequest request,
-            final HttpServletResponse response)
-    throws IOException, ServletException
-    {
-        final FilterChain filterChain = new InvocationChain(servletHandler, filterHandlers);
-        filterChain.doFilter(request, response);
     }
 }
