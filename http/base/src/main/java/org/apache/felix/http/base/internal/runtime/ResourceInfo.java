@@ -37,11 +37,14 @@ public final class ResourceInfo extends WhiteboardServiceInfo<Object>
      */
     private final String prefix;
 
+    private final ServletInfo servletInfo;
+
     public ResourceInfo(final ServiceReference<Object> ref)
     {
         super(ref);
         this.patterns = getStringArrayProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PATTERN);
         this.prefix = getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PREFIX);
+        this.servletInfo = new ServletInfo(this);
     }
 
     @Override
@@ -70,5 +73,10 @@ public final class ResourceInfo extends WhiteboardServiceInfo<Object>
     public String[] getPatterns()
     {
         return patterns;
+    }
+
+    public ServletInfo getServletInfo()
+    {
+        return this.servletInfo;
     }
 }

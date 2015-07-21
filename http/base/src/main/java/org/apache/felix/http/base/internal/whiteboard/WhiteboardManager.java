@@ -692,7 +692,7 @@ public final class WhiteboardManager
             }
             else if ( info instanceof ResourceInfo )
             {
-                final ServletInfo servletInfo = new ServletInfo((ResourceInfo)info);
+                final ServletInfo servletInfo = ((ResourceInfo)info).getServletInfo();
                 final ExtServletContext servletContext = handler.getServletContext(info.getServiceReference().getBundle());
                 if ( servletContext == null )
                 {
@@ -766,7 +766,7 @@ public final class WhiteboardManager
             }
             else if ( info instanceof ResourceInfo )
             {
-                handler.getRegistry().unregisterServlet(new ServletInfo((ResourceInfo)info), true);
+                handler.getRegistry().unregisterServlet(((ResourceInfo)info).getServletInfo(), true);
                 handler.ungetServletContext(info.getServiceReference().getBundle());
             }
 
