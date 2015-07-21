@@ -209,7 +209,6 @@ public final class WhiteboardManager
 
         this.serviceRuntime.setServiceReference(null);
 
-        // TODO cleanup
         if (this.defaultContextRegistration != null)
         {
             this.defaultContextRegistration.unregister();

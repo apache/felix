@@ -19,7 +19,6 @@ package org.apache.felix.http.base.internal.whiteboard;
 import static org.apache.felix.http.base.internal.util.UriUtils.decodePath;
 import static org.apache.felix.http.base.internal.util.UriUtils.removeDotSegments;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Collections;
@@ -313,7 +312,7 @@ public class SharedServletContextImpl implements ServletContext
 
         final RequestDispatcher dispatcher;
         final ServletHandler servletHandler = this.registry.resolveServletByName(name);
-        if ( servletHandler != null ) 
+        if ( servletHandler != null )
         {
         	final ServletResolution resolution = new ServletResolution();
         	resolution.handler = servletHandler;
@@ -322,7 +321,7 @@ public class SharedServletContextImpl implements ServletContext
             final RequestInfo requestInfo = new RequestInfo("", null, null);
             dispatcher = new RequestDispatcherImpl(resolution, requestInfo);
         }
-        else 
+        else
         {
         	dispatcher = null;
         }
@@ -354,7 +353,7 @@ public class SharedServletContextImpl implements ServletContext
 
         final RequestDispatcher dispatcher;
         final PathResolution pathResolution = this.registry.resolve(requestURI);
-        if ( pathResolution != null ) 
+        if ( pathResolution != null )
         {
         	final ServletResolution resolution = new ServletResolution();
         	resolution.handler = pathResolution.handler;
@@ -362,7 +361,7 @@ public class SharedServletContextImpl implements ServletContext
             final RequestInfo requestInfo = new RequestInfo(pathResolution.servletPath, pathResolution.pathInfo, query);
             dispatcher = new RequestDispatcherImpl(resolution, requestInfo);
         }
-        else 
+        else
         {
         	dispatcher = null;
         }
