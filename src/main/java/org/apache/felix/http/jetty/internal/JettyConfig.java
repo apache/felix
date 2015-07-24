@@ -106,13 +106,13 @@ public final class JettyConfig
     /** Felix specific property to set the list of path exclusions for Web Application Bundles */
     public static final String FELIX_HTTP_PATH_EXCLUSIONS = "org.apache.felix.http.path_exclusions";
 
-    /** Felix specific property to configure the excluded cipher suites. @deprecated use {@link #FELIX_JETTY_EXCLUDE_SUITES} instead. */
+    /** Felix specific property to configure the excluded cipher suites. @deprecated use {@link #FELIX_JETTY_EXCLUDED_SUITES} instead. */
     @Deprecated
     public static final String FELIX_JETTY_EXCLUDED_SUITES_OLD = "org.apache.felix.https.jetty.cipersuites.excluded";
     /** Felix specific property to configure the excluded cipher suites */
     public static final String FELIX_JETTY_EXCLUDED_SUITES = "org.apache.felix.https.jetty.ciphersuites.excluded";
 
-    /** Felix specific property to configure the included cipher suites. @deprecated use {@link #FELIX_JETTY_INCLUDE_SUITES} instead. */
+    /** Felix specific property to configure the included cipher suites. @deprecated use {@link #FELIX_JETTY_INCLUDED_SUITES} instead. */
     @Deprecated
     public static final String FELIX_JETTY_INCLUDED_SUITES_OLD = "org.apache.felix.https.jetty.cipersuites.included";
     /** Felix specific property to configure the included cipher suites. */
@@ -126,6 +126,9 @@ public final class JettyConfig
 
     /** Felix specific property to configure the excluded protocols */
     public static final String FELIX_JETTY_EXCLUDED_PROTOCOLS = "org.apache.felix.https.jetty.protocols.excluded";
+
+    /** Felix specific properties to be able to disable renegotiation protocol for TLSv1 */
+    public static final String FELIX_JETTY_RENEGOTIATION_ALLOWED = "org.apache.felix.https.jetty.renegotiateAllowed";
 
     /** Felix specific property to control whether to enable Proxy/Load Balancer Connection */
     public static final String FELIX_PROXY_LOAD_BALANCER_CONNECTION_ENABLE = "org.apache.felix.proxy.load.balancer.connection.enable";
@@ -366,6 +369,10 @@ public final class JettyConfig
     public boolean isProxyLoadBalancerConnection()
     {
         return getBooleanProperty(FELIX_PROXY_LOAD_BALANCER_CONNECTION_ENABLE, false);
+    }
+
+    public boolean isRenegotiationAllowed() {
+        return getBooleanProperty(FELIX_JETTY_RENEGOTIATION_ALLOWED, true);
     }
 
     public void reset()

@@ -418,6 +418,8 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         {
             connector.setExcludeProtocols(this.config.getExcludedProtocols());
         }
+
+        connector.setRenegotiationAllowed(this.config.isRenegotiationAllowed());
     }
 
     private void configureConnector(final ServerConnector connector, int port)
