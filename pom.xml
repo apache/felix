@@ -83,6 +83,9 @@
                             osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.http.runtime.HttpServiceRuntime";
                             uses:="org.osgi.service.http.runtime,org.osgi.service.http.runtime.dto"
                         </Provide-Capability>
+                        <Require-Capability>
+                            osgi.contract;filter:="(&amp;(osgi.contract=JavaServlet)(version=3.1))"
+                        </Require-Capability>
                     </instructions>
                 <!-- Skip Baselining due to Jetty API -->
 	                <skip>true</skip>
