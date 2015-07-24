@@ -35,6 +35,7 @@ import javax.servlet.http.HttpSessionIdListener;
 import javax.servlet.http.HttpSessionListener;
 
 import org.apache.felix.http.base.internal.handler.ListenerHandler;
+import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.ListenerInfo;
 import org.osgi.service.http.runtime.dto.FailedListenerDTO;
 import org.osgi.service.http.runtime.dto.ListenerDTO;
@@ -129,7 +130,7 @@ public final class EventListenerRegistry implements
      */
     public void removeListeners(@Nonnull final ListenerInfo info)
     {
-        // each listener map returns the same handler, we just need it once to destory
+        // each listener map returns the same handler, we just need it once to destroy
         ListenerHandler handler = null;
         if ( info.isListenerType(ServletContextListener.class.getName()))
         {
@@ -176,7 +177,7 @@ public final class EventListenerRegistry implements
             final ServletContextListener listener = (ServletContextListener)l.getListener();
             if ( listener != null )
             {
-                listener.contextInitialized(new ServletContextEvent(l.getContext()));
+                contextInitialized(l.getListenerInfo(), listener, new ServletContextEvent(l.getContext()));
             }
         }
     }
@@ -187,7 +188,7 @@ public final class EventListenerRegistry implements
             final ServletContextListener listener = (ServletContextListener) l.getListener();
             if ( listener != null )
             {
-                listener.contextDestroyed(new ServletContextEvent(l.getContext()));
+                contextDestroyed(l.getListenerInfo(), listener, new ServletContextEvent(l.getContext()));
             }
         }
     }
@@ -334,6 +335,36 @@ public final class EventListenerRegistry implements
         if ( listenerDTOs.size() > 0 )
         {
             dto.listenerDTOs = listenerDTOs.toArray(new ListenerDTO[listenerDTOs.size()]);
+        }
+    }
+
+    public static void contextInitialized(
+            @Nonnull final ListenerInfo info,
+            @Nonnull final ServletContextListener listener,
+            @Nonnull final ServletContextEvent event)
+    {
+        try
+        {
+            listener.contextInitialized(event);
+        }
+        catch (final Throwable t)
+        {
+            SystemLogger.error(info.getServiceReference(), "Exception while calling servlet context listener.", t);
+        }
+    }
+
+    public static void contextDestroyed(
+            @Nonnull final ListenerInfo info,
+            @Nonnull final ServletContextListener listener,
+            @Nonnull final ServletContextEvent event)
+    {
+        try
+        {
+            listener.contextDestroyed(event);
+        }
+        catch (final Throwable t)
+        {
+            SystemLogger.error(info.getServiceReference(), "Exception while calling servlet context listener.", t);
         }
     }
 }
