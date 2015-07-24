@@ -50,6 +50,7 @@ import org.apache.felix.http.base.internal.handler.WhiteboardFilterHandler;
 import org.apache.felix.http.base.internal.handler.WhiteboardListenerHandler;
 import org.apache.felix.http.base.internal.handler.WhiteboardServletHandler;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
+import org.apache.felix.http.base.internal.registry.EventListenerRegistry;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.AbstractInfo;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
@@ -588,7 +589,7 @@ public final class WhiteboardManager
                                     final ServletContextListener listener = (ServletContextListener)handler.getListener();
                                     if ( listener != null )
                                     {
-                                        listener.contextInitialized(new ServletContextEvent(handler.getContext()));
+                                        EventListenerRegistry.contextInitialized(handler.getListenerInfo(), listener, new ServletContextEvent(handler.getContext()));
                                     }
                                 }
                             }
@@ -633,7 +634,7 @@ public final class WhiteboardManager
                                     final ServletContextListener listener = (ServletContextListener) handler.getListener();
                                     if ( listener != null )
                                     {
-                                        listener.contextDestroyed(new ServletContextEvent(handler.getContext()));
+                                        EventListenerRegistry.contextDestroyed(handler.getListenerInfo(), listener, new ServletContextEvent(handler.getContext()));
                                     }
                                 }
                             }
