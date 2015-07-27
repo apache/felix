@@ -80,8 +80,10 @@ public class DependencyManager {
     static {
         try {
 	    	Bundle bundle = FrameworkUtil.getBundle(DependencyManager.class);
-	        if (bundle != null && bundle.getState() != Bundle.ACTIVE) {
-	            bundle.start();
+	        if (bundle != null) {
+	            if (bundle.getState() != Bundle.ACTIVE) {	        
+	                bundle.start();
+	            }
 	            BundleContext bundleContext = bundle.getBundleContext();
 	            String index = bundleContext.getProperty(SERVICEREGISTRY_CACHE_INDICES);
 	            if (index != null) {
