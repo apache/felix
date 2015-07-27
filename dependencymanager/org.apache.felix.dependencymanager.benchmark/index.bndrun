@@ -33,7 +33,7 @@
 -runproperties:  \
 	ds.loglevel=warn,\
 	org.osgi.framework.bootdelegation='sun.*,com.sun.*,org.netbeans.*',\
-	org.apache.felix.dependencymanager.filterindex=objectClass,id
+	org.apache.felix.dependencymanager.filterindex='objectClass,id'
 -runvm: -server -Xmx1024m -Xms1024m
 -runee: JavaSE-1.8
 javac.source:          1.8
