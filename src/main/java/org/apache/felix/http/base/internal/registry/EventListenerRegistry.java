@@ -19,6 +19,7 @@ package org.apache.felix.http.base.internal.registry;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.servlet.ServletContextAttributeEvent;
 import javax.servlet.ServletContextAttributeListener;
@@ -166,7 +167,12 @@ public final class EventListenerRegistry implements
         }
     }
 
-    public ListenerHandler getServletContextListener(@Nonnull final ListenerInfo info)
+    /**
+     * Get the listener handler for the listener info
+     * @param info The listener info
+     * @return The handler or {@code null}.
+     */
+    public @CheckForNull ListenerHandler getServletContextListener(@Nonnull final ListenerInfo info)
     {
         return this.contextListeners.getListenerHandler(info);
     }
@@ -198,7 +204,14 @@ public final class EventListenerRegistry implements
     {
         for (final HttpSessionAttributeListener l : sessionAttributeListeners.getActiveListeners())
         {
-            l.attributeReplaced(event);
+            try
+            {
+                l.attributeReplaced(event);
+            }
+            catch (final Throwable t)
+            {
+                SystemLogger.error(null, "Exception while calling listener " + l, t);
+            }
         }
     }
 
@@ -207,7 +220,14 @@ public final class EventListenerRegistry implements
     {
         for (final HttpSessionAttributeListener l : sessionAttributeListeners.getActiveListeners())
         {
-            l.attributeRemoved(event);
+            try
+            {
+                l.attributeRemoved(event);
+            }
+            catch (final Throwable t)
+            {
+                SystemLogger.error(null, "Exception while calling listener " + l, t);
+            }
         }
     }
 
@@ -216,7 +236,14 @@ public final class EventListenerRegistry implements
     {
         for (final HttpSessionAttributeListener l : sessionAttributeListeners.getActiveListeners())
         {
-            l.attributeAdded(event);
+            try
+            {
+                l.attributeAdded(event);
+            }
+            catch (final Throwable t)
+            {
+                SystemLogger.error(null, "Exception while calling listener " + l, t);
+            }
         }
     }
 
@@ -225,7 +252,14 @@ public final class EventListenerRegistry implements
     {
         for (final ServletContextAttributeListener l : contextAttributeListeners.getActiveListeners())
         {
-            l.attributeReplaced(event);
+            try
+            {
+                l.attributeReplaced(event);
+            }
+            catch (final Throwable t)
+            {
+                SystemLogger.error(null, "Exception while calling listener " + l, t);
+            }
         }
     }
 
@@ -234,7 +268,14 @@ public final class EventListenerRegistry implements
     {
         for (final ServletContextAttributeListener l : contextAttributeListeners.getActiveListeners())
         {
-            l.attributeRemoved(event);
+            try
+            {
+                l.attributeRemoved(event);
+            }
+            catch (final Throwable t)
+            {
+                SystemLogger.error(null, "Exception while calling listener " + l, t);
+            }
         }
     }
 
@@ -243,7 +284,14 @@ public final class EventListenerRegistry implements
     {
         for (final ServletContextAttributeListener l : contextAttributeListeners.getActiveListeners())
         {
-            l.attributeAdded(event);
+            try
+            {
+                l.attributeAdded(event);
+            }
+            catch (final Throwable t)
+            {
+                SystemLogger.error(null, "Exception while calling listener " + l, t);
+            }
         }
     }
 
@@ -252,7 +300,14 @@ public final class EventListenerRegistry implements
     {
         for (final HttpSessionListener l : sessionListeners.getActiveListeners())
         {
-            l.sessionCreated(se);
+            try
+            {
+                l.sessionCreated(se);
+            }
+            catch (final Throwable t)
+            {
+                SystemLogger.error(null, "Exception while calling listener " + l, t);
+            }
         }
     }
 
@@ -261,7 +316,14 @@ public final class EventListenerRegistry implements
     {
         for (final HttpSessionListener l : sessionListeners.getActiveListeners())
         {
-            l.sessionDestroyed(se);
+            try
+            {
+                l.sessionDestroyed(se);
+            }
+            catch (final Throwable t)
+            {
+                SystemLogger.error(null, "Exception while calling listener " + l, t);
+            }
         }
     }
 
@@ -270,7 +332,14 @@ public final class EventListenerRegistry implements
     {
         for (final ServletRequestListener l : requestListeners.getActiveListeners())
         {
-            l.requestDestroyed(sre);
+            try
+            {
+                l.requestDestroyed(sre);
+            }
+            catch (final Throwable t)
+            {
+                SystemLogger.error(null, "Exception while calling listener " + l, t);
+            }
         }
     }
 
@@ -279,7 +348,14 @@ public final class EventListenerRegistry implements
     {
         for (final ServletRequestListener l : requestListeners.getActiveListeners())
         {
-            l.requestInitialized(sre);
+            try
+            {
+                l.requestInitialized(sre);
+            }
+            catch (final Throwable t)
+            {
+                SystemLogger.error(null, "Exception while calling listener " + l, t);
+            }
         }
     }
 
@@ -288,7 +364,14 @@ public final class EventListenerRegistry implements
     {
         for (final ServletRequestAttributeListener l : requestAttributeListeners.getActiveListeners())
         {
-            l.attributeAdded(srae);
+            try
+            {
+                l.attributeAdded(srae);
+            }
+            catch (final Throwable t)
+            {
+                SystemLogger.error(null, "Exception while calling listener " + l, t);
+            }
         }
     }
 
@@ -297,7 +380,14 @@ public final class EventListenerRegistry implements
     {
         for (final ServletRequestAttributeListener l : requestAttributeListeners.getActiveListeners())
         {
-            l.attributeRemoved(srae);
+            try
+            {
+                l.attributeRemoved(srae);
+            }
+            catch (final Throwable t)
+            {
+                SystemLogger.error(null, "Exception while calling listener " + l, t);
+            }
         }
     }
 
@@ -306,7 +396,14 @@ public final class EventListenerRegistry implements
     {
         for (final ServletRequestAttributeListener l : requestAttributeListeners.getActiveListeners())
         {
-            l.attributeReplaced(srae);
+            try
+            {
+                l.attributeReplaced(srae);
+            }
+            catch (final Throwable t)
+            {
+                SystemLogger.error(null, "Exception while calling listener " + l, t);
+            }
         }
     }
 
@@ -317,7 +414,14 @@ public final class EventListenerRegistry implements
     public void sessionIdChanged(@Nonnull final HttpSessionEvent event, @Nonnull final String oldSessionId) {
         for (final HttpSessionIdListener l : sessionIdListeners.getActiveListeners())
         {
-            l.sessionIdChanged(event, oldSessionId);
+            try
+            {
+                l.sessionIdChanged(event, oldSessionId);
+            }
+            catch (final Throwable t)
+            {
+                SystemLogger.error(null, "Exception while calling listener " + l, t);
+            }
         }
     }
 
