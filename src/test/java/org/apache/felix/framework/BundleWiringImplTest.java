@@ -222,10 +222,10 @@ public class BundleWiringImplTest
         assertEquals("There should be 2 state changes fired by the weaving", 2,
                 dummyWovenClassListener.stateList.size());
         assertEquals("The first state change should transform the class",
-                WovenClass.TRANSFORMED,
+                (Object)WovenClass.TRANSFORMED,
                 dummyWovenClassListener.stateList.get(0));
         assertEquals("The second state change should define the class",
-                WovenClass.DEFINED, dummyWovenClassListener.stateList.get(1));
+                (Object)WovenClass.DEFINED, dummyWovenClassListener.stateList.get(1));
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -292,7 +292,7 @@ public class BundleWiringImplTest
                 dummyWovenClassListener.stateList.size());
         assertEquals(
                 "The only state change should be a failed transform on the class",
-                WovenClass.TRANSFORMING_FAILED,
+                (Object)WovenClass.TRANSFORMING_FAILED,
                 dummyWovenClassListener.stateList.get(0));
 
     }
@@ -358,10 +358,10 @@ public class BundleWiringImplTest
         assertEquals("There should be 2 state changes fired by the weaving", 2,
                 dummyWovenClassListener.stateList.size());
         assertEquals("The first state change should transform the class",
-                WovenClass.TRANSFORMED,
+                (Object)WovenClass.TRANSFORMED,
                 dummyWovenClassListener.stateList.get(0));
         assertEquals("The second state change failed the define on the class",
-                WovenClass.DEFINE_FAILED,
+                (Object)WovenClass.DEFINE_FAILED,
                 dummyWovenClassListener.stateList.get(1));
     }
 
