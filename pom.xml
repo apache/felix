@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.apache.felix</groupId>
     <artifactId>felix-parent</artifactId>
-    <version>2.1</version>
+    <version>3</version>
     <relativePath>../pom/pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -30,6 +30,7 @@
   <version>5.1.0-SNAPSHOT</version>
   <properties>
     <dollar>$</dollar>
+    <felix.java.version>6</felix.java.version>
   </properties>
   <scm>
       <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/framework</connection>
@@ -39,15 +40,6 @@
 
   <build>
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <target>1.5</target>
-          <source>1.5</source>
-        </configuration>
-      </plugin>
-
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
@@ -65,7 +57,7 @@
                 org.osgi.resource.dto;-split-package:=first,                
                 org.osgi.service.packageadmin;-split-package:=first,
                 org.osgi.service.startlevel;-split-package:=first,
-	        org.osgi.service.url;-split-package:=first,
+	            org.osgi.service.url;-split-package:=first,
                 org.osgi.service.resolver,
                 org.osgi.util.tracker;-split-package:=first,
                 org.osgi.dto
@@ -142,12 +134,6 @@
         <groupId>org.ow2.asm</groupId>
         <artifactId>asm-all</artifactId>
         <version>4.2</version>
-        <scope>test</scope>
-    </dependency>
-    <dependency>
-        <groupId>org.mockito</groupId>
-        <artifactId>mockito-all</artifactId>
-        <version>1.10.19</version>
         <scope>test</scope>
     </dependency>
   </dependencies>
