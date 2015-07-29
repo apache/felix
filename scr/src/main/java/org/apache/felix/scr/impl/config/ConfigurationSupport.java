@@ -73,7 +73,7 @@ public class ConfigurationSupport implements ConfigurationListener
 
     // the service m_registration of the ConfigurationListener service
     private ServiceRegistration<?> m_registration;
-    
+
     public ConfigurationSupport(final BundleContext bundleContext, final ComponentRegistry registry)
     {
         this.m_registry = registry;
@@ -137,12 +137,12 @@ public class ConfigurationSupport implements ConfigurationListener
                                         if ( checkBundleLocation( config, bundleContext.getBundle() ) )
                                         {
                                             long changeCount = changeCounter.getChangeCount( config, false, -1 );
-                                            created |= holder.configurationUpdated( new TargetedPID( config.getPid() ), 
+                                            created |= holder.configurationUpdated( new TargetedPID( config.getPid() ),
                                             		new TargetedPID( config.getFactoryPid() ),
                                                     config.getProperties(),
                                                     changeCount );
                                         }
-                                        if ( !created ) 
+                                        if ( !created )
                                         {
                                         	return false;
                                         }
@@ -171,7 +171,7 @@ public class ConfigurationSupport implements ConfigurationListener
                                         	return false;
                                         }
                                     }
-                                    else 
+                                    else
                                     {
                                     	return false;
                                     }
@@ -298,17 +298,20 @@ public class ConfigurationSupport implements ConfigurationListener
                     if ( factoryPid != null || targetedPid.equals(oldTargetedPID) || targetedPid.bindsStronger( oldTargetedPID ))
                     {
                         final ConfigurationInfo configInfo = getConfigurationInfo( pid, targetedPid, componentHolder, bundleContext );
-                        if ( checkBundleLocation( configInfo.getBundleLocation(), bundleContext.getBundle() ) )
+                        if ( configInfo != null )
                         {
-                        	// The below seems to be unnecessary - and if put in, the behaviour is not spec compliant anymore:
-                        	// if a component has a required configuration and a modified method, the component must not be
-                        	// reactivated
-                            // If this is replacing a weaker targetedPID delete the old one.
-                            // if ( factoryPid == null && !targetedPid.equals(oldTargetedPID) && oldTargetedPID != null)
-                            //{
-                                //componentHolder.configurationDeleted( pid, factoryPid );
-                            //}
-                            componentHolder.configurationUpdated( pid, factoryPid, configInfo.getProps(), configInfo.getChangeCount() );
+                            if ( checkBundleLocation( configInfo.getBundleLocation(), bundleContext.getBundle() ) )
+                            {
+                            	// The below seems to be unnecessary - and if put in, the behaviour is not spec compliant anymore:
+                            	// if a component has a required configuration and a modified method, the component must not be
+                            	// reactivated
+                                // If this is replacing a weaker targetedPID delete the old one.
+                                // if ( factoryPid == null && !targetedPid.equals(oldTargetedPID) && oldTargetedPID != null)
+                                //{
+                                    //componentHolder.configurationDeleted( pid, factoryPid );
+                                //}
+                                componentHolder.configurationUpdated( pid, factoryPid, configInfo.getProps(), configInfo.getChangeCount() );
+                            }
                         }
                     }
 
@@ -336,24 +339,27 @@ public class ConfigurationSupport implements ConfigurationListener
                         //this sets the location to this component's bundle if not already set.  OK here
                         //since it used to be set to this bundle, ok to reset it
                         final ConfigurationInfo configInfo = getConfigurationInfo( pid, targetedPid, componentHolder, bundleContext );
-                        Activator.log(LogService.LOG_DEBUG, null, "LocationChanged event, same targetedPID {0}, location now {1}",
-                                new Object[] {targetedPid, configInfo.getBundleLocation()},
-                                null);
-                        if (configInfo.getProps() == null)
+                        if ( configInfo != null )
                         {
-                            throw new IllegalStateException("Existing Configuration with pid " + pid + 
-                                    " has had its properties set to null and location changed.  We expected a delete event first.");
+                            Activator.log(LogService.LOG_DEBUG, null, "LocationChanged event, same targetedPID {0}, location now {1}",
+                                    new Object[] {targetedPid, configInfo.getBundleLocation()},
+                                    null);
+                            if (configInfo.getProps() == null)
+                            {
+                                throw new IllegalStateException("Existing Configuration with pid " + pid +
+                                        " has had its properties set to null and location changed.  We expected a delete event first.");
+                            }
+                            //this config was used on this component.  Does it still match?
+                            if (!checkBundleLocation( configInfo.getBundleLocation(), bundleContext.getBundle() ))
+                            {
+                                //no, delete it
+                                componentHolder.configurationDeleted( pid, factoryPid );
+                                //maybe there's another match
+                                configureComponentHolder(componentHolder);
+
+                            }
+                            //else still matches
                         }
-                        //this config was used on this component.  Does it still match?
-                        if (!checkBundleLocation( configInfo.getBundleLocation(), bundleContext.getBundle() ))
-                        {
-                            //no, delete it
-                            componentHolder.configurationDeleted( pid, factoryPid );
-                            //maybe there's another match
-                            configureComponentHolder(componentHolder);
-                            
-                        }
-                        //else still matches
                         break;
                     }
                     boolean better = targetedPid.bindsStronger( oldTargetedPID );
@@ -362,24 +368,27 @@ public class ConfigurationSupport implements ConfigurationListener
                         //this sets the location to this component's bundle if not already set.  OK here
                         //because if it is set to this bundle we will use it.
                         final ConfigurationInfo configInfo = getConfigurationInfo( pid, targetedPid, componentHolder, bundleContext );
-                        Activator.log(LogService.LOG_DEBUG, null, "LocationChanged event, better targetedPID {0} compared to {1}, location now {2}",
-                                new Object[] {targetedPid, oldTargetedPID, configInfo.getBundleLocation()},
-                                null);
-                        if (configInfo.getProps() == null)
+                        if ( configInfo != null )
                         {
-                            //location has been changed before any properties are set.  We don't care.  Wait for an updated event with the properties
-                            break;
-                        }
-                        //this component was not configured with this config.  Should it be now?
-                        if ( checkBundleLocation( configInfo.getBundleLocation(), bundleContext.getBundle() ) )
-                        {
-                            if ( oldTargetedPID != null )
+                            Activator.log(LogService.LOG_DEBUG, null, "LocationChanged event, better targetedPID {0} compared to {1}, location now {2}",
+                                    new Object[] {targetedPid, oldTargetedPID, configInfo.getBundleLocation()},
+                                    null);
+                            if (configInfo.getProps() == null)
                             {
-                                //this is a better match, delete old before setting new
-                                componentHolder.configurationDeleted( pid, factoryPid );
+                                //location has been changed before any properties are set.  We don't care.  Wait for an updated event with the properties
+                                break;
                             }
-                            componentHolder.configurationUpdated( pid, factoryPid,
-                                    configInfo.getProps(), configInfo.getChangeCount() );
+                            //this component was not configured with this config.  Should it be now?
+                            if ( checkBundleLocation( configInfo.getBundleLocation(), bundleContext.getBundle() ) )
+                            {
+                                if ( oldTargetedPID != null )
+                                {
+                                    //this is a better match, delete old before setting new
+                                    componentHolder.configurationDeleted( pid, factoryPid );
+                                }
+                                componentHolder.configurationUpdated( pid, factoryPid,
+                                        configInfo.getProps(), configInfo.getChangeCount() );
+                            }
                         }
                     }
                     //else worse match, do nothing
@@ -399,7 +408,7 @@ public class ConfigurationSupport implements ConfigurationListener
         }
     }
 
-    
+
     private String getEventType(ConfigurationEvent event)
     {
         switch (event.getType())
@@ -421,7 +430,7 @@ public class ConfigurationSupport implements ConfigurationListener
         private final Dictionary<String, Object> props;
         private final String bundleLocation;
         private final long changeCount;
-        
+
         public ConfigurationInfo(Dictionary<String, Object> props, String bundleLocation, long changeCount)
         {
             this.props = props;
@@ -443,14 +452,14 @@ public class ConfigurationSupport implements ConfigurationListener
         {
             return bundleLocation;
         }
-        
+
     }
 
     /**
      * This gets config admin, gets the requested configuration, extracts the info we need from it, and ungets config admin.
      * Some versions of felix config admin do not allow access to configurations after the config admin instance they were obtained from
      * are ungot.  Extracting the info we need into "configInfo" solves this problem.
-     * 
+     *
      * @param pid TargetedPID for the desired configuration
      * @param targetedPid the targeted factory pid for a factory configuration or the pid for a singleton configuration
      * @param componentHolder ComponentHolder that holds the old change count (for r4 fake change counting)
@@ -549,7 +558,7 @@ public class ConfigurationSupport implements ConfigurationListener
                     best = config;
                 }
             }
-            
+
         }
         return best;
     }
@@ -594,7 +603,7 @@ public class ConfigurationSupport implements ConfigurationListener
         }
         return configsByPid.values();
     }
-    
+
     private boolean checkBundleLocation(Configuration config, Bundle bundle)
     {
         if (config == null)
@@ -637,18 +646,18 @@ public class ConfigurationSupport implements ConfigurationListener
         // no factories in case of problems
         return null;
     }
-    
+
     private String getTargetedPidFilter(String pid, Bundle bundle, String key)
     {
         String bsn = bundle.getSymbolicName();
         String version = bundle.getVersion().toString();
         String location = escape(bundle.getLocation());
         String f = String.format(
-                "(|(%1$s=%2$s)(%1$s=%2$s|%3$s)(%1$s=%2$s|%3$s|%4$s)(%1$s=%2$s|%3$s|%4$s|%5$s))", 
+                "(|(%1$s=%2$s)(%1$s=%2$s|%3$s)(%1$s=%2$s|%3$s|%4$s)(%1$s=%2$s|%3$s|%4$s|%5$s))",
                 key, pid, bsn, version, location );
         return f;
     }
-    
+
     /**
      * see core spec 3.2.7.  Escape \*() with preceding \
      * @param value
@@ -658,26 +667,26 @@ public class ConfigurationSupport implements ConfigurationListener
     {
         return value.replaceAll( "([\\\\\\*\\(\\)])", "\\\\$1" );
     }
-    
-    
+
+
     private interface ChangeCount {
         long getChangeCount( Configuration configuration, boolean fromEvent, long previous );
     }
-    
+
     private static class R5ChangeCount implements ChangeCount {
 
         public long getChangeCount(Configuration configuration, boolean fromEvent, long previous)
         {
             return configuration.getChangeCount();
         }
-    }   
-    
+    }
+
     private static class R4ChangeCount implements ChangeCount {
 
         public long getChangeCount(Configuration configuration, boolean fromEvent, long previous)
         {
             return fromEvent? previous + 1:0;
         }
-        
+
     }
 }
