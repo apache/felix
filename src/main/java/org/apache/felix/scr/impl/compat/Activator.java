@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.felix.scr.ScrInfo;
 import org.apache.felix.scr.ScrService;
+import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -35,7 +36,7 @@ import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 
-public class Activator
+public class Activator implements BundleActivator
 {
     // tracker of the runtime service
     private volatile ServiceTracker<ServiceComponentRuntime, ServiceComponentRuntime> runtimeTracker;
