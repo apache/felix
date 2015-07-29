@@ -111,6 +111,10 @@ public class ArrayMap<K, V> extends AbstractMap<K, V> {
                             }
                             return (V) table[(index++ << 1) + 1];
                         }
+                        
+                        public void remove() {
+                            throw new UnsupportedOperationException();
+                        }
                     };
                 }
 
@@ -145,6 +149,10 @@ public class ArrayMap<K, V> extends AbstractMap<K, V> {
                         entry.value = table[i + 1];
                         index++;
                         return entry;
+                    }
+	
+	                public void remove() {
+                        throw new UnsupportedOperationException();
                     }
                 };
             }
