@@ -551,7 +551,7 @@ public final class JettyConfig
             final String stringVal = ((String) value).trim();
             if (stringVal.length() > 0)
             {
-                return new String[] { stringVal };
+                return stringVal.split(",");
             }
         }
         else if (value instanceof String[])

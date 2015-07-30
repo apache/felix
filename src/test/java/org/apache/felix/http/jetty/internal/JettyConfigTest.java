@@ -18,6 +18,7 @@ package org.apache.felix.http.jetty.internal;
 
 import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.replay;
+import static org.junit.Assert.assertArrayEquals;
 
 import java.util.Hashtable;
 
@@ -111,6 +112,15 @@ public class JettyConfigTest extends TestCase
         this.config.update(props);
         assertTrue(this.config.getHttpPort() == port);
         assertTrue(this.config.getHttpsPort() == port);
+    }
+
+    public void testParseStringArrayProperty() {
+        Hashtable<String, Object> props = new Hashtable<>();
+        props.put("org.apache.felix.https.jetty.ciphersuites.excluded",
+                  "TLS_DHE_RSA_WITH_AES_128_CBC_SHA,TLS_DHE_RSA_WITH_AES_128_CBC_SHA256,TLS_ECDH_anon_WITH_RC4_128_SHA");
+        this.config.update(props);
+        String[] expecteds = {"TLS_DHE_RSA_WITH_AES_128_CBC_SHA", "TLS_DHE_RSA_WITH_AES_128_CBC_SHA256", "TLS_ECDH_anon_WITH_RC4_128_SHA"};
+        assertArrayEquals(expecteds, this.config.getExcludedCipherSuites());
     }
 
     @Override
