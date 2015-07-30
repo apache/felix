@@ -31,6 +31,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import junit.framework.TestCase;
+
 import org.apache.felix.framework.ServiceRegistrationImpl.ServiceReferenceImpl;
 import org.apache.felix.framework.ServiceRegistry.ServiceHolder;
 import org.apache.felix.framework.ServiceRegistry.UsageCount;
@@ -50,8 +52,6 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.hooks.service.EventHook;
 import org.osgi.framework.hooks.service.FindHook;
 import org.osgi.framework.hooks.service.ListenerHook;
-
-import junit.framework.TestCase;
 
 public class ServiceRegistryTest extends TestCase
 {
@@ -519,9 +519,8 @@ public class ServiceRegistryTest extends TestCase
 
         inUseMap.put(b, new UsageCount[] {uc});
 
-        assertTrue(sr.ungetService(b, ref, null));
+        assertFalse(sr.ungetService(b, ref, null));
         assertNull(uc.m_svcHolderRef.get());
-        assertNull(inUseMap.get(b));
     }
 
     @SuppressWarnings("unchecked")
@@ -551,7 +550,6 @@ public class ServiceRegistryTest extends TestCase
 
         assertTrue(sr.ungetService(b, ref, null));
         assertNull(uc.m_svcHolderRef.get());
-        assertNull(inUseMap.get(b));
 
         Mockito.verify(reg, Mockito.times(1)).
             ungetService(Mockito.isA(Bundle.class), Mockito.eq(svc));
@@ -609,7 +607,6 @@ public class ServiceRegistryTest extends TestCase
 
         assertTrue(sr.ungetService(b, ref, null));
         assertNull(uc.m_svcHolderRef.get());
-        assertNull(inUseMap.get(b));
 
         Mockito.verify(reg, Mockito.never()).
             ungetService(Mockito.isA(Bundle.class), Mockito.any());
@@ -651,7 +648,6 @@ public class ServiceRegistryTest extends TestCase
             assertEquals("Test!", re.getMessage());
         }
         assertNull(uc.m_svcHolderRef.get());
-        assertNull(inUseMap.get(b));
 
         Mockito.verify(reg, Mockito.times(1)).ungetService(b, svc);
     }
@@ -1148,6 +1144,27 @@ public class ServiceRegistryTest extends TestCase
         latch.await();
 
         assertTrue("" + exceptions.size(), exceptions.isEmpty());
+    }
+
+    public void testUsageCountCleanup() throws Exception
+    {
+        ServiceRegistry sr = new ServiceRegistry(null, null);
+        Bundle regBundle = Mockito.mock(Bundle.class);
+
+        ServiceRegistration<?> reg = sr.registerService(
+                regBundle, new String [] {String.class.getName()}, "hi", null);
+
+        final Bundle clientBundle = Mockito.mock(Bundle.class);
+        Mockito.when(clientBundle.getBundleId()).thenReturn(327L);
+
+        assertEquals("hi", sr.getService(clientBundle, reg.getReference(), false));
+        sr.ungetService(clientBundle, reg.getReference(), null);
+
+        ConcurrentMap<Bundle, UsageCount[]> inUseMap =
+                (ConcurrentMap<Bundle, UsageCount[]>) getPrivateField(sr, "m_inUseMap");
+
+        sr.unregisterService(regBundle, reg);
+        assertEquals(0, inUseMap.size());
     }
 
     private Object getPrivateField(Object obj, String fieldName) throws NoSuchFieldException,
