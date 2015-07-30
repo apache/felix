@@ -193,7 +193,7 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 new String[] {"/system"},
                 2147483647,
                 null, null,
-                bundle.getBundleContext().getProperty(JettyConfig.FELIX_HTTP_PATH_EXCLUSIONS)));
+                getStringArray(bundle.getBundleContext().getProperty(JettyConfig.FELIX_HTTP_PATH_EXCLUSIONS))));
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_EXCLUDED_SUITES,
                 "Excluded Cipher Suites",
@@ -202,7 +202,7 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 null,
                 2147483647,
                 null, null,
-                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_EXCLUDED_SUITES)));
+                getStringArray(bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_EXCLUDED_SUITES))));
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_INCLUDED_SUITES,
                 "Included Cipher Suites",
@@ -211,7 +211,7 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 null,
                 2147483647,
                 null, null,
-                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_INCLUDED_SUITES)));
+                getStringArray(bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_INCLUDED_SUITES))));
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_SEND_SERVER_HEADER,
                 "Send Server Header",
@@ -229,7 +229,7 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 null,
                 2147483647,
                 null, null,
-                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_INCLUDED_PROTOCOLS)));
+                getStringArray(bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_INCLUDED_PROTOCOLS))));
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_EXCLUDED_PROTOCOLS,
                 "Excluded Protocols",
@@ -241,7 +241,7 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 null,
                 2147483647,
                 null, null,
-                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_EXCLUDED_PROTOCOLS)));
+                getStringArray(bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_EXCLUDED_PROTOCOLS))));
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_PROXY_LOAD_BALANCER_CONNECTION_ENABLE,
                 "Enable Proxy/Load Balancer Connection",
@@ -290,6 +290,15 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
         };
     }
 
+    private String [] getStringArray(final String value)
+    {
+        if ( value != null )
+        {
+            return value.trim().split(",");
+        }
+        return null;
+    }
+
     private static class AttributeDefinitionImpl implements AttributeDefinition
     {
 
@@ -305,33 +314,41 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
 
         AttributeDefinitionImpl( final String id, final String name, final String description, final String defaultValue, final String overrideValue )
         {
-            this( id, name, description, STRING, defaultValue == null ? null : new String[] { defaultValue }, 0, null, null, overrideValue );
+            this( id, name, description, STRING, defaultValue == null ? null : new String[] { defaultValue }, 0, null, null, overrideValue == null ? null : new String[] { overrideValue } );
         }
 
         AttributeDefinitionImpl( final String id, final String name, final String description, final int defaultValue, final String overrideValue )
         {
             this( id, name, description, INTEGER, new String[]
-                { String.valueOf(defaultValue) }, 0, null, null, overrideValue );
+                { String.valueOf(defaultValue) }, 0, null, null, overrideValue == null ? null : new String[] { overrideValue } );
         }
 
         AttributeDefinitionImpl( final String id, final String name, final String description, final boolean defaultValue, final String overrideValue )
         {
             this( id, name, description, BOOLEAN, new String[]
-                { String.valueOf(defaultValue) }, 0, null, null, overrideValue );
+                { String.valueOf(defaultValue) }, 0, null, null, overrideValue == null ? null : new String[] { overrideValue } );
+        }
+
+        AttributeDefinitionImpl( final String id, final String name, final String description, final int type,
+                final String[] defaultValues, final int cardinality, final String[] optionLabels,
+                final String[] optionValues,
+                final String overrideValue)
+        {
+            this(id, name, description, type, defaultValues, cardinality, optionLabels, optionValues, overrideValue == null ? null : new String[] { overrideValue });
         }
 
         AttributeDefinitionImpl( final String id, final String name, final String description, final int type,
             final String[] defaultValues, final int cardinality, final String[] optionLabels,
             final String[] optionValues,
-            final String overrideValue)
+            final String[] overrideValues)
         {
             this.id = id;
             this.name = name;
             this.description = description;
             this.type = type;
-            if ( overrideValue != null )
+            if ( overrideValues != null )
             {
-               this.defaultValues = new String[] {overrideValue};
+               this.defaultValues = overrideValues;
             }
             else
             {
