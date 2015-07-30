@@ -144,16 +144,6 @@ public class FilePersistenceManager implements PersistenceManager
      */
     private final boolean isWin;
 
-    /**
-     * A set of three character names (prefixes) considered reserved
-     * on Windows platform systems. This set consists of names such as
-     * LPT, CON, COM, etc., which cause weird behaviour on Windows systems
-     * if used as prefixes on path segments. See .
-     *
-     * @see <a href="https://issues.apache.org/jira/browse/FELIX-4302">FELIX-4302</a>
-     */
-    private final Set winDevNames;
-
     // sets up this class defining the set of valid characters in path
     // set getFile(String) for details.
     static
@@ -187,21 +177,37 @@ public class FilePersistenceManager implements PersistenceManager
         // "Windows" hence we assume a Windows platform in thus case.
         final String osName = System.getProperty( "os.name" );
         isWin = osName != null && osName.startsWith( "Windows" );
-        if ( isWin )
-        {
-            winDevNames = new HashSet();
-            winDevNames.add( "CON" ); // keyboard and display
-            winDevNames.add( "PRN" ); // system list; generally par. port
-            winDevNames.add( "AUX" ); // auxiliary; generally ser. port
-            winDevNames.add( "CLO" ); // CLOCK$; system real time clock
-            winDevNames.add( "NUL" ); // Bit-bucket
-            winDevNames.add( "COM" ); // COM1..COMn; serial ports
-            winDevNames.add( "LPT" ); // LPT1..LPTn; parallel ports
+    }
+    
+    private static boolean equalsNameWithPrefixPlusOneDigit( String name, String prefix) {
+        if ( name.length() != prefix.length() + 1 ) {
+            return false;
         }
-        else
-        {
-            winDevNames = null;
+        if ( !name.startsWith(prefix) ) {
+            return false;
         }
+        char charAfterPrefix = name.charAt( prefix.length() );
+        return charAfterPrefix > '0' && charAfterPrefix < '9';
+    }
+
+    private static boolean isWinReservedName(String name) {
+        String upperCaseName = name.toUpperCase();
+        if ( "CON".equals( upperCaseName ) ) {
+            return true;
+        } else if ( "PRN".equals( upperCaseName ) ){
+            return true;
+        } else if ( "AUX".equals( upperCaseName ) ){
+            return true;
+        } else if ( "CLOCK$".equals( upperCaseName ) ){
+            return true;
+        } else if ( "NUL".equals( upperCaseName ) ){
+            return true;
+        } else if ( equalsNameWithPrefixPlusOneDigit( upperCaseName, "COM") ) {
+            return true;
+        } else if ( equalsNameWithPrefixPlusOneDigit( upperCaseName, "LPT") ){
+            return true;
+        }
+        return false;
     }
 
 
@@ -403,7 +409,7 @@ public class FilePersistenceManager implements PersistenceManager
             while ( segments.hasMoreTokens() )
             {
                 final String segment = segments.nextToken();
-                if ( segment.length() >= 3 && winDevNames.contains( segment.substring( 0, 3 ).toUpperCase() ) )
+                if ( isWinReservedName(segment) )
                 {
                     appendEncoded( pidBuffer, segment.charAt( 0 ) );
                     pidBuffer.append( segment.substring( 1 ) );

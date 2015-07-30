@@ -102,7 +102,7 @@ public class FilePersistenceManagerTest extends TestCase
             assertEquals("%0043ON", winFpm.encodePid( "CON" ));
             assertEquals("%0050RN", winFpm.encodePid( "PRN" ));
             assertEquals("%0041UX", winFpm.encodePid( "AUX" ));
-            assertEquals("%0043LOCK%0024", winFpm.encodePid( "CLOCK$" ));
+            assertEquals("CLOCK%0024", winFpm.encodePid( "CLOCK$" ));
             assertEquals("%004eUL", winFpm.encodePid( "NUL" ));
             assertEquals("%0043OM6", winFpm.encodePid( "COM6" ));
         } finally {
