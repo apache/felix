@@ -140,7 +140,7 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
             }
 
             MetaTypeInformationImpl impl = null;
-            if ( bundle.getState() == Bundle.ACTIVE || bundle.getState() == Bundle.STARTING )
+            if ( bundle.getState() == Bundle.ACTIVE || bundle.getState() == Bundle.STARTING || bundle.getState() == Bundle.RESOLVED )
             {
                 putMetaTypeInformationInternal( bundle, mti );
             }

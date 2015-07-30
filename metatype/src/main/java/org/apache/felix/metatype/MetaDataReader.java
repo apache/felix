@@ -81,13 +81,15 @@ public class MetaDataReader
     private KXmlParser parser = new KXmlParser();
     private String namespace = NAMESPACE_1_0;
 
+    private URL documentURL;
+
     /** Sets of attributes belonging to XML elements. */
-    private static final Set AD_ATTRIBUTES = new HashSet(Arrays.asList(new String[] { "name", "description", "id", "type", "cardinality", "min", "max", "default", "required" }));
-    private static final Set ATTRIBUTE_ATTRIBUTES = new HashSet(Arrays.asList(new String[] { "adref", "content" }));
-    private static final Set DESIGNATE_ATTRIBUTES = new HashSet(Arrays.asList(new String[] { "pid", "factoryPid", "bundle", "optional", "merge" }));
-    private static final Set DESIGNATEOBJECT_ATTRIBUTES = new HashSet(Arrays.asList(new String[] { "ocdref" }));
-    private static final Set METADATA_ATTRIBUTES = new HashSet(Arrays.asList(new String[] { "localization" }));
-    private static final Set OCD_ATTRIBUTES = new HashSet(Arrays.asList(new String[] { "name", "description", "id" }));
+    private static final Set<String> AD_ATTRIBUTES = new HashSet<String>(Arrays.asList(new String[] { "name", "description", "id", "type", "cardinality", "min", "max", "default", "required" }));
+    private static final Set<String> ATTRIBUTE_ATTRIBUTES = new HashSet<String>(Arrays.asList(new String[] { "adref", "content" }));
+    private static final Set<String> DESIGNATE_ATTRIBUTES = new HashSet<String>(Arrays.asList(new String[] { "pid", "factoryPid", "bundle", "optional", "merge" }));
+    private static final Set<String> DESIGNATEOBJECT_ATTRIBUTES = new HashSet<String>(Arrays.asList(new String[] { "ocdref" }));
+    private static final Set<String> METADATA_ATTRIBUTES = new HashSet<String>(Arrays.asList(new String[] { "localization" }));
+    private static final Set<String> OCD_ATTRIBUTES = new HashSet<String>(Arrays.asList(new String[] { "name", "description", "id" }));
 
     /**
      * Parses the XML document provided by the <code>url</code>. The XML document
@@ -107,6 +109,7 @@ public class MetaDataReader
      */
     public MetaData parse(URL url) throws IOException
     {
+        this.documentURL = url;
         InputStream ins = null;
         try
         {
@@ -137,6 +140,7 @@ public class MetaDataReader
                     // ignore
                 }
             }
+            this.documentURL = null;
         }
     }
 
@@ -637,9 +641,13 @@ public class MetaDataReader
         return new XmlPullParserException(message, this.parser, null);
     }
 
-    private void logMissingElement(String elementName)
+    private void logMissingElement(final String elementName)
     {
         String message = "Missing element " + elementName + " in element " + this.parser.getName();
+        if ( documentURL != null )
+        {
+            message = message + " : " + this.documentURL;
+        }
         Activator.log(LogService.LOG_ERROR, message);
     }
 
