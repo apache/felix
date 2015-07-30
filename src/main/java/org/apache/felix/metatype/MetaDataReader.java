@@ -316,7 +316,8 @@ public class MetaDataReader
                     if (getNamespaceVersion() < 13 && ocd.getAttributeDefinitions() == null)
                     {
                         // Need at least one AD in versions 1.0, 1.1 & 1.2...
-                        throw missingElement("AD");
+                        logMissingElement("AD");
+                        ocd = null;
                     }
                     break;
                 }
@@ -377,7 +378,8 @@ public class MetaDataReader
                     if (designate.getObject() == null)
                     {
                         // Exactly 1 Object is allowed...
-                        throw missingElement("Object");
+                        logMissingElement("Object");
+                        designate = null;
                     }
                     break;
                 }
@@ -405,7 +407,7 @@ public class MetaDataReader
 
         readOptionalAttributes(ad, AD_ATTRIBUTES);
 
-        Map options = new LinkedHashMap();
+        Map<String, String> options = new LinkedHashMap<String, String>();
         int eventType = this.parser.next();
         while (eventType != XmlPullParser.END_DOCUMENT)
         {
@@ -439,7 +441,7 @@ public class MetaDataReader
 
         ad.setOptions(options);
 
-        // set value as late as possible to force an options check (FELIX-3884, FELIX-4665)... 
+        // set value as late as possible to force an options check (FELIX-3884, FELIX-4665)...
         if (dfltValue != null)
         {
             ad.setDefaultValue(dfltValue);
@@ -635,10 +637,10 @@ public class MetaDataReader
         return new XmlPullParserException(message, this.parser, null);
     }
 
-    private XmlPullParserException missingElement(String elementName)
+    private void logMissingElement(String elementName)
     {
         String message = "Missing element " + elementName + " in element " + this.parser.getName();
-        return new XmlPullParserException(message, this.parser, null);
+        Activator.log(LogService.LOG_ERROR, message);
     }
 
     private XmlPullParserException unexpectedElement(String elementName)
