@@ -317,17 +317,17 @@ public class ServiceRegistry
 
                 // Increment the usage count and grab the already retrieved
                 // service object, if one exists.
-                checkCountOverflow(usage.m_count.incrementAndGet());
-
+                incrementToPositiveValue(usage.m_count);
                 svcObj = usage.getService();
+
                 if ( isServiceObjects )
                 {
-                    checkCountOverflow(usage.m_serviceObjectsCount.incrementAndGet());
+                    incrementToPositiveValue(usage.m_serviceObjectsCount);
                 }
 
                 // If we have a usage count, but no service object, then we haven't
                 // cached the service object yet, so we need to create one.
-                if ((usage != null) && (svcObj == null))
+                if (usage != null)
                 {
                     ServiceHolder holder = null;
 
@@ -377,6 +377,21 @@ public class ServiceRegistry
         }
 
         return (S) svcObj;
+    }
+
+    // Increment the Atomic Long by 1, and ensure the result is at least 1.
+    private void incrementToPositiveValue(AtomicLong al)
+    {
+        boolean success = false;
+
+        while (!success)
+        {
+            long oldVal = al.get();
+            long newVal = Math.max(oldVal + 1L, 1L);
+            checkCountOverflow(newVal);
+
+            success = al.compareAndSet(oldVal, newVal);
+        }
     }
 
     private void checkCountOverflow(long c)
@@ -442,9 +457,10 @@ public class ServiceRegistry
                                 .getRegistration().ungetService(bundle, svc);
 
                         }
-
                     }
                 }
+
+                return count >= 0;
             }
             finally
             {
@@ -455,7 +471,7 @@ public class ServiceRegistry
 
                 // If the registration is invalid or the usage count has reached
                 // zero, then flush it.
-                if (count <= 0 || !reg.isValid())
+                if (!reg.isValid())
                 {
                     flushUsageCount(bundle, ref, usage);
                 }
@@ -465,8 +481,6 @@ public class ServiceRegistry
         {
             reg.unmarkCurrentThread();
         }
-
-        return true;
     }
 
 
@@ -492,6 +506,9 @@ public class ServiceRegistry
         // service cache.
         for (int i = 0; i < usages.length; i++)
         {
+            if (usages[i].m_svcHolderRef.get() == null)
+                continue;
+
             // Keep ungetting until all usage count is zero.
             while (ungetService(bundle, usages[i].m_ref, usages[i].m_prototype ? usages[i].getService() : null))
             {
