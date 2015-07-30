@@ -20,6 +20,7 @@ package org.apache.felix.cm.impl;
 
 
 import java.io.IOException;
+
 import org.osgi.framework.Bundle;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
@@ -38,10 +39,10 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
 {
 
     // The configuration manager to which most of the tasks are delegated
-    private ConfigurationManager configurationManager;
+    private volatile ConfigurationManager configurationManager;
 
     // The bundle for which this instance has been created
-    private Bundle bundle;
+    private volatile Bundle bundle;
 
 
     ConfigurationAdminImpl( ConfigurationManager configurationManager, Bundle bundle )
