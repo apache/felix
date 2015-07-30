@@ -352,7 +352,7 @@ public final class JettyConfig
 
     public boolean isSendServerHeader()
     {
-        return getBooleanProperty(FELIX_JETTY_SEND_SERVER_HEADER, true);
+        return getBooleanProperty(FELIX_JETTY_SEND_SERVER_HEADER, false);
     }
 
     /**
