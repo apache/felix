@@ -24,10 +24,10 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 
-import junit.framework.TestCase;
-
 import org.osgi.service.metatype.AttributeDefinition;
 import org.xmlpull.v1.XmlPullParserException;
+
+import junit.framework.TestCase;
 
 /**
  * The <code>MetaDataReaderTest</code> class tests the
@@ -39,6 +39,7 @@ public class MetaDataReaderTest extends TestCase
 {
     private MetaDataReader reader;
 
+    @Override
     protected void setUp() throws Exception
     {
         super.setUp();
@@ -46,6 +47,7 @@ public class MetaDataReaderTest extends TestCase
         reader = new MetaDataReader();
     }
 
+    @Override
     protected void tearDown() throws Exception
     {
         reader = null;
@@ -184,7 +186,7 @@ public class MetaDataReaderTest extends TestCase
     }
 
     /**
-     * FELIX-4665 - Default values can be empty. 
+     * FELIX-4665 - Default values can be empty.
      */
     public void testAttributeWithDefaultValueOk() throws IOException, XmlPullParserException
     {
@@ -221,7 +223,7 @@ public class MetaDataReaderTest extends TestCase
     }
 
     /**
-     * FELIX-4644 - Enforce that we can only have one Object in a Designate element. 
+     * FELIX-4644 - Enforce that we can only have one Object in a Designate element.
      */
     public void testOCDWithoutADFail() throws IOException, XmlPullParserException
     {
@@ -231,15 +233,8 @@ public class MetaDataReaderTest extends TestCase
 
         String xml = "<MetaData><OCD id=\"" + ocdId + "\" name=\"" + ocdName + "\" description=\"" + ocdDescription + "\" /></MetaData>";
 
-        try
-        {
-            read(xml); // should fail!
-            fail("IOException expected!");
-        }
-        catch (IOException e)
-        {
-            assertTrue(e.getMessage().contains("Missing element AD"));
-        }
+        final MetaData md = read(xml);
+        assertNull(md.getObjectClassDefinitions());
     }
 
     /**
@@ -269,7 +264,7 @@ public class MetaDataReaderTest extends TestCase
     }
 
     /**
-     * FELIX-4644 - Enforce that we can only have one Object in a Designate element. 
+     * FELIX-4644 - Enforce that we can only have one Object in a Designate element.
      */
     public void testDesignateWithoutObjectFail() throws IOException, XmlPullParserException
     {
@@ -281,19 +276,13 @@ public class MetaDataReaderTest extends TestCase
         String xml = "<MetaData><OCD id=\"" + ocdId + "\" name=\"" + ocdName + "\" description=\"" + ocdDescription + "\"><AD id=\"attr\" type=\"String\" required=\"false\" /></OCD><Designate pid=\""
             + pid + "\" bundle=\"*\"></Designate></MetaData>";
 
-        try
-        {
-            read(xml); // should fail!
-            fail("IOException expected!");
-        }
-        catch (IOException e)
-        {
-            assertTrue(e.getMessage().contains("Missing element Object"));
-        }
+        final MetaData md = read(xml);
+        assertNull(md.getDesignates());
+        assertEquals(1, md.getObjectClassDefinitions().size());
     }
 
     /**
-     * FELIX-4644 - Enforce that we can only have one Object in a Designate element. 
+     * FELIX-4644 - Enforce that we can only have one Object in a Designate element.
      */
     public void testDesignateWithObjectOk() throws IOException, XmlPullParserException
     {
@@ -326,7 +315,7 @@ public class MetaDataReaderTest extends TestCase
     }
 
     /**
-     * FELIX-4644 - Enforce that we can only have one Object in a Designate element. 
+     * FELIX-4644 - Enforce that we can only have one Object in a Designate element.
      */
     public void testDesignateWithTwoObjectsFail() throws IOException, XmlPullParserException
     {
@@ -350,7 +339,7 @@ public class MetaDataReaderTest extends TestCase
     }
 
     /**
-     * FELIX-4799 - tests that we can have multiple designates for the same factory PID in one MetaData configuration. 
+     * FELIX-4799 - tests that we can have multiple designates for the same factory PID in one MetaData configuration.
      */
     public void testMultipleFactoryDesignatesWithSamePidOk() throws IOException, XmlPullParserException
     {
@@ -366,7 +355,7 @@ public class MetaDataReaderTest extends TestCase
     }
 
     /**
-     * FELIX-4799 - tests that we can have multiple designates for the same factory PID in one MetaData configuration. 
+     * FELIX-4799 - tests that we can have multiple designates for the same factory PID in one MetaData configuration.
      */
     public void testMultipleFactoryDesignatesWithDifferentPidsOk() throws IOException, XmlPullParserException
     {
