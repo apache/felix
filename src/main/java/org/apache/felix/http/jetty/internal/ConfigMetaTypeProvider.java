@@ -216,7 +216,7 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_SEND_SERVER_HEADER,
                 "Send Server Header",
                 "If enabled, the server header is sent.",
-                true,
+                false,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_SEND_SERVER_HEADER)));
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_INCLUDED_PROTOCOLS,
