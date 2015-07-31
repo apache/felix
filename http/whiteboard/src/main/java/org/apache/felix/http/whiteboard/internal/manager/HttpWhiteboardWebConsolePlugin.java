@@ -20,9 +20,9 @@ package org.apache.felix.http.whiteboard.internal.manager;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Comparator;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -47,7 +47,7 @@ public class HttpWhiteboardWebConsolePlugin extends HttpServlet
 
     public String getTitle()
     {
-        return "Http Whiteboard";
+        return "Felix Http Whiteboard";
     }
 
     public HttpWhiteboardWebConsolePlugin(final ExtenderManager extMgr)
@@ -304,6 +304,7 @@ public class HttpWhiteboardWebConsolePlugin extends HttpServlet
     {
         Set<FilterMapping> mappings = new TreeSet<FilterMapping>(new Comparator<FilterMapping>()
         {
+            @Override
             public int compare(FilterMapping o1, FilterMapping o2)
             {
                 if (o1 == o2)
