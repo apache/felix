@@ -362,6 +362,10 @@ public class ServiceRegistry
                                 svcObj = holder.m_service;
                             }
                         }
+
+                        // if someone concurrently changed the holder, loop again
+                        if (holder != usage.m_svcHolderRef.get())
+                            holder = null;
                     }
                 }
             }
