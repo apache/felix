@@ -249,8 +249,11 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 false,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_PROXY_LOAD_BALANCER_CONNECTION_ENABLE)));
 
-        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_RENEGOTIATION_ALLOWED, "Renegotiation allowed", "Whether TLS renegotiation is allowed (true by default)",
-                                               true, bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_RENEGOTIATION_ALLOWED)));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_RENEGOTIATION_ALLOWED,
+                "Renegotiation allowed",
+                "Whether TLS renegotiation is allowed (true by default)",
+                false,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_RENEGOTIATION_ALLOWED)));
 
         return new ObjectClassDefinition()
         {

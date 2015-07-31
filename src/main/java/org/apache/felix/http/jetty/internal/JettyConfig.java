@@ -372,7 +372,7 @@ public final class JettyConfig
     }
 
     public boolean isRenegotiationAllowed() {
-        return getBooleanProperty(FELIX_JETTY_RENEGOTIATION_ALLOWED, true);
+        return getBooleanProperty(FELIX_JETTY_RENEGOTIATION_ALLOWED, false);
     }
 
     public void reset()
