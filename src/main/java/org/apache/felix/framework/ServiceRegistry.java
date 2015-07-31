@@ -452,12 +452,17 @@ public class ServiceRegistry
 
                     if (svc != null)
                     {
-                        if (usage.m_svcHolderRef.compareAndSet(holder, null))
+                        // Check the count again to ensure that nobody else has just
+                        // obtained the service again
+                        if (usage.m_count.get() <= 0)
                         {
-                            // Remove reference from usages array.
-                            ((ServiceRegistrationImpl.ServiceReferenceImpl) ref)
-                                .getRegistration().ungetService(bundle, svc);
+                            if (usage.m_svcHolderRef.compareAndSet(holder, null))
+                            {
+                                // Remove reference from usages array.
+                                ((ServiceRegistrationImpl.ServiceReferenceImpl) ref)
+                                    .getRegistration().ungetService(bundle, svc);
 
+                            }
                         }
                     }
                 }
