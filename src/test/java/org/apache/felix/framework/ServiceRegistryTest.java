@@ -1147,7 +1147,13 @@ public class ServiceRegistryTest extends TestCase
 
         latch.await();
 
-        assertTrue("" + exceptions.size(), exceptions.isEmpty());
+        List<String> counterValues = new ArrayList<String>();
+        for (Exception ex : exceptions)
+        {
+            counterValues.add(ex.getMessage());
+        }
+
+        assertTrue("" + counterValues, exceptions.isEmpty());
     }
 
     public void testUsageCountCleanup() throws Exception
