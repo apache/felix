@@ -1053,14 +1053,12 @@ public class ServiceRegistryTest extends TestCase
 
                     final class ObserverImpl implements Observer
                     {
-//                        private volatile int counter = 0;
                         private final AtomicInteger counter = new AtomicInteger();
                         public volatile boolean active = true;
 
                         @Override
                         public void update(Observable o, Object arg)
                         {
-//                            counter++; // Not completely atomic, but that doesn't matter here.
                             counter.incrementAndGet();
                             if ( !active )
                             {
