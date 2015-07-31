@@ -380,6 +380,8 @@ public class ServiceRegistry
     }
 
     // Increment the Atomic Long by 1, and ensure the result is at least 1.
+    // This method uses a loop, optimistic algorithm to do this in a threadsafe
+    // way without locks.
     private void incrementToPositiveValue(AtomicLong al)
     {
         boolean success = false;
@@ -469,9 +471,11 @@ public class ServiceRegistry
                     usage.m_svcHolderRef.set(null);
                 }
 
-                // If the registration is invalid or the usage count has reached
-                // zero, then flush it.
-                if (!reg.isValid())
+                // If the registration is invalid or the usage count for a prototype
+                // reached zero, then flush it. Non-prototype services are not flushed
+                // on ungetService() when they reach 0 as this introduces a race
+                // condition of concurrently the same service is obtained via getService()
+                if (!reg.isValid() || (count <= 0 && svcObj != null))
                 {
                     flushUsageCount(bundle, ref, usage);
                 }
