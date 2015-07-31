@@ -30,6 +30,7 @@ import java.util.Observer;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import junit.framework.TestCase;
 
@@ -1052,15 +1053,18 @@ public class ServiceRegistryTest extends TestCase
 
                     final class ObserverImpl implements Observer
                     {
-
+//                        private volatile int counter = 0;
+                        private final AtomicInteger counter = new AtomicInteger();
                         public volatile boolean active = true;
 
                         @Override
                         public void update(Observable o, Object arg)
                         {
+//                            counter++; // Not completely atomic, but that doesn't matter here.
+                            counter.incrementAndGet();
                             if ( !active )
                             {
-                                throw new IllegalArgumentException();
+                                throw new IllegalArgumentException("Iteration:" + counter.get());
                             }
                         }
 
