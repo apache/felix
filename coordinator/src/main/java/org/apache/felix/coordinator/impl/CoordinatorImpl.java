@@ -182,7 +182,7 @@ public class CoordinatorImpl implements Coordinator
      */
     public boolean fail(final Throwable reason)
     {
-        CoordinationImpl current = (CoordinationImpl)mgr.peek();
+        Coordination current = mgr.peek();
         if (current != null)
         {
             return current.fail(reason);
@@ -195,12 +195,7 @@ public class CoordinatorImpl implements Coordinator
      */
     public Coordination peek()
     {
-        Coordination c = mgr.peek();
-        if ( c != null )
-        {
-            c = ((CoordinationImpl)c).getHolder();
-        }
-        return c;
+        return mgr.peek();
     }
 
     /**
@@ -219,7 +214,8 @@ public class CoordinatorImpl implements Coordinator
 
         // create coordination
         final CoordinationImpl c = mgr.create(this, name, timeout);
-        this.mgr.push(c);
+        c.setAssociatedThread(Thread.currentThread());
+        this.mgr.push(c.getHolder());
         return c.getHolder();
     }
 
@@ -232,7 +228,6 @@ public class CoordinatorImpl implements Coordinator
         if ( c != null )
         {
             checkPermission(c.getName(), CoordinationPermission.INITIATE);
-            c = ((CoordinationImpl)c).getHolder();
         }
         return c;
     }
@@ -271,12 +266,12 @@ public class CoordinatorImpl implements Coordinator
 
     //----------
 
-    void push(final CoordinationImpl c)
+    void push(final Coordination c)
     {
         mgr.push(c);
     }
 
-    void unregister(final CoordinationImpl c, final boolean removeFromStack)
+    void unregister(final Coordination c, final boolean removeFromStack)
     {
         mgr.unregister(c, removeFromStack);
     }

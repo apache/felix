@@ -43,7 +43,7 @@ import org.osgi.service.coordinator.Participant;
 public class CoordinationMgr
 {
 
-    private ThreadLocal<Stack<CoordinationImpl>> perThreadStack;
+    private ThreadLocal<Stack<CoordinationHolder>> perThreadStack;
 
     private final AtomicLong ctr;
 
@@ -63,7 +63,7 @@ public class CoordinationMgr
 
     CoordinationMgr()
     {
-        perThreadStack = new ThreadLocal<Stack<CoordinationImpl>>();
+        perThreadStack = new ThreadLocal<Stack<CoordinationHolder>>();
         ctr = new AtomicLong(-1);
         coordinations = new HashMap<Long, CoordinationImpl>();
         participants = new IdentityHashMap<Participant, CoordinationImpl>();
@@ -100,15 +100,15 @@ public class CoordinationMgr
         perThreadStack = null;
     }
 
-    private Stack<CoordinationImpl> getThreadStack(final boolean create)
+    private Stack<CoordinationHolder> getThreadStack(final boolean create)
     {
-        final ThreadLocal<Stack<CoordinationImpl>> tl = this.perThreadStack;
-        Stack<CoordinationImpl> stack = null;
+        final ThreadLocal<Stack<CoordinationHolder>> tl = this.perThreadStack;
+        Stack<CoordinationHolder> stack = null;
         if ( tl != null )
         {
             stack = tl.get();
             if ( stack == null && create ) {
-                stack = new Stack<CoordinationImpl>();
+                stack = new Stack<CoordinationHolder>();
                 tl.set(stack);
             }
         }
@@ -201,7 +201,7 @@ public class CoordinationMgr
         return c;
     }
 
-    void unregister(final CoordinationImpl c, final boolean removeFromThread)
+    void unregister(final Coordination c, final boolean removeFromThread)
     {
         synchronized ( this.coordinations )
         {
@@ -209,7 +209,7 @@ public class CoordinationMgr
         }
         if ( removeFromThread )
         {
-            final Stack<CoordinationImpl> stack = this.getThreadStack(false);
+            final Stack<CoordinationHolder> stack = this.getThreadStack(false);
             if (stack != null)
             {
                 stack.remove(c);
@@ -217,28 +217,29 @@ public class CoordinationMgr
         }
     }
 
-    void push(final CoordinationImpl c)
+    void push(final Coordination c)
     {
-        Stack<CoordinationImpl> stack = this.getThreadStack(true);
+        CoordinationHolder holder = (c instanceof CoordinationHolder) ? (CoordinationHolder)c : ((CoordinationImpl)c).getHolder();
+        Stack<CoordinationHolder> stack = this.getThreadStack(true);
         if ( stack != null)
         {
-            if ( stack.contains(c) )
+            if ( stack.contains(holder) )
             {
                 throw new CoordinationException("Coordination already pushed", c, CoordinationException.ALREADY_PUSHED);
             }
-            c.setAssociatedThread(Thread.currentThread());
-            stack.push(c);
+            holder.getCoordination().setAssociatedThread(Thread.currentThread());
+            stack.push(holder);
         }
     }
 
     Coordination pop()
     {
-        final Stack<CoordinationImpl> stack = this.getThreadStack(false);
+        final Stack<CoordinationHolder> stack = this.getThreadStack(false);
         if (stack != null && !stack.isEmpty())
         {
-            final CoordinationImpl c = stack.pop();
+            final CoordinationHolder c = stack.pop();
             if ( c != null ) {
-                c.setAssociatedThread(null);
+                c.getCoordination().setAssociatedThread(null);
             }
             return c;
         }
@@ -247,7 +248,7 @@ public class CoordinationMgr
 
     Coordination peek()
     {
-        final Stack<CoordinationImpl> stack = this.getThreadStack(false);
+        final Stack<CoordinationHolder> stack = this.getThreadStack(false);
         if (stack != null && !stack.isEmpty())
         {
             return stack.peek();
@@ -262,7 +263,9 @@ public class CoordinationMgr
         {
             for(final CoordinationImpl c : this.coordinations.values() )
             {
-                result.add(c.getHolder());
+                if (c.getHolder() != null) {
+                    result.add(c.getHolder());
+                }
             }
         }
         return result;
@@ -277,9 +280,9 @@ public class CoordinationMgr
         }
     }
 
-	public Coordination getEnclosingCoordination(final CoordinationImpl c)
+	public CoordinationHolder getEnclosingCoordination(final CoordinationImpl c)
 	{
-        final Stack<CoordinationImpl> stack = this.getThreadStack(false);
+        final Stack<CoordinationHolder> stack = this.getThreadStack(false);
         if ( stack != null )
         {
         	final int index = stack.indexOf(c);
@@ -294,7 +297,7 @@ public class CoordinationMgr
 	public CoordinationException endNestedCoordinations(final CoordinationImpl c)
 	{
 	    CoordinationException partiallyFailed = null;
-        final Stack<CoordinationImpl> stack = this.getThreadStack(false);
+        final Stack<CoordinationHolder> stack = this.getThreadStack(false);
         if ( stack != null )
         {
         	final int index = stack.indexOf(c) + 1;
@@ -303,7 +306,7 @@ public class CoordinationMgr
         		final int count = stack.size()-index;
         		for(int i=0;i<count;i++)
         		{
-        			final CoordinationImpl nested = stack.pop();
+        			final Coordination nested = stack.pop();
         			try
         			{
         			    if ( partiallyFailed != null)

@@ -18,11 +18,19 @@
  */
 package org.apache.felix.coordinator.impl;
 
+import java.lang.ref.Reference;
+import java.lang.ref.ReferenceQueue;
+import java.lang.ref.WeakReference;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+import junit.framework.Assert;
 import junit.framework.TestCase;
 
 import org.osgi.service.coordinator.Coordination;
 import org.osgi.service.coordinator.CoordinationException;
 import org.osgi.service.coordinator.Participant;
+import org.osgi.test.support.sleep.Sleep;
 
 public class CoordinatorImplTest extends TestCase
 {
@@ -34,7 +42,6 @@ public class CoordinatorImplTest extends TestCase
     protected void setUp() throws Exception
     {
         super.setUp();
-
         mgr = new CoordinationMgr();
         coordinator = new CoordinatorImpl(null, mgr);
     }
@@ -124,6 +131,56 @@ public class CoordinatorImplTest extends TestCase
             // ignore
         }
         assertNull(coordinator.peek());
+    }
+    
+    public void test_coordinationCorrectlyOrphanedOnGC() throws InterruptedException
+    {
+        final CountDownLatch latch = new CountDownLatch(1);
+        Coordination coordination = coordinator.create("test", 0);
+        coordination.addParticipant(new Participant() {
+            
+            public void failed(Coordination coordination) throws Exception {
+                latch.countDown();
+            }
+            
+            public void ended(Coordination coordination) throws Exception {
+            }
+        });
+        coordination = null;
+        WeakReference<Coordination> coord = new WeakReference<Coordination>(coordination, new ReferenceQueue<Coordination>());
+        assertReferenceEnqueued(coord);
+        latch.await(10, TimeUnit.SECONDS);
+        Assert.assertEquals(0, coordinator.getCoordinations().size());
+        Assert.assertEquals("Non referenced Coordination should be failed after gc", 0, latch.getCount());
+    }
+    
+    public void test_coordinationCorrectlyOrphanedOnMgrShutdown() throws InterruptedException
+    {
+        final CountDownLatch latch = new CountDownLatch(1);
+        Coordination coord = coordinator.create("test", 0);
+        coord.addParticipant(new Participant() {
+            
+            public void failed(Coordination coordination) throws Exception {
+                latch.countDown();
+            }
+            
+            public void ended(Coordination coordination) throws Exception {
+            }
+        });
+        mgr.cleanUp();
+        Assert.assertEquals(0, coordinator.getCoordinations().size());
+        Assert.assertEquals("Coordination from same bundle should be failed after mgr.dispose", 0, latch.getCount());
+    }
+
+
+    /**
+     * Regression test for FELIX-4976
+     */
+    public void test_coordinationOrphanedBug()
+    {
+        coordinator.begin("test", 0);
+        System.gc();
+        coordinator.pop().end();
     }
 
     public void test_beginCoordination_stack()
@@ -401,4 +458,13 @@ public class CoordinatorImplTest extends TestCase
             this.addParticipantFailure = t;
         }
     }
+    
+    private static void assertReferenceEnqueued(Reference<?> reference) throws InterruptedException {
+        for (int i = 0; i < 10 && !reference.isEnqueued(); i++) {
+            System.gc();
+            Thread.sleep(500);
+        }
+        assertTrue("Coordination was not garbage collected", reference.isEnqueued());
+    }
+
 }

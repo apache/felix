@@ -179,7 +179,8 @@ public class CoordinationHolder implements Coordination {
         super.finalize();
     }
 
-    public Coordination getCoordination() {
+    public CoordinationImpl getCoordination() {
         return this.coordination;
     }
+
 }

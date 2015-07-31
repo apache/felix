@@ -436,12 +436,7 @@ public class CoordinationImpl implements Coordination
     public Coordination getEnclosingCoordination()
     {
         this.owner.checkPermission(name, CoordinationPermission.ADMIN);
-        Coordination c = this.owner.getEnclosingCoordination(this);
-        if ( c != null )
-        {
-            c = ((CoordinationImpl)c).holderRef.get();
-        }
-        return c;
+        return this.owner.getEnclosingCoordination(this);
     }
 
     //-------
@@ -541,7 +536,7 @@ public class CoordinationImpl implements Coordination
 	    this.associatedThread = t;
 	}
 
-    public Coordination getHolder() {
+    public CoordinationHolder getHolder() {
         return this.holderRef.get();
     }
 }
