@@ -58,7 +58,7 @@ public class CoordinationImpl implements Coordination
 
     private final String name;
 
-    private volatile long deadLine;
+    private long deadLine;
 
     /**
      * Access to this field must be synchronized as long as the expected state
@@ -68,17 +68,15 @@ public class CoordinationImpl implements Coordination
      */
     private volatile State state;
 
-    private volatile Throwable failReason;
+    private Throwable failReason;
 
     private final ArrayList<Participant> participants;
 
     private final Map<Class<?>, Object> variables;
 
-    private volatile TimerTask timeoutTask;
+    private TimerTask timeoutTask;
 
-    private volatile Thread associatedThread;
-
-    private volatile CoordinationHolder threadAssociatedRef;
+    private Thread associatedThread;
 
     private final Object waitLock = new Object();
 
@@ -539,17 +537,8 @@ public class CoordinationImpl implements Coordination
 		return id == other.id;
 	}
 
-	void setAssociatedThread(final Thread t)
-	{
+	void setAssociatedThread(final Thread t) {
 	    this.associatedThread = t;
-	    if ( t != null )
-	    {
-	        this.threadAssociatedRef = this.holderRef.get();
-	    }
-	    else
-	    {
-	        this.threadAssociatedRef = null;
-	    }
 	}
 
     public Coordination getHolder() {
