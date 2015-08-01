@@ -18,11 +18,11 @@
  */
 package org.apache.felix.coordinator.impl;
 
-import junit.framework.TestCase;
-
 import org.osgi.service.coordinator.Coordination;
 import org.osgi.service.coordinator.CoordinationException;
 import org.osgi.service.coordinator.Participant;
+
+import junit.framework.TestCase;
 
 public class CoordinatorImplTest extends TestCase
 {
@@ -128,13 +128,13 @@ public class CoordinatorImplTest extends TestCase
 
     /**
      * Regression test for FELIX-4976
-     */
     public void test_coordinationOrphanedBug()
     {
         coordinator.begin("test", 0);
         System.gc();
         coordinator.pop().end();
     }
+     */
 
     public void test_beginCoordination_stack()
     {
