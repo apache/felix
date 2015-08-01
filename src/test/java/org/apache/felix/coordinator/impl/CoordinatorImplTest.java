@@ -126,6 +126,16 @@ public class CoordinatorImplTest extends TestCase
         assertNull(coordinator.peek());
     }
 
+    /**
+     * Regression test for FELIX-4976
+     */
+    public void test_coordinationOrphanedBug()
+    {
+        coordinator.begin("test", 0);
+        System.gc();
+        coordinator.pop().end();
+    }
+
     public void test_beginCoordination_stack()
     {
         final String name = "test";
