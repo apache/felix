@@ -95,8 +95,10 @@ public class ConfigurationSupport implements ConfigurationListener
         }
     }
 
-    // ---------- BaseConfigurationSupport overwrites
-
+    /**
+     * The return value is only relevant for the call from {@link #configurationEvent(ConfigurationEvent)}
+     * in the case of a deleted configuration which is not a factory configuration!
+     */
     public boolean configureComponentHolder(final ComponentHolder<?> holder)
     {
 
@@ -127,9 +129,9 @@ public class ConfigurationSupport implements ConfigurationListener
                                         bundleContext.getBundle() );
                                 if ( !factory.isEmpty() )
                                 {
+                                    boolean created = false;
                                     for ( Configuration config: factory )
                                     {
-                                        boolean created = false;
                                         Activator.log( LogService.LOG_DEBUG, null,
                                                 "Configuring holder {0} with factory configuration {1}", new Object[] {
                                                         holder, config }, null );
@@ -142,10 +144,10 @@ public class ConfigurationSupport implements ConfigurationListener
                                                     config.getProperties(),
                                                     changeCount );
                                         }
-                                        if ( !created )
-                                        {
-                                        	return false;
-                                        }
+                                    }
+                                    if ( !created )
+                                    {
+                                        return false;
                                     }
                                 }
                                 else
