@@ -19,9 +19,8 @@
 package org.apache.felix.http.jetty;
 
 import org.eclipse.jetty.server.Connector;
-
-import aQute.bnd.annotation.ConsumerType;
 import org.eclipse.jetty.server.Server;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * The <code>ConnectorFactory</code> is a service interface which allows
