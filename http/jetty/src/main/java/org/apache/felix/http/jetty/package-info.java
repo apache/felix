@@ -19,4 +19,4 @@
 @Version("2.0")
 package org.apache.felix.http.jetty;
 
-import aQute.bnd.annotation.Version;
+import org.osgi.annotation.versioning.Version;

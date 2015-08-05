@@ -406,7 +406,7 @@ public abstract class BaseIntegrationTest
         }
     }
 
-    protected void configureHttpService(Dictionary<?, ?> props) throws Exception
+    protected void configureHttpService(Dictionary<String, ?> props) throws Exception
     {
         final String pid = "org.apache.felix.http";
 
