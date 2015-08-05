@@ -112,7 +112,6 @@
         <module>configadmin</module>
         <module>metatype</module>
         <module>deploymentadmin</module>
-        <module>servicebinder</module>
         <module>wireadmin</module>
         <module>prefs</module>
         <module>inventory</module>
