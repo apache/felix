@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Future;
 import junit.framework.TestCase;
 import org.apache.felix.fileinstall.ArtifactListener;
 import org.easymock.EasyMock;
@@ -417,8 +418,9 @@ public class DirectoryWatcherTest extends TestCase
 
         dw = new DirectoryWatcher(fileInstall, props, mockBundleContext) {
 
-            void refresh(Collection<Bundle> bundles) throws InterruptedException {
+            Future<Void> refresh(Collection<Bundle> bundles) throws InterruptedException {
                 Assert.fail("bundle refresh called");
+                return null;
             }
             
         };

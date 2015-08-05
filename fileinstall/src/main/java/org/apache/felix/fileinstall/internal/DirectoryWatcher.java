@@ -38,6 +38,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
@@ -492,9 +497,18 @@ public class DirectoryWatcher extends Thread implements BundleListener
             if (toRefresh.size() > 0)
             {
                 // Refresh if any bundle got uninstalled or updated.
-                refresh(toRefresh);
+                Future<Void> refresh = refresh(toRefresh);
                 // set the state to reattempt starting managed bundles which aren't already STARTING or ACTIVE
-                setStateChanged(true);
+
+                try {
+                    // wait for the refresh to happen
+                    refresh.get();
+                    setStateChanged(true);
+                }
+                catch (ExecutionException ee) {
+                    // should never happen
+                    ee.printStackTrace();
+                }
             }
         }
 
@@ -669,9 +683,21 @@ public class DirectoryWatcher extends Thread implements BundleListener
     /**
      * Convenience to refresh the packages
      */
-    void refresh(Collection<Bundle> bundles) throws InterruptedException
+    Future<Void> refresh(final Collection<Bundle> bundles) throws InterruptedException
     {
-        FileInstall.refresh(context, bundles);
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+        return executorService.submit(
+            new Callable<Void>() {
+
+                public Void call() throws Exception {
+                    FileInstall.refresh(context, bundles);
+
+                    return null;
+                }
+
+            }
+        );
     }
 
     /**
