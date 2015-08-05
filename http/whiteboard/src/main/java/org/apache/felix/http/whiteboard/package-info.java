@@ -21,9 +21,7 @@
  * @see: @TODO ref to whiteboard page on felix.apache.org
  */
 @Version("1.0")
-@Export(optional = "provide:=true")
 package org.apache.felix.http.whiteboard;
 
-import aQute.bnd.annotation.Export;
-import aQute.bnd.annotation.Version;
+import org.osgi.annotation.versioning.Version;
 
