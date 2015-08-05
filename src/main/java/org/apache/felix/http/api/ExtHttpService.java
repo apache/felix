@@ -22,10 +22,9 @@ import javax.servlet.Filter;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 
+import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
-
-import aQute.bnd.annotation.ProviderType;
 
 /**
  * The {@link ExtHttpService} allows other bundles in the OSGi environment to dynamically

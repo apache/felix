@@ -20,5 +20,5 @@
 @Version("2.0.6")
 package org.apache.felix.http.api;
 
-import aQute.bnd.annotation.Version;
+import org.osgi.annotation.versioning.Version;
 
