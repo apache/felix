@@ -21,13 +21,13 @@
     <name>Apache Felix Servlet API</name>
     <description>Provides the Servlet API for use by applications</description>
     <artifactId>org.apache.felix.http.servlet-api</artifactId>
-    <version>1.1.1-SNAPSHOT</version>
+    <version>1.1.2</version>
     <packaging>bundle</packaging>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http/servlet-api</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/http/servlet-api</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/http/servlet-api/</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http.servlet-api-1.1.2</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http.servlet-api-1.1.2</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.http.servlet-api-1.1.2</url>
     </scm>
 
     <build>
