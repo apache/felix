@@ -151,6 +151,9 @@ public class DirectoryWatcher extends Thread implements BundleListener
     // Represents installed artifacts which need to be started later because they failed to start
     Set<Bundle> delayedStart = new HashSet<Bundle>();
 
+    // Represents consistently failing bundles
+    Set<Bundle> consistentlyFailingBundles = new HashSet<Bundle>();
+
     // Represents artifacts that could not be installed
     final Map<File, Artifact> installationFailures = new HashMap<File, Artifact>();
 
@@ -507,6 +510,8 @@ public class DirectoryWatcher extends Thread implements BundleListener
             delayedStart.removeAll(uninstalledBundles);
             // Try to start newly installed bundles, or bundles which we missed on a previous round
             startBundles(delayedStart);
+            consistentlyFailingBundles.clear();
+            consistentlyFailingBundles.addAll(delayedStart);
 
             // set the state as unchanged to not reattempt starting failed bundles
             setStateChanged(false);
@@ -1212,9 +1217,11 @@ public class DirectoryWatcher extends Thread implements BundleListener
       */
     private void startBundles(Collection<Bundle> bundles)
     {
+        // Check if this is the consistent set of bundles which failed previously.
+        boolean logFailures = bundles.equals(consistentlyFailingBundles);
         for (Iterator<Bundle> b = bundles.iterator(); b.hasNext(); )
         {
-            if (startBundle(b.next()))
+            if (startBundle(b.next(), logFailures))
             {
                 b.remove();
             }
@@ -1226,7 +1233,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
       * @param bundle the bundle to start.
       * @return whether the bundle was started.
       */
-    private boolean startBundle(Bundle bundle)
+    private boolean startBundle(Bundle bundle, boolean logFailures)
     {
         FrameworkStartLevel startLevelSvc = context.getBundle(0).adapt(FrameworkStartLevel.class);
         // Fragments can never be started.
@@ -1249,7 +1256,10 @@ public class DirectoryWatcher extends Thread implements BundleListener
             catch (BundleException e)
             {
                 // Don't log this as an error, instead we start the bundle repeatedly.
-                log(Logger.LOG_WARNING, "Error while starting bundle: " + bundle.getLocation(), e);
+                if (logFailures)
+                {
+                    log(Logger.LOG_WARNING, "Error while starting bundle: " + bundle.getLocation(), e);
+                }
             }
         }
         return false;
