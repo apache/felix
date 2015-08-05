@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -263,16 +264,43 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
 
         final Map<String, Object> props = component.properties;
 
-        final String pid = (String) (props != null ? props.get(Constants.SERVICE_PID)
-            : null);
+        String pid = null;
+        String configurationPid = null;
+        final Object obj = props != null ? props.get(Constants.SERVICE_PID) : null;
+        if ( obj instanceof String )
+        {
+            pid = (String)obj;
+            configurationPid = pid;
+        }
+        else if ( obj instanceof String[] )
+        {
+            final String[] arr = (String[])obj;
+            if ( arr.length > 0 )
+            {
+                pid = Arrays.toString(arr);
+                configurationPid = arr[0];
+            }
+        }
+        else if ( obj instanceof Collection )
+        {
+            final Collection<?> col = (Collection<?>)obj;
+            if ( !col.isEmpty() )
+            {
+                pid = col.toString();
+                configurationPid = col.iterator().next().toString();
+            }
+        }
         if (pid != null)
         {
             jw.key("pid"); //$NON-NLS-1$
             jw.value(pid);
-            if (isConfigurable(this.getBundleContext().getBundle(0).getBundleContext().getBundle(component.description.bundle.id), pid))
+            if ( configurationPid != null )
             {
-                jw.key("configurable"); //$NON-NLS-1$
-                jw.value(pid);
+                if (isConfigurable(this.getBundleContext().getBundle(0).getBundleContext().getBundle(component.description.bundle.id), configurationPid))
+                {
+                    jw.key("configurable"); //$NON-NLS-1$
+                    jw.value(configurationPid);
+                }
             }
         }
 
