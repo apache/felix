@@ -22,6 +22,7 @@ package org.apache.felix.metatype;
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -37,6 +38,7 @@ import org.osgi.framework.BundleListener;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkListener;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
@@ -122,6 +124,13 @@ public class MockBundleContext implements BundleContext
             public boolean matchCase( Dictionary arg0 )
             {
                 return true;
+            }
+
+
+            public boolean matches(Map<String, ?> map)
+            {
+
+               return false;
             }
 
         };
@@ -305,6 +314,31 @@ public class MockBundleContext implements BundleContext
         }
 
         return false;
+    }
+
+
+    public <S> ServiceRegistration<S> registerService(Class<S> clazz, S service, Dictionary<String, ?> properties)
+    {
+        return null;
+    }
+
+
+    public <S> ServiceReference<S> getServiceReference(Class<S> clazz)
+    {
+        return null;
+    }
+
+
+    public <S> Collection<ServiceReference<S>> getServiceReferences(Class<S> clazz, String filter)
+            throws InvalidSyntaxException
+    {
+        return null;
+    }
+
+
+    public Bundle getBundle(String location)
+    {
+        return null;
     }
 
 

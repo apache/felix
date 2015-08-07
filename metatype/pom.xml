@@ -38,13 +38,13 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
-            <version>4.0.0</version>
+            <version>5.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
-            <version>4.3.0</version>
+            <artifactId>osgi.cmpn</artifactId>
+            <version>6.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -76,6 +76,10 @@
                         <Bundle-DocURL>
                             http://felix.apache.org/site/apache-felix-metatype-service.html
                         </Bundle-DocURL>
+                        <Import-Package>
+                            org.osgi.framework;version="[1.3,2)",
+                            *
+                        </Import-Package>
                         <Export-Package>
                             org.apache.felix.metatype; version=1.2,
                             org.osgi.service.metatype; provide:=true
@@ -87,6 +91,14 @@
                         <Bundle-Activator>
                             org.apache.felix.metatype.internal.Activator
                         </Bundle-Activator>
+                        <Provide-Capability>
+                            osgi.implementation;osgi.implementation="osgi.metatype";version:Version="1.3";
+                            uses:="org.osgi.service.metatype",
+                            osgi.extender;osgi.extender="osgi.metatype";version:Version="1.3";
+                            uses:="org.osgi.service.metatype",
+                            osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.metatype.MetaTypeService";
+                            uses:="org.osgi.service.metatype"
+                        </Provide-Capability>
                         <Embed-Dependency>
                             kxml2;inline=org/kxml2/io/KXmlParser.class|org/xmlpull/v1/XmlPull**
                         </Embed-Dependency>
