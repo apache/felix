@@ -1,3 +1,14 @@
+Changes from 1.8.6 to 1.8.8
+---------------------------
+
+** Improvement
+    * [FELIX-4917] - FilePersistenceManager doesn't support comments
+
+** Bug
+    * [FELIX-4962] - Configadmin leaks caller's security context downstream
+    * [FELIX-4945] - Escaped folder names makes ConfigAdmin incompatible and factory configs not always work
+
+
 Changes from 1.8.4 to 1.8.6
 ---------------------------
 
