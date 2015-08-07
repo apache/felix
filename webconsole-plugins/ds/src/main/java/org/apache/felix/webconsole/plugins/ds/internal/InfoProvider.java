@@ -53,7 +53,6 @@ class InfoProvider implements BundleInfoProvider
     /**
      * @see org.apache.felix.webconsole.bundleinfo.BundleInfoProvider#getName(java.util.Locale)
      */
-    @Override
     public String getName(Locale locale)
     {
         return localization.getResourceBundle(locale).getString("info.name"); //$NON-NLS-1$;;
@@ -63,7 +62,6 @@ class InfoProvider implements BundleInfoProvider
     * @see org.apache.felix.webconsole.bundleinfo.BundleInfoProvider#getBundleInfo(org.osgi.framework.Bundle,
     *      java.lang.String, java.util.Locale)
     */
-    @Override
     public BundleInfo[] getBundleInfo(Bundle bundle, String webConsoleRoot, Locale locale)
     {
         final List<ComponentDescriptionDTO> descriptions = new ArrayList<ComponentDescriptionDTO>();

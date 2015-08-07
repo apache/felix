@@ -243,7 +243,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         }
     }
 
-    private void component(JSONWriter jw, ComponentConfigurationDTO component, boolean details)
+    void component(JSONWriter jw, ComponentConfigurationDTO component, boolean details)
         throws JSONException
     {
         String id = String.valueOf(component.id);
