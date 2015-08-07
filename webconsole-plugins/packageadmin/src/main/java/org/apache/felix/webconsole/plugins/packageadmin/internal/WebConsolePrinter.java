@@ -23,17 +23,18 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
-import org.apache.felix.webconsole.ConfigurationPrinter;
+import org.apache.felix.inventory.Format;
+import org.apache.felix.inventory.InventoryPrinter;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
-class WebConsolePrinter implements ConfigurationPrinter
+class WebConsolePrinter implements InventoryPrinter
 {
 
     private final ServiceTracker tracker;
@@ -46,9 +47,10 @@ class WebConsolePrinter implements ConfigurationPrinter
     }
 
     /**
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
+     * @see org.apache.felix.inventory.InventoryPrinter#print(
+     *  java.io.PrintWriter, org.apache.felix.inventory.Format, boolean)
      */
-    public void printConfiguration(PrintWriter pw)
+    public void print(PrintWriter pw, Format format, boolean isZip) 
     {
         final PackageAdmin pa = (PackageAdmin) tracker.getService();
         if (pa == null)
@@ -160,7 +162,7 @@ class WebConsolePrinter implements ConfigurationPrinter
     }
 
     /**
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
+     * @return
      */
     public String getTitle()
     {
