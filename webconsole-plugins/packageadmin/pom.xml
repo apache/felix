@@ -51,19 +51,6 @@
     </scm>
 
     <build>
-		<!-- add UTF-8-to-ISO translated resources -->
-		<resources>
-			<resource>
-				<directory>${basedir}/src/main/resources</directory>
-			</resource>
-			<resource>
-				<directory>target/classes</directory>
-				<includes>
-					<include>OSGI-INF/**</include>
-				</includes>
-				<filtering>false</filtering>
-			</resource>
-		</resources>
 
         <plugins>
 			<!-- translate UTF-8 encoded properties files to ISO-8859-1 -->
@@ -102,10 +89,13 @@
                         <Bundle-Activator>
                             org.apache.felix.webconsole.plugins.packageadmin.internal.Activator
                         </Bundle-Activator>
+                        <Include-Resource>
+                            {maven-resources},OSGI-INF=target/classes/OSGI-INF
+                        </Include-Resource>
                     </instructions>
                 </configuration>
             </plugin>
-			<plugin>
+            <plugin>
                 <groupId>org.apache.rat</groupId>
                 <artifactId>apache-rat-plugin</artifactId>
                 <configuration>
@@ -151,12 +141,12 @@
             <version>1.4</version>
             <scope>provided</scope>
         </dependency>
-		<dependency>
-			<groupId>org.apache.felix</groupId>
-			<artifactId>org.apache.felix.webconsole</artifactId>
-			<version>3.1.8</version>
-			<scope>provided</scope>
-		</dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.webconsole</artifactId>
+            <version>4.2.0</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>

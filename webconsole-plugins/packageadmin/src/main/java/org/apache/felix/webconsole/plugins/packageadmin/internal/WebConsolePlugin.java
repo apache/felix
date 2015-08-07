@@ -74,7 +74,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
 
     WebConsolePlugin(BundleContext bc, Object pa)
     {
-        super(LABEL, TITLE, CSS);
+        super(LABEL, TITLE, CATEGORY, CSS);
 
         this.pa = (PackageAdmin) pa;
         this.bc = bc;
