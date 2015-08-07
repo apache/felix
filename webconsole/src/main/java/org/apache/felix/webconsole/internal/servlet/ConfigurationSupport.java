@@ -19,7 +19,6 @@
 package org.apache.felix.webconsole.internal.servlet;
 
 
-import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
@@ -104,9 +103,11 @@ class ConfigurationSupport implements ManagedService
                         Dictionary newConfig = cfg.getProperties();
                         if ( newConfig != null )
                         {
-                            // assumption: config is not null and as a non-null password String property
-                            final String pwd = ( String ) config.get( OsgiManager.PROP_PASSWORD );
-                            final String hashedPassword = Password.hashPassword( pwd );
+                            String pwd = ( String ) config.get( OsgiManager.PROP_PASSWORD );
+                            // password can be null, see FELIX-4995
+                            final String hashedPassword = null == pwd 
+                                ? OsgiManager.DEFAULT_PASSWORD
+                                : Password.hashPassword( pwd );
                             newConfig.put( OsgiManager.PROP_PASSWORD, hashedPassword );
                             cfg.update( newConfig );
                         }
