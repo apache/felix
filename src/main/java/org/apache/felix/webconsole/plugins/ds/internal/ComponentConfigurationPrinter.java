@@ -32,6 +32,8 @@ import java.util.TreeSet;
 import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.InventoryPrinter;
 import org.apache.felix.webconsole.WebConsoleUtil;
+import org.json.JSONException;
+import org.json.JSONWriter;
 import org.osgi.framework.Constants;
 import org.osgi.framework.dto.ServiceReferenceDTO;
 import org.osgi.service.component.ComponentConstants;
@@ -48,16 +50,17 @@ class ComponentConfigurationPrinter implements InventoryPrinter
 {
 
     private final ServiceComponentRuntime scrService;
+    private final WebConsolePlugin plugin;
 
-    ComponentConfigurationPrinter(Object scrService)
+    ComponentConfigurationPrinter(Object scrService, WebConsolePlugin plugin)
     {
         this.scrService = (ServiceComponentRuntime)scrService;
+        this.plugin = plugin;
     }
 
     /**
      * @see org.apache.felix.inventory.InventoryPrinter#print(java.io.PrintWriter, org.apache.felix.inventory.Format, boolean)
      */
-    @Override
     public void print(PrintWriter pw, Format format, boolean isZip)
     {
         final List<ComponentDescriptionDTO> descriptions = new ArrayList<ComponentDescriptionDTO>();
@@ -74,11 +77,43 @@ class ComponentConfigurationPrinter implements InventoryPrinter
         }
         Collections.sort(configurations, Util.COMPONENT_COMPARATOR);
 
-        printComponents(pw, configurations);
+        if (Format.JSON.equals(format))
+        {
+            try
+            {
+                printComponentsJson(pw, configurations, isZip);
+            }
+            catch (JSONException t)
+            {
+                // ignore
+            }
+        }
+        else
+        {
+            printComponentsText(pw, configurations);
+        }
     }
 
+    private final void printComponentsJson(final PrintWriter pw,
+        final List<ComponentConfigurationDTO> configurations,
+        final boolean details) throws JSONException
+    {
+        final JSONWriter jw = new JSONWriter(pw);
+        jw.object();
+        jw.key("components"); //$NON-NLS-1$
+        jw.array();
+        
+        // render components
+        for (final ComponentConfigurationDTO cfg : configurations)
+        {
+            plugin.component(jw, cfg, details);
+        }
+        
+        jw.endArray();
+        jw.endObject();
+    }
 
-    private static final void printComponents(final PrintWriter pw,
+    private static final void printComponentsText(final PrintWriter pw,
             final List<ComponentConfigurationDTO> configurations)
     {
         if (configurations.size() == 0)

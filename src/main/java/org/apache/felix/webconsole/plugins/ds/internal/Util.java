@@ -27,7 +27,6 @@ class Util
 
     static final Comparator<ComponentConfigurationDTO> COMPONENT_COMPARATOR = new Comparator<ComponentConfigurationDTO>()
     {
-        @Override
         public int compare(ComponentConfigurationDTO c0, ComponentConfigurationDTO c1)
         {
             final int nameCmp = c0.description.name.compareTo(c1.description.name);

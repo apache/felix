@@ -16,8 +16,10 @@
  */
 package org.apache.felix.webconsole.plugins.ds.internal;
 
+import java.util.Dictionary;
 import java.util.Hashtable;
 
+import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.InventoryPrinter;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.osgi.framework.BundleActivator;
@@ -82,12 +84,17 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
             this.plugin = plugin = new WebConsolePlugin().register(context);
             final Object service = context.getService(reference);
 
-            final Hashtable props = new Hashtable();
+            final Dictionary<String, Object> props = new Hashtable<String, Object>();
             final String name = "Declarative Services Components";
-            props.put(InventoryPrinter.NAME, name.replace(' ', '_'));
+            props.put(InventoryPrinter.NAME, "scr"); //$NON-NLS-1$
             props.put(InventoryPrinter.TITLE, name);
+            props.put(InventoryPrinter.FORMAT, new String[] {
+                    Format.TEXT.toString(),
+                    Format.JSON.toString()
+            });
             printerRegistration = context.registerService(InventoryPrinter.SERVICE,
-                new ComponentConfigurationPrinter(service), props);
+                new ComponentConfigurationPrinter(service, (WebConsolePlugin) plugin),
+                props);
 
             infoRegistration = new InfoProvider(context.getBundle(), service).register(context);
         }
