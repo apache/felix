@@ -19,17 +19,22 @@
 package org.apache.felix.metatype;
 
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.security.cert.X509Certificate;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.Version;
 
 
 public class MockBundle implements Bundle
@@ -195,5 +200,35 @@ public class MockBundle implements Bundle
 
     public void update( InputStream in )
     {
+    }
+
+
+    public int compareTo(Bundle o)
+    {
+        return 0;
+    }
+
+
+    public Map<X509Certificate, List<X509Certificate>> getSignerCertificates(int signersType)
+    {
+        return null;
+    }
+
+
+    public Version getVersion()
+    {
+        return null;
+    }
+
+
+    public <A> A adapt(Class<A> type)
+    {
+        return null;
+    }
+
+
+    public File getDataFile(String filename)
+    {
+        return null;
     }
 }

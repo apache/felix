@@ -1,3 +1,11 @@
+Changes from 1.0.12 to 1.1.0
+-----------------------------
+
+** Improvement
+    * [FELIX-4980] - Add capabilities for metatype R6
+    * [FELIX-4973] - Relax exception handling when reading metatype XML
+
+
 Changes from 1.0.10 to 1.0.12
 -----------------------------
 
