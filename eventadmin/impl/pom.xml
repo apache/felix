@@ -140,10 +140,10 @@
                 <configuration>
                     <instructions>
                         <Bundle-SymbolicName>
-                            ${pom.artifactId} 
+                            ${project.artifactId} 
 	                    </Bundle-SymbolicName>
   	                    <Bundle-Activator>
-                            ${pom.artifactId}.impl.Activator
+                            ${project.artifactId}.impl.Activator
                         </Bundle-Activator>
                         <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                         <DynamicImport-Package>

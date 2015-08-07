@@ -4,6 +4,8 @@ Changes from 1.4.2 to 1.4.4
     * [FELIX-4623] - Add test for thread based ordering
     * [FELIX-4638] - Less locking on event handler timing
     * [FELIX-4663] - Potential memory leak in AsyncDeliveryTask
+** Bug
+    * [FELIX-4963] - Eventadmin leaks caller's security context downstream
 
 
 Changes from 1.4.0 to 1.4.2
