@@ -21,8 +21,12 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.TreeMap;
 
-import org.apache.felix.webconsole.ConfigurationPrinter;
+import org.apache.felix.inventory.Format;
+import org.apache.felix.inventory.InventoryPrinter;
 import org.apache.felix.webconsole.WebConsoleUtil;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.upnp.UPnPAction;
@@ -35,7 +39,7 @@ import org.osgi.util.tracker.ServiceTracker;
  * Prints the available UPnP devices
  *
  */
-class ConfigurationPrinterImpl implements ConfigurationPrinter, Constants
+class ConfigurationPrinterImpl implements InventoryPrinter, Constants
 {
 
     private final ServiceTracker tracker;
@@ -46,18 +50,12 @@ class ConfigurationPrinterImpl implements ConfigurationPrinter, Constants
     }
 
     /**
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
+     * @see org.apache.felix.inventory.InventoryPrinter
+     *   #print(java.io.PrintWriter, org.apache.felix.inventory.Format, boolean)
      */
-    public String getTitle()
+    public void print(PrintWriter pw, Format format, boolean isZip)
     {
-        return "UPnP Devices"; //$NON-NLS-1$
-    }
 
-    /**
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
-     */
-    public void printConfiguration(PrintWriter pw)
-    {
         TreeMap componentMap = new TreeMap();
 
         ServiceReference[] refs = tracker.getServiceReferences();
@@ -67,9 +65,50 @@ class ConfigurationPrinterImpl implements ConfigurationPrinter, Constants
             if (null != ref.getProperty(UPnPDevice.UDN)) // make sure device is valid
             {
                 // order components by friendly name
-                componentMap.put(nameOf(ref).toString() + ref.getProperty(SERVICE_ID), ref);
+                componentMap.put(nameOf(ref).toString() + ref.getProperty(SERVICE_ID),
+                    ref);
             }
         }
+
+        if (Format.JSON.equals(format))
+        {
+            try
+            {
+                printJSON(componentMap, pw);
+            }
+            catch (JSONException e)
+            {
+                printText(componentMap, pw);
+            }
+        }
+        else
+        {
+            printText(componentMap, pw);
+        }
+    }
+
+    private void printJSON(TreeMap componentMap, PrintWriter pw) throws JSONException
+    {
+        final JSONObject ret = new JSONObject();
+        final JSONArray jDevices = new JSONArray();
+        ret.put("devices", jDevices); //$NON-NLS-1$
+
+        // render components
+        for (Iterator ci = componentMap.values().iterator(); ci.hasNext();)
+        {
+            final ServiceReference ref = (ServiceReference) ci.next();
+            final UPnPDevice device = (UPnPDevice) tracker.getService(ref);
+            if (device != null)
+            {
+                jDevices.put(Serializer.deviceToJSON(ref, device));
+            }
+        }
+
+        ret.write(pw);
+    }
+    
+    private void printText(TreeMap componentMap, PrintWriter pw)
+    {
 
         if (componentMap.isEmpty())
         {
@@ -200,5 +239,7 @@ class ConfigurationPrinterImpl implements ConfigurationPrinter, Constants
         }
         pw.println();
     }
+
+    
 
 }

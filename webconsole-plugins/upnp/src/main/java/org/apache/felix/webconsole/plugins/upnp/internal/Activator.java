@@ -16,7 +16,11 @@
  */
 package org.apache.felix.webconsole.plugins.upnp.internal;
 
-import org.apache.felix.webconsole.ConfigurationPrinter;
+import java.util.Dictionary;
+import java.util.Hashtable;
+
+import org.apache.felix.inventory.Format;
+import org.apache.felix.inventory.InventoryPrinter;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -78,8 +82,16 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
         if (plugin == null)
         {
             this.plugin = plugin = new WebConsolePlugin(tracker).register(context);
-            printerRegistration = context.registerService(ConfigurationPrinter.SERVICE,
-                new ConfigurationPrinterImpl(tracker), null);
+
+            // register configuration printer
+            final Dictionary/*<String, Object>*/ props = new Hashtable/*<String, Object>*/();
+            props.put(InventoryPrinter.NAME, "upnp"); //$NON-NLS-1$
+            props.put(InventoryPrinter.TITLE, "UPnP Devices"); //$NON-NLS-1$
+            props.put(InventoryPrinter.FORMAT,
+                new String[] { Format.TEXT.toString(), Format.JSON.toString() });
+
+            printerRegistration = context.registerService(InventoryPrinter.SERVICE,
+                new ConfigurationPrinterImpl(tracker), props);
         }
 
         return context.getService(reference);
