@@ -33,7 +33,7 @@
     <description>
         Implementation of the OSGi Metatype Service Specification 1.2
     </description>
-    <version>1.1.2</version>
+    <version>1.1.3-SNAPSHOT</version>
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
@@ -55,9 +55,9 @@
     </dependencies>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.metatype-1.1.2</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.metatype-1.1.2</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.metatype-1.1.2</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/metatype</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/metatype</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/metatype</url>
     </scm>
 
     <build>
