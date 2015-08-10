@@ -183,6 +183,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
      */
     private BuildContext buildContext;
 
+    @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         final String projectType = project.getArtifact().getType();
 
@@ -494,7 +495,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
                     resourcesEntry.append(entry);
                     resourcesEntry.append("=");
                     resourcesEntry.append(this.outputDirectory);
-                    resourcesEntry.append("/");
+                    resourcesEntry.append(File.separatorChar);
                     resourcesEntry.append(entry);
                 }
             }
@@ -513,7 +514,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
                     resourcesEntry.append(entry);
                     resourcesEntry.append("=");
                     resourcesEntry.append(this.outputDirectory);
-                    resourcesEntry.append("/");
+                    resourcesEntry.append(File.separatorChar);
                     resourcesEntry.append(entry);
                 }
             }
@@ -542,7 +543,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
             final Iterator<Resource> rsrcIterator = this.project.getResources().iterator();
             while (!found && rsrcIterator.hasNext()) {
                 final Resource rsrc = rsrcIterator.next();
-                found = rsrc.getDirectory().equals(ourRsrcPath);
+                found = rsrc.getDirectory().replace(File.separatorChar, '/').equals(ourRsrcPath);
             }
             if (!found) {
                 final Resource resource = new Resource();
