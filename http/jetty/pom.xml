@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.http.parent</artifactId>
-        <version>8-SNAPSHOT</version>
+        <version>7</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
@@ -158,13 +158,13 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.api</artifactId>
-            <version>3.0.1-SNAPSHOT</version>
+            <version>3.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>3.0.1-SNAPSHOT</version>
+            <version>3.0.0</version>
         </dependency>
     </dependencies>
 
