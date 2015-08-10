@@ -189,7 +189,8 @@ public class MetaTypeInformationImpl implements MetaTypeInformation
                 }
 
                 // get ocd for the reference, ignore designate if none
-                OCD ocd = (OCD) md.getObjectClassDefinitions().get(ocdRef);
+                final Map map = md.getObjectClassDefinitions();
+                OCD ocd = (OCD) (map == null ? null : map.get(ocdRef));
                 if (ocd == null)
                 {
                     continue;
