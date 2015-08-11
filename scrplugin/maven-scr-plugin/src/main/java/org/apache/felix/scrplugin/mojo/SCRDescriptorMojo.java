@@ -534,7 +534,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
      * configured build output directory) is used for output
      */
     private boolean updateProjectResources() {
-        final String classesDir = this.project.getBuild().getOutputDirectory().replace(File.separatorChar, '/');
+        final String classesDir = new File(this.project.getBuild().getOutputDirectory()).getAbsolutePath().replace(File.separatorChar, '/');
         final String ourRsrcPath = this.outputDirectory.getAbsolutePath().replace(File.separatorChar, '/');
         if ( !classesDir.equals(ourRsrcPath) ) {
             // now add the descriptor directory to the maven resources
@@ -543,7 +543,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
             final Iterator<Resource> rsrcIterator = this.project.getResources().iterator();
             while (!found && rsrcIterator.hasNext()) {
                 final Resource rsrc = rsrcIterator.next();
-                found = rsrc.getDirectory().replace(File.separatorChar, '/').equals(ourRsrcPath);
+                found = new File(rsrc.getDirectory()).getAbsolutePath().replace(File.separatorChar, '/').equals(ourRsrcPath);
             }
             if (!found) {
                 final Resource resource = new Resource();
