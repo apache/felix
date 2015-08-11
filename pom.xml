@@ -36,7 +36,6 @@
     <modules>
         <module>bundlerepository</module>
         <module>bundlerepository.osgi-ct</module>
-        <module>bundleplugin</module>
         <module>configadmin</module>
         <module>deploymentadmin</module>
         <module>eventadmin</module>
@@ -59,12 +58,20 @@
         <module>prefs</module>
         <module>resolver</module>
         <module>scr</module>
-        <module>scrplugin</module>
         <module>shell</module>
         <module>shell.tui</module>
         <module>shell.gui</module>
         <module>shell.gui.plugin</module>
         <module>shell.remote</module>
+        
+        <module>tools/maven-bundle-plugin</module>
+        <module>tools/maven-scr-plugin</module>
+        <module>tools/org.apache.felix.scr.annotations</module>
+        <module>tools/org.apache.felix.scr.ant</module>
+        <module>tools/org.apache.felix.scr.bnd</module>
+        <module>tools/org.apache.felix.scr.ds-annotations</module>
+        <module>tools/org.apache.felix.scr.generator</module>
+
         <module>transaction</module>
         <module>upnp</module>
         <module>useradmin</module>
