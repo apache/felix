@@ -1,3 +1,57 @@
+Changes from 1.8.2 to 2.0.0
+---------------------------
+** Improvement
+    * [FELIX-4949] [RFC-190] Implement prototype_required
+    * [FELIX-4918] Implement searching for event methods according to 112.3.2
+    * [FELIX-4916] Provide service capability
+    * [FELIX-4787] Update DS Implementation to R6
+    * [FELIX-4769  [RFC190/212] Implement ComponentServiceObjects
+    * [FELIX-4634] [RFC212] Implement replace strategy
+    * [FELIX-4633] [RFC212] Implement update strategy
+    * [FELIX-4632] [RFC212] Make properties map passed to event methods comparable
+    * [FELIX-4631] [R6/RFC212] Implement field injection
+    * [FELIX-4537] use a bnd.bnd file for bnd configuration
+    * [FELIX-4507] "persistent" factory components
+    * [FELIX-4506] Control felix optional extensions through xml attributes in component descriptor
+    * [FELIX-4467] Option to use system bundle context for tracking bundles
+    * [FELIX-4412] Add Provide-Capability for declarative services bundle
+    * [FELIX-4406] [R6/rfc190] support 1.3 namespace
+    * [FELIX-4405] [R6rfc190] support prototype scope
+    * [FELIX-4404] [R6/rfc190] implement additional event method signature single Map
+    * [FELIX-4403] [R6/rfc190] implement configuration through annotation instances
+    * [FELIX-4402] [R6/rfc190] implement multiple pid support
+    * [FELIX-4401] [R6/rfc190] Implement runtime/introspection/console based on DTOs
+    * [FELIX-4391] R6/rfc190 Support <refname>.cardinality.minimum configuration property
+
+** Bug
+    * [FELIX-4990] Only first factoy configuration is used
+    * [FELIX-4968] With configuration annotations, coercion exceptions are thrown at the wrong time.
+    * [FELIX-4967] Configuration annotations need to handle char and char[]
+    * [FELIX-4965] Configuration annotations with invalid members handled incorrectly
+    * [FELIX-4964] Reactivate component at most once per service event
+    * [FELIX-4957] [RFC-212] Various issues with field references
+    * [FELIX-4951] [RFC-190] Correct pid handling
+    * [FELIX-4950] [RFC-190] Within a component instance for each reference to the same service the same object needs to be injected
+    * [FELIX-4883] ServiceComponentRuntime.getComponentConfigurationDTOs NullPointerException
+    * [FELIX-4843] ScrInfo impl misses the first provided service
+    * [FELIX-4835] Use bnd 2.3 (via maven-bundle-plugin 2.5.3) to avoid java 8 import problems
+    * [FELIX-4793] Components with an empty configuration are created even if configuration is required or available
+    * [FELIX-4792] Handle Errors on component initialization
+    * [FELIX-4790] SCR MutablePropertiesTest fails when run with framework 4.6.0
+    * [FELIX-4789] SCR Felix4188Test fails when run with framework 4.4.1 or newer
+    * [FELIX-4785] Incompatible SCR API
+    * [FELIX-4768] [RFC190/212] Reference can specify both method and field
+    * [FELIX-4753] Timing issues with bundle context configuration and CM configuration taking effect.
+    * [FELIX-4686] If component is declared with 1.3 NS and ds.factory.enabled = true, validation error occors
+    * [FELIX-4585] SCR will create an additional component instance when ComponentContext.enableComponent is called
+    * [FELIX-4563] target filters in xml reference element are not turned into properties
+    * [FELIX-4536] [R6rfc190] service.pid property aggregates pids from all configurations.
+    * [FELIX-4469] shell command "scr help" does not work without parameter
+    * [FELIX-4447] Regression in ScrShellCommand (NPE caused by falsy regex)
+    * [FELIX-4396] for factory components, configuration changes should affect existing instances
+    * [FELIX-4149] Do not directly support modifying service registration properties
+
+
 Changes from 1.8 to 1.8.2
 ---------------------------
 
