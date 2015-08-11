@@ -17,132 +17,60 @@
  under the License. 
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+    <modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>org.apache</groupId>
-    <artifactId>apache</artifactId>
-    <version>5</version>
-  </parent>
+    <parent>
+        <groupId>org.apache</groupId>
+        <artifactId>apache</artifactId>
+        <version>17</version>
+    </parent>
 
-  <groupId>org.apache.felix</groupId>
-  <artifactId>reactor</artifactId>
-  <packaging>pom</packaging>
-  <name>Apache Felix</name>
-  <!-- We just increase the version each time the list of modules changes -->
-  <version>1</version>
-  <description>Apache Felix Reactor POM</description>
-  <!-- 
-  Felix contains 2 custom maven packaging plugins. Each creates a jar file
-  as an artifact. 
-  
-  maven-bundle-plugin 
-    (bundle packaging - latest prefered plugin for generating OSGi bundles.)
-  maven-osgi-plugin 
-    (osgi-bundle packaging - old plugin for generating OSGi bundles.)
-    
-  But with maven bug https://issues.apache.org/jira/browse/FELIX-198 files
-  are not always created with the correct extension in the repository.
+    <groupId>org.apache.felix</groupId>
+    <artifactId>reactor</artifactId>
+    <packaging>pom</packaging>
+    <name>Apache Felix</name>
+    <version>2-SNAPSHOT</version>
+    <description>Apache Felix Reactor POM</description>
 
-  As a work around, this pom creates different profiles for building the 
-  different types of felix modules. 
-
-  Usage:
-  mvn -Dpackaging=<type> clean install
-  -->
-
-  <profiles>
-
-    <profile>
-      <id>packaging-obr</id>
-      <activation>
-        <property>
-          <name>packaging</name>
-          <value>obr</value>
-        </property>
-      </activation>
-      <modules>
-        <module>utils</module>
+    <!-- Alphabetical list of modules -->
+    <modules>
         <module>bundlerepository</module>
         <module>bundlerepository.osgi-ct</module>
-     </modules>
-   </profile>
-
-    <profile>
-      <id>packaging-plugins</id>
-      <activation>
-        <property>
-          <name>packaging</name>
-          <value>plugins</value>
-        </property>
-      </activation>
-      <modules>
         <module>bundleplugin</module>
-        <module>scrplugin</module>
-      </modules>
-    </profile>
-
-    <profile>
-      <id>packaging-bundle</id>
-      <activation>
-        <property>
-          <name>packaging</name>
-          <value>bundle</value>
-        </property>
-      </activation>
-      <modules>        
-        <module>resolver</module>
+        <module>configadmin</module>
+        <module>deploymentadmin</module>
+        <module>eventadmin</module>
+        <module>examples</module>
+        <module>fileinstall</module>
         <module>framework</module>
+		<module>gogo</module>
+        <module>http</module>
+        <module>httplite</module>
+        <module>inventory</module>
+        <module>ipojo</module>
+        <module>jaas</module>
+        <module>jmood</module> 
+        <module>log</module>
         <module>main</module>
+        <module>metatype</module>
+        <module>mosgi</module> 
+        <module>org.apache.felix.daemon</module>
+        <module>org.osgi.service.obr</module>
+        <module>prefs</module>
+        <module>resolver</module>
+        <module>scr</module>
+        <module>scrplugin</module>
         <module>shell</module>
         <module>shell.tui</module>
         <module>shell.gui</module>
         <module>shell.gui.plugin</module>
         <module>shell.remote</module>
-        <module>org.osgi.service.obr</module>
-        <module>log</module>
-        <module>eventadmin</module>
-        <module>http</module>
-        <module>httplite</module>
+        <module>transaction</module>
         <module>upnp</module>
-        <module>scr</module>
-        <module>configadmin</module>
-        <module>metatype</module>
-        <module>deploymentadmin</module>
-        <module>wireadmin</module>
-        <module>prefs</module>
-        <module>inventory</module>
+        <module>useradmin</module>
+        <module>utils</module>
         <module>webconsole</module>
         <module>webconsole-plugins/event</module>
-        <module>fileinstall</module>
-        <module>useradmin</module>
-        <module>jaas</module>
-
-		<module>gogo</module>
-
-        <module>ipojo</module>
-
-        <module>mosgi</module> 
-        <module>jmood</module> 
-        
-        <module>transaction</module>
-
-        <module>examples</module>
-      </modules>
-    </profile>
-    
-    <profile>
-      <id>packaging-osgi-bundle</id>
-      <activation>
-        <property>
-          <name>packaging</name>
-          <value>osgi-bundle</value>
-        </property>
-      </activation>
-      <modules>
-        <module>org.apache.felix.daemon</module>
-      </modules>
-    </profile>
-
-  </profiles>
+        <module>wireadmin</module>
+    </modules>
 </project>
