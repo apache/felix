@@ -77,7 +77,20 @@
         <module>useradmin</module>
         <module>utils</module>
         <module>webconsole</module>
+        <module>webconsole-plugins/deppack</module>
+        <module>webconsole-plugins/ds</module>
         <module>webconsole-plugins/event</module>
+        <module>webconsole-plugins/gogo</module>
+        <module>webconsole-plugins/memoryusage</module>
+        <module>webconsole-plugins/metatype</module>
+        <module>webconsole-plugins/obr</module>
+        <module>webconsole-plugins/packageadmin</module>
+        <module>webconsole-plugins/script-console</module>
+        <module>webconsole-plugins/servicediagnostics</module>
+        <module>webconsole-plugins/shell</module>
+        <module>webconsole-plugins/subsystems</module>
+        <module>webconsole-plugins/upnp</module>
+        <module>webconsole-plugins/useradmin</module>
         <module>wireadmin</module>
     </modules>
 </project>
