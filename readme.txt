@@ -12,33 +12,17 @@ The Apache Felix project has the following directory structure in order to organ
 the project's varied product artifacts.
 
 + framework
-+ sandbox
++ project-xyz
 + tools
 
 The *framework* directory contains the source and build tree for the OSGi-compliant
-framework implementation.  It is, of course, the primary product of this project.
+framework implementation.  
 
-The *sandbox* directory contains a directory tree whereby project committers can 
-store various experimental and working versions of code.  Each committer that wishes
-to utilize the sandbox should create a subdirectory named after his/her apache username.
+The *project-xyz* is a placeholder for the various subprojects of Apache Felix. The
+subprojects cover other OSGi specifications like Declarative Services, Config Admin as
+well as other useful OSGi bundles.
 
-e.g.
 
-- sandbox
-  + erodriguez
-  + rickhall
-  + tbennett
 
-The *tools* directory contains a directory tree for various tools that may be developed
-in association with this project.  One such tool is the maven-osgi-plugin currently under
-development for the MAVEN2 build system.  A tools directory may itself have multiple
-products each requiring their own directory.
+The *tools* directory contains a directory tree for various build tools.
 
-e.g.
-
-- tools
-  - maven2
-    + maven-osgi-plugin
-
-As the project matures, we certainly may see other directories created to organize other
-types of products.
