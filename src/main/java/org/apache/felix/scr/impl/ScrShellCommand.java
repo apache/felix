@@ -118,8 +118,8 @@ class ScrShellCommand implements Command
             out.println("");
             out.println("scr " + LIST_CMD + " [ <bundleId> ]");
             out.println("");
-            out.println("This command lists registered components. If a bundle ID is\n"
-                + "added, only the components of the selected bundles are listed.");
+            out.println("This command lists registered component configurations. If a bundle ID is\n"
+                + "added, only the component configurations of the selected bundles are listed.");
             out.println("");
         }
         else if (INFO_CMD.equals( command ))
@@ -128,23 +128,23 @@ class ScrShellCommand implements Command
             out.println("scr " + INFO_CMD + " <componentId>");
             out.println("");
             out.println("This command dumps information of the component whose\n"
-                + "component ID is given as command argument.");
+                + "component name or component configuration ID is given as command argument.");
             out.println("");
         }
         else if (ENABLE_CMD.equals( command ))
         {
             out.println("");
-            out.println("scr " + ENABLE_CMD + " <componentId>");
+            out.println("scr " + ENABLE_CMD + " <componentName>");
             out.println("");
-            out.println("This command enables the component whose component ID\n" + "is given as command argument.");
+            out.println("This command enables the component whose component name\n" + "is given as command argument.");
             out.println("");
         }
         else if (DISABLE_CMD.equals( command ))
         {
             out.println("");
-            out.println("scr " + DISABLE_CMD + " <componentId>");
+            out.println("scr " + DISABLE_CMD + " <componentName>");
             out.println("");
-            out.println("This command disables the component whose component ID\n" + "is given as command argument.");
+            out.println("This command disables the component whose component name\n" + "is given as command argument.");
             out.println("");
         }
         else if (CONFIG_CMD.equals( command ))
@@ -160,8 +160,8 @@ class ScrShellCommand implements Command
             out.println("scr " + HELP_CMD + " [" + LIST_CMD + "]");
             out.println("scr " + LIST_CMD + " [ <bundleId> ]");
             out.println("scr " + INFO_CMD + " <componentId>");
-            out.println("scr " + ENABLE_CMD + " <componentId>");
-            out.println("scr " + DISABLE_CMD + " <componentId>");
+            out.println("scr " + ENABLE_CMD + " <componentName>");
+            out.println("scr " + DISABLE_CMD + " <componentName>");
             out.println("scr " + CONFIG_CMD);
         }
     }
