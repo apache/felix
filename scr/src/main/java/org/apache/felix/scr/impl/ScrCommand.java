@@ -33,8 +33,8 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 
-import org.apache.felix.scr.info.ScrInfo;
 import org.apache.felix.scr.impl.config.ScrConfiguration;
+import org.apache.felix.scr.info.ScrInfo;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -59,7 +59,7 @@ public class ScrCommand implements ScrInfo
     private final BundleContext bundleContext;
     private final ServiceComponentRuntime scrService;
     private final ScrConfiguration scrConfiguration;
-    
+
     private ServiceRegistration<ScrInfo> reg;
     private ServiceRegistration<?> gogoReg;
     private ServiceRegistration<?> shellReg;
@@ -147,7 +147,7 @@ public class ScrCommand implements ScrInfo
 
     // ---------- Actual implementation
 
-    
+
     public void update( boolean infoAsService )
     {
         if (infoAsService)
@@ -169,26 +169,26 @@ public class ScrCommand implements ScrInfo
             }
         }
     }
-    
+
     /* (non-Javadoc)
      * @see org.apache.felix.scr.impl.ScrInfo#list(java.lang.String, java.io.PrintStream, java.io.PrintStream)
      */
     public void list(final String bundleIdentifier, final PrintWriter out)
     {
-        List<ComponentDescriptionDTO> components;
+        List<ComponentConfigurationDTO> components;
 
         if (bundleIdentifier != null)
         {
             Bundle bundle = null;
             try
             {
-                long bundleId = Long.parseLong(bundleIdentifier);
+                final long bundleId = Long.parseLong(bundleIdentifier);
                 bundle = bundleContext.getBundle(bundleId);
             }
-            catch (NumberFormatException nfe)
+            catch (final NumberFormatException nfe)
             {
                 // might be a bundle symbolic name
-                Bundle[] bundles = bundleContext.getBundles();
+                final Bundle[] bundles = bundleContext.getBundles();
                 for (int i = 0; i < bundles.length; i++)
                 {
                     if (bundleIdentifier.equals(bundles[i].getSymbolicName()))
@@ -205,7 +205,11 @@ public class ScrCommand implements ScrInfo
             }
             if (ComponentRegistry.isBundleActive(bundle))
             {
-                components = new ArrayList<ComponentDescriptionDTO>(scrService.getComponentDescriptionDTOs(bundle));
+                components = new ArrayList<ComponentConfigurationDTO>();
+                for(final ComponentDescriptionDTO cmp : scrService.getComponentDescriptionDTOs(bundle))
+                {
+                    components.addAll(scrService.getComponentConfigurationDTOs(cmp));
+                }
                 if (components.isEmpty())
                 {
                     out.println("Bundle " + bundleIdentifier + " declares no components");
@@ -220,7 +224,11 @@ public class ScrCommand implements ScrInfo
         }
         else
         {
-            components = new ArrayList<ComponentDescriptionDTO>(scrService.getComponentDescriptionDTOs());
+            components = new ArrayList<ComponentConfigurationDTO>();
+            for(final ComponentDescriptionDTO cmp : scrService.getComponentDescriptionDTOs())
+            {
+                components.addAll(scrService.getComponentConfigurationDTOs(cmp));
+            }
             if (components.isEmpty())
             {
                 out.println("No components registered");
@@ -228,42 +236,42 @@ public class ScrCommand implements ScrInfo
             }
         }
 
-        Collections.sort( components, new Comparator<ComponentDescriptionDTO>()
+        Collections.sort( components, new Comparator<ComponentConfigurationDTO>()
                 {
 
-                    public int compare(ComponentDescriptionDTO c1, ComponentDescriptionDTO c2)
+                    public int compare(final ComponentConfigurationDTO c1, final ComponentConfigurationDTO c2)
                     {
-                        return c1.name.compareTo(c2.name);
+                        return Long.signum(c1.id - c2.id);
                     }
 
                 });
 
-        out.println(" Name  BundleId DefaultEnabled");
-        for ( ComponentDescriptionDTO component : components )
+        out.println(" Id   State BundleId Name");
+        for ( final ComponentConfigurationDTO component : components )
         {
-            out.println( String.format( "[%1$s] [%2$4d] [%3$b]", component.name, component.bundle.id, component.defaultEnabled ) );
+            out.println( String.format( "[%1$4d] [%2$s] [%3$4d] %4$s", component.id, toStateString( component.state ), component.description.bundle.id, component.description.name ) );
         }
         out.flush();
    }
 
-    /* (non-Javadoc)
+    /**
      * @see org.apache.felix.scr.impl.ScrInfo#info(java.lang.String, java.io.PrintStream, java.io.PrintStream)
      */
-    public void info(final String componentId, PrintWriter out)
+    public void info(final String componentId, final PrintWriter out)
     {
-        Collection<ComponentDescriptionDTO> components = getComponentFromArg(componentId);
-        if (components == null)
+        final Result result = getComponentsFromArg(componentId, false);
+        if (result.components.isEmpty())
         {
             return;
         }
 
-        Collections.sort( new ArrayList<ComponentDescriptionDTO>(components), new Comparator<ComponentDescriptionDTO>()
+        Collections.sort( new ArrayList<ComponentDescriptionDTO>(result.components), new Comparator<ComponentDescriptionDTO>()
                 {
 
-                    public int compare(ComponentDescriptionDTO c1, ComponentDescriptionDTO c2)
+                    public int compare(final ComponentDescriptionDTO c1, final ComponentDescriptionDTO c2)
                     {
-                        long bundleId1 = c1.bundle.id;
-                        long bundleId2 = c2.bundle.id;
+                        final long bundleId1 = c1.bundle.id;
+                        final long bundleId2 = c2.bundle.id;
                         int result = Long.signum(bundleId1 - bundleId2);
                         if ( result == 0)
                         {
@@ -276,7 +284,7 @@ public class ScrCommand implements ScrInfo
 
         long bundleId = -1;
 
-        for ( ComponentDescriptionDTO component : components )
+        for ( ComponentDescriptionDTO component : result.components )
         {
             if ( component.bundle.id != bundleId )
             {
@@ -367,9 +375,16 @@ public class ScrCommand implements ScrInfo
 
             Map<String, Object> props = component.properties;
             propertyInfo(props, out, "");
-            for (ComponentConfigurationDTO cc: scrService.getComponentConfigurationDTOs(component))
+            if ( result.configuration != null )
             {
-                info(cc, out);
+                info(result.configuration, out);
+            }
+            else
+            {
+                for (final ComponentConfigurationDTO cc: scrService.getComponentConfigurationDTOs(component))
+                {
+                    info(cc, out);
+                }
             }
         }
 
@@ -468,16 +483,11 @@ public class ScrCommand implements ScrInfo
         propertyInfo( cc.properties, out, "    ");
     }
 
-    void change(final String componentIdentifier, PrintWriter out, boolean enable)
+    void change(final String componentIdentifier, final PrintWriter out, final boolean enable)
     {
-        Collection<ComponentDescriptionDTO> components = getComponentFromArg(componentIdentifier);
-        ArrayList<String> disposed = new ArrayList<String>();
-        if (components == null)
-        {
-            return;
-        }
+        final Result result = getComponentsFromArg(componentIdentifier, true);
 
-        for ( ComponentDescriptionDTO component : components )
+        for ( final ComponentDescriptionDTO component : result.components )
         {
             if ( enable )
             {
@@ -505,17 +515,12 @@ public class ScrCommand implements ScrInfo
             }
         }
         out.flush();
-        if ( !disposed.isEmpty() )
-        {
-            throw new IllegalArgumentException( "Components " + disposed + " already disposed, cannot change state" );
-
-        }
     }
 
-    /* (non-Javadoc)
+    /**
      * @see org.apache.felix.scr.impl.ScrInfo#config(java.io.PrintStream)
      */
-    public void config(PrintWriter out)
+    public void config(final PrintWriter out)
     {
         out.print("Log Level: ");
         out.println(scrConfiguration.getLogLevel());
@@ -531,45 +536,75 @@ public class ScrCommand implements ScrInfo
         out.println(scrConfiguration.globalExtender());
         out.print("Info Service registered: ");
         out.println(scrConfiguration.infoAsService() ? "Supported" : "Unsupported");
+        out.flush();
     }
 
-    private String toStateString(int state)
+    private String toStateString(final int state)
     {
-        switch (state) {
+        switch (state)
+        {
 
         case (ComponentConfigurationDTO.UNSATISFIED_REFERENCE):
             return "unsatisfied reference";
         case (ComponentConfigurationDTO.ACTIVE):
             return "active      ";
         case (ComponentConfigurationDTO.SATISFIED):
-            return "satisfied  ";
+            return "satisfied   ";
+        case (ComponentConfigurationDTO.UNSATISFIED_CONFIGURATION):
+            return "unsatisfied config";
         default:
             return "unkown: " + state;
         }
     }
 
-    private Collection<ComponentDescriptionDTO> getComponentFromArg(final String componentIdentifier)
+    private static final class Result {
+        public Collection<ComponentDescriptionDTO> components = new ArrayList<ComponentDescriptionDTO>();
+        public ComponentConfigurationDTO configuration;
+    }
+
+    private Result getComponentsFromArg(final String componentIdentifier, final boolean nameMatch)
     {
-        Collection<ComponentDescriptionDTO> components = scrService.getComponentDescriptionDTOs();
-        if (componentIdentifier != null)
+        final Pattern p = (componentIdentifier == null ? null : Pattern.compile(componentIdentifier));
+        final Result result = new Result();
+
+        for(final ComponentDescriptionDTO cmp : scrService.getComponentDescriptionDTOs())
         {
-            ArrayList<ComponentDescriptionDTO> cs = new ArrayList<ComponentDescriptionDTO>(components.size());
-            Pattern p = Pattern.compile(componentIdentifier);
-            for (ComponentDescriptionDTO component: components)
+            if (componentIdentifier != null)
             {
-                if ( p.matcher( component.name).matches() )
+                if ( p.matcher(cmp.name).matches() )
                 {
-                    cs.add( component );
+                    result.components.add(cmp);
+                }
+                else if ( !nameMatch )
+                {
+                    boolean done = false;
+                    for (final ComponentConfigurationDTO cfg: scrService.getComponentConfigurationDTOs(cmp))
+                    {
+                        if ( p.matcher( String.valueOf( cfg.id )).matches() )
+                        {
+                            result.components.add( cmp );
+                            result.configuration = cfg;
+                            done = true;
+                            break;
+                        }
+                    }
+                    if ( done )
+                    {
+                        break;
+                    }
                 }
             }
-            if (cs.isEmpty())
+            else
             {
-                throw new IllegalArgumentException("No Component with ID or matching " + componentIdentifier);
+                result.components.add(cmp);
             }
-            components = cs;
+        }
+        if (componentIdentifier != null && result.components.isEmpty())
+        {
+            throw new IllegalArgumentException("No Component with name or configuration with ID matching " + componentIdentifier);
         }
 
-        return components;
+        return result;
     }
 
 }
