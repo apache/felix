@@ -77,11 +77,8 @@
         </property>
       </activation>
       <modules>
-        <module>maven-obr-plugin</module>
         <module>bundleplugin</module>
         <module>scrplugin</module>
-        <module>tools/maven2/maven-osgi-plugin</module>
-<!--        <module>tools/maven2/maven-felix-plugin</module> -->
       </modules>
     </profile>
 
@@ -144,10 +141,6 @@
       </activation>
       <modules>
         <module>org.apache.felix.daemon</module>
-
-        <!--    <module>tools/mangen</module> -->
-
-
       </modules>
     </profile>
 
