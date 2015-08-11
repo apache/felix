@@ -1,3 +1,16 @@
+Changes from 1.0.0 to 2.0.0
+---------------------------
+
+** Improvement
+    * [FELIX-4786] - Update to latest DS implementation
+    * [FELIX-4559] - DS plugin should use Inventory instead of deprecated ConfigurationPrinter
+    * [FELIX-3861] - Set felix.webconsole.category on Web Console plugins
+    * [FELIX-3140] - Display link for component id within the bundle details and service details view
+
+** Bug
+    * [FELIX-4872] - Error while downloadig full text config in BundlesServlet: IllegalArgumentException: Invalid local link
+
+    
 Initial Release 1.0.0
 ---------------------
 
