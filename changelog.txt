@@ -1,3 +1,9 @@
+Changes from 2.0.0 to 2.0.2
+---------------------------
+** Improvement
+    * [FELIX-5001] scr:list Gogo command should display component configurations
+
+
 Changes from 1.8.2 to 2.0.0
 ---------------------------
 ** Improvement
