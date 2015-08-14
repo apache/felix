@@ -18,7 +18,6 @@ package org.apache.felix.http.cometd.internal;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Properties;
 
 import javax.servlet.http.HttpServlet;
 
@@ -58,7 +57,7 @@ public final class CometdServiceImpl
     public void start()
         throws Exception
     {
-        Properties props = new Properties();
+        Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(Constants.SERVICE_PID, PID);
         this.configServiceReg = this.context.registerService(ManagedService.class.getName(), this, props);
 
