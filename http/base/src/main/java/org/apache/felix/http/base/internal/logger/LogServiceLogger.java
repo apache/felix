@@ -18,20 +18,30 @@
  */
 package org.apache.felix.http.base.internal.logger;
 
-import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
+import org.osgi.util.tracker.ServiceTracker;
 
 public final class LogServiceLogger
     extends AbstractLogger
 {
-    private final ConsoleLogger consoleLogger;
+    private final LogService defaultLogger;
     private final ServiceTracker tracker;
 
-    public LogServiceLogger(BundleContext context)
+    private static final String JUL_LOGGER = "org.apache.felix.http.log.jul";
+
+    public LogServiceLogger(final BundleContext context)
     {
-        this.consoleLogger = new ConsoleLogger();
+        Object julLogOpt = context.getProperty(JUL_LOGGER);
+        if ( julLogOpt == null ) {
+            julLogOpt = System.getProperty(JUL_LOGGER);
+        }
+        if ( julLogOpt != null ) {
+            this.defaultLogger = new JDK14Logger(context);
+        } else {
+            this.defaultLogger = new ConsoleLogger();
+        }
         this.tracker = new ServiceTracker(context, LogService.class.getName(), null);
         this.tracker.open();
     }
@@ -41,13 +51,14 @@ public final class LogServiceLogger
         this.tracker.close();
     }
 
+    @Override
     public void log(ServiceReference ref, int level, String message, Throwable cause)
     {
         LogService log = (LogService)this.tracker.getService();
         if (log != null) {
             log.log(ref, level, message, cause);
         } else {
-            this.consoleLogger.log(ref, level, message, cause);
+            this.defaultLogger.log(ref, level, message, cause);
         }
     }
 }
