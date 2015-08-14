@@ -20,5 +20,5 @@
 @Version("3.0.0")
 package org.apache.felix.http.proxy;
 
-import aQute.bnd.annotation.Version;
+import org.osgi.annotation.versioning.Version;
 
