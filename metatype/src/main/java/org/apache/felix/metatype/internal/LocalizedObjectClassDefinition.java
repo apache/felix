@@ -26,6 +26,8 @@ import java.util.*;
 
 import org.apache.felix.metatype.AD;
 import org.apache.felix.metatype.OCD;
+import org.apache.felix.metatype.OptionalAttributes;
+import org.apache.felix.metatype.OptionalAttributesProvider;
 import org.apache.felix.metatype.internal.l10n.Resources;
 import org.osgi.framework.Bundle;
 import org.osgi.service.metatype.AttributeDefinition;
@@ -41,7 +43,7 @@ import org.osgi.service.metatype.ObjectClassDefinition;
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class LocalizedObjectClassDefinition extends LocalizedBase implements ObjectClassDefinition
+public class LocalizedObjectClassDefinition extends LocalizedBase implements OptionalAttributesProvider, ObjectClassDefinition
 {
 
     private Bundle bundle;
@@ -179,6 +181,13 @@ public class LocalizedObjectClassDefinition extends LocalizedBase implements Obj
     {
         return localize( ocd.getName() );
     }
+
+
+    public OptionalAttributes getOptionalAttributes()
+    {
+        return ocd;
+    }
+
 
     private static class RequiredFilterIterator implements Iterator
     {

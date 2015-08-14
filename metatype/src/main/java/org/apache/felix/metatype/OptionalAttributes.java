@@ -19,27 +19,47 @@
 package org.apache.felix.metatype;
 
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 
 public class OptionalAttributes
 {
-    private Map optionalAttributes;
+    public static final String DEFAULT_NAMESPACE = "";
+
+    private Map<String, Map<String, String>> namespacedAttributes = new HashMap<String, Map<String,String>>();
 
 
     public void addOptionalAttribute( String name, String value )
     {
+        addOptionalAttribute(name, value, DEFAULT_NAMESPACE);
+    }
+
+
+    public void addOptionalAttribute( String name, String value, String namespace )
+    {
+        if (namespace == null) {
+            namespace = DEFAULT_NAMESPACE;
+        }
+        Map<String, String> optionalAttributes = namespacedAttributes.get(namespace);
         if ( optionalAttributes == null )
         {
-            optionalAttributes = new HashMap();
+            optionalAttributes = new HashMap<String, String>();
+            namespacedAttributes.put(namespace, optionalAttributes);
         }
         optionalAttributes.put( name, value );
     }
 
 
-    public Map getOptionalAttributes()
+    public Map<String, String> getOptionalAttributes()
     {
-        return optionalAttributes;
+        return getOptionalAttributes(DEFAULT_NAMESPACE);
+    }
+
+
+    public Map<String, String> getOptionalAttributes( String namespace )
+    {
+        return Collections.unmodifiableMap(namespacedAttributes.get(namespace));
     }
 }

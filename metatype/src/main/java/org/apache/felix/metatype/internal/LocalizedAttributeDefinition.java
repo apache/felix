@@ -20,6 +20,8 @@ package org.apache.felix.metatype.internal;
 
 
 import org.apache.felix.metatype.AD;
+import org.apache.felix.metatype.OptionalAttributes;
+import org.apache.felix.metatype.OptionalAttributesProvider;
 import org.apache.felix.metatype.internal.l10n.Resources;
 import org.osgi.service.metatype.AttributeDefinition;
 
@@ -33,7 +35,7 @@ import org.osgi.service.metatype.AttributeDefinition;
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-class LocalizedAttributeDefinition extends LocalizedBase implements AttributeDefinition
+class LocalizedAttributeDefinition extends LocalizedBase implements AttributeDefinition, OptionalAttributesProvider
 {
 
     private final AD ad;
@@ -122,6 +124,12 @@ class LocalizedAttributeDefinition extends LocalizedBase implements AttributeDef
     public int getType()
     {
         return ad.getType();
+    }
+
+
+    public OptionalAttributes getOptionalAttributes()
+    {
+        return ad;
     }
 
 

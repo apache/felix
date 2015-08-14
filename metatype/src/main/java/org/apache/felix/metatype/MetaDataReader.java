@@ -221,7 +221,8 @@ public class MetaDataReader
             if (!attributes.contains(name))
             {
                 String value = this.parser.getAttributeValue(i);
-                entity.addOptionalAttribute(name, value);
+                String namespace = this.parser.getAttributeNamespace(i);
+                entity.addOptionalAttribute(name, value, namespace);
             }
         }
     }
