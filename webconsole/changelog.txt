@@ -1,3 +1,16 @@
+Changes from 4.2.10 to 4.2.12
+-----------------------------
+** Bug
+    * [FELIX-5004] - Null is passed to BundleInfoProvider if plugin root is null
+
+
+Changes from 4.2.8 to 4.2.10
+----------------------------
+** Bug
+    * [FELIX-4852] - Unbinding configuration does not have desired effect
+    * [FELIX-4886] - Check for ConfigAdmin#listConfigurations returning null
+
+
 Changes from 4.2.6 to 4.2.8
 ---------------------------
 ** Bug

@@ -22,7 +22,7 @@ import java.net.URL;
 
 /**
  * This pre-java 5 enum defines all valid bundle information value types.
- * 
+ *
  * @author Valentin Valchev
  */
 public final class BundleInfoType
@@ -34,7 +34,7 @@ public final class BundleInfoType
      * with <code>&lt;protocol&gt;://</code> the link will be considered as
      * external. Otherwise the link should be absolute link to a local Servlet
      * and must always start with <code>/</code>.
-     * 
+     *
      * for security reasons, the protocol cannot be <code>file</code> for
      * external links.
      */
@@ -65,7 +65,7 @@ public final class BundleInfoType
 
     /**
      * Returns the name of the type.
-     * 
+     *
      * @return the type name
      */
     public final String getName()
@@ -77,7 +77,7 @@ public final class BundleInfoType
     /**
      * That method is used to validate if the object is correct for the
      * specified type.
-     * 
+     *
      * @param value
      *            the value that will be validated.
      */
@@ -93,19 +93,19 @@ public final class BundleInfoType
             if ( idx == -1 )
             {
                 if ( !val.startsWith( "/" ) ) //$NON-NLS-1$
-                    throw new IllegalArgumentException( "Invalid local link" );
+                    throw new IllegalArgumentException( "Invalid local link: " + val );
             }
             else
             {
                 // check external link
                 if ( val.substring( 0, idx ).equalsIgnoreCase( "file" ) ) //$NON-NLS-1$
-                    throw new IllegalArgumentException( "External link cannot use file protocol" );
+                    throw new IllegalArgumentException( "External link cannot use file protocol: " + value );
             }
         }
         else if ( this == RESOURCE )
         {
             if ( !( value instanceof URL ) )
-                throw new IllegalArgumentException( "Invalid URL" );
+                throw new IllegalArgumentException( "Invalid URL: " + value );
         }
     }
 
