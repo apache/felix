@@ -105,7 +105,7 @@ class InfoProvider implements BundleInfoProvider
                 name != null ? name : "", //$NON-NLS-1$
                 state, //
         });
-        return new BundleInfo(key, webConsoleRoot + "/components/" + cfg.id, //$NON-NLS-1$
+        return new BundleInfo(key, (webConsoleRoot == null ? "" : webConsoleRoot) + "/components/" + cfg.id, //$NON-NLS-1$
             BundleInfoType.LINK, descr);
     }
 
