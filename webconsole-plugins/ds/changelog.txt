@@ -1,3 +1,11 @@
+Changes from 2.0.0 to 2.0.2
+---------------------------
+** Improvement
+    * [FELIX-4998] - Declarative Service plugin might provide JSON format support for Inventory Printer
+** Bug
+    * [FELIX-5005] - BundleInfoProvider should work with null being passed as appRoot
+
+
 Changes from 1.0.0 to 2.0.0
 ---------------------------
 
