@@ -822,7 +822,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         }
 
         listHeaders( jw, bundle );
-        final String appRoot = ( pluginRoot == null ) ? null : pluginRoot.substring( 0, pluginRoot.lastIndexOf( "/" ) );
+        final String appRoot = ( pluginRoot == null ) ? "" : pluginRoot.substring( 0, pluginRoot.lastIndexOf( "/" ) );
         bundleInfoDetails( jw, bundle, appRoot, locale );
 
         jw.endArray();
