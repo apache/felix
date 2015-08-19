@@ -177,6 +177,11 @@ class URLHandlersBundleURLConnection extends URLConnection
         return m_contentLength;
     }
 
+    public long getContentLengthLong()
+    {
+        return getContentLength();
+    }
+
     public long getLastModified()
     {
         try
