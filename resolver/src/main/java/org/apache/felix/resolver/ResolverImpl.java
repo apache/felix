@@ -60,6 +60,8 @@ public class ResolverImpl implements Resolver
 
     private final int m_parallelism;
 
+    private final Executor m_executor;
+
     // Note this class is not thread safe.
     // Only use in the context of a single thread.
     class ResolveSession
@@ -114,16 +116,28 @@ public class ResolverImpl implements Resolver
     {
         this.m_logger = logger;
         this.m_parallelism = parallelism;
+        this.m_executor = null;
+    }
+
+    public ResolverImpl(Logger logger, Executor executor)
+    {
+        this.m_logger = logger;
+        this.m_parallelism = -1;
+        this.m_executor = executor;
     }
 
     public Map<Resource, List<Wire>> resolve(ResolveContext rc) throws ResolutionException
     {
-        if (m_parallelism > 1)
+        if (m_executor != null)
+        {
+            return resolve(rc, m_executor);
+        }
+        else if (m_parallelism > 1)
         {
             ExecutorService executor = Executors.newFixedThreadPool(m_parallelism);
             try
             {
-                return doResolve(rc, executor);
+                return resolve(rc, executor);
             }
             finally
             {
@@ -132,11 +146,11 @@ public class ResolverImpl implements Resolver
         }
         else
         {
-            return doResolve(rc, new DumbExecutor());
+            return resolve(rc, new DumbExecutor());
         }
     }
 
-    private Map<Resource, List<Wire>> doResolve(ResolveContext rc, Executor executor) throws ResolutionException
+    public Map<Resource, List<Wire>> resolve(ResolveContext rc, Executor executor) throws ResolutionException
     {
         ResolveSession session = new ResolveSession(rc);
         Map<Resource, List<Wire>> wireMap =
