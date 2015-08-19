@@ -183,11 +183,12 @@ public class CopyOnWriteList<E> implements List<E>, Cloneable {
         int idx = 0;
         for (int i = 0, l = o.length; i < l; i++) {
             if (c.contains(o[i])) {
-                modified = true;
-            } else if (modified) {
-                if (idx == 0) {
+                if (!modified) {
                     d = o.clone();
+                    idx = i;
+                    modified = true;
                 }
+            } else if (modified) {
                 d[idx++] = o[i];
             }
         }
