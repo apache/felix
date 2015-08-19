@@ -3693,7 +3693,7 @@ public class Felix extends BundleImpl implements Framework
         }
         catch (ServiceException ex)
         {
-            fireFrameworkEvent(FrameworkEvent.ERROR, ref.getBundle(), ex);
+            fireFrameworkEvent(FrameworkEvent.ERROR, bundle, ex);
         }
 
         return null;
