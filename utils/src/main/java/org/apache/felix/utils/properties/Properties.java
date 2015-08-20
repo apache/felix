@@ -70,12 +70,19 @@ public class Properties extends AbstractMap<String, String> {
      */
     private static final String DEFAULT_ENCODING = "ISO-8859-1";
 
+    /** Used to specify a specific encoding (see https://issues.apache.org/jira/browse/FELIX-4416). */
+    private static final String ENCODING = AccessController.doPrivileged(new PrivilegedAction<String>() {
+        public String run() {
+            return System.getProperty("felix.fileinstall.configEncoding", DEFAULT_ENCODING);
+        }
+    });
+
     /** Constant for the platform specific line separator.*/
     private static final String LINE_SEPARATOR = AccessController.doPrivileged(new PrivilegedAction<String>() {
-            public String run() {
-                return System.getProperty("line.separator");
-            }
-        });
+        public String run() {
+            return System.getProperty("line.separator");
+        }
+    });
 
     /** Constant for the radix of hex numbers.*/
     private static final int HEX_RADIX = 16;
@@ -137,7 +144,7 @@ public class Properties extends AbstractMap<String, String> {
     }
 
     public void load(InputStream is) throws IOException {
-        load(new InputStreamReader(is, DEFAULT_ENCODING));
+        load(new InputStreamReader(is, ENCODING));
     }
 
     public void load(Reader reader) throws IOException {
@@ -158,7 +165,7 @@ public class Properties extends AbstractMap<String, String> {
     }
 
     public void save(OutputStream os) throws IOException {
-        save(new OutputStreamWriter(os, DEFAULT_ENCODING));
+        save(new OutputStreamWriter(os, ENCODING));
     }
 
     public void save(Writer writer) throws IOException {
