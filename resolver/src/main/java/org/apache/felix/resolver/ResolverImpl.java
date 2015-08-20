@@ -572,7 +572,7 @@ public class ResolverImpl implements Resolver
                                 new DumbExecutor(),
                                 session, usesPermutations, importPermutations, allCandidates,
                                 new OpenHashMap<Resource, ResolutionError>(resourcePkgMap.size()),
-                                Collections.singletonMap(host, allCandidates.getWrappedHost(host)),
+                                allCandidates.getHosts(),
                                 true);
                     }
                     while ((rethrow != null)
