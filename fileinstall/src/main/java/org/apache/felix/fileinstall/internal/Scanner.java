@@ -22,8 +22,10 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -113,12 +115,13 @@ public class Scanner implements Closeable {
     public Set<File> scan(boolean reportImmediately)
     {
         File[] list = directory.listFiles(filter);
+        Arrays.sort(list);
         if (list == null)
         {
             return null;
         }
-        Set<File> files = new HashSet<File>();
-        Set<File> removed = new HashSet<File>(storedChecksums.keySet());
+        Set<File> files = new LinkedHashSet<File>();
+        Set<File> removed = new LinkedHashSet<File>(storedChecksums.keySet());
         for (File file : list)
         {
             long lastChecksum = lastChecksums.get(file) != null ? (Long) lastChecksums.get(file) : 0;
