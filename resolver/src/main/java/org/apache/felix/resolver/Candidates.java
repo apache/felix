@@ -132,7 +132,10 @@ class Candidates
             {
                 res = ((WrappedResource) res).getDeclaredResource();
             }
-            hosts.put(res, getWrappedHost(res));
+            if (!Util.isFragment(res))
+            {
+                hosts.put(res, getWrappedHost(res));
+            }
         }
         for (Capability cap : m_dependentMap.keySet())
         {
@@ -141,7 +144,10 @@ class Candidates
             {
                 res = ((WrappedResource) res).getDeclaredResource();
             }
-            hosts.put(res, getWrappedHost(res));
+            if (!Util.isFragment(res))
+            {
+                hosts.put(res, getWrappedHost(res));
+            }
         }
         return hosts;
     }
