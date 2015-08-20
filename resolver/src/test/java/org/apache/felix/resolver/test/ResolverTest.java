@@ -426,7 +426,155 @@ public class ResolverTest
         // should be wired to A and C1
         assertEquals(resA, wiresB.get(0).getProvider());
         assertEquals(resC1, wiresB.get(1).getProvider());
+    }
 
+    /**
+     * Test dynamic resolution with a resolved fragment
+     */
+    @Test
+    public void testScenario10() throws Exception
+    {
+        ResolverImpl resolver = new ResolverImpl(new Logger(Logger.LOG_DEBUG), 1);
+
+        Map<Resource, Wiring> wirings = new HashMap<Resource, Wiring>();
+        Map<Requirement, List<Capability>> candMap = new HashMap<Requirement, List<Capability>>();
+
+        ResourceImpl a1 = new ResourceImpl("A");
+        Capability a1_hostCap = addCap(a1, HostNamespace.HOST_NAMESPACE, "A");
+
+        ResourceImpl f1 = new ResourceImpl("F1", IdentityNamespace.TYPE_FRAGMENT);
+        Requirement f1_hostReq = addReq(f1, HostNamespace.HOST_NAMESPACE, "A");
+        Capability f1_pkgCap = addCap(f1, PackageNamespace.PACKAGE_NAMESPACE, "org.foo.a");
+
+        ResourceImpl b1 = new ResourceImpl("B");
+        Requirement b_pkgReq1 = addReq(b1, PackageNamespace.PACKAGE_NAMESPACE, "org.foo.a");
+
+        candMap.put(b_pkgReq1, Collections.singletonList(f1_pkgCap));
+
+        Map<Resource, List<Wire>> wires = new HashMap<Resource, List<Wire>>();
+        wires.put(a1, new ArrayList<Wire>());
+        wires.put(b1, new ArrayList<Wire>());
+        wires.put(f1, new ArrayList<Wire>());
+        wires.get(f1).add(new SimpleWire(f1_hostReq, a1_hostCap));
+
+        Map<Resource, List<Wire>> invertedWires = new HashMap<Resource, List<Wire>>();
+        invertedWires.put(a1, new ArrayList<Wire>());
+        invertedWires.put(b1, new ArrayList<Wire>());
+        invertedWires.put(f1, new ArrayList<Wire>());
+        invertedWires.get(a1).add(new SimpleWire(f1_hostReq, a1_hostCap));
+
+        wirings.put(a1, new SimpleWiring(a1, Arrays.asList(a1_hostCap, f1_pkgCap), wires, invertedWires));
+        wirings.put(b1, new SimpleWiring(b1, Collections.<Capability>emptyList(), wires, invertedWires));
+        wirings.put(f1, new SimpleWiring(f1, Collections.<Capability>emptyList(), wires, invertedWires));
+
+        ResolveContextImpl rci = new ResolveContextImpl(wirings, candMap, Collections.<Resource>emptyList(), Collections.<Resource> emptyList());
+
+        List<Capability> caps = new ArrayList<Capability>();
+        caps.add(f1_pkgCap);
+        Map<Resource, List<Wire>> wireMap = resolver.resolve(rci, b1, b_pkgReq1, caps);
+
+        assertEquals(1, wireMap.size());
+        List<Wire> wiresB = wireMap.get(b1);
+        assertNotNull(wiresB);
+        assertEquals(1, wiresB.size());
+        // should be wired to A through the fragment capability
+        assertEquals(a1, wiresB.get(0).getProvider());
+        assertEquals(f1_pkgCap, wiresB.get(0).getCapability());
+    }
+
+    /**
+     * Test dynamic resolution with an unresolved fragment
+     */
+    @Test
+    public void testScenario11() throws Exception
+    {
+        ResolverImpl resolver = new ResolverImpl(new Logger(Logger.LOG_DEBUG), 1);
+
+        Map<Resource, Wiring> wirings = new HashMap<Resource, Wiring>();
+        Map<Requirement, List<Capability>> candMap = new HashMap<Requirement, List<Capability>>();
+
+        ResourceImpl a1 = new ResourceImpl("A");
+        Capability a1_hostCap = addCap(a1, HostNamespace.HOST_NAMESPACE, "A");
+
+        ResourceImpl f1 = new ResourceImpl("F1", IdentityNamespace.TYPE_FRAGMENT);
+        Requirement f1_hostReq = addReq(f1, HostNamespace.HOST_NAMESPACE, "A");
+        Capability f1_pkgCap = addCap(f1, PackageNamespace.PACKAGE_NAMESPACE, "org.foo.a");
+
+        ResourceImpl b1 = new ResourceImpl("B");
+        Requirement b_pkgReq1 = addReq(b1, PackageNamespace.PACKAGE_NAMESPACE, "org.foo.a");
+
+        candMap.put(b_pkgReq1, Collections.singletonList(f1_pkgCap));
+        candMap.put(f1_hostReq, Collections.singletonList(a1_hostCap));
+
+        Map<Resource, List<Wire>> wires = new HashMap<Resource, List<Wire>>();
+        wires.put(a1, new ArrayList<Wire>());
+        wires.put(b1, new ArrayList<Wire>());
+
+        Map<Resource, List<Wire>> invertedWires = new HashMap<Resource, List<Wire>>();
+        invertedWires.put(a1, new ArrayList<Wire>());
+        invertedWires.put(b1, new ArrayList<Wire>());
+
+        wirings.put(a1, new SimpleWiring(a1, Collections.<Capability>emptyList(), wires, invertedWires));
+        wirings.put(b1, new SimpleWiring(b1, Collections.<Capability>emptyList(), wires, invertedWires));
+
+        ResolveContextImpl rci = new ResolveContextImpl(wirings, candMap, Collections.<Resource>emptyList(), Collections.<Resource> emptyList());
+
+        List<Capability> caps = new ArrayList<Capability>();
+        caps.add(f1_pkgCap);
+        Map<Resource, List<Wire>> wireMap = resolver.resolve(rci, b1, b_pkgReq1, caps);
+
+        assertEquals(1, wireMap.size());
+        List<Wire> wiresB = wireMap.get(b1);
+        assertNotNull(wiresB);
+        assertEquals(1, wiresB.size());
+        // should be wired to A through the fragment capability
+        assertEquals(a1, wiresB.get(0).getProvider());
+        assertEquals(f1_pkgCap, wiresB.get(0).getCapability());
+    }
+
+    /**
+     * Test dynamic resolution with an unresolvable host
+     */
+    @Test(expected = ResolutionException.class)
+    public void testScenario12() throws Exception
+    {
+        ResolverImpl resolver = new ResolverImpl(new Logger(Logger.LOG_DEBUG), 1);
+
+        Map<Resource, Wiring> wirings = new HashMap<Resource, Wiring>();
+        Map<Requirement, List<Capability>> candMap = new HashMap<Requirement, List<Capability>>();
+
+        ResourceImpl a1 = new ResourceImpl("A");
+        Capability a1_hostCap = addCap(a1, HostNamespace.HOST_NAMESPACE, "A");
+
+        ResourceImpl b1 = new ResourceImpl("B");
+        Requirement b_pkgReq1 = addReq(b1, PackageNamespace.PACKAGE_NAMESPACE, "org.foo.a");
+
+        ResourceImpl c1 = new ResourceImpl("C");
+        Capability c_hostCap = addCap(c1, HostNamespace.HOST_NAMESPACE, "A");
+        Capability c_pkgCap = addCap(c1, PackageNamespace.PACKAGE_NAMESPACE, "org.foo.a");
+        Requirement c_pkgReq1 = addReq(c1, PackageNamespace.PACKAGE_NAMESPACE, "org.foo.b");
+
+        candMap.put(b_pkgReq1, Collections.singletonList(c_pkgCap));
+        candMap.put(c_pkgReq1, Collections.<Capability>emptyList());
+
+        Map<Resource, List<Wire>> wires = new HashMap<Resource, List<Wire>>();
+        wires.put(a1, new ArrayList<Wire>());
+        wires.put(b1, new ArrayList<Wire>());
+
+        Map<Resource, List<Wire>> invertedWires = new HashMap<Resource, List<Wire>>();
+        invertedWires.put(a1, new ArrayList<Wire>());
+        invertedWires.put(b1, new ArrayList<Wire>());
+
+        wirings.put(a1, new SimpleWiring(a1, Collections.<Capability>emptyList(), wires, invertedWires));
+        wirings.put(b1, new SimpleWiring(b1, Collections.<Capability>emptyList(), wires, invertedWires));
+
+        ResolveContextImpl rci = new ResolveContextImpl(wirings, candMap, Collections.<Resource>emptyList(), Collections.<Resource> emptyList());
+
+        List<Capability> caps = new ArrayList<Capability>();
+        caps.add(c_pkgCap);
+        Map<Resource, List<Wire>> wireMap = resolver.resolve(rci, b1, b_pkgReq1, caps);
+
+        assertEquals(0, wireMap.size());
     }
 
     private static String getResourceName(Resource r)

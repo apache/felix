@@ -123,6 +123,29 @@ class Candidates
         return m_populateResultCache.size();
     }
 
+    public Map<Resource, Resource> getHosts()
+    {
+        Map<Resource, Resource> hosts = new HashMap<Resource, Resource>();
+        for (Resource res : m_mandatoryResources)
+        {
+            if (res instanceof WrappedResource)
+            {
+                res = ((WrappedResource) res).getDeclaredResource();
+            }
+            hosts.put(res, getWrappedHost(res));
+        }
+        for (Capability cap : m_dependentMap.keySet())
+        {
+            Resource res = cap.getResource();
+            if (res instanceof WrappedResource)
+            {
+                res = ((WrappedResource) res).getDeclaredResource();
+            }
+            hosts.put(res, getWrappedHost(res));
+        }
+        return hosts;
+    }
+
     /**
      * Returns the delta which is the differences in the candidates from the
      * original Candidates permutation.
@@ -460,13 +483,24 @@ class Candidates
         // cannot resolve.
         // TODO: verify the two following statements
         LinkedList<Resource> toPopulate = new LinkedList<Resource>();
-        toPopulate.add(resource);
         ResolutionError rethrow = processCandidates(rc, toPopulate, req, candidates);
 
         // Add the dynamic imports candidates.
         // Make sure this is done after the call to processCandidates since we want to ensure
         // fragment candidates are properly hosted before adding the candidates list which makes a copy
         addCandidates(req, candidates);
+
+        populate(rc, toPopulate);
+
+        CopyOnWriteList<Capability> caps = m_candidateMap.get(req);
+        if (caps != null)
+        {
+            candidates.retainAll(caps);
+        }
+        else
+        {
+            candidates.clear();
+        }
 
         if (candidates.isEmpty())
         {
@@ -1092,9 +1126,12 @@ class Candidates
                     if (!Util.isOptional(r))
                     {
                         PopulateResult result = m_populateResultCache.get(r.getResource());
-                        result.success = false;
-                        result.error =
-                            new MissingRequirementError(r, m_populateResultCache.get(c.getResource()).error);
+                        if (result != null)
+                        {
+                            result.success = false;
+                            result.error =
+                                    new MissingRequirementError(r, m_populateResultCache.get(c.getResource()).error);
+                        }
                         unresolvedResources.add(r.getResource());
                     }
                 }
