@@ -21,6 +21,7 @@ package org.apache.felix.gogo.command;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.felix.service.command.CommandSession;
@@ -68,7 +69,11 @@ public class Files
         {
             return cwd;
         }
-        cwd = new File(cwd, dir);
+
+        URI curUri = cwd.toURI();
+        URI newUri = curUri.resolve(dir);
+
+        cwd = new File(newUri);
         if (!cwd.exists())
         {
             throw new IOException("Directory does not exist");
