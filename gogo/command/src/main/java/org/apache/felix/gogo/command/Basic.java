@@ -37,6 +37,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+
+import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Descriptor;
 import org.apache.felix.service.command.Parameter;
 import org.osgi.framework.Bundle;
@@ -65,7 +67,7 @@ public class Basic
     public void bundlelevel(@Descriptor("bundle to query") Bundle bundle)
     {
         // Keep track of service references.
-        List<ServiceReference> refs = new ArrayList();
+        List<ServiceReference> refs = new ArrayList<ServiceReference>();
 
         // Get start level service.
         StartLevel sl = Util.getService(m_bc, StartLevel.class, refs);
@@ -95,7 +97,7 @@ public class Basic
         @Descriptor("target identifiers") Bundle[] bundles)
     {
         // Keep track of service references.
-        List<ServiceReference> refs = new ArrayList();
+        List<ServiceReference> refs = new ArrayList<ServiceReference>();
 
         // Get start level service.
         StartLevel sl = Util.getService(m_bc, StartLevel.class, refs);
@@ -150,7 +152,7 @@ public class Basic
     public void frameworklevel()
     {
         // Keep track of service references.
-        List<ServiceReference> refs = new ArrayList();
+        List<ServiceReference> refs = new ArrayList<ServiceReference>();
 
         // Get start level service.
         StartLevel sl = Util.getService(m_bc, StartLevel.class, refs);
@@ -166,7 +168,7 @@ public class Basic
     public void frameworklevel(@Descriptor("target start level") int level)
     {
         // Keep track of service references.
-        List<ServiceReference> refs = new ArrayList();
+        List<ServiceReference> refs = new ArrayList<ServiceReference>();
 
         // Get start level service.
         StartLevel sl = Util.getService(m_bc, StartLevel.class, refs);
@@ -256,14 +258,19 @@ public class Basic
 
                 // Get flags and options.
                 Class[] paramTypes = m.getParameterTypes();
-                Map<String, Parameter> flags = new TreeMap();
-                Map<String, String> flagDescs = new TreeMap();
-                Map<String, Parameter> options = new TreeMap();
-                Map<String, String> optionDescs = new TreeMap();
-                List<String> params = new ArrayList();
+                Map<String, Parameter> flags = new TreeMap<String, Parameter>();
+                Map<String, String> flagDescs = new TreeMap<String, String>();
+                Map<String, Parameter> options = new TreeMap<String, Parameter>();
+                Map<String, String> optionDescs = new TreeMap<String, String>();
+                List<String> params = new ArrayList<String>();
                 Annotation[][] anns = m.getParameterAnnotations();
                 for (int paramIdx = 0; paramIdx < anns.length; paramIdx++)
                 {
+                    Class<?> paramType = m.getParameterTypes()[paramIdx];
+                    if (paramType == CommandSession.class) {
+                        /* Do not bother the user with a CommandSession. */
+                        continue;
+                    }
                     Parameter p = findAnnotation(anns[paramIdx], Parameter.class);
                     d = findAnnotation(anns[paramIdx], Descriptor.class);
                     if (p != null)
@@ -368,7 +375,7 @@ public class Basic
             // This should never happen.
         }
 
-        Map<String, List<Method>> commands = new TreeMap();
+        Map<String, List<Method>> commands = new TreeMap<String, List<Method>>();
 
         for (ServiceReference ref : refs)
         {
@@ -382,7 +389,7 @@ public class Basic
 
                 for (String func : funcs)
                 {
-                    commands.put(scope + ":" + func, new ArrayList());
+                    commands.put(scope + ":" + func, new ArrayList<Method>());
                 }
 
                 if (!commands.isEmpty())
@@ -640,7 +647,7 @@ public class Basic
         }
 
         // Keep track of service references.
-        List<ServiceReference> refs = new ArrayList();
+        List<ServiceReference> refs = new ArrayList<ServiceReference>();
 
         // Get package admin service.
         PackageAdmin pa = Util.getService(m_bc, PackageAdmin.class, refs);
@@ -664,7 +671,7 @@ public class Basic
         }
 
         // Keep track of service references.
-        List<ServiceReference> refs = new ArrayList();
+        List<ServiceReference> refs = new ArrayList<ServiceReference>();
 
         // Get package admin service.
         PackageAdmin pa = Util.getService(m_bc, PackageAdmin.class, refs);
@@ -1020,12 +1027,12 @@ public class Basic
 
             if (level < 0)
             {
-                System.out.println(String.format("%5d|%-11s|%s", bundle.getBundleId(),
+                System.out.println(String.format("%5d|%-11s|%s|%s", bundle.getBundleId(),
                     getStateString(bundle), name, bundle.getVersion()));
             }
             else
             {
-                System.out.println(String.format("%5d|%-11s|%5d|%s",
+                System.out.println(String.format("%5d|%-11s|%5d|%s|%s",
                     bundle.getBundleId(), getStateString(bundle), level, name,
                     bundle.getVersion()));
             }
