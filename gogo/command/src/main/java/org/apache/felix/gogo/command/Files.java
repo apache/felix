@@ -27,11 +27,10 @@ import java.util.List;
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Descriptor;
 import org.osgi.framework.BundleContext;
+import static org.apache.felix.gogo.command.Util.CWD;
 
 public class Files
 {
-    private static final String CWD = "_cwd";
-
     private final BundleContext m_bc;
 
     public Files(BundleContext bc)
