@@ -18,6 +18,9 @@
  */
 package org.apache.felix.resolver;
 
+import java.security.AccessControlContext;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -56,6 +59,11 @@ import org.osgi.service.resolver.Resolver;
 
 public class ResolverImpl implements Resolver
 {
+    private final AccessControlContext m_acc =
+        System.getSecurityManager() != null ?
+            AccessController.getContext() :
+            null;
+
     private final Logger m_logger;
 
     private final int m_parallelism;
@@ -134,14 +142,37 @@ public class ResolverImpl implements Resolver
         }
         else if (m_parallelism > 1)
         {
-            ExecutorService executor = Executors.newFixedThreadPool(m_parallelism);
+            final ExecutorService executor =
+                System.getSecurityManager() != null ?
+                    AccessController.doPrivileged(
+                        new PrivilegedAction<ExecutorService>()
+                        {
+                            public ExecutorService run()
+                            {
+                                return Executors.newFixedThreadPool(m_parallelism);
+                            }
+                        }, m_acc)
+                :
+                    Executors.newFixedThreadPool(m_parallelism);
             try
             {
                 return resolve(rc, executor);
             }
             finally
             {
-                executor.shutdownNow();
+                if (System.getSecurityManager() != null)
+                {
+                    AccessController.doPrivileged(new PrivilegedAction<Void>(){
+                        public Void run() {
+                            executor.shutdownNow();
+                            return null;
+                        }
+                    }, m_acc);
+                }
+                else
+                {
+                    executor.shutdownNow();
+                }
             }
         }
         else
