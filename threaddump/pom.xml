@@ -19,16 +19,16 @@
     </parent>
 
     <artifactId>org.apache.felix.threaddump</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Felix Thread Dump</name>
     <description>Thread Dump classes for OSGi.</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.threaddump-1.0.0</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.threaddump-1.0.0</developerConnection>
-        <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.threaddump-1.0.0</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/threaddump</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/threaddump</developerConnection>
+        <url>http://svn.apache.org/repos/asf/felix/threaddump</url>
     </scm>
 
     <dependencies>
