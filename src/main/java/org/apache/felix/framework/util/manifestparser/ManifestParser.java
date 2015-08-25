@@ -613,7 +613,7 @@ public class ManifestParser
         
         List<SimpleFilter> nativeFilterClauseList = new ArrayList<SimpleFilter>();
         
-        if(nativeLibraryClauses != null)
+        if(nativeLibraryClauses != null && !nativeLibraryClauses.isEmpty())
         {
             for(NativeLibraryClause clause: nativeLibraryClauses)
             {
