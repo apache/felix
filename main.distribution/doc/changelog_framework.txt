@@ -1,3 +1,17 @@
+Changes from 5.0.1 to 5.2.0
+---------------------------
+** Bug
+    * [FELIX-4456] - openConnection().getContentLengthLong() always returns -1 for bundle URLs on Java7
+    * [FELIX-4468] - EventObject is created with null pointer : "null source"
+    * [FELIX-4960] - NPE in BundleRevisionImpl.getResourcesLocal()
+    * [FELIX-4977] - Concurrency issue with factory services
+
+** Improvement
+    * [FELIX-4938] - Throw an exception when service use count overflow
+
+** New Feature
+    * [FELIX-4942] - Optimise the resolver
+
 Changes from 5.0.0 to 5.0.1
 ---------------------------
 ** Bug
@@ -5,6 +19,7 @@ Changes from 5.0.0 to 5.0.1
     * [FELIX-4905] - Framework does not export org.osgi.service.resolver
     * [FELIX-4914] - Resolution problem with identity requirements on fragments
     * [FELIX-4927] - Felix reports itself as an OSGi R4/R5 Framework
+    * [FELIX-4928] - Singleton getService() sometimes incorrectly returns null
 
 ** Improvement
     * [FELIX-4866] - Improve service registry
