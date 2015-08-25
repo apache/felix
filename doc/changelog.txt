@@ -1,3 +1,17 @@
+Changes from 5.0.1 to 5.2.0
+---------------------------
+** Bug
+    * [FELIX-4456] - openConnection().getContentLengthLong() always returns -1 for bundle URLs on Java7
+    * [FELIX-4468] - EventObject is created with null pointer : "null source"
+    * [FELIX-4960] - NPE in BundleRevisionImpl.getResourcesLocal()
+    * [FELIX-4977] - Concurrency issue with factory services
+
+** Improvement
+    * [FELIX-4938] - Throw an exception when service use count overflow
+
+** New Feature
+    * [FELIX-4942] - Optimise the resolver
+
 Changes from 5.0.0 to 5.0.1
 ---------------------------
 ** Bug
