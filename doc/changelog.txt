@@ -5,6 +5,7 @@ Changes from 5.0.1 to 5.2.0
     * [FELIX-4468] - EventObject is created with null pointer : "null source"
     * [FELIX-4960] - NPE in BundleRevisionImpl.getResourcesLocal()
     * [FELIX-4977] - Concurrency issue with factory services
+    * [FELIX-5010] - NPE when resolving bundle with a header "Bundle-NativeCode = *"
 
 ** Improvement
     * [FELIX-4938] - Throw an exception when service use count overflow
