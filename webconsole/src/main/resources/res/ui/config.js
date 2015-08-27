@@ -591,10 +591,14 @@ $(document).ready(function() {
 	configRow     = configBody.find('tr:eq(0)').clone();
 	factoryRow    = configBody.find('tr:eq(1)').clone();
 	
+	function returnReferer() {
+	  if(referer) window.location = referer;
+	}
 	// setup button - cannot inline in dialog option because of i18n
 	var _buttons = {};
 	_buttons[i18n.abort] = function() {
-		$(this).dialog('close');
+	  $(this).dialog('close');
+	  returnReferer();
 	}
 	_buttons[i18n.reset] = function() {
 		var form = document.getElementById('editorForm');
@@ -603,6 +607,7 @@ $(document).ready(function() {
 	_buttons[i18n.del] = function() {
 	    	if (deleteConfig($(this).attr('__pid'), $(this).attr('__location'))) {
 			$(this).dialog('close');
+			returnReferer();
 	    	}
 	}
 	_buttons[i18n.unbind_btn] = function() {
@@ -634,6 +639,7 @@ $(document).ready(function() {
 			document.location.href = pluginRoot; 
 		});
 		$(this).dialog('close');
+		returnReferer();
 	}
 	// prepare editor, but don't open yet!
 	editor = $('#editor').dialog({
@@ -641,7 +647,8 @@ $(document).ready(function() {
 		modal    : true,
 		width    : '90%',
 		closeText: i18n.abort,
-		buttons  : _buttons
+		buttons  : _buttons,
+		close    : function( event, ui ) { if(referer) window.location = referer; }
 	});
 	editorMessage = editor.find('p');
 
