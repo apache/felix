@@ -498,7 +498,7 @@ function deleteConfig(/* String */ configId, /* String */ bundleLocation)
 		url      : pluginRoot + '/' + configId,
 		data     : param.apply + '=1&' + param.dele + '=1',
 		success  : function () { 
-		  if(!backToReferer()) document.location.href = pluginRoot;
+		  if(!navigateAfterConfigurationClose()) document.location.href = pluginRoot;
 		},
 		dataType : 'json',
 		async    : false
@@ -589,9 +589,9 @@ function treetableExtraction(node) {
 
 	return mixedLinksExtraction(node);
 };
-function backToReferer() {
-	if(referer) {
-	  window.location = referer;
+function navigateAfterConfigurationClose() {
+	if(configurationReferer) {
+	  window.location = configurationReferer;
 	  return true;
 	}
 	return false;
@@ -649,7 +649,7 @@ $(document).ready(function() {
 			data     : $(this).find('form').serialize(),
 			success  : function () {
 			  // reload on success - prevents AJAX errors - see FELIX-3116
-			  if(!backToReferer()) document.location.href = pluginRoot; 
+			  if(!navigateAfterConfigurationClose()) document.location.href = pluginRoot; 
 			},
 			async    : false
 		})
@@ -664,7 +664,7 @@ $(document).ready(function() {
 		width    : '90%',
 		closeText: i18n.abort,
 		buttons  : _buttons,
-		close    : function( event, ui ) { backToReferer(); }
+		close    : function( event, ui ) { navigateAfterConfigurationClose(); }
 	});
 	editorMessage = editor.find('p');
 

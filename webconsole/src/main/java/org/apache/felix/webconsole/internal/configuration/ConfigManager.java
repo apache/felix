@@ -413,7 +413,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         vars.put( "__data__", json.toString() ); //$NON-NLS-1$
         vars.put( "selectedPid", pid != null ? pid : ""); //$NON-NLS-1$ //$NON-NLS-2$
         String referer = request.getParameter( REFERER );
-        vars.put( "referer", referer != null ? referer : ""); //$NON-NLS-1$ //$NON-NLS-2$
+        vars.put( "configurationReferer", referer != null ? referer : ""); //$NON-NLS-1$ //$NON-NLS-2$
         vars.put( "param.apply", ACTION_APPLY ); //$NON-NLS-1$
         vars.put( "param.create", ACTION_CREATE ); //$NON-NLS-1$
         vars.put( "param.unbind", ACTION_UNBIND ); //$NON-NLS-1$
