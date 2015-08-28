@@ -493,9 +493,16 @@ function configConfirm(/* String */ message, /* String */ title, /* String */ lo
 function deleteConfig(/* String */ configId, /* String */ bundleLocation)
 {
     if ( configConfirm(i18n.del_ask, configId, bundleLocation) ) {
-	$.post(pluginRoot + '/' + configId, param.apply + '=1&' + param.dele + '=1', function() {
-	    document.location.href = pluginRoot;
-	}, 'json');
+	$.ajax({
+		type     : 'POST',
+		url      : pluginRoot + '/' + configId,
+		data     : param.apply + '=1&' + param.dele + '=1',
+		success  : function () { 
+		  if(!backToReferer()) document.location.href = pluginRoot;
+		},
+		dataType : 'json',
+		async    : false
+	});
 	return true;
     }
     return false;
@@ -582,6 +589,13 @@ function treetableExtraction(node) {
 
 	return mixedLinksExtraction(node);
 };
+function backToReferer() {
+	if(referer) {
+	  window.location = referer;
+	  return true;
+	}
+	return false;
+}
 
 $(document).ready(function() {
 	configContent = $('#configContent');
@@ -591,14 +605,10 @@ $(document).ready(function() {
 	configRow     = configBody.find('tr:eq(0)').clone();
 	factoryRow    = configBody.find('tr:eq(1)').clone();
 	
-	function returnReferer() {
-	  if(referer) window.location = referer;
-	}
 	// setup button - cannot inline in dialog option because of i18n
 	var _buttons = {};
 	_buttons[i18n.abort] = function() {
 	  $(this).dialog('close');
-	  returnReferer();
 	}
 	_buttons[i18n.reset] = function() {
 		var form = document.getElementById('editorForm');
@@ -607,7 +617,6 @@ $(document).ready(function() {
 	_buttons[i18n.del] = function() {
 	    	if (deleteConfig($(this).attr('__pid'), $(this).attr('__location'))) {
 			$(this).dialog('close');
-			returnReferer();
 	    	}
 	}
 	_buttons[i18n.unbind_btn] = function() {
@@ -634,12 +643,19 @@ $(document).ready(function() {
 		});
 		propListElement.val(propListArray.join(','));
 
-		$.post(pluginRoot + '/' + $(this).attr('__pid'), $(this).find('form').serialize(), function() {
-			// reload on success - prevents AJAX errors - see FELIX-3116
-			document.location.href = pluginRoot; 
+		$.ajax({
+			type     : 'POST',
+			url      : pluginRoot + '/' + $(this).attr('__pid'),
+			data     : $(this).find('form').serialize(),
+			success  : function () {
+			  // reload on success - prevents AJAX errors - see FELIX-3116
+			  if(!backToReferer()) document.location.href = pluginRoot; 
+			},
+			async    : false
+		})
+		.fail(function () {
+		  $(this).dialog('close');
 		});
-		$(this).dialog('close');
-		returnReferer();
 	}
 	// prepare editor, but don't open yet!
 	editor = $('#editor').dialog({
@@ -648,7 +664,7 @@ $(document).ready(function() {
 		width    : '90%',
 		closeText: i18n.abort,
 		buttons  : _buttons,
-		close    : function( event, ui ) { if(referer) window.location = referer; }
+		close    : function( event, ui ) { backToReferer(); }
 	});
 	editorMessage = editor.find('p');
 
