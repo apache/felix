@@ -63,6 +63,7 @@ public class NativeLibraryClause
     private static final String OS_WINDOWS_7 = "windows7";
     private static final String OS_WINDOWS_8 = "windows8";
     private static final String OS_WINDOWS_9 = "windows9";
+    private static final String OS_WINDOWS_10 = "windows10";
     private static final String OS_WINDOWS_95 = "windows95";
     private static final String OS_WINDOWS_98 = "windows98";
     private static final String OS_WINDOWS_CE = "windowsce";
@@ -613,6 +614,11 @@ public class NativeLibraryClause
             {
                 os = OS_WINDOWS_9;
             }
+            else if ((value.indexOf(" 10") >= 0) || value.equals("win10"))
+            {
+                os = OS_WINDOWS_10;
+            }
+            
             return os;
         }
         else if (value.startsWith(OS_LINUX))
