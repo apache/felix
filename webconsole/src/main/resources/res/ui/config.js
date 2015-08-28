@@ -608,7 +608,7 @@ $(document).ready(function() {
 	// setup button - cannot inline in dialog option because of i18n
 	var _buttons = {};
 	_buttons[i18n.abort] = function() {
-	  $(this).dialog('close');
+		$(this).dialog('close');
 	}
 	_buttons[i18n.reset] = function() {
 		var form = document.getElementById('editorForm');
