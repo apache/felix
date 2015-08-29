@@ -602,19 +602,23 @@ public class NativeLibraryClause
             {
                 os = OS_WINDOWS_VISTA;
             }
-            else if ((value.indexOf(" 7") >= 0) || value.equals("win7"))
+            else if ((value.indexOf(" 7") >= 0) || value.startsWith(OS_WINDOWS_7)
+                    || value.equals("win7"))
             {
                 os = OS_WINDOWS_7;
             }
-            else if ((value.indexOf(" 8") >= 0) || value.equals("win8"))
+            else if ((value.indexOf(" 8") >= 0) || value.startsWith(OS_WINDOWS_8)
+                    || value.equals("win8"))
             {
                 os = OS_WINDOWS_8;
             }
-            else if ((value.indexOf(" 9") >= 0) || value.equals("win9"))
+            else if ((value.indexOf(" 9") >= 0) || value.startsWith(OS_WINDOWS_9)
+                    || value.equals("win9"))
             {
                 os = OS_WINDOWS_9;
             }
-            else if ((value.indexOf(" 10") >= 0) || value.equals("win10"))
+            else if ((value.indexOf(" 10") >= 0) || value.startsWith(OS_WINDOWS_10)
+                    || value.equals("win10"))
             {
                 os = OS_WINDOWS_10;
             }
