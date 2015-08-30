@@ -123,9 +123,10 @@ public class Util
     }
 
     public static <T> T getService(
-        BundleContext bc, Class<T> clazz, List<ServiceReference> refs)
+        BundleContext bc, Class<T> clazz, List<ServiceReference<?>> refs)
     {
-        ServiceReference ref = bc.getServiceReference(clazz.getName());
+        @SuppressWarnings("unchecked")
+        ServiceReference<T> ref = (ServiceReference<T>) bc.getServiceReference(clazz.getName());
         if (ref == null)
         {
             return null;
@@ -138,7 +139,7 @@ public class Util
         return t;
     }
 
-    public static void ungetServices(BundleContext bc, List<ServiceReference> refs)
+    public static void ungetServices(BundleContext bc, List<ServiceReference<?>> refs)
     {
         while (refs.size() > 0)
         {
@@ -181,10 +182,8 @@ public class Util
                 out.println("Downloading " + fileName + ".");
             }
             byte[] buffer = new byte[4096];
-            int count = 0;
             for (int len = is.read(buffer); len > 0; len = is.read(buffer))
             {
-                count += len;
                 os.write(buffer, 0, len);
             }
 
@@ -320,7 +319,7 @@ public class Util
 
     public static List<String> parseSubstring(String value)
     {
-        List<String> pieces = new ArrayList();
+        List<String> pieces = new ArrayList<String>();
         StringBuffer ss = new StringBuffer();
         // int kind = SIMPLE; // assume until proven otherwise
         boolean wasStar = false; // indicates last piece was a star
