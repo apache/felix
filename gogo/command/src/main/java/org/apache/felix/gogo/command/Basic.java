@@ -423,13 +423,14 @@ public class Basic
     }
 
     @Descriptor("install bundle using URLs")
-    public void install(@Descriptor("target URLs") String[] urls)
+    public void install(@Descriptor("command session")CommandSession session,
+                        @Descriptor("target URLs") String[] urls) throws IOException
     {
         StringBuffer sb = new StringBuffer();
 
         for (String url : urls)
         {
-            String location = url.trim();
+            String location = Util.resolveUri(session, url.trim());
             Bundle bundle = null;
             try
             {
@@ -876,11 +877,13 @@ public class Basic
     }
 
     @Descriptor("update bundle from URL")
-    public void update(@Descriptor("target bundle") Bundle bundle,
-        @Descriptor("URL from where to retrieve bundle") String location)
-    {
+    public void update(
+            @Descriptor("command session") CommandSession session,
+            @Descriptor("target bundle") Bundle bundle,
+        @Descriptor("URL from where to retrieve bundle") String location) throws IOException {
         if (location != null)
         {
+            location = Util.resolveUri(session, location.trim());
             try
             {
                 // Get the bundle.
