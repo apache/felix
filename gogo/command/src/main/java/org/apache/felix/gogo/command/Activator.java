@@ -29,6 +29,7 @@ public class Activator implements BundleActivator
 
     public void start(BundleContext bc) throws Exception
     {
+        BundleContext systemBundleContext = bc.getBundle(0).getBundleContext();
         Hashtable props = new Hashtable();
         props.put("osgi.command.scope", "felix");
         props.put("osgi.command.function", new String[] {
@@ -37,7 +38,7 @@ public class Activator implements BundleActivator
             "resolve", "start", "stop", "uninstall", "update",
             "which" });
         bc.registerService(
-            Basic.class.getName(), new Basic(bc), props);
+            Basic.class.getName(), new Basic(systemBundleContext), props);
 
         // Register "inspect" command for R4.3 or R4.2 depending
         // on the underlying framework.
@@ -47,7 +48,7 @@ public class Activator implements BundleActivator
         {
             getClass().getClassLoader().loadClass("org.osgi.framework.wiring.BundleWiring");
             bc.registerService(
-                Inspect.class.getName(), new Inspect(bc), props);
+                Inspect.class.getName(), new Inspect(systemBundleContext), props);
         }
         catch (Throwable th)
         {
