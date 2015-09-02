@@ -63,17 +63,17 @@ class ComponentConfigurationPrinter implements InventoryPrinter
      */
     public void print(PrintWriter pw, Format format, boolean isZip)
     {
-        final List<ComponentDescriptionDTO> descriptions = new ArrayList<ComponentDescriptionDTO>();
+        final List<ComponentDescriptionDTO> disabled = new ArrayList<ComponentDescriptionDTO>();
         final List<ComponentConfigurationDTO> configurations = new ArrayList<ComponentConfigurationDTO>();
 
         final Collection<ComponentDescriptionDTO> descs = scrService.getComponentDescriptionDTOs();
         for(final ComponentDescriptionDTO d : descs)
         {
-            for(final ComponentConfigurationDTO cfg : scrService.getComponentConfigurationDTOs(d))
+            if ( !scrService.isComponentEnabled(d) )
             {
-                configurations.add(cfg);
+                disabled.add(d);
             }
-            descriptions.add(d);
+            configurations.addAll(scrService.getComponentConfigurationDTOs(d));
         }
         Collections.sort(configurations, Util.COMPONENT_COMPARATOR);
 
@@ -81,7 +81,7 @@ class ComponentConfigurationPrinter implements InventoryPrinter
         {
             try
             {
-                printComponentsJson(pw, configurations, isZip);
+                printComponentsJson(pw, disabled, configurations, isZip);
             }
             catch (JSONException t)
             {
@@ -90,11 +90,12 @@ class ComponentConfigurationPrinter implements InventoryPrinter
         }
         else
         {
-            printComponentsText(pw, configurations);
+            printComponentsText(pw, disabled, configurations);
         }
     }
 
     private final void printComponentsJson(final PrintWriter pw,
+        final List<ComponentDescriptionDTO> disabled,
         final List<ComponentConfigurationDTO> configurations,
         final boolean details) throws JSONException
     {
@@ -102,26 +103,42 @@ class ComponentConfigurationPrinter implements InventoryPrinter
         jw.object();
         jw.key("components"); //$NON-NLS-1$
         jw.array();
-        
-        // render components
+
+        // render disabled descriptions
+        for(final ComponentDescriptionDTO cd : disabled)
+        {
+            plugin.disabledComponent(jw, cd);
+        }
+        // render configurations
         for (final ComponentConfigurationDTO cfg : configurations)
         {
             plugin.component(jw, cfg, details);
         }
-        
+
         jw.endArray();
         jw.endObject();
     }
 
     private static final void printComponentsText(final PrintWriter pw,
+            final List<ComponentDescriptionDTO> disabled,
             final List<ComponentConfigurationDTO> configurations)
     {
+        if ( !disabled.isEmpty())
+        {
+            pw.println("Disabled components:");
+        }
+        for(final ComponentDescriptionDTO cd : disabled)
+        {
+            disabledComponent(pw, cd);
+        }
+
         if (configurations.size() == 0)
         {
-            pw.println("Status: No Components Registered");
+            pw.println("Status: No Component Configurations");
         }
         else
         {
+            pw.println("Component Configurations:");
             // order components by id
             TreeMap<Long, ComponentConfigurationDTO> componentMap = new TreeMap<Long, ComponentConfigurationDTO>();
             for(final ComponentConfigurationDTO cfg : configurations)
@@ -156,6 +173,19 @@ class ComponentConfigurationPrinter implements InventoryPrinter
         listReferences(pw, cfg);
         listProperties(pw, cfg);
 
+        pw.println();
+    }
+
+    private static final void disabledComponent(PrintWriter pw, final ComponentDescriptionDTO cfg)
+    {
+
+        pw.print(cfg.name);
+
+        pw.println("  Bundle" + cfg.bundle.symbolicName + " ("
+            + cfg.bundle.id + ")");
+        pw.println("  DefaultState="
+            + (cfg.defaultEnabled ? "enabled" : "disabled"));
+        pw.println("  Activation=" + (cfg.immediate ? "immediate" : "delayed"));
         pw.println();
     }
 

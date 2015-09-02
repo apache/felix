@@ -4,6 +4,7 @@ Changes from 2.0.0 to 2.0.2
     * [FELIX-4998] - Declarative Service plugin might provide JSON format support for Inventory Printer
 ** Bug
     * [FELIX-5005] - BundleInfoProvider should work with null being passed as appRoot
+    * [FELIX-5023] - Web Console plugin is missing function to enable component descriptions
 
 
 Changes from 1.0.0 to 2.0.0
