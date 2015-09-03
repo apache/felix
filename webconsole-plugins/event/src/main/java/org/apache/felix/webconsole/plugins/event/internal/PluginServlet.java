@@ -23,11 +23,17 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Array;
 import java.net.URL;
-import java.util.*;
+import java.util.Date;
+import java.util.Dictionary;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.servlet.ServletException;
-import javax.servlet.http.*;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
@@ -358,7 +364,7 @@ public class PluginServlet extends HttpServlet
                 final Object value = current.getValue();
                 if ( null == value )
                 {
-                  jw.write("null"); //$NON-NLS-1$
+                  jw.write( "null" ); //$NON-NLS-1$
                 }
                 else if ( value.getClass().isArray() )
                 {
@@ -370,7 +376,7 @@ public class PluginServlet extends HttpServlet
                         {
                             b.append(", ");
                         }
-                        b.append( Array.get(value, m).toString() );
+                        b.append( String.valueOf( Array.get(value, m) ) );
                     }
                     b.append(']');
                     jsonValue(jw, b.toString());
