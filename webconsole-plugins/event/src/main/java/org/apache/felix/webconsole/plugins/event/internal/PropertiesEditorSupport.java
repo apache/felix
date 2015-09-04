@@ -17,6 +17,7 @@
 package org.apache.felix.webconsole.plugins.event.internal;
 
 import java.util.Hashtable;
+import java.util.StringTokenizer;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -85,11 +86,27 @@ public class PropertiesEditorSupport
         {
             return new Character(value.toString().charAt(0));
         }
+        else if ("byte array".equals(type)) //$NON-NLS-1$
+        {
+            return decodeHex(value.toString());
+        }
         else
         {
             throw new IllegalArgumentException("Unsupported type!");
         }
-        // TODO: hex, base64, sha1
+    }
+    
+    private static final byte[] decodeHex(String data)
+    {
+        final StringTokenizer tok = new StringTokenizer(data, "[]{},;: \t"); //$NON-NLS-1$
+        final byte[] bs = new byte[tok.countTokens()];
+        int i = 0;
+        while (tok.hasMoreTokens())
+        {
+            final String next = tok.nextToken();
+            bs[i++] = Integer.decode(next).byteValue();
+        }
+        return bs;
     }
 
 }
