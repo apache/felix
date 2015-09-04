@@ -519,8 +519,8 @@ public class OsgiManager extends GenericServlet
                 path = path.concat("/"); //$NON-NLS-1$
             }
             path = path.concat(holder.getDefaultPluginLabel());
-            response.sendRedirect(path);
             response.setContentLength(0);
+            response.sendRedirect(path);
             return;
         }
 
