@@ -265,21 +265,30 @@ public class ScrCommand implements ScrInfo
 
         Collections.sort( descriptions, DESCRIPTION_COMP);
 
-        out.println(" BundleId Component Name Id    State");
+        out.println(" BundleId Component Name Default State");
+        out.println("    Component Id State      PIDs (Factory PID)");
         for(final ComponentDescriptionDTO desc : descriptions)
         {
+            out.println( String.format( " [%1$4d]   %2$s  %3$s", desc.bundle.id, desc.name, desc.defaultEnabled ? "enabled" : "disabled" ) );
             final List<ComponentConfigurationDTO> configs = new ArrayList<ComponentConfigurationDTO>(this.scrService.getComponentConfigurationDTOs(desc));
-            if ( configs.isEmpty() )
+            Collections.sort( configs, CONFIGURATION_COMP);
+            for ( final ComponentConfigurationDTO component : configs )
             {
-                out.println( String.format( " [%1$4d]   %2$s  --    --", desc.bundle.id, desc.name  ) );            }
-            else
-            {
-                Collections.sort( configs, CONFIGURATION_COMP);
-                for ( final ComponentConfigurationDTO component : configs )
-                {
-                    out.println( String.format( " [%1$4d]   %2$s [%3$4d] [%4$s]", desc.bundle.id, desc.name, component.id,
-                          toStateString( component.state )  ) );
+                final Object servicePid = component.properties.get(Constants.SERVICE_PID);
+                final String factoryPid = (String)component.properties.get("service.factoryPid");
+
+                final StringBuilder pid = new StringBuilder();
+                if ( servicePid != null ) {
+                    pid.append(servicePid);
                 }
+                if ( factoryPid != null ) {
+                    pid.append(" (");
+                    pid.append(factoryPid);
+                    pid.append(" )");
+                }
+                out.println( String.format( "    [%1$4d] [%2$s] %3$s", component.id,
+                          toStateString( component.state ),
+                          pid.toString()) );
             }
         }
         out.flush();
