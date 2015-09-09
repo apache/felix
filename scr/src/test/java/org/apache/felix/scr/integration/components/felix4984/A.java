@@ -16,8 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-
 package org.apache.felix.scr.integration.components.felix4984;
 
 import java.util.ArrayList;
@@ -58,7 +56,7 @@ public class A
     {
         return bs;
     }
-    
+
     public void dumpStackTracesWhenBWasBound(LogService log) {
         log.log(LogService.LOG_WARNING, "Stack traces when B was bound:");
         for (Exception e : bsStackTraces) {
