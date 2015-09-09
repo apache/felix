@@ -56,6 +56,41 @@ import org.osgi.service.component.runtime.dto.UnsatisfiedReferenceDTO;
 public class ScrCommand implements ScrInfo
 {
 
+    private static final Comparator<ComponentDescriptionDTO> DESCRIPTION_COMP = new Comparator<ComponentDescriptionDTO>()
+    {
+        public int compare(final ComponentDescriptionDTO c1, final ComponentDescriptionDTO c2)
+        {
+            final long bundleId1 = c1.bundle.id;
+            final long bundleId2 = c2.bundle.id;
+            int result = Long.signum(bundleId1 - bundleId2);
+            if ( result == 0)
+            {
+                // sanity check
+                if ( c1.name == null )
+                {
+                    result = ( c2.name == null ? 0 : -1);
+                }
+                else if ( c2.name == null )
+                {
+                    result = 1;
+                }
+                else
+                {
+                    result = c1.name.compareTo(c2.name);
+                }
+            }
+            return result;
+        }
+    };
+
+    private static final Comparator<ComponentConfigurationDTO> CONFIGURATION_COMP = new Comparator<ComponentConfigurationDTO>()
+    {
+        public int compare(final ComponentConfigurationDTO c1, final ComponentConfigurationDTO c2)
+        {
+            return Long.signum(c1.id - c2.id);
+        }
+    };
+
     private final BundleContext bundleContext;
     private final ServiceComponentRuntime scrService;
     private final ScrConfiguration scrConfiguration;
@@ -175,7 +210,7 @@ public class ScrCommand implements ScrInfo
      */
     public void list(final String bundleIdentifier, final PrintWriter out)
     {
-        List<ComponentConfigurationDTO> components;
+        final List<ComponentDescriptionDTO> descriptions = new ArrayList<ComponentDescriptionDTO>();
 
         if (bundleIdentifier != null)
         {
@@ -205,12 +240,8 @@ public class ScrCommand implements ScrInfo
             }
             if (ComponentRegistry.isBundleActive(bundle))
             {
-                components = new ArrayList<ComponentConfigurationDTO>();
-                for(final ComponentDescriptionDTO cmp : scrService.getComponentDescriptionDTOs(bundle))
-                {
-                    components.addAll(scrService.getComponentConfigurationDTOs(cmp));
-                }
-                if (components.isEmpty())
+                descriptions.addAll(scrService.getComponentDescriptionDTOs(bundle));
+                if (descriptions.isEmpty())
                 {
                     out.println("Bundle " + bundleIdentifier + " declares no components");
                     return;
@@ -224,32 +255,32 @@ public class ScrCommand implements ScrInfo
         }
         else
         {
-            components = new ArrayList<ComponentConfigurationDTO>();
-            for(final ComponentDescriptionDTO cmp : scrService.getComponentDescriptionDTOs())
-            {
-                components.addAll(scrService.getComponentConfigurationDTOs(cmp));
-            }
-            if (components.isEmpty())
+            descriptions.addAll(scrService.getComponentDescriptionDTOs());
+            if (descriptions.isEmpty())
             {
                 out.println("No components registered");
                 return;
             }
         }
 
-        Collections.sort( components, new Comparator<ComponentConfigurationDTO>()
-                {
+        Collections.sort( descriptions, DESCRIPTION_COMP);
 
-                    public int compare(final ComponentConfigurationDTO c1, final ComponentConfigurationDTO c2)
-                    {
-                        return Long.signum(c1.id - c2.id);
-                    }
-
-                });
-
-        out.println(" Id   State BundleId Name");
-        for ( final ComponentConfigurationDTO component : components )
+        out.println(" BundleId Component Name Id    State");
+        for(final ComponentDescriptionDTO desc : descriptions)
         {
-            out.println( String.format( "[%1$4d] [%2$s] [%3$4d] %4$s", component.id, toStateString( component.state ), component.description.bundle.id, component.description.name ) );
+            final List<ComponentConfigurationDTO> configs = new ArrayList<ComponentConfigurationDTO>(this.scrService.getComponentConfigurationDTOs(desc));
+            if ( configs.isEmpty() )
+            {
+                out.println( String.format( " [%1$4d]   %2$s  --    --", desc.bundle.id, desc.name  ) );            }
+            else
+            {
+                Collections.sort( configs, CONFIGURATION_COMP);
+                for ( final ComponentConfigurationDTO component : configs )
+                {
+                    out.println( String.format( " [%1$4d]   %2$s [%3$4d] [%4$s]", desc.bundle.id, desc.name, component.id,
+                          toStateString( component.state )  ) );
+                }
+            }
         }
         out.flush();
    }
