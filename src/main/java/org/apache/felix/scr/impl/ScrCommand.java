@@ -296,22 +296,7 @@ public class ScrCommand implements ScrInfo
             return;
         }
 
-        Collections.sort( new ArrayList<ComponentDescriptionDTO>(result.components), new Comparator<ComponentDescriptionDTO>()
-                {
-
-                    public int compare(final ComponentDescriptionDTO c1, final ComponentDescriptionDTO c2)
-                    {
-                        final long bundleId1 = c1.bundle.id;
-                        final long bundleId2 = c2.bundle.id;
-                        int result = Long.signum(bundleId1 - bundleId2);
-                        if ( result == 0)
-                        {
-                            result = c1.name.compareTo(c2.name);
-                        }
-                        return result;
-                    }
-
-                });
+        Collections.sort( new ArrayList<ComponentDescriptionDTO>(result.components), DESCRIPTION_COMP);
 
         long bundleId = -1;
 
