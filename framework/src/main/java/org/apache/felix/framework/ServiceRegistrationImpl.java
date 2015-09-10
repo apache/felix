@@ -378,7 +378,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
         else
         {
             throw new ServiceException(
-                "Service factory returned null.", ServiceException.FACTORY_ERROR);
+                "Service factory returned null. (" + m_factory + ")", ServiceException.FACTORY_ERROR);
         }
         return svcObj;
     }
