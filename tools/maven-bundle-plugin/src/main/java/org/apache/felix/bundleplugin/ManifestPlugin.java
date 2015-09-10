@@ -120,7 +120,14 @@ public class ManifestPlugin extends BundlePlugin
         }
         finally
         {
-            analyzer.close();
+            try 
+            {
+                analyzer.close();
+            }
+            catch ( IOException e )
+            {
+                throw new MojoExecutionException( "Error trying to write Manifest to file " + outputFile, e );
+            }
         }
     }
 
