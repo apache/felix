@@ -64,17 +64,17 @@ class InfoProvider implements BundleInfoProvider
     */
     public BundleInfo[] getBundleInfo(Bundle bundle, String webConsoleRoot, Locale locale)
     {
-        final List<ComponentDescriptionDTO> descriptions = new ArrayList<ComponentDescriptionDTO>();
+        final List<ComponentDescriptionDTO> disabled = new ArrayList<ComponentDescriptionDTO>();
         final List<ComponentConfigurationDTO> configurations = new ArrayList<ComponentConfigurationDTO>();
 
         final Collection<ComponentDescriptionDTO> descs = scrService.getComponentDescriptionDTOs(bundle);
         for(final ComponentDescriptionDTO d : descs)
         {
-            for(final ComponentConfigurationDTO cfg : scrService.getComponentConfigurationDTOs(d))
+            if ( !scrService.isComponentEnabled(d))
             {
-                configurations.add(cfg);
+                disabled.add(d);
             }
-            descriptions.add(d);
+            configurations.addAll(scrService.getComponentConfigurationDTOs(d));
         }
         Collections.sort(configurations, Util.COMPONENT_COMPARATOR);
 
@@ -83,14 +83,37 @@ class InfoProvider implements BundleInfoProvider
             return NO_INFO;
         }
 
-        BundleInfo[] ret = new BundleInfo[configurations.size()];
+        BundleInfo[] ret = new BundleInfo[configurations.size() + disabled.size()];
         int i=0;
+        for (final ComponentDescriptionDTO cfg : disabled)
+        {
+            ret[i] = toInfo(cfg, webConsoleRoot, locale);
+            i++;
+        }
         for (final ComponentConfigurationDTO cfg : configurations)
         {
             ret[i] = toInfo(cfg, webConsoleRoot, locale);
             i++;
         }
         return ret;
+    }
+
+    private BundleInfo toInfo(final ComponentDescriptionDTO cfg, String webConsoleRoot, Locale locale)
+    {
+        final ResourceBundle bundle = localization.getResourceBundle(locale);
+        final String state = "disabled";
+        final String name = cfg.name;
+        final String descr = bundle.getString("info.descr"); //$NON-NLS-1$;
+        String key = bundle.getString("info.key"); //$NON-NLS-1$;
+        // Component #{0} {1}, state {2}
+        key = MessageFormat.format(key, new Object[] { "", //$NON-NLS-1$
+                name,
+                state
+        });
+        return new BundleInfo(key,
+                (webConsoleRoot == null ? "" : webConsoleRoot) + "/components", //$NON-NLS-1$
+                BundleInfoType.LINK,
+                descr);
     }
 
     private BundleInfo toInfo(final ComponentConfigurationDTO cfg, String webConsoleRoot, Locale locale)
@@ -101,9 +124,9 @@ class InfoProvider implements BundleInfoProvider
         final String descr = bundle.getString("info.descr"); //$NON-NLS-1$;
         String key = bundle.getString("info.key"); //$NON-NLS-1$;
         // Component #{0} {1}, state {2}
-        key = MessageFormat.format(key, new Object[] { String.valueOf(cfg.id), //
-                name != null ? name : "", //$NON-NLS-1$
-                state, //
+        key = MessageFormat.format(key, new Object[] { String.valueOf(cfg.id),
+                name,
+                state
         });
         return new BundleInfo(key, (webConsoleRoot == null ? "" : webConsoleRoot) + "/components/" + cfg.id, //$NON-NLS-1$
             BundleInfoType.LINK, descr);

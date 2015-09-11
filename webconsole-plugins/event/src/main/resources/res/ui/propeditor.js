@@ -45,7 +45,7 @@
 				// If options exist, lets merge them with our default settings
 				var settings = {
 					validator  : false,
-					types      : ['byte', 'int', 'long', 'float', 'double', 'string', 'char', 'hex', 'base64', 'sha1']
+					types      : ['byte', 'int', 'long', 'float', 'double', 'string', 'char', 'byte array']
 				};
 				if (options) settings = $.extend(settings, options);
 

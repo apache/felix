@@ -62,8 +62,8 @@ function entry( /* Object */ dataEntry ) {
 	_.find('td:eq(2)').text( dataEntry.state );
 
 	// setup buttons
-	if ( dataEntry.stateRaw == 1 || dataEntry.stateRaw == 1024 ) { // disabled or disabling
-		_.find('li:eq(0)').removeClass('ui-helper-hidden').click(function() { changeDataEntryState(idPath, 'enable') });
+	if ( dataEntry.stateRaw == -1 ) { // disabled or disabling
+		_.find('li:eq(0)').removeClass('ui-helper-hidden').click(function() { changeDataEntryState(dataEntry.name, 'enable') });
 	} else {
 		_.find('li:eq(1)').removeClass('ui-helper-hidden').click(function() { changeDataEntryState(idPath, 'disable') });
 	}

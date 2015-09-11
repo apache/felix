@@ -63,6 +63,7 @@ public class NativeLibraryClause
     private static final String OS_WINDOWS_7 = "windows7";
     private static final String OS_WINDOWS_8 = "windows8";
     private static final String OS_WINDOWS_9 = "windows9";
+    private static final String OS_WINDOWS_10 = "windows10";
     private static final String OS_WINDOWS_95 = "windows95";
     private static final String OS_WINDOWS_98 = "windows98";
     private static final String OS_WINDOWS_CE = "windowsce";
@@ -601,18 +602,27 @@ public class NativeLibraryClause
             {
                 os = OS_WINDOWS_VISTA;
             }
-            else if ((value.indexOf(" 7") >= 0) || value.equals("win7"))
+            else if ((value.indexOf(" 7") >= 0) || value.startsWith(OS_WINDOWS_7)
+                    || value.equals("win7"))
             {
                 os = OS_WINDOWS_7;
             }
-            else if ((value.indexOf(" 8") >= 0) || value.equals("win8"))
+            else if ((value.indexOf(" 8") >= 0) || value.startsWith(OS_WINDOWS_8)
+                    || value.equals("win8"))
             {
                 os = OS_WINDOWS_8;
             }
-            else if ((value.indexOf(" 9") >= 0) || value.equals("win9"))
+            else if ((value.indexOf(" 9") >= 0) || value.startsWith(OS_WINDOWS_9)
+                    || value.equals("win9"))
             {
                 os = OS_WINDOWS_9;
             }
+            else if ((value.indexOf(" 10") >= 0) || value.startsWith(OS_WINDOWS_10)
+                    || value.equals("win10"))
+            {
+                os = OS_WINDOWS_10;
+            }
+            
             return os;
         }
         else if (value.startsWith(OS_LINUX))

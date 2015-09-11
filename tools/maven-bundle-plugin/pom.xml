@@ -68,14 +68,6 @@
   <plugins>
    <plugin>
     <groupId>org.apache.maven.plugins</groupId>
-    <artifactId>maven-compiler-plugin</artifactId>
-    <configuration>
-     <source>1.5</source>
-     <target>1.5</target>
-    </configuration>
-   </plugin>
-   <plugin>
-    <groupId>org.apache.maven.plugins</groupId>
     <artifactId>maven-plugin-plugin</artifactId>
    </plugin>
    <plugin>
@@ -88,36 +80,8 @@
      </excludes>
     </configuration>
    </plugin>
-   <plugin>
-    <groupId>org.apache.maven.plugins</groupId>
-    <artifactId>maven-shade-plugin</artifactId>
-    <version>2.4</version>
-    <executions>
-     <execution>
-      <phase>package</phase>
-      <goals>
-       <goal>shade</goal>
-      </goals>
-      <configuration>
-       <artifactSet>
-        <includes>
-         <include>biz.aQute.bnd:*</include>
-        </includes>
-       </artifactSet>
-      </configuration>
-     </execution>
-    </executions>
-   </plugin>
   </plugins>
  </build>
-
- <repositories>
-  <repository>
-   <id>local</id>
-   <layout>default</layout>
-   <url>file:${basedir}/src/repo</url>
-  </repository>
- </repositories>
 
  <dependencies>
   <dependency>
@@ -128,7 +92,7 @@
   <dependency>
     <groupId>biz.aQute.bnd</groupId>
     <artifactId>biz.aQute.bndlib</artifactId>
-    <version>20150713</version>
+    <version>3.0.0</version>
   </dependency>
   <dependency>
     <groupId>org.apache.felix</groupId>

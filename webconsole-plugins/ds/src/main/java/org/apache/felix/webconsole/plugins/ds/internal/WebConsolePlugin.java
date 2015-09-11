@@ -51,6 +51,7 @@ import org.osgi.service.component.runtime.dto.ReferenceDTO;
 import org.osgi.service.component.runtime.dto.SatisfiedReferenceDTO;
 import org.osgi.service.metatype.MetaTypeInformation;
 import org.osgi.service.metatype.MetaTypeService;
+import org.osgi.util.promise.Promise;
 
 /**
  * ComponentsServlet provides a plugin for managing Service Components Runtime.
@@ -95,6 +96,21 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         return CATEGORY;
     }
 
+    private void wait(final Promise<Void> p )
+    {
+        while ( !p.isDone() )
+        {
+            try
+            {
+                Thread.sleep(5);
+            }
+            catch (final InterruptedException e)
+            {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
     /**
      * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
@@ -102,25 +118,43 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
         throws IOException
     {
-        final RequestInfo reqInfo = new RequestInfo(request);
+        final String op = request.getParameter(OPERATION);
+        RequestInfo reqInfo = new RequestInfo(request, true);
         if (reqInfo.component == null && reqInfo.componentRequested)
         {
-            response.sendError(404);
-            return;
+            boolean found = false;
+            if (OPERATION_ENABLE.equals(op))
+            {
+                final String name = reqInfo.name;
+                for(final ComponentDescriptionDTO cd : reqInfo.disabled)
+                {
+                    if ( name.equals(cd.name) )
+                    {
+                        wait(getScrService().enableComponent(cd));
+                        reqInfo = new RequestInfo(request, false);
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            if ( !found )
+            {
+                response.sendError(404);
+                return;
+            }
         }
-        if (!reqInfo.componentRequested)
+        else
         {
-            response.sendError(500);
-            return;
-        }
-        String op = request.getParameter(OPERATION);
-        if (OPERATION_ENABLE.equals(op))
-        {
-            getScrService().enableComponent(reqInfo.component.description);
-        }
-        else if (OPERATION_DISABLE.equals(op))
-        {
-            getScrService().disableComponent(reqInfo.component.description);
+            if (!reqInfo.componentRequested)
+            {
+                response.sendError(500);
+                return;
+            }
+            if (OPERATION_DISABLE.equals(op))
+            {
+                wait(getScrService().disableComponent(reqInfo.component.description));
+                reqInfo = new RequestInfo(request, false);
+            }
         }
 
         final PrintWriter pw = response.getWriter();
@@ -140,7 +174,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         // don't process if this is request to load a resource
         if (!path.startsWith(RES))
         {
-            final RequestInfo reqInfo = new RequestInfo(request);
+            final RequestInfo reqInfo = new RequestInfo(request, true);
             if (reqInfo.component == null && reqInfo.componentRequested)
             {
                 response.sendError(404);
@@ -191,32 +225,17 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         {
             jw.object();
 
+            jw.key("status"); //$NON-NLS-1$
             final ServiceComponentRuntime scrService = getScrService();
             if (scrService == null)
             {
-                jw.key("status"); //$NON-NLS-1$
                 jw.value(-1);
             }
             else
             {
-                if (info.configurations.size() == 0)
+                jw.value(info.configurations.size());
+                if ( !info.configurations.isEmpty())
                 {
-                    jw.key("status"); //$NON-NLS-1$
-                    jw.value(0);
-                }
-                else
-                {
-                    final StringBuffer buffer = new StringBuffer();
-                    buffer.append(info.configurations.size());
-                    buffer.append(" component"); //$NON-NLS-1$
-                    if (info.configurations.size() != 1)
-                    {
-                        buffer.append('s');
-                    }
-                    buffer.append(" installed."); //$NON-NLS-1$
-                    jw.key("status"); //$NON-NLS-1$
-                    jw.value(info.configurations.size());
-
                     // render components
                     jw.key("data"); //$NON-NLS-1$
                     jw.array();
@@ -226,6 +245,10 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                     }
                     else
                     {
+                        for( final ComponentDescriptionDTO cd : info.disabled )
+                        {
+                            disabledComponent(jw, cd);
+                        }
                         for (final ComponentConfigurationDTO cfg : info.configurations)
                         {
                             component(jw, cfg, false);
@@ -241,6 +264,41 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         {
             throw new IOException(je.toString());
         }
+    }
+
+    void disabledComponent(final JSONWriter jw, final ComponentDescriptionDTO component)
+    throws JSONException
+    {
+        final String name = component.name;
+
+        jw.object();
+
+        // component information
+        jw.key("id"); //$NON-NLS-1$
+        jw.value("");
+        jw.key("name"); //$NON-NLS-1$
+        jw.value(name);
+        jw.key("state"); //$NON-NLS-1$
+        jw.value("disabled"); //$NON-NLS-1$
+        jw.key("stateRaw"); //$NON-NLS-1$
+        jw.value(-1);
+
+        if ( component.configurationPid != null && component.configurationPid.length > 0 )
+        {
+            final String pid;
+            if ( component.configurationPid.length == 1 )
+            {
+                pid = component.configurationPid[0];
+            }
+            else
+            {
+                pid = Arrays.toString(component.configurationPid);
+            }
+            jw.key("pid"); //$NON-NLS-1$
+            jw.value(pid);
+        }
+
+        jw.endObject();
     }
 
     void component(JSONWriter jw, ComponentConfigurationDTO component, boolean details)
@@ -546,8 +604,10 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         public final ServiceComponentRuntime scrService;
         public final List<ComponentDescriptionDTO> descriptions = new ArrayList<ComponentDescriptionDTO>();
         public final List<ComponentConfigurationDTO> configurations = new ArrayList<ComponentConfigurationDTO>();
+        public final List<ComponentDescriptionDTO> disabled = new ArrayList<ComponentDescriptionDTO>();
+        public final String name;
 
-        protected RequestInfo(final HttpServletRequest request)
+        protected RequestInfo(final HttpServletRequest request, final boolean checkPathInfo)
         {
             this.scrService = getScrService();
             if ( scrService != null )
@@ -555,11 +615,12 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                 final Collection<ComponentDescriptionDTO> descs = scrService.getComponentDescriptionDTOs();
                 for(final ComponentDescriptionDTO d : descs)
                 {
-                    for(final ComponentConfigurationDTO cfg : scrService.getComponentConfigurationDTOs(d))
-                    {
-                        configurations.add(cfg);
-                    }
                     descriptions.add(d);
+                    if ( !scrService.isComponentEnabled(d) )
+                    {
+                        disabled.add(d);
+                    }
+                    configurations.addAll(scrService.getComponentConfigurationDTOs(d));
                 }
                 Collections.sort(configurations, Util.COMPONENT_COMPARATOR);
             }
@@ -579,7 +640,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                 extension = "html"; //$NON-NLS-1$
             }
 
-            if (info.length() > 1 && info.startsWith("/")) //$NON-NLS-1$
+            if (checkPathInfo && info.length() > 1 && info.startsWith("/")) //$NON-NLS-1$
             {
                 this.componentRequested = true;
                 info = info.substring(1);
@@ -595,6 +656,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                 this.componentRequested = false;
                 this.component = null;
             }
+            this.name = info;
 
             request.setAttribute(WebConsolePlugin.this.getClass().getName(), this);
         }

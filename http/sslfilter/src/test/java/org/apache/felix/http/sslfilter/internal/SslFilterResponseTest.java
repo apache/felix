@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -36,6 +37,7 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 import org.junit.Test;
 
 public class SslFilterResponseTest
@@ -100,26 +102,26 @@ public class SslFilterResponseTest
 
         assertEquals(expected, resp.getHeader(LOCATION));
     }
-    
-    
+
+
     @Test
     public void testSetHttpLocationHeaderToOriginalRequestURIWithFragment() throws Exception
     {
         String location, expected;
-        
+
         TestHttpServletResponse resp = createServletResponse();
         HttpServletRequest req = createServletRequest(BACKEND_SERVER, PATH);
-        
+
         SslFilterResponse sresp = new SslFilterResponse(resp, req);
-        
+
         location = HTTP + "://" + BACKEND_SERVER + "/foo#abc";
         expected = HTTPS + "://" + BACKEND_SERVER + "/foo#abc";
-        
+
         sresp.setHeader(LOCATION, location);
-        
+
         assertEquals(expected, resp.getHeader(LOCATION));
     }
-    
+
 
     @Test
     public void testSetHttpLocationHeaderToOriginalRequestWithExplicitPort() throws Exception
@@ -191,6 +193,23 @@ public class SslFilterResponseTest
         assertEquals(expected, resp.getHeader(LOCATION));
     }
 
+    @Test
+    public void testQueryString() throws Exception
+    {
+        TestHttpServletResponse response = createServletResponse();
+        HttpServletRequest req = createServletRequest(BACKEND_SERVER, PATH);
+
+        SslFilterResponse sresp = new SslFilterResponse(response, req);
+
+        final String queryString = "?resource=%2Fen.html%3FpbOpen%3Dtrue&$$login$$=%24%24login%24%24&j_reason=errors.login.account.not.found";
+        final String setUrl = "http://" + BACKEND_SERVER + "/" + queryString;
+        final URI u = new URI(setUrl);
+        final String expectedUrl = "https://" + BACKEND_SERVER + "/" + queryString;
+        sresp.setHeader(SslFilterConstants.HDR_LOCATION, setUrl);
+
+        assertEquals(expectedUrl, sresp.getHeader(SslFilterConstants.HDR_LOCATION));
+    }
+
     private HttpServletRequest createServletRequest(String serverName, String requestURL)
     {
         return createServletRequest(serverName, DEFAULT_HTTP_PORT, HTTPS, DEFAULT_HTTPS_PORT, requestURL);
@@ -218,186 +237,223 @@ public class SslFilterResponseTest
         private int status = -1;
         private boolean committed = false;
 
+        @Override
         public void setLocale(Locale loc)
         {
             throw new UnsupportedOperationException();
         }
 
+        @Override
         public void setContentType(String type)
         {
             throw new UnsupportedOperationException();
         }
 
+        @Override
         public void setContentLength(int len)
         {
             throw new UnsupportedOperationException();
         }
 
+        @Override
         public void setContentLengthLong(long len)
         {
             throw new UnsupportedOperationException();
         }
 
+        @Override
         public void setCharacterEncoding(String charset)
         {
             throw new UnsupportedOperationException();
         }
 
+        @Override
         public void setBufferSize(int size)
         {
             throw new UnsupportedOperationException();
         }
 
+        @Override
         public void resetBuffer()
         {
         }
 
+        @Override
         public void reset()
         {
         }
 
+        @Override
         public boolean isCommitted()
         {
             return this.committed;
         }
 
+        @Override
         public PrintWriter getWriter() throws IOException
         {
             throw new UnsupportedOperationException();
         }
 
+        @Override
         public ServletOutputStream getOutputStream() throws IOException
         {
             throw new UnsupportedOperationException();
         }
 
+        @Override
         public Locale getLocale()
         {
             throw new UnsupportedOperationException();
         }
 
+        @Override
         public String getContentType()
         {
             throw new UnsupportedOperationException();
         }
 
+        @Override
         public String getCharacterEncoding()
         {
             throw new UnsupportedOperationException();
         }
 
+        @Override
         public int getBufferSize()
         {
             throw new UnsupportedOperationException();
         }
 
+        @Override
         public void flushBuffer() throws IOException
         {
             committed = true;
         }
 
+        @Override
         public void setStatus(int sc, String sm)
         {
             status = sc;
             committed = true;
         }
 
+        @Override
         public void setStatus(int sc)
         {
             status = sc;
             committed = true;
         }
 
+        @Override
         public void setIntHeader(String name, int value)
         {
             headers.put(name, Integer.toString(value));
         }
 
+        @Override
         public void setHeader(String name, String value)
         {
             headers.put(name, value);
         }
 
+        @Override
         public void setDateHeader(String name, long date)
         {
             throw new UnsupportedOperationException();
         }
 
+        @Override
         public void sendRedirect(String location) throws IOException
         {
             throw new UnsupportedOperationException();
         }
 
+        @Override
         public void sendError(int sc, String msg) throws IOException
         {
             throw new UnsupportedOperationException();
         }
 
+        @Override
         public void sendError(int sc) throws IOException
         {
             throw new UnsupportedOperationException();
         }
 
+        @Override
         public int getStatus()
         {
             return status;
         }
 
+        @Override
         public Collection<String> getHeaders(String name)
         {
             return Collections.singleton(headers.get(name));
         }
 
+        @Override
         public Collection<String> getHeaderNames()
         {
             return headers.keySet();
         }
 
+        @Override
         public String getHeader(String name)
         {
             return headers.get(name);
         }
 
+        @Override
         public String encodeUrl(String url)
         {
             throw new UnsupportedOperationException();
         }
 
+        @Override
         public String encodeURL(String url)
         {
             throw new UnsupportedOperationException();
         }
 
+        @Override
         public String encodeRedirectUrl(String url)
         {
             throw new UnsupportedOperationException();
         }
 
+        @Override
         public String encodeRedirectURL(String url)
         {
             throw new UnsupportedOperationException();
         }
 
+        @Override
         public boolean containsHeader(String name)
         {
             return headers.containsKey(name);
         }
 
+        @Override
         public void addIntHeader(String name, int value)
         {
             throw new UnsupportedOperationException();
         }
 
+        @Override
         public void addHeader(String name, String value)
         {
             throw new UnsupportedOperationException();
         }
 
+        @Override
         public void addDateHeader(String name, long date)
         {
             throw new UnsupportedOperationException();
         }
 
+        @Override
         public void addCookie(Cookie cookie)
         {
             throw new UnsupportedOperationException();

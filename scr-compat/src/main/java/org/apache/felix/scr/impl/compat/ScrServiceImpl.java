@@ -76,7 +76,7 @@ public class ScrServiceImpl implements ScrService
     {
         List<Component> result = new ArrayList<Component>();
 
-        final Collection<ComponentDescriptionDTO> descriptions = this.runtime.getComponentDescriptionDTOs(bundle);
+        final Collection<ComponentDescriptionDTO> descriptions = (bundle == null ? this.runtime.getComponentDescriptionDTOs() : this.runtime.getComponentDescriptionDTOs(bundle));
         for(final ComponentDescriptionDTO descDTO : descriptions )
         {
             final Collection<ComponentConfigurationDTO> configs = this.runtime.getComponentConfigurationDTOs(descDTO);

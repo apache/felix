@@ -36,6 +36,7 @@ public class NativeLibraryClauseTest extends TestCase {
         assertEquals("windowsvista", NativeLibraryClause.normalizeOSName("WinVista"));
         assertEquals("windows7", NativeLibraryClause.normalizeOSName("Windows 7"));
         assertEquals("windows8", NativeLibraryClause.normalizeOSName("Win8"));
+        assertEquals("windows10", NativeLibraryClause.normalizeOSName("Windows 10"));
         assertEquals("linux", NativeLibraryClause.normalizeOSName("Linux1.2.3"));
         assertEquals("aix", NativeLibraryClause.normalizeOSName("AIX-4.5.6"));
         assertEquals("digitalunix", NativeLibraryClause.normalizeOSName("digitalunix_blah"));
@@ -71,6 +72,7 @@ public class NativeLibraryClauseTest extends TestCase {
         assertEquals("windows7", NativeLibraryClause.normalizeOSName("windows7"));
         assertEquals("windows8", NativeLibraryClause.normalizeOSName("windows8"));
         assertEquals("windows9", NativeLibraryClause.normalizeOSName("windows9"));
+        assertEquals("windows10", NativeLibraryClause.normalizeOSName("windows10"));
         assertEquals("windows95", NativeLibraryClause.normalizeOSName("windows95"));
         assertEquals("windows98", NativeLibraryClause.normalizeOSName("windows98"));
         assertEquals("windowsce", NativeLibraryClause.normalizeOSName("windowsce"));
@@ -98,6 +100,7 @@ public class NativeLibraryClauseTest extends TestCase {
         assertTrue(NativeLibraryClause.getOsNameWithAliases("Windows 7").contains("windows7"));
         assertTrue(NativeLibraryClause.getOsNameWithAliases("Windows7").contains("windows7"));
         assertTrue(NativeLibraryClause.getOsNameWithAliases("Win8").contains("windows8"));
+        assertTrue(NativeLibraryClause.getOsNameWithAliases("Windows 10").contains("windows10"));
         assertTrue(NativeLibraryClause.getOsNameWithAliases("Linux1.2.3").contains("linux"));
         assertTrue(NativeLibraryClause.getOsNameWithAliases("AIX-4.5.6").contains("aix"));
         assertTrue(NativeLibraryClause.getOsNameWithAliases("digitalunix_blah").contains("digitalunix"));
@@ -133,6 +136,7 @@ public class NativeLibraryClauseTest extends TestCase {
         assertTrue(NativeLibraryClause.getOsNameWithAliases("windows7").contains("windows7"));
         assertTrue(NativeLibraryClause.getOsNameWithAliases("windows8").contains("windows8"));
         assertTrue(NativeLibraryClause.getOsNameWithAliases("windows9").contains("windows9"));
+        assertTrue(NativeLibraryClause.getOsNameWithAliases("windows10").contains("windows10"));
         assertTrue(NativeLibraryClause.getOsNameWithAliases("windows95").contains("windows95"));
         assertTrue(NativeLibraryClause.getOsNameWithAliases("windows98").contains("windows98"));
         assertTrue(NativeLibraryClause.getOsNameWithAliases("windowsce").contains("windowsce"));

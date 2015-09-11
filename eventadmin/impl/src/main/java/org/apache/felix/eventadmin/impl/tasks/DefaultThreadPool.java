@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.felix.eventadmin.impl.util.LogWrapper;
 
@@ -39,6 +40,8 @@ public class DefaultThreadPool
 
     private int oldSize = -1;
 
+    private final AtomicLong threadCounter = new AtomicLong(1);
+
     /**
      * Create a new pool.
      */
@@ -56,6 +59,7 @@ public class DefaultThreadPool
                     thread.setPriority( Thread.NORM_PRIORITY );
                     thread.setDaemon( true );
 
+                    thread.setName("EventAdminThread #" + threadCounter.getAndIncrement());
                     return thread;
                 }
             };

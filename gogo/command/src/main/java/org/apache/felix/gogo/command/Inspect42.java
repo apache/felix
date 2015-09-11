@@ -30,6 +30,7 @@ import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.packageadmin.RequiredBundle;
 
+@SuppressWarnings("deprecation")
 public class Inspect42
 {
     public static final String LEGACY_PACKAGE_NAMESPACE = "package";
@@ -175,7 +176,7 @@ public class Inspect42
         boolean matches = false;
 
         // Keep track of service references.
-        List<ServiceReference> refs = new ArrayList();
+        List<ServiceReference<?>> refs = new ArrayList<ServiceReference<?>>();
 
         // Fragments cannot export packages.
         if (!isFragment(b))
@@ -242,7 +243,7 @@ public class Inspect42
         boolean matches = false;
 
         // Keep track of service references.
-        List<ServiceReference> refs = new ArrayList();
+        List<ServiceReference<?>> refs = new ArrayList<ServiceReference<?>>();
 
         // Fragments cannot import packages.
         if (!isFragment(b))
@@ -298,7 +299,7 @@ public class Inspect42
         boolean matches = false;
 
         // Keep track of service references.
-        List<ServiceReference> refs = new ArrayList();
+        List<ServiceReference<?>> refs = new ArrayList<ServiceReference<?>>();
 
         // Fragments cannot be required.
         if (!isFragment(b))
@@ -371,7 +372,7 @@ public class Inspect42
         boolean matches = false;
 
         // Keep track of service references.
-        List<ServiceReference> refs = new ArrayList();
+        List<ServiceReference<?>> refs = new ArrayList<ServiceReference<?>>();
 
         // Fragments cannot require bundles.
         if (!isFragment(b))
@@ -421,7 +422,7 @@ public class Inspect42
         boolean matches = false;
 
         // Keep track of service references.
-        List<ServiceReference> refs = new ArrayList();
+        List<ServiceReference<?>> refs = new ArrayList<ServiceReference<?>>();
 
         // Get package admin service.
         PackageAdmin pa = Util.getService(bc, PackageAdmin.class, refs);
@@ -480,7 +481,7 @@ public class Inspect42
         boolean matches = false;
 
         // Keep track of service references.
-        List<ServiceReference> refs = new ArrayList();
+        List<ServiceReference<?>> refs = new ArrayList<ServiceReference<?>>();
 
         // Get package admin service.
         PackageAdmin pa = Util.getService(bc, PackageAdmin.class, refs);

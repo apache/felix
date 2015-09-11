@@ -718,5 +718,8 @@ $(document).ready(function() {
 	} else {
 		configContent.addClass('ui-helper-hidden');
 	}
-	if (selectedPid) configure(selectedPid);
+	if(selectedPid) {
+	  if(factoryCreate) configure(selectedPid, true);
+	  else configure(selectedPid);
+	}
 });

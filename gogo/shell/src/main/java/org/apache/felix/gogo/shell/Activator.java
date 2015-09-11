@@ -99,7 +99,7 @@ public class Activator implements BundleActivator
         dict.put(CommandProcessor.COMMAND_SCOPE, "gogo");
 
         // register converters
-        regs.add(context.registerService(Converter.class.getName(), new Converters(context), null));
+        regs.add(context.registerService(Converter.class.getName(), new Converters(context.getBundle(0).getBundleContext()), null));
 
         // register commands
 

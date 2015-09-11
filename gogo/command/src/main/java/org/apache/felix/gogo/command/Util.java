@@ -26,12 +26,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
+
+import org.apache.felix.service.command.CommandSession;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -39,6 +42,10 @@ import org.osgi.framework.ServiceReference;
 
 public class Util
 {
+
+
+    static final String CWD = "_cwd";
+
     public static String getBundleName(Bundle bundle)
     {
         if (bundle != null)
@@ -123,9 +130,10 @@ public class Util
     }
 
     public static <T> T getService(
-        BundleContext bc, Class<T> clazz, List<ServiceReference> refs)
+        BundleContext bc, Class<T> clazz, List<ServiceReference<?>> refs)
     {
-        ServiceReference ref = bc.getServiceReference(clazz.getName());
+        @SuppressWarnings("unchecked")
+        ServiceReference<T> ref = (ServiceReference<T>) bc.getServiceReference(clazz.getName());
         if (ref == null)
         {
             return null;
@@ -138,7 +146,7 @@ public class Util
         return t;
     }
 
-    public static void ungetServices(BundleContext bc, List<ServiceReference> refs)
+    public static void ungetServices(BundleContext bc, List<ServiceReference<?>> refs)
     {
         while (refs.size() > 0)
         {
@@ -181,10 +189,8 @@ public class Util
                 out.println("Downloading " + fileName + ".");
             }
             byte[] buffer = new byte[4096];
-            int count = 0;
             for (int len = is.read(buffer); len > 0; len = is.read(buffer))
             {
-                count += len;
                 os.write(buffer, 0, len);
             }
 
@@ -320,7 +326,7 @@ public class Util
 
     public static List<String> parseSubstring(String value)
     {
-        List<String> pieces = new ArrayList();
+        List<String> pieces = new ArrayList<String>();
         StringBuffer ss = new StringBuffer();
         // int kind = SIMPLE; // assume until proven otherwise
         boolean wasStar = false; // indicates last piece was a star
@@ -490,5 +496,30 @@ loop:   for (int i = 0; i < len; i++)
         }
 
         return result;
+    }
+
+    /**
+     * Intepret a string as a URI relative to the current working directory.
+     * @param session the session (where the CWD is stored)
+     * @param relativeUri the input URI
+     * @return the resulting URI as a string
+     * @throws IOException
+     */
+    public static String resolveUri(CommandSession session, String relativeUri) throws IOException
+    {
+        File cwd = (File) session.get(CWD);
+        if (cwd == null)
+        {
+            cwd = new File("").getCanonicalFile();
+            session.put(CWD, cwd);
+        }
+        if ((relativeUri == null) || (relativeUri.length() == 0))
+        {
+            return relativeUri;
+        }
+
+        URI curUri = cwd.toURI();
+        URI newUri = curUri.resolve(relativeUri);
+        return newUri.toString();
     }
 }
