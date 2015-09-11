@@ -53,6 +53,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
     static final String PID = "pid"; //$NON-NLS-1$
     static final String FACTORY_PID = "factoryPid"; //$NON-NLS-1$
     static final String PLACEHOLDER_PID = "[Temporary PID replaced by real PID upon save]"; //$NON-NLS-1$
+    static final String FACTORY_CREATE = "factoryCreate"; //$NON-NLS-1$
 
     static final String ACTION_CREATE = "create"; //$NON-NLS-1$
     static final String ACTION_DELETE = "delete"; //$NON-NLS-1$
@@ -411,6 +412,8 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         DefaultVariableResolver vars = ( ( DefaultVariableResolver ) WebConsoleUtil.getVariableResolver( request ) );
         vars.put( "__data__", json.toString() ); //$NON-NLS-1$
         vars.put( "selectedPid", pid != null ? pid : ""); //$NON-NLS-1$ //$NON-NLS-2$
+        boolean factoryCreate = "true".equals(request.getParameter(FACTORY_CREATE)); //$NON-NLS-1$
+        vars.put( "factoryCreate", Boolean.valueOf(factoryCreate)); //$NON-NLS-1$
         vars.put( "param.apply", ACTION_APPLY ); //$NON-NLS-1$
         vars.put( "param.create", ACTION_CREATE ); //$NON-NLS-1$
         vars.put( "param.unbind", ACTION_UNBIND ); //$NON-NLS-1$
