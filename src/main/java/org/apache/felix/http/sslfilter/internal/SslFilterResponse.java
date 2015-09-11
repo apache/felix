@@ -67,7 +67,7 @@ class SslFilterResponse extends HttpServletResponseWrapper
         }
         else
         {
-            // Client is talking HTTPS to proxy, so we should rewrite all HTTP-based URLs... 
+            // Client is talking HTTPS to proxy, so we should rewrite all HTTP-based URLs...
             this.clientProto = HTTPS;
             this.serverProto = HTTP;
         }
@@ -98,7 +98,7 @@ class SslFilterResponse extends HttpServletResponseWrapper
     {
         if (HDR_LOCATION.equalsIgnoreCase(name))
         {
-        	URL rewritten = null;
+        	String rewritten = null;
         	try {
         		rewritten = rewriteUrlIfNeeded(value);
         	} catch (URISyntaxException e) {
@@ -107,7 +107,7 @@ class SslFilterResponse extends HttpServletResponseWrapper
             // Trying to set a redirect location to the original client-side URL, which should be https...
             if (rewritten != null)
             {
-                value = rewritten.toExternalForm();
+                value = rewritten;
             }
         }
         super.setHeader(name, value);
@@ -116,7 +116,7 @@ class SslFilterResponse extends HttpServletResponseWrapper
     @Override
     public void sendRedirect(String location) throws IOException
     {
-    	URL rewritten = null;
+    	String rewritten = null;
     	try {
     		rewritten = rewriteUrlIfNeeded(location);
     	} catch (URISyntaxException e) {
@@ -124,7 +124,7 @@ class SslFilterResponse extends HttpServletResponseWrapper
     	}
         if (rewritten != null)
         {
-            location = rewritten.toExternalForm();
+            location = rewritten;
         }
         super.sendRedirect(location);
     }
@@ -142,7 +142,7 @@ class SslFilterResponse extends HttpServletResponseWrapper
         return HTTP_PORT;
     }
 
-    private URL rewriteUrlIfNeeded(String value) throws URISyntaxException
+    private String rewriteUrlIfNeeded(String value) throws URISyntaxException
     {
         if (value == null)
         {
@@ -154,7 +154,7 @@ class SslFilterResponse extends HttpServletResponseWrapper
             URI uri;
             if (value.startsWith(this.serverProto.concat("://")))
             {
-  
+
                 uri = new URI (value);
             }
             else
@@ -165,7 +165,7 @@ class SslFilterResponse extends HttpServletResponseWrapper
 
             String actualProto = uri.getScheme();
 
-            
+
             if (!this.serverProto.equalsIgnoreCase(actualProto))
             {
                 // protocol is already correct
@@ -184,15 +184,37 @@ class SslFilterResponse extends HttpServletResponseWrapper
                 return null;
             }
 
-         
-            return new URI(this.clientProto,null, this.serverName, this.clientPort, uri.getPath(),uri.getQuery(),uri.getFragment()).toURL();
+            final StringBuilder sb = new StringBuilder();
+            sb.append(this.clientProto);
+            sb.append("://");
+            sb.append(this.serverName);
+            if ( this.clientPort != -1 )
+            {
+                sb.append(':');
+                sb.append(this.clientPort);
+            }
+            if ( uri.getPath() != null )
+            {
+                sb.append(uri.getPath());
+            }
+            if ( uri.getRawQuery() != null )
+            {
+                sb.append('?');
+                sb.append(uri.getRawQuery());
+            }
+            if ( uri.getRawFragment() != null )
+            {
+                sb.append('#');
+                sb.append(uri.getRawFragment());
+            }
+            return sb.toString();
         }
         catch (MalformedURLException e)
         {
             return null;
         }
     }
-    
-    
-    
+
+
+
 }
