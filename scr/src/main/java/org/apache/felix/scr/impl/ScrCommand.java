@@ -120,27 +120,17 @@ public class ScrCommand implements ScrInfo
     {
         /*
          * Register the Gogo Command as a service of its own class.
-         * Due to a race condition during project building (this class is
-         * compiled for Java 1.3 compatibility before the required
-         * ScrGogoCommand class compiled for Java 5 compatibility) this uses
-         * reflection to load and instantiate the class. Any failure during this
-         * process is just ignored.
          */
         try
         {
-            final String scrGogoCommandClassName = "org.apache.felix.scr.impl.ScrGogoCommand";
-            final Class<?> scrGogoCommandClass = scrService.getClass().getClassLoader().loadClass(scrGogoCommandClassName);
-            final Constructor c = scrGogoCommandClass.getConstructor(new Class[]
-                { ScrCommand.class });
-            final Object gogoCmd = c.newInstance(new Object[]
-                { this });
+            final ScrGogoCommand gogoCmd = new ScrGogoCommand(this);
             final Hashtable<String, Object> props = new Hashtable<String, Object>();
             props.put("osgi.command.scope", "scr");
             props.put("osgi.command.function", new String[]
                 { "config", "disable", "enable", "info", "list" });
             props.put(Constants.SERVICE_DESCRIPTION, "SCR Gogo Shell Support");
             props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-            gogoReg = bundleContext.registerService(scrGogoCommandClassName, gogoCmd, props);
+            gogoReg = bundleContext.registerService(ScrGogoCommand.class, gogoCmd, props);
         }
         catch (Throwable t)
         {
@@ -305,7 +295,7 @@ public class ScrCommand implements ScrInfo
             return;
         }
 
-        Collections.sort( new ArrayList<ComponentDescriptionDTO>(result.components), DESCRIPTION_COMP);
+        Collections.sort( result.components, DESCRIPTION_COMP );
 
         long bundleId = -1;
 
@@ -315,7 +305,6 @@ public class ScrCommand implements ScrInfo
             {
                 if ( bundleId != -1 )
                 {
-                    out.println();
                     out.println();
                 }
                 bundleId = component.bundle.id;
@@ -362,7 +351,7 @@ public class ScrCommand implements ScrInfo
             String[] services = component.serviceInterfaces;
             if ( services != null )
             {
-                out.print( "  Services: " );
+                out.println( "  Services: " );
                 for ( String service: services )
                 {
                     out.print( "          " );
@@ -411,6 +400,7 @@ public class ScrCommand implements ScrInfo
                     info(cc, out);
                 }
             }
+            out.println();
         }
 
         out.flush();
@@ -467,7 +457,7 @@ public class ScrCommand implements ScrInfo
             out.print( "      Target: " );
             out.println( ref.target );
             ServiceReferenceDTO[] serviceRefs = ref.boundServices;
-            if ( serviceRefs != null )
+            if ( serviceRefs.length > 0 )
             {
                 out.print( "      Bound to:" );
                 for ( ServiceReferenceDTO sr: serviceRefs )
@@ -490,7 +480,7 @@ public class ScrCommand implements ScrInfo
             out.print( "      Target: " );
             out.println( ref.target );
             ServiceReferenceDTO[] serviceRefs = ref.targetServices;
-            if ( serviceRefs != null )
+            if ( serviceRefs.length > 0 )
             {
                 out.print( "      Target services:" );
                 for ( ServiceReferenceDTO sr: serviceRefs )
@@ -501,7 +491,7 @@ public class ScrCommand implements ScrInfo
             }
             else
             {
-                out.println( "      (unbound)" );
+                out.println( "      (no target services)" );
             }
 
         }
@@ -583,7 +573,7 @@ public class ScrCommand implements ScrInfo
     }
 
     private static final class Result {
-        public Collection<ComponentDescriptionDTO> components = new ArrayList<ComponentDescriptionDTO>();
+        public List<ComponentDescriptionDTO> components = new ArrayList<ComponentDescriptionDTO>();
         public ComponentConfigurationDTO configuration;
     }
 

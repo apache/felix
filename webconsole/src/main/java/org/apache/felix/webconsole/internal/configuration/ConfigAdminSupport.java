@@ -636,6 +636,10 @@ class ConfigAdminSupport
     {
         Dictionary props = config.getProperties();
         Map adMap = (mtss != null) ? mtss.getAttributeDefinitionMap(config, null) : null;
+        if (null == adMap)
+        {
+          return null;
+        }
 
         // check for configured name hint template
         String nameHint = getConfigurationPropertyValueOrDefault(PROPERTY_FACTORYCONFIG_NAMEHINT, props, adMap);

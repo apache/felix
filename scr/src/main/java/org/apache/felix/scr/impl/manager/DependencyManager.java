@@ -383,6 +383,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             int serviceCount = 0;
             AtomicInteger trackingCount = new AtomicInteger( );
             SortedMap<ServiceReference<T>, RefPair<S, T>> tracked = getTracker().getTracked( true, trackingCount );
+            List<RefPair<S,T>> failed = new ArrayList<RefPair<S, T>>();
             for (RefPair<S, T> refPair: tracked.values())
             {
                 if (getServiceObject( key, m_bindMethods.getBind(), refPair ))
@@ -391,10 +392,18 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 }
                 else
                 {
-                     m_componentManager.registerMissingDependency( DependencyManager.this, refPair.getRef(), trackingCount.get() );
+                    failed.add(refPair);
                 }
             }
-            return cardinalitySatisfied( serviceCount );
+            if ( cardinalitySatisfied( serviceCount ) ) 
+            {
+                for ( RefPair<S, T> refPair: failed) 
+                {
+                    m_componentManager.registerMissingDependency( DependencyManager.this, refPair.getRef(), trackingCount.get() );                    
+                }
+                return true;
+            }
+            return false;
         }
 
         public void close()
@@ -521,11 +530,6 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 if ( getServiceObject( key, m_bindMethods.getBind(), refPair ) )
                 {
                     serviceCount++;
-                }
-                else
-                {
-                    m_componentManager.registerMissingDependency( DependencyManager.this, refPair.getRef(),
-                            trackingCount.get() );
                 }
             }
             return cardinalitySatisfied( serviceCount );
@@ -734,7 +738,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                                 closeRefPair();
                             }
                         }
-                        else
+                        else if ( cardinalitySatisfied( 0 ) )
                         {
                             m_componentManager.registerMissingDependency( DependencyManager.this, serviceReference,
                                     trackingCount );
@@ -866,7 +870,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             if (refPair != null)
             {
                 success |= getServiceObject( key, m_bindMethods.getBind(), refPair );
-                if ( refPair.isFailed() )
+                if ( refPair.isFailed() &&  cardinalitySatisfied( 0 ))
                 {
                     m_componentManager.registerMissingDependency( DependencyManager.this, refPair.getRef(),
                             trackingCount.get() );
@@ -1561,6 +1565,9 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         }
         //TODO dynamic reluctant
         RefPair<S, T> refPair = m_tracker.getService( ref );
+        if (refPair == null) {
+            return; // The service is no longer available, probably because the tracker has been closed
+        }
         //TODO this check is no longer correct, fix it!
 //        if (refPair.getServiceObject(key) != null)
 //        {
