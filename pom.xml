@@ -28,13 +28,13 @@
 
     <name>Apache Felix Http SSL Filter</name>
     <artifactId>org.apache.felix.http.sslfilter</artifactId>
-    <version>1.0.4</version>
+    <version>1.0.5-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http.sslfilter-1.0.4</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http.sslfilter-1.0.4</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.http.sslfilter-1.0.4</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http/sslfilter</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/http/sslfilter</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/http/sslfilter/</url>
     </scm>
 
     <build>
