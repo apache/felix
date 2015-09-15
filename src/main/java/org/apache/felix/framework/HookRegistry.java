@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceFactory;
@@ -59,7 +60,7 @@ public class HookRegistry
     }
 
     private final Map<String, SortedSet<ServiceReference<?>>> m_allHooks =
-        new HashMap<String, SortedSet<ServiceReference<?>>>();
+        new ConcurrentHashMap<String, SortedSet<ServiceReference<?>>>();
 
     private final WeakHashMap<ServiceReference<?>, ServiceReference<?>> m_blackList =
             new WeakHashMap<ServiceReference<?>, ServiceReference<?>>();
@@ -119,7 +120,7 @@ public class HookRegistry
         {
             if (isHook(serviceName, svcObj))
             {
-                synchronized (m_allHooks)
+                synchronized (m_allHooks) // we need to sync as we replace the value
                 {
                     SortedSet<ServiceReference<?>> hooks = m_allHooks.get(serviceName);
                     if (hooks == null)
@@ -153,7 +154,7 @@ public class HookRegistry
         {
             if (isHook(serviceName, svcObj))
             {
-                synchronized (m_allHooks)
+                synchronized (m_allHooks) // we need to sync as we replace the value
                 {
                     SortedSet<ServiceReference<?>> hooks = m_allHooks.get(serviceName);
                     if (hooks != null)
@@ -180,7 +181,7 @@ public class HookRegistry
         {
             if (isHook(serviceName, svcObj))
             {
-                synchronized (m_allHooks)
+                synchronized (m_allHooks) // we need to sync as we replace the value
                 {
                     SortedSet<ServiceReference<?>> hooks = m_allHooks.get(serviceName);
                     if (hooks != null)
@@ -214,26 +215,6 @@ public class HookRegistry
         return Collections.emptySet();
     }
 
-    public Set<ServiceReference<org.osgi.framework.hooks.bundle.FindHook>> getBundleFindHooks()
-    {
-        return getHooks(org.osgi.framework.hooks.bundle.FindHook.class);
-    }
-
-    public Set<ServiceReference<org.osgi.framework.hooks.service.FindHook>> getServiceFindHooks()
-    {
-        return getHooks(org.osgi.framework.hooks.service.FindHook.class);
-    }
-
-    public Set<ServiceReference<org.osgi.framework.hooks.bundle.EventHook>> getBundleEventHooks()
-    {
-        return getHooks(org.osgi.framework.hooks.bundle.EventHook.class);
-    }
-
-    public Set<ServiceReference<org.osgi.framework.hooks.service.ListenerHook>> getServiceListenerHooks()
-    {
-        return getHooks(org.osgi.framework.hooks.service.ListenerHook.class);
-    }
-
     public boolean isHookBlackListed(final ServiceReference<?> sr)
     {
         synchronized ( m_blackList )
@@ -249,5 +230,4 @@ public class HookRegistry
             m_blackList.put(sr, sr);
         }
     }
-
 }
