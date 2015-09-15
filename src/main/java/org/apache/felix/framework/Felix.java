@@ -118,9 +118,9 @@ public class Felix extends BundleImpl implements Framework
     // Logging related member variables.
     private final Logger m_logger;
     // Immutable config properties.
-    private final Map m_configMap;
+    private final Map<String, Object> m_configMap;
     // Mutable configuration properties passed into constructor.
-    private final Map m_configMutableMap;
+    private final Map<String, Object> m_configMutableMap;
 
     // Resolver and resolver state.
     private final StatefulResolver m_resolver;
@@ -129,7 +129,7 @@ public class Felix extends BundleImpl implements Framework
     // lock or the global lock can be acquired.
     private final Object[] m_bundleLock = new Object[0];
     // Keeps track of threads wanting to acquire the global lock.
-    private final List m_globalLockWaitersList = new ArrayList();
+    private final List<Thread> m_globalLockWaitersList = new ArrayList<Thread>();
     // The thread currently holding the global lock.
     private Thread m_globalLockThread = null;
     // How many times the global lock was acquired by the thread holding
@@ -139,7 +139,7 @@ public class Felix extends BundleImpl implements Framework
 
     // Maps a bundle location to a bundle location;
     // used to reserve a location when installing a bundle.
-    private final Map m_installRequestMap = new HashMap();
+    private final Map<String, String> m_installRequestMap = new HashMap<String, String>();
     // This lock must be acquired to modify m_installRequestMap;
     // to help avoid deadlock this lock as priority 1 and should
     // be acquired before locks with lower priority.
@@ -164,7 +164,7 @@ public class Felix extends BundleImpl implements Framework
     private volatile int m_activeStartLevel = FelixConstants.FRAMEWORK_INACTIVE_STARTLEVEL;
     // Framework's target start level.
     // Normally the target start will equal the active start level, except
-    // whem the start level is changing, in which case the target start level
+    // when the start level is changing, in which case the target start level
     // will report the new start level while the active start level will report
     // the old start level. Once the start level change is complete, the two
     // will become equal again.
@@ -414,6 +414,7 @@ public class Felix extends BundleImpl implements Framework
 
         // Create service registry.
         m_registry = new ServiceRegistry(m_logger, new ServiceRegistryCallbacks() {
+            @Override
             public void serviceChanged(ServiceEvent event, Dictionary oldProps)
             {
                 fireServiceEvent(event, oldProps);
@@ -619,6 +620,7 @@ public class Felix extends BundleImpl implements Framework
     }
 
 
+    @Override
     public void init() throws BundleException
     {
         init((FrameworkListener[]) null);
@@ -626,6 +628,7 @@ public class Felix extends BundleImpl implements Framework
     /**
      * @see org.osgi.framework.launch.Framework#init(org.osgi.framework.FrameworkListener[])
      */
+    @Override
     public void init(final FrameworkListener... listeners) throws BundleException
     {
         // The system bundle can only be initialized if it currently isn't started.
@@ -1021,6 +1024,7 @@ public class Felix extends BundleImpl implements Framework
             // Spec says stop() on SystemBundle should return immediately and
             // shutdown framework on another thread.
             new Thread(new Runnable() {
+                @Override
                 public void run()
                 {
                     try
@@ -1051,6 +1055,7 @@ public class Felix extends BundleImpl implements Framework
      * @param timeout A timeout value.
      * @throws java.lang.InterruptedException If the thread was interrupted.
     **/
+    @Override
     public FrameworkEvent waitForStop(long timeout) throws InterruptedException
     {
         // Throw exception if timeout is negative.
@@ -1119,6 +1124,7 @@ public class Felix extends BundleImpl implements Framework
 
         // Then to stop and restart the framework on a separate thread.
         new Thread(new Runnable() {
+            @Override
             public void run()
             {
                 try
@@ -3106,7 +3112,7 @@ public class Felix extends BundleImpl implements Framework
         if (existing != null)
         {
             Set<ServiceReference<org.osgi.framework.hooks.bundle.FindHook>> hooks =
-                getHooks(org.osgi.framework.hooks.bundle.FindHook.class);
+                    getHookRegistry().getBundleFindHooks();
             if (!hooks.isEmpty())
             {
                 Collection<Bundle> bundles = new ArrayList<Bundle>(1);
@@ -3200,7 +3206,7 @@ public class Felix extends BundleImpl implements Framework
         }
 
         Set<ServiceReference<org.osgi.framework.hooks.bundle.FindHook>> hooks =
-            getHooks(org.osgi.framework.hooks.bundle.FindHook.class);
+                getHookRegistry().getBundleFindHooks();
         if (!hooks.isEmpty() && (bundle != null))
         {
             Collection<Bundle> bundles = new ArrayList<Bundle>(1);
@@ -3268,43 +3274,41 @@ public class Felix extends BundleImpl implements Framework
      * Implementation for BundleContext.getBundles(). Retrieves
      * all installed bundles.
      *
-     * @return An array containing all installed bundles or null if
-     *         there are no installed bundles.
-    **/
+     * @return An array containing all installed bundles or an empty
+     *        array if there are no installed bundles.
+     **/
     Bundle[] getBundles(BundleContext bc)
     {
         Collection<Bundle> bundles = m_installedBundles[IDENTIFIER_MAP_IDX].values();
-        Set<ServiceReference<org.osgi.framework.hooks.bundle.FindHook>> hooks =
-            getHooks(org.osgi.framework.hooks.bundle.FindHook.class);
-        if (!hooks.isEmpty())
+        // If the requesting bundle is something other than the system bundle, return the shrunk
+        // collection of bundles. If it *is* the system bundle, it should receive the unfiltered bundles.
+        if ( !bundles.isEmpty() && bc.getBundle() != this )
         {
-            Collection<Bundle> shrunkBundles = new ShrinkableCollection<Bundle>(new ArrayList(bundles));
-            for (ServiceReference<org.osgi.framework.hooks.bundle.FindHook> hook : hooks)
+            Set<ServiceReference<org.osgi.framework.hooks.bundle.FindHook>> hooks =
+                    getHookRegistry().getBundleFindHooks();
+            if (!hooks.isEmpty())
             {
-                org.osgi.framework.hooks.bundle.FindHook fh = getService(this, hook, false);
-                if (fh != null)
+                Collection<Bundle> shrunkBundles = new ShrinkableCollection<Bundle>(new ArrayList<Bundle>(bundles));
+                for (ServiceReference<org.osgi.framework.hooks.bundle.FindHook> hook : hooks)
                 {
-                    try
+                    org.osgi.framework.hooks.bundle.FindHook fh = getService(this, hook, false);
+                    if (fh != null)
                     {
-                        m_secureAction.invokeBundleFindHook(fh, bc, shrunkBundles);
-                    }
-                    catch (Throwable th)
-                    {
-                        m_logger.doLog(
-                            hook.getBundle(),
-                            hook,
-                            Logger.LOG_WARNING,
-                            "Problem invoking bundle hook.",
-                            th);
+                        try
+                        {
+                            m_secureAction.invokeBundleFindHook(fh, bc, shrunkBundles);
+                        }
+                        catch (Throwable th)
+                        {
+                            m_logger.doLog(
+                                hook.getBundle(),
+                                hook,
+                                Logger.LOG_WARNING,
+                                "Problem invoking bundle hook.",
+                                th);
+                        }
                     }
                 }
-            }
-
-            if (bc.getBundle() != this)
-            {
-                // If the requesting bundle is something other than the system bundle, return the shrunk
-                // collection of bundles. If it *is* the system bundle, it should receive the unfiltered bundles.
-                bundles = shrunkBundles;
             }
         }
 
@@ -3355,7 +3359,7 @@ public class Felix extends BundleImpl implements Framework
 
         // Invoke ListenerHook.removed() if filter updated.
         Set<ServiceReference<org.osgi.framework.hooks.service.ListenerHook>> listenerHooks =
-            m_registry.getHookRegistry().getHooks(org.osgi.framework.hooks.service.ListenerHook.class);
+                getHookRegistry().getServiceListenerHooks();
         if (oldFilter != null)
         {
             final Collection removed = Collections.singleton(
@@ -3426,7 +3430,7 @@ public class Felix extends BundleImpl implements Framework
         {
             // Invoke the ListenerHook.removed() on all hooks.
             Set<ServiceReference<org.osgi.framework.hooks.service.ListenerHook>> listenerHooks =
-                m_registry.getHookRegistry().getHooks(org.osgi.framework.hooks.service.ListenerHook.class);
+                    getHookRegistry().getServiceListenerHooks();
             Collection removed = Collections.singleton(listener);
             for (ServiceReference<org.osgi.framework.hooks.service.ListenerHook> sr : listenerHooks)
             {
@@ -3597,7 +3601,7 @@ public class Felix extends BundleImpl implements Framework
 
         // activate findhooks
         Set<ServiceReference<org.osgi.framework.hooks.service.FindHook>> findHooks =
-            m_registry.getHookRegistry().getHooks(org.osgi.framework.hooks.service.FindHook.class);
+                getHookRegistry().getServiceFindHooks();
         for (ServiceReference<org.osgi.framework.hooks.service.FindHook> sr : findHooks)
         {
             org.osgi.framework.hooks.service.FindHook fh = getService(this, sr, false);
@@ -3734,19 +3738,9 @@ public class Felix extends BundleImpl implements Framework
     // Hook service management methods.
     //
 
-    boolean isHookBlackListed(final ServiceReference sr)
+    HookRegistry getHookRegistry()
     {
-        return m_registry.getHookRegistry().isHookBlackListed(sr);
-    }
-
-    void blackListHook(final ServiceReference sr)
-    {
-        m_registry.getHookRegistry().blackListHook(sr);
-    }
-
-    public <S> Set<ServiceReference<S>> getHooks(final Class<S> hookClass)
-    {
-        return m_registry.getHookRegistry().getHooks(hookClass);
+        return m_registry.getHookRegistry();
     }
 
     //
@@ -4828,6 +4822,7 @@ public class Felix extends BundleImpl implements Framework
 
     class SystemBundleActivator implements BundleActivator
     {
+        @Override
         public void start(BundleContext context) throws Exception
         {
             // Add the bundle activator for the url handler service.
@@ -4854,6 +4849,7 @@ public class Felix extends BundleImpl implements Framework
             }
         }
 
+        @Override
         public void stop(BundleContext context)
         {
             // The state of the framework should be STOPPING, so
@@ -5084,6 +5080,7 @@ public class Felix extends BundleImpl implements Framework
             m_level = level;
         }
 
+        @Override
         public int compareTo(StartLevelTuple t)
         {
             int result = 1;

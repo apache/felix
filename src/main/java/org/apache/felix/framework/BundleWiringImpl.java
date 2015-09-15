@@ -513,22 +513,26 @@ public class BundleWiringImpl implements BundleWiring
         return m_fragmentContents;
     }
 
+    @Override
     public boolean isCurrent()
     {
         BundleRevision current = getBundle().adapt(BundleRevision.class);
         return (current != null) && (current.getWiring() == this);
     }
 
+    @Override
     public synchronized boolean isInUse()
     {
         return !m_isDisposed;
     }
 
+    @Override
     public List<Capability> getResourceCapabilities(String namespace)
     {
         return BundleRevisionImpl.asCapabilityList(getCapabilities(namespace));
     }
 
+    @Override
     public List<BundleCapability> getCapabilities(String namespace)
     {
         if (isInUse())
@@ -550,11 +554,13 @@ public class BundleWiringImpl implements BundleWiring
         return null;
     }
 
+    @Override
     public List<Requirement> getResourceRequirements(String namespace)
     {
         return BundleRevisionImpl.asRequirementList(getRequirements(namespace));
     }
 
+    @Override
     public List<BundleRequirement> getRequirements(String namespace)
     {
         if (isInUse())
@@ -596,11 +602,13 @@ public class BundleWiringImpl implements BundleWiring
         return wires;
     }
 
+    @Override
     public List<Wire> getProvidedResourceWires(String namespace)
     {
         return asWireList(getProvidedWires(namespace));
     }
 
+    @Override
     public List<BundleWire> getProvidedWires(String namespace)
     {
         if (isInUse())
@@ -611,11 +619,13 @@ public class BundleWiringImpl implements BundleWiring
         return null;
     }
 
+    @Override
     public List<Wire> getRequiredResourceWires(String namespace)
     {
         return asWireList(getRequiredWires(namespace));
     }
 
+    @Override
     public List<BundleWire> getRequiredWires(String namespace)
     {
         if (isInUse())
@@ -656,16 +666,19 @@ public class BundleWiringImpl implements BundleWiring
         m_importedPkgs = importedPkgs;
     }
 
+    @Override
     public BundleRevision getResource()
     {
         return m_revision;
     }
 
+    @Override
     public BundleRevision getRevision()
     {
         return m_revision;
     }
 
+    @Override
     public ClassLoader getClassLoader()
     {
         if (m_isDisposed)
@@ -723,6 +736,7 @@ public class BundleWiringImpl implements BundleWiring
         return m_classLoader;
     }
 
+    @Override
     public List<URL> findEntries(String path, String filePattern, int options)
     {
         if (isInUse())
@@ -749,6 +763,7 @@ public class BundleWiringImpl implements BundleWiring
     private final ThreadLocal m_listResourcesCycleCheck = new ThreadLocal();
 
 // TODO: OSGi R4.3 - Should this be synchronized or should we take a snapshot?
+    @Override
     public synchronized Collection<String> listResources(
         String path, String filePattern, int options)
     {
@@ -1056,6 +1071,7 @@ public class BundleWiringImpl implements BundleWiring
         return SimpleFilter.compareSubstring(pattern, resource);
     }
 
+    @Override
     public Bundle getBundle()
     {
         return m_revision.getBundle();
@@ -1688,6 +1704,7 @@ public class BundleWiringImpl implements BundleWiring
                     return AccessController
                         .doPrivileged(new PrivilegedExceptionAction()
                         {
+                            @Override
                             public Object run() throws Exception
                             {
                                 return doImplicitBootDelegation(classes, name,
@@ -1851,11 +1868,13 @@ public class BundleWiringImpl implements BundleWiring
             m_enumeration = enumeration;
         }
 
+        @Override
         public boolean hasMoreElements()
         {
             return m_enumeration.hasMoreElements();
         }
 
+        @Override
         public Object nextElement()
         {
             return convertToLocalUrl((URL) m_enumeration.nextElement());
@@ -1973,6 +1992,7 @@ public class BundleWiringImpl implements BundleWiring
             return m_isActivationTriggered;
         }
 
+        @Override
         public Bundle getBundle()
         {
             return m_wiring.getBundle();
@@ -2077,10 +2097,10 @@ public class BundleWiringImpl implements BundleWiring
                     Felix felix = ((BundleImpl) m_wiring.m_revision.getBundle()).getFramework();
 
                     Set<ServiceReference<WeavingHook>> hooks =
-                        felix.getHooks(WeavingHook.class);
+                        felix.getHookRegistry().getHooks(WeavingHook.class);
 
                     Set<ServiceReference<WovenClassListener>> wovenClassListeners =
-                        felix.getHooks(WovenClassListener.class);
+                        felix.getHookRegistry().getHooks(WovenClassListener.class);
 
                     WovenClassImpl wci = null;
                     if (!hooks.isEmpty())
@@ -2390,7 +2410,7 @@ public class BundleWiringImpl implements BundleWiring
             for (ServiceReference<WeavingHook> sr : hooks)
             {
                 // Only use the hook if it is not black listed.
-                if (!felix.isHookBlackListed(sr))
+                if (!felix.getHookRegistry().isHookBlackListed(sr))
                 {
                     // Get the hook service object.
                     // Note that we don't use the bundle context
@@ -2408,7 +2428,7 @@ public class BundleWiringImpl implements BundleWiring
                         {
                             if (!(th instanceof WeavingException))
                             {
-                                felix.blackListHook(sr);
+                                felix.getHookRegistry().blackListHook(sr);
                             }
                             felix.fireFrameworkEvent(
                                     FrameworkEvent.ERROR,
@@ -2666,6 +2686,7 @@ public class BundleWiringImpl implements BundleWiring
             return m_resource.hashCode();
         }
 
+        @Override
         public int compareTo(ResourceSource t)
         {
             return m_resource.compareTo(t.m_resource);

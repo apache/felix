@@ -18,10 +18,8 @@
  */
 package org.apache.felix.framework;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
@@ -60,8 +58,8 @@ public class HookRegistry
         HOOK_CLASSES.put(c.getName(), c);
     }
 
-    private final Map<String, Set<ServiceReference<?>>> m_allHooks =
-        new HashMap<String, Set<ServiceReference<?>>>();
+    private final Map<String, SortedSet<ServiceReference<?>>> m_allHooks =
+        new HashMap<String, SortedSet<ServiceReference<?>>>();
 
     private final WeakHashMap<ServiceReference<?>, ServiceReference<?>> m_blackList =
             new WeakHashMap<ServiceReference<?>, ServiceReference<?>>();
@@ -109,6 +107,12 @@ public class HookRegistry
         return false;
     }
 
+    /**
+     * Check and add the service to the set of hooks
+     * @param classNames The service names
+     * @param svcObj The service object
+     * @param ref The service reference
+     */
     public void addHooks(final String[] classNames, final Object svcObj, final ServiceReference<?> ref)
     {
         for(final String serviceName : classNames)
@@ -117,18 +121,26 @@ public class HookRegistry
             {
                 synchronized (m_allHooks)
                 {
-                    Set<ServiceReference<?>> hooks = m_allHooks.get(serviceName);
+                    SortedSet<ServiceReference<?>> hooks = m_allHooks.get(serviceName);
                     if (hooks == null)
                     {
                         hooks = new TreeSet<ServiceReference<?>>(Collections.reverseOrder());
-                        m_allHooks.put(serviceName, hooks);
+                    }
+                    else
+                    {
+                        hooks = new TreeSet<ServiceReference<?>>(hooks);
                     }
                     hooks.add(ref);
+                    m_allHooks.put(serviceName, hooks);
                 }
             }
         }
     }
 
+    /**
+     * Update the service ranking for a hook
+     * @param ref The service reference
+     */
     public void updateHooks(final ServiceReference<?> ref)
     {
         // We maintain the hooks sorted, so if ranking has changed for example,
@@ -143,18 +155,21 @@ public class HookRegistry
             {
                 synchronized (m_allHooks)
                 {
-                    final Set<ServiceReference<?>> hooks = m_allHooks.get(serviceName);
+                    SortedSet<ServiceReference<?>> hooks = m_allHooks.get(serviceName);
                     if (hooks != null)
                     {
-                        List<ServiceReference<?>> refs = new ArrayList<ServiceReference<?>>(hooks);
-                        hooks.clear();
-                        hooks.addAll(refs);
+                        hooks = new TreeSet<ServiceReference<?>>(hooks);
+                        m_allHooks.put(serviceName, hooks);
                     }
                 }
             }
         }
     }
 
+    /**
+     * Remove the service hooks
+     * @param ref The service reference
+     */
     public void removeHooks(final ServiceReference<?> ref)
     {
         final Object svcObj = ((ServiceRegistrationImpl.ServiceReferenceImpl) ref)
@@ -167,44 +182,72 @@ public class HookRegistry
             {
                 synchronized (m_allHooks)
                 {
-                    final Set<ServiceReference<?>> hooks = m_allHooks.get(serviceName);
+                    SortedSet<ServiceReference<?>> hooks = m_allHooks.get(serviceName);
                     if (hooks != null)
                     {
+                        hooks = new TreeSet<ServiceReference<?>>(hooks);
                         hooks.remove(ref);
-                        if (hooks.isEmpty())
-                        {
-                            m_allHooks.remove(serviceName);
-                        }
+                        m_allHooks.put(serviceName, hooks);
                     }
                 }
             }
         }
-        m_blackList.remove(ref);
+        synchronized ( m_blackList )
+        {
+            m_blackList.remove(ref);
+        }
     }
 
+    /**
+     * Return the sorted set of hooks
+     * @param hookClass The hook class
+     * @return The sorted set - the set might be empty
+     */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public <S> Set<ServiceReference<S>> getHooks(final Class<S> hookClass)
     {
-        synchronized (m_allHooks)
+        final Set<ServiceReference<?>> hooks = m_allHooks.get(hookClass.getName());
+        if (hooks != null)
         {
-            final Set<ServiceReference<?>> hooks = m_allHooks.get(hookClass.getName());
-            if (hooks != null)
-            {
-                SortedSet<ServiceReference<?>> sorted = new TreeSet<ServiceReference<?>>(Collections.reverseOrder());
-                sorted.addAll(hooks);
-                return (Set) sorted;
-            }
-            return Collections.emptySet();
+            return (Set)hooks;
         }
+        return Collections.emptySet();
+    }
+
+    public Set<ServiceReference<org.osgi.framework.hooks.bundle.FindHook>> getBundleFindHooks()
+    {
+        return getHooks(org.osgi.framework.hooks.bundle.FindHook.class);
+    }
+
+    public Set<ServiceReference<org.osgi.framework.hooks.service.FindHook>> getServiceFindHooks()
+    {
+        return getHooks(org.osgi.framework.hooks.service.FindHook.class);
+    }
+
+    public Set<ServiceReference<org.osgi.framework.hooks.bundle.EventHook>> getBundleEventHooks()
+    {
+        return getHooks(org.osgi.framework.hooks.bundle.EventHook.class);
+    }
+
+    public Set<ServiceReference<org.osgi.framework.hooks.service.ListenerHook>> getServiceListenerHooks()
+    {
+        return getHooks(org.osgi.framework.hooks.service.ListenerHook.class);
     }
 
     public boolean isHookBlackListed(final ServiceReference<?> sr)
     {
-        return m_blackList.containsKey(sr);
+        synchronized ( m_blackList )
+        {
+            return m_blackList.containsKey(sr);
+        }
     }
 
     public void blackListHook(final ServiceReference<?> sr)
     {
-        m_blackList.put(sr, sr);
+        synchronized ( m_blackList )
+        {
+            m_blackList.put(sr, sr);
+        }
     }
 
 }
