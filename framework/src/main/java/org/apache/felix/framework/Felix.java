@@ -3112,7 +3112,7 @@ public class Felix extends BundleImpl implements Framework
         if (existing != null)
         {
             Set<ServiceReference<org.osgi.framework.hooks.bundle.FindHook>> hooks =
-                    getHookRegistry().getBundleFindHooks();
+                    getHookRegistry().getHooks(org.osgi.framework.hooks.bundle.FindHook.class);
             if (!hooks.isEmpty())
             {
                 Collection<Bundle> bundles = new ArrayList<Bundle>(1);
@@ -3206,7 +3206,7 @@ public class Felix extends BundleImpl implements Framework
         }
 
         Set<ServiceReference<org.osgi.framework.hooks.bundle.FindHook>> hooks =
-                getHookRegistry().getBundleFindHooks();
+                getHookRegistry().getHooks(org.osgi.framework.hooks.bundle.FindHook.class);
         if (!hooks.isEmpty() && (bundle != null))
         {
             Collection<Bundle> bundles = new ArrayList<Bundle>(1);
@@ -3285,7 +3285,7 @@ public class Felix extends BundleImpl implements Framework
         if ( !bundles.isEmpty() && bc.getBundle() != this )
         {
             Set<ServiceReference<org.osgi.framework.hooks.bundle.FindHook>> hooks =
-                    getHookRegistry().getBundleFindHooks();
+                    getHookRegistry().getHooks(org.osgi.framework.hooks.bundle.FindHook.class);
             if (!hooks.isEmpty())
             {
                 Collection<Bundle> shrunkBundles = new ShrinkableCollection<Bundle>(new ArrayList<Bundle>(bundles));
@@ -3359,7 +3359,7 @@ public class Felix extends BundleImpl implements Framework
 
         // Invoke ListenerHook.removed() if filter updated.
         Set<ServiceReference<org.osgi.framework.hooks.service.ListenerHook>> listenerHooks =
-                getHookRegistry().getServiceListenerHooks();
+                getHookRegistry().getHooks(org.osgi.framework.hooks.service.ListenerHook.class);
         if (oldFilter != null)
         {
             final Collection removed = Collections.singleton(
@@ -3430,7 +3430,7 @@ public class Felix extends BundleImpl implements Framework
         {
             // Invoke the ListenerHook.removed() on all hooks.
             Set<ServiceReference<org.osgi.framework.hooks.service.ListenerHook>> listenerHooks =
-                    getHookRegistry().getServiceListenerHooks();
+                    getHookRegistry().getHooks(org.osgi.framework.hooks.service.ListenerHook.class);
             Collection removed = Collections.singleton(listener);
             for (ServiceReference<org.osgi.framework.hooks.service.ListenerHook> sr : listenerHooks)
             {
@@ -3601,7 +3601,7 @@ public class Felix extends BundleImpl implements Framework
 
         // activate findhooks
         Set<ServiceReference<org.osgi.framework.hooks.service.FindHook>> findHooks =
-                getHookRegistry().getServiceFindHooks();
+                getHookRegistry().getHooks(org.osgi.framework.hooks.service.FindHook.class);
         for (ServiceReference<org.osgi.framework.hooks.service.FindHook> sr : findHooks)
         {
             org.osgi.framework.hooks.service.FindHook fh = getService(this, sr, false);
