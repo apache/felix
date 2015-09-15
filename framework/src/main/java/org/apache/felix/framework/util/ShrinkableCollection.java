@@ -33,26 +33,31 @@ public class ShrinkableCollection<T> implements Collection<T>
         m_delegate = delegate;
     }
 
+    @Override
     public boolean add(T o)
     {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public boolean addAll(Collection<? extends T> c)
     {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public void clear()
     {
         m_delegate.clear();
     }
 
+    @Override
     public boolean contains(Object o)
     {
         return m_delegate.contains(o);
     }
 
+    @Override
     public boolean containsAll(Collection<?> c)
     {
         return m_delegate.containsAll(c);
@@ -70,41 +75,49 @@ public class ShrinkableCollection<T> implements Collection<T>
         return m_delegate.hashCode();
     }
 
+    @Override
     public boolean isEmpty()
     {
         return m_delegate.isEmpty();
     }
 
-    public Iterator iterator()
+    @Override
+    public Iterator<T> iterator()
     {
         return m_delegate.iterator();
     }
 
+    @Override
     public boolean remove(Object o)
     {
         return m_delegate.remove(o);
     }
 
+    @Override
     public boolean removeAll(Collection<?> c)
     {
         return m_delegate.removeAll(c);
     }
 
+    @Override
     public boolean retainAll(Collection<?> c)
     {
         return m_delegate.retainAll(c);
     }
 
+    @Override
     public int size()
     {
         return m_delegate.size();
     }
 
+    @Override
     public Object[] toArray()
     {
         return m_delegate.toArray();
     }
 
+    @Override
     public <A> A[] toArray(A[] a)
     {
         return m_delegate.toArray(a);

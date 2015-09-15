@@ -233,6 +233,7 @@ class BundleImpl implements Bundle, BundleRevisions
         m_activator = activator;
     }
 
+    @Override
     public BundleContext getBundleContext()
     {
         Object sm = System.getSecurityManager();
@@ -251,6 +252,7 @@ class BundleImpl implements Bundle, BundleRevisions
         m_context = context;
     }
 
+    @Override
     public long getBundleId()
     {
         try
@@ -268,6 +270,7 @@ class BundleImpl implements Bundle, BundleRevisions
         }
     }
 
+    @Override
     public URL getEntry(String name)
     {
         Object sm = System.getSecurityManager();
@@ -288,6 +291,7 @@ class BundleImpl implements Bundle, BundleRevisions
         return getFramework().getBundleEntry(this, name);
     }
 
+    @Override
     public Enumeration getEntryPaths(String path)
     {
         Object sm = System.getSecurityManager();
@@ -308,6 +312,7 @@ class BundleImpl implements Bundle, BundleRevisions
         return getFramework().getBundleEntryPaths(this, path);
     }
 
+    @Override
     public Enumeration findEntries(String path, String filePattern, boolean recurse)
     {
         Object sm = System.getSecurityManager();
@@ -329,11 +334,13 @@ class BundleImpl implements Bundle, BundleRevisions
                 this, path, filePattern, recurse);
     }
 
+    @Override
     public Dictionary getHeaders()
     {
         return getHeaders(Locale.getDefault().toString());
     }
 
+    @Override
     public Dictionary getHeaders(String locale)
     {
         Object sm = System.getSecurityManager();
@@ -569,6 +576,7 @@ class BundleImpl implements Bundle, BundleRevisions
         return result;
     }
 
+    @Override
     public long getLastModified()
     {
         try
@@ -602,6 +610,7 @@ class BundleImpl implements Bundle, BundleRevisions
         }
     }
 
+    @Override
     public String getLocation()
     {
         Object sm = System.getSecurityManager();
@@ -636,6 +645,7 @@ class BundleImpl implements Bundle, BundleRevisions
      *
      * @return a URL to named resource, or null if not found.
     **/
+    @Override
     public URL getResource(String name)
     {
         Object sm = System.getSecurityManager();
@@ -656,6 +666,7 @@ class BundleImpl implements Bundle, BundleRevisions
         return getFramework().getBundleResource(this, name);
     }
 
+    @Override
     public Enumeration getResources(String name) throws IOException
     {
         Object sm = System.getSecurityManager();
@@ -685,6 +696,7 @@ class BundleImpl implements Bundle, BundleRevisions
      *
      * @return an array of service references or null.
     **/
+    @Override
     public ServiceReference[] getRegisteredServices()
     {
         Object sm = System.getSecurityManager();
@@ -728,6 +740,7 @@ class BundleImpl implements Bundle, BundleRevisions
         }
     }
 
+    @Override
     public ServiceReference[] getServicesInUse()
     {
         Object sm = System.getSecurityManager();
@@ -769,6 +782,7 @@ class BundleImpl implements Bundle, BundleRevisions
         return getFramework().getBundleServicesInUse(this);
     }
 
+    @Override
     public int getState()
     {
         return m_state;
@@ -913,27 +927,32 @@ class BundleImpl implements Bundle, BundleRevisions
         return false;
     }
 
+    @Override
     public String getSymbolicName()
     {
         return adapt(BundleRevisionImpl.class).getSymbolicName();
     }
 
+    @Override
     public Version getVersion()
     {
         return adapt(BundleRevisionImpl.class).getVersion();
     }
 
+    @Override
     public boolean hasPermission(Object obj)
     {
         return getFramework().bundleHasPermission(this, obj);
     }
 
+    @Override
     public Map getSignerCertificates(int signersType)
     {
         // TODO: SECURITY - This needs to be adapted to our security mechanisms.
         return (Map) getFramework().getSignerMatcher(this, signersType);
     }
 
+    @Override
     public Class loadClass(String name) throws ClassNotFoundException
     {
         if (isExtension())
@@ -959,11 +978,13 @@ class BundleImpl implements Bundle, BundleRevisions
         return getFramework().loadBundleClass(this, name);
     }
 
+    @Override
     public void start() throws BundleException
     {
         start(0);
     }
 
+    @Override
     public void start(int options) throws BundleException
     {
         Object sm = System.getSecurityManager();
@@ -977,11 +998,13 @@ class BundleImpl implements Bundle, BundleRevisions
         getFramework().startBundle(this, options);
     }
 
+    @Override
     public void update() throws BundleException
     {
         update(null);
     }
 
+    @Override
     public void update(InputStream is) throws BundleException
     {
         Object sm = System.getSecurityManager();
@@ -995,11 +1018,13 @@ class BundleImpl implements Bundle, BundleRevisions
         getFramework().updateBundle(this, is);
     }
 
+    @Override
     public void stop() throws BundleException
     {
         stop(0);
     }
 
+    @Override
     public void stop(int options) throws BundleException
     {
         Object sm = System.getSecurityManager();
@@ -1013,6 +1038,7 @@ class BundleImpl implements Bundle, BundleRevisions
         getFramework().stopBundle(this, ((options & Bundle.STOP_TRANSIENT) == 0));
     }
 
+    @Override
     public void uninstall() throws BundleException
     {
         Object sm = System.getSecurityManager();
@@ -1064,6 +1090,7 @@ class BundleImpl implements Bundle, BundleRevisions
         }
     }
 
+    @Override
     public synchronized <A> A adapt(Class<A> type)
     {
         checkAdapt(type);
@@ -1125,11 +1152,13 @@ class BundleImpl implements Bundle, BundleRevisions
         return null;
     }
 
+    @Override
     public File getDataFile(String filename)
     {
         return getFramework().getDataFile(this, filename);
     }
 
+    @Override
     public int compareTo(Bundle t)
     {
         long thisBundleId = this.getBundleId();
@@ -1157,11 +1186,13 @@ class BundleImpl implements Bundle, BundleRevisions
     // Revision management.
     //
 
+    @Override
     public Bundle getBundle()
     {
         return this;
     }
 
+    @Override
     public synchronized List<BundleRevision> getRevisions()
     {
         return new ArrayList<BundleRevision>(m_revisions);
@@ -1280,7 +1311,7 @@ class BundleImpl implements Bundle, BundleRevisions
             }
             if (!collisionCanditates.isEmpty() && allowMultiple.equals(Constants.FRAMEWORK_BSNVERSION_MANAGED))
             {
-                Set<ServiceReference<CollisionHook>> hooks = getFramework().getHooks(CollisionHook.class);
+                Set<ServiceReference<CollisionHook>> hooks = getFramework().getHookRegistry().getHooks(CollisionHook.class);
                 if (!hooks.isEmpty())
                 {
                     Collection<Bundle> shrinkableCollisionCandidates = new ShrinkableCollection<Bundle>(collisionCanditates);

@@ -18,12 +18,13 @@
  */
 package org.apache.felix.framework;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-import junit.framework.TestCase;
 
 import org.apache.felix.framework.cache.BundleArchive;
 import org.apache.felix.framework.cache.BundleArchiveRevision;
@@ -35,6 +36,8 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
 import org.osgi.framework.hooks.bundle.CollisionHook;
 
+import junit.framework.TestCase;
+
 public class CollisionHookTest extends TestCase
 {
     public void testCollisionHookInstall() throws Exception
@@ -45,6 +48,7 @@ public class CollisionHookTest extends TestCase
 
         CollisionHook testCollisionHook = new CollisionHook()
         {
+            @Override
             public void filterCollisions(int operationType, Bundle target, Collection<Bundle> collisionCandidates)
             {
                 if ((target.getBundleId() == 4L) && (operationType == CollisionHook.INSTALLING))
@@ -60,7 +64,9 @@ public class CollisionHookTest extends TestCase
         // Mock the framework
         StatefulResolver mockResolver = Mockito.mock(StatefulResolver.class);
         Felix felixMock = Mockito.mock(Felix.class);
-        Mockito.when(felixMock.getHooks(CollisionHook.class)).thenReturn(Collections.singleton(chRef));
+        HookRegistry hReg = mock(HookRegistry.class);
+        when(hReg.getHooks(CollisionHook.class)).thenReturn(Collections.singleton(chRef));
+        when(felixMock.getHookRegistry()).thenReturn(hReg);
         Mockito.when(felixMock.getResolver()).thenReturn(mockResolver);
         Mockito.when(felixMock.getBundles()).thenReturn(new Bundle[]
         {
@@ -104,6 +110,7 @@ public class CollisionHookTest extends TestCase
 
         CollisionHook testCollisionHook = new CollisionHook()
         {
+            @Override
             public void filterCollisions(int operationType, Bundle target, Collection<Bundle> collisionCandidates)
             {
                 if ((target.getBundleId() == 3L) && (operationType == CollisionHook.UPDATING))
@@ -123,7 +130,9 @@ public class CollisionHookTest extends TestCase
         StatefulResolver mockResolver = Mockito.mock(StatefulResolver.class);
         Felix felixMock = Mockito.mock(Felix.class);
         Mockito.when(felixMock.getConfig()).thenReturn(config);
-        Mockito.when(felixMock.getHooks(CollisionHook.class)).thenReturn(Collections.singleton(chRef));
+        HookRegistry hReg = mock(HookRegistry.class);
+        when(hReg.getHooks(CollisionHook.class)).thenReturn(Collections.singleton(chRef));
+        when(felixMock.getHookRegistry()).thenReturn(hReg);
         Mockito.when(felixMock.getResolver()).thenReturn(mockResolver);
         Mockito.when(felixMock.getBundles()).thenReturn(new Bundle[]
         {
@@ -160,6 +169,7 @@ public class CollisionHookTest extends TestCase
 
         CollisionHook testCollisionHook = new CollisionHook()
         {
+            @Override
             public void filterCollisions(int operationType, Bundle target, Collection<Bundle> collisionCandidates)
             {
                 if ((target.getBundleId() == 3L) && (operationType == CollisionHook.INSTALLING))
@@ -179,7 +189,9 @@ public class CollisionHookTest extends TestCase
         StatefulResolver mockResolver = Mockito.mock(StatefulResolver.class);
         Felix felixMock = Mockito.mock(Felix.class);
         Mockito.when(felixMock.getConfig()).thenReturn(config);
-        Mockito.when(felixMock.getHooks(CollisionHook.class)).thenReturn(Collections.singleton(chRef));
+        HookRegistry hReg = mock(HookRegistry.class);
+        when(hReg.getHooks(CollisionHook.class)).thenReturn(Collections.singleton(chRef));
+        when(felixMock.getHookRegistry()).thenReturn(hReg);
         Mockito.when(felixMock.getResolver()).thenReturn(mockResolver);
         Mockito.when(felixMock.getBundles()).thenReturn(new Bundle[]
         {
@@ -255,6 +267,8 @@ public class CollisionHookTest extends TestCase
         // Mock the framework
         StatefulResolver mockResolver = Mockito.mock(StatefulResolver.class);
         Felix felixMock = Mockito.mock(Felix.class);
+        HookRegistry hReg = Mockito.mock(HookRegistry.class);
+        Mockito.when(felixMock.getHookRegistry()).thenReturn(hReg);
         Mockito.when(felixMock.getResolver()).thenReturn(mockResolver);
         Mockito.when(felixMock.getBundles()).thenReturn(new Bundle[]
         {
