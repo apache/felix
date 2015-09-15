@@ -188,7 +188,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         return ScrConfiguration.DEFAULT_LOCK_TIMEOUT_MILLISECONDS;
     }
 
-    private void obtainLock( Lock lock, String source )
+    private void obtainLock( Lock lock )
     {
         try
         {
@@ -218,22 +218,22 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         }
     }
 
-    final void obtainActivationReadLock( String source )
+    final void obtainActivationReadLock(  )
     {
-        obtainLock( m_activationLock.readLock(), source);
+        obtainLock( m_activationLock.readLock());
     }
 
-    final void releaseActivationReadLock( String source )
+    final void releaseActivationReadLock( )
     {
         m_activationLock.readLock().unlock();
     }
 
-    final void obtainActivationWriteLock( String source )
+    final void obtainActivationWriteLock( )
     {
-        obtainLock( m_activationLock.writeLock(), source);
+        obtainLock( m_activationLock.writeLock());
     }
 
-    final void releaseActivationWriteeLock( String source )
+    final void releaseActivationWriteeLock( )
     {
         if ( m_activationLock.getWriteHoldCount() > 0 )
         {
@@ -241,12 +241,12 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         }
     }
 
-    final void obtainStateLock( String source )
+    final void obtainStateLock()
     {
-        obtainLock( m_stateLock, source );
+        obtainLock( m_stateLock );
     }
 
-    final void releaseStateLock( String source )
+    final void releaseStateLock()
     {
         m_stateLock.unlock();
     }
@@ -683,7 +683,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
             return;
         }
 
-        obtainActivationReadLock( "activateInternal" );
+        obtainActivationReadLock(  );
         try
         {
             // Double check conditions now that we have obtained the lock
@@ -726,7 +726,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         }
         finally
         {
-            releaseActivationReadLock( "activateInternal" );
+            releaseActivationReadLock(  );
         }
     }
 
@@ -751,14 +751,14 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
         // catch any problems from deleting the component to prevent the
         // component to remain in the deactivating state !
-        obtainActivationReadLock( "deactivateInternal" );
+        obtainActivationReadLock(  );
         try
         {
             doDeactivate( reason, disable || m_factoryInstance );
         }
         finally
         {
-            releaseActivationReadLock( "deactivateInternal" );
+            releaseActivationReadLock(  );
         }
         if ( isFactory() || m_factoryInstance || dispose )
         {
@@ -775,7 +775,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
             {
                 log( LogService.LOG_DEBUG, "Component deactivation occuring on another thread", null );
             }
-            obtainStateLock( "AbstractComponentManager.State.doDeactivate.1" );
+            obtainStateLock(  );
             try
             {
             	m_satisfied = false;
@@ -789,7 +789,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
             }
             finally
             {
-                releaseStateLock( "AbstractComponentManager.State.doDeactivate.1" );
+                releaseStateLock( );
             }
         }
         catch ( Throwable t )

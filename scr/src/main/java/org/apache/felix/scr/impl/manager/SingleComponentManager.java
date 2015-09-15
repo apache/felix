@@ -587,14 +587,14 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
             // unsatisfied component and non-ignored configuration may change targets
             // to satisfy references
-            obtainActivationWriteLock( "reconfigure" );
+            obtainActivationWriteLock( );
             try
             {
                 if ( !isSatisfied() && !getComponentMetadata().isConfigurationIgnored() )
                 {
                     log( LogService.LOG_DEBUG, "Attempting to activate unsatisfied component", null );
                     updateTargets( getProperties() );
-                    releaseActivationWriteeLock( "reconfigure.unsatisfied" );
+                    releaseActivationWriteeLock(  );
                     activateInternal( );
                     return;
                 }
@@ -609,20 +609,20 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                     // FELIX-2368: cycle component immediately, reconfigure() is
                     //     called through ConfigurationListener API which itself is
                     //     called asynchronously by the Configuration Admin Service
-                    releaseActivationWriteeLock( "reconfigure.modified.1" );
+                    releaseActivationWriteeLock(  );
                     //we have already determined that modify cannot be called. Therefore factory instances must be disposed.
                     boolean dispose = m_factoryInstance;
                     deactivateInternal( reason, dispose, dispose );
                     if ( !dispose )
                     {
-                        obtainActivationWriteLock("reconfigure.deactivate.activate");
+                        obtainActivationWriteLock();
                         try
                         {
                             updateTargets(getProperties());
                         }
                         finally
                         {
-                            releaseActivationWriteeLock("reconfigure.deactivate.activate");
+                            releaseActivationWriteeLock();
                         }
                         activateInternal();
                     }
@@ -631,7 +631,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             finally
             {
                 //used if modify succeeds or if there's an exception.
-                releaseActivationWriteeLock( "reconfigure.end" );;
+                releaseActivationWriteeLock(  );
             }
         }
         finally
@@ -677,7 +677,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         // 4. call method (nothing to do when failed, since it has already been logged)
         //   (call with non-null default result to continue even if the
         //    modify method call failed)
-        obtainStateLock( "ImmediateComponentManager.modify" );
+        obtainStateLock(  );
         try
         {
             //cf 112.5.12 where invoking modified method before updating target services is specified.
@@ -717,7 +717,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         }
         finally
         {
-            releaseStateLock( "ImmediateComponentManager.modify" );
+            releaseStateLock(  );
         }
     }
 
@@ -760,16 +760,35 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
     public S getService( Bundle bundle, ServiceRegistration<S> serviceRegistration )
     {
-        boolean success = getServiceInternal();
-        ComponentContextImpl<S> componentContext = m_componentContext;
-        if ( success && componentContext != null)
+        obtainStateLock(  );
+        try
         {
             m_useCount.incrementAndGet();
-            return componentContext.getImplementationObject( true );
         }
-        else
+        finally
         {
-            return null;
+            releaseStateLock( );
+        }
+        boolean decrement = true;
+        try {
+            boolean success = getServiceInternal();
+            ComponentContextImpl<S> componentContext = m_componentContext;
+            if ( success && componentContext != null)
+            {
+                decrement = false;
+                return componentContext.getImplementationObject( true );
+            }
+            else
+            {
+                return null;
+            }
+        }
+        finally
+        {
+            if ( decrement )
+            {
+                ungetService( bundle, serviceRegistration, null );
+            }
         }
     }
 
@@ -805,7 +824,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                             null );
                     success = false;
                 }
-                obtainStateLock( "ImmediateComponentManager.getService.1" );
+                obtainStateLock(  );
                 try
                 {
                     if ( m_componentContext == null )
@@ -824,7 +843,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 }
                 finally
                 {
-                    releaseStateLock( "ImmediateComponentManager.getService.1" );
+                    releaseStateLock(  );
                 }
             }
             return success;
@@ -872,30 +891,20 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
     public void ungetService( Bundle bundle, ServiceRegistration<S> serviceRegistration, S o )
     {
-        // the framework should not call ungetService more than it calls
-        // calls getService. Still, we want to be sure to not go below zero
-        if ( m_useCount.get() > 0 )
+        obtainStateLock( );
+        try
         {
-            int useCount = m_useCount.decrementAndGet();
-
             // unget the service instance if no bundle is using it
             // any longer unless delayed component instances have to
             // be kept (FELIX-3039)
-            if ( useCount == 0 && !isImmediate() && !keepInstances() )
+            if (  m_useCount.decrementAndGet() == 0 && !isImmediate() && !keepInstances() )
             {
-                obtainStateLock( "ImmediateComponentManager.ungetService.1" );
-                try
-                {
-                    if ( m_useCount.get() == 0 )
-                    {
-                        ungetService( );
-                    }
-                }
-                finally
-                {
-                    releaseStateLock( "ImmediateComponentManager.ungetService.1" );
-                }
+                ungetService( );
             }
+        }
+        finally
+        {
+            releaseStateLock(  );
         }
     }
 

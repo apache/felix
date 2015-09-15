@@ -20,8 +20,6 @@ package org.apache.felix.scr.impl.manager;
 
 
 import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -31,7 +29,6 @@ import org.apache.felix.scr.impl.helper.ComponentServiceObjectsHelper;
 import org.apache.felix.scr.impl.helper.ReadOnlyDictionary;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentInstance;
 import org.osgi.service.log.LogService;
@@ -116,7 +113,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
 
     public Object locateService( String name )
     {
-        m_componentManager.obtainActivationReadLock( "locate.service.name" );
+        m_componentManager.obtainActivationReadLock( );
         try
         {
             DependencyManager<S, ?> dm = m_componentManager.getDependencyManager( name );
@@ -124,14 +121,14 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         }
         finally
         {
-            m_componentManager.releaseActivationReadLock( "locate.service.name" );
+            m_componentManager.releaseActivationReadLock(  );
         }
     }
 
 
     public Object locateService( String name, ServiceReference ref )
     {
-        m_componentManager.obtainActivationReadLock( "locate.service.ref" );
+        m_componentManager.obtainActivationReadLock(  );
         try
         {
             DependencyManager<S, ?> dm = m_componentManager.getDependencyManager( name );
@@ -139,14 +136,14 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         }
         finally
         {
-            m_componentManager.releaseActivationReadLock( "locate.service.ref" );
+            m_componentManager.releaseActivationReadLock( );
         }
     }
 
 
     public Object[] locateServices( String name )
     {
-        m_componentManager.obtainActivationReadLock( "locate.services" );
+        m_componentManager.obtainActivationReadLock(  );
         try
         {
             DependencyManager<S, ?> dm = m_componentManager.getDependencyManager( name );
@@ -154,7 +151,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         }
         finally
         {
-            m_componentManager.releaseActivationReadLock( "locate.services" );
+            m_componentManager.releaseActivationReadLock( );
         }
     }
 
