@@ -1,3 +1,14 @@
+Changes from 1.0.0 to 1.0.2
+-----------------------------
+** Bug
+    * [FELIX-3968] - StringIndexOutOfBoundsException in packageadmin plugin
+    * [FELIX-4996] - Dependency Finder should use Inventory instead of deprecated ConfigurationPrinter
+
+** Improvement
+    * [FELIX-3656] - Change the label for the dependency finder plugin to "Dependency Finder" from "Packages"
+    * [FELIX-3861] - Set felix.webconsole.category on Web Console plugins
+    * [FELIX-4430] - [PackageAdmin Web Console Plugin] Provide using bundles with versions
+
 Initial Release 1.0.0
 ---------------------
 
