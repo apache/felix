@@ -18,8 +18,12 @@
  */
 package org.apache.felix.framework;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -36,6 +40,7 @@ import org.apache.felix.framework.BundleWiringImpl.BundleClassLoader;
 import org.apache.felix.framework.BundleWiringImpl.BundleClassLoaderJava5;
 import org.apache.felix.framework.cache.Content;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
@@ -126,6 +131,8 @@ public class BundleWiringImplTest
     public void testFindClassExistant() throws Exception
     {
         Felix mockFramework = mock(Felix.class);
+        HookRegistry hReg = mock(HookRegistry.class);
+        Mockito.when(mockFramework.getHookRegistry()).thenReturn(hReg);
         Content mockContent = mock(Content.class);
         Class testClass = TestClass.class;
         String testClassName = testClass.getName();
@@ -191,13 +198,15 @@ public class BundleWiringImplTest
         when(mockContent.getEntryAsBytes(testClassAsPath)).thenReturn(
                 testClassBytes);
 
-        when(mockFramework.getHooks(WeavingHook.class)).thenReturn(hooks);
+        HookRegistry hReg = mock(HookRegistry.class);
+        when(hReg.getHooks(WeavingHook.class)).thenReturn(hooks);
+        when(mockFramework.getHookRegistry()).thenReturn(hReg);
         when(
                 mockFramework.getService(mockFramework,
                         mockServiceReferenceWeavingHook, false)).thenReturn(
                 new GoodDummyWovenHook());
 
-        when(mockFramework.getHooks(WovenClassListener.class)).thenReturn(
+        when(hReg.getHooks(WovenClassListener.class)).thenReturn(
                 listeners);
         when(
                 mockFramework.getService(mockFramework,
@@ -261,13 +270,15 @@ public class BundleWiringImplTest
         when(mockContent.getEntryAsBytes(testClassAsPath)).thenReturn(
                 testClassBytes);
 
-        when(mockFramework.getHooks(WeavingHook.class)).thenReturn(hooks);
+        HookRegistry hReg = mock(HookRegistry.class);
+        when(hReg.getHooks(WeavingHook.class)).thenReturn(hooks);
+        when(mockFramework.getHookRegistry()).thenReturn(hReg);
         when(
                 mockFramework.getService(mockFramework,
                         mockServiceReferenceWeavingHook, false)).thenReturn(
                 new BadDummyWovenHook());
 
-        when(mockFramework.getHooks(WovenClassListener.class)).thenReturn(
+        when(hReg.getHooks(WovenClassListener.class)).thenReturn(
                 listeners);
         when(
                 mockFramework.getService(mockFramework,
@@ -330,13 +341,15 @@ public class BundleWiringImplTest
         when(mockContent.getEntryAsBytes(testClassAsPath)).thenReturn(
                 testClassBytes);
 
-        when(mockFramework.getHooks(WeavingHook.class)).thenReturn(hooks);
+        HookRegistry hReg = mock(HookRegistry.class);
+        when(hReg.getHooks(WeavingHook.class)).thenReturn(hooks);
+        when(mockFramework.getHookRegistry()).thenReturn(hReg);
         when(
                 mockFramework.getService(mockFramework,
                         mockServiceReferenceWeavingHook, false)).thenReturn(
                 new BadDefineWovenHook());
 
-        when(mockFramework.getHooks(WovenClassListener.class)).thenReturn(
+        when(hReg.getHooks(WovenClassListener.class)).thenReturn(
                 listeners);
         when(
                 mockFramework.getService(mockFramework,
@@ -353,7 +366,7 @@ public class BundleWiringImplTest
             fail("Class should throw exception");
         } catch (Throwable e)
         {
-            
+
         }
         assertEquals("There should be 2 state changes fired by the weaving", 2,
                 dummyWovenClassListener.stateList.size());
@@ -408,6 +421,7 @@ public class BundleWiringImplTest
     class GoodDummyWovenHook implements WeavingHook
     {
         // Adds the awesomePublicField to a class
+        @Override
         @SuppressWarnings("unchecked")
         public void weave(WovenClass wovenClass)
         {
@@ -426,6 +440,7 @@ public class BundleWiringImplTest
     class BadDefineWovenHook implements WeavingHook
     {
         // Adds the awesomePublicField twice to the class. This is bad java.
+        @Override
         @SuppressWarnings("unchecked")
         public void weave(WovenClass wovenClass)
         {
@@ -446,6 +461,7 @@ public class BundleWiringImplTest
     class BadDummyWovenHook implements WeavingHook
     {
         // Just Blow up
+        @Override
         public void weave(WovenClass wovenClass)
         {
             throw new WeavingException("Bad Weaver!");
@@ -456,6 +472,7 @@ public class BundleWiringImplTest
     {
         public List<Integer> stateList = new ArrayList<Integer>();
 
+        @Override
         public void modified(WovenClass wovenClass)
         {
             stateList.add(wovenClass.getState());

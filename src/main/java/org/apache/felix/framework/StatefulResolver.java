@@ -668,7 +668,7 @@ class StatefulResolver
 
         // Get resolver hook factories.
         Set<ServiceReference<ResolverHookFactory>> hookRefs =
-            m_felix.getHooks(ResolverHookFactory.class);
+            m_felix.getHookRegistry().getHooks(ResolverHookFactory.class);
         Collection<BundleRevision> whitelist;
 
         if (!hookRefs.isEmpty())
@@ -1718,6 +1718,7 @@ class StatefulResolver
         {
             return new Iterable<ResolverHook>()
             {
+                @Override
                 public Iterator<ResolverHook> iterator()
                 {
                     return new Iterator<ResolverHook>()
@@ -1726,6 +1727,7 @@ class StatefulResolver
                             m_resolveHookMap.entrySet().iterator();
                         private Entry<ServiceReference<ResolverHookFactory>, ResolverHook> next = null;
 
+                        @Override
                         public boolean hasNext()
                         {
                             if (next == null)
@@ -1734,6 +1736,7 @@ class StatefulResolver
                             return next != null;
                         }
 
+                        @Override
                         public ResolverHook next()
                         {
                             if (next == null)
@@ -1761,6 +1764,7 @@ class StatefulResolver
                             }
                         }
 
+                        @Override
                         public void remove()
                         {
                             throw new UnsupportedOperationException();

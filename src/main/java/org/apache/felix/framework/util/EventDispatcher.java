@@ -95,6 +95,7 @@ public class EventDispatcher
                 m_stopping = false;
 
                 m_thread = new Thread(new Runnable() {
+                    @Override
                     public void run()
                     {
                         try
@@ -552,7 +553,7 @@ public class EventDispatcher
     {
         Set<ServiceReference<org.osgi.framework.hooks.service.EventHook>> ehs =
             m_registry.getHookRegistry().getHooks(org.osgi.framework.hooks.service.EventHook.class);
-        if ((ehs != null) && !ehs.isEmpty())
+        if (!ehs.isEmpty())
         {
             // Create a whitelist of bundle context for bundle listeners,
             // if we have hooks.
@@ -575,7 +576,7 @@ public class EventDispatcher
 
         Set<ServiceReference<org.osgi.framework.hooks.service.EventListenerHook>> elhs =
             m_registry.getHookRegistry().getHooks(org.osgi.framework.hooks.service.EventListenerHook.class);
-        if ((elhs != null) && !elhs.isEmpty())
+        if (!elhs.isEmpty())
         {
             List<ListenerInfo> systemBundleListeners = null;
 
@@ -677,7 +678,7 @@ public class EventDispatcher
         // Create a whitelist of bundle context, if we have hooks.
         Set<BundleContext> whitelist = null;
         Set<ServiceReference<T>> hooks = m_registry.getHookRegistry().getHooks(hookClass);
-        if ((hooks != null) && !hooks.isEmpty())
+        if (!hooks.isEmpty())
         {
             boolean systemBundleListener = false;
             BundleContext systemBundleContext = felix.getBundleContext();
@@ -868,6 +869,7 @@ public class EventDispatcher
             if (System.getSecurityManager() != null)
             {
                 AccessController.doPrivileged(new PrivilegedAction() {
+                    @Override
                     public Object run()
                     {
                         ((FrameworkListener) l).frameworkEvent((FrameworkEvent) event);
@@ -901,6 +903,7 @@ public class EventDispatcher
             if (System.getSecurityManager() != null)
             {
                 AccessController.doPrivileged(new PrivilegedAction() {
+                    @Override
                     public Object run()
                     {
                         ((BundleListener) l).bundleChanged((BundleEvent) event);
@@ -975,6 +978,7 @@ public class EventDispatcher
                     {
                         AccessController.doPrivileged(new PrivilegedAction()
                         {
+                            @Override
                             public Object run()
                             {
                                 ((ServiceListener) l).serviceChanged((ServiceEvent) event);
@@ -1001,6 +1005,7 @@ public class EventDispatcher
                     {
                         AccessController.doPrivileged(new PrivilegedAction()
                         {
+                            @Override
                             public Object run()
                             {
                                 ((ServiceListener) l).serviceChanged(se);
