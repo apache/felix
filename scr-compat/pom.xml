@@ -30,11 +30,11 @@
         Extensions of the DS Implementation to provide compatibility with API from older Apache Felix DS implementations.
     </description>
     <artifactId>org.apache.felix.scr.compat</artifactId>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.2</version>
     <scm>
-        <connection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/scr-compat</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/scr-compat</developerConnection>
-        <url>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/scr-compat</url>
+        <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.scr.compat-1.0.2</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.scr.compat-1.0.2</developerConnection>
+        <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.scr.compat-1.0.2</url>
     </scm>
     
     <dependencies>
