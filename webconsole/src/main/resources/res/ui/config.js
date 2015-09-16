@@ -493,9 +493,16 @@ function configConfirm(/* String */ message, /* String */ title, /* String */ lo
 function deleteConfig(/* String */ configId, /* String */ bundleLocation)
 {
     if ( configConfirm(i18n.del_ask, configId, bundleLocation) ) {
-	$.post(pluginRoot + '/' + configId, param.apply + '=1&' + param.dele + '=1', function() {
-	    document.location.href = pluginRoot;
-	}, 'json');
+	$.ajax({
+		type     : 'POST',
+		url      : pluginRoot + '/' + configId,
+		data     : param.apply + '=1&' + param.dele + '=1',
+		success  : function () { 
+		  if(!navigateAfterConfigurationClose()) document.location.href = pluginRoot;
+		},
+		dataType : 'json',
+		async    : false
+	});
 	return true;
     }
     return false;
@@ -582,6 +589,13 @@ function treetableExtraction(node) {
 
 	return mixedLinksExtraction(node);
 };
+function navigateAfterConfigurationClose() {
+	if(configurationReferer) {
+	  window.location = configurationReferer;
+	  return true;
+	}
+	return false;
+}
 
 $(document).ready(function() {
 	configContent = $('#configContent');
@@ -629,11 +643,19 @@ $(document).ready(function() {
 		});
 		propListElement.val(propListArray.join(','));
 
-		$.post(pluginRoot + '/' + $(this).attr('__pid'), $(this).find('form').serialize(), function() {
-			// reload on success - prevents AJAX errors - see FELIX-3116
-			document.location.href = pluginRoot; 
+		$.ajax({
+			type     : 'POST',
+			url      : pluginRoot + '/' + $(this).attr('__pid'),
+			data     : $(this).find('form').serialize(),
+			success  : function () {
+			  // reload on success - prevents AJAX errors - see FELIX-3116
+			  if(!navigateAfterConfigurationClose()) document.location.href = pluginRoot; 
+			},
+			async    : false
+		})
+		.fail(function () {
+		  $(this).dialog('close');
 		});
-		$(this).dialog('close');
 	}
 	// prepare editor, but don't open yet!
 	editor = $('#editor').dialog({
@@ -641,7 +663,8 @@ $(document).ready(function() {
 		modal    : true,
 		width    : '90%',
 		closeText: i18n.abort,
-		buttons  : _buttons
+		buttons  : _buttons,
+		close    : function( event, ui ) { navigateAfterConfigurationClose(); }
 	});
 	editorMessage = editor.find('p');
 

@@ -53,6 +53,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
     static final String PID = "pid"; //$NON-NLS-1$
     static final String FACTORY_PID = "factoryPid"; //$NON-NLS-1$
     static final String PLACEHOLDER_PID = "[Temporary PID replaced by real PID upon save]"; //$NON-NLS-1$
+    static final String REFERER = "referer"; //$NON-NLS-1$
     static final String FACTORY_CREATE = "factoryCreate"; //$NON-NLS-1$
 
     static final String ACTION_CREATE = "create"; //$NON-NLS-1$
@@ -65,7 +66,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
     static final String CONFIGURATION_ADMIN_NAME = "org.osgi.service.cm.ConfigurationAdmin"; //$NON-NLS-1$
     static final String META_TYPE_NAME = "org.osgi.service.metatype.MetaTypeService"; //$NON-NLS-1$
 
-    public static final String UNBOUND_LOCATION = "??unbound:bundle/location";
+    public static final String UNBOUND_LOCATION = "??unbound:bundle/location"; //$NON-NLS-1$
 
     // templates
     private final String TEMPLATE;
@@ -149,12 +150,12 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         Configuration config = null;
 
         // should actually apply the configuration before redirecting
-        if ( request.getParameter( ACTION_CREATE ) != null ) //$NON-NLS-1$
+        if ( request.getParameter( ACTION_CREATE ) != null )
         {
             config = cas.getPlaceholderConfiguration( pid ); // ca.createFactoryConfiguration( pid, null );
             pid = config.getPid();
         }
-        else if ( request.getParameter( ACTION_APPLY ) != null ) //$NON-NLS-1$
+        else if ( request.getParameter( ACTION_APPLY ) != null )
         {
             String redirect = cas.applyConfiguration( request, pid );
             if ( redirect != null )
@@ -181,11 +182,11 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         }
 
         // check for configuration unbinding
-        if ( request.getParameter( ACTION_UNBIND ) != null ) //$NON-NLS-1$
+        if ( request.getParameter( ACTION_UNBIND ) != null )
         {
             if ( config != null && config.getBundleLocation() != null )
             {
-                config.setBundleLocation( UNBOUND_LOCATION ); //$NON-NLS-1$
+                config.setBundleLocation( UNBOUND_LOCATION );
 
             }
             response.setContentType( "application/json" ); //$NON-NLS-1$
@@ -210,7 +211,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
     throws ServletException, IOException
     {
         // check for "post" requests from previous versions
-        if ( "true".equals(request.getParameter("post")) ) {
+        if ( "true".equals(request.getParameter("post")) ) { //$NON-NLS-1$ //$NON-NLS-2$
             this.doPost(request, response);
             return;
         }
@@ -271,7 +272,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
                 final StringBuffer sb = new StringBuffer();
                 if ( pid != null && pidFilter != null)
                 {
-                    sb.append("(&");
+                    sb.append("(&"); //$NON-NLS-1$
                 }
                 if ( pid != null )
                 {
@@ -402,18 +403,20 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         }
 
         // if a configuration is addressed, display it immediately
-        if ( request.getParameter( ACTION_CREATE ) != null && pid != null ) //$NON-NLS-1$
+        if ( request.getParameter( ACTION_CREATE ) != null && pid != null )
         {
             pid = PLACEHOLDER_PID; // new PlaceholderConfiguration( pid ).getPid();
         }
 
 
         // prepare variables
+        final String referer = request.getParameter( REFERER );
+        final boolean factoryCreate = "true".equals( request.getParameter(FACTORY_CREATE) ); //$NON-NLS-1$
         DefaultVariableResolver vars = ( ( DefaultVariableResolver ) WebConsoleUtil.getVariableResolver( request ) );
         vars.put( "__data__", json.toString() ); //$NON-NLS-1$
-        vars.put( "selectedPid", pid != null ? pid : ""); //$NON-NLS-1$ //$NON-NLS-2$
-        boolean factoryCreate = "true".equals(request.getParameter(FACTORY_CREATE)); //$NON-NLS-1$
-        vars.put( "factoryCreate", Boolean.valueOf(factoryCreate)); //$NON-NLS-1$
+        vars.put( "selectedPid", pid != null ? pid : "" ); //$NON-NLS-1$ //$NON-NLS-2$
+        vars.put( "configurationReferer", referer != null ? referer : "" ); //$NON-NLS-1$ //$NON-NLS-2$
+        vars.put( "factoryCreate", Boolean.valueOf(factoryCreate) ); //$NON-NLS-1$
         vars.put( "param.apply", ACTION_APPLY ); //$NON-NLS-1$
         vars.put( "param.create", ACTION_CREATE ); //$NON-NLS-1$
         vars.put( "param.unbind", ACTION_UNBIND ); //$NON-NLS-1$
