@@ -115,7 +115,7 @@ public class Activator extends AbstractExtender
         BundleContext context;
         if ( globalExtender )
         {
-            context = m_context.getBundle( 0 ).getBundleContext();
+            context = m_context.getBundle( Constants.SYSTEM_BUNDLE_LOCATION ).getBundleContext();
         }
         else
         {
@@ -238,10 +238,21 @@ public class Activator extends AbstractExtender
 
     //---------- Component Management -----------------------------------------
 
+    private volatile boolean gogoMissing =true;
 
     @Override
     protected Extension doCreateExtension(final Bundle bundle) throws Exception
     {
+        if (gogoMissing)
+        {
+            try
+            {
+                bundle.loadClass("org.apache.felix.service.command.Descriptor");
+                gogoMissing = false;
+            }
+            catch (Throwable e)
+            {}
+        }
         return new ScrExtension(bundle);
     }
 
