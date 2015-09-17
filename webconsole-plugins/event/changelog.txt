@@ -1,3 +1,9 @@
+Changes from 1.1.2 to 1.1.4
+---------------------------
+
+** Bug
+    * [FELIX-5025] - NPE in Events web console plugin - no events can be seen
+
 Changes from 1.1.0 to 1.1.2
 ---------------------------
 
