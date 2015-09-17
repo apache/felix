@@ -1,3 +1,11 @@
+Changes from 2.0.2 to 2.0.4
+---------------------------
+** Improvement
+    * [FELIX-5040] When global extender is turned on, get framwork bundle using location not id.
+
+** Bug
+
+
 Changes from 2.0.0 to 2.0.2
 ---------------------------
 ** Improvement
