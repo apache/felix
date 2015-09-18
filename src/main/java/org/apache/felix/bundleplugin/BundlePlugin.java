@@ -1262,8 +1262,16 @@ public class BundlePlugin extends AbstractMojo
     private void doMavenMetadata( MavenProject currentProject, Jar jar ) throws IOException
     {
         String path = "META-INF/maven/" + currentProject.getGroupId() + "/" + currentProject.getArtifactId();
-        File pomFile = new File( currentProject.getBasedir(), "pom.xml" );
-        jar.putResource( path + "/pom.xml", new FileResource( pomFile ) );
+
+        File pomFile = currentProject.getFile();
+        if ( pomFile == null || !pomFile.exists() )
+        {
+            pomFile = new File( currentProject.getBasedir(), "pom.xml" );
+        }
+        if ( pomFile.exists() )
+        {
+            jar.putResource( path + "/pom.xml", new FileResource( pomFile ) );
+        }
 
         Properties p = new Properties();
         p.put( "version", currentProject.getVersion() );
