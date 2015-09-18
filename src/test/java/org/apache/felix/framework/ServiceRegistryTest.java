@@ -399,7 +399,7 @@ public class ServiceRegistryTest extends TestCase
         final ServiceHolder sh = new ServiceHolder();
         uc.m_svcHolderRef.set(sh);
 
-        final StringBuilder sb = new StringBuilder();
+        final StringBuffer sb = new StringBuffer();
         final AtomicBoolean threadException = new AtomicBoolean(false);
         Thread t = new Thread() {
             @Override
@@ -1173,6 +1173,59 @@ public class ServiceRegistryTest extends TestCase
 
         sr.unregisterService(regBundle, reg);
         assertEquals(0, inUseMap.size());
+    }
+
+    @SuppressWarnings("unchecked")
+    public void testGetServiceThrowsException() throws Exception
+    {
+        final ServiceRegistry sr = new ServiceRegistry(null, null);
+
+        final Bundle b = Mockito.mock(Bundle.class);
+        ServiceRegistrationImpl reg = Mockito.mock(ServiceRegistrationImpl.class);
+        Mockito.when(reg.isValid()).thenReturn(true);
+        Mockito.when(reg.getService(b)).thenAnswer(new Answer() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable
+            {
+                Thread.sleep(500);
+                throw new Exception("boo!");
+            }
+        });
+
+        final ServiceReferenceImpl ref = Mockito.mock(ServiceReferenceImpl.class);
+        Mockito.when(ref.getRegistration()).thenReturn(reg);
+
+        final StringBuffer sb = new StringBuffer();
+        Thread t = new Thread()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    assertEquals("Should not yet have given the service to the other thread",
+                            "", sb.toString());
+                    sr.getService(b, ref, false);
+                }
+                catch (Exception e)
+                {
+                    // We expect an exception here.
+                }
+            }
+        };
+        t.start();
+
+        // Wait until the other thread has called getService();
+        Thread.sleep(250);
+
+        // This thread has waited long enough for the other thread to call getService()
+        // however the actual getService() call blocks long enough for this one to then
+        // concurrently call getService() while the other thread is in getService() of the
+        // factory. This thread will then end up in m_latch.await().
+        // The factory implementation of the other thread then throws an exception. This test
+        // ultimately checks that this thread here is not stuck waiting forwever.
+        assertNull(sr.getService(b, ref, false));
+        sb.append("Obtained service");
     }
 
     private Object getPrivateField(Object obj, String fieldName) throws NoSuchFieldException,
