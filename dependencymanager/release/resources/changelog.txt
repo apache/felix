@@ -1,3 +1,9 @@
+Release Notes - Felix - Version  org.apache.felix.dependencymanager-r6:
+======================================================================
+
+** Bug
+	* [FELIX-5045] DM Optional callbacks may sometimes be invoked before start callback.
+
 Release Notes - Felix - Version  org.apache.felix.dependencymanager-r5:
 ======================================================================
 
