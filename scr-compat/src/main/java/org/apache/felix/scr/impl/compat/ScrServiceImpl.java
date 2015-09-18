@@ -219,7 +219,7 @@ public class ScrServiceImpl implements ScrService
 
         public String[] getServices()
         {
-            return this.description.serviceInterfaces;
+            return this.description.serviceInterfaces.length == 0 ? null : this.description.serviceInterfaces;
         }
 
         public Dictionary getProperties()
