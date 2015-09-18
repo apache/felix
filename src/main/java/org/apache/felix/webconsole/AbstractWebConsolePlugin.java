@@ -207,7 +207,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
     /**
      * Detects whether this request is intended to have the headers and
      * footers of this plugin be rendered or not. This method always returns
-     * <code>true</true> and may be overwritten by plugins to detect
+     * <code>true</code> and may be overwritten by plugins to detect
      * from the actual request, whether or not to render the header and
      * footer.
      *

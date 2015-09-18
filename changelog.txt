@@ -7,6 +7,7 @@ Changes from 4.2.10 to 4.2.12
     * [FELIX-4995] - NPE when updating Apache Felix OSGi Management Console configuration without a password
     * [FELIX-5004] - Null is passed to BundleInfoProvider if plugin root is null
     * [FELIX-5031] - NPE in Web Console configuration plugin when metatype service is missing
+    * [FELIX-5041] - Cannot build web console with JDK 1.8 due to javadoc problems
 
 ** Improvement
     * [FELIX-5018] - [webconsole] "create factory configuration" link for config screen
