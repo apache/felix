@@ -18,6 +18,7 @@ package org.apache.felix.webconsole.internal.core;
 
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 
 
 /**
@@ -48,7 +49,7 @@ public class BundleContextUtil
     {
         if ( WORK_CTX_SYSTEM.equalsIgnoreCase(bc.getProperty(FWK_PROP_WORK_CONTEXT)) )
         {
-            return bc.getBundle(0).getBundleContext();
+            return bc.getBundle(Constants.SYSTEM_BUNDLE_LOCATION).getBundleContext();
         }
         return bc;
     }

@@ -496,7 +496,7 @@ class ConfigAdminSupport
         try
         {
             final ServiceReference[] refs = getBundleContext().getServiceReferences(
-                null,
+                (String)null,
                 "(&(" + Constants.OBJECTCLASS + '=' + ManagedService.class.getName() //$NON-NLS-1$
                     + ")(" + Constants.SERVICE_PID + '=' + pid + "))"); //$NON-NLS-1$ //$NON-NLS-2$
             if ( refs != null && refs.length > 0 )
