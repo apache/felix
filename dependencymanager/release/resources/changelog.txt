@@ -3,6 +3,9 @@ Release Notes - Felix - Version  org.apache.felix.dependencymanager-r6:
 
 ** Bug
 	* [FELIX-5045] DM Optional callbacks may sometimes be invoked before start callback.
+	* [FELIX-5046] Gradle wrapper is not included in DM source release
+
+Gradle wrapper is not included in DM source release
 
 Release Notes - Felix - Version  org.apache.felix.dependencymanager-r5:
 ======================================================================
