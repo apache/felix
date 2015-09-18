@@ -251,7 +251,7 @@ public final class WebConsoleUtil
     }
 
     /**
-     * Escapes HTML special chars like: <>&\r\n and space
+     * Escapes HTML special chars like: &lt;&gt;&amp;\r\n and space
      *
      *
      * @param text the text to escape
