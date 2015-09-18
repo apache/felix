@@ -99,7 +99,7 @@ task makeStaging << {
     logger.lifecycle("    Packaging binary dependencies.")    
     ant.zip(destfile: "staging/"+topdir+"-deps.zip") {
     	ant.zipfileset(dir: '..', prefix: topdir+"-src", includes: 'gradlew')
-    	ant.zipfileset(dir: '../gradle', prefix: topdir+"-src/gradle", includes: '*')    	
+    	ant.zipfileset(dir: '../gradle', prefix: topdir+"-src/gradle", includes: '**')    	
 		ant.zipfileset(dir: 'resources/deps', prefix: topdir+"-src", includes: '*')
 		ant.zipfileset(dir: '../cnf', prefix: topdir+"-src/cnf",
 		    		   includes: 'buildrepo/**,localrepo/**,releaserepo/**,plugins/**,gradle/**')
