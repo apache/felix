@@ -340,9 +340,12 @@ public class ServiceRegistry
                         if (usage.m_svcHolderRef.compareAndSet(null, h))
                         {
                             holder = h;
-                            svcObj = reg.getService(bundle);
-                            holder.m_service = svcObj;
-                            holder.m_latch.countDown();
+                            try {
+                                svcObj = reg.getService(bundle);
+                                holder.m_service = svcObj;
+                            } finally {
+                                holder.m_latch.countDown();
+                            }
                         }
                         else
                         {
