@@ -269,6 +269,12 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
      * @see org.apache.felix.dm.itest.api.FELIX4913_OptionalCallbackInvokedTwiceTest which reproduces the use case.
      */
     private final Map<Event, Event> m_invokeCallbackCache = new IdentityHashMap<>();
+
+    /**
+     * Flag used to check if the start callback has been invoked.
+     * We use this flag to ensure that we only inject optional dependencies after the start callback has been called. 
+     */
+	private boolean m_startCalled;
 	
     /**
      * Default component declaration implementation.
@@ -974,7 +980,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         if (oldState == ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED && newState == ComponentState.TRACKING_OPTIONAL) {
             invokeAutoConfigInstanceBoundDependencies();
             invokeAddRequiredInstanceBoundDependencies();
-            invoke(m_callbackStart);
+            invokeStart();
             invokeAddOptionalDependencies();
             registerService();
             notifyListeners(newState);
@@ -983,7 +989,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         if (oldState == ComponentState.TRACKING_OPTIONAL && newState == ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED) {
             unregisterService();
             invokeRemoveOptionalDependencies();
-            invoke(m_callbackStop);
+            invokeStop();
             invokeRemoveInstanceBoundDependencies();
             notifyListeners(newState);
             return true;
@@ -1006,7 +1012,17 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         return false;
     }
     
-    /**
+	private void invokeStart() {
+        invoke(m_callbackStart);
+        m_startCalled = true;
+	}
+
+    private void invokeStop() {
+        invoke(m_callbackStop);
+        m_startCalled = false;
+	}
+
+	/**
      * Sets the m_handlingChange flag that indicates if the state machine is currently running the handleChange method.
      */
     private void handlingChange(boolean transiting) {
@@ -1408,11 +1424,16 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	
 	/**
 	 * This method ensures that a dependency callback is invoked only one time;
+	 * It also ensures that if the dependency callback is optional, then we only
+	 * invoke the bind method if the component start callback has already been called. 
 	 */
 	private void invokeCallbackSafe(DependencyContext dc, EventType type, Event event) {
-	    if (m_invokeCallbackCache.put(event, event) == null) {
-	        dc.invokeCallback(type, event);
-	    }
+		if (! dc.isRequired() && ! m_startCalled) {
+			return;
+		}
+		if (m_invokeCallbackCache.put(event, event) == null) {
+			dc.invokeCallback(type, event);
+		}		
 	}
 	
 	/**
