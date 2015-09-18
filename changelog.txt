@@ -1,3 +1,9 @@
+Changes from 4.2.12 to 4.2.14
+-----------------------------
+** Bug
+    * [FELIX-5042] - Get system bundle by location, not number for global bundle list
+
+
 Changes from 4.2.10 to 4.2.12
 -----------------------------
 ** Bug
