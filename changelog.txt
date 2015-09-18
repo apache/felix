@@ -1,7 +1,16 @@
 Changes from 4.2.10 to 4.2.12
 -----------------------------
 ** Bug
+    * [FELIX-2880] - The Webconsole does not handle Vector<PrimitiveWrapper>
+    * [FELIX-3366] - The Configuration Webconsole Plugin seems to ignore the ocd ref element
+    * [FELIX-4849] - Do not call setContentLength after calling sendRedirect
+    * [FELIX-4995] - NPE when updating Apache Felix OSGi Management Console configuration without a password
     * [FELIX-5004] - Null is passed to BundleInfoProvider if plugin root is null
+    * [FELIX-5031] - NPE in Web Console configuration plugin when metatype service is missing
+
+** Improvement
+    * [FELIX-5018] - [webconsole] "create factory configuration" link for config screen
+    * [FELIX-5019] - [webconsole] "referer" parameter for configuration open/create link
 
 
 Changes from 4.2.8 to 4.2.10
