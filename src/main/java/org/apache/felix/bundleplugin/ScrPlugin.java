@@ -41,7 +41,11 @@ import aQute.bnd.osgi.Resource;
 import aQute.bnd.service.AnalyzerPlugin;
 import aQute.libg.generics.Create;
 
-
+/**
+ * Create capabilities for DS components
+ * @deprecated bnd generates these as well.
+ */
+@Deprecated
 public class ScrPlugin implements AnalyzerPlugin
 {
 
