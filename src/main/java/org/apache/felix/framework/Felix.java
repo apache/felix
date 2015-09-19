@@ -3280,9 +3280,7 @@ public class Felix extends BundleImpl implements Framework
     Bundle[] getBundles(BundleContext bc)
     {
         Collection<Bundle> bundles = m_installedBundles[IDENTIFIER_MAP_IDX].values();
-        // If the requesting bundle is something other than the system bundle, return the shrunk
-        // collection of bundles. If it *is* the system bundle, it should receive the unfiltered bundles.
-        if ( !bundles.isEmpty() && bc.getBundle() != this )
+        if ( !bundles.isEmpty() )
         {
             Set<ServiceReference<org.osgi.framework.hooks.bundle.FindHook>> hooks =
                     getHookRegistry().getHooks(org.osgi.framework.hooks.bundle.FindHook.class);
@@ -3308,6 +3306,11 @@ public class Felix extends BundleImpl implements Framework
                                 th);
                         }
                     }
+                }
+                if ( bc.getBundle() != this ) {
+                    // If the requesting bundle is something other than the system bundle, return the shrunk
+                    // collection of bundles. If it *is* the system bundle, it should receive the unfiltered bundles.
+                    bundles = shrunkBundles;
                 }
             }
         }
