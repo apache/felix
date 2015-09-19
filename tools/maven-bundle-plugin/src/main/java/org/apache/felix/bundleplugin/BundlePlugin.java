@@ -27,16 +27,24 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
-import aQute.bnd.header.OSGiHeader;
-import aQute.bnd.header.Parameters;
-import aQute.bnd.osgi.Instruction;
-import aQute.bnd.osgi.Instructions;
-import aQute.lib.collections.ExtList;
-import aQute.libg.generics.Create;
 import org.apache.maven.archiver.ManifestSection;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.archiver.MavenArchiver;
@@ -70,16 +78,22 @@ import org.codehaus.plexus.util.PropertyUtils;
 import org.codehaus.plexus.util.StringUtils;
 
 import aQute.bnd.header.Attrs;
+import aQute.bnd.header.OSGiHeader;
+import aQute.bnd.header.Parameters;
 import aQute.bnd.osgi.Analyzer;
 import aQute.bnd.osgi.Builder;
 import aQute.bnd.osgi.Constants;
 import aQute.bnd.osgi.Descriptors.PackageRef;
 import aQute.bnd.osgi.EmbeddedResource;
 import aQute.bnd.osgi.FileResource;
+import aQute.bnd.osgi.Instruction;
+import aQute.bnd.osgi.Instructions;
 import aQute.bnd.osgi.Jar;
 import aQute.bnd.osgi.Packages;
 import aQute.bnd.osgi.Processor;
+import aQute.lib.collections.ExtList;
 import aQute.lib.spring.SpringXMLType;
+import aQute.libg.generics.Create;
 
 
 /**
@@ -1502,8 +1516,7 @@ public class BundlePlugin extends AbstractMojo
         properties.put( "classifier", classifier == null ? "" : classifier );
 
         // Add default plugins
-        header( properties, Analyzer.PLUGIN, ScrPlugin.class.getName() + ","
-                                           + BlueprintPlugin.class.getName() + ","
+        header( properties, Analyzer.PLUGIN, BlueprintPlugin.class.getName() + ","
                                            + SpringXMLType.class.getName() );
 
         return properties;
@@ -1667,7 +1680,7 @@ public class BundlePlugin extends AbstractMojo
                 scanner.setBasedir( sourcePath );
                 if ( resource.getIncludes() != null && !resource.getIncludes().isEmpty() )
                 {
-                    scanner.setIncludes( ( String[] ) resource.getIncludes().toArray( EMPTY_STRING_ARRAY ) );
+                    scanner.setIncludes( resource.getIncludes().toArray( EMPTY_STRING_ARRAY ) );
                 }
                 else
                 {
@@ -1676,7 +1689,7 @@ public class BundlePlugin extends AbstractMojo
 
                 if ( resource.getExcludes() != null && !resource.getExcludes().isEmpty() )
                 {
-                    scanner.setExcludes( ( String[] ) resource.getExcludes().toArray( EMPTY_STRING_ARRAY ) );
+                    scanner.setExcludes( resource.getExcludes().toArray( EMPTY_STRING_ARRAY ) );
                 }
 
                 scanner.addDefaultExcludes();
