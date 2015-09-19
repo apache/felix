@@ -207,10 +207,12 @@ public class ServiceRaceTest extends TestBase {
         });
         
         // Remove configuration (asynchronously)
+        final Ensure stepConfDeleted = new Ensure(false);
         schedule(new Runnable() {
             public void run() {
                 try {
                     conf.delete();
+                    stepConfDeleted.step(1);
                 }
                 catch (IOException e) {
                     warn("error while unconfiguring", e);
@@ -222,6 +224,8 @@ public class ServiceRaceTest extends TestBase {
         expectedStep += 2; // stop/destroy
         expectedStep += DEPENDENCIES; // removed all dependencies
         step.waitForStep(expectedStep, STEP_WAIT);
+        // Make sure configuration is removed
+        stepConfDeleted.waitForStep(1, STEP_WAIT);
         step.ensure();
         Assert.assertEquals(0, clientImpl.getDependencies());
 
