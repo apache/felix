@@ -91,6 +91,12 @@ public class RegistrationManagerTest
         }
 
         @Override
+        void postRegister(Object t)
+        {
+            // TODO Auto-generated method stub
+        }
+
+        @Override
         void unregister(Object serviceRegistration)
         {
             try
@@ -107,7 +113,7 @@ public class RegistrationManagerTest
         @Override
         void log(int level, String message, Object[] arguments, Throwable ex)
         {
-            if ( arguments.length == 1 && (arguments[0] instanceof ArrayList))
+            if ( arguments != null && arguments.length == 1 && (arguments[0] instanceof ArrayList))
             {
                 ArrayList<RegState> opqueue = ( ArrayList<org.apache.felix.scr.impl.manager.RegistrationManager.RegState> ) arguments[0];
 //                System.out.println("opqueue: " + opqueue);
@@ -140,6 +146,6 @@ public class RegistrationManagerTest
             // TODO Auto-generated method stub
             
         }
-        
+
     }
 }

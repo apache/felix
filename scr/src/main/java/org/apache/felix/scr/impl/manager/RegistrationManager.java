@@ -67,15 +67,14 @@ abstract class RegistrationManager<T>
         {
             return regState.toString();
         }
-        
-        
-        
+
     }
     private final Lock registrationLock = new ReentrantLock();
     //Deque, ArrayDeque if we had java 6
     private final List<RegStateWrapper> opqueue = new ArrayList<RegStateWrapper>();
 
     private volatile T m_serviceRegistration;
+
     /**
      * 
      * @param desired desired registration state
@@ -154,6 +153,7 @@ abstract class RegistrationManager<T>
                     if ( next.getRegState() == RegState.registered)
                     {
                         m_serviceRegistration = serviceRegistration;
+                        postRegister( m_serviceRegistration );
                     }
                     next.getLatch().countDown();
                 }
@@ -199,6 +199,8 @@ abstract class RegistrationManager<T>
     }
     
     abstract T register(String[] services);
+
+    abstract void postRegister(T t);
 
     abstract void unregister(T serviceRegistration);
     

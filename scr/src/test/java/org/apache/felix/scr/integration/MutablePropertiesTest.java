@@ -28,6 +28,7 @@ import junit.framework.Assert;
 import junit.framework.TestCase;
 
 import org.apache.felix.scr.integration.components.MutatingService;
+import org.apache.felix.scr.integration.components.MutatingServiceConsumer;
 import org.apache.felix.scr.integration.components.SimpleServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,6 +36,7 @@ import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
+import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 
 
 @RunWith(JUnit4TestRunner.class)
@@ -207,5 +209,27 @@ public class MutablePropertiesTest extends ComponentTestBase
         for (String p : props) {
             Assert.assertFalse("Should not contain property " + p, Arrays.asList(serviceReference.getPropertyKeys()).contains(p));
         }
+    }
+
+    @Test
+    public void test_mutable_properties_consumer() throws Exception
+    {
+        ServiceReference<MutatingServiceConsumer> mscRef = bundleContext.getServiceReference(MutatingServiceConsumer.class);
+        MutatingServiceConsumer msc = bundleContext.getService(mscRef);
+        assertMsc(msc, null, null, null);
+
+        String componentName = "components.mutable.properties.return2";
+        ComponentDescriptionDTO cd = findComponentDescriptorByName(componentName);
+
+        enableAndCheck(cd);
+
+        assertMsc(msc, false, true, null);
+    }
+
+    private void assertMsc(MutatingServiceConsumer msc, Boolean set, Boolean updated, Boolean unset)
+    {
+        Assert.assertEquals("set ", set, msc.isUpdatedInSet());
+        Assert.assertEquals("updated ", updated, msc.isUpdatedInUpdated());
+        Assert.assertEquals("unset ", unset, msc.isUpdatedInUnset());
     }
 }

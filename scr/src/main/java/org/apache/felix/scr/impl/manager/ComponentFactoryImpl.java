@@ -276,6 +276,11 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         throw new IllegalStateException( "ComponentFactory service properties are immutable" );
     }
 
+    @Override
+    void postRegister()
+    {
+        //do nothing
+    }
 
     public Dictionary<String, Object> getServiceProperties()
     {
@@ -412,6 +417,5 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
             cms.addAll(m_componentInstances.keySet());
         }
     }
-
 
 }

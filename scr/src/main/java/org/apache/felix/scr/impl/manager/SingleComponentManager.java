@@ -499,6 +499,15 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     }
 
     @Override
+    void postRegister()
+    {
+        if (m_serviceProperties != null)
+        {
+            updateServiceRegistration();
+        }
+    }
+
+    @Override
     public Dictionary<String, Object> getServiceProperties()
     {
         if ( m_serviceProperties != null )
@@ -521,6 +530,10 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 {
                     sr.setProperties( regProps );
                 }
+                else
+                {
+                    log( LogService.LOG_DEBUG, "Not updating service registration, no change in properties", null, null );
+                }
             }
             catch ( IllegalStateException ise )
             {
@@ -535,6 +548,10 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             {
                 log( LogService.LOG_ERROR, "Unexpected problem when updating service registration", t );
             }
+        }
+        else
+        {
+            log( LogService.LOG_DEBUG, "No service registration to update", null, null );
         }
     }
 

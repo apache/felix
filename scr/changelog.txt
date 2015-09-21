@@ -1,9 +1,10 @@
 Changes from 2.0.2 to 2.0.4
 ---------------------------
 ** Improvement
-    * [FELIX-5040] When global extender is turned on, get framwork bundle using location not id.
+    * [FELIX-5040] When global extender is turned on, get framework bundle using location not id.
 
 ** Bug
+    * [FELIX-5044] (felix mutable service properties) Make sure service property changes eventually get shown.
 
 
 Changes from 2.0.0 to 2.0.2
