@@ -28,17 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import aQute.bnd.differ.Baseline;
-import aQute.bnd.differ.Baseline.Info;
-import aQute.bnd.differ.DiffPluginImpl;
-import aQute.bnd.osgi.Instructions;
-import aQute.bnd.osgi.Jar;
-import aQute.bnd.osgi.Processor;
-import aQute.bnd.service.diff.Delta;
-import aQute.bnd.service.diff.Diff;
-import aQute.bnd.version.Version;
-import aQute.service.reporter.Reporter;
-
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.metadata.ArtifactMetadataRetrievalException;
@@ -58,6 +47,17 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.StringUtils;
+
+import aQute.bnd.differ.Baseline;
+import aQute.bnd.differ.Baseline.Info;
+import aQute.bnd.differ.DiffPluginImpl;
+import aQute.bnd.osgi.Instructions;
+import aQute.bnd.osgi.Jar;
+import aQute.bnd.osgi.Processor;
+import aQute.bnd.service.diff.Delta;
+import aQute.bnd.service.diff.Diff;
+import aQute.bnd.version.Version;
+import aQute.service.reporter.Reporter;
 
 /**
  * Abstract BND Baseline check between two bundles.
@@ -512,7 +512,7 @@ abstract class AbstractBaselinePlugin
         for ( Iterator<ArtifactVersion> versionIterator = versions.iterator(); versionIterator.hasNext(); )
         {
             ArtifactVersion version = versionIterator.next();
-            if ( version.getQualifier().endsWith( "SNAPSHOT" ) )
+            if ( version.getQualifier() != null && version.getQualifier().endsWith( "SNAPSHOT" ) )
             {
                 versionIterator.remove();
             }
