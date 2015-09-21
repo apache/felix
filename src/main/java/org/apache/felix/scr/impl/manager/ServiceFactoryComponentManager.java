@@ -21,6 +21,7 @@ package org.apache.felix.scr.impl.manager;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Dictionary;
 import java.util.IdentityHashMap;
 
 import org.apache.felix.scr.impl.config.ComponentContainer;
@@ -41,6 +42,19 @@ import org.osgi.service.log.LogService;
  */
 public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
 {
+
+    @Override
+    public void setServiceProperties(Dictionary<String, ?> serviceProperties)
+    {
+        throw new IllegalStateException( "Bundle scoped service properties are immutable" );
+    }
+
+
+    @Override
+    void postRegister()
+    {
+        // do nothing
+    }
 
     // maintain the map of ComponentContext objects created for the
     // service instances
