@@ -40,9 +40,9 @@
  </description>
 
  <scm>
-  <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/bundleplugin</connection>
-  <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/bundleplugin</developerConnection>
-  <url>http://svn.apache.org/repos/asf/felix/trunk/bundleplugin</url>
+     <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/tools/maven-bundle-plugin</connection>
+     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/tools/maven-bundle-plugin</developerConnection>
+     <url>http://svn.apache.org/viewvc/felix/trunk/tools/maven-bundle-plugin</url>
  </scm>
 
  <properties>
