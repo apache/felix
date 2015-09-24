@@ -2,6 +2,8 @@ Changes from 1.4.4 to 1.4.6
 ---------------------------
 ** Improvement
     * [FELIX-5006] - EventAdmin threads should be named
+** Bug
+    * [FElIX-5051] - Memory leak in async delivery
 
 
 Changes from 1.4.2 to 1.4.4
