@@ -223,7 +223,7 @@ public class JettyServiceTest extends TestCase
 
         //Pause since service is multi-threaded.
         //Fail if takes too long.
-        if (!testLatch.await(6, TimeUnit.SECONDS))
+        if (!testLatch.await(10, TimeUnit.SECONDS))
         {
             fail("Test Was not asserted");
         }
