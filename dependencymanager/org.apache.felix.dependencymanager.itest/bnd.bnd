@@ -14,13 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
--runbundles:  \
+-runbundles: \
 	org.apache.felix.metatype;version=1.0.4,\
 	org.apache.felix.gogo.runtime;version=0.10.0,\
 	org.apache.felix.log;version=1.0.1,\
 	org.apache.felix.configadmin;version=1.8.6,\
 	org.apache.felix.dependencymanager;version=latest,\
-	org.apache.felix.dependencymanager.shell;version=latest
+	org.apache.felix.dependencymanager.shell;version=latest,\
+	biz.aQute.junit;version=3.0.0
 -runee: JavaSE-1.7
 -runvm: -ea
 -runfw: org.apache.felix.framework

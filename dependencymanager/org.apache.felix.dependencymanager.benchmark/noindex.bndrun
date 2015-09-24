@@ -23,12 +23,12 @@
 	org.apache.felix.gogo.shell;version=0.10.0,\
 	org.apache.felix.gogo.runtime;version=0.10.0,\
 	org.apache.felix.configadmin;version=1.8.0,\
-	org.apache.felix.dependencymanager.benchmark.scenario,\
-	org.apache.felix.dependencymanager.benchmark.dependencymanager,\
-    org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel,\
-    org.apache.felix.dependencymanager.benchmark.controller
+	org.apache.felix.dependencymanager.benchmark.scenario;version=latest,\
+	org.apache.felix.dependencymanager.benchmark.dependencymanager;version=latest,\
+    org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel;version=latest,\
+    org.apache.felix.dependencymanager.benchmark.controller;version=latest
 	
--runfw: org.apache.felix.framework;version='[4.4.0,4.4.0]'
+-runfw: org.apache.felix.framework;version='[5.2.0,5.2.0]'
 
 -runproperties:  \
 	ds.loglevel=warn,\
