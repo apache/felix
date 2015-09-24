@@ -74,7 +74,7 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
     private volatile CountDownLatch m_startLatch, m_stopLatch;
 
     /**
-     * When a components is called in its start or stop method, we'll perform some processing if the following
+     * When a component is called in its start or stop method, we'll perform some processing if the following
      * attribute is true.
      */
     private volatile boolean m_doProcessingInStartStop;
