@@ -1,11 +1,16 @@
-Release Notes - Felix - Version  org.apache.felix.dependencymanager-r6:
+Release Notes - Felix - Version org.apache.felix.dependencymanager-r6
 ======================================================================
 
 ** Bug
-	* [FELIX-5045] DM Optional callbacks may sometimes be invoked before start callback.
-	* [FELIX-5046] Gradle wrapper is not included in DM source release
+    * [FELIX-4974] - DM filter indices not enabled if the dependencymanager bundle is started first
+    * [FELIX-5045] - DM Optional callbacks may sometimes be invoked before start callback
+    * [FELIX-5046] - Gradle wrapper is not included in DM source release
 
-Gradle wrapper is not included in DM source release
+** Improvement
+    * [FELIX-4921] - Ensure binary equality of the same bundle between successive DM releases
+    * [FELIX-4922] - Simplify DM changelog management 
+    * [FELIX-5054] - Clean-up instance bound dependencies when component is destroyed
+    * [FELIX-5055] - Upgrade DM to BndTools 3.0.0
 
 Release Notes - Felix - Version  org.apache.felix.dependencymanager-r5:
 ======================================================================
