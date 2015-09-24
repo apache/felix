@@ -39,10 +39,9 @@ public final class RequestDispatcherImpl implements RequestDispatcher
     private final RequestInfo requestInfo;
     private final ServletResolution resolution;
 
-    public RequestDispatcherImpl(final ServletResolution resolution, 
+    public RequestDispatcherImpl(final ServletResolution resolution,
     		final RequestInfo requestInfo)
     {
-    	System.out.println("New dispatcher with " + requestInfo);
         this.resolution = resolution;
         this.requestInfo = requestInfo;
     }
@@ -72,7 +71,7 @@ public final class RequestDispatcherImpl implements RequestDispatcher
             final FilterHandler[] filterHandlers = this.resolution.handlerRegistry.getFilterHandlers(this.resolution.handler, DispatcherType.FORWARD, requestURI);
 
             final FilterChain filterChain = new InvocationChain(resolution.handler, filterHandlers);
-            filterChain.doFilter( req, (HttpServletResponse) response);
+            filterChain.doFilter( req, response);
         }
         finally
         {
@@ -99,6 +98,6 @@ public final class RequestDispatcherImpl implements RequestDispatcher
         final FilterHandler[] filterHandlers = this.resolution.handlerRegistry.getFilterHandlers(this.resolution.handler, DispatcherType.INCLUDE, requestURI);
 
         final FilterChain filterChain = new InvocationChain(resolution.handler, filterHandlers);
-        filterChain.doFilter( req, (HttpServletResponse) response);
+        filterChain.doFilter( req, response);
     }
 }
