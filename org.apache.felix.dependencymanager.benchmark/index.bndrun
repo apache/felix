@@ -23,18 +23,18 @@
 	org.apache.felix.gogo.shell;version=0.10.0,\
 	org.apache.felix.gogo.runtime;version=0.10.0,\
 	org.apache.felix.configadmin;version=1.8.0,\
-	org.apache.felix.dependencymanager.benchmark.scenario,\
-	org.apache.felix.dependencymanager.benchmark.dependencymanager,\
-    org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel,\
-    org.apache.felix.dependencymanager.benchmark.controller
+	org.apache.felix.dependencymanager.benchmark.scenario;version=latest,\
+	org.apache.felix.dependencymanager.benchmark.dependencymanager;version=latest,\
+    org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel;version=latest,\
+    org.apache.felix.dependencymanager.benchmark.controller;version=latest
 	
--runfw: org.apache.felix.framework;version='[4.4.0,4.4.0]'
+-runfw: org.apache.felix.framework;version='[5.2.0,5.2.0]'
 
 -runproperties:  \
 	ds.loglevel=warn,\
 	org.osgi.framework.bootdelegation='sun.*,com.sun.*,org.netbeans.*',\
 	org.apache.felix.dependencymanager.filterindex='objectClass,id'
 -runvm: -server -Xmx1024m -Xms1024m
--runee: JavaSE-1.8
+-runee: JavaSE/compact1-1.9
 javac.source:          1.8
 javac.target:          1.8
