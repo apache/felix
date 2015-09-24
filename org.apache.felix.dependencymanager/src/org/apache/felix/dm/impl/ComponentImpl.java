@@ -996,6 +996,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         }
         if (oldState == ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED && newState == ComponentState.WAITING_FOR_REQUIRED) {
             invoke(m_callbackDestroy);
+            removeInstanceBoundDependencies();
             invokeRemoveRequiredDependencies();
             notifyListeners(newState);
             if (! someDependenciesNeedInstance()) {
@@ -1436,6 +1437,19 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		}		
 	}
 	
+	/**
+	 * Removes and closes all instance bound dependencies.
+	 * This method is called when a component is destroyed.
+	 */
+    private void removeInstanceBoundDependencies() {
+    	for (DependencyContext dep : m_dependencies) {
+    		if (dep.isInstanceBound()) {
+    			m_dependencies.remove(dep);
+    			dep.stop();
+    		}
+    	}
+    }
+
 	/**
 	 * Clears the cache of invoked components callbacks.
 	 * We only clear the cache when the state machine is not running.
