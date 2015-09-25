@@ -1,3 +1,15 @@
+Changes from 2.5.5 to 3.0.0
+---------------------------
+
+** Improvement
+    * [FELIX-5047] - Disable bnd ScrPlugin by default
+    * [FELIX-5030] - Do not require a pom.xml when Polyglot Maven is used
+    * [FELIX-5029] - Update to bnd 3.0.0
+
+Especially the update to bnd 3.0.0 brings many fixes and improvements,
+including support for OSGi Enterprise R6 DS annotations and Metatype
+annotations.
+
 Changes from 2.5.4 to 2.5.5
 ---------------------------
 
