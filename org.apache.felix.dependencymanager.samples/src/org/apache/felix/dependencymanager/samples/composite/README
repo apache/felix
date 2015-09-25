@@ -24,4 +24,4 @@ Dependencies are injected in all objects being part of the composition.
 
 To see logs, type this command under the gogo shell:
 
-g! log info|grep compositefactory
+g! log info|grep composite
