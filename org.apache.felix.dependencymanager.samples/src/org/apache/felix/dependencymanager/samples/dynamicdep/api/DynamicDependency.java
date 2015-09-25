@@ -33,8 +33,8 @@ import aQute.bnd.annotation.metatype.Configurable;
  * - LogService
  * - Configuration with PID="org.apache.felix.dependencymanager.samples.dynamicdep.api.DynamicDependencyConfiguration"
  * 
- * We the define a dynamic dependency on a Storage Service from our init method and we configure the dependency filter and
- * required from using the injected configuration in our updated method.
+ * We then define a dynamic dependency on a Storage Service from our init method and we configure the dependency filter and
+ * required from using the configuration injected in our updated method.
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
