@@ -40,7 +40,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.felix.resolver.util.ArrayMap;
 import org.apache.felix.resolver.util.OpenHashMap;
-
 import org.osgi.framework.namespace.BundleNamespace;
 import org.osgi.framework.namespace.ExecutionEnvironmentNamespace;
 import org.osgi.framework.namespace.HostNamespace;
@@ -1730,12 +1729,12 @@ public class ResolverImpl implements Resolver
         }
 
         Set<Capability> packageSources = sources.get(cap);
-        if(packageSources == null) 
+        if(packageSources == null)
         {
             return new HashSet<Capability>();
         }
 
-        return packageSources;  
+        return packageSources;
     }
 
     private static void getPackageSourcesInternal(
@@ -2074,7 +2073,7 @@ public class ResolverImpl implements Resolver
         }
     }
 
-    private static class Packages
+    public static class Packages
     {
         public final OpenHashMap<String, Blame> m_exportedPkgs;
         public final OpenHashMap<String, List<Blame>> m_importedPkgs;
