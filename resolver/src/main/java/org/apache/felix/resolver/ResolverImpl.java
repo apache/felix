@@ -1717,7 +1717,25 @@ public class ResolverImpl implements Resolver
     private static Set<Capability> getPackageSources(
             Capability cap, Map<Resource, Packages> resourcePkgMap)
     {
-        return resourcePkgMap.get(cap.getResource()).m_sources.get(cap);
+        Resource resource = cap.getResource();
+        if(resource == null)
+        {
+            return new HashSet<Capability>();
+        }
+
+        OpenHashMap<Capability, Set<Capability>> sources = resourcePkgMap.get(resource).m_sources;
+        if(sources == null)
+        {
+            return new HashSet<Capability>();
+        }
+
+        Set<Capability> packageSources = sources.get(cap);
+        if(packageSources == null) 
+        {
+            return new HashSet<Capability>();
+        }
+
+        return packageSources;  
     }
 
     private static void getPackageSourcesInternal(
