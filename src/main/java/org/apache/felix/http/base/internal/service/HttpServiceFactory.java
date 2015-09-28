@@ -115,13 +115,13 @@ public final class HttpServiceFactory
 
     public void stop()
     {
-        this.context = null;
         if ( this.httpServiceReg != null )
         {
             this.httpServiceReg.unregister();
             this.httpServiceReg = null;
         }
 
+        this.context = null;
         this.sharedHttpService = null;
 
         this.contextAttributeListenerManager.close();
@@ -134,13 +134,17 @@ public final class HttpServiceFactory
     @Override
     public HttpService getService(final Bundle bundle, final ServiceRegistration<HttpService> reg)
     {
-        return new PerBundleHttpServiceImpl(bundle,
-                this.sharedHttpService,
-                this.context,
-                this.contextAttributeListenerManager,
-                this.sharedContextAttributes,
-                this.requestListenerManager,
-                this.requestAttributeListenerManager);
+        final ServletContext servletContext = this.context;
+        if ( servletContext != null ) {
+            return new PerBundleHttpServiceImpl(bundle,
+                    this.sharedHttpService,
+                    this.context,
+                    this.contextAttributeListenerManager,
+                    this.sharedContextAttributes,
+                    this.requestListenerManager,
+                    this.requestAttributeListenerManager);
+        }
+        return null;
     }
 
     @Override
