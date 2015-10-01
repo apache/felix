@@ -80,7 +80,6 @@ public final class RequestDispatcherImpl implements RequestDispatcher
             if (!request.isAsyncStarted())
             {
                 response.flushBuffer();
-                response.getWriter().close();
             }
         }
     }
