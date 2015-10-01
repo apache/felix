@@ -49,11 +49,7 @@
                         </Bundle-Activator>
                         <Export-Package>
                             org.apache.felix.http.api,
-                            org.osgi.service.http,
-                            org.osgi.service.http.context,
-                            org.osgi.service.http.runtime,
-                            org.osgi.service.http.runtime.dto,
-                            org.osgi.service.http.whiteboard
+                            org.osgi.service.http.*;-split-package:=merge-first
                         </Export-Package>
                         <Private-Package>
                             org.apache.felix.http.base.*,

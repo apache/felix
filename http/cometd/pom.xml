@@ -67,6 +67,7 @@
                             cometd-java-server;inline=true,
                             cometd-java-common;inline=true,
                             jetty-util;inline=true,
+                            jetty-util-ajax;inline=true,
                         </Embed-Dependency>
                         <Import-Package>
                         	javax.imageio;resolution:=optional,
@@ -103,6 +104,11 @@
             <version>${jetty.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-util-ajax</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
         	<groupId>org.cometd.java</groupId>
         	<artifactId>cometd-java-server</artifactId>
         	<version>${cometd.version}</version>
@@ -135,12 +141,12 @@
                     <artifactId>jetty-http</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>        
+        </dependency>
         <dependency>
         	<groupId>org.cometd.java</groupId>
         	<artifactId>cometd-java-common</artifactId>
         	<version>${cometd.version}</version>
-        </dependency>            
+        </dependency>
         <dependency>
             <groupId>org.cometd.java</groupId>
             <artifactId>bayeux-api</artifactId>
