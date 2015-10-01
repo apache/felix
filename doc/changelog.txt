@@ -1,4 +1,15 @@
-Changes from 0.10.0 to 0.12.0
+Changes from 0.14.0 to 0.16.0
+-----------------------------
+** Improvement 
+    * FELIX-5021 [GOGO] Use system bundle to find bundles
+    * FELIX-5009 Relative URIs would be nice for install and update
+    * FELIX-5008 gogo usage messages could be less confusing
+    * FELIX-3499 felix:cd command works only with relative paths
+
+** Bug 
+    * FELIX-4969 cd refuses to leave initial directory
+
+Changes from 0.12.0 to 0.14.0
 -----------------------------
 
 * Fix a NPE with the obr:info command
