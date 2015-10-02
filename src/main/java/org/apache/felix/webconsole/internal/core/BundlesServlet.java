@@ -72,7 +72,6 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.Version;
 import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
@@ -1155,9 +1154,9 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             appendProperty( val, refs[i], Constants.SERVICE_PID, "Service PID" );
             appendProperty( val, refs[i], "org.apache.felix.karaf.features.configKey", "Feature PID" );
             appendProperty( val, refs[i], ConfigurationAdmin.SERVICE_FACTORYPID, "Factory PID" );
-            appendProperty( val, refs[i], ComponentConstants.COMPONENT_NAME, "Component Name" );
-            appendProperty( val, refs[i], ComponentConstants.COMPONENT_ID, "Component ID" );
-            appendProperty( val, refs[i], ComponentConstants.COMPONENT_FACTORY, "Component Factory" );
+            appendProperty( val, refs[i], "component.name", "Component Name" );
+            appendProperty( val, refs[i], "component.id", "Component ID" );
+            appendProperty( val, refs[i], "component.factory", "Component Factory" );
             appendProperty( val, refs[i], Constants.SERVICE_DESCRIPTION, "Description" );
             appendProperty( val, refs[i], Constants.SERVICE_VENDOR, "Vendor" );
 
