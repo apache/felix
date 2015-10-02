@@ -28,7 +28,7 @@
 
     <artifactId>org.apache.felix.webconsole</artifactId>
     <packaging>bundle</packaging>
-    <version>4.2.13-SNAPSHOT</version>
+    <version>4.2.14</version>
 
     <name>Apache Felix Web Management Console</name>
     <description>
@@ -49,9 +49,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/webconsole</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/webconsole</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/webconsole</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.webconsole-4.2.14</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.webconsole-4.2.14</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.webconsole-4.2.14</url>
     </scm>
 
     <build>
