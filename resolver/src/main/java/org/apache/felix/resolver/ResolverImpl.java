@@ -2235,6 +2235,10 @@ public class ResolverImpl implements Resolver
             this.m_allCandidates = allCandidates;
             this.m_resource = resource;
             this.m_pkgName = pkgName;
+            if (blame1 == null)
+            {
+                throw new NullPointerException("First blame cannot be null.");
+            }
             this.m_blame1 = blame1;
             this.m_blame2 = blame2;
         }
@@ -2276,7 +2280,9 @@ public class ResolverImpl implements Resolver
         public Collection<Requirement> getUnresolvedRequirements() {
             if (m_blame2 == null)
             {
-                return Collections.emptyList();
+                // This is an export conflict so there is only the first blame;
+                // use its requirement.
+                return Collections.singleton(m_blame1.m_reqs.get(0));
             }
             else
             {
