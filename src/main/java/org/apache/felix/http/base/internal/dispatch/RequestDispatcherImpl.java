@@ -25,7 +25,6 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.registry.ServletResolution;
@@ -80,6 +79,16 @@ public final class RequestDispatcherImpl implements RequestDispatcher
             if (!request.isAsyncStarted())
             {
                 response.flushBuffer();
+                try {
+                    try {
+                        response.getWriter().close();
+                    } catch ( final IllegalStateException ise ) {
+                        // output stream has been used
+                        response.getOutputStream().close();
+                    }
+                } catch ( final Exception ignore ) {
+                    // ignore everything, see FELIX-5053
+                }
             }
         }
     }
