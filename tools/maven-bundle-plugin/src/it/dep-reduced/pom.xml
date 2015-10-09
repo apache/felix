@@ -30,6 +30,11 @@ under the License.
       <artifactId>commons-io</artifactId>
       <version>2.4</version>
     </dependency>
+    <dependency>
+    <groupId>org.apache.commons</groupId>
+    <artifactId>commons-compress</artifactId>
+    <version>1.10</version>
+</dependency>
   </dependencies>
   <build>
     <plugins>
@@ -41,8 +46,7 @@ under the License.
         <configuration>
           <createDependencyReducedPom>true</createDependencyReducedPom>
           <instructions>
-            <Embed-Dependency>*;scope=compile</Embed-Dependency>
-            <Export-Package>org.apache.commons.io</Export-Package>
+            <Embed-Dependency>commons-io</Embed-Dependency>
           </instructions>
         </configuration>
       </plugin>
