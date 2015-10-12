@@ -159,8 +159,12 @@ public class HookRegistry
                     SortedSet<ServiceReference<?>> hooks = m_allHooks.get(serviceName);
                     if (hooks != null)
                     {
-                        hooks = new TreeSet<ServiceReference<?>>(hooks);
-                        m_allHooks.put(serviceName, hooks);
+                        TreeSet<ServiceReference<?>> newHooks = new TreeSet<ServiceReference<?>>(Collections.reverseOrder());
+                        for (ServiceReference<?> hook : hooks) {
+                            newHooks.add(hook); // addAll() does not re-sort
+                        }
+
+                        m_allHooks.put(serviceName, newHooks);
                     }
                 }
             }
