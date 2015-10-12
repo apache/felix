@@ -161,7 +161,7 @@ public class HookRegistry
                     {
                         TreeSet<ServiceReference<?>> newHooks = new TreeSet<ServiceReference<?>>(Collections.reverseOrder());
                         for (ServiceReference<?> hook : hooks) {
-                            newHooks.add(hook); // addAll() does not re-sort
+                            newHooks.add(hook); // copy constructor / addAll() does not re-sort
                         }
 
                         m_allHooks.put(serviceName, newHooks);
