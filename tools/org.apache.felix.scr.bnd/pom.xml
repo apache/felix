@@ -92,12 +92,22 @@
                             <!-- exclude provided dependencies -->
                             <artifactSet>
                                 <excludes>
-                                    <!-- Don't include anything from bndlib -->
+                                    <!-- Don't include anything from bndlib (as this is always part of the classpath) -->
                                     <exclude>biz.aQute.bnd:bndlib</exclude>
-                                    <!-- Don't include any org.osgi references as those are only referenced constants! -->
-                                    <exclude>org.osgi</exclude>
                                 </excludes>
                             </artifactSet>
+                            <filters>
+                                <filter>
+                                    <artifact>org.osgi</artifact>
+                                    <!-- exclude everything which is already included in bndlib -->
+                                    <excludes>
+                                        <exclude>org/osgi/resource</exclude>
+                                        <exclude>org/osgi/service/component/annotations</exclude>
+                                        <exclude>org/osgi/service/metatype/annotations</exclude>
+                                        <exclude>org/osgi/service/repository</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
                         </configuration>
                     </execution>
                 </executions>
