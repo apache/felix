@@ -4,7 +4,6 @@ Changes from 5.2.0 to 5.4.0
 ** Improvement
     * Update to framework and main 5.4.0
     * Update to latest obr version 2.0.6
-    * Update to latest gogo shell 0.12.0
     * Update to latest gogo commands 0.16.0
 
 Changes from 5.0.1 to 5.2.0
