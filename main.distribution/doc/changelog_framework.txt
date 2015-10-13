@@ -1,3 +1,17 @@
+Changes from 5.2.0 to 5.4.0
+---------------------------
+
+** Bug
+    * [FELIX-5043] - Potential of waiting forever in ServiceRegistry.getService()
+    * [FELIX-5061] - Optional resource fragment with requirements that cause class space consistency issues with the host export cause unexpected ResolutionExceptions
+    * [FELIX-5064] - Framework should provide service capabilities for registered services
+    * [FELIX-5075] - Framework hooks not re-sorted on service ranking update
+
+** Improvement
+    * [FELIX-5014] - Support Windows 10 for Bundle-NativeCode
+    * [FELIX-5034] - Reduce and correct locking related to the hook registry
+    * Update to latest resolver 1.8.0
+
 Changes from 5.0.1 to 5.2.0
 ---------------------------
 ** Bug
