@@ -1,3 +1,9 @@
+Changes from 1.10.0 to 1.9.12
+-----------------------------
+** Improvement
+    * [FELIX-5072] - Support optional property "pattern" in @SlingFilter annotation
+
+
 Changes from 1.9.12 to 1.9.10
 -----------------------------
 ** Improvement

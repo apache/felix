@@ -1,5 +1,5 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one
+  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
  * regarding copyright ownership.  The ASF licenses this file
@@ -34,6 +34,7 @@ import org.apache.felix.scrplugin.description.ComponentDescription;
 import org.apache.felix.scrplugin.description.PropertyDescription;
 import org.apache.felix.scrplugin.description.PropertyType;
 import org.apache.felix.scrplugin.description.ServiceDescription;
+import org.apache.felix.scrplugin.helper.StringUtils;
 
 /**
  * This is the processor for the Apache Felix Sling annotations.
@@ -187,6 +188,19 @@ public class SlingAnnotationProcessor implements AnnotationProcessor {
         }
         classDescription.add(pd);
 
+        // property pattern = sling.filter.pattern
+        final String pattern = cad.getStringValue("pattern", "");
+        if(!StringUtils.isEmpty(pattern)) {
+            final PropertyDescription pdPattern = new PropertyDescription(cad);
+            pdPattern.setName("sling.filter.pattern");
+            pdPattern.setValue(pattern);
+            pdPattern.setType(PropertyType.String);
+            if (metatype) {
+            	pdPattern.setPrivate(true);
+            }
+            classDescription.add(pdPattern);        	
+        }
+        
         // property scope
         final String[] scopes;
         final Object val = cad.getValue("scope");
