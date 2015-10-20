@@ -117,7 +117,8 @@ public abstract class ComponentTestBase
     // method include it when starting the OSGi framework JVM
     protected static String paxRunnerVmOption = null;
 
-    protected static String DS_LOGLEVEL = "debug";
+    //To investigate any problems at all set to "debug"
+    protected static String DS_LOGLEVEL = "warn";
 
     protected static String bsnVersionUniqueness = "single";
 
@@ -916,9 +917,9 @@ public abstract class ComponentTestBase
                 while ( true )
                 {
                     entry = m_logQueue.take();
-                    if ( entry.getLevel() <= 2 )
+                    if ( entry.getLevel() <= 2 && acceptWarning( entry.getMessage() ) )
                     {
-                        if ( m_warnings.size() < 1024 && acceptWarning( entry.getMessage() ) )
+                        if ( m_warnings.size() < 1024 )
                         {
                             m_warnings.add( entry.getMessage() );
                         }
