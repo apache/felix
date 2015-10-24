@@ -28,7 +28,7 @@
 
     <name>Apache Felix Http Jetty</name>
     <artifactId>org.apache.felix.http.jetty</artifactId>
-    <version>3.1.1-SNAPSHOT</version>
+    <version>3.1.3-SNAPSHOT</version>
     <packaging>jar</packaging>
     
     <scm>
@@ -191,7 +191,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>3.0.1-SNAPSHOT</version>
+            <version>3.0.3-SNAPSHOT</version>
         </dependency>
   <!-- Testing -->
         <dependency>

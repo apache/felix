@@ -313,6 +313,8 @@ public class ScrCommand implements ScrInfo
             out.println( "Component Description:");
             out.print( "  Name: " );
             out.println( component.name );
+            out.print( "  Implementation Class: " );
+            out.println( component.implementationClass );
             out.print( "  Default State: " );
             out.println( component.defaultEnabled ? "enabled" : "disabled" );
             out.print( "  Activation: " );

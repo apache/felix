@@ -36,7 +36,8 @@ public class ComponentConcurrencyTest extends ComponentTestBase
         		"FrameworkEvent ERROR",
         		"Could not get service from ref",
         		"Failed creating the component instance; see log for reason",
-        		"Cannot create component instance due to failure to bind reference"};
+        		"Cannot create component instance due to failure to bind reference",
+        		"DependencyManager : invokeBindMethod : Service not available from service registry for ServiceReference"};
         DS_LOGLEVEL = "warn";
     }
 

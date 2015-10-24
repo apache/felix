@@ -1,3 +1,9 @@
+1.8.0
+-----
+
+** Bug
+    * [FELIX-5015] - NPE in ResolverImpl
+
 1.6.0
 -----
 

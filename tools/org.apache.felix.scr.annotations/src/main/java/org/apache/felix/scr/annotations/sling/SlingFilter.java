@@ -52,6 +52,12 @@ public @interface SlingFilter {
     int order();
 
     /**
+     * Restrict the filter to paths that match the supplied regular expression. Requires Sling Engine 2.4.0.
+     * @since 1.10.0
+     */
+    String pattern() default "";
+
+    /**
      * The scopes of a filter.
      * If the filter has request scope, it is run once for a request.
      * If the filter has component scope, it is run once for every included

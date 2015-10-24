@@ -298,5 +298,43 @@
         <property name="service.pid" value="7.B.0.1.dynamic" />
     </scr:component>
 
+    <!-- A 1.1 static delayed, B 0..n dynamic immediate. Both should start (B first) and both should have references -->
+    <scr:component name="8.A.1.1.static"
+        enabled="true"
+        configuration-policy="ignore">
+        <implementation class="org.apache.felix.scr.integration.components.circular.A" />
+        <service>
+            <provide interface="org.apache.felix.scr.integration.components.circular.A" />
+        </service>
+        <reference
+            name="b"
+            interface="org.apache.felix.scr.integration.components.circular.B"
+            cardinality="1..1"
+            policy="static"
+            bind="setB"
+            unbind="unsetB"
+            target="(service.pid=8.B.0.n.dynamic)"
+        />
+        <property name="service.pid" value="8.A.1.1.static" />
+    </scr:component>
+    <scr:component name="8.B.0.n.dynamic"
+        enabled="true"
+        immediate="true"
+        configuration-policy="ignore">
+        <implementation class="org.apache.felix.scr.integration.components.circular.B" />
+        <service>
+            <provide interface="org.apache.felix.scr.integration.components.circular.B" />
+        </service>
+        <reference
+            name="a"
+            interface="org.apache.felix.scr.integration.components.circular.A"
+            cardinality="0..n"
+            policy="dynamic"
+            bind="setA"
+            unbind="unsetA"
+            target="(service.pid=8.A.1.1.static)"
+        />
+        <property name="service.pid" value="8.B.0.n.dynamic" />
+    </scr:component>
 
 </components>
