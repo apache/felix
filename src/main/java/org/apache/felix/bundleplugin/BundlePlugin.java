@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Writer;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -45,12 +46,20 @@ import java.util.TreeMap;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
+import org.apache.felix.bundleplugin.pom.PomWriter;
 import org.apache.maven.archiver.ManifestSection;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.archiver.MavenArchiver;
 import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
+import org.apache.maven.artifact.metadata.ArtifactMetadataSource;
+import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.artifact.resolver.ArtifactCollector;
+import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.execution.MavenSession;
+import org.apache.maven.model.Dependency;
+import org.apache.maven.model.Exclusion;
 import org.apache.maven.model.License;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Resource;
@@ -64,10 +73,14 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.MavenProjectBuilder;
 import org.apache.maven.project.MavenProjectHelper;
+import org.apache.maven.project.ProjectBuildingException;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilderException;
 import org.apache.maven.shared.dependency.graph.DependencyNode;
+import org.apache.maven.shared.dependency.tree.DependencyTreeBuilder;
+import org.apache.maven.shared.dependency.tree.DependencyTreeBuilderException;
 import org.apache.maven.shared.osgi.DefaultMaven2OsgiConverter;
 import org.apache.maven.shared.osgi.Maven2OsgiConverter;
 import org.codehaus.plexus.archiver.UnArchiver;
@@ -94,6 +107,7 @@ import aQute.bnd.osgi.Processor;
 import aQute.lib.collections.ExtList;
 import aQute.lib.spring.SpringXMLType;
 import aQute.libg.generics.Create;
+import org.codehaus.plexus.util.WriterFactory;
 
 
 /**
@@ -161,6 +175,20 @@ public class BundlePlugin extends AbstractMojo
     @Parameter
     protected String packaging;
 
+    /**
+     * If true, remove any inlined or embedded dependencies from the resulting pom.
+     */
+    @Parameter
+    protected boolean createDependencyReducedPom;
+
+    /**
+     * Where to put the dependency reduced pom. Note: setting a value for this parameter with a directory other than
+     * ${basedir} will change the value of ${basedir} for all executions that come after the shade execution. This is
+     * often not what you want. This is considered an open issue with this plugin.
+     */
+    @Parameter( defaultValue = "${basedir}/dependency-reduced-pom.xml" )
+    protected File dependencyReducedPomLocation;
+
     @Component
     private MavenProjectHelper m_projectHelper;
 
@@ -171,14 +199,66 @@ public class BundlePlugin extends AbstractMojo
     private ArtifactHandlerManager m_artifactHandlerManager;
 
     @Component
-    private DependencyGraphBuilder m_dependencyGraphBuilder;
+    protected DependencyGraphBuilder m_dependencyGraphBuilder;
+
+    /* The current Maven session.  */
+    @Parameter( defaultValue = "${session}", readonly = true )
+    protected MavenSession session;
+
+
+    /**
+     * ProjectBuilder, needed to create projects from the artifacts.
+     */
+    @Component
+    protected MavenProjectBuilder mavenProjectBuilder;
+
+    @Component
+    private DependencyTreeBuilder dependencyTreeBuilder;
+
+    /**
+     * The dependency graph builder to use.
+     */
+    @Component
+    protected DependencyGraphBuilder dependencyGraphBuilder;
+
+    @Component
+    private ArtifactMetadataSource artifactMetadataSource;
+
+    @Component
+    private ArtifactCollector artifactCollector;
+
+    @Component
+    protected ArtifactFactory artifactFactory;
+
+    /**
+     * Artifact resolver, needed to download source jars for inclusion in classpath.
+     *
+     * @component
+     * @required
+     * @readonly
+     */
+    protected ArtifactResolver artifactResolver;
+
+
+    /**
+     * Local maven repository.
+     */
+    @Parameter( readonly = true, required = true, defaultValue = "${localRepository}" )
+    protected ArtifactRepository localRepository;
+
+    /**
+     * Remote repositories which will be searched for source attachments.
+     */
+    @Parameter( readonly = true, required = true, defaultValue = "${project.remoteArtifactRepositories}" )
+    protected List<ArtifactRepository> remoteArtifactRepositories;
+
+
 
     /**
      * Project types which this plugin supports.
      */
     @Parameter
-    protected List<String> supportedProjectTypes = Arrays.asList( new String[]
-        { "jar", "bundle" } );
+    protected List<String> supportedProjectTypes = Arrays.asList("jar", "bundle");
 
     /**
      * The directory for the generated bundles.
@@ -613,7 +693,20 @@ public class BundlePlugin extends AbstractMojo
 
         // update BND instructions to embed selected Maven dependencies
         Collection<Artifact> embeddableArtifacts = getEmbeddableArtifacts( currentProject, dependencyGraph, builder );
-        new DependencyEmbedder( getLog(), dependencyGraph, embeddableArtifacts ).processHeaders(builder);
+        DependencyEmbedder dependencyEmbedder = new DependencyEmbedder(getLog(), dependencyGraph, embeddableArtifacts);
+        dependencyEmbedder.processHeaders(builder);
+
+        Collection<Artifact> embeddedArtifacts = dependencyEmbedder.getEmbeddedArtifacts();
+        if ( !embeddedArtifacts.isEmpty() && createDependencyReducedPom )
+        {
+            Set<String> embeddedIds = new HashSet<String>();
+            for ( Artifact artifact : embeddedArtifacts )
+            {
+                embeddedIds.add( getId( artifact ) );
+            }
+            createDependencyReducedPom( embeddedIds );
+
+        }
 
         if ( dumpInstructions != null || getLog().isDebugEnabled() )
         {
@@ -627,6 +720,8 @@ public class BundlePlugin extends AbstractMojo
             }
         }
 
+
+
         if ( dumpClasspath != null || getLog().isDebugEnabled() )
         {
             StringBuilder buf = new StringBuilder();
@@ -638,6 +733,213 @@ public class BundlePlugin extends AbstractMojo
                 FileUtils.fileWrite( dumpClasspath, "# BND classpath" + NL + buf );
             }
         }
+    }
+
+
+    // We need to find the direct dependencies that have been included in the uber JAR so that we can modify the
+    // POM accordingly.
+    private void createDependencyReducedPom( Set<String> artifactsToRemove )
+            throws IOException, DependencyTreeBuilderException, ProjectBuildingException
+    {
+        Model model = project.getOriginalModel();
+        List<Dependency> dependencies = new ArrayList<Dependency>();
+
+        boolean modified = false;
+
+        List<Dependency> transitiveDeps = new ArrayList<Dependency>();
+
+        for ( Iterator it = project.getArtifacts().iterator(); it.hasNext(); )
+        {
+            Artifact artifact = (Artifact) it.next();
+
+            if ( "pom".equals( artifact.getType() ) )
+            {
+                // don't include pom type dependencies in dependency reduced pom
+                continue;
+            }
+
+            //promote
+            Dependency dep = new Dependency();
+            dep.setArtifactId( artifact.getArtifactId() );
+            if ( artifact.hasClassifier() )
+            {
+                dep.setClassifier( artifact.getClassifier() );
+            }
+            dep.setGroupId( artifact.getGroupId() );
+            dep.setOptional( artifact.isOptional() );
+            dep.setScope( artifact.getScope() );
+            dep.setType( artifact.getType() );
+            dep.setVersion( artifact.getVersion() );
+
+            //we'll figure out the exclusions in a bit.
+
+            transitiveDeps.add( dep );
+        }
+        List<Dependency> origDeps = project.getDependencies();
+
+        for ( Iterator<Dependency> i = origDeps.iterator(); i.hasNext(); )
+        {
+            Dependency d = i.next();
+
+            dependencies.add( d );
+
+            String id = getId( d );
+
+            if ( artifactsToRemove.contains( id ) )
+            {
+                modified = true;
+
+                dependencies.remove( d );
+            }
+        }
+
+        // Check to see if we have a reduction and if so rewrite the POM.
+        if ( modified )
+        {
+            while ( modified )
+            {
+
+                model.setDependencies( dependencies );
+
+                if ( dependencyReducedPomLocation == null )
+                {
+                    // MSHADE-123: We can't default to 'target' because it messes up uses of ${project.basedir}
+                    dependencyReducedPomLocation = new File ( project.getBasedir(), "dependency-reduced-pom.xml" );
+                }
+
+                File f = dependencyReducedPomLocation;
+                if ( f.exists() )
+                {
+                    f.delete();
+                }
+
+                Writer w = WriterFactory.newXmlWriter( f );
+
+                String origRelativePath = null;
+                String replaceRelativePath = null;
+                if ( model.getParent() != null)
+                {
+                    origRelativePath = model.getParent().getRelativePath();
+
+                }
+                replaceRelativePath = origRelativePath;
+
+                if ( origRelativePath == null )
+                {
+                    origRelativePath = "../pom.xml";
+                }
+
+                if ( model.getParent() != null )
+                {
+                    File parentFile = new File( project.getBasedir(), model.getParent().getRelativePath() ).getCanonicalFile();
+                    if ( !parentFile.isFile() )
+                    {
+                        parentFile = new File( parentFile, "pom.xml");
+                    }
+
+                    parentFile = parentFile.getCanonicalFile();
+
+                    String relPath = RelativizePath.convertToRelativePath( parentFile, f );
+                    model.getParent().setRelativePath( relPath );
+                }
+
+                try
+                {
+                    PomWriter.write( w, model, true );
+                }
+                finally
+                {
+                    if ( model.getParent() != null )
+                    {
+                        model.getParent().setRelativePath( replaceRelativePath );
+                    }
+                    w.close();
+                }
+
+                MavenProject p2 = mavenProjectBuilder.build( f, localRepository, null );
+                modified = updateExcludesInDeps( p2, dependencies, transitiveDeps );
+
+            }
+
+            project.setFile( dependencyReducedPomLocation );
+        }
+    }
+
+    private String getId( Artifact artifact )
+    {
+        return getId( artifact.getGroupId(), artifact.getArtifactId(), artifact.getType(), artifact.getClassifier() );
+    }
+
+    private String getId( Dependency dependency )
+    {
+        return getId( dependency.getGroupId(), dependency.getArtifactId(), dependency.getType(),
+                dependency.getClassifier() );
+    }
+
+    private String getId( String groupId, String artifactId, String type, String classifier )
+    {
+        return groupId + ":" + artifactId + ":" + type + ":" + ( ( classifier != null ) ? classifier : "" );
+    }
+
+    public boolean updateExcludesInDeps( MavenProject project, List<Dependency> dependencies, List<Dependency> transitiveDeps )
+            throws DependencyTreeBuilderException
+    {
+        org.apache.maven.shared.dependency.tree.DependencyNode node = dependencyTreeBuilder.buildDependencyTree(project, localRepository, artifactFactory,
+                artifactMetadataSource, null,
+                artifactCollector);
+        boolean modified = false;
+        Iterator it = node.getChildren().listIterator();
+        while ( it.hasNext() )
+        {
+            org.apache.maven.shared.dependency.tree.DependencyNode n2 = (org.apache.maven.shared.dependency.tree.DependencyNode) it.next();
+            Iterator it2 = n2.getChildren().listIterator();
+            while ( it2.hasNext() )
+            {
+                org.apache.maven.shared.dependency.tree.DependencyNode n3 = (org.apache.maven.shared.dependency.tree.DependencyNode) it2.next();
+                //anything two levels deep that is marked "included"
+                //is stuff that was excluded by the original poms, make sure it
+                //remains excluded IF promoting transitives.
+                if ( n3.getState() == org.apache.maven.shared.dependency.tree.DependencyNode.INCLUDED )
+                {
+                    //check if it really isn't in the list of original dependencies.  Maven
+                    //prior to 2.0.8 may grab versions from transients instead of
+                    //from the direct deps in which case they would be marked included
+                    //instead of OMITTED_FOR_DUPLICATE
+
+                    //also, if not promoting the transitives, level 2's would be included
+                    boolean found = false;
+                    for ( int x = 0; x < transitiveDeps.size(); x++ )
+                    {
+                        Dependency dep = transitiveDeps.get( x );
+                        if ( dep.getArtifactId().equals( n3.getArtifact().getArtifactId() ) && dep.getGroupId().equals(
+                                n3.getArtifact().getGroupId() ) )
+                        {
+                            found = true;
+                        }
+
+                    }
+
+                    if ( !found )
+                    {
+                        for ( int x = 0; x < dependencies.size(); x++ )
+                        {
+                            Dependency dep = dependencies.get( x );
+                            if ( dep.getArtifactId().equals( n2.getArtifact().getArtifactId() )
+                                    && dep.getGroupId().equals( n2.getArtifact().getGroupId() ) )
+                            {
+                                Exclusion exclusion = new Exclusion();
+                                exclusion.setArtifactId( n3.getArtifact().getArtifactId() );
+                                exclusion.setGroupId( n3.getArtifact().getGroupId() );
+                                dep.addExclusion( exclusion );
+                                modified = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return modified;
     }
 
 

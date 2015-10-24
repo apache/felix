@@ -73,7 +73,6 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
         m_embeddedArtifacts = new LinkedHashSet<Artifact>();
     }
 
-
     public void processHeaders( Analyzer analyzer ) throws MojoExecutionException
     {
         StringBuffer includeResource = new StringBuffer();
