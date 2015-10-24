@@ -24,5 +24,6 @@ well as other useful OSGi bundles.
 
 
 
-The *tools* directory contains a directory tree for various build tools.
+The *tools* directory contains a directory tree for various build
+tools. The maven-bundle-plugin lives in tools/maven-bundle-plugin.
 
