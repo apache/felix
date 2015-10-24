@@ -45,8 +45,18 @@
      <url>http://svn.apache.org/viewvc/felix/trunk/tools/maven-bundle-plugin</url>
  </scm>
 
+ <!-- Support for publishing the mvn site. -->
+  <distributionManagement>
+    <site>
+      <id>apache.website</id>
+      <url>scm:svn:https://svn.apache.org/repos/infra/websites/production/felix/components/${maven.site.path}</url>
+    </site>
+  </distributionManagement>
+
+
  <properties>
-    <felix.java.version>6</felix.java.version>
+   <felix.java.version>6</felix.java.version>
+   <maven.site.path>bundle-plugin-archives/bundle-plugin-LATEST</maven.site.path>
  </properties>
 
  <build>
@@ -63,6 +73,44 @@
       </execution>
      </executions>
     </plugin>
+          <plugin>
+            <artifactId>maven-site-plugin</artifactId>
+            <version>3.4</version>
+            <dependencies>
+              <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-archiver</artifactId>
+                <version>2.5</version>
+              </dependency>
+              <dependency>
+                <groupId>org.codehaus.plexus</groupId>
+                <artifactId>plexus-archiver</artifactId>
+                <version>2.4.4</version>
+              </dependency>
+              <dependency>
+                <groupId>org.apache.maven.doxia</groupId>
+                <artifactId>doxia-core</artifactId>
+                <version>1.6</version>
+                <exclusions>
+                  <exclusion>
+                    <artifactId>xercesImpl</artifactId>
+                    <groupId>xerces</groupId>
+                  </exclusion>
+                </exclusions>
+              </dependency>
+            </dependencies>
+            <configuration>
+              <topSiteURL>scm:svn:https://svn.apache.org/repos/infra/websites/production/felix/components/${maven.site.path}</topSiteURL>
+            </configuration>
+          </plugin>
+          <plugin>
+            <artifactId>maven-scm-publish-plugin</artifactId>
+            <version>1.1</version>
+            <configuration>
+              <checkoutDirectory>${user.home}/maven-sites/bundle-plugin-archives/bundle-plugin-LATEST</checkoutDirectory>
+              <tryUpdate>true</tryUpdate>
+            </configuration>
+          </plugin>
    </plugins>
   </pluginManagement>
   <plugins>
@@ -194,7 +242,8 @@
      <component>12311143</component>
      <versionPrefix>maven-bundle-plugin-</versionPrefix>
      <statusIds>Resolved,Closed</statusIds>
-     <maxEntries>1000</maxEntries>
+     <!-- 1000 gets a 403 -->
+     <maxEntries>100</maxEntries>
      <issueManagementSystems>
       <issueManagementSystem>JIRA</issueManagementSystem>
      </issueManagementSystems>
