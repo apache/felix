@@ -86,7 +86,10 @@
         <configuration>
           <cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
           <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
-          <postBuildHookScript>verify</postBuildHookScript> <!-- no extension required -->
+          <postBuildHookScript>verify</postBuildHookScript>
+          <goals>
+            <goal>install</goal>
+          </goals>
         </configuration>
         <executions>
           <execution>
