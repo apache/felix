@@ -20,6 +20,11 @@ under the License.
 -->
 
 <project>
+  <skin>
+    <groupId>org.apache.maven.skins</groupId>
+    <artifactId>maven-fluido-skin</artifactId>
+    <version>1.3.1</version>
+  </skin>
   <body>
     <menu name="Overview">
       <item name="Introduction" href="index.html"/>
