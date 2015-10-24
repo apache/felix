@@ -12,3 +12,5 @@ velocity.log
 maven-eclipse.xml
 .externalToolBuilders
 .idea/
+*~
+dependency-reduced-pom.xml
