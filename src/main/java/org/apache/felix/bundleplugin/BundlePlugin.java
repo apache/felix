@@ -89,6 +89,7 @@ import org.codehaus.plexus.util.DirectoryScanner;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.PropertyUtils;
 import org.codehaus.plexus.util.StringUtils;
+import org.codehaus.plexus.util.WriterFactory;
 
 import aQute.bnd.header.Attrs;
 import aQute.bnd.header.OSGiHeader;
@@ -107,7 +108,6 @@ import aQute.bnd.osgi.Processor;
 import aQute.lib.collections.ExtList;
 import aQute.lib.spring.SpringXMLType;
 import aQute.libg.generics.Create;
-import org.codehaus.plexus.util.WriterFactory;
 
 
 /**
@@ -1612,7 +1612,7 @@ public class BundlePlugin extends AbstractMojo
         for ( Iterator<Artifact> it = artifacts.iterator(); it.hasNext(); )
         {
             Artifact artifact = it.next();
-            if ( artifact.getArtifactHandler().isAddedToClasspath() )
+            if ( artifact.getArtifactHandler().isAddedToClasspath() && !Artifact.SCOPE_TEST.equals( artifact.getScope() ) )
             {
                 File file = getFile( artifact );
                 if ( file == null )
@@ -2126,7 +2126,7 @@ public class BundlePlugin extends AbstractMojo
             else if ( mavenTestSourcePaths.length() > 0 )
             {
                 log.warn( Analyzer.SOURCEPATH + ": overriding " + mavenTestSourcePaths + " with " + sourcePath + " (add "
-                        + MAVEN_TEST_SOURCES + " if you want to include the maven sources)" );
+                        + MAVEN_TEST_SOURCES + " if you want to include the maven test sources)" );
             }
         }
         else if ( mavenSourcePaths.length() > 0 )
