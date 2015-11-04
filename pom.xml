@@ -75,6 +75,10 @@
                         <Bundle-Activator>
                             org.apache.felix.coordinator.impl.Activator
                         </Bundle-Activator>
+                        <Provide-Capability>
+                            osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.coordinator.Coordinator";
+                            uses:="org.osgi.service.coordinator"
+                        </Provide-Capability>
                     </instructions>
                 </configuration>
             </plugin>
