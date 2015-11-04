@@ -42,6 +42,11 @@ import org.osgi.service.coordinator.Participant;
  */
 public class CoordinationMgr
 {
+    public static final class CreationResult 
+    {
+        public CoordinationImpl coordination;
+        public CoordinationHolder holder;
+    }
 
     private ThreadLocal<Stack<CoordinationImpl>> perThreadStack;
 
@@ -190,15 +195,15 @@ public class CoordinationMgr
 
     // ---------- Coordinator back end implementation
 
-    CoordinationImpl create(final CoordinatorImpl owner, final String name, final long timeout)
+    CreationResult create(final CoordinatorImpl owner, final String name, final long timeout)
     {
         final long id = ctr.incrementAndGet();
-        final CoordinationImpl c = new CoordinationImpl(owner, id, name, timeout);
+        final CreationResult result = CoordinationImpl.create(owner, id, name, timeout);
         synchronized ( this.coordinations )
         {
-            coordinations.put(id, c);
+            coordinations.put(id, result.coordination);
         }
-        return c;
+        return result;
     }
 
     void unregister(final CoordinationImpl c, final boolean removeFromThread)

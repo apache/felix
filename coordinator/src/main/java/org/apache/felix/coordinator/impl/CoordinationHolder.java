@@ -35,10 +35,11 @@ import org.osgi.service.coordinator.Participant;
  */
 public class CoordinationHolder implements Coordination {
 
-    private final CoordinationImpl coordination;
+    private CoordinationImpl coordination;
 
-	public CoordinationHolder(final CoordinationImpl coordination) {
-		this.coordination = coordination;
+	public void setCoordination(final CoordinationImpl coordination) 
+	{
+	    this.coordination = coordination;
 	}
 
     /**

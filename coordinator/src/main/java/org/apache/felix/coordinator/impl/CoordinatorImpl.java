@@ -151,9 +151,9 @@ public class CoordinatorImpl implements Coordinator
     	}
 
     	// create coordination
-        final CoordinationImpl c = mgr.create(this, name, timeout);
+        final CoordinationMgr.CreationResult result = mgr.create(this, name, timeout);
 
-        return c.getHolder();
+        return result.holder;
     }
 
     /**
@@ -218,9 +218,9 @@ public class CoordinatorImpl implements Coordinator
         }
 
         // create coordination
-        final CoordinationImpl c = mgr.create(this, name, timeout);
-        this.mgr.push(c);
-        return c.getHolder();
+        final CoordinationMgr.CreationResult result  = mgr.create(this, name, timeout);
+        this.mgr.push(result.coordination);
+        return result.holder;
     }
 
     /**
