@@ -80,7 +80,19 @@ public class CoordinationImpl implements Coordination
 
     private final Object waitLock = new Object();
 
-    public CoordinationImpl(final CoordinatorImpl owner, final long id, final String name, final long timeOutInMs)
+    public static CoordinationMgr.CreationResult create(final CoordinatorImpl owner, final long id, final String name, final long timeOutInMs)
+    {
+        final CoordinationMgr.CreationResult result = new CoordinationMgr.CreationResult();
+        result.holder = new CoordinationHolder();
+        result.coordination = new CoordinationImpl(owner, id, name, timeOutInMs, result.holder);
+        return result;
+    }
+
+    private CoordinationImpl(final CoordinatorImpl owner,
+            final long id,
+            final String name,
+            final long timeOutInMs,
+            final CoordinationHolder holder)
     {
         this.owner = owner;
         this.id = id;
@@ -89,8 +101,8 @@ public class CoordinationImpl implements Coordination
         this.participants = new ArrayList<Participant>();
         this.variables = new HashMap<Class<?>, Object>();
         this.deadLine = (timeOutInMs > 0) ? System.currentTimeMillis() + timeOutInMs : 0;
-
-        this.holderRef = new WeakReference<CoordinationHolder>(new CoordinationHolder(this));
+        holder.setCoordination(this);
+        this.holderRef = new WeakReference<CoordinationHolder>(holder);
 
         scheduleTimeout(deadLine);
     }
