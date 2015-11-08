@@ -100,7 +100,7 @@
               </dependency>
             </dependencies>
             <configuration>
-              <topSiteURL>scm:svn:https://svn.apache.org/repos/infra/websites/production/felix/components/${maven.site.path}</topSiteURL>
+              <topSiteURL>scm:svn:https://svn.apache.org/repos/infra/websites/production/felix/content/components/${maven.site.path}</topSiteURL>
             </configuration>
           </plugin>
           <plugin>
