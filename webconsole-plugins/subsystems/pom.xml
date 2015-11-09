@@ -35,6 +35,12 @@
         This is a plugin for the Apache Felix OSGi web console to integrate with OSGi Subsystems.
     </description>
 
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/subsystems</connection>
+       <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/subsystems</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/webconsole-plugins/subsystems</url>
+    </scm>
+
     <build>
         <plugins>
             <plugin>
