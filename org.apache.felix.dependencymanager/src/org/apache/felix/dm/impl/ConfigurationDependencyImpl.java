@@ -51,6 +51,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 	private final AtomicBoolean m_updateInvokedCache = new AtomicBoolean();
 	private final Logger m_logger;
 	private final BundleContext m_context;
+	private boolean m_needsInstance = true;
 
     public ConfigurationDependencyImpl() {
         this(null, null);
@@ -69,6 +70,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 	    m_pid = prototype.m_pid;
 	    m_logger = prototype.m_logger;
         m_metaType = prototype.m_metaType != null ? new MetaTypeProviderImpl(prototype.m_metaType, this, null) : null;
+        m_needsInstance = prototype.needsInstance();
 	}
 	
     @Override
@@ -87,13 +89,18 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
     }
     
     public ConfigurationDependencyImpl setCallback(Object instance, String callback) {
+    	return setCallback(instance, callback, false);
+    }
+
+    public ConfigurationDependencyImpl setCallback(Object instance, String callback, boolean needsInstance) {
         super.setCallbacks(instance, callback, null);
+        m_needsInstance = needsInstance;
         return this;
     }
 
     @Override
     public boolean needsInstance() {
-        return m_callbackInstance == null;
+        return m_needsInstance;
     }
 
     @Override

@@ -18,6 +18,8 @@
  */
 package org.apache.felix.dm;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Configuration dependency that can track the availability of a (valid) configuration. To use
  * it, specify a PID for the configuration. The dependency is always required, because if it is
@@ -50,12 +52,15 @@ package org.apache.felix.dm;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+@ProviderType
 public interface ConfigurationDependency extends Dependency, ComponentDependencyDeclaration {
     /**
      * Sets the name of the callback method that should be invoked when a configuration
      * is available. The contract for this method is identical to that of
      * <code>ManagedService.updated(Dictionary) throws ConfigurationException</code>.
      * By default, if this method is not called, the callback name is "updated".
+     * The callback is always invoked with an already instantiated component (the component implementation class(es) are
+     * always instantiated before the updated callback is invoked).
      * 
      * @param callback the name of the callback method
      */
@@ -65,12 +70,27 @@ public interface ConfigurationDependency extends Dependency, ComponentDependency
      * Sets the name of the callback method that should be invoked when a configuration
      * is available. The contract for this method is identical to that of
      * <code>ManagedService.updated(Dictionary) throws ConfigurationException</code>.
+     * The callback is called with a component that is not yet instantiated. This allows factory objects to get
+     * injected with a configuration before its <code>create</code> method is called.
      * 
      * @param instance the instance to call the callbacks on
      * @param callback the name of the callback method
      */
     ConfigurationDependency setCallback(Object instance, String callback);
 
+    /**
+     * Sets the name of the callback method that should be invoked when a configuration
+     * is available. The contract for this method is identical to that of
+     * <code>ManagedService.updated(Dictionary) throws ConfigurationException</code>.
+     * The component instance is instantiated before the callback is invoked only the the <code>needsInstance</code> parameter is set to true.
+     * 
+     * @param instance the instance to call the callback on
+     * @param callback the name of the callback method
+     * @param needsInstance true if the component implementation class(es) must be created before the
+     *        callback instance is invoked, else false.
+     */
+    ConfigurationDependency setCallback(Object instance, String callback, boolean needsInstance);
+    
     /**
      * Sets the <code>service.pid</code> of the configuration you are depending
      * on.
