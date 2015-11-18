@@ -177,7 +177,8 @@ public class LogEventAdapter extends AbstractAdapter implements ServiceListener
 
                     properties.put("log.level", new Integer(entry.getLevel()));
 
-                    properties.put(EventConstants.MESSAGE, entry.getMessage());
+		    properties.put(EventConstants.MESSAGE,
+				   (entry.getMessage()) != null ? entry.getMessage() : "" );
 
                     properties.put(EventConstants.TIMESTAMP, new Long(
                         entry.getTime()));
