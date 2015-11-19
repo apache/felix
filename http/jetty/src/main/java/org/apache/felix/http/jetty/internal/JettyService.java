@@ -62,6 +62,8 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.component.AbstractLifeCycle;
 import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
+import org.eclipse.jetty.util.thread.ThreadPool;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -240,7 +242,13 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         if (this.config.isUseHttp() || this.config.isUseHttps())
         {
             final String version = fixJettyVersion();
-            this.server = new Server();
+
+            final int threadPoolMax = this.config.getThreadPoolMax();
+            if (threadPoolMax >= 0) {
+                this.server = new Server( new QueuedThreadPool(threadPoolMax) );
+            } else {
+                this.server = new Server();
+            }
             this.server.addLifeCycleListener(this);
 
             this.server.addBean(new HashLoginService("OSGi HTTP Service Realm"));
@@ -286,6 +294,22 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             if (this.server.getConnectors() != null && this.server.getConnectors().length > 0)
             {
                 message.append(" on context path ").append(this.config.getContextPath());
+
+                message.append(" [");
+                ThreadPool threadPool = this.server.getThreadPool();
+                if (threadPool instanceof ThreadPool.SizedThreadPool) {
+                    ThreadPool.SizedThreadPool sizedThreadPool = (ThreadPool.SizedThreadPool) threadPool;
+                    message.append("minThreads=").append(sizedThreadPool.getMinThreads()).append(",");
+                    message.append("maxThreads=").append(sizedThreadPool.getMaxThreads()).append(",");
+                }
+                Connector connector = this.server.getConnectors()[0];
+                if (connector instanceof ServerConnector) {
+                    ServerConnector serverConnector = (ServerConnector) connector;
+                    message.append("acceptors=").append(serverConnector.getAcceptors()).append(",");
+                    message.append("selectors=").append(serverConnector.getSelectorManager().getSelectorCount());
+                }
+                message.append("]");
+
                 SystemLogger.info(message.toString());
                 publishServiceProperties();
             }
@@ -321,7 +345,14 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
     {
         HttpConnectionFactory connFactory = new HttpConnectionFactory();
         configureHttpConnectionFactory(connFactory);
-        ServerConnector connector = new ServerConnector(server, connFactory);
+
+        ServerConnector connector = new ServerConnector(
+            server,
+            config.getAcceptors(),
+            config.getSelectors(),
+            connFactory
+        );
+
         configureConnector(connector, this.config.getHttpPort());
 
         if (this.config.isProxyLoadBalancerConnection())
@@ -340,7 +371,14 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         SslContextFactory sslContextFactory = new SslContextFactory();
         configureSslContextFactory(sslContextFactory);
 
-        ServerConnector connector = new ServerConnector(server, new SslConnectionFactory(sslContextFactory, HttpVersion.HTTP_1_1.toString()), connFactory);
+        ServerConnector connector = new ServerConnector(
+            server,
+            config.getAcceptors(),
+            config.getSelectors(),
+            new SslConnectionFactory(sslContextFactory, HttpVersion.HTTP_1_1.toString()),
+            connFactory
+        );
+
         HttpConfiguration httpConfiguration = connFactory.getHttpConfiguration();
         httpConfiguration.addCustomizer(new SecureRequestCustomizer());
 
