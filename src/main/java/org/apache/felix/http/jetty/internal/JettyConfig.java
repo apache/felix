@@ -85,6 +85,15 @@ public final class JettyConfig
     /** Felix specific property to configure the session timeout in minutes (same session-timout in web.xml). Default is servlet container specific */
     public static final String FELIX_SESSION_TIMEOUT = "org.apache.felix.http.session.timeout";
 
+    /** Felix specific property to control the maximum size of the jetty thread pool */
+    public static final String FELIX_JETTY_THREADPOOL_MAX = "org.apache.felix.http.jetty.threadpool.max";
+
+    /** Felix specific property to control the number of jetty acceptor threads */
+    public static final String FELIX_JETTY_ACCEPTORS = "org.apache.felix.http.jetty.acceptors";
+
+    /** Felix specific property to control the number of jetty selector threads */
+    public static final String FELIX_JETTY_SELECTORS = "org.apache.felix.http.jetty.selectors";
+
     /** Felix specific property to configure the request buffer size. Default is 16KB (instead of Jetty's default of 4KB) */
     public static final String FELIX_JETTY_HEADER_BUFFER_SIZE = "org.apache.felix.http.jetty.headerBufferSize";
 
@@ -293,6 +302,21 @@ public final class JettyConfig
     {
         Object value = getProperty(name);
         return value != null ? String.valueOf(value) : defValue;
+    }
+
+    public int getThreadPoolMax()
+    {
+        return getIntProperty(FELIX_JETTY_THREADPOOL_MAX, -1);
+    }
+
+    public int getAcceptors()
+    {
+        return getIntProperty(FELIX_JETTY_ACCEPTORS, -1);
+    }
+
+    public int getSelectors()
+    {
+        return getIntProperty(FELIX_JETTY_SELECTORS, -1);
     }
 
     public int getRequestBufferSize()

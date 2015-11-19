@@ -155,6 +155,24 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 0,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_SESSION_TIMEOUT)));
 
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_THREADPOOL_MAX,
+                "Thread Pool Max",
+                "Maximum number of jetty threads. Using the default -1 uses Jetty's default (200).",
+                -1,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_THREADPOOL_MAX)));
+
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_ACCEPTORS,
+                "Acceptors",
+                "Number of acceptor threads to use, or -1 for a default value. Acceptors accept new TCP/IP connections. If 0, then the selector threads are used to accept connections.",
+                -1,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_ACCEPTORS)));
+
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_SELECTORS,
+                "Selectors",
+                "Number of selector threads, or <=0 for a default value. Selectors notice and schedule established connection that can make IO progress.",
+                -1,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_SELECTORS)));
+
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_HEADER_BUFFER_SIZE,
                 "Header Buffer Size",
                 "Size of the buffer for request and response headers. Default is 16KB.",
