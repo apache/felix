@@ -254,6 +254,18 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 "Whether TLS renegotiation is allowed (true by default)",
                 false,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_RENEGOTIATION_ALLOWED)));
+        
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_SESSION_COOKIE_HTTP_ONLY,
+                "Session Cookie httpOnly",
+                "Session Cookie httpOnly (true by default)",
+                true,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_SESSION_COOKIE_HTTP_ONLY)));
+        
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_SESSION_COOKIE_SECURE,
+                "Session Cookie secure",
+                "Session Cookie secure (false by default)",
+                false,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_SESSION_COOKIE_SECURE)));
 
         return new ObjectClassDefinition()
         {

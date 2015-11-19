@@ -132,6 +132,12 @@ public final class JettyConfig
 
     /** Felix specific property to control whether to enable Proxy/Load Balancer Connection */
     public static final String FELIX_PROXY_LOAD_BALANCER_CONNECTION_ENABLE = "org.apache.felix.proxy.load.balancer.connection.enable";
+    
+    /** Felix specific property to configure the session cookie httpOnly flag */
+    public static final String FELIX_JETTY_SESSION_COOKIE_HTTP_ONLY = "org.apache.felix.https.jetty.session.cookie.httpOnly";
+    
+    /** Felix specific property to configure the session cookie secure flag */
+    public static final String FELIX_JETTY_SESSION_COOKIE_SECURE = "org.apache.felix.https.jetty.session.cookie.secure";
 
     private static String validateContextPath(String ctxPath)
     {
