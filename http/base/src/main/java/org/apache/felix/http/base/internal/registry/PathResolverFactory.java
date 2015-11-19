@@ -22,6 +22,7 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.apache.felix.http.base.internal.handler.ServletHandler;
+import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 
 /**
  * The path resolver factory creates a path resolver for a pattern.
@@ -55,7 +56,11 @@ public abstract class PathResolverFactory {
         {
             return new PathMatcher(handler, pattern);
         }
-        return new ExactAndPathMatcher(handler, pattern);
+        else if ( handler != null && handler.getContextServiceId() == HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID )
+        {
+            return new ExactAndPathMatcher(handler, pattern);
+        }
+        return new ExactMatcher(handler, pattern);
     }
 
     public static @Nonnull PathResolver createRegexMatcher(@Nonnull final String regex)
@@ -184,7 +189,7 @@ public abstract class PathResolverFactory {
 
         public ExactAndPathMatcher(final ServletHandler handler, final String pattern)
         {
-            super(handler, pattern, 4);
+            super(handler, pattern, 5);
             this.path = pattern;
             this.prefix = pattern.concat("/");
         }
@@ -221,18 +226,63 @@ public abstract class PathResolverFactory {
         }
     }
 
+    public static final class ExactMatcher extends AbstractMatcher
+    {
+        private final String path;
+
+        public ExactMatcher(final ServletHandler handler, final String pattern)
+        {
+            super(handler, pattern, 5);
+            this.path = pattern;
+        }
+
+        @Override
+        public PathResolution resolve(final String uri) {
+            if ( uri.equals(this.path) )
+            {
+                final PathResolution pr = new PathResolution();
+                pr.servletPath = uri;
+                pr.pathInfo = null;
+                pr.requestURI = uri;
+                pr.handler = this.getServletHandler();
+
+                return pr;
+            }
+            return null;
+        }
+
+        @Override
+        public int getOrdering()
+        {
+            return this.path.length();
+        }
+    }
+
     public static final class PathMatcher extends AbstractMatcher
     {
         private final String prefix;
+
+        private final String path;
 
         public PathMatcher(final ServletHandler handler, final String pattern)
         {
             super(handler, pattern, 4);
             this.prefix = pattern.substring(0, pattern.length() - 1);
+            this.path = pattern.substring(0, pattern.length() - 2);
         }
 
         @Override
         public PathResolution resolve(final String uri) {
+            if ( uri.equals(this.path) )
+            {
+                final PathResolution pr = new PathResolution();
+                pr.servletPath = this.path;
+                pr.pathInfo = null;
+                pr.requestURI = uri;
+                pr.handler = this.getServletHandler();
+
+                return pr;
+            }
             if ( uri.startsWith(this.prefix) )
             {
                 final PathResolution pr = new PathResolution();

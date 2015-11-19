@@ -62,4 +62,17 @@ public class PathResolverFactoryTest {
         assertResult(pr, "/foo/bar", "/foo/bar", null);
         assertResult(pr, "/foo", "/foo", null);
     }
+
+    @Test public void testPathMatcher()
+    {
+        final PathResolver pr = PathResolverFactory.createPatternMatcher(null, "/*");
+        assertNotNull(pr);
+
+        assertResult(pr, "/foo", "", "/foo");
+        assertResult(pr, "/foo/bar", "", "/foo/bar");
+
+        assertResult(pr, "/", "", "/");
+
+        assertResult(pr, "", "", null);
+    }
 }

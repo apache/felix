@@ -26,6 +26,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -171,6 +175,20 @@ public class ServletRegistryTest {
         assertEmpty(dto, holder);
     }
 
+    @Test public void testMatcherOrdering()  throws InvalidSyntaxException
+    {
+        final ServletHandler h1 = createServletHandler(1L, 0, "/foo");
+        final ServletHandler h2 = createServletHandler(2L, 0, "/foo/*");
+
+        final List<PathResolver> resolvers = new ArrayList<PathResolver>();
+        resolvers.add(PathResolverFactory.createPatternMatcher(h1, "/foo"));
+        resolvers.add(PathResolverFactory.createPatternMatcher(h2, "/foo/*"));
+
+        Collections.sort(resolvers);
+        assertEquals("/foo", resolvers.get(0).getPattern());
+        assertEquals("/foo/*", resolvers.get(1).getPattern());
+    }
+
     @Test public void testServletOrdering() throws InvalidSyntaxException
     {
         final ServletHandler h1 = createServletHandler(1L, 0, "/foo");
@@ -195,16 +213,16 @@ public class ServletRegistryTest {
         assertNull(pr);
 
         pr = reg.resolve("/foo/bar");
-        assertEquals("/foo/*", pr.patterns[0]);
-        assertEquals(h2, pr.handler);
+        assertEquals("/foo", pr.patterns[0]);
+        assertEquals(h1, pr.handler);
 
         pr = reg.resolve("/foo/rsrc");
         assertEquals("/foo/rsrc", pr.patterns[0]);
         assertEquals(h3, pr.handler);
 
         pr = reg.resolve("/foo/rsrc/some");
-        assertEquals("/foo/rsrc/*", pr.patterns[0]);
-        assertEquals(h4, pr.handler);
+        assertEquals("/foo/rsrc", pr.patterns[0]);
+        assertEquals(h3, pr.handler);
 
         pr = reg.resolve("/other");
         assertEquals("/other", pr.patterns[0]);

@@ -257,4 +257,18 @@ public class ServletPatternTest extends BaseIntegrationTest
         assertTrue(initLatch.await(5, TimeUnit.SECONDS));
         assertContent("servlet2", createURL("/a/b/test/servlet"));
     }
+
+    @Test
+    public void pathMatchingTest() throws Exception
+    {
+        setupLatches(1);
+
+        setupContext("contextA", "/a");
+
+        setupServlet("servlet1", new String[]{ "/servlet/*" }, 1, "contextA");
+
+        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
+        assertContent("servlet1", createURL("/a/servlet/foo"));
+        assertContent("servlet1", createURL("/a/servlet"));
+    }
 }
