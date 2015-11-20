@@ -24,12 +24,13 @@ Before you can start staging a release candidate, you must:
 * under bndtools, release (only) the bundles that needs to be released (using "Release workspace bundles" menu).
 * create a tagged version of the sources in preparation of the release candidate.
 
-Realease only the necessary bundles
+Release only the necessary bundles
 ===================================
 
 Click on the bndtools "Release workspace bundles", and release the bundles that have been modified and need to be released.
 Don't release other unmodified bundles.
-Once done, under the shell prompt, svn remove the previous old released bundles, svn add the new released bundles, 
+Once done, under the shell prompt, go to the "cnf/releaserepo/" directory, svn remove the previous old released bundles,
+and svn add the new released bundles.
 refresh the repositories under bndtools, and commit.  
 
 Create a tagged version
