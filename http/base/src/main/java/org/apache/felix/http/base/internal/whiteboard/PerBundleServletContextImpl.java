@@ -44,6 +44,7 @@ import javax.servlet.http.HttpSessionListener;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.registry.EventListenerRegistry;
+import org.apache.felix.http.base.internal.util.MimeTypes;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.service.http.context.ServletContextHelper;
@@ -122,7 +123,12 @@ public class PerBundleServletContextImpl implements ExtServletContext {
     @Override
     public String getMimeType(final String name)
     {
-        return this.contextHelper.getMimeType(name);
+        String type = this.contextHelper.getMimeType(name);
+        if (type != null) {
+            return type;
+        }
+
+        return MimeTypes.get().getByFile(name);
     }
 
     @Override
