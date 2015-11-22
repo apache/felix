@@ -54,7 +54,7 @@ $ ./gradlew check
 
 ** Compilation Using Eclipse:
 
-- Install either Eclipse Kepler SR2 or Eclipse Luna and configure two JREs for both java7 and java8:
+- Install latest Eclipse Mars, and configure two JREs for both java7 and java8:
 
 * go to Windows -> Preferences -> Java -> Installed JREs
 * Then add two JREs: one for java7, and the other for java8.
@@ -63,15 +63,22 @@ $ ./gradlew check
 Java8 is only used to build and run the org.apache.felix.dependencymanager.benchmark module, which is used to perform
 DM performance tests within eclipse bndtools.
 
-- Install BndTools 2.4.1, and a subversion plugin for eclipse.
+- Install BndTools 3.0.0
+
 - Open BndTools perspective
+
 - Import Dependency Manager into Eclipse, and compile everything
+
 - if it's the first time you import the project into eclipse, it may happen that some modules that requires the 
 Dependency Manager Annotations bnd plugin don't compile: It's a know issue. To work around, restart eclipse and 
 rebuild every modules. 
+
 - Click on org.apache.felix.dependencymanager project and run it as "JUnit test".
+
 - Click on org.apache.felix.dependencymanager.shell and run it as "JUnit test"
+
 - Click on org.apache.felix.dependencymanager.itest and run it as "Bnd OSGi Test Launcer (Junit)".
+
 - Click on org.apache.felix.dependencymanager.runtime.itest and run it as ""Bnd OSGi Test Launcer (Junit)".
 
 Getting Started
