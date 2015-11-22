@@ -54,7 +54,7 @@ public class FactoryInjectedWithConfigurationBeforeTheCreateMethod extends TestB
         m.add(configurator);
         
         m.add(myComponent);
-        m_e.waitForStep(4, 300000000);
+        m_e.waitForStep(4, 10000);
         m.remove(myComponent);
         m.remove(configurator);
     }
