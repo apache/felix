@@ -33,6 +33,8 @@ import org.osgi.service.cm.ConfigurationAdmin;
 /**
  * Use case: one component is instantiated using another factory object, and the 
  * factory object needs the configuration before the factory.create method is called.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class FactoryInjectedWithConfigurationBeforeTheCreateMethod extends TestBase {
     Ensure m_e;
