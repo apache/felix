@@ -12,6 +12,7 @@ Release Notes - Felix - Version org.apache.felix.dependencymanager-r6
     * [FELIX-5054] - Clean-up instance bound dependencies when component is destroyed
     * [FELIX-5055] - Upgrade DM to BndTools 3.0.0
     * [FELIX-5104] - Call a conf dependency callback Instance with an instantiated component
+    * [FELIX-5113] - Remove useless wrong test in ConfigurationDependencyImpl
 
 Release Notes - Felix - Version  org.apache.felix.dependencymanager-r5:
 ======================================================================

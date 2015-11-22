@@ -203,14 +203,11 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
         // If this is initial settings, or a configuration update, we handle it synchronously.
         // We'll conclude that the dependency is available only if invoking updated did not cause
         // any ConfigurationException.
-        Object[] instances = m_component.getInstances();
-        if (instances != null) {
-            try {
-                invokeUpdated(settings);
-            } catch (ConfigurationException e) {
-                logConfigurationException(e);
-                throw e;
-            }
+        try {
+            invokeUpdated(settings); // either the callback instance or the component instances, if available.
+        } catch (ConfigurationException e) {
+            logConfigurationException(e);
+            throw e;
         }
         
         // At this point, we have accepted the configuration.
@@ -249,7 +246,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
             break;
         case REMOVED:
             // The state machine is stopping us. We have to invoke updated(null).
-            // Reset for the next time the state machine calls invokeAdd
+            // Reset for the next time the state machine calls invokeCallback(ADDED)
             m_updateInvokedCache.set(false);
             break;
         default:
