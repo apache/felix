@@ -27,6 +27,8 @@ import org.apache.felix.dm.Logger;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * This interface is the entry point to the Component implementation context.
  * It is used by all DependencyManager Dependency implementations.
@@ -34,7 +36,16 @@ import org.osgi.framework.BundleContext;
  * @see DependencyContext interface
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+@ProviderType
 public interface ComponentContext extends Component {
+    /**
+     * Returns the Component Executor gate that can be used to ensure proper component event serialization.
+     * When you schedule a task in the component executor, your task is executed safely and you do not need
+     * to managed synchronization (other external events, like service dependency events) will be queued
+     * until your task has been executed). 
+     */
+    public Executor getExecutor();    
+    
     /**
      * Returns the logger which can be used by the DependencyManager Dependencies implementations.
      */

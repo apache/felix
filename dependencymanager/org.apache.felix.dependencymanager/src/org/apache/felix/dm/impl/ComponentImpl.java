@@ -341,6 +341,11 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     }
 
     @Override
+    public Executor getExecutor() {
+        return m_executor;
+    }
+
+    @Override
     public Component setDebug(String debugKey) {
         // Force debug level in our logger
         m_logger.setEnabledLevel(LogService.LOG_DEBUG);
@@ -1606,9 +1611,5 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             }
             result.append(")");
         }
-    }
-    
-    private Executor getExecutor() {
-        return m_executor;
     }
 }

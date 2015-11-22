@@ -67,6 +67,11 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     }
     
     @Override
+    public Executor getExecutor() {
+        return m_component.getExecutor();
+    }
+
+    @Override
     public String toString() {
         return m_component.toString();
     }

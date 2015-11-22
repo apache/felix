@@ -21,6 +21,11 @@ package org.apache.felix.dm.impl;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Dictionary;
 import java.util.Properties;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.felix.dm.Component;
@@ -52,6 +57,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 	private final Logger m_logger;
 	private final BundleContext m_context;
 	private boolean m_needsInstance = true;
+	private final static int UPDATE_MAXWAIT = 30000; // max time to wait until a component has handled a configuration change event.
 
     public ConfigurationDependencyImpl() {
         this(null, null);
@@ -188,7 +194,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
     
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
-    public void updated(Dictionary settings) throws ConfigurationException {
+    public void updated(final Dictionary settings) throws ConfigurationException {
     	m_updateInvokedCache.set(false);
         Dictionary<String, Object> oldSettings = null;
         synchronized (this) {
@@ -203,11 +209,46 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
         // If this is initial settings, or a configuration update, we handle it synchronously.
         // We'll conclude that the dependency is available only if invoking updated did not cause
         // any ConfigurationException.
+        // However, we still want to schedule the event in the component executor, to make sure that the
+        // callback is invoked safely. So, we use a Callable and a FutureTask that allows to handle the 
+        // configuration update through the component executor. We still wait for the result because
+        // in case of any configuration error, we have to return it from the current thread.
+        
+        Callable<ConfigurationException> result = new Callable<ConfigurationException>() {
+            @Override
+            public ConfigurationException call() throws Exception {
+                try {
+                    invokeUpdated(settings); // either the callback instance or the component instances, if available.
+                } catch (ConfigurationException e) {
+                    return e;
+                }
+                return null;
+            }            
+        };
+        
+        // Schedule the configuration update in the component executor. In Normal case, the task is immediately executed.
+        // But in a highly concurrent system, and if the component is being reconfigured, the component may be currently busy
+        // (handling a service dependency event for example), so the task will be enqueued in the component executor, and
+        // we'll wait for the task execution by using a FutureTask:
+        
+        FutureTask<ConfigurationException> ft = new FutureTask<>(result);
+        m_component.getExecutor().execute(ft);
+        
         try {
-            invokeUpdated(settings); // either the callback instance or the component instances, if available.
-        } catch (ConfigurationException e) {
-            logConfigurationException(e);
-            throw e;
+            ConfigurationException confError = ft.get(UPDATE_MAXWAIT, TimeUnit.MILLISECONDS);
+            if (confError != null) {
+                throw confError; // will be logged by the Configuration Admin service;
+            }
+          }
+
+        catch (ExecutionException error) {
+            throw new ConfigurationException(null, "Configuration update error, unexpected exception.", error);
+        } catch (InterruptedException error) {
+            // will be logged by the Configuration Admin service;
+            throw new ConfigurationException(null, "Configuration update interrupted.", error);
+        } catch (TimeoutException error) {
+            // will be logged by the Configuration Admin service;
+            throw new ConfigurationException(null, "Component did not handle configuration update timely.", error);
         }
         
         // At this point, we have accepted the configuration.
