@@ -39,6 +39,7 @@
 #bin:                   bin
 #testsrc:               test
 #testbin:               bin_test
+#test-reports:          test-reports
 #target-dir:            generated
 #target:                ${project}/${target-dir}
 #build:                 ${workspace}/cnf
@@ -51,6 +52,7 @@
 #javac:                 javac
 javac.source:          1.7
 javac.target:          1.7
+#javac.profile:
 #javac.debug:           on
 
 ## Bnd Options
@@ -65,7 +67,7 @@ javac.target:          1.7
 
 
 ## To enable baselining, uncomment the following lines:
--baseline: *
+#-baseline: *
 
 ## If you use git, you might want to uncomment the following lines:
 # Git-Descriptor:       ${system-allow-fail;git describe --dirty --always}
