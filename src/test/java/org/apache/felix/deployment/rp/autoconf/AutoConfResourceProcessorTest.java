@@ -37,6 +37,7 @@ import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.deploymentadmin.DeploymentPackage;
 import org.osgi.service.deploymentadmin.spi.DeploymentSession;
+import org.osgi.service.deploymentadmin.spi.ResourceProcessorException;
 import org.osgi.service.log.LogService;
 
 public class AutoConfResourceProcessorTest extends TestCase {
@@ -292,6 +293,73 @@ public class AutoConfResourceProcessorTest extends TestCase {
         logger.failOnException();
         assertEquals("test", configuration.getProperties().get("name"));
         assertNull(emptyConfiguration.getProperties());
+        Utils.removeDirectoryWithContent(tempDir);
+    }
+
+    /** Go through a simple session, containing two empty configurations. */
+    public void testMissingMandatoryValueInConfig() throws Throwable {
+        AutoConfResourceProcessor p = new AutoConfResourceProcessor();
+        Logger logger = new Logger();
+        Utils.configureObject(p, LogService.class, logger);
+        BundleContext mockBC = (BundleContext) Utils.createMockObjectAdapter(BundleContext.class, new Object() {
+            public Filter createFilter(String condition) {
+                return (Filter) Utils.createMockObjectAdapter(Filter.class, new Object() {
+                    public boolean match(ServiceReference ref) {
+                        Object id = ref.getProperty("id");
+                        if (id != null && id.equals(Integer.valueOf(42))) {
+                            return true;
+                        }
+                        return false;
+                    }
+                    public void remove(Component service) {
+                    }
+                });
+            }
+        });
+        Utils.configureObject(p, BundleContext.class, mockBC);
+        Utils.configureObject(p, DependencyManager.class, new DependencyManager(mockBC) {
+            public void remove(Component service) {
+            }
+        });
+        File tempDir = File.createTempFile("persistence", "dir");
+        tempDir.delete();
+        tempDir.mkdirs();
+        
+        System.out.println("Temporary dir: " + tempDir);
+        
+        Utils.configureObject(p, PersistencyManager.class, new PersistencyManager(tempDir));
+        Session s = new Session();
+        p.begin(s);
+        Utils.configureObject(p, Component.class, Utils.createMockObjectAdapter(Component.class, new Object() {
+            public DependencyManager getDependencyManager() {
+                return new DependencyManager((BundleContext) Utils.createNullObject(BundleContext.class));
+            }
+        }));
+
+        String config =
+            "<MetaData xmlns:metatype='http://www.osgi.org/xmlns/metatype/v1.1.0' filter='(id=42)'>\n" + 
+            "  <OCD name='ocd' id='ocd'>\n" + 
+            "    <AD id='name' type='Integer' />\n" + 
+            "  </OCD>\n" + 
+            "  <Designate pid='simple' bundle='osgi-dp:location'>\n" + 
+            "    <Object ocdref='ocd'>\n" + 
+            "      <Attribute adref='name'>\n" + 
+            "        <Value><![CDATA[]]></Value>\n" + 
+            "      </Attribute>\n" + 
+            "    </Object>\n" + 
+            "  </Designate>\n" + 
+            "</MetaData>\n";
+        
+        try
+        {
+            p.process("missing-value", new ByteArrayInputStream(config.getBytes()));
+            fail("Expected ResourceProcessorException for missing value!");
+        }
+        catch (ResourceProcessorException e)
+        {
+            // Ok; expected...
+            assertEquals("Unable to parse value for definition: adref=name", e.getMessage());
+        }
         Utils.removeDirectoryWithContent(tempDir);
     }
 
