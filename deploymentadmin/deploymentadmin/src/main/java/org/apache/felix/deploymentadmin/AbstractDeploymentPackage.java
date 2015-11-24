@@ -24,6 +24,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.jar.Manifest;
 
@@ -160,7 +161,7 @@ public abstract class AbstractDeploymentPackage implements DeploymentPackage, Co
      * @param manifest The manifest of the deployment package.
      * @param bundleContext The bundle context.
      * @throws DeploymentException Thrown if the specified manifest does not
-     *         describe a valid deployment package.
+     *             describe a valid deployment package.
      */
     public AbstractDeploymentPackage(Manifest manifest, BundleContext bundleContext, DeploymentAdminImpl deploymentAdmin) throws DeploymentException {
         m_manifest = new DeploymentPackageManifest(manifest);
@@ -279,7 +280,7 @@ public abstract class AbstractDeploymentPackage implements DeploymentPackage, Co
      * @return Stream to the bundle identified by the specified symbolic name or
      *         null if no such bundle exists in this deployment package.
      * @throws IOException If the bundle can not be properly offered as an
-     *         inputstream
+     *             inputstream
      */
     public abstract InputStream getBundleStream(String symbolicName) throws IOException;
 
@@ -491,7 +492,7 @@ public abstract class AbstractDeploymentPackage implements DeploymentPackage, Co
      * it's path/resource-id.
      *
      * @param path String containing a resource path (either bundle or processed
-     *        resource)
+     *            resource)
      * @return <code>AbstractInfoImpl</code> for the resource identified by the
      *         specified path or null if the path is unknown
      */
@@ -499,4 +500,17 @@ public abstract class AbstractDeploymentPackage implements DeploymentPackage, Co
         return (AbstractInfo) m_pathToEntry.get(path);
     }
 
+    /**
+     * Returns whether the given name (which is expected to be the name of a
+     * JarEntry) is a signature file or the JAR index file.
+     * 
+     * @param name the name of the JAR entry to test, cannot be
+     *            <code>null</code>.
+     * @return <code>true</code> if the given JAR entry name is a signature file
+     *         or JAR index file, <code>false</code> otherwise.
+     */
+    protected boolean isMetaInfFile(String name) {
+        name = name.toUpperCase(Locale.US);
+        return name.startsWith("META-INF/") && (name.endsWith("/INDEX.LIST") || name.endsWith(".SF") || name.endsWith(".DSA") || name.endsWith(".RS"));
+    }
 }

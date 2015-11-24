@@ -88,6 +88,7 @@ public abstract class BaseIntegrationTest extends TestCase {
             mavenBundle("org.apache.felix", "org.apache.felix.deploymentadmin").versionAsInProject(),
             mavenBundle("org.apache.felix", "org.apache.felix.eventadmin").versionAsInProject(),
             mavenBundle("org.apache.felix", "org.apache.felix.configadmin").versionAsInProject(),
+            mavenBundle("commons-codec", "commons-codec").versionAsInProject(),
             
             junitBundles()
         );

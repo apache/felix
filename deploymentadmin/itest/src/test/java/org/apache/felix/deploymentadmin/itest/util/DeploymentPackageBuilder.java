@@ -20,6 +20,7 @@ package org.apache.felix.deploymentadmin.itest.util;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -99,23 +100,6 @@ public class DeploymentPackageBuilder {
 
     private static final int BUFFER_SIZE = 32 * 1024;
 
-    private final String m_symbolicName;
-    private final String m_version;
-    private final List<ArtifactData> m_bundles = new ArrayList<ArtifactData>();
-    private final List<ArtifactData> m_processors = new ArrayList<ArtifactData>();
-
-    private final List<ArtifactData> m_artifacts = new ArrayList<ArtifactData>();
-    private String m_fixPackageVersion;
-
-    private boolean m_verification;
-
-    private DeploymentPackageBuilder(String symbolicName, String version) {
-        m_symbolicName = symbolicName;
-        m_version = version;
-
-        m_verification = true;
-    }
-
     /**
      * Creates a new deployment package builder.
      * 
@@ -125,6 +109,27 @@ public class DeploymentPackageBuilder {
      */
     public static DeploymentPackageBuilder create(String name, String version) {
         return new DeploymentPackageBuilder(name, version);
+    }
+
+    private final String m_symbolicName;
+    private final String m_version;
+    private final List<ArtifactData> m_localizationFiles = new ArrayList<ArtifactData>();
+    private final List<ArtifactData> m_bundles = new ArrayList<ArtifactData>();
+    private final List<ArtifactData> m_processors = new ArrayList<ArtifactData>();
+
+    private final List<ArtifactData> m_artifacts = new ArrayList<ArtifactData>();
+
+    private String m_fixPackageVersion;
+
+    private boolean m_addSignatures;
+    private boolean m_verification;
+
+    private DeploymentPackageBuilder(String symbolicName, String version) {
+        m_symbolicName = symbolicName;
+        m_version = version;
+
+        m_addSignatures = false;
+        m_verification = true;
     }
 
     /**
@@ -142,9 +147,17 @@ public class DeploymentPackageBuilder {
         else if (artifactData.isBundle()) {
             m_bundles.add(artifactData);
         }
+        else if (artifactData.isLocalizationFile()) {
+            m_localizationFiles.add(artifactData);
+        }
         else {
             m_artifacts.add(artifactData);
         }
+        return this;
+    }
+
+    public DeploymentPackageBuilder addSignatures() {
+        m_addSignatures = true;
         return this;
     }
 
@@ -161,6 +174,10 @@ public class DeploymentPackageBuilder {
 
     public BundleDataBuilder createBundleResource() {
         return new BundleDataBuilder();
+    }
+
+    public LocalizationResourceDataBuilder createLocalizationResource() {
+        return new LocalizationResourceDataBuilder();
     }
 
     public ResourceDataBuilder createResource() {
@@ -207,6 +224,7 @@ public class DeploymentPackageBuilder {
      */
     public void generate(OutputStream output) throws Exception {
         List<ArtifactData> artifacts = new ArrayList<ArtifactData>();
+        artifacts.addAll(m_localizationFiles);
         artifacts.addAll(m_bundles);
         artifacts.addAll(m_processors);
         artifacts.addAll(m_artifacts);
@@ -217,6 +235,14 @@ public class DeploymentPackageBuilder {
         }
 
         Manifest m = createManifest(artifacts);
+
+        // The order in which the actual entries are added to the JAR is different than we're using for the manifest...
+        artifacts.clear();
+        artifacts.addAll(m_bundles);
+        artifacts.addAll(m_processors);
+        artifacts.addAll(m_localizationFiles);
+        artifacts.addAll(m_artifacts);
+
         writeStream(artifacts, m, output);
     }
 
@@ -293,6 +319,10 @@ public class DeploymentPackageBuilder {
                 a.putValue("DeploymentPackage-Missing", "true");
             }
 
+            if (m_addSignatures) {
+                a.putValue("SHA-256-Digest", "bogusdata=");
+            }
+
             entries.put(file.getFilename(), a);
         }
 
@@ -337,12 +367,40 @@ public class DeploymentPackageBuilder {
         }
     }
 
+    private InputStream getArtifactDataInputStream(ArtifactData file) throws IOException {
+        ResourceFilter filter = file.getFilter();
+        if (filter != null) {
+            return filter.createInputStream(file.getURL());
+        }
+        return file.getURL().openStream();
+    }
+
     private void writeStream(List<ArtifactData> files, Manifest manifest, OutputStream outputStream) throws Exception {
+        byte[] buffer = new byte[BUFFER_SIZE];
         JarOutputStream output = null;
-        InputStream fis = null;
+        InputStream is = null;
         try {
             output = new JarOutputStream(outputStream, manifest);
-            byte[] buffer = new byte[BUFFER_SIZE];
+
+            if (m_addSignatures) {
+                // Empty file index...
+                output.putNextEntry(new JarEntry("META-INF/INDEX.LIST"));
+                output.write(new byte[0]);
+                output.closeEntry();
+                
+                // Create a signature file + signature block
+                Manifest mf = new Manifest();
+                mf.getMainAttributes().put(Attributes.Name.SIGNATURE_VERSION, "1.0");
+                mf.getMainAttributes().putValue("SHA-256-Digest-Manifest", "bogusdata=");
+
+                output.putNextEntry(new JarEntry("META-INF/DP.SF"));
+                mf.write(output);
+                output.closeEntry();
+
+                output.putNextEntry(new JarEntry("META-INF/DP.DSA"));
+                output.write(new byte[] { 1, 2, 3, 4 });
+                output.closeEntry();
+            }
 
             Iterator<ArtifactData> filesIter = files.iterator();
             while (filesIter.hasNext()) {
@@ -354,35 +412,33 @@ public class DeploymentPackageBuilder {
 
                 output.putNextEntry(new JarEntry(file.getFilename()));
 
-                ResourceFilter filter = file.getFilter();
-                if (filter != null) {
-                    fis = filter.createInputStream(file.getURL());
-                }
-                else {
-                    fis = file.getURL().openStream();
-                }
-
+                is = getArtifactDataInputStream(file);
                 try {
-                    int bytes = fis.read(buffer);
-                    while (bytes != -1) {
+                    int bytes;
+                    while ((bytes = is.read(buffer)) != -1) {
                         output.write(buffer, 0, bytes);
-                        bytes = fis.read(buffer);
                     }
                 }
                 finally {
-                    fis.close();
-                    fis = null;
+                    closeSilently(is);
 
                     output.closeEntry();
                 }
             }
         }
         finally {
-            if (fis != null) {
-                fis.close();
+            closeSilently(is);
+            closeSilently(output);
+        }
+    }
+
+    static void closeSilently(Closeable resource) {
+        if (resource != null) {
+            try {
+                resource.close();
             }
-            if (output != null) {
-                output.close();
+            catch (IOException e) {
+                // Ignore...
             }
         }
     }

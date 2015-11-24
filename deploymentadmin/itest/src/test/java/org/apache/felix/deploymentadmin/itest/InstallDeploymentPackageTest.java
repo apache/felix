@@ -19,6 +19,7 @@
 package org.apache.felix.deploymentadmin.itest;
 
 import java.io.File;
+import java.net.URL;
 
 import org.apache.felix.deploymentadmin.itest.util.DeploymentPackageBuilder;
 import org.apache.felix.deploymentadmin.itest.util.DeploymentPackageBuilder.JarManifestManipulatingFilter;
@@ -36,6 +37,24 @@ import org.osgi.service.deploymentadmin.DeploymentPackage;
 @RunWith(PaxExam.class)
 public class InstallDeploymentPackageTest extends BaseIntegrationTest
 {
+    /**
+     * FELIX-518 - Test that DP with localization and signature files are properly deployed.
+     */
+    @Test
+    public void testInstallDeploymentPackageWithLocalizationAndSignatureFilesOk() throws Exception {
+        URL dpProps = getClass().getResource("/dp.properties");
+        assertNotNull(dpProps);
+        
+        DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
+        dpBuilder
+            .addSignatures()
+            .add(dpBuilder.createLocalizationResource().setUrl(dpProps).setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setFilename("dp.properties"))
+            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")));
+
+        installDeploymentPackage(dpBuilder);
+    }
+    
+    
     /**
      * FELIX-4409/4410/4463 - test the installation of an invalid deployment package.
      */

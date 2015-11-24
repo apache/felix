@@ -66,6 +66,10 @@ public class ArtifactData {
         return m_isBundle;
     }
 
+    public boolean isLocalizationFile() {
+        return m_filename.startsWith("OSGI-INF/l10n/");
+    }
+
     public boolean isCustomizer() {
         return m_isCustomizer;
     }
