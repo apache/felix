@@ -62,6 +62,7 @@ import org.osgi.service.metatype.MetaTypeService;
 import org.osgi.service.metatype.ObjectClassDefinition;
 
 public class AutoConfResourceProcessor implements ResourceProcessor, EventHandler {
+    private static final int CODE_OTHER_ERROR = ResourceProcessorException.CODE_OTHER_ERROR;
     private static final String LOCATION_PREFIX = "osgi-dp:";
     public static final String CONFIGURATION_ADMIN_FILTER_ATTRIBUTE = "filter";
 
@@ -74,7 +75,7 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
     
 	private Component m_component;
 	
-	private final Object LOCK = new Object(); // protects the members below
+	private final Object m_lock = new Object(); // protects the members below
 
 	private DeploymentSession m_session = null;
 	private final Map m_toBeInstalled = new HashMap(); // Map<String, List<AutoConfResource>>
@@ -92,14 +93,14 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
 	
     public void begin(DeploymentSession session) {
         m_log.log(LogService.LOG_DEBUG, "beginning session " + session);
-        synchronized (LOCK) {
+        synchronized (m_lock) {
             if (m_session != null) {
                 throw new IllegalArgumentException("Trying to begin new deployment session while already in one.");
             }
             if (session == null) {
                 throw new IllegalArgumentException("Trying to begin new deployment session with a null session.");
             }
-            if (m_toBeInstalled.size() > 0 || m_toBeDeleted.size() > 0 || m_configurationAdminTasks.size() > 0 || m_postCommitTasks.size() > 0 || m_component != null) {
+            if (!m_toBeInstalled.isEmpty() || !m_toBeDeleted.isEmpty() || !m_configurationAdminTasks.isEmpty() || !m_postCommitTasks.isEmpty() || m_component != null) {
                 throw new IllegalStateException("State not reset correctly at start of session.");
             }
             m_session = session;
@@ -109,9 +110,9 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
     public void process(String name, InputStream stream) throws ResourceProcessorException {
         m_log.log(LogService.LOG_DEBUG, "processing " + name);
         // initial validation
-        synchronized (LOCK) {
+        synchronized (m_lock) {
             if (m_session == null) {
-                throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Can not process resource without a Deployment Session");
+                throw new ResourceProcessorException(CODE_OTHER_ERROR, "Can not process resource without a Deployment Session");
             }
         }
         MetaDataReader reader = new MetaDataReader();
@@ -120,10 +121,10 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
             data = reader.parse(stream);
         }
         catch (IOException e) {
-            throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Unable to process resource.", e);
+            throw new ResourceProcessorException(CODE_OTHER_ERROR, "Unable to process resource.", e);
         }
         if (data == null) {
-            throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Supplied configuration is not conform the metatype xml specification.");
+            throw new ResourceProcessorException(CODE_OTHER_ERROR, "Supplied configuration is not conform the metatype xml specification.");
         }
         // process resources
         String filter = null;
@@ -135,8 +136,8 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
         if (!m_toBeInstalled.containsKey(name)) {
             m_toBeInstalled.put(name, new ArrayList());
         }
-        Map designates = data.getDesignates();
-        if (designates == null) {
+        List designates = data.getDesignates();
+        if (designates == null || designates.isEmpty()) {
             // if there are no designates, there's nothing to process
             m_log.log(LogService.LOG_INFO, "No designates found in the resource, so there's nothing to process.");
             return;
@@ -145,24 +146,24 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
         if (localOcds == null) {
             localOcds = Collections.EMPTY_MAP;
         }
-        Iterator i = designates.keySet().iterator();
+        Iterator i = designates.iterator();
         while (i.hasNext()) {
-            Designate designate = (Designate) designates.get(i.next());
+            Designate designate = (Designate) i.next();
             
             // check object
             if (designate.getObject() == null) {
-                throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Designate Object child missing or invalid");
+                throw new ResourceProcessorException(CODE_OTHER_ERROR, "Designate Object child missing or invalid");
             }
             
             // check attributes
             if (designate.getObject().getAttributes() == null || designate.getObject().getAttributes().size() == 0) {
-                throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Object Attributes child missing or invalid");
+                throw new ResourceProcessorException(CODE_OTHER_ERROR, "Object Attributes child missing or invalid");
             }
             
             // check ocdRef
             String ocdRef = designate.getObject().getOcdRef();
             if (ocdRef == null || "".equals(ocdRef)) {
-                throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Object ocdRef attribute missing or invalid");
+                throw new ResourceProcessorException(CODE_OTHER_ERROR, "Object ocdRef attribute missing or invalid");
             }
 
             // determine OCD
@@ -171,7 +172,7 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
             // ask meta type service for matching OCD if no local OCD has been defined
             ocd = (localOcd != null) ? new ObjectClassDefinitionImpl(localOcd) : getMetaTypeOCD(data, designate);
             if (ocd == null) {
-                throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "No Object Class Definition found with id=" + ocdRef);
+                throw new ResourceProcessorException(CODE_OTHER_ERROR, "No Object Class Definition found with id=" + ocdRef);
             }
             // determine configuration data based on the values and their type definition
             Dictionary dict = getProperties(designate, ocd);
@@ -187,9 +188,9 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
 
     public void dropped(String name) throws ResourceProcessorException {
         m_log.log(LogService.LOG_DEBUG, "dropped " + name);
-        synchronized (LOCK) {
+        synchronized (m_lock) {
         	if (m_session == null) {
-        		throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Can not process resource without a Deployment Session");
+        		throw new ResourceProcessorException(CODE_OTHER_ERROR, "Can not process resource without a Deployment Session");
         	}
         }
     	try {
@@ -200,16 +201,16 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
     		((List) m_toBeDeleted.get(name)).addAll(resources);
     	}
     	catch (IOException ioe) {
-    		throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Unable to drop resource: " + name, ioe);
+    		throw new ResourceProcessorException(CODE_OTHER_ERROR, "Unable to drop resource: " + name, ioe);
     	}
         m_log.log(LogService.LOG_DEBUG, "dropped " + name + " done");
     }
 
     public void dropAllResources() throws ResourceProcessorException {
         m_log.log(LogService.LOG_DEBUG, "drop all resources");
-        synchronized (LOCK) {
+        synchronized (m_lock) {
         	if (m_session == null) {
-        		throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Can not drop all resources without a Deployment Session");
+        		throw new ResourceProcessorException(CODE_OTHER_ERROR, "Can not drop all resources without a Deployment Session");
         	}
         }
 
@@ -221,7 +222,7 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
     		}
     	}
     	else {
-    		throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Unable to drop resources, data area is not accessible");
+    		throw new ResourceProcessorException(CODE_OTHER_ERROR, "Unable to drop resources, data area is not accessible");
     	}
         m_log.log(LogService.LOG_DEBUG, "drop all resources done");
     }
@@ -231,9 +232,9 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
 
     public void prepare() throws ResourceProcessorException {
         m_log.log(LogService.LOG_DEBUG, "prepare");
-        synchronized (LOCK) {
+        synchronized (m_lock) {
         	if (m_session == null) {
-        		throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Can not process resource without a Deployment Session");
+        		throw new ResourceProcessorException(CODE_OTHER_ERROR, "Can not process resource without a Deployment Session");
         	}
         }
     	try {
@@ -416,7 +417,7 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
     						break;
     					}
     					else {
-    						throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Could not match attribute to it's definition: adref=" + adRef);
+    						throw new ResourceProcessorException(CODE_OTHER_ERROR, "Could not match attribute to it's definition: adref=" + adRef);
     					}
     				}
     				properties.put(adRef, value);
@@ -429,7 +430,7 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
     				properties = null;
     				break;
     			} else {
-    				throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Could not find attribute definition: adref=" + adRef);
+    				throw new ResourceProcessorException(CODE_OTHER_ERROR, "Could not find attribute definition: adref=" + adRef);
     			}
     		}
     	}
@@ -500,10 +501,10 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
      * 
      * @param attribute The attribute containing value(s)
      * @param ad The attribute definition
-     * @return An <code>Object</code> reflecting what was specified in the attribute and it's definition or <code>null</code> if
-     * the value did not match it's definition.
+     * @return An <code>Object</code> reflecting what was specified in the attribute and it's definition or <code>null</code> if the value did not match it's definition.
+     * @throws ResourceProcessorException in case we're unable to parse the value of an attribute.
      */
-    private Object getValue(Attribute attribute, AttributeDefinition ad) {
+    private Object getValue(Attribute attribute, AttributeDefinition ad) throws ResourceProcessorException {
     	if (attribute == null || ad == null || !attribute.getAdRef().equals(ad.getID())) {
     		// wrong attribute or definition
     		return null;
@@ -532,7 +533,7 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
 	    					typedContent[i] = new Character(charArray[0]);
 	    				}
 	    				else {
-	    					return null;
+	    		            throw new ResourceProcessorException(CODE_OTHER_ERROR, "Unable to parse value for definition: adref=" + ad.getID());
 	    				}
 	    				break;
 	    			case AttributeDefinition.DOUBLE:
@@ -561,12 +562,12 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
 	    				break;
 	    			default:
 	    				// unsupported type
-	    				return null;
+                        throw new ResourceProcessorException(CODE_OTHER_ERROR, "Unsupported value-type for definition: adref=" + ad.getID());
     			}
     		}
     	}
     	catch (NumberFormatException nfe) {
-    		return null;
+            throw new ResourceProcessorException(CODE_OTHER_ERROR, "Unable to parse value for definition: adref=" + ad.getID());
     	}
 
     	// verify cardinality of value(s)

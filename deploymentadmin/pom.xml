@@ -22,8 +22,8 @@ under the License.
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>1.2.0</version>
-        <relativePath>../../pom/pom.xml</relativePath>
+        <version>3</version>
+        <relativePath>../pom/pom.xml</relativePath>
     </parent>
     <packaging>pom</packaging>
     <name>Apache Felix Deployment Admin Subproject</name>
