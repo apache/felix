@@ -35,6 +35,7 @@ import org.osgi.service.deploymentadmin.DeploymentException;
 public class StreamDeploymentPackage extends AbstractDeploymentPackage {
     private final JarInputStream m_input;
     private final List m_names = new ArrayList();
+    private boolean m_inMetaInf = true;
 
     /**
      * Creates an instance of this class.
@@ -57,17 +58,37 @@ public class StreamDeploymentPackage extends AbstractDeploymentPackage {
     }
 
     public AbstractInfo getNextEntry() throws IOException {
-        ZipEntry nextEntry = m_input.getNextJarEntry();
-        if (nextEntry == null) {
-            return null;
+        String name;
+
+        boolean metaInfFile = true;
+        do {
+            ZipEntry nextEntry = m_input.getNextJarEntry();
+            if (nextEntry == null) {
+                return null;
+            }
+            name = nextEntry.getName();
+
+            // FELIX-518: do not try to process signature or localization files...
+            metaInfFile = isMetaInfFile(name);
+            if (metaInfFile) {
+                if (!m_inMetaInf) {
+                    throw new IOException("Unexpected signature file found after manifest files: " + name);
+                }
+                else {
+                    continue;
+                }
+            }
         }
-        String name = nextEntry.getName();
+        while (metaInfFile);
+
+        m_inMetaInf = false;
         m_names.add(name);
-        AbstractInfo abstractInfoByPath = getAbstractInfoByPath(name);
-        return abstractInfoByPath;
+
+        return getAbstractInfoByPath(name);
     }
 
-    // This only works for those resources that have been read from the stream already, no guarantees for remainder of stream
+    // This only works for those resources that have been read from the stream already, no guarantees for remainder of
+    // stream
     public BundleInfoImpl[] getOrderedBundleInfos() {
         List result = new ArrayList();
 

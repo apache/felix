@@ -65,6 +65,10 @@ public class UpdateCommand extends Command {
                 String name = entry.getPath();
                 BundleInfoImpl bundleInfo = (BundleInfoImpl) expectedBundles.remove(name);
                 if (bundleInfo == null) {
+                    if (isLocalizationFile(name)) {
+                        // FELIX-518: do not try to process signature or localization files...
+                        continue;
+                    }
                     throw new DeploymentException(CODE_OTHER_ERROR, "Resource '" + name + "' is not described in the manifest.");
                 }
 
@@ -100,8 +104,8 @@ public class UpdateCommand extends Command {
 
                 Version targetVersion = getVersion(bundle);
                 if (!sourceVersion.equals(targetVersion)) {
-                    throw new DeploymentException(CODE_OTHER_ERROR, "Installed/updated bundle version (" + targetVersion + ") do not match what was installed/updated: " + sourceVersion
-                        + ", offending bundle = " + bsn);
+                    throw new DeploymentException(CODE_OTHER_ERROR,
+                        "Installed/updated bundle version (" + targetVersion + ") do not match what was installed/updated: " + sourceVersion + ", offending bundle = " + bsn);
                 }
             }
         }
@@ -112,6 +116,10 @@ public class UpdateCommand extends Command {
 
     private Version getVersion(Bundle bundle) {
         return Version.parseVersion((String) bundle.getHeaders().get(BUNDLE_VERSION));
+    }
+
+    private boolean isLocalizationFile(String name) {
+        return name.startsWith("OSGI-INF/l10n/");
     }
 
     private static class UninstallBundleRunnable extends AbstractAction {
