@@ -318,6 +318,11 @@ public class HttpSessionWrapper implements HttpSession
     {
         this.checkInvalid();
 
+        // session listener must be called before the session is invalidated
+        if (context.getHttpSessionListener() != null) {
+            context.getHttpSessionListener().sessionDestroyed(new HttpSessionEvent(this));
+        }
+
         if ( this.keyPrefix != null )
         {
             this.delegate.removeAttribute(ATTR_CREATED + this.sessionId);
@@ -342,10 +347,6 @@ public class HttpSessionWrapper implements HttpSession
             this.delegate.invalidate();
         }
 
-        if ( context.getHttpSessionListener() != null )
-        {
-            context.getHttpSessionListener().sessionDestroyed(new HttpSessionEvent(this));
-        }
         this.isInvalid = true;
     }
 
