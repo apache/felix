@@ -81,7 +81,7 @@ public final class Dispatcher
             }
         }
 
-        // get full path
+        // get full decoded path for dispatching
         // we can't use req.getRequestURI() or req.getRequestURL() as these are returning the encoded path
         String path = req.getServletPath();
         if ( path == null )
@@ -107,7 +107,7 @@ public final class Dispatcher
         }
 
         final ExtServletContext servletContext = pr.handler.getContext();
-        final RequestInfo requestInfo = new RequestInfo(pr.servletPath, pr.pathInfo, null);
+        final RequestInfo requestInfo = new RequestInfo(pr.servletPath, pr.pathInfo, null, req.getRequestURI());
 
         final HttpServletRequest wrappedRequest = new ServletRequestWrapper(req, servletContext, requestInfo, null,
                 pr.handler.getContextServiceId(),

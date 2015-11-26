@@ -51,12 +51,12 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
     private final ExtServletContext servletContext;
     private final long contextId;
     private final boolean asyncSupported;
-    
-    public ServletRequestWrapper(HttpServletRequest req, 
-    		ExtServletContext servletContext, 
+
+    public ServletRequestWrapper(HttpServletRequest req,
+    		ExtServletContext servletContext,
     		RequestInfo requestInfo,
-            DispatcherType type, 
-            final Long contextId, 
+            DispatcherType type,
+            final Long contextId,
             final boolean asyncSupported)
     {
         super(req);
@@ -78,7 +78,7 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
             // meaning that the request information comes from the *original* request...
             if (INCLUDE_REQUEST_URI.equals(name))
             {
-                return concat(request.getContextPath(), this.requestInfo.requestURI);
+                return this.requestInfo.requestURI;
             }
             else if (INCLUDE_CONTEXT_PATH.equals(name))
             {
@@ -202,7 +202,7 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
         {
             return super.getRequestURI();
         }
-        return concat(getContextPath(), this.requestInfo.requestURI);
+        return this.requestInfo.requestURI;
     }
 
     @Override

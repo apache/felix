@@ -49,6 +49,7 @@ import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.registry.PathResolution;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.registry.ServletResolution;
+import org.apache.felix.http.base.internal.util.UriUtils;
 
 /**
  * This servlet context implementation represents the shared
@@ -318,7 +319,7 @@ public class SharedServletContextImpl implements ServletContext
         	resolution.handler = servletHandler;
             resolution.handlerRegistry = this.registry;
             // TODO - what is the path of a named servlet?
-            final RequestInfo requestInfo = new RequestInfo("", null, null);
+            final RequestInfo requestInfo = new RequestInfo("", null, null, null);
             dispatcher = new RequestDispatcherImpl(resolution, requestInfo);
         }
         else
@@ -345,11 +346,8 @@ public class SharedServletContextImpl implements ServletContext
             path = path.substring(0, q);
         }
         // TODO remove path parameters...
-        String requestURI = decodePath(removeDotSegments(path));
-        if ( requestURI == null )
-        {
-            requestURI = "";
-        }
+        final String encodedRequestURI = path == null ? "" : removeDotSegments(path);
+        final String requestURI = decodePath(encodedRequestURI);
 
         final RequestDispatcher dispatcher;
         final PathResolution pathResolution = this.registry.resolve(requestURI);
@@ -358,7 +356,8 @@ public class SharedServletContextImpl implements ServletContext
         	final ServletResolution resolution = new ServletResolution();
         	resolution.handler = pathResolution.handler;
             resolution.handlerRegistry = this.registry;
-            final RequestInfo requestInfo = new RequestInfo(pathResolution.servletPath, pathResolution.pathInfo, query);
+            final RequestInfo requestInfo = new RequestInfo(pathResolution.servletPath, pathResolution.pathInfo, query,
+                    UriUtils.concat(this.contextPath, encodedRequestURI));
             dispatcher = new RequestDispatcherImpl(resolution, requestInfo);
         }
         else
@@ -426,6 +425,7 @@ public class SharedServletContextImpl implements ServletContext
         return this.context.getSessionCookieConfig();
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void log(final Exception cause, final String message)
     {

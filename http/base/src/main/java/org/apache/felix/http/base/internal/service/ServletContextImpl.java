@@ -58,6 +58,7 @@ import org.apache.felix.http.base.internal.registry.PathResolution;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.registry.ServletResolution;
 import org.apache.felix.http.base.internal.util.MimeTypes;
+import org.apache.felix.http.base.internal.util.UriUtils;
 import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpContext;
 
@@ -517,7 +518,7 @@ public class ServletContextImpl implements ExtServletContext
         	resolution.handler = servletHandler;
             resolution.handlerRegistry = this.handlerRegistry;
             // TODO - what is the path of a named servlet?
-            final RequestInfo requestInfo = new RequestInfo("", null, null);
+            final RequestInfo requestInfo = new RequestInfo("", null, null, null);
             dispatcher = new RequestDispatcherImpl(resolution, requestInfo);
         }
         else
@@ -544,11 +545,8 @@ public class ServletContextImpl implements ExtServletContext
             path = path.substring(0, q);
         }
         // TODO remove path parameters...
-        String requestURI = decodePath(removeDotSegments(path));
-        if ( requestURI == null )
-        {
-            requestURI = "";
-        }
+        final String encodedRequestURI = path == null ? "" : removeDotSegments(path);
+        final String requestURI = decodePath(encodedRequestURI);
 
         final RequestDispatcher dispatcher;
         final PathResolution pathResolution = this.handlerRegistry.resolve(requestURI);
@@ -557,7 +555,7 @@ public class ServletContextImpl implements ExtServletContext
         	final ServletResolution resolution = new ServletResolution();
         	resolution.handler = pathResolution.handler;
             resolution.handlerRegistry = this.handlerRegistry;
-            final RequestInfo requestInfo = new RequestInfo(pathResolution.servletPath, pathResolution.pathInfo, query);
+            final RequestInfo requestInfo = new RequestInfo(pathResolution.servletPath, pathResolution.pathInfo, query, UriUtils.concat(this.getContextPath(), encodedRequestURI));
             dispatcher = new RequestDispatcherImpl(resolution, requestInfo);
         }
         else
