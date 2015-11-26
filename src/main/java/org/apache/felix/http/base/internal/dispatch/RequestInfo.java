@@ -16,10 +16,6 @@
  */
 package org.apache.felix.http.base.internal.dispatch;
 
-import static org.apache.felix.http.base.internal.util.UriUtils.concat;
-
-import org.apache.felix.http.base.internal.util.UriUtils;
-
 public final class RequestInfo
 {
     final String servletPath;
@@ -27,12 +23,15 @@ public final class RequestInfo
     final String queryString;
     final String requestURI;
 
-    public RequestInfo(String servletPath, String pathInfo, String queryString)
+    public RequestInfo(final String servletPath,
+            final String pathInfo,
+            final String queryString,
+            final String requestURI)
     {
         this.servletPath = servletPath;
         this.pathInfo = pathInfo;
         this.queryString = queryString;
-        this.requestURI = UriUtils.compactPath(concat(servletPath, pathInfo));
+        this.requestURI = requestURI;
     }
 
     @Override
