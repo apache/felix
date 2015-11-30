@@ -19,21 +19,34 @@
 
 package org.apache.felix.webconsole.plugins.scriptconsole.internal;
 
-import org.apache.commons.io.IOUtils;
-import org.osgi.framework.*;
-import org.osgi.service.log.LogService;
-import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
-
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineFactory;
+
+import org.apache.commons.io.IOUtils;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
+import org.osgi.framework.BundleListener;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.log.LogService;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
  * It is based on org.apache.sling.scripting.core.impl.ScriptEngineManagerFactory
@@ -187,25 +200,22 @@ class ScriptEngineManager implements BundleListener, ServiceTrackerCustomizer
         {
             ins = url.openStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(ins));
-            String line;
-            while ((line = reader.readLine()) != null)
+            for (String className : getClassNames(reader))
             {
-                if (!line.startsWith("#") && line.trim().length() > 0)
+                try
                 {
-                    try
-                    {
-                        Class<ScriptEngineFactory> clazz = bundle.loadClass(line);
-                        ScriptEngineFactory spi = clazz.newInstance();
-                        registerFactory(mgr, spi, null);
-                        extensions.addAll(spi.getExtensions());
-                    }
-                    catch (Throwable t)
-                    {
-                        log.log(LogService.LOG_ERROR,
-                            "Cannot register ScriptEngineFactory " + line, t);
-                    }
+                    Class<ScriptEngineFactory> clazz = bundle.loadClass(className);
+                    ScriptEngineFactory spi = clazz.newInstance();
+                    registerFactory(mgr, spi, null);
+                    extensions.addAll(spi.getExtensions());
+                }
+                catch (Throwable t)
+                {
+                    log.log(LogService.LOG_ERROR,
+                            "Cannot register ScriptEngineFactory " + className, t);
                 }
             }
+
         }
         catch (IOException ioe)
         {
@@ -242,6 +252,19 @@ class ScriptEngineManager implements BundleListener, ServiceTrackerCustomizer
         {
             scriptFactoryTracker.close();
         }
+    }
+
+    static List<String> getClassNames(BufferedReader reader) throws IOException {
+        List<String> classNames = new ArrayList<String>();
+        String line;
+        while ((line = reader.readLine()) != null)
+        {
+            if (!line.startsWith("#") && line.trim().length() > 0)
+            {
+                classNames.add(line);
+            }
+        }
+        return classNames;
     }
 
     private static Map<Object, Object> getServiceProperties(ServiceReference reference)
