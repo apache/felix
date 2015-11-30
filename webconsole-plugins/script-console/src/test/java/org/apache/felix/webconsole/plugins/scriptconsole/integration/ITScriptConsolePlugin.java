@@ -19,6 +19,10 @@
 
 package org.apache.felix.webconsole.plugins.scriptconsole.integration;
 
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
@@ -30,16 +34,17 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.sling.testing.tools.http.RequestBuilder;
 import org.apache.sling.testing.tools.http.RequestExecutor;
+import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
+import org.ops4j.pax.exam.junit.PaxExamServer;
 
 public class ITScriptConsolePlugin
 {
     private DefaultHttpClient httpClient = new DefaultHttpClient();
     private RequestExecutor executor = new RequestExecutor(httpClient);
+
+    @Rule
+    public PaxExamServer exam = new PaxExamServer(ServerConfiguration.class);
 
     @Test
     public void testScriptExecution() throws Exception
