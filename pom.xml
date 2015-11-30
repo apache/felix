@@ -54,6 +54,7 @@
     <bundle.boot.file>
       ${bundle.build.name}/${project.build.finalName}-boot.jar
     </bundle.boot.file>
+    <felix.java.version>6</felix.java.version>
   </properties>
 
   <build>
