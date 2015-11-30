@@ -149,7 +149,7 @@ class BundleLoginModuleCreator extends BundleTracker implements LoginModuleCreat
 
                 loginModuleInfo.put(className, bi);
                 log.log(LogService.LOG_INFO, "Registering LoginModule class ["
-                    + className + "] from Bundle" + bundle);
+                    + className + "] from Bundle " + bundle);
             }
             else
             {
