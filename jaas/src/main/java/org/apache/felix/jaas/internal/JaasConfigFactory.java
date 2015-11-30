@@ -19,8 +19,6 @@
 
 package org.apache.felix.jaas.internal;
 
-import static org.apache.felix.jaas.internal.Util.trimToNull;
-
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -43,6 +41,8 @@ import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
 import org.osgi.service.log.LogService;
 
+import static org.apache.felix.jaas.internal.Util.trimToNull;
+
 @Component(label = "%jaas.name",
         description = "%jaas.description",
         metatype = true,
@@ -57,7 +57,10 @@ import org.osgi.service.log.LogService;
         @PropertyOption(name = "optional", value = "%jaas.flag.optional")
     }),
     @Property(name = LoginModuleFactory.JAAS_RANKING, intValue = 0),
-    @Property(name = LoginModuleFactory.JAAS_REALM_NAME)
+    @Property(name = LoginModuleFactory.JAAS_REALM_NAME),
+    @Property(name = "webconsole.configurationFactory.nameHint",
+            value = "{" + LoginModuleFactory.JAAS_RANKING + "} : {" + JaasConfigFactory.JAAS_CLASS_NAME + "}"
+                    + " ({" + LoginModuleFactory.JAAS_CONTROL_FLAG + "})")
 })
 public class JaasConfigFactory implements ManagedServiceFactory
 {
