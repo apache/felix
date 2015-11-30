@@ -40,7 +40,7 @@ function setUpCodeMirror() {
     });
     outputEditor = CodeMirror.fromTextArea(document.getElementById("result"), {
             lineNumbers:true,
-            readOnly:"nocursor"
+            readOnly:true
         });
 }
 
