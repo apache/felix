@@ -23,7 +23,6 @@ import java.io.BufferedReader;
 import java.io.StringReader;
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static java.util.Arrays.asList;
@@ -49,7 +48,6 @@ public class ScriptEngineManagerTest {
         assertEquals(asList("org.codehaus.groovy.jsr223.GroovyScriptEngineFactory"),classNames);
     }
 
-    @Ignore("FELIX-5120")
     @Test
     public void configWithCommentAtEnd() throws Exception
     {
@@ -60,6 +58,5 @@ public class ScriptEngineManagerTest {
                 "\n";
         List<String> classNames = ScriptEngineManager.getClassNames(new BufferedReader(new StringReader(config)));
         assertEquals(asList("com.sun.script.javascript.RhinoScriptEngineFactory"),classNames);
-
     }
 }

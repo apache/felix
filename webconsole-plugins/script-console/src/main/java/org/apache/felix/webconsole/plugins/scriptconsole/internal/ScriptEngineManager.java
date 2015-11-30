@@ -261,6 +261,12 @@ class ScriptEngineManager implements BundleListener, ServiceTrackerCustomizer
         {
             if (!line.startsWith("#") && line.trim().length() > 0)
             {
+                int indexOfHash = line.indexOf('#');
+                if (indexOfHash >= 0)
+                {
+                    line = line.substring(0, indexOfHash);
+                }
+                line = line.trim();
                 classNames.add(line);
             }
         }
