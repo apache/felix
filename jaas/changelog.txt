@@ -1,3 +1,12 @@
+Changes from 0.0.2 to 0.0.4
+---------------------------
+** Bug
+    * [FELIX-4827] - Improve logging on LoginModule registration
+
+** Improvement
+    * [FELIX-4978] - Enable name hint for JAAS Config entries
+    * [FELIX-5083] - Set webconsole.configurationFactory.nameHint for JAAS configurations
+
 Initial Release 0.0.2
 ---------------------
 
