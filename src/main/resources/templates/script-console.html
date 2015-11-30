@@ -13,7 +13,6 @@ var scriptConfig = ${__scriptConfig__};
 <div class="ui-widget-header ">
     <img id="ajaxSpinner" src="${appRoot}/res/imgs/loading.gif" tile="Working..." />
     <button type="button" id="executeButton">${console.execute}</button>
-    <button type="button" id="langButton">${console.lang}</button>
     <select id="codeLang">
         <option></option>
     </select>
@@ -28,7 +27,7 @@ var scriptConfig = ${__scriptConfig__};
         </form>
     </div>
     <div id="code-output">
-        <textarea id="result" style="width: 90%;" readonly="yes"></textarea>
+        <textarea id="result" style="width: 90%;" readonly></textarea>
     </div>
 </div>
 

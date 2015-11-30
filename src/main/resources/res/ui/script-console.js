@@ -8,7 +8,6 @@ function sendData(url, data) {
         url:url,
         data:data,
 //        dataType:"json",
-        timeout:30000, //In millis
         beforeSend:function () {
             $('#ajaxSpinner').show();
         },
