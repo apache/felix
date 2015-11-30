@@ -23,7 +23,7 @@
     <groupId>org.apache.felix</groupId>
     <artifactId>felix-parent</artifactId>
     <version>3</version>
-    <relativePath>../pom/pom.xml</relativePath>
+    <relativePath>../../pom/pom.xml</relativePath>
   </parent>
 
   <artifactId>org.apache.felix.webconsole.plugins.scriptconsole</artifactId>
@@ -37,7 +37,7 @@
   </description>
 
   <properties>
-    <pax-exam.version>3.0.0</pax-exam.version>
+    <pax-exam.version>4.6.0</pax-exam.version>
     <bundle.build.name>
       ${basedir}/target
     </bundle.build.name>
@@ -119,47 +119,6 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>properties-maven-plugin</artifactId>
-        <version>1.0-alpha-2</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>set-system-properties</goal>
-            </goals>
-            <phase>pre-integration-test</phase>
-            <configuration>
-              <properties>
-                <property>
-                  <name>project.bundle.file</name>
-                  <value>${bundle.file.name}</value>
-                </property>
-                <property>
-                  <name>http.port</name>
-                  <value>${http.port}</value>
-                </property>
-              </properties>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.ops4j.pax.exam</groupId>
-        <artifactId>exam-maven-plugin</artifactId>
-        <version>4.5.0</version>
-        <configuration>
-          <configClass>org.apache.felix.webconsole.plugins.scriptconsole.integration.ServerConfiguration</configClass>
-        </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>start-container</goal>
-              <goal>stop-container</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <groupId>org.apache.servicemix.tooling</groupId>
         <artifactId>depends-maven-plugin</artifactId>
         <version>1.2</version>
@@ -188,6 +147,7 @@
           <systemPropertyVariables>
             <coverage.command>${coverage.command}</coverage.command>
             <http.port>${http.port}</http.port>
+            <project.bundle.file>${bundle.file.name}</project.bundle.file>
           </systemPropertyVariables>
           <forkMode>always</forkMode>
           <parallel>none</parallel>
@@ -198,6 +158,15 @@
   </build>
 
   <dependencies>
+    <!-- Need to keep first to override conflicts in core and
+    compendium jars-->
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.framework</artifactId>
+      <version>5.4.0</version>
+      <scope>test</scope>
+    </dependency>
+
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
@@ -252,7 +221,7 @@
     <!-- Pax Exam Dependencies -->
     <dependency>
       <groupId>org.ops4j.pax.exam</groupId>
-      <artifactId>pax-exam-container-forked</artifactId>
+      <artifactId>pax-exam-container-native</artifactId>
       <version>${pax-exam.version}</version>
       <scope>test</scope>
     </dependency>
@@ -271,7 +240,7 @@
     <dependency>
       <groupId>org.ops4j.pax.url</groupId>
       <artifactId>pax-url-wrap</artifactId>
-      <version>1.5.2</version>
+      <version>2.4.3</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -388,32 +357,6 @@
           </plugin>
         </plugins>
       </build>
-    </profile>
-
-    <profile>
-      <id>felix</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <dependencies>
-        <dependency>
-          <groupId>org.apache.felix</groupId>
-          <artifactId>org.apache.felix.framework</artifactId>
-          <version>4.0.2</version>
-          <scope>test</scope>
-        </dependency>
-      </dependencies>
-    </profile>
-    <profile>
-      <id>equinox</id>
-      <dependencies>
-        <dependency>
-          <groupId>org.eclipse</groupId>
-          <artifactId>org.eclipse.osgi</artifactId>
-          <version>3.8.0.v20120529-1548</version>
-          <scope>test</scope>
-        </dependency>
-      </dependencies>
     </profile>
   </profiles>
 </project>
