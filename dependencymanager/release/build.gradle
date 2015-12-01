@@ -106,18 +106,35 @@ task makeStaging << {
     }
 
     // Package binaries as a simple collection of bundles. We use same license files as for src distrib.
-    logger.lifecycle("    Packaging binary distribution.")    
+    logger.lifecycle("    Packaging binary distribution.")
+
+    // First, get list of latest released bundles available from our Release repository
+    def released = []
+    def releaseRepo = workspace.getRepository("Release")
+    logger.lifecycle("releaserepo=" + releaseRepo)
+    def bundles=releaseRepo.list(null)
+    bundles.each {
+	    def sortedVersions = releaseRepo.versions(it)
+	    def latestVersion = sortedVersions.last()
+	    def latestBundle = releaseRepo.get(it, latestVersion, null)
+	    released << latestBundle
+    }
+
+    // Now, add all the latest released bundles in the binary distribution
     ant.zip(destfile: "staging/"+topdir+"-bin.zip") {
-        ant.mappedresources() {
-            // simply include all released bundle.
-        	ant.fileset(dir: '..', includes: 'cnf/releaserepo/*/*.jar')
-            ant.chainedmapper() {
-                ant.flattenmapper()
-                ant.globmapper(from: '*', to: topdir+'-bin/*')
+        // simply include all released bundle.
+        released.each {
+	    file=it
+            ant.mappedresources() {
+        	ant.filelist(files: file)
+                ant.chainedmapper() {
+                    ant.flattenmapper()
+                    ant.globmapper(from: '*', to: topdir+'-bin/*')
+                }
             }
         }
         ant.mappedresources() {
-        	ant.fileset(dir: 'resources/bin', includes: '*')
+            ant.fileset(dir: 'resources/bin', includes: '*')
             ant.chainedmapper() {
                 ant.flattenmapper()
                 ant.globmapper(from: '*', to: topdir+'-bin/*')
