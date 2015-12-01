@@ -118,8 +118,6 @@ https://dist.apache.org/repos/dist/release/felix by invoking the following targe
 
 $ ./gradlew promoteToRelease
 
-Then Edit the ./release/build.gradle script, increment the "ext.dmRelease" property, and commit.
-
 Cancelling the release
 ======================
 
