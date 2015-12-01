@@ -280,6 +280,9 @@ public class BundlePlugin extends AbstractMojo
 
     /**
      * The BND instructions for the bundle.
+     * Maven will expand property macros in these values. If you want to use a BND macro, you must double the dollar sign
+     * for the plugin to pass it to BND correctly. For example: <br>
+     * {@code <_consumer-policy>$${range;[===,+)}<code>}<code>{@code </_consumer-policy> }
      */
     @Parameter
     private Map<String, String> instructions = new LinkedHashMap<String, String>();
