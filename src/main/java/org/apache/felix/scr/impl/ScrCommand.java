@@ -397,10 +397,18 @@ public class ScrCommand implements ScrInfo
             }
             else
             {
-                for (final ComponentConfigurationDTO cc: scrService.getComponentConfigurationDTOs(component))
-                {
-                    info(cc, out);
-                }
+            	Collection<ComponentConfigurationDTO> componentConfigurationDTOs = scrService.getComponentConfigurationDTOs(component);
+            	if (componentConfigurationDTOs.isEmpty())
+            	{
+            		out.println("  (No Component Configurations)");
+            	}
+            	else 
+            	{
+            		for (final ComponentConfigurationDTO cc: componentConfigurationDTOs)
+            		{
+            			info(cc, out);
+            		}
+            	}
             }
             out.println();
         }
