@@ -644,8 +644,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
                 return m_enablePromise;
             }
             wait( m_disablePromise );
-
-
+            
             List<AbstractComponentManager<S>> cms = new ArrayList<AbstractComponentManager<S>>();
             synchronized ( m_components )
             {

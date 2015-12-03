@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.felix.scr.impl.Activator;
 import org.apache.felix.scr.impl.BundleComponentActivator;
@@ -43,9 +44,11 @@ import org.osgi.service.cm.ConfigurationEvent;
 import org.osgi.service.cm.ConfigurationListener;
 import org.osgi.service.cm.ConfigurationPermission;
 import org.osgi.service.log.LogService;
+import org.osgi.util.tracker.ServiceTracker;
 
-public class ConfigurationSupport implements ConfigurationListener
+public class RegionConfigurationSupport implements ConfigurationListener
 {
+
     private static final ChangeCount changeCounter;
     static
     {
@@ -68,33 +71,67 @@ public class ConfigurationSupport implements ConfigurationListener
         changeCounter = cc;
     }
 
+    private final BundleContext caBundleContext;
+    private final Long bundleId;
+    
     // the registry of components to be configured
     private final ComponentRegistry m_registry;
+    
+    private final AtomicInteger reference = new AtomicInteger(1);
 
     // the service m_registration of the ConfigurationListener service
-    private ServiceRegistration<?> m_registration;
+    private ServiceRegistration<ConfigurationListener> m_registration;
+    
 
-    public ConfigurationSupport(final BundleContext bundleContext, final ComponentRegistry registry)
+    /**
+     * 
+     * @param bundleContext of the ConfigurationAdmin we are tracking
+     * @param registry
+     */
+    public RegionConfigurationSupport(ServiceReference<ConfigurationAdmin> reference, final ComponentRegistry registry)
     {
         this.m_registry = registry;
-
+        Bundle bundle = reference.getBundle();
+        this.bundleId = bundle.getBundleId();
+        this.caBundleContext = bundle.getBundleContext();
+    }
+    
+    public void start() 
+    {
         // register as listener for configurations
         Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(Constants.SERVICE_DESCRIPTION, "Declarative Services Configuration Support Listener");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        this.m_registration = bundleContext.registerService(new String[]
-            { "org.osgi.service.cm.ConfigurationListener" }, this, props);
+        this.m_registration = caBundleContext.registerService(ConfigurationListener.class, this, props);
+
     }
 
-    public void dispose()
-    {
-        if (this.m_registration != null)
-        {
+	public Long getBundleId() 
+	{
+		return bundleId;
+	}
+
+	public boolean reference() 
+	{
+		if (reference.get() == 0)
+		{
+			return false;
+		}
+		reference.incrementAndGet();
+		return true;
+	}
+
+	public boolean dereference() 
+	{		
+		if ( reference.decrementAndGet() ==0 )
+		{
             this.m_registration.unregister();
-            this.m_registration = null;
-        }
-    }
-
+            this.m_registration = null;		
+            return true;
+		}
+		return false;
+	}
+	
     /**
      * The return value is only relevant for the call from {@link #configurationEvent(ConfigurationEvent)}
      * in the case of a deleted configuration which is not a factory configuration!
@@ -208,26 +245,6 @@ public class ConfigurationSupport implements ConfigurationListener
             }
         }
         return false;
-    }
-
-    // ---------- ServiceListener
-
-    public void configureComponentHolders(final ServiceReference<ConfigurationAdmin> configurationAdminReference,
-        final Object configurationAdmin)
-    {
-        if (configurationAdmin instanceof ConfigurationAdmin)
-        {
-            Configuration[] configs = findConfigurations((ConfigurationAdmin) configurationAdmin, null);
-            if (configs != null)
-            {
-                for (int i = 0; i < configs.length; i++)
-                {
-                    ConfigurationEvent cfgEvent = new ConfigurationEvent(configurationAdminReference,
-                        ConfigurationEvent.CM_UPDATED, configs[i].getFactoryPid(), configs[i].getPid());
-                    configurationEvent(cfgEvent);
-                }
-            }
-        }
     }
 
     // ---------- ConfigurationListener
@@ -691,4 +708,5 @@ public class ConfigurationSupport implements ConfigurationListener
         }
 
     }
+
 }

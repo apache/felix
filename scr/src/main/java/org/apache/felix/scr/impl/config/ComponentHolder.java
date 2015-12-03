@@ -33,7 +33,7 @@ import org.osgi.util.promise.Promise;
  * component instances configured through either singleton configurations (or
  * no configuration at all) and factory configurations.
  * <p>
- * Instances of this interface are managed by the {@link ConfigurationSupport}
+ * Instances of this interface are managed by the {@link RegionConfigurationSupport}
  * class on behalf of the
  * {@link org.apache.felix.scr.impl.BundleComponentActivator} and the
  * {@link org.apache.felix.scr.impl.ComponentRegistry}.

@@ -151,7 +151,7 @@ public class Activator extends AbstractExtender
 
         // prepare component registry
         m_componentBundles = new HashMap<Long, BundleComponentActivator>();
-        m_componentRegistry = new ComponentRegistry( m_context );
+        m_componentRegistry = new ComponentRegistry( );
 
         final ServiceComponentRuntime runtime = new ServiceComponentRuntimeImpl(m_context, m_componentRegistry);
         m_runtime_reg = m_context.registerService(ServiceComponentRuntime.class,
@@ -206,7 +206,6 @@ public class Activator extends AbstractExtender
 		// dispose component registry
     	if ( m_componentRegistry != null )
     	{
-    	    m_componentRegistry.dispose();
     	    m_componentRegistry = null;
     	}
 
