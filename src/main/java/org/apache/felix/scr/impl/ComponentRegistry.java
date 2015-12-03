@@ -26,21 +26,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.felix.scr.impl.config.ComponentHolder;
 import org.apache.felix.scr.impl.config.ConfigurableComponentHolder;
-import org.apache.felix.scr.impl.config.ConfigurationSupport;
+import org.apache.felix.scr.impl.config.RegionConfigurationSupport;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.apache.felix.scr.impl.manager.DependencyManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceEvent;
-import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentException;
 import org.osgi.service.log.LogService;
@@ -50,14 +47,11 @@ import org.osgi.service.log.LogService;
  * The <code>ComponentRegistry</code> class acts as the global registry for
  * components by name and by component ID.
  */
-public class ComponentRegistry implements ServiceListener
+public class ComponentRegistry
 {
 
     // the name of the ConfigurationAdmin service
     public static final String CONFIGURATION_ADMIN = "org.osgi.service.cm.ConfigurationAdmin";
-
-    // the bundle context
-    private BundleContext m_bundleContext;
 
     /**
      * The map of known components indexed by component name. The values are
@@ -91,7 +85,7 @@ public class ComponentRegistry implements ServiceListener
      *
      * @see #registerComponentHolder(String, ComponentHolder)
      * @see #unregisterComponentHolder(String)
-     * @see ConfigurationSupport#configurationEvent(org.osgi.service.cm.ConfigurationEvent)
+     * @see RegionConfigurationSupport#configurationEvent(org.osgi.service.cm.ConfigurationEvent)
      */
     private final Map<String, Set<ComponentHolder<?>>> m_componentHoldersByPid;
 
@@ -112,49 +106,15 @@ public class ComponentRegistry implements ServiceListener
      */
     private long m_componentCounter = -1;
 
-    // ConfigurationAdmin support -- created on demand upon availability of
-    // the ConfigurationAdmin service
-    private ConfigurationSupport configurationSupport;
-
     private final Map<ServiceReference<?>, List<Entry<?, ?>>> m_missingDependencies = new HashMap<ServiceReference<?>, List<Entry<?, ?>>>( );
 
-    protected ComponentRegistry( final BundleContext context )
+    protected ComponentRegistry( )
     {
-        m_bundleContext = context;
         m_componentHoldersByName = new HashMap<ComponentRegistryKey, ComponentHolder<?>>();
         m_componentHoldersByPid = new HashMap<String, Set<ComponentHolder<?>>>();
         m_componentsById = new HashMap<Long, AbstractComponentManager<?>>();
 
-        // keep me informed on ConfigurationAdmin state changes
-        try
-        {
-            context.addServiceListener(this, "(objectclass=" + CONFIGURATION_ADMIN + ")");
-        }
-        catch (InvalidSyntaxException ise)
-        {
-            // not expected (filter is tested valid)
-        }
-
-        // If the Configuration Admin Service is already registered, setup
-        // configuration support immediately
-        if (context.getServiceReference(CONFIGURATION_ADMIN) != null)
-        {
-            getOrCreateConfigurationSupport();
-        }
     }
-
-    public void dispose()
-    {
-        m_bundleContext.removeServiceListener(this);
-
-        if (configurationSupport != null)
-        {
-            configurationSupport.dispose();
-            configurationSupport = null;
-        }
-    }
-
-
 
     //---------- ComponentManager registration by component Id
 
@@ -310,11 +270,6 @@ public class ComponentRegistry implements ServiceListener
             }
         }
 
-        if (configurationSupport != null)
-        {
-            configurationSupport.configureComponentHolder(componentHolder);
-        }
-
   }
 
     /**
@@ -459,40 +414,6 @@ public class ComponentRegistry implements ServiceListener
 
     //---------- ServiceListener
 
-    /**
-     * Called if the Configuration Admin service changes state. This
-     * implementation is mainly interested in the Configuration Admin service
-     * being registered <i>after</i> the Declarative Services setup to be able
-     * to forward existing configuration.
-     *
-     * @param event The service change event
-     */
-    public void serviceChanged(ServiceEvent event)
-    {
-        if (event.getType() == ServiceEvent.REGISTERED)
-        {
-            ConfigurationSupport configurationSupport = getOrCreateConfigurationSupport();
-
-            final ServiceReference<ConfigurationAdmin> caRef = (ServiceReference<ConfigurationAdmin>) event.getServiceReference();
-            final ConfigurationAdmin service = m_bundleContext.getService(caRef);
-            if (service != null)
-            {
-                try
-                {
-                    configurationSupport.configureComponentHolders(caRef, service);
-                }
-                finally
-                {
-                    m_bundleContext.ungetService(caRef);
-                }
-            }
-        }
-        else if (event.getType() == ServiceEvent.UNREGISTERING)
-        {
-            disposeConfigurationSupport();
-        }
-    }
-
     //---------- Helper method
 
     /**
@@ -535,24 +456,6 @@ public class ComponentRegistry implements ServiceListener
 
         // fall back: bundle is not considered active
         return false;
-    }
-
-    private ConfigurationSupport getOrCreateConfigurationSupport()
-    {
-        if (configurationSupport == null)
-        {
-            configurationSupport = new ConfigurationSupport(m_bundleContext, this);
-        }
-        return configurationSupport;
-    }
-
-    private void disposeConfigurationSupport()
-    {
-        if (configurationSupport != null)
-        {
-            this.configurationSupport.dispose();
-            this.configurationSupport = null;
-        }
     }
 
     public synchronized <T> void missingServicePresent( final ServiceReference<T> serviceReference, ComponentActorThread actor )
@@ -618,4 +521,46 @@ public class ComponentRegistry implements ServiceListener
             return trackingCount;
         }
     }
+    
+    private final ConcurrentMap<Long, RegionConfigurationSupport> bundleToRcsMap = new ConcurrentHashMap<Long, RegionConfigurationSupport>();
+
+	public RegionConfigurationSupport registerRegionConfigurationSupport(
+			RegionConfigurationSupport trialRcs) {
+		Long bundleId = trialRcs.getBundleId();
+		RegionConfigurationSupport existing = null;
+		RegionConfigurationSupport previous = null;
+		while (true)
+		{
+			existing = bundleToRcsMap.putIfAbsent(bundleId, trialRcs);
+			if (existing == null) 
+			{
+				trialRcs.start();
+				return trialRcs;
+			}
+			if (existing == previous)
+			{
+				//the rcs we referenced is still current
+				return existing;
+			}
+			if (existing.reference())
+			{
+				//existing can still be used
+				previous = existing;
+			}
+			else
+			{
+				//existing was discarded in another thread, start over
+				previous = null;
+			}
+		}
+	}
+
+	public void unregisterRegionConfigurationSupport(
+			RegionConfigurationSupport rcs) {
+		if (rcs.dereference())
+		{
+			bundleToRcsMap.remove(rcs.getBundleId());
+		}
+		
+	}
 }

@@ -31,12 +31,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.felix.scr.impl.config.ComponentHolder;
+import org.apache.felix.scr.impl.config.ConfigAdminTracker;
+import org.apache.felix.scr.impl.config.RegionConfigurationSupport;
 import org.apache.felix.scr.impl.config.ScrConfiguration;
 import org.apache.felix.scr.impl.helper.Logger;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
@@ -65,6 +66,7 @@ import org.osgi.util.tracker.ServiceTracker;
  */
 public class BundleComponentActivator implements Logger, ExtendedServiceListenerContext<ExtendedServiceEvent>
 {
+	
     // global component registration
     private final ComponentRegistry m_componentRegistry;
 
@@ -74,8 +76,8 @@ public class BundleComponentActivator implements Logger, ExtendedServiceListener
     // The bundle context owning the registered component
     private final BundleContext m_context;
 
-    // This is a list of component instance managers that belong to a particular bundle
-    private final List<ComponentHolder<?>> m_managers = new ArrayList<ComponentHolder<?>>();
+    // This is a list of component holders that belong to a particular bundle
+    private final List<ComponentHolder<?>> m_holders = new ArrayList<ComponentHolder<?>>();
 
     // The Configuration Admin tracker providing configuration for components
     private final ServiceTracker<LogService, LogService> m_logService;
@@ -89,6 +91,8 @@ public class BundleComponentActivator implements Logger, ExtendedServiceListener
 
     // the configuration
     private final ScrConfiguration m_configuration;
+    
+    private final ConfigAdminTracker configAdminTracker;
 
     private final Map<String, ListenerInfo> listenerMap = new HashMap<String, ListenerInfo>();
 
@@ -268,6 +272,16 @@ public class BundleComponentActivator implements Logger, ExtendedServiceListener
         }
 
         initialize(descriptorLocations);
+        ConfigAdminTracker tracker = null;
+        for (ComponentHolder<?> holder: m_holders) 
+        {
+        	if (!holder.getComponentMetadata().isConfigurationIgnored())
+        	{
+        		tracker = new ConfigAdminTracker(this, componentRegistry);
+        		break;
+        	}
+        }
+        configAdminTracker = tracker;
     }
 
     /**
@@ -318,7 +332,7 @@ public class BundleComponentActivator implements Logger, ExtendedServiceListener
     void initialEnable()
     {
         //enable all the enabled components
-        for (ComponentHolder<?> componentHolder : m_managers)
+        for (ComponentHolder<?> componentHolder : m_holders)
         {
             log(LogService.LOG_DEBUG,
                 "BundleComponentActivator : Bundle [{0}] May enable component holder {1}",
@@ -459,7 +473,7 @@ public class BundleComponentActivator implements Logger, ExtendedServiceListener
 
                     // register the component after validation
                     m_componentRegistry.registerComponentHolder(key, holder);
-                    m_managers.add(holder);
+                    m_holders.add(holder);
 
                     log(LogService.LOG_DEBUG,
                         "BundleComponentActivator : Bundle [{0}] ComponentHolder created for {1}",
@@ -509,7 +523,7 @@ public class BundleComponentActivator implements Logger, ExtendedServiceListener
             }
         }
     }
-
+    
     /**
     * Dispose of this component activator instance and all the component
     * managers.
@@ -520,10 +534,10 @@ public class BundleComponentActivator implements Logger, ExtendedServiceListener
         {
             log(LogService.LOG_DEBUG,
                 "BundleComponentActivator : Bundle [{0}] will destroy {1} instances",
-                new Object[] { m_bundle.getBundleId(), m_managers.size() }, null, null,
+                new Object[] { m_bundle.getBundleId(), m_holders.size() }, null, null,
                 null);
 
-            for (ComponentHolder<?> holder : m_managers)
+            for (ComponentHolder<?> holder : m_holders)
             {
                 try
                 {
@@ -542,6 +556,7 @@ public class BundleComponentActivator implements Logger, ExtendedServiceListener
                 }
 
             }
+            configAdminTracker.dispose();
 
             log(LogService.LOG_DEBUG, "BundleComponentActivator : Bundle [{0}] STOPPED",
                 new Object[] { m_bundle.getBundleId() }, null, null, null);
@@ -666,7 +681,7 @@ public class BundleComponentActivator implements Logger, ExtendedServiceListener
         // if all components are selected
         if (name == null)
         {
-            return m_managers;
+            return m_holders;
         }
 
         ComponentHolder<?> componentHolder = m_componentRegistry.getComponentHolder(
@@ -829,4 +844,15 @@ public class BundleComponentActivator implements Logger, ExtendedServiceListener
         m_componentRegistry.registerMissingDependency(dependencyManager,
             serviceReference, trackingCount);
     }
+
+	public void setRegionConfigurationSupport(RegionConfigurationSupport rcs) {
+		for (ComponentHolder<?> holder: m_holders)
+		{
+			rcs.configureComponentHolder(holder);
+		}		
+	}
+
+	public void unsetRegionConfigurationSupport(RegionConfigurationSupport rcs) {
+		// TODO anything needed?		
+	}
 }
