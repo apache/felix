@@ -26,9 +26,6 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
 import java.nio.charset.CodingErrorAction;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
-
 /**
  * Some convenience methods for handling URI(-parts).
  */
@@ -37,66 +34,6 @@ public abstract class UriUtils
     private static final String SLASH_STR = "/";
     private static final char DOT = '.';
     private static final char SLASH = '/';
-
-    public static String compactPath(String path)
-    {
-        if (path == null)
-        {
-            return null;
-        }
-
-        StringBuilder sb = new StringBuilder();
-
-        int len = path.length();
-        boolean inQuery = false;
-        for (int i = 0; i < len; i++)
-        {
-            char ch = path.charAt(i);
-            if (!inQuery && ch == SLASH && la(path, i + 1) == SLASH)
-            {
-                continue;
-            }
-            if (ch == '?')
-            {
-                inQuery = true;
-            }
-            sb.append(ch);
-        }
-
-        return sb.toString();
-    }
-
-    public static @Nonnull String relativePath(@CheckForNull String base, @CheckForNull String path)
-    {
-        if (path == null)
-        {
-            return "";
-        }
-        if (base == null)
-        {
-            return path;
-        }
-
-        int len = base.length();
-        if (base.endsWith("/"))
-        {
-            len--;
-        }
-        else if (!base.equals(path))
-        {
-            base = base.concat("/");
-        }
-
-        if (path.startsWith(base))
-        {
-            path = path.substring(len);
-        }
-        if ("".equals(path) || "/".equals(path))
-        {
-            return "";
-        }
-        return path;
-    }
 
     /**
      * Concatenates two paths keeping their respective path-parts into consideration.
@@ -199,7 +136,7 @@ public abstract class UriUtils
      * @param encoding the character encoding to use, cannot be <code>null</code>.
      * @return the decoded path, can be <code>null</code> only if the given path was <code>null</code>.
      */
-    public static String decodePath(String path, String encoding)
+    private static String decodePath(String path, String encoding)
     {
         // Special cases...
         if (path == null)
