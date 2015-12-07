@@ -18,24 +18,18 @@
  */
 package org.apache.felix.bundlerepository.impl;
 
-import java.util.Dictionary;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
-import java.util.StringTokenizer;
 
 import org.apache.felix.bundlerepository.Capability;
+import org.apache.felix.bundlerepository.LocalResource;
 import org.apache.felix.bundlerepository.Requirement;
 import org.apache.felix.bundlerepository.Resource;
 import org.apache.felix.utils.log.Logger;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
-import org.osgi.framework.wiring.BundleRevision;
 
-public class LazyLocalResourceImpl implements Resource
+public class LazyLocalResourceImpl implements LocalResource
 {
     private final Bundle m_bundle;
     private final Logger m_logger;
