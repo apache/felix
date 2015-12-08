@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.apache.felix.bundlerepository.Capability;
+import org.apache.felix.bundlerepository.LocalResource;
 import org.apache.felix.bundlerepository.Requirement;
 import org.apache.felix.bundlerepository.Resource;
 import org.apache.felix.utils.log.Logger;
@@ -35,7 +36,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
 import org.osgi.framework.wiring.BundleRevision;
 
-public class LazyLocalResourceImpl implements Resource
+public class LazyLocalResourceImpl implements LocalResource
 {
     private final Bundle m_bundle;
     private final Logger m_logger;
