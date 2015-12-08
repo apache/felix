@@ -347,11 +347,13 @@ public class ResolverImpl implements Resolver
         for (Resource aResourceSet : resourceSet) {
             checkInterrupt();
             Capability[] caps = aResourceSet.getCapabilities();
-            for (int capIdx = 0; (caps != null) && (capIdx < caps.length); capIdx++) {
-                if (req.isSatisfied(caps[capIdx])) {
-                    // The requirement is already satisfied an existing
-                    // resource, return the resource.
-                    return aResourceSet;
+            if (caps != null) {
+                for (Capability cap : caps) {
+                    if (req.isSatisfied(cap)) {
+                        // The requirement is already satisfied an existing
+                        // resource, return the resource.
+                        return aResourceSet;
+                    }
                 }
             }
         }
@@ -369,18 +371,17 @@ public class ResolverImpl implements Resolver
     {
         List<ResourceCapability> matchingCapabilities = new ArrayList<ResourceCapability>();
 
-        for (int resIdx = 0; (resources != null) && (resIdx < resources.length); resIdx++)
-        {
-            checkInterrupt();
-            // We don't need to look at resources we've already looked at.
-            if (!m_failedSet.contains(resources[resIdx]))
-            {
-                Capability[] caps = resources[resIdx].getCapabilities();
-                for (int capIdx = 0; (caps != null) && (capIdx < caps.length); capIdx++)
-                {
-                    if (req.isSatisfied(caps[capIdx]))
-                    {
-                        matchingCapabilities.add(new ResourceCapabilityImpl(resources[resIdx], caps[capIdx]));
+        if (resources != null) {
+            for (Resource resource : resources) {
+                checkInterrupt();
+                // We don't need to look at resources we've already looked at.
+                if (!m_failedSet.contains(resource)) {
+                    Capability[] caps = resource.getCapabilities();
+                    if (caps != null) {
+                        for (Capability cap : caps) {
+                            if (req.isSatisfied(cap))
+                                matchingCapabilities.add(new ResourceCapabilityImpl(resource, cap));
+                        }
                     }
                 }
             }
