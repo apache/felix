@@ -18,8 +18,10 @@
  */
 package org.apache.felix.bundlerepository.impl;
 
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Collections;
+import java.util.Dictionary;
 import java.util.Hashtable;
 
 import junit.framework.TestCase;
@@ -34,10 +36,7 @@ import org.easymock.Capture;
 import org.easymock.EasyMock;
 import org.easymock.IAnswer;
 import org.easymock.internal.matchers.Captures;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleListener;
-import org.osgi.framework.ServiceListener;
+import org.osgi.framework.*;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.resource.Capability;
 
@@ -134,6 +133,29 @@ public class ResolverImplTest extends TestCase
 
     }
 
+    public void testFindUpdatableLocalResource() throws Exception {
+        RepositoryAdminImpl repoAdmin = createRepositoryAdmin();
+        repoAdmin.addRepository(getClass().getResource("/repo_for_mandatory.xml"));
+
+        Resolver resolver = repoAdmin.resolver();
+
+        Resource resource = EasyMock.createMock(Resource.class);
+        EasyMock.expect(resource.getSymbolicName()).andReturn("com.test.bundleA").anyTimes();
+        EasyMock.expect(resource.getRequirements()).andReturn(null).anyTimes();
+        EasyMock.expect(resource.getURI()).andReturn("http://test.com").anyTimes();
+        EasyMock.replay(resource);
+
+        resolver.add(resource);
+
+        boolean exceptionThrown = false;
+        try {
+            resolver.resolve();
+        } catch (Exception e) {
+            exceptionThrown = true;
+        }
+        assertFalse(exceptionThrown);
+    }
+
     public static void main(String[] args) throws Exception
     {
         new ResolverImplTest().testReferral1();
@@ -150,7 +172,10 @@ public class ResolverImplTest extends TestCase
                     .andReturn(getClass().getResource("/referred.xml").toExternalForm());
         EasyMock.expect(bundleContext.getProperty((String) EasyMock.anyObject())).andReturn(null).anyTimes();
         EasyMock.expect(bundleContext.getBundle(0)).andReturn(systemBundle);
-        EasyMock.expect(systemBundle.getHeaders()).andReturn(new Hashtable());
+        EasyMock.expect(bundleContext.installBundle((String) EasyMock.anyObject(), (InputStream) EasyMock.anyObject())).andReturn(systemBundle);
+        EasyMock.expect(systemBundle.getHeaders()).andReturn(new Hashtable()).anyTimes();
+        systemBundle.start();
+        EasyMock.expectLastCall().anyTimes();
         EasyMock.expect(systemBundle.getRegisteredServices()).andReturn(null);
         EasyMock.expect(new Long(systemBundle.getBundleId())).andReturn(new Long(0)).anyTimes();
         EasyMock.expect(systemBundle.getBundleContext()).andReturn(bundleContext);
