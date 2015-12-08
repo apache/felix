@@ -123,7 +123,7 @@ public class ResolverImpl implements Resolver
         throw new IllegalStateException("The resources have not been resolved.");
     }
 
-    private LocalResource[] getLocalResources()
+    protected LocalResource[] getLocalResources()
     {
         List<LocalResource> resources = new ArrayList<LocalResource>();
         for (Resource resource : getResources())
@@ -154,8 +154,8 @@ public class ResolverImpl implements Resolver
         List<Resource> resources = new ArrayList<Resource>();
         for (int repoIdx = 0; (m_repositories != null) && (repoIdx < m_repositories.length); repoIdx++)
         {
-            boolean isLocal = m_repositories[repoIdx] instanceof LocalRepositoryImpl;
-            boolean isSystem = m_repositories[repoIdx] instanceof SystemRepositoryImpl;
+            boolean isLocal = m_repositories[repoIdx].getURI().equals(Repository.LOCAL);
+            boolean isSystem = m_repositories[repoIdx].getURI().equals(Repository.SYSTEM);
             if (isLocal && (m_resolutionFlags & NO_LOCAL_RESOURCES) != 0) {
                 continue;
             }

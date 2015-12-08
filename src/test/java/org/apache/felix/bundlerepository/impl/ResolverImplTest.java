@@ -21,17 +21,14 @@ package org.apache.felix.bundlerepository.impl;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Collections;
-import java.util.Dictionary;
 import java.util.Hashtable;
 
 import junit.framework.TestCase;
 
-import org.apache.felix.bundlerepository.Repository;
-import org.apache.felix.bundlerepository.Requirement;
-import org.apache.felix.bundlerepository.Resolver;
-import org.apache.felix.bundlerepository.Resource;
+import org.apache.felix.bundlerepository.*;
 import org.apache.felix.utils.filter.FilterImpl;
 import org.apache.felix.utils.log.Logger;
+
 import org.easymock.Capture;
 import org.easymock.EasyMock;
 import org.easymock.IAnswer;
@@ -134,22 +131,39 @@ public class ResolverImplTest extends TestCase
     }
 
     public void testFindUpdatableLocalResource() throws Exception {
-        RepositoryAdminImpl repoAdmin = createRepositoryAdmin();
-        repoAdmin.addRepository(getClass().getResource("/repo_for_mandatory.xml"));
-
-        Resolver resolver = repoAdmin.resolver();
-
-        Resource resource = EasyMock.createMock(Resource.class);
+        LocalResource resource = EasyMock.createMock(LocalResource.class);
         EasyMock.expect(resource.getSymbolicName()).andReturn("com.test.bundleA").anyTimes();
         EasyMock.expect(resource.getRequirements()).andReturn(null).anyTimes();
+        EasyMock.expect(resource.getCapabilities()).andReturn(null).anyTimes();
         EasyMock.expect(resource.getURI()).andReturn("http://test.com").anyTimes();
-        EasyMock.replay(resource);
+        EasyMock.expect(resource.isLocal()).andReturn(true).anyTimes();
+
+        Repository localRepo = EasyMock.createMock(Repository.class);
+
+        Repository[] localRepos = { localRepo };
+        final LocalResource[] localResources = { resource };
+
+        EasyMock.expect(localRepo.getResources()).andReturn(localResources).anyTimes();
+        EasyMock.expect(localRepo.getURI()).andReturn(Repository.LOCAL).anyTimes();
+        EasyMock.expect(localRepo.getLastModified()).andReturn(System.currentTimeMillis()).anyTimes();
+
+        BundleContext bundleContext = EasyMock.createMock(BundleContext.class);
+
+        EasyMock.replay(resource, localRepo);
+
+        ResolverImpl resolver = new ResolverImpl(bundleContext, localRepos, new Logger(bundleContext)) {
+            @Override
+            public LocalResource[] getLocalResources() {
+                return localResources;
+            }
+        };
 
         resolver.add(resource);
 
         boolean exceptionThrown = false;
         try {
             resolver.resolve();
+            resolver.deploy(Resolver.START);
         } catch (Exception e) {
             exceptionThrown = true;
         }
