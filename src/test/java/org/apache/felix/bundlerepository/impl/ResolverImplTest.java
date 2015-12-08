@@ -165,6 +165,7 @@ public class ResolverImplTest extends TestCase
             resolver.resolve();
             resolver.deploy(Resolver.START);
         } catch (Exception e) {
+            e.printStackTrace();
             exceptionThrown = true;
         }
         assertFalse(exceptionThrown);
