@@ -19,21 +19,9 @@
 package org.apache.felix.bundlerepository.impl;
 
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-import org.apache.felix.bundlerepository.Capability;
-import org.apache.felix.bundlerepository.Reason;
-import org.apache.felix.bundlerepository.Repository;
-import org.apache.felix.bundlerepository.Requirement;
-import org.apache.felix.bundlerepository.Resolver;
-import org.apache.felix.bundlerepository.Resource;
+import org.apache.felix.bundlerepository.*;
 import org.apache.felix.utils.log.Logger;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -136,9 +124,35 @@ public class ResolverImpl implements Resolver
         throw new IllegalStateException("The resources have not been resolved.");
     }
 
-    private Resource[] getResources(boolean local)
+    private LocalResource[] getLocalResources()
     {
-        List resources = new ArrayList();
+        List<LocalResource> resources = new ArrayList<LocalResource>();
+        for (Resource resource : getResources())
+        {
+            if (resource != null && resource.isLocal())
+            {
+                resources.add((LocalResource) resource);
+            }
+        }
+        return resources.toArray(new LocalResource[resources.size()]);
+    }
+
+    private Resource[] getRemoteResources()
+    {
+        List<Resource> resources = new ArrayList<Resource>();
+        for (Resource resource : getResources())
+        {
+            if (resource != null && !resource.isLocal())
+            {
+                resources.add(resource);
+            }
+        }
+        return resources.toArray(new Resource[resources.size()]);
+    }
+
+    private Resource[] getResources()
+    {
+        List<Resource> resources = new ArrayList<Resource>();
         for (int repoIdx = 0; (m_repositories != null) && (repoIdx < m_repositories.length); repoIdx++)
         {
             boolean isLocal = m_repositories[repoIdx] instanceof LocalRepositoryImpl;
@@ -149,16 +163,9 @@ public class ResolverImpl implements Resolver
             if (isSystem && (m_resolutionFlags & NO_SYSTEM_BUNDLE) != 0) {
                 continue;
             }
-            Resource[] res = m_repositories[repoIdx].getResources();
-            for (int resIdx = 0; (res != null) && (resIdx < res.length); resIdx++)
-            {
-                if (res[resIdx].isLocal() == local)
-                {
-                    resources.add(res[resIdx]);
-                }
-            }
+            Collections.addAll(resources, m_repositories[repoIdx].getResources());
         }
-        return (Resource[]) resources.toArray(new Resource[resources.size()]);
+        return resources.toArray(new Resource[resources.size()]);
     }
 
     public synchronized boolean resolve()
@@ -169,8 +176,8 @@ public class ResolverImpl implements Resolver
     public synchronized boolean resolve(int flags)
     {
         // Find resources
-        Resource[] locals = getResources(true);
-        Resource[] remotes = getResources(false);
+        Resource[] locals = getLocalResources();
+        Resource[] remotes = getRemoteResources();
 
         // time of the resolution process start
         m_resolveTimeStamp = 0;
@@ -566,8 +573,7 @@ public class ResolverImpl implements Resolver
             // For the resource being deployed, see if there is an older
             // version of the resource already installed that can potentially
             // be updated.
-            LocalResourceImpl localResource =
-                findUpdatableLocalResource(deployResources[i]);
+            LocalResource localResource = findUpdatableLocalResource(deployResources[i]);
             // If a potentially updatable older version was found,
             // then verify that updating the local resource will not
             // break any of the requirements of any of the other
@@ -683,11 +689,11 @@ public class ResolverImpl implements Resolver
 
     // TODO: OBR - Think about this again and make sure that deployment ordering
     // won't impact it...we need to update the local state too.
-    private LocalResourceImpl findUpdatableLocalResource(Resource resource)
+    private LocalResource findUpdatableLocalResource(Resource resource)
     {
         // Determine if any other versions of the specified resource
         // already installed.
-        Resource[] localResources = findLocalResources(resource.getSymbolicName());
+        LocalResource[] localResources = findLocalResources(resource.getSymbolicName());
         if (localResources != null)
         {
             // Since there are local resources with the same symbolic
@@ -700,7 +706,7 @@ public class ResolverImpl implements Resolver
             {
                 if (isResourceUpdatable(localResources[i], resource, localResources))
                 {
-                    return (LocalResourceImpl) localResources[i];
+                    return localResources[i];
                 }
             }
         }
@@ -712,9 +718,9 @@ public class ResolverImpl implements Resolver
      * @param symName The symbolic name of the wanted local resources.
      * @return The local resources with the specified symbolic name.
      */
-    private Resource[] findLocalResources(String symName)
+    private LocalResource[] findLocalResources(String symName)
     {
-        Resource[] localResources = getResources(true);
+        LocalResource[] localResources = getLocalResources();
 
         List matchList = new ArrayList();
         for (int i = 0; i < localResources.length; i++)
@@ -725,7 +731,7 @@ public class ResolverImpl implements Resolver
                 matchList.add(localResources[i]);
             }
         }
-        return (Resource[]) matchList.toArray(new Resource[matchList.size()]);
+        return (LocalResource[]) matchList.toArray(new LocalResource[matchList.size()]);
     }
 
     private boolean isResourceUpdatable(
