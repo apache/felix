@@ -556,8 +556,11 @@ public class BundleComponentActivator implements Logger, ExtendedServiceListener
                 }
 
             }
-            configAdminTracker.dispose();
-
+            if (configAdminTracker != null)
+            {
+            	configAdminTracker.dispose();
+            }
+            
             log(LogService.LOG_DEBUG, "BundleComponentActivator : Bundle [{0}] STOPPED",
                 new Object[] { m_bundle.getBundleId() }, null, null, null);
 
