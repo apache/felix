@@ -97,13 +97,21 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer
             set(ht, DirectoryWatcher.POLL);
             set(ht, DirectoryWatcher.DIR);
             set(ht, DirectoryWatcher.LOG_LEVEL);
+            set(ht, DirectoryWatcher.LOG_DEFAULT);
             set(ht, DirectoryWatcher.FILTER);
             set(ht, DirectoryWatcher.TMPDIR);
             set(ht, DirectoryWatcher.START_NEW_BUNDLES);
             set(ht, DirectoryWatcher.USE_START_TRANSIENT);
+            set(ht, DirectoryWatcher.USE_START_ACTIVATION_POLICY);
             set(ht, DirectoryWatcher.NO_INITIAL_DELAY);
+            set(ht, DirectoryWatcher.DISABLE_CONFIG_SAVE);
+            set(ht, DirectoryWatcher.ENABLE_CONFIG_SAVE);
             set(ht, DirectoryWatcher.START_LEVEL);
+            set(ht, DirectoryWatcher.ACTIVE_LEVEL);
+            set(ht, DirectoryWatcher.UPDATE_WITH_LISTENERS);
             set(ht, DirectoryWatcher.OPTIONAL_SCOPE);
+            set(ht, DirectoryWatcher.FRAGMENT_SCOPE);
+            set(ht, DirectoryWatcher.DISABLE_NIO2);
             set(ht, DirectoryWatcher.SUBDIR_MODE);
 
             // check if dir is an array of dirs
