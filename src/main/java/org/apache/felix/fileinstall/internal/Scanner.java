@@ -44,8 +44,15 @@ import java.util.zip.CRC32;
  */
 public class Scanner implements Closeable {
 
+    public final static String SUBDIR_MODE_JAR = "jar";
+    public final static String SUBDIR_MODE_SKIP = "skip";
+    public final static String SUBDIR_MODE_RECURSE = "recurse";
+
     final File directory;
     final FilenameFilter filter;
+    final boolean jarSubdir;
+    final boolean skipSubdir;
+    final boolean recurseSubdir;
 
     // Store checksums of files or directories
     Map<File, Long> lastChecksums = new HashMap<File, Long>();
@@ -58,7 +65,7 @@ public class Scanner implements Closeable {
      */
     public Scanner(File directory)
     {
-        this(directory, null);
+        this(directory, null, null);
     }
 
     /**
@@ -66,8 +73,9 @@ public class Scanner implements Closeable {
      *
      * @param directory the directory to scan
      * @param filterString a filter for file names
+     * @param subdirMode to use when scanning
      */
-    public Scanner(File directory, final String filterString)
+    public Scanner(File directory, final String filterString, String subdirMode)
     {
         this.directory = canon(directory);
         if (filterString != null && filterString.length() > 0)
@@ -85,6 +93,9 @@ public class Scanner implements Closeable {
         {
             this.filter = null;
         }
+        this.jarSubdir = subdirMode == null || SUBDIR_MODE_JAR.equals(subdirMode);
+        this.skipSubdir = SUBDIR_MODE_SKIP.equals(subdirMode);
+        this.recurseSubdir = SUBDIR_MODE_RECURSE.equals(subdirMode);
     }
 
     /**
@@ -117,25 +128,44 @@ public class Scanner implements Closeable {
         {
             return null;
         }
+        return processFiles(reportImmediately, list);
+    }
+
+    private Set<File> processFiles(boolean reportImmediately, File[] list)
+    {
         Set<File> files = new HashSet<File>();
         Set<File> removed = new HashSet<File>(storedChecksums.keySet());
         for (File file : list)
         {
+            if (file.isDirectory())
+            {
+                if (skipSubdir)
+                {
+                    continue;
+                } 
+                else if (recurseSubdir)
+                {
+                    files.addAll(processFiles(reportImmediately, file.listFiles(filter)));
+                    continue;
+                }
+            }
             long lastChecksum = lastChecksums.get(file) != null ? (Long) lastChecksums.get(file) : 0;
             long storedChecksum = storedChecksums.get(file) != null ? (Long) storedChecksums.get(file) : 0;
             long newChecksum = checksum(file);
             lastChecksums.put(file, newChecksum);
-            // Only handle file when it does not change anymore and it has changed since last reported
-            if ((newChecksum == lastChecksum || reportImmediately) && newChecksum != storedChecksum) {
+            // Only handle file when it does not change anymore and it has changed
+            // since last reported
+            if ((newChecksum == lastChecksum || reportImmediately) && newChecksum != storedChecksum)
+            {
                 storedChecksums.put(file, newChecksum);
                 files.add(file);
             }
             removed.remove(file);
         }
+        // Make sure we'll handle a file that has been deleted
+        files.addAll(removed);
         for (File file : removed)
         {
-            // Make sure we'll handle a file that has been deleted
-            files.addAll(removed);
             // Remove no longer used checksums
             lastChecksums.remove(file);
             storedChecksums.remove(file);
