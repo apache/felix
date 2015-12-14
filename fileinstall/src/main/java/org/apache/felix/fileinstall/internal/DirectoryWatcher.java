@@ -106,6 +106,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
     public final static String OPTIONAL_SCOPE = "felix.fileinstall.optionalImportRefreshScope";
     public final static String FRAGMENT_SCOPE = "felix.fileinstall.fragmentRefreshScope";
     public final static String DISABLE_NIO2 = "felix.fileinstall.disableNio2";
+    public final static String SUBDIR_MODE = "felix.fileinstall.subdir.mode";
 
     public final static String SCOPE_NONE = "none";
     public final static String SCOPE_MANAGED = "managed";
@@ -185,12 +186,12 @@ public class DirectoryWatcher extends Thread implements BundleListener
         this.context.addBundleListener(this);
 
         if (disableNio2) {
-            scanner = new Scanner(watchedDirectory, filter);
+            scanner = new Scanner(watchedDirectory, filter, properties.get(SUBDIR_MODE));
         } else {
             try {
-                scanner = new WatcherScanner(context, watchedDirectory, filter);
+                scanner = new WatcherScanner(context, watchedDirectory, filter, properties.get(SUBDIR_MODE));
             } catch (Throwable t) {
-                scanner = new Scanner(watchedDirectory, filter);
+                scanner = new Scanner(watchedDirectory, filter, properties.get(SUBDIR_MODE));
             }
         }
     }

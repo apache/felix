@@ -42,9 +42,10 @@ public class WatcherScanner extends Scanner {
      *
      * @param directory the directory to scan
      * @param filterString a filter for file names
+     * @param subdirMode to use when scanning
      */
-    public WatcherScanner(BundleContext bundleContext, File directory, String filterString) throws IOException {
-        super(directory, filterString);
+    public WatcherScanner(BundleContext bundleContext, File directory, String filterString, String subdirMode) throws IOException {
+        super(directory, filterString, subdirMode);
         this.bundleContext = bundleContext;
         if (filterString != null) {
             this.fileMatcher = FileSystems.getDefault().getPathMatcher("regex:" + filterString);
@@ -115,11 +116,23 @@ public class WatcherScanner extends Scanner {
         @Override
         protected void process(Path path) {
             File file = path.toFile();
-            while (!file.getParentFile().equals(directory)) {
-                file = file.getParentFile();
-                if (file == null) {
+            if (!file.getParentFile().equals(directory)) {
+              // File is in a sub directory.
+              if (skipSubdir) {
+                return;
+              }
+              if (jarSubdir) {
+                // Walk up until the first level sub-directory.
+                do  {
+                  file = file.getParentFile();
+                  if (file == null) {
+                    // The file was not actually inside the watched directory.
+                    // Should not happen.
                     return;
-                }
+                  }
+                } while (!file.getParentFile().equals(directory));
+              }
+              // Otherwise we recurse by adding the file as-is.
             }
             synchronized (changed) {
                 changed.add(file);
@@ -128,16 +141,7 @@ public class WatcherScanner extends Scanner {
 
         @Override
         protected void onRemove(Path path) {
-            File file = path.toFile();
-            while (!file.getParentFile().equals(directory)) {
-                file = file.getParentFile();
-                if (file == null) {
-                    return;
-                }
-            }
-            synchronized (changed) {
-                changed.add(file);
-            }
+            process(path);
         }
 
         @Override
