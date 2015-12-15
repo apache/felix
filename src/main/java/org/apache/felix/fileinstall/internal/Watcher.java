@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
+import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
@@ -34,6 +35,7 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -150,7 +152,10 @@ public abstract class Watcher implements Closeable {
             key.cancel();
         }
         keys.clear();
-        Files.walkFileTree(root, new FilteringFileVisitor());
+        Files.walkFileTree(root,
+                           EnumSet.of(FileVisitOption.FOLLOW_LINKS),
+                           Integer.MAX_VALUE,
+                           new FilteringFileVisitor());
     }
 
     public void processEvents() {
