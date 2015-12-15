@@ -27,7 +27,6 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -37,6 +36,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.jar.JarInputStream;
@@ -114,10 +114,6 @@ public class DirectoryWatcher extends Thread implements BundleListener
 
     public final static String LOG_STDOUT = "stdout";
     public final static String LOG_JUL = "jul";
-
-    static final SecureRandom random = new SecureRandom();
-
-    final File javaIoTmpdir = new File(System.getProperty("java.io.tmpdir"));
 
     final FileInstall fileInstall;
 
@@ -333,7 +329,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
         int type = bundleEvent.getType();
         if (type == BundleEvent.UNINSTALLED)
         {
-            for (Iterator it = getArtifacts().iterator(); it.hasNext();)
+            for (Iterator<?> it = getArtifacts().iterator(); it.hasNext();)
             {
                 Artifact artifact = (Artifact) it.next();
                 if (artifact.getBundleId() == bundleEvent.getBundle().getBundleId())
@@ -594,17 +590,18 @@ public class DirectoryWatcher extends Thread implements BundleListener
     {
         if (tmpDir == null)
         {
+            File javaIoTmpdir = new File(System.getProperty("java.io.tmpdir"));
             if (!javaIoTmpdir.exists() && !javaIoTmpdir.mkdirs()) {
                 throw new IllegalStateException("Unable to create temporary directory " + javaIoTmpdir);
             }
-            for (;;)
+            Random random = new Random();
+            while (tmpDir == null)
             {
                 File f = new File(javaIoTmpdir, "fileinstall-" + Long.toString(random.nextLong()));
                 if (!f.exists() && f.mkdirs())
                 {
                     tmpDir = f;
                     tmpDir.deleteOnExit();
-                    break;
                 }
             }
         }
