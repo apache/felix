@@ -20,6 +20,8 @@ package org.apache.felix.fileinstall.internal;
 
 import java.io.*;
 import java.net.URI;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.*;
 
 import org.apache.felix.cm.file.ConfigurationHandler;
@@ -86,7 +88,28 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         deleteConfig(artifact);
     }
 
-    public void configurationEvent(ConfigurationEvent configurationEvent)
+    public void configurationEvent(final ConfigurationEvent configurationEvent)
+    {
+        if (System.getSecurityManager() != null)
+        {
+            AccessController.doPrivileged(
+                    new PrivilegedAction<Void>()
+                    {
+                        public Void run()
+                        {
+                            doConfigurationEvent(configurationEvent);
+                            return null;
+                        }
+                    }
+            );
+        }
+        else
+        {
+            doConfigurationEvent(configurationEvent);
+        }
+    }
+
+    public void doConfigurationEvent(ConfigurationEvent configurationEvent)
     {
         // Check if writing back configurations has been disabled.
         {
