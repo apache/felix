@@ -55,7 +55,6 @@
         <module>bundle</module>
         <module>sslfilter</module>
         <module>itest</module>
-        <module>samples/filter</module>
         <module>samples/bridge</module>
         <module>samples/whiteboard</module>
         <module>samples/cometd</module>
