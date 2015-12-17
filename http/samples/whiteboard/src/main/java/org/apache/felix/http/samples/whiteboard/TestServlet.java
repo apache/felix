@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.http.samples.filter;
+package org.apache.felix.http.samples.whiteboard;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
