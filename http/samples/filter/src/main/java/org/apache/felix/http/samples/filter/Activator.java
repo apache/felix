@@ -16,68 +16,69 @@
  */
 package org.apache.felix.http.samples.filter;
 
+import java.util.Dictionary;
+import java.util.Hashtable;
+
+import javax.servlet.Filter;
+import javax.servlet.Servlet;
+
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.util.tracker.ServiceTracker;
-import org.apache.felix.http.api.ExtHttpService;
+import org.osgi.service.http.context.ServletContextHelper;
+import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
 public final class Activator
     implements BundleActivator
 {
-    private ServiceTracker tracker;
-    private TestServlet servlet1 = new TestServlet("servlet1");
-    private TestServlet servlet2 = new TestServlet("servlet2");
-    private TestFilter filter1 = new TestFilter("filter1");
-    private TestFilter filter2 = new TestFilter("filter2");
 
+    @Override
     public void start(BundleContext context)
         throws Exception
     {
-        this.tracker = new ServiceTracker(context, ExtHttpService.class.getName(), null)
-        {
-            @Override
-            public Object addingService(ServiceReference ref)
-            {
-                Object service =  super.addingService(ref);
-                serviceAdded((ExtHttpService)service);
-                return service;
-            }
+        // create a servlet context
+        final TestServletContext servletContext = new TestServletContext(context.getBundle());
 
-            @Override
-            public void removedService(ServiceReference ref, Object service)
-            {
-                serviceRemoved((ExtHttpService)service);
-                super.removedService(ref, service);
-            }
-        };
+        // register the servlet context with name "filtersample" at "/filtersample"
+        final Dictionary<String, Object> servletContextProps = new Hashtable<String, Object>();
+        servletContextProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, "filtersample");
+        servletContextProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, "/filtersample");
+        context.registerService(ServletContextHelper.class, servletContext, servletContextProps);
 
-        this.tracker.open();
+        // create and register servlets
+        final TestServlet servlet1 = new TestServlet("servlet1");
+        final Dictionary<String, Object> servlet1Props = new Hashtable<String, Object>();
+        servlet1Props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/");
+        servlet1Props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
+                "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=filtersample)");
+        context.registerService(Servlet.class, servlet1, servlet1Props);
+
+        final TestServlet servlet2 = new TestServlet("servlet2");
+        final Dictionary<String, Object> servlet2Props = new Hashtable<String, Object>();
+        servlet2Props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/other/*");
+        servlet2Props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
+                "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=filtersample)");
+        context.registerService(Servlet.class, servlet2, servlet2Props);
+
+        // create and register filters
+        final TestFilter filter1 = new TestFilter("filter1");
+        final Dictionary<String, Object> filter1Props = new Hashtable<String, Object>();
+        filter1Props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, "/");
+        filter1Props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
+                "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=filtersample)");
+        context.registerService(Filter.class, filter1, filter1Props);
+
+        final TestFilter filter2 = new TestFilter("filter2");
+        final Dictionary<String, Object> filter2Props = new Hashtable<String, Object>();
+        filter2Props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, "/other/*");
+        filter2Props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
+                "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=filtersample)");
+        context.registerService(Filter.class, filter2, filter2Props);
     }
 
+    @Override
     public void stop(BundleContext context)
         throws Exception
     {
-        this.tracker.close();
-    }
-
-    private void serviceAdded(ExtHttpService service)
-    {
-        try {
-            service.registerServlet("/", this.servlet1, null, null);
-            service.registerServlet("/other", this.servlet2, null, null);
-            service.registerFilter(this.filter1, ".*", null, 0, null);
-            service.registerFilter(this.filter2, "/other/.*", null, 100, null);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void serviceRemoved(ExtHttpService service)
-    {
-        service.unregisterServlet(this.servlet1);
-        service.unregisterServlet(this.servlet2);
-        service.unregisterFilter(this.filter1);
-        service.unregisterFilter(this.filter2);
+        // nothing to do, services are unregistered automatically
     }
 }

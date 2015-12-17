@@ -27,9 +27,10 @@
     </parent>
 
     <name>Apache Felix Http Samples - Filter</name>
+    <description>This example shows how to register servlets and filters using the Http Whiteboard Service.</description>
     <artifactId>org.apache.felix.http.samples.filter</artifactId>
     <version>2.3.3-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <packaging>bundle</packaging>
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http/samples/filter</connection>
@@ -42,32 +43,25 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
+                <version>3.0.1</version>
+                <extensions>true</extensions>
                 <configuration>
                     <instructions>
                         <Bundle-Activator>
                             org.apache.felix.http.samples.filter.Activator
                         </Bundle-Activator>
                         <Private-Package>
-                            org.apache.felix.http.samples.filter.*
+                            org.apache.felix.http.samples.filter
                         </Private-Package>
-                        <Import-Package>
-                            *;resolution:=optional
-                        </Import-Package>
+                        <Export-Package>
+                           !org.apache.felix.http.samples.filter
+                        </Export-Package>
+                        <Require-Capability>
+                            osgi.contract; filter:="(&amp;(osgi.contract=JavaServlet)(version>=3.1))"
+                        </Require-Capability>
                     </instructions>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>            
         </plugins>
     </build>
 
@@ -84,11 +78,5 @@
             <groupId>org.osgi</groupId>
             <artifactId>osgi.cmpn</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.http.api</artifactId>
-            <version>3.0.0</version>
-        </dependency>
     </dependencies>
-
 </project>
