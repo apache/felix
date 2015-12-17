@@ -212,7 +212,11 @@ public class HttpServicePlugin extends HttpServlet
 
         final PrintWriter pw = resp.getWriter();
 
-        printForm(pw, req.getParameter(ATTR_TEST), req.getParameter(ATTR_MSG));
+        String path = req.getContextPath() + req.getServletPath();
+        if ( req.getPathInfo() != null ) {
+            path = path + req.getPathInfo();
+        }
+        printForm(pw, req.getParameter(ATTR_TEST), req.getParameter(ATTR_MSG), path);
 
         printRuntimeDetails(pw, dto.serviceDTO);
 
@@ -233,7 +237,7 @@ public class HttpServicePlugin extends HttpServlet
         pw.println("<br/>");
     }
 
-    private void printForm(final PrintWriter pw, final String value, final String msg)
+    private void printForm(final PrintWriter pw, final String value, final String msg, final String path)
     {
         pw.println("<table class='content' cellpadding='0' cellspacing='0' width='100%'>");
 
@@ -248,7 +252,9 @@ public class HttpServicePlugin extends HttpServlet
         pw.println("<tr class='content'>");
         pw.println("<td class='content'>Test</td>");
         pw.print("<td class='content' colspan='2'>");
-        pw.print("<form method='post'>");
+        pw.print("<form method='POST' action='");
+        pw.print(path);
+        pw.print("'>");
         pw.print("<input type='text' name='" + ATTR_TEST + "' value='");
         if (value != null) {
             pw.print(escapeXml(value));
