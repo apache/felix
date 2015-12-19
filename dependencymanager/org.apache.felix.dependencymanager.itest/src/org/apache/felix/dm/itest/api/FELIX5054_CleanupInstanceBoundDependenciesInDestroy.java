@@ -34,8 +34,9 @@ public class FELIX5054_CleanupInstanceBoundDependenciesInDestroy extends TestBas
 		DependencyManager m = getDM();
 		m_ensure = new Ensure();
 		
+		A aObject = new A();
 		Component a = m.createComponent()
-				.setImplementation(new A())
+				.setImplementation(aObject)
 				.add(m.createServiceDependency().setService(B.class).setRequired(true).setCallbacks("bindB", "unbindB"));
 		
 		Component b = m.createComponent()
@@ -54,6 +55,8 @@ public class FELIX5054_CleanupInstanceBoundDependenciesInDestroy extends TestBas
 		m_ensure.waitForStep(5, 3000);
 		m.add(b);
 		m_ensure.waitForStep(8, 3000);
+		aObject.testDone();
+		m.clear();
 	}
 	
 	public class A {
@@ -63,13 +66,18 @@ public class FELIX5054_CleanupInstanceBoundDependenciesInDestroy extends TestBas
         private Ensure.Steps m_stepsUnbindC = new Ensure.Steps(4);
         private Ensure.Steps m_stepsInit = new Ensure.Steps(2, 7);
         private Dependency m_depC;
+        private boolean m_done;
 
 		void bindB(B b) {
 			m_ensure.steps(m_stepsBindB);
 		}
 		
-		void unbindB(B b) {
-			m_ensure.steps(m_stepsUnbindB);
+		public void testDone() {
+            m_done = true;           
+        }
+
+        void unbindB(B b) {
+			if (! m_done) m_ensure.steps(m_stepsUnbindB);
 		}
 
 		void init(Component component) {
@@ -84,7 +92,7 @@ public class FELIX5054_CleanupInstanceBoundDependenciesInDestroy extends TestBas
 		}
 		
 		void unbindC(C c) {
-			m_ensure.steps(m_stepsUnbindC);
+		    if (! m_done) m_ensure.steps(m_stepsUnbindC);
 		}
 	}
 	
