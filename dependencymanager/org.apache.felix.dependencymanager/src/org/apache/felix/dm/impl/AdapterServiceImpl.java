@@ -57,13 +57,12 @@ public class AdapterServiceImpl extends FilterComponent {
         Object callbackInstance, String add, String change, String remove, String swap, boolean propagate)
     {
         super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
-        m_component.setImplementation(new AdapterImpl(adapteeInterface, adapteeFilter, autoConfig, callbackInstance, add, 
-            change, remove, swap, propagate))
-                 .add(dm.createServiceDependency()
-                      .setService(adapteeInterface, adapteeFilter)
-                      .setAutoConfig(false)
-                      .setCallbacks("added", null, "removed", "swapped"))
-                 .setCallbacks("init", null, "stop", null);
+        m_component.setImplementation(new AdapterImpl(adapteeInterface, adapteeFilter, autoConfig, callbackInstance, add, change, remove, swap, propagate))            
+            .add(dm.createServiceDependency()
+                   .setService(adapteeInterface, adapteeFilter)
+                   .setAutoConfig(false)
+                   .setCallbacks("added", null, "removed", "swapped"))
+            .setCallbacks("init", null, "stop", null);
     }	
 	    
     public class AdapterImpl extends AbstractDecorator {
@@ -106,9 +105,6 @@ public class AdapterServiceImpl extends FilterComponent {
             }
             if (m_autoConfig != null) {
                 dependency.setAutoConfig(m_autoConfig);
-            } else {
-                // enable auto configuration if there is no add callback or if there is one on a callbackInstance
-                dependency.setAutoConfig(m_add == null || (m_add != null && m_dependencyCallbackInstance != null));
             }
             
             if (m_propagate) {
