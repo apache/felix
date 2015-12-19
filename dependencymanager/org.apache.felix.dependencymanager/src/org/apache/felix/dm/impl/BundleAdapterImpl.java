@@ -53,7 +53,7 @@ public class BundleAdapterImpl extends FilterComponent
         		   .setFilter(filter)
         		   .setStateMask(stateMask)
         		   .setCallbacks("added", "removed"))
-        		   .setCallbacks("init", null, "stop", null);
+        	.setCallbacks("init", null, "stop", null);
 	}
 
 	public class BundleAdapterDecorator extends AbstractDecorator {
@@ -101,8 +101,7 @@ public class BundleAdapterImpl extends FilterComponent
                     .setBundle(bundle)
                     .setStateMask(m_bundleStateMask)
                     .setPropagate(m_propagate)
-                    .setCallbacks(m_cbInstance, m_add, m_change, m_remove)
-                    .setAutoConfig(true)
+                    .setCallbacks(m_cbInstance, m_add, m_change, m_remove) // if no callbacks, autoconfig is enabled
                     .setRequired(true));
 
             for (DependencyContext dc : dependencies) {
