@@ -19,15 +19,8 @@
 package org.apache.felix.scr.integration.components.annoconfig;
 
 
-import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
-import org.apache.felix.scr.impl.helper.AnnotationTest.E1;
-import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentContext;
 
 
