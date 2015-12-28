@@ -24,6 +24,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,6 +86,10 @@ public class Annotations
                 for (Map.Entry<String, Method> entry: complexFields.entrySet())
                 {
                     List<Map<String, Object>> proplist = nested.get(entry.getKey());
+                    if (proplist == null)
+                    {
+                    	proplist = Collections.emptyList();
+                    }
                     Method method = entry.getValue();
                     Class<?> returnType  = method.getReturnType();
                     if (returnType.isArray())

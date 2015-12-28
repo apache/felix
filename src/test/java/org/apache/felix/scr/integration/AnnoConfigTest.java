@@ -20,7 +20,6 @@ package org.apache.felix.scr.integration;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +30,10 @@ import org.apache.felix.scr.integration.components.annoconfig.AnnoComponent;
 import org.apache.felix.scr.integration.components.annoconfig.AnnoComponent.A1;
 import org.apache.felix.scr.integration.components.annoconfig.AnnoComponent.A1Arrays;
 import org.apache.felix.scr.integration.components.annoconfig.AnnoComponent.E1;
+import org.apache.felix.scr.integration.components.annoconfig.NestedAnnoComponent;
+import org.apache.felix.scr.integration.components.annoconfig.NestedAnnoComponent.A2;
+import org.apache.felix.scr.integration.components.annoconfig.NestedAnnoComponent.B2;
+import org.apache.felix.scr.integration.components.annoconfig.NestedAnnoComponent.E2;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
@@ -253,4 +256,59 @@ public class AnnoConfigTest extends ComponentTestBase
         TestCase.assertEquals(null, a.shor());
         TestCase.assertEquals(null, a.string());
     }
+    
+    @Test
+    public void testNestedAnnoConfig() throws Exception
+    {
+        String name = "org.apache.felix.scr.integration.components.nestedannoconfig";
+        ComponentConfigurationDTO dto = findComponentConfigurationByName(name, ComponentConfigurationDTO.SATISFIED);
+        NestedAnnoComponent ac = getServiceFromConfiguration(dto, NestedAnnoComponent.class);
+        checkA2NoValues(ac.m_a2_activate);
+        
+        Configuration c = configure(name, null, allNestedValues());
+        delay();
+        
+        checkA2(ac.m_a2_modified);
+
+        ungetServiceFromConfiguration(dto, NestedAnnoComponent.class);
+        checkA2(ac.m_a2_deactivate);
+        ac = getServiceFromConfiguration(dto, NestedAnnoComponent.class);
+        checkA2(ac.m_a2_activate);
+        
+
+    }
+    private Hashtable<String, Object> allNestedValues()
+    {
+        Hashtable<String, Object> values = new Hashtable<String, Object>();
+        values.put("b2.0.bool", "true");
+        values.put("b2.0.e2", E2.a.toString());
+        values.put("b2s.0.bool", "true");
+        values.put("b2s.0.e2", E2.a.toString());
+        values.put("b2s.1.bool", "true");
+        values.put("b2s.1.e2", E2.b.toString());
+        values.put("b2s.2.bool", "true");
+        values.put("b2s.2.e2", E2.c.toString());
+        return values;
+    }
+
+    private void checkA2NoValues(A2 a)
+    {
+        TestCase.assertEquals(0, a.b2s().length);
+    }
+    private void checkA2(A2 a)
+    {
+        checkB2(a.b2(), E2.a);
+        TestCase.assertNull(a.b2null());
+
+        TestCase.assertEquals(3, a.b2s().length);
+        checkB2(a.b2s()[0], E2.a);
+        checkB2(a.b2s()[1], E2.b);
+        checkB2(a.b2s()[2], E2.c);
+    }
+
+	private void checkB2(B2 b, E2 e2) {
+		TestCase.assertEquals(true, b.bool());
+		TestCase.assertEquals(e2, b.e2());
+	}
+
 }
