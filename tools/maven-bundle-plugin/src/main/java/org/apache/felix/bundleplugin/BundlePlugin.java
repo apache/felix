@@ -189,6 +189,18 @@ public class BundlePlugin extends AbstractMojo
     @Parameter( defaultValue = "${basedir}/dependency-reduced-pom.xml" )
     protected File dependencyReducedPomLocation;
 
+    /**
+     * Directory where the SCR files will be written
+     */
+    @Parameter(defaultValue="${project.build.outputDirectory}")
+    protected File scrLocation;
+
+    /**
+     * When true, dump the generated SCR files
+     */
+    @Parameter
+    protected boolean exportScr;
+    
     @Component
     private MavenProjectHelper m_projectHelper;
 
@@ -507,7 +519,7 @@ public class BundlePlugin extends AbstractMojo
 
                 try
                 {
-                    ManifestPlugin.writeManifest( builder, outputFile, niceManifest );
+                    ManifestPlugin.writeManifest( builder, outputFile, niceManifest, exportScr, scrLocation );
                 }
                 catch ( IOException e )
                 {
