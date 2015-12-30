@@ -66,19 +66,6 @@ public class ManifestPlugin extends BundlePlugin
     @Parameter( property = "rebuildBundle" )
     protected boolean rebuildBundle;
 
-    /**
-     * Directory where the SCR files will be written
-     *
-     * @parameter expression="${scrLocation}" default-value="${project.build.outputDirectory}"
-     */
-    protected File scrLocation;
-
-    /**
-     * When true, dump the generated SCR files
-     * @parameter
-     */
-    protected boolean exportScr;
-
     @Override
     protected void execute( MavenProject project, DependencyNode dependencyGraph, Map<String, String> instructions, Properties properties, Jar[] classpath )
         throws MojoExecutionException
@@ -112,7 +99,7 @@ public class ManifestPlugin extends BundlePlugin
 
         try
         {
-            writeManifest( analyzer, outputFile, niceManifest );
+            writeManifest( analyzer, outputFile, niceManifest, exportScr, scrLocation );
         }
         catch ( Exception e )
         {
@@ -149,32 +136,7 @@ public class ManifestPlugin extends BundlePlugin
 
         if (exportScr)
         {
-            scrLocation.mkdirs();
-
-            String bpHeader = analyzer.getProperty(Analyzer.SERVICE_COMPONENT);
-            Parameters map = Processor.parseHeader(bpHeader, null);
-            for (String root : map.keySet())
-            {
-                Map<String, Resource> dir = jar.getDirectories().get(root);
-                File location = new File(scrLocation, root);
-                if (dir == null || dir.isEmpty())
-                {
-                    Resource resource = jar.getResource(root);
-                    if (resource != null)
-                    {
-                        writeSCR(resource, location);
-                    }
-                }
-                else
-                {
-                    for (Map.Entry<String, Resource> entry : dir.entrySet())
-                    {
-                        String path = entry.getKey();
-                        Resource resource = entry.getValue();
-                        writeSCR(resource, new File(location, path));
-                    }
-                }
-            }
+            exportScr(analyzer, jar, scrLocation);
         }
 
         // cleanup...
@@ -182,8 +144,37 @@ public class ManifestPlugin extends BundlePlugin
 
         return manifest;
     }
+    
+    private static void exportScr(Analyzer analyzer, Jar jar, File scrLocation) throws Exception {
+        scrLocation.mkdirs();
 
-    protected void writeSCR(Resource resource, File destination) throws Exception
+        String bpHeader = analyzer.getProperty(Analyzer.SERVICE_COMPONENT);
+        Parameters map = Processor.parseHeader(bpHeader, null);
+        for (String root : map.keySet())
+        {
+            Map<String, Resource> dir = jar.getDirectories().get(root);
+            File location = new File(scrLocation, root);
+            if (dir == null || dir.isEmpty())
+            {
+                Resource resource = jar.getResource(root);
+                if (resource != null)
+                {
+                    writeSCR(resource, location);
+                }
+            }
+            else
+            {
+                for (Map.Entry<String, Resource> entry : dir.entrySet())
+                {
+                    String path = entry.getKey();
+                    Resource resource = entry.getValue();
+                    writeSCR(resource, new File(location, path));
+                }
+            }
+        }
+    }
+
+    private static void writeSCR(Resource resource, File destination) throws Exception
     {
         destination.getParentFile().mkdirs();
         OutputStream os = new FileOutputStream(destination);
@@ -295,10 +286,12 @@ public class ManifestPlugin extends BundlePlugin
     }
 
 
-    public static void writeManifest( Analyzer analyzer, File outputFile, boolean niceManifest ) throws Exception
+    public static void writeManifest( Analyzer analyzer, File outputFile, boolean niceManifest,
+            boolean exportScr, File scrLocation ) throws Exception
     {
         Properties properties = analyzer.getProperties();
-        Manifest manifest = analyzer.getJar().getManifest();
+        Jar jar = analyzer.getJar();
+        Manifest manifest = jar.getManifest();
         if ( outputFile.exists() && properties.containsKey( "Merge-Headers" ) )
         {
             Manifest analyzerManifest = manifest;
@@ -321,6 +314,11 @@ public class ManifestPlugin extends BundlePlugin
             parentFile.mkdirs();
         }
         writeManifest( manifest, outputFile, niceManifest );
+        
+        if (exportScr)
+        {
+            exportScr(analyzer, jar, scrLocation);            
+        }
     }
 
 
