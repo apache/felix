@@ -171,12 +171,13 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
             out.print("\nBenchmarking bundle: " + bundle.getSymbolicName() + " ");            
             List<Long> sortedResults = LongStream.range(0, iterations)
                 .peek(i -> out.print("."))
-                .map(n -> durationOf(() -> startAndStop(bundle)))
+                .map(n -> durationOf(() -> start(bundle)))
+                .peek(n -> stop(bundle))
                 .sorted().boxed().collect(toList());
             out.println();
             displaySortedResults(sortedResults);
             Unchecked.run(() -> Thread.sleep(500));
-        });        
+        });               
     }
 
     /**
@@ -242,30 +243,50 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
      * 
      * 1) start a bundle, and register the ScenarioController service (this will trigger all components activation)
      * 2) wait for all expected components to be fully started
-     * 3) stop the bundle and wait for all expected components to be fully stopped
      * 
      * @param b the benchmarked scenario bundle
      */
-    void startAndStop(Bundle b) {
+    void start(Bundle b) {
         try {
-            initLatches();
-
+            m_startLatch = new CountDownLatch(ARTISTS
+                + (ARTISTS * (ALBUMS + (ALBUMS * TRACKS))));
+            
             debug(() -> "starting bundle " + b.getSymbolicName());
             b.start();
                                     
             if (! m_startLatch.await(60, TimeUnit.SECONDS)) {
                 out.println("Could not start components timely: current start latch=" + m_startLatch.getCount() + ", stop latch=" + m_stopLatch.getCount());
-                Unchecked.run(() -> Thread.sleep(Integer.MAX_VALUE));
+                Unchecked.run(() -> Thread.sleep(Integer.MAX_VALUE)); // FIXME
             }
             
             // Make sure the threadpool is quiescent and has finished to register all components
             if (! Helper.getThreadPool().awaitQuiescence(5, TimeUnit.SECONDS)) {
                 out.println("could not start components timely (thread pool is still active after 5 seconds)");
-                Unchecked.run(() -> Thread.sleep(Integer.MAX_VALUE));
+                Unchecked.run(() -> Thread.sleep(Integer.MAX_VALUE)); // FIXME
             }
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
+    }
+    
+    /**
+     * This function stops the bundle and wait for all expected components to be fully stopped
+     * 
+     * @param b the benchmarked scenario bundle
+     */
+    void stop(Bundle b) {
+        try {
+            m_stopLatch = new CountDownLatch(ARTISTS
+                + (ARTISTS * (ALBUMS + (ALBUMS * TRACKS))));
                         
             debug(() -> "stopping bundle " + b.getSymbolicName());
             b.stop();
+            
+            // Make sure the threadpool is quiescent and has finished to register all components
+            if (! Helper.getThreadPool().awaitQuiescence(5, TimeUnit.SECONDS)) {
+                out.println("could not start components timely (thread pool is still active after 5 seconds)");
+                Unchecked.run(() -> Thread.sleep(Integer.MAX_VALUE)); // FIXME
+            }
             
             // Wait for all component deactivations
             if (! m_stopLatch.await(60, TimeUnit.SECONDS)) {
