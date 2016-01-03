@@ -18,28 +18,10 @@
  */
 package org.apache.felix.dm.itest.bundle;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
-
-import org.apache.felix.dm.DependencyActivatorBase;
-import org.apache.felix.dm.DependencyManager;
-import org.osgi.framework.BundleContext;
-
-/**
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
- */
-public class Activator extends DependencyActivatorBase {
+public class HelloWorldService implements HelloWorld {
 
 	@Override
-	public void init(BundleContext ctx, DependencyManager m) throws Exception {
-		m.add(createComponent()
-		    .setImplementation(TestComponent.class)
-		    .setInterface(TestService.class.getName(), null));
-		
-        Dictionary<String, Object> props = new Hashtable<>();
-        props.put("dm", "dm4");
-        m.add(createComponent().setInterface(HelloWorld.class.getName(), props)
-         .setImplementation(new HelloWorldServiceFactory()));
+	public String sayIt(String arg) {
+		return "Hello " + arg;
 	}
-
 }
