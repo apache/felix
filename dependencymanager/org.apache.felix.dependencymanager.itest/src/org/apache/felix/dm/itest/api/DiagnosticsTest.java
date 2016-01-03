@@ -35,10 +35,11 @@ import org.apache.felix.dm.itest.util.TestBase;
 
 public class DiagnosticsTest extends TestBase {
 	
-	// there is one TestComponent created by org.apache.felix.dm.itest.bundle
-	// this component is always registered, so we only need to take it into 
+	// there are two components (TestComponent and HelloWorldServiceFactory) created by 
+    // org.apache.felix.dm.itest.bundle
+	// These component is always registered, so we only need to take them into 
 	// account when we build the graph with ALL components
-	private static final int InitialComponentCount = 1;
+	private static final int InitialComponentCount = 2;
 	
 	private boolean checkComponentCount(int expected, int count) {
 		return count == expected + InitialComponentCount;
