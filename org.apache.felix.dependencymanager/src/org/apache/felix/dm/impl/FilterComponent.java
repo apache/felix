@@ -90,6 +90,10 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
             if (dc.isRequired()) {
                 allDependenciesOptional = false;
             }
+            
+            // Temporarily remove dependency callback instance (if set), because we don't want to call it twice (one time from the
+            // internal aspect/adapter AbstractDecorator object, and another one time from the actual aspect/adapter component instances).
+            // See FELIX-5155.            
             if (dc.getCallbackInstance() != null) {
                 m_dependencyCallbacks.put(dc, dc.setCallbackInstance(null));
             }
