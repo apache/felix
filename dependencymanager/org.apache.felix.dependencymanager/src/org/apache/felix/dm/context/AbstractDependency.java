@@ -538,7 +538,26 @@ public abstract class AbstractDependency<T extends Dependency> implements
     public ComponentContext getComponentContext() {
         return m_component;
     }
+       
+    /**
+     * Returns the dependency callback instance, if there is one.
+     * @returns the dependency callback instance if there is one, else null.
+     */
+    public Object getCallbackInstance() {
+        return m_callbackInstance;
+    }
 
+    /**
+     * Sets the dependency callback instance
+     * @param callbackInstance the dependency callback instance
+     * @return the previous callbackInstance, or <code>null</code> if it did not have one
+     */
+    public Object setCallbackInstance(Object callbackInstance) {
+        Object currentCallbackInstance = m_callbackInstance;
+        m_callbackInstance = callbackInstance;
+        return currentCallbackInstance;
+    }
+    
     /**
      * Returns the default service, or null.
      * @param nullObject if true, a null object may be returned.

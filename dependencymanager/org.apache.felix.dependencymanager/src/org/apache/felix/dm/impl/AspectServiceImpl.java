@@ -152,9 +152,7 @@ public class AspectServiceImpl extends FilterComponent {
             
             configureAutoConfigState(service, m_component);
             
-            for (DependencyContext dc : dependencies) {
-                service.add((Dependency) dc.createCopy());
-            }
+            copyDependencies(dependencies, service);
 
             for (int i = 0; i < m_stateListeners.size(); i++) {
                 service.add((ComponentStateListener) m_stateListeners.get(i));

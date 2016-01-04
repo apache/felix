@@ -134,9 +134,7 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
             newService.setCallbacks(m_callbackObject, m_init, m_start, m_stop, m_destroy); // if not set, no effect
             configureAutoConfigState(newService, m_component);
             
-            for (DependencyContext dc : m_component.getDependencies()) {
-                newService.add((Dependency) dc.createCopy());
-            }
+            copyDependencies(m_component.getDependencies(), newService);
             
             for (int i = 0; i < m_stateListeners.size(); i ++) {
                 newService.add(m_stateListeners.get(i));

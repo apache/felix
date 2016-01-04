@@ -104,9 +104,7 @@ public class BundleAdapterImpl extends FilterComponent
                     .setCallbacks(m_cbInstance, m_add, m_change, m_remove) // if no callbacks, autoconfig is enabled
                     .setRequired(true));
 
-            for (DependencyContext dc : dependencies) {
-                service.add((Dependency) dc.createCopy());
-            }
+            copyDependencies(dependencies, service);
 
             for (ComponentStateListener stateListener : m_stateListeners) {
                 service.add(stateListener);
