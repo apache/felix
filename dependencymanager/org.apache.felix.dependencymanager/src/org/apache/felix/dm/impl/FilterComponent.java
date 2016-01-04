@@ -160,6 +160,8 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
                 }
             }
         }
+        // Cleanup possibly cached depenedncy callack instances.
+        m_dependencyCallbacks.remove((DependencyContext) dependency);
         return this;
     }
 
