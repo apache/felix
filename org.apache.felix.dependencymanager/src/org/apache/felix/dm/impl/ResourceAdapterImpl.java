@@ -131,9 +131,7 @@ public class ResourceAdapterImpl extends FilterComponent {
             
             configureAutoConfigState(service, m_component);
 
-            for (DependencyContext dc : dependencies) {
-                service.add((Dependency) dc.createCopy());
-            }
+            copyDependencies(dependencies, service);
 
             for (ComponentStateListener stateListener : m_stateListeners) {
                 service.add(stateListener);
