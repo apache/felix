@@ -24,7 +24,7 @@ import javax.servlet.http.HttpServlet;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.cometd.CometdService;
 import org.cometd.bayeux.server.BayeuxServer;
-import org.cometd.server.CometdServlet;
+import org.cometd.server.CometDServlet;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -46,14 +46,14 @@ public final class CometdServiceImpl
     private ServiceRegistration configServiceReg;
     private ServiceTracker httpServiceTracker;
     private ServiceRegistration cometdServiceReg;
-    private CometdServlet continuationCometdServlet;
+    private CometDServlet continuationCometdServlet;
 
     public CometdServiceImpl(BundleContext context)
     {
         this.context = context;
         this.config = new CometdConfig(this.context);
     }
-    
+
     public void start()
         throws Exception
     {
@@ -77,6 +77,7 @@ public final class CometdServiceImpl
         }
     }
 
+    @Override
     public void updated(Dictionary props)
     {
         this.config.update(props);
@@ -89,6 +90,7 @@ public final class CometdServiceImpl
         }
     }
 
+    @Override
     public Object addingService(ServiceReference reference)
     {
         Object service = this.context.getService(reference);
@@ -96,12 +98,14 @@ public final class CometdServiceImpl
         return service;
     }
 
+    @Override
     public void modifiedService(ServiceReference reference, Object service)
     {
         this.unregister((HttpService)service);
         this.register((HttpService)service);
     }
 
+    @Override
     public void removedService(ServiceReference reference, Object service)
     {
         this.unregister((HttpService)service);
@@ -109,7 +113,7 @@ public final class CometdServiceImpl
 
     private void register(HttpService httpService) {
         if (this.continuationCometdServlet == null) {
-            this.continuationCometdServlet = new CometdServlet();
+            this.continuationCometdServlet = new CometDServlet();
         }
         try {
           Dictionary dictionary = new Hashtable();
@@ -131,6 +135,7 @@ public final class CometdServiceImpl
         }
     }
 
+    @Override
     public BayeuxServer getBayeuxServer() {
         return this.continuationCometdServlet.getBayeux();
     }

@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.cometd.bayeux.MarkedReference;
 import org.cometd.bayeux.server.BayeuxServer;
 import org.cometd.bayeux.server.ConfigurableServerChannel;
 import org.cometd.bayeux.server.LocalSession;
@@ -58,81 +59,81 @@ public class TimeServlet
         "    <script type='text/javascript' src='/js/dojo/dojo.js'></script>\n" +
         "    <script type='text/javascript'>\n" +
         "      dojo.require('dojox.cometd');\n" +
-        "dojo.addOnLoad(function()\n" + 
-        "{\n" + 
-        "    var cometd = dojox.cometd;\n" + 
-        "\n" + 
-        "    function _connectionEstablished()\n" + 
-        "    {\n" + 
-        "        dojo.byId('body').innerHTML += '<div>CometD Connection Established</div>';\n" + 
-        "    }\n" + 
-        "\n" + 
-        "    function _connectionBroken()\n" + 
-        "    {\n" + 
-        "        dojo.byId('body').innerHTML += '<div>CometD Connection Broken</div>';\n" + 
-        "    }\n" + 
-        "\n" + 
-        "    function _connectionClosed()\n" + 
-        "    {\n" + 
-        "        dojo.byId('body').innerHTML += '<div>CometD Connection Closed</div>';\n" + 
-        "    }\n" + 
-        "\n" + 
-        "    // Function that manages the connection status with the Bayeux server\n" + 
-        "    var _connected = false;\n" + 
-        "    function _metaConnect(message)\n" + 
-        "    {\n" + 
-        "        if (cometd.isDisconnected())\n" + 
-        "        {\n" + 
-        "            _connected = false;\n" + 
-        "            _connectionClosed();\n" + 
-        "            return;\n" + 
-        "        }\n" + 
-        "\n" + 
-        "        var wasConnected = _connected;\n" + 
-        "        _connected = message.successful === true;\n" + 
-        "        if (!wasConnected && _connected)\n" + 
-        "        {\n" + 
-        "            _connectionEstablished();\n" + 
-        "        }\n" + 
-        "        else if (wasConnected && !_connected)\n" + 
-        "        {\n" + 
-        "            _connectionBroken();\n" + 
-        "        }\n" + 
-        "    }\n" + 
-        "\n" + 
-        "    // Function invoked when first contacting the server and\n" + 
-        "    // when the server has lost the state of this client\n" + 
-        "    function _metaHandshake(handshake)\n" + 
-        "    {\n" + 
-        "        if (handshake.successful === true)\n" + 
-        "        {\n" + 
-        "            cometd.batch(function()\n" + 
-        "            {\n" + 
-        "                cometd.subscribe('/System/Time', function(message)\n" + 
-        "                {\n" + 
-        "                    dojo.byId('systemTime').innerHTML = '<div>' + message.data + '</div>';\n" + 
-        "                });\n" + 
-        "            });\n" + 
-        "        }\n" + 
-        "    }\n" + 
-        "\n" + 
-        "    // Disconnect when the page unloads\n" + 
-        "    dojo.addOnUnload(function()\n" + 
-        "    {\n" + 
-        "        cometd.disconnect(true);\n" + 
-        "    });\n" + 
-        "\n" + 
-        "    var cometURL = \"http://localhost:8080/system/cometd\";\n" + 
-        "    cometd.configure({\n" + 
-        "        url: cometURL,\n" + 
-        "        logLevel: 'debug'\n" + 
-        "    });\n" + 
-        "\n" + 
-        "    cometd.addListener('/meta/handshake', _metaHandshake);\n" + 
-        "    cometd.addListener('/meta/connect', _metaConnect);\n" + 
-        "\n" + 
-        "    cometd.handshake();\n" + 
-        "});\n" + 
+        "dojo.addOnLoad(function()\n" +
+        "{\n" +
+        "    var cometd = dojox.cometd;\n" +
+        "\n" +
+        "    function _connectionEstablished()\n" +
+        "    {\n" +
+        "        dojo.byId('body').innerHTML += '<div>CometD Connection Established</div>';\n" +
+        "    }\n" +
+        "\n" +
+        "    function _connectionBroken()\n" +
+        "    {\n" +
+        "        dojo.byId('body').innerHTML += '<div>CometD Connection Broken</div>';\n" +
+        "    }\n" +
+        "\n" +
+        "    function _connectionClosed()\n" +
+        "    {\n" +
+        "        dojo.byId('body').innerHTML += '<div>CometD Connection Closed</div>';\n" +
+        "    }\n" +
+        "\n" +
+        "    // Function that manages the connection status with the Bayeux server\n" +
+        "    var _connected = false;\n" +
+        "    function _metaConnect(message)\n" +
+        "    {\n" +
+        "        if (cometd.isDisconnected())\n" +
+        "        {\n" +
+        "            _connected = false;\n" +
+        "            _connectionClosed();\n" +
+        "            return;\n" +
+        "        }\n" +
+        "\n" +
+        "        var wasConnected = _connected;\n" +
+        "        _connected = message.successful === true;\n" +
+        "        if (!wasConnected && _connected)\n" +
+        "        {\n" +
+        "            _connectionEstablished();\n" +
+        "        }\n" +
+        "        else if (wasConnected && !_connected)\n" +
+        "        {\n" +
+        "            _connectionBroken();\n" +
+        "        }\n" +
+        "    }\n" +
+        "\n" +
+        "    // Function invoked when first contacting the server and\n" +
+        "    // when the server has lost the state of this client\n" +
+        "    function _metaHandshake(handshake)\n" +
+        "    {\n" +
+        "        if (handshake.successful === true)\n" +
+        "        {\n" +
+        "            cometd.batch(function()\n" +
+        "            {\n" +
+        "                cometd.subscribe('/System/Time', function(message)\n" +
+        "                {\n" +
+        "                    dojo.byId('systemTime').innerHTML = '<div>' + message.data + '</div>';\n" +
+        "                });\n" +
+        "            });\n" +
+        "        }\n" +
+        "    }\n" +
+        "\n" +
+        "    // Disconnect when the page unloads\n" +
+        "    dojo.addOnUnload(function()\n" +
+        "    {\n" +
+        "        cometd.disconnect(true);\n" +
+        "    });\n" +
+        "\n" +
+        "    var cometURL = \"http://localhost:8080/system/cometd\";\n" +
+        "    cometd.configure({\n" +
+        "        url: cometURL,\n" +
+        "        logLevel: 'debug'\n" +
+        "    });\n" +
+        "\n" +
+        "    cometd.addListener('/meta/handshake', _metaHandshake);\n" +
+        "    cometd.addListener('/meta/connect', _metaConnect);\n" +
+        "\n" +
+        "    cometd.handshake();\n" +
+        "});\n" +
         "    </script>\n" +
         "  </head>\n" +
         "  <body>\n" +
@@ -145,14 +146,13 @@ public class TimeServlet
         this.bayeuxServer = bayeuxServer;
         this.channels = new ArrayList<ServerChannel>();
         for (SystemTopics topic : SystemTopics.values()) {
-        	boolean created = bayeuxServer.createIfAbsent("/System/" + topic, new ServerChannel.Initializer() {
-				public void configureChannel(ConfigurableServerChannel channel) {
+        	MarkedReference<ServerChannel> created = bayeuxServer.createChannelIfAbsent("/System/" + topic, new ConfigurableServerChannel.Initializer() {
+				@Override
+                public void configureChannel(ConfigurableServerChannel channel) {
 					channel.setPersistent(true);
 				}
         	});
-        	if (created) {
-        		this.channels.add(topic.ordinal(), this.bayeuxServer.getChannel("/System/" + topic));
-        	}
+    		this.channels.add(topic.ordinal(), created.getReference());
         }
         this.logDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 		this.updateTimer = new Timer("System.Time.ClientNotifier");
@@ -196,6 +196,7 @@ public class TimeServlet
         extends TimerTask
     {
 
+        @Override
         public void run() {
             for (SystemTopics topic : SystemTopics.values()) {
                 String topicData;
@@ -209,7 +210,7 @@ public class TimeServlet
                 ServerMessage.Mutable message = bayeuxServer.newMessage();
                 message.setChannel(channels.get(topic.ordinal()).getId());
                 message.setData(topicData);
-                channels.get(topic.ordinal()).publish(session, topicData, null);
+                channels.get(topic.ordinal()).publish(session, message);
             }
         }
     }
