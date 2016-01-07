@@ -4,6 +4,7 @@ Changes from 3 to 4
     * [FELIX-5157] - Add m2e lifecycle mappings
     * [FELIX-5158] - Update test dependencies
     * [FELIX-5159] - Update plugin dependencies
+    * [FELIX-5160] - Update configuration for Apache rat plugin
 
 
 Changes from 2.1 to 3
