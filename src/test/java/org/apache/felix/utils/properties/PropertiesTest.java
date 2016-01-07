@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -237,7 +238,7 @@ public class PropertiesTest extends TestCase {
         assertTrue(sw.toString(), sw.toString().endsWith(RESULT3));
         List<String> rawValue = properties.getRaw(KEY1);
         assertEquals(2, rawValue.size());
-        assertEquals(KEY1A + " = " + VALUE1 + "\\", rawValue.get(0));
+        assertEquals(KEY1A + " = " + VALUE1, rawValue.get(0));
         assertEquals(VALUE1, rawValue.get(1));
     }
 
@@ -261,6 +262,58 @@ public class PropertiesTest extends TestCase {
         properties = new Properties();
         properties.load(new ByteArrayInputStream(baos.toByteArray()));
         assertEquals(VALUE1 + "x", properties.get(KEY1));
+    }
+
+    public void testMultiValueEscaping() throws IOException {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        pw.println("fruits                           apple, banana, pear, \\");
+        pw.println("                                 cantaloupe, watermelon, \\");
+        pw.println("                                 kiwi, mango");
+
+        java.util.Properties p = new java.util.Properties();
+        p.load(new StringReader(sw.toString()));
+        assertEquals("apple, banana, pear, cantaloupe, watermelon, kiwi, mango", p.getProperty("fruits"));
+
+        Properties props = new Properties();
+        props.load(new StringReader(sw.toString()));
+        assertEquals("apple, banana, pear, cantaloupe, watermelon, kiwi, mango", props.getProperty("fruits"));
+        List<String> raw = props.getRaw("fruits");
+        assertNotNull(raw);
+        assertEquals(3, raw.size());
+        assertEquals("fruits                           apple, banana, pear, ", raw.get(0));
+
+        props = new Properties();
+        props.put("fruits", props.getComments("fruits"), Arrays.asList(
+                "fruits                           apple, banana, pear, ",
+                "                                 cantaloupe, watermelon, ",
+                "                                 kiwi, mango"));
+        assertEquals("apple, banana, pear, cantaloupe, watermelon, kiwi, mango", props.getProperty("fruits"));
+        raw = props.getRaw("fruits");
+        assertNotNull(raw);
+        assertEquals(3, raw.size());
+        assertEquals("fruits                           apple, banana, pear, ", raw.get(0));
+
+        sw = new StringWriter();
+        props.save(sw);
+        props = new Properties();
+        props.load(new StringReader(sw.toString()));
+        assertEquals("apple, banana, pear, cantaloupe, watermelon, kiwi, mango", props.getProperty("fruits"));
+        raw = props.getRaw("fruits");
+        assertNotNull(raw);
+        assertEquals(3, raw.size());
+        assertEquals("fruits                           apple, banana, pear, ", raw.get(0));
+
+        props = new Properties();
+        props.put("fruits", props.getComments("fruits"), Arrays.asList(
+                "                           apple, banana, pear, ",
+                "                                 cantaloupe, watermelon, ",
+                "                                 kiwi, mango"));
+        assertEquals("apple, banana, pear, cantaloupe, watermelon, kiwi, mango", props.getProperty("fruits"));
+        raw = props.getRaw("fruits");
+        assertNotNull(raw);
+        assertEquals(3, raw.size());
+        assertEquals("fruits =                            apple, banana, pear, ", raw.get(0));
     }
 
 }
