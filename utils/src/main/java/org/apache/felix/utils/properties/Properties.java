@@ -27,6 +27,7 @@ import java.io.LineNumberReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.StringReader;
 import java.io.Writer;
 import java.net.URL;
 import java.security.AccessController;
@@ -284,21 +285,32 @@ public class Properties extends AbstractMap<String, String> {
         commentLines = new ArrayList<String>(commentLines);
         valueLines = new ArrayList<String>(valueLines);
         String escapedKey = escapeKey(key);
+        StringBuilder sb = new StringBuilder();
         int lastLine = valueLines.size() - 1;
         if (valueLines.isEmpty()) {
             valueLines.add(escapedKey + "=");
-        } else if (!valueLines.get(0).trim().startsWith(escapedKey)) {
-            valueLines.set(0, escapedKey + " = " + escapeJava(valueLines.get(0)) + (0 < lastLine? "\\": ""));
+            sb.append(escapedKey).append("=");
+        } else {
+            String val0 = valueLines.get(0);
+            if (!val0.trim().startsWith(escapedKey)) {
+                valueLines.set(0, escapedKey + " = " + escapeJava(val0) /*+ (0 < lastLine? "\\": "")*/);
+                sb.append(escapedKey).append(" = ").append(escapeJava(val0));
+            } else {
+                valueLines.set(0, escapeJava(val0) /*+ (0 < lastLine? "\\": "")*/);
+                sb.append(escapeJava(val0));
+            }
         }
         for (int i = 1; i < valueLines.size(); i++) {
-            valueLines.set(i, escapeJava(valueLines.get(i)) + (i < lastLine? "\\": ""));
+            String val = valueLines.get(i);
+            valueLines.set(i, escapeJava(val) /*+ (i < lastLine? "\\": "")*/);
+            while (!val.isEmpty() && Character.isWhitespace(val.charAt(0))) {
+                val = val.substring(1);
+            }
+            sb.append(val);
         }
-        StringBuilder value = new StringBuilder();
-        for (String line: valueLines) {
-            value.append(line);
-        }
+        String[] property = PropertiesReader.parseProperty(sb.toString());
         this.layout.put(key, new Layout(commentLines, valueLines));
-        return storage.put(key, unescapeJava(value.toString()));
+        return storage.put(key, property[1]);
     }
 
     public String put(String key, List<String> commentLines, String value) {
@@ -470,9 +482,17 @@ public class Properties extends AbstractMap<String, String> {
             }
             if (l != null && l.getValueLines() != null)
             {
-                for (String s : l.getValueLines())
+                for (int i = 0; i < l.getValueLines().size(); i++)
                 {
-                    writer.writeln(s);
+                    String s = l.getValueLines().get(i);
+                    if (i < l.getValueLines().size() - 1)
+                    {
+                        writer.writeln(s + "\\");
+                    }
+                    else
+                    {
+                        writer.writeln(s);
+                    }
                 }
             }
             else
@@ -838,20 +858,19 @@ public class Properties extends AbstractMap<String, String> {
                     continue;
                 }
 
+                boolean combine = checkCombineLines(line);
+                if (combine)
+                {
+                    line = line.substring(0, line.length() - 1);
+                }
                 valueLines.add(line);
                 while (line.length() > 0 && contains(WHITE_SPACE, line.charAt(0)))
                 {
                     line = line.substring(1, line.length());
                 }
-
-                if (checkCombineLines(line))
+                buffer.append(line);
+                if (!combine)
                 {
-                    line = line.substring(0, line.length() - 1);
-                    buffer.append(line);
-                }
-                else
-                {
-                    buffer.append(line);
                     break;
                 }
             }
