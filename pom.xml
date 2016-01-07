@@ -38,7 +38,7 @@
     </scm>
     
     <properties>
-        <felix.java.version>7</felix.java.version>
+        <felix.java.version>8</felix.java.version>
     	<!-- jetty.version is moved to http-parent POM -->
     </properties>
 
