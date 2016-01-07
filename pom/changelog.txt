@@ -2,7 +2,7 @@ Changes from 3 to 4
 -------------------
 ** Improvement
     * [FELIX-5157] - Add m2e lifecycle mappings
-
+    * [FELIX-5158] - Update test dependencies
 
 Changes from 2.1 to 3
 ---------------------
