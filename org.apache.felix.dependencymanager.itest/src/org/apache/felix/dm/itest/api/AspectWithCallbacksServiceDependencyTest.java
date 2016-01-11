@@ -20,8 +20,11 @@ package org.apache.felix.dm.itest.api;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.itest.api.AspectBaseTest.ServiceAspect;
+import org.apache.felix.dm.itest.api.AspectBaseTest.ServiceInterface;
 import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
+import org.osgi.framework.ServiceReference;
 
 
 /**
@@ -51,7 +54,32 @@ public class AspectWithCallbacksServiceDependencyTest extends TestBase {
         e.step(8);
     }
     
-    static interface ServiceInterface {
+    public void testServiceRegistrationAndConsumptionWithAspectCallbackInstance() {
+        DependencyManager m = getDM();
+        // helper class that ensures certain steps get executed in sequence
+        Ensure e = new Ensure();
+        // create a service provider and consumer
+        Component sp = m.createComponent().setImplementation(new ServiceProvider(e)).setInterface(ServiceInterface.class.getName(), null);
+        Component sc = m.createComponent().setImplementation(new ServiceConsumer(e)).add(m.createServiceDependency()
+                .setService(ServiceInterface.class)
+                .setCallbacks("add", "remove")
+                .setRequired(true));
+        ServiceProviderAspect providerAspect = new ServiceProviderAspect();
+        ServiceProviderAspectCallbackInstance aspectCb = new ServiceProviderAspectCallbackInstance(providerAspect);
+        Component asp = m.createAspectService(ServiceInterface.class, null, 100, aspectCb, "add", null, "remove", "swap")
+                .setImplementation(providerAspect);
+        m.add(sp);
+        m.add(sc);
+        m.add(asp);
+        m.remove(asp); 
+        m.remove(sc);
+        m.remove(sp);
+        
+        // ensure we executed all steps inside the component instance
+        e.step(8);
+    }
+    
+   static interface ServiceInterface {
         public void invoke(String caller);
     }
 
@@ -69,6 +97,26 @@ public class AspectWithCallbacksServiceDependencyTest extends TestBase {
         }
     }
     
+    public static class ServiceProviderAspectCallbackInstance {
+        private final ServiceProviderAspect m_aspect;
+        
+        ServiceProviderAspectCallbackInstance(ServiceProviderAspect aspect) {
+            m_aspect = aspect;
+        }
+        
+        public void add(ServiceInterface service) {
+            m_aspect.add(service);
+        }
+        
+        public void remove(ServiceInterface service) {
+            m_aspect.remove(service);
+        }
+        
+        public void swap(ServiceInterface previous, ServiceInterface current) {
+            m_aspect.swap(previous, current);
+        }
+    }
+
     static class ServiceProviderAspect implements ServiceInterface {
     	private volatile ServiceInterface m_service;
     	
