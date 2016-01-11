@@ -222,6 +222,16 @@ public abstract class DependencyActivatorBase implements BundleActivator {
     }
     	
     /**
+     * Creates a new aspect service.
+     * 
+     * @return the aspect service
+     * @see DependencyManager#createAspectService(Class, String, int, Object, String, String, String, String)
+     */
+    public Component createAspectService(Class<?> serviceInterface, String serviceFilter, int ranking, Object callbackInstance, String add, String change, String remove, String swap) {    
+        return m_manager.createAspectService(serviceInterface, serviceFilter, ranking, callbackInstance, add, change, remove, swap);
+    }
+        
+    /**
      * Creates a new adapter service.
      * 
      * @return the adapter service
