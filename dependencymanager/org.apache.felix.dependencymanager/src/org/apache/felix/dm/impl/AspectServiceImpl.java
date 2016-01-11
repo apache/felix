@@ -43,15 +43,17 @@ public class AspectServiceImpl extends FilterComponent {
 	private final String m_change;
 	private final String m_remove;
 	private final String m_swap;
-	private int m_ranking;
+	private final int m_ranking;
+    private final Object m_dependencyCallbackInstance;
 
-	public AspectServiceImpl(DependencyManager dm, Class<?> aspectInterface, String aspectFilter, int ranking, String autoConfig, String add, String change, String remove, String swap) {
+	public AspectServiceImpl(DependencyManager dm, Class<?> aspectInterface, String aspectFilter, int ranking, String autoConfig, Object callbackInstance, String add, String change, String remove, String swap) {
 		super(dm.createComponent());
-		this.m_ranking = ranking;
-		this.m_add = add;
-		this.m_change = change;
-		this.m_remove = remove;
-		this.m_swap = swap;
+		m_ranking = ranking;
+		m_add = add;
+		m_change = change;
+		m_remove = remove;
+		m_swap = swap;
+		m_dependencyCallbackInstance = callbackInstance;
 		
 		m_component.setImplementation(new AspectImpl(aspectInterface, autoConfig))
 			.add(dm.createServiceDependency()
@@ -208,6 +210,10 @@ public class AspectServiceImpl extends FilterComponent {
             m_aspectDependency = (ServiceDependencyImpl) aspectDependency;
             m_originalServiceRef = originalServiceRef;
         }
+        
+        private Object[] getDependencyCallbackInstance() {
+            return m_dependencyCallbackInstance == null ? m_aspectDependency.getComponentContext().getInstances() : new Object[] { m_dependencyCallbackInstance };
+        }
 
         @SuppressWarnings("unused")
 		private void addAspect(Component c, ServiceReference ref, Object service) {
@@ -215,7 +221,7 @@ public class AspectServiceImpl extends FilterComponent {
         	
         	// Invoke is done on dependency.getInstances() which unfortunately returns this callback instance...
         	ServiceEventImpl event = new ServiceEventImpl(ref, service);
-        	m_aspectDependency.invoke(m_add, event, m_aspectDependency.getComponentContext().getInstances());
+        	m_aspectDependency.invoke(m_add, event, getDependencyCallbackInstance());
         }
 
         @SuppressWarnings("unused")
@@ -223,7 +229,7 @@ public class AspectServiceImpl extends FilterComponent {
             // Invoke "change" service dependency callback
             if (m_change != null) {
             	ServiceEventImpl event = new ServiceEventImpl(ref, service);
-                m_aspectDependency.invoke(m_change, event, m_aspectDependency.getComponentContext().getInstances());
+                m_aspectDependency.invoke(m_change, event, getDependencyCallbackInstance());
             }
             // Propagate change to immediate higher aspect, or to client using our aspect.
             // We always propagate our own properties, and the ones from the original service, but we don't inherit
@@ -236,7 +242,7 @@ public class AspectServiceImpl extends FilterComponent {
 		private void removeAspect(Component c, ServiceReference ref, Object service) {
             // Just forward "remove" service dependency callback.
         	ServiceEventImpl event = new ServiceEventImpl(ref, service);
-        	m_aspectDependency.invoke(m_remove, event, m_aspectDependency.getComponentContext().getInstances());
+        	m_aspectDependency.invoke(m_remove, event, getDependencyCallbackInstance());
         }
 
         @SuppressWarnings("unused")
@@ -244,7 +250,7 @@ public class AspectServiceImpl extends FilterComponent {
                                 Object curr) {
         	Object[] instances = m_aspectDependency.getComponentContext().getInstances();        	        	
             // Just forward "swap" service dependency callback.
-        	m_aspectDependency.invokeSwap(m_swap, prevRef, prev, currRef, curr, m_aspectDependency.getComponentContext().getInstances());
+        	m_aspectDependency.invokeSwap(m_swap, prevRef, prev, currRef, curr, getDependencyCallbackInstance());
         }
         
         @Override
