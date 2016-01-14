@@ -1,3 +1,16 @@
+Version 3.5.2
+-------------
+** Bug
+    * [FELIX-4906] - Changes in symlinked bundles not detected with NIO2 WatcherScanner
+    * [FELIX-4935] - Felix fileinstall project set to incorrect java version
+    * [FELIX-4975] - fileinstall's ConfigInstaller leaks it's permission checks to caller
+    * [FELIX-5135] - Felix Fileinstall does not use all properties
+    * [FELIX-5136] - Felix Fileinstall temp dir generation is inefficient
+    * [FELIX-5137] - Felix Fileinstall: add support for recursing and skipping subdirectories
+
+** Improvement
+    * [FELIX-4714] - Felix should sort bundles by alphabetical name from "deploy" directory
+
 Version 3.5.0
 -------------
 ** New Feature
