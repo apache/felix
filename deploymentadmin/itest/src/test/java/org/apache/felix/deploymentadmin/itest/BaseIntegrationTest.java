@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.Security;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -38,6 +39,7 @@ import javax.inject.Inject;
 import junit.framework.TestCase;
 
 import org.apache.felix.deploymentadmin.itest.util.DeploymentPackageBuilder;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;
 import org.junit.Before;
 import org.ops4j.pax.exam.Configuration;
@@ -74,24 +76,23 @@ public abstract class BaseIntegrationTest extends TestCase {
     protected volatile AtomicInteger m_gate = new AtomicInteger(0);
     protected volatile String m_testBundleBasePath;
     protected volatile Map<String, List<Version>> m_initialBundles;
-    
-    private int cnt = 0;        
-    
+
+    private int cnt = 0;
+
     @Configuration
     public Option[] config() throws Exception {
-        return options(
-            bootDelegationPackage("sun.*"),
-            systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("ERROR"),
+        return options(bootDelegationPackage("sun.*"), systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("ERROR"),
 
-            mavenBundle("org.apache.felix", "org.apache.felix.metatype").versionAsInProject(),
+            mavenBundle("org.apache.felix", "org.apache.felix.metatype").versionAsInProject(), 
             mavenBundle("org.apache.felix", "org.apache.felix.dependencymanager").versionAsInProject(),
-            mavenBundle("org.apache.felix", "org.apache.felix.deploymentadmin").versionAsInProject(),
+            mavenBundle("org.apache.felix", "org.apache.felix.deploymentadmin").versionAsInProject(), 
             mavenBundle("org.apache.felix", "org.apache.felix.eventadmin").versionAsInProject(),
             mavenBundle("org.apache.felix", "org.apache.felix.configadmin").versionAsInProject(),
             mavenBundle("commons-codec", "commons-codec").versionAsInProject(),
-            
-            junitBundles()
-        );
+            mavenBundle("org.bouncycastle", "bcprov-jdk15on").versionAsInProject(),
+            mavenBundle("org.bouncycastle", "bcpkix-jdk15on").versionAsInProject(),
+
+            junitBundles());
     }
 
     @Before
@@ -110,9 +111,9 @@ public abstract class BaseIntegrationTest extends TestCase {
                 }
             }
         });
-        
+
         m_initialBundles = new HashMap<String, List<Version>>();
-        
+
         for (Bundle bundle : m_context.getBundles()) {
             List<Version> versions = m_initialBundles.get(bundle.getSymbolicName());
             if (versions == null) {
@@ -121,12 +122,16 @@ public abstract class BaseIntegrationTest extends TestCase {
             }
             versions.add(bundle.getVersion());
         }
+
+        Security.addProvider(new BouncyCastleProvider());
     }
-    
+
     @After
     public void tearDown() throws Exception {
         System.setProperty("rp1", "");
         System.setProperty("bundle3", "");
+
+        Security.removeProvider(BouncyCastleProvider.PROVIDER_NAME);
     }
 
     protected void assertBundleExists(String symbolicName, String version) {
@@ -168,24 +173,26 @@ public abstract class BaseIntegrationTest extends TestCase {
         }
         return result;
     }
-    
+
     protected final DeploymentPackage installDeploymentPackage(DeploymentPackageBuilder dpBuilder) throws Exception {
         return installDeploymentPackage(dpBuilder.generate());
     }
-    
+
     protected final DeploymentPackage installDeploymentPackage(InputStream is) throws Exception {
         try {
             return m_deploymentAdmin.installDeploymentPackage(is);
-        } finally {
+        }
+        finally {
             try {
                 is.close();
-            } catch (IOException e) {
+            }
+            catch (IOException e) {
                 // Nothing we can do about this, but log it...
                 e.printStackTrace();
             }
         }
     }
-    
+
     protected final int countDeploymentPackages() {
         return m_deploymentAdmin.listDeploymentPackages().length;
     }
@@ -193,17 +200,17 @@ public abstract class BaseIntegrationTest extends TestCase {
     protected DeploymentPackageBuilder createNewDeploymentPackageBuilder(String version) {
         return createDeploymentPackageBuilder(String.format("itest%d", ++cnt), version);
     }
-    
+
     protected DeploymentPackageBuilder createDeploymentPackageBuilder(String symName, String version) {
         return DeploymentPackageBuilder.create(symName, version);
     }
-    
+
     protected Map<String, List<Version>> getCurrentBundles() {
         Map<String, List<Version>> bundles = new HashMap<String, List<Version>>();
         for (Bundle bundle : m_context.getBundles()) {
             String symbolicName = bundle.getSymbolicName();
             Version version = bundle.getVersion();
-            
+
             // Is is not part of any of the initially provisioned bundles?
             List<Version> versions = m_initialBundles.get(symbolicName);
             if ((versions == null) || !versions.contains(version)) {
@@ -217,7 +224,7 @@ public abstract class BaseIntegrationTest extends TestCase {
         }
         return bundles;
     }
-    
+
     protected String getSymbolicName(String baseName) {
         return "testbundles.".concat(baseName);
     }
@@ -241,10 +248,11 @@ public abstract class BaseIntegrationTest extends TestCase {
     }
 
     protected URL getTestBundleURL(String baseName) throws MalformedURLException {
-    	return getTestBundleURL(baseName, "1.0.0");
+        return getTestBundleURL(baseName, "1.0.0");
     }
+
     protected URL getTestBundleURL(String baseName, String version) throws MalformedURLException {
-    	return getTestBundleURL(baseName, baseName, version);
+        return getTestBundleURL(baseName, baseName, version);
     }
 
     protected URL getTestBundleURL(String artifactName, String baseName, String version) throws MalformedURLException {
@@ -253,7 +261,7 @@ public abstract class BaseIntegrationTest extends TestCase {
         assertTrue("No such bundle: " + f, f.exists() && f.isFile());
         return f.toURI().toURL();
     }
-    
+
     protected boolean isBundleActive(Bundle bundle) {
         return isBundleInState(bundle, Bundle.ACTIVE);
     }
@@ -280,7 +288,7 @@ public abstract class BaseIntegrationTest extends TestCase {
     protected boolean isBundleRemoved(String symbolicName, String version) {
         return isBundleRemoved(symbolicName, new Version(version));
     }
-    
+
     protected boolean isBundleRemoved(String symbolicName, Version version) {
         Map<String, List<Version>> bundles = getCurrentBundles();
 
@@ -297,13 +305,13 @@ public abstract class BaseIntegrationTest extends TestCase {
 
         FrameworkWiring frameworkWiring = systemBundle.adapt(FrameworkWiring.class);
         frameworkWiring.resolveBundles(Arrays.asList(bundles));
-        
+
         for (Bundle bundle : bundles) {
             if ((bundle.getState() & Bundle.RESOLVED) == 0) {
                 return false;
             }
         }
-        
+
         return true;
     }
 }

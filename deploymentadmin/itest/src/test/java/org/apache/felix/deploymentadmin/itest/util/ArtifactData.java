@@ -18,6 +18,8 @@
  */
 package org.apache.felix.deploymentadmin.itest.util;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 
 public class ArtifactData {
@@ -36,6 +38,13 @@ public class ArtifactData {
     ArtifactData(URL url, String filename) {
         m_url = url;
         m_filename = filename;
+    }
+
+    public final InputStream createInputStream() throws IOException {
+        if (m_filter != null) {
+            return m_filter.createInputStream(m_url);
+        }
+        return m_url.openStream();
     }
 
     public String getFilename() {
@@ -77,7 +86,7 @@ public class ArtifactData {
     public boolean isMissing() {
         return m_missing;
     }
-    
+
     public boolean isResourceProcessorNeeded() {
         return m_needRP;
     }

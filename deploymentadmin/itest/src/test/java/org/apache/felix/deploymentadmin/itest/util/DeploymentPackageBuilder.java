@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -32,9 +34,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
+import java.util.zip.ZipEntry;
 
 import org.osgi.framework.Version;
 
@@ -100,6 +104,27 @@ public class DeploymentPackageBuilder {
 
     private static final int BUFFER_SIZE = 32 * 1024;
 
+    private final DPSigner m_signer;
+    private final String m_symbolicName;
+    private final String m_version;
+    private final List<ArtifactData> m_localizationFiles = new ArrayList<ArtifactData>();
+    private final List<ArtifactData> m_bundles = new ArrayList<ArtifactData>();
+    private final List<ArtifactData> m_processors = new ArrayList<ArtifactData>();
+    private final List<ArtifactData> m_artifacts = new ArrayList<ArtifactData>();
+
+    private String m_fixPackageVersion;
+    private boolean m_verification;
+    private PrivateKey m_signingKey;
+    private X509Certificate m_signingCert;
+
+    private DeploymentPackageBuilder(String symbolicName, String version) {
+        m_symbolicName = symbolicName;
+        m_version = version;
+
+        m_verification = true;
+        m_signer = new DPSigner();
+    }
+
     /**
      * Creates a new deployment package builder.
      * 
@@ -111,25 +136,15 @@ public class DeploymentPackageBuilder {
         return new DeploymentPackageBuilder(name, version);
     }
 
-    private final String m_symbolicName;
-    private final String m_version;
-    private final List<ArtifactData> m_localizationFiles = new ArrayList<ArtifactData>();
-    private final List<ArtifactData> m_bundles = new ArrayList<ArtifactData>();
-    private final List<ArtifactData> m_processors = new ArrayList<ArtifactData>();
-
-    private final List<ArtifactData> m_artifacts = new ArrayList<ArtifactData>();
-
-    private String m_fixPackageVersion;
-
-    private boolean m_addSignatures;
-    private boolean m_verification;
-
-    private DeploymentPackageBuilder(String symbolicName, String version) {
-        m_symbolicName = symbolicName;
-        m_version = version;
-
-        m_addSignatures = false;
-        m_verification = true;
+    static void closeSilently(Closeable resource) {
+        if (resource != null) {
+            try {
+                resource.close();
+            }
+            catch (IOException e) {
+                // Ignore...
+            }
+        }
     }
 
     /**
@@ -153,11 +168,6 @@ public class DeploymentPackageBuilder {
         else {
             m_artifacts.add(artifactData);
         }
-        return this;
-    }
-
-    public DeploymentPackageBuilder addSignatures() {
-        m_addSignatures = true;
         return this;
     }
 
@@ -210,7 +220,6 @@ public class DeploymentPackageBuilder {
     public InputStream generate() throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         generate(baos);
-
         return new ByteArrayInputStream(baos.toByteArray());
     }
 
@@ -223,26 +232,8 @@ public class DeploymentPackageBuilder {
      * @throws Exception if something goes wrong while validating or generating
      */
     public void generate(OutputStream output) throws Exception {
-        List<ArtifactData> artifacts = new ArrayList<ArtifactData>();
-        artifacts.addAll(m_localizationFiles);
-        artifacts.addAll(m_bundles);
-        artifacts.addAll(m_processors);
-        artifacts.addAll(m_artifacts);
-
-        if (m_verification) {
-            validateProcessedArtifacts();
-            validateMissingArtifacts(artifacts);
-        }
-
-        Manifest m = createManifest(artifacts);
-
-        // The order in which the actual entries are added to the JAR is different than we're using for the manifest...
-        artifacts.clear();
-        artifacts.addAll(m_bundles);
-        artifacts.addAll(m_processors);
-        artifacts.addAll(m_localizationFiles);
-        artifacts.addAll(m_artifacts);
-
+        Manifest m = createManifest();
+        List<ArtifactData> artifacts = getArtifactList();
         writeStream(artifacts, m, output);
     }
 
@@ -283,6 +274,47 @@ public class DeploymentPackageBuilder {
         return this;
     }
 
+    /**
+     * Enables the creating of a signed deployment package, equivalent to creating a signed JAR file.
+     * <p>
+     * This method assumes the use of self-signed certificates for the signing process.
+     * </p>
+     * 
+     * @param signingKey the private key of the signer;
+     * @param signingCert the public certificate of the signer.
+     * @return this builder.
+     */
+    public DeploymentPackageBuilder signOutput(PrivateKey signingKey, X509Certificate signingCert) {
+        m_signingKey = signingKey;
+        m_signingCert = signingCert;
+        return this;
+    }
+
+    final Manifest createManifest() throws Exception {
+        List<ArtifactData> artifacts = new ArrayList<ArtifactData>();
+        artifacts.addAll(m_localizationFiles);
+        artifacts.addAll(m_bundles);
+        artifacts.addAll(m_processors);
+        artifacts.addAll(m_artifacts);
+
+        if (m_verification) {
+            validateProcessedArtifacts();
+            validateMissingArtifacts(artifacts);
+        }
+
+        return createManifest(artifacts);
+    }
+
+    final List<ArtifactData> getArtifactList() {
+        // The order in which the actual entries are added to the JAR is different than we're using for the manifest...
+        List<ArtifactData> artifacts = new ArrayList<ArtifactData>();
+        artifacts.addAll(m_bundles);
+        artifacts.addAll(m_processors);
+        artifacts.addAll(m_localizationFiles);
+        artifacts.addAll(m_artifacts);
+        return artifacts;
+    }
+
     private Manifest createManifest(List<ArtifactData> files) throws Exception {
         Manifest manifest = new Manifest();
         Attributes main = manifest.getMainAttributes();
@@ -296,37 +328,38 @@ public class DeploymentPackageBuilder {
 
         Map<String, Attributes> entries = manifest.getEntries();
 
-        Iterator<ArtifactData> filesIter = files.iterator();
-        while (filesIter.hasNext()) {
-            ArtifactData file = filesIter.next();
-
-            Attributes a = new Attributes();
-            a.putValue("Name", file.getFilename());
+        for (ArtifactData file : files) {
+            Attributes attrs = new Attributes();
+            attrs.putValue("Name", file.getFilename());
 
             if (file.isBundle()) {
-                a.putValue("Bundle-SymbolicName", file.getSymbolicName());
-                a.putValue("Bundle-Version", file.getVersion());
+                attrs.putValue("Bundle-SymbolicName", file.getSymbolicName());
+                attrs.putValue("Bundle-Version", file.getVersion());
                 if (file.isCustomizer()) {
-                    a.putValue("DeploymentPackage-Customizer", "true");
-                    a.putValue("Deployment-ProvidesResourceProcessor", file.getProcessorPid());
+                    attrs.putValue("DeploymentPackage-Customizer", "true");
+                    attrs.putValue("Deployment-ProvidesResourceProcessor", file.getProcessorPid());
                 }
             }
             else if (file.isResourceProcessorNeeded()) {
-                a.putValue("Resource-Processor", file.getProcessorPid());
+                attrs.putValue("Resource-Processor", file.getProcessorPid());
             }
 
             if (file.isMissing()) {
-                a.putValue("DeploymentPackage-Missing", "true");
+                attrs.putValue("DeploymentPackage-Missing", "true");
             }
 
-            if (m_addSignatures) {
-                a.putValue("SHA-256-Digest", "bogusdata=");
+            if (isAddSignatures()) {
+                m_signer.addDigestAttribute(attrs, file);
             }
 
-            entries.put(file.getFilename(), a);
+            entries.put(file.getFilename(), attrs);
         }
 
         return manifest;
+    }
+
+    private boolean isAddSignatures() {
+        return m_signingKey != null && m_signingCert != null;
     }
 
     private void validateMissingArtifacts(List<ArtifactData> files) throws Exception {
@@ -367,44 +400,21 @@ public class DeploymentPackageBuilder {
         }
     }
 
-    private InputStream getArtifactDataInputStream(ArtifactData file) throws IOException {
-        ResourceFilter filter = file.getFilter();
-        if (filter != null) {
-            return filter.createInputStream(file.getURL());
-        }
-        return file.getURL().openStream();
-    }
-
     private void writeStream(List<ArtifactData> files, Manifest manifest, OutputStream outputStream) throws Exception {
         byte[] buffer = new byte[BUFFER_SIZE];
-        JarOutputStream output = null;
-        InputStream is = null;
-        try {
-            output = new JarOutputStream(outputStream, manifest);
 
-            if (m_addSignatures) {
-                // Empty file index...
-                output.putNextEntry(new JarEntry("META-INF/INDEX.LIST"));
-                output.write(new byte[0]);
-                output.closeEntry();
-                
-                // Create a signature file + signature block
-                Manifest mf = new Manifest();
-                mf.getMainAttributes().put(Attributes.Name.SIGNATURE_VERSION, "1.0");
-                mf.getMainAttributes().putValue("SHA-256-Digest-Manifest", "bogusdata=");
-
-                output.putNextEntry(new JarEntry("META-INF/DP.SF"));
-                mf.write(output);
-                output.closeEntry();
-
-                output.putNextEntry(new JarEntry("META-INF/DP.DSA"));
-                output.write(new byte[] { 1, 2, 3, 4 });
+        try (JarOutputStream output = new JarOutputStream(outputStream)) {
+            // Write out the manifest...
+            if (isAddSignatures()) {
+                m_signer.writeSignedManifest(manifest, output, m_signingKey, m_signingCert);
+            }
+            else {
+                output.putNextEntry(new ZipEntry(JarFile.MANIFEST_NAME));
+                manifest.write(output);
                 output.closeEntry();
             }
 
-            Iterator<ArtifactData> filesIter = files.iterator();
-            while (filesIter.hasNext()) {
-                ArtifactData file = filesIter.next();
+            for (ArtifactData file : files) {
                 if (file.isMissing()) {
                     // No need to write the 'missing' files...
                     continue;
@@ -412,33 +422,15 @@ public class DeploymentPackageBuilder {
 
                 output.putNextEntry(new JarEntry(file.getFilename()));
 
-                is = getArtifactDataInputStream(file);
-                try {
+                try (InputStream is = file.createInputStream()) {
                     int bytes;
                     while ((bytes = is.read(buffer)) != -1) {
                         output.write(buffer, 0, bytes);
                     }
                 }
                 finally {
-                    closeSilently(is);
-
                     output.closeEntry();
                 }
-            }
-        }
-        finally {
-            closeSilently(is);
-            closeSilently(output);
-        }
-    }
-
-    static void closeSilently(Closeable resource) {
-        if (resource != null) {
-            try {
-                resource.close();
-            }
-            catch (IOException e) {
-                // Ignore...
             }
         }
     }

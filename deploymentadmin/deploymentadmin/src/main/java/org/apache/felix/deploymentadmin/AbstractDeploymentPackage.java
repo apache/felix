@@ -511,6 +511,6 @@ public abstract class AbstractDeploymentPackage implements DeploymentPackage, Co
      */
     protected boolean isMetaInfFile(String name) {
         name = name.toUpperCase(Locale.US);
-        return name.startsWith("META-INF/") && (name.endsWith("/INDEX.LIST") || name.endsWith(".SF") || name.endsWith(".DSA") || name.endsWith(".RS"));
+        return name.startsWith("META-INF/") && (name.endsWith("/INDEX.LIST") || name.endsWith(".SF") || name.endsWith(".DSA") || name.endsWith(".RSA") || name.endsWith(".EC"));
     }
 }

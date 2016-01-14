@@ -18,9 +18,13 @@
  */
 package org.apache.felix.deploymentadmin.itest;
 
+import static org.apache.felix.deploymentadmin.itest.util.CertificateUtil.createSelfSignedCert;
+
 import java.io.File;
 import java.net.URL;
 
+import org.apache.felix.deploymentadmin.itest.util.CertificateUtil.KeyType;
+import org.apache.felix.deploymentadmin.itest.util.CertificateUtil.SignerInfo;
 import org.apache.felix.deploymentadmin.itest.util.DeploymentPackageBuilder;
 import org.apache.felix.deploymentadmin.itest.util.DeploymentPackageBuilder.JarManifestManipulatingFilter;
 import org.junit.Test;
@@ -35,8 +39,7 @@ import org.osgi.service.deploymentadmin.DeploymentPackage;
  * Provides test cases regarding the use of "normal" deployment packages in DeploymentAdmin.
  */
 @RunWith(PaxExam.class)
-public class InstallDeploymentPackageTest extends BaseIntegrationTest
-{
+public class InstallDeploymentPackageTest extends BaseIntegrationTest {
     /**
      * FELIX-518 - Test that DP with localization and signature files are properly deployed.
      */
@@ -44,36 +47,40 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
     public void testInstallDeploymentPackageWithLocalizationAndSignatureFilesOk() throws Exception {
         URL dpProps = getClass().getResource("/dp.properties");
         assertNotNull(dpProps);
-        
-        DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder
-            .addSignatures()
-            .add(dpBuilder.createLocalizationResource().setUrl(dpProps).setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setFilename("dp.properties"))
-            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")));
 
-        installDeploymentPackage(dpBuilder);
+        SignerInfo signer = createSelfSignedCert("CN=dpTest", KeyType.EC);
+
+        DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
+        dpBuilder.signOutput(signer.getPrivate(), signer.getCert())
+            .add(dpBuilder.createLocalizationResource().setUrl(dpProps).setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setFilename("dp.properties"))
+            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")));
+
+        installDeploymentPackage(dpBuilder); // should succeed.
+        
+        assertBundleExists("testbundles.bundle1", "1.0.0");
+        assertBundleExists("testbundles.bundle2", "1.0.0");
+        assertBundleExists("testbundles.rp1", "1.0.0");
     }
-    
-    
+
     /**
      * FELIX-4409/4410/4463 - test the installation of an invalid deployment package.
      */
     @Test
-    public void testInstallInvalidDeploymentPackageFail() throws Exception
-    {
+    public void testInstallInvalidDeploymentPackageFail() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        // incluse two different versions of the same bundle (with the same BSN), this is *not* allowed per the DA spec...
+        // incluse two different versions of the same bundle (with the same BSN), this is *not* allowed per the DA
+        // spec...
         dpBuilder
             .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundleapi1", "bundleapi1", "1.0.0")))
             .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundleapi2", "bundleapi2", "2.0.0")));
 
-        try
-        {
+        try {
             installDeploymentPackage(dpBuilder);
             fail("DeploymentException expected!");
         }
-        catch (DeploymentException e)
-        {
+        catch (DeploymentException e) {
             // Ok; expected...
         }
 
@@ -86,10 +93,10 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
      * FELIX-1835 - test whether we can install bundles with a non-root path inside the DP.
      */
     @Test
-    public void testInstallBundlesWithPathsOk() throws Exception
-    {
+    public void testInstallBundlesWithPathsOk() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        // incluse two different versions of the same bundle (with the same BSN), this is *not* allowed per the DA spec...
+        // incluse two different versions of the same bundle (with the same BSN), this is *not* allowed per the DA
+        // spec...
         dpBuilder
             .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundleapi1", "bundleapi1", "1.0.0")).setFilename("bundles/bundleapi1.jar"))
             .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundleimpl1", "bundleimpl1", "1.0.0")).setFilename("bundles/bundleimpl1.jar"));
@@ -106,11 +113,11 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
     }
 
     /**
-     * Tests that adding the dependency for a bundle in an update package causes the depending bundle to be resolved and started.
+     * Tests that adding the dependency for a bundle in an update package causes the depending bundle to be resolved and
+     * started.
      */
     @Test
-    public void testInstallBundleWithDependencyInPackageUpdateOk() throws Exception
-    {
+    public void testInstallBundleWithDependencyInPackageUpdateOk() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         // missing bundle1 as dependency...
         dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")));
@@ -140,11 +147,11 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
     }
 
     /**
-     * Tests that installing a bundle with a dependency installed by another deployment package is not started, but is resolved.
+     * Tests that installing a bundle with a dependency installed by another deployment package is not started, but is
+     * resolved.
      */
     @Test
-    public void testInstallBundleWithDependencyInSeparatePackageOk() throws Exception
-    {
+    public void testInstallBundleWithDependencyInSeparatePackageOk() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")));
 
@@ -183,8 +190,7 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
      * Tests that if an exception is thrown in the start method of a bundle, the installation is not rolled back.
      */
     @Test
-    public void testInstallBundleWithExceptionThrownInStartCausesNoRollbackOk() throws Exception
-    {
+    public void testInstallBundleWithExceptionThrownInStartCausesNoRollbackOk() throws Exception {
         System.setProperty("bundle3", "start");
 
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
@@ -208,11 +214,11 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
     }
 
     /**
-     * Tests that installing a bundle along with a fragment bundle succeeds (DA should not try to start the fragment, see FELIX-4167).
+     * Tests that installing a bundle along with a fragment bundle succeeds (DA should not try to start the fragment,
+     * see FELIX-4167).
      */
     @Test
-    public void testInstallBundleWithFragmentOk() throws Exception
-    {
+    public void testInstallBundleWithFragmentOk() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
             .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")))
@@ -236,8 +242,7 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
      * Tests that installing a bundle whose dependencies cannot be met, is installed, but not started.
      */
     @Test
-    public void testInstallBundleWithMissingDependencyOk() throws Exception
-    {
+    public void testInstallBundleWithMissingDependencyOk() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")));
 
@@ -258,8 +263,7 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
      * Tests that installing a bundle along with other (non-bundle) artifacts succeeds.
      */
     @Test
-    public void testInstallBundleWithOtherArtifactsOk() throws Exception
-    {
+    public void testInstallBundleWithOtherArtifactsOk() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
             .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")))
@@ -282,8 +286,7 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
      * Tests that installing a new bundle works as expected.
      */
     @Test
-    public void testInstallSingleValidBundleOk() throws Exception
-    {
+    public void testInstallSingleValidBundleOk() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")));
 
@@ -302,8 +305,7 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
      * Tests that installing two bundles works as expected.
      */
     @Test
-    public void testInstallTwoValidBundlesOk() throws Exception
-    {
+    public void testInstallTwoValidBundlesOk() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
             .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")))
@@ -324,11 +326,11 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
     }
 
     /**
-     * Tests that if an exception is thrown during the uninstall of a bundle, the installation/update continues and succeeds.
+     * Tests that if an exception is thrown during the uninstall of a bundle, the installation/update continues and
+     * succeeds.
      */
     @Test
-    public void testUninstallBundleWithExceptionThrownInStopCauseNoRollbackOk() throws Exception
-    {
+    public void testUninstallBundleWithExceptionThrownInStopCauseNoRollbackOk() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
             .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")))
@@ -365,8 +367,7 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
      * Tests that if an exception is thrown during the stop of a bundle, the installation/update continues and succeeds.
      */
     @Test
-    public void testUpdateBundleWithExceptionThrownInStopCauseNoRollbackOk() throws Exception
-    {
+    public void testUpdateBundleWithExceptionThrownInStopCauseNoRollbackOk() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
             .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")))
@@ -402,7 +403,8 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
     }
 
     /**
-     * Tests that we can correctly rollback the installation of a deployment package for bundles that have their data area populated. 
+     * Tests that we can correctly rollback the installation of a deployment package for bundles that have their data
+     * area populated.
      */
     @Test
     public void testRollbackWithPopulatedDataAreaOk() throws Exception {
@@ -434,7 +436,7 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
         // Simulate an upgrade for our bundle, which should cause its data area to be retained...
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
         dpBuilder
-        .add(dpBuilder.createBundleResource().setVersion("1.1.0").setUrl(getTestBundleURL("bundle1")).setFilter(new JarManifestManipulatingFilter("Bundle-Version", "1.1.0")))
+            .add(dpBuilder.createBundleResource().setVersion("1.1.0").setUrl(getTestBundleURL("bundle1")).setFilter(new JarManifestManipulatingFilter("Bundle-Version", "1.1.0")))
             .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")))
             .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")));
 
@@ -449,7 +451,7 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
         // We should still have this bundle..
         bundle1 = getBundle("testbundles.bundle1");
         assertNotNull("Unable to get installed test bundle?!", bundle1);
-        
+
         dataArea = bundle1.getDataFile("");
         assertNotNull("No data area obtained for test bundle?!", dataArea);
 
@@ -460,7 +462,7 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
     }
 
     /**
-     * Tests that we can correctly install a deployment package with bundles that have their data area populated. 
+     * Tests that we can correctly install a deployment package with bundles that have their data area populated.
      */
     @Test
     public void testUpgradeWithPopulatedDataAreaOk() throws Exception {
@@ -497,7 +499,7 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
         // We should still have this bundle..
         bundle1 = getBundle("testbundles.bundle1");
         assertNotNull("Unable to get installed test bundle?!", bundle1);
-        
+
         dataArea = bundle1.getDataFile("");
         assertNotNull("No data area obtained for test bundle?!", dataArea);
 
@@ -508,7 +510,7 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
     }
 
     /**
-     * Tests that we can correctly install a deployment package with bundles that have their data area populated. 
+     * Tests that we can correctly install a deployment package with bundles that have their data area populated.
      */
     @Test
     public void testUninstallBundleWithPopulatedDataAreaOk() throws Exception {
@@ -548,8 +550,9 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
         // Data area should be restored exactly as-is...
         assertFalse("Data area not purged?!", dataArea.exists());
     }
+
     /**
-     * Tests that we can correctly install a deployment package with bundles that have their data area populated. 
+     * Tests that we can correctly install a deployment package with bundles that have their data area populated.
      */
     @Test
     public void testRollbackUninstallBundleWithPopulatedDataAreaOk() throws Exception {
@@ -594,7 +597,7 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
         // We should still have this bundle..
         bundle1 = getBundle("testbundles.bundle1");
         assertNotNull("Unable to get installed test bundle?!", bundle1);
-        
+
         dataArea = bundle1.getDataFile("");
         assertNotNull("No data area obtained for test bundle?!", dataArea);
 
