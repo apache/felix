@@ -10,6 +10,7 @@ Version 3.5.2
 
 ** Improvement
     * [FELIX-4714] - Felix should sort bundles by alphabetical name from "deploy" directory
+    * [FELIX-5167] - Upgrade to felix utils 1.8.2
 
 Version 3.5.0
 -------------
