@@ -33,10 +33,8 @@ import org.osgi.service.deploymentadmin.DeploymentException;
  * deployment package manifest and can interpret the various manifest entries and headers the OSGi specification defines.
  */
 public class DeploymentPackageManifest implements Constants {
-
     private final Manifest m_manifest;
     private final Version m_version;
-
     private final List m_bundleInfos = new ArrayList();
     private final List m_resourceInfos = new ArrayList();
     private final String m_symbolicName;

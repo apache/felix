@@ -181,6 +181,8 @@ public class DeploymentAdminImpl implements DeploymentAdmin, Constants {
                 jarInput = new ContentCopyingJarInputStream(sourceInput, tempIndex, tempContents);
 
                 if (jarInput.getManifest() == null) {
+                    Utils.closeSilently(jarInput);
+                    
                     m_log.log(LogService.LOG_ERROR, "Stream does not contain a valid deployment package: missing manifest!");
                     throw new DeploymentException(CODE_MISSING_HEADER, "No manifest present in deployment package!");
                 }

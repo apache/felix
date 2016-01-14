@@ -18,7 +18,8 @@
  */
 package org.apache.felix.deploymentadmin;
 
-import java.io.Closeable;
+import static org.apache.felix.deploymentadmin.Utils.closeSilently;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
@@ -53,7 +54,7 @@ class ContentCopyingJarInputStream extends JarInputStream {
     private OutputStream m_entryOS;
 
     public ContentCopyingJarInputStream(InputStream in, File indexFile, File contentDir) throws IOException {
-        super(in);
+        super(in, true /* verify */);
 
         m_contentDir = contentDir;
 
@@ -120,17 +121,6 @@ class ContentCopyingJarInputStream extends JarInputStream {
     private void closeIndex() {
         closeSilently(m_indexFileWriter);
         m_indexFileWriter = null;
-    }
-
-    private void closeSilently(Closeable resource) {
-        try {
-            if (resource != null) {
-                resource.close();
-            }
-        }
-        catch (IOException e) {
-            // Ignore, not much we can do about this...
-        }
     }
 
     /**
