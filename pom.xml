@@ -30,7 +30,7 @@
     </properties>
     <packaging>bundle</packaging>
     <name>Apache Felix AutoConf Resource Processor</name>
-    <version>0.1.6</version>
+    <version>0.1.8-SNAPSHOT</version>
     <artifactId>org.apache.felix.deployment.rp.autoconf</artifactId>
     <dependencies>
         <dependency>
@@ -106,8 +106,8 @@
         </plugins>
     </build>
 	<scm>
-		<connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.deployment.rp.autoconf-0.1.6</connection>
-		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.deployment.rp.autoconf-0.1.6</developerConnection>
-		<url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.deployment.rp.autoconf-0.1.6</url>
+		<connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/deploymentadmin/autoconf</connection>
+		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/deploymentadmin/autoconf</developerConnection>
+		<url>http://svn.apache.org/viewvc/felix/trunk/deploymentadmin/autoconf</url>
 	</scm>
 </project>
