@@ -21,14 +21,14 @@ package org.apache.felix.deployment.rp.autoconf;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
-
 /**
  * Default null object implementation. Uses a dynamic proxy. Null objects are used
  * as placeholders for services that are not available.
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class DefaultNullObject implements InvocationHandler {
+public class DefaultNullObject implements InvocationHandler
+{
     private static final Boolean DEFAULT_BOOLEAN = Boolean.FALSE;
     private static final Byte DEFAULT_BYTE = new Byte((byte) 0);
     private static final Short DEFAULT_SHORT = new Short((short) 0);
@@ -36,35 +36,44 @@ public class DefaultNullObject implements InvocationHandler {
     private static final Long DEFAULT_LONG = new Long(0);
     private static final Float DEFAULT_FLOAT = new Float(0.0f);
     private static final Double DEFAULT_DOUBLE = new Double(0.0);
-    
+
     /**
      * Invokes a method on this null object. The method will return a default
      * value without doing anything.
      */
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable
+    {
         Class returnType = method.getReturnType();
-        if (returnType.equals(Boolean.class) || returnType.equals(Boolean.TYPE)) {
+        if (returnType.equals(Boolean.class) || returnType.equals(Boolean.TYPE))
+        {
             return DEFAULT_BOOLEAN;
         }
-        else if (returnType.equals(Byte.class) || returnType.equals(Byte.TYPE)) {
+        else if (returnType.equals(Byte.class) || returnType.equals(Byte.TYPE))
+        {
             return DEFAULT_BYTE;
-        } 
-        else if (returnType.equals(Short.class) || returnType.equals(Short.TYPE)) {
+        }
+        else if (returnType.equals(Short.class) || returnType.equals(Short.TYPE))
+        {
             return DEFAULT_SHORT;
-        } 
-        else if (returnType.equals(Integer.class) || returnType.equals(Integer.TYPE)) {
+        }
+        else if (returnType.equals(Integer.class) || returnType.equals(Integer.TYPE))
+        {
             return DEFAULT_INT;
-        } 
-        else if (returnType.equals(Long.class) || returnType.equals(Long.TYPE)) {
+        }
+        else if (returnType.equals(Long.class) || returnType.equals(Long.TYPE))
+        {
             return DEFAULT_LONG;
-        } 
-        else if (returnType.equals(Float.class) || returnType.equals(Float.TYPE)) {
+        }
+        else if (returnType.equals(Float.class) || returnType.equals(Float.TYPE))
+        {
             return DEFAULT_FLOAT;
-        } 
-        else if (returnType.equals(Double.class) || returnType.equals(Double.TYPE)) {
+        }
+        else if (returnType.equals(Double.class) || returnType.equals(Double.TYPE))
+        {
             return DEFAULT_DOUBLE;
-        } 
-        else {
+        }
+        else
+        {
             return null;
         }
     }
