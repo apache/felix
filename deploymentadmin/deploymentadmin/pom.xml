@@ -89,4 +89,9 @@
 			</plugin>
 		</plugins>
 	</build>
+	<scm>
+		<connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/deploymentadmin/deploymentadmin</connection>
+		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/deploymentadmin/deploymentadmin</developerConnection>
+		<url>http://svn.apache.org/viewvc/felix/trunk/deploymentadmin/deploymentadmin</url>
+	</scm>
 </project>
