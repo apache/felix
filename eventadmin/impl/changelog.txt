@@ -1,9 +1,9 @@
 Changes from 1.4.4 to 1.4.6
 ---------------------------
-** Improvement
-    * [FELIX-5006] - EventAdmin threads should be named
 ** Bug
-    * [FElIX-5051] - Memory leak in async delivery
+    * [FELIX-5006] - EventAdmin threads should be named
+    * [FELIX-5051] - Memory leak in async delivery
+    * [FELIX-5107] - NullPointerException in org.apache.felix.eventadmin.impl.adapter.LogEventAdapter if log msg is empty
 
 
 Changes from 1.4.2 to 1.4.4
