@@ -1,3 +1,14 @@
+Release 0.1.6
+-------------
+
+FELIX-4912 Upgrade autoconf to Dependency Manager 4
+
+Release 0.1.5
+-------------
+
+FELIX-3355 Autoconf can't find Metatype service
+FELIX-4314 Split service registration to solve visibility issue in autoconf
+
 Release 0.1.4
 -------------
 
