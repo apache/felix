@@ -22,6 +22,7 @@
 		<osgi.version>4.2.0</osgi.version>
 	</properties>
 	<name>Apache Felix Deployment Admin</name>
+	<groupId>org.apache.felix</groupId>
 	<artifactId>org.apache.felix.deploymentadmin</artifactId>
 	<version>0.9.8-SNAPSHOT</version>
 	<packaging>bundle</packaging>
