@@ -38,7 +38,7 @@
 			<version>${osgi.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>${pom.groupId}</groupId>
+			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.dependencymanager</artifactId>
 			<version>4.1.1</version>
 		</dependency>
