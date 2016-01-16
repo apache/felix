@@ -23,7 +23,7 @@
 	<name>Apache Felix Deployment Admin</name>
 	<groupId>org.apache.felix</groupId>
 	<artifactId>org.apache.felix.deploymentadmin</artifactId>
-	<version>0.9.10-SNAPSHOT</version>
+	<version>0.9.10</version>
 	<packaging>bundle</packaging>
 	<dependencies>
 		<dependency>
@@ -89,8 +89,8 @@
 		</plugins>
 	</build>
 	<scm>
-		<connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/deploymentadmin/deploymentadmin</connection>
-		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/deploymentadmin/deploymentadmin</developerConnection>
-		<url>http://svn.apache.org/viewvc/felix/trunk/deploymentadmin/deploymentadmin</url>
+		<connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.deploymentadmin-0.9.10</connection>
+		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.deploymentadmin-0.9.10</developerConnection>
+		<url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.deploymentadmin-0.9.10</url>
 	</scm>
 </project>
