@@ -1,3 +1,8 @@
+Release 0.1.8
+-------------
+
+FELIX-5169 AutoConf incorrectly references constants from DeploymentAdmin
+
 Release 0.1.6
 -------------
 
