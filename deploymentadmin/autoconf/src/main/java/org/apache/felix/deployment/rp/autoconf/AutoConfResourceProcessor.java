@@ -64,6 +64,8 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
     public static final String CONFIGURATION_ADMIN_FILTER_ATTRIBUTE = "filter";
 
     private static final String LOCATION_PREFIX = "osgi-dp:";
+    /** FELIX-5169 - do not reference this constant from the Constants class in DA! */
+    private static final String EVENTTOPIC_COMPLETE = "org/osgi/service/deployment/COMPLETE";
 
     // dependencies injected by Dependency Manager
     private volatile LogService m_log;
@@ -156,7 +158,7 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
         m_log.log(LogService.LOG_DEBUG, "commit");
 
         Dictionary properties = new Properties();
-        properties.put(EventConstants.EVENT_TOPIC, org.apache.felix.deploymentadmin.Constants.EVENTTOPIC_COMPLETE);
+        properties.put(EventConstants.EVENT_TOPIC, EVENTTOPIC_COMPLETE);
         m_component = m_dm.createComponent()
             .setInterface(EventHandler.class.getName(), properties)
             .setImplementation(this)
