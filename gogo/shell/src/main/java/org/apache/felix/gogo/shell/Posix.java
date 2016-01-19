@@ -50,7 +50,7 @@ public class Posix
         }
 
         URI cwd = Shell.cwd(session);
-        
+
         for (String arg : args)
         {
             copy(cwd.resolve(arg), System.out);
@@ -141,7 +141,7 @@ public class Posix
             {
                 URI cwd = Shell.cwd(session);
                 in = (arg == null) ? System.in : cwd.resolve(arg).toURL().openStream();
-                
+
                 BufferedReader rdr = new BufferedReader(new InputStreamReader(in));
                 int line = 0;
                 String s;
@@ -180,21 +180,26 @@ public class Posix
 
         return match && status;
     }
-    
-    public static void copy(URI source, OutputStream out) throws IOException {
+
+    public static void copy(URI source, OutputStream out) throws IOException
+    {
         InputStream in = source.toURL().openStream();
-        try {
+        try
+        {
             copy(in, out);
-        } finally {
+        }
+        finally
+        {
             in.close();
         }
     }
 
-
-    public static void copy(InputStream in, OutputStream out) throws IOException {
+    public static void copy(InputStream in, OutputStream out) throws IOException
+    {
         byte buf[] = new byte[10240];
         int len;
-        while ((len = in.read(buf)) > 0) {
+        while ((len = in.read(buf)) > 0)
+        {
             out.write(buf, 0, len);
         }
         out.flush();

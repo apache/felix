@@ -71,6 +71,7 @@ public class Shell
                 "     --nointeractive       don't start interactive session",
                 "     --login               login shell (same session, reads etc/gosh_profile)",
                 "  -s --noshutdown          don't shutdown framework when script completes",
+                "  -q --quiet               don't display message-of-the-day",
                 "  -x --xtrace              echo commands before execution",
                 "  -? --help                show help",
                 "If no script-file, an interactive shell is started, type $D to exit." };
@@ -100,6 +101,10 @@ public class Shell
         }
 
         CommandSession newSession = (login ? session : processor.createSession(session.getKeyboard(), session.getConsole(), System.err));
+        // Make some of the given arguments available to the shell itself...
+        newSession.put(".gosh_login", login);
+        newSession.put(".gosh_interactive", interactive);
+        newSession.put(".gosh_quiet", opt.isSet("quiet"));
 
         if (opt.isSet("xtrace"))
         {
