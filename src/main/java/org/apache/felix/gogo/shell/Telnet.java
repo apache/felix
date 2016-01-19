@@ -74,8 +74,7 @@ public class Telnet implements Runnable
         {
             if (server != null)
             {
-                throw new IllegalStateException("telnetd is already running on port "
-                    + port);
+                throw new IllegalStateException("telnetd is already running on port " + port);
             }
             ip = opt.get("ip");
             port = opt.getNumber("port");
@@ -115,8 +114,9 @@ public class Telnet implements Runnable
     private void start() throws IOException
     {
         quit = false;
-        server = new ServerSocket(port, 0, InetAddress.getByName(ip));
-        thread = new Thread(this, "gogo telnet");
+        InetAddress addr = "".equals(ip) ? null : InetAddress.getByName(ip);
+        server = new ServerSocket(port, 0, addr);
+        thread = new Thread(this, "Gogo telnet");
         thread.start();
     }
 
