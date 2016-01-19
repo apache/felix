@@ -24,19 +24,19 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
-import java.util.Formatter;
 
+import org.apache.felix.service.command.Converter;
+import org.apache.felix.service.command.Function;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-import org.apache.felix.service.command.Converter;
-import org.apache.felix.service.command.Function;
 import org.osgi.service.startlevel.StartLevel;
 
 public class Converters implements Converter
 {
     private final BundleContext context;
+
     public Converters(BundleContext context)
     {
         this.context = context;
@@ -67,9 +67,6 @@ public class Converters implements Converter
 
     private CharSequence print(ServiceReference ref)
     {
-        StringBuilder sb = new StringBuilder();
-        Formatter f = new Formatter(sb);
-
         String spid = "";
         Object pid = ref.getProperty("service.pid");
         if (pid != null)
@@ -77,10 +74,9 @@ public class Converters implements Converter
             spid = pid.toString();
         }
 
-        f.format("%06d %3s %-40s %s", ref.getProperty("service.id"),
+        return String.format("%06d %3s %-40s %s", ref.getProperty("service.id"),
             ref.getBundle().getBundleId(),
             getShortNames((String[]) ref.getProperty("objectclass")), spid);
-        return sb;
     }
 
     private CharSequence getShortNames(String[] list)

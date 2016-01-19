@@ -35,6 +35,7 @@ import org.apache.felix.gogo.options.Option;
 import org.apache.felix.gogo.options.Options;
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 
@@ -48,6 +49,8 @@ public class Shell
     private final BundleContext context;
     private final CommandProcessor processor;
     private final History history;
+
+    private volatile Bundle systemBundle;
 
     public Shell(BundleContext context, CommandProcessor processor)
     {
@@ -79,6 +82,9 @@ public class Shell
         boolean login = opt.isSet("login");
         boolean interactive = !opt.isSet("nointeractive");
 
+        // We grab this bundle as early as possible to avoid having to deal with invalid bundleContexts of this bundle during shutdowns...
+        systemBundle = context.getBundle(0);
+
         if (opt.isSet("help"))
         {
             opt.usage();
@@ -94,8 +100,7 @@ public class Shell
             throw opt.usageError("option --command requires argument(s)");
         }
 
-        CommandSession newSession = (login ? session : processor.createSession(
-            session.getKeyboard(), session.getConsole(), System.err));
+        CommandSession newSession = (login ? session : processor.createSession(session.getKeyboard(), session.getConsole(), System.err));
 
         if (opt.isSet("xtrace"))
         {
@@ -108,7 +113,8 @@ public class Shell
             if (!new File(uri).exists())
             {
                 URL url = getClass().getResource("/ext/gosh_profile");
-                if (url == null) {
+                if (url == null)
+                {
                     url = getClass().getResource("/gosh_profile");
                 }
                 uri = (url == null) ? null : url.toURI();
@@ -173,10 +179,17 @@ public class Shell
             result = newSession.execute(program);
         }
 
-        if (login && interactive && !opt.isSet("noshutdown"))
+        if (login && interactive)
         {
-            System.out.println("gosh: stopping framework");
-            shutdown();
+            if (opt.isSet("noshutdown"))
+            {
+                System.out.println("gosh: stopping shell");
+            }
+            else
+            {
+                System.out.println("gosh: stopping shell and framework");
+                shutdown();
+            }
         }
 
         return result;
@@ -189,7 +202,11 @@ public class Shell
 
     private void shutdown() throws BundleException
     {
-        context.getBundle(0).stop();
+        if (systemBundle != null)
+        {
+            systemBundle.stop();
+            systemBundle = null;
+        }
     }
 
     public Object source(CommandSession session, String script) throws Exception
@@ -258,10 +275,12 @@ public class Shell
         }
     }
 
-    public String[] history() {
+    public String[] history()
+    {
         Iterator<String> history = this.history.getHistory();
         List<String> lines = new ArrayList<String>();
-        for (int i = 1; history.hasNext(); i++) {
+        for (int i = 1; history.hasNext(); i++)
+        {
             lines.add(String.format("%5d  %s", i, history.next()));
         }
         return lines.toArray(new String[lines.size()]);
