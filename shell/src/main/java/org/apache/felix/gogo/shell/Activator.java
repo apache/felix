@@ -18,10 +18,11 @@
  */
 package org.apache.felix.gogo.shell;
 
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -43,7 +44,8 @@ public class Activator implements BundleActivator
     private ServiceTracker commandProcessorTracker;
     private Set<ServiceRegistration> regs;
 
-    private ExecutorService executor;
+    private volatile ExecutorService executor;
+    private volatile StartShellJob shellJob;
 
     public Activator()
     {
@@ -59,17 +61,21 @@ public class Activator implements BundleActivator
 
     public void stop(BundleContext context) throws Exception
     {
-        Iterator<ServiceRegistration> iterator = regs.iterator();
-        while (iterator.hasNext())
+        Set<ServiceRegistration> currentRegs = new HashSet<ServiceRegistration>();
+        synchronized (regs)
         {
-            ServiceRegistration reg = iterator.next();
-            reg.unregister();
-            iterator.remove();
+            currentRegs.addAll(regs);
+            regs.clear();
         }
 
-        stopShell();
+        for (ServiceRegistration reg : currentRegs)
+        {
+            reg.unregister();
+        }
 
         this.commandProcessorTracker.close();
+
+        stopShell();
     }
 
     private ServiceTracker createCommandProcessorTracker()
@@ -98,26 +104,34 @@ public class Activator implements BundleActivator
         Dictionary<String, Object> dict = new Hashtable<String, Object>();
         dict.put(CommandProcessor.COMMAND_SCOPE, "gogo");
 
+        Set<ServiceRegistration> currentRegs = new HashSet<ServiceRegistration>();
+
         // register converters
-        regs.add(context.registerService(Converter.class.getName(), new Converters(context.getBundle(0).getBundleContext()), null));
+        currentRegs.add(context.registerService(Converter.class.getName(), new Converters(context.getBundle(0).getBundleContext()), null));
 
         // register commands
 
         dict.put(CommandProcessor.COMMAND_FUNCTION, Builtin.functions);
-        regs.add(context.registerService(Builtin.class.getName(), new Builtin(), dict));
+        currentRegs.add(context.registerService(Builtin.class.getName(), new Builtin(), dict));
 
         dict.put(CommandProcessor.COMMAND_FUNCTION, Procedural.functions);
-        regs.add(context.registerService(Procedural.class.getName(), new Procedural(), dict));
+        currentRegs.add(context.registerService(Procedural.class.getName(), new Procedural(), dict));
 
         dict.put(CommandProcessor.COMMAND_FUNCTION, Posix.functions);
-        regs.add(context.registerService(Posix.class.getName(), new Posix(), dict));
+        currentRegs.add(context.registerService(Posix.class.getName(), new Posix(), dict));
 
         dict.put(CommandProcessor.COMMAND_FUNCTION, Telnet.functions);
-        regs.add(context.registerService(Telnet.class.getName(), new Telnet(processor), dict));
+        currentRegs.add(context.registerService(Telnet.class.getName(), new Telnet(processor), dict));
 
         Shell shell = new Shell(context, processor);
         dict.put(CommandProcessor.COMMAND_FUNCTION, Shell.functions);
-        regs.add(context.registerService(Shell.class.getName(), shell, dict));
+        currentRegs.add(context.registerService(Shell.class.getName(), shell, dict));
+
+        synchronized (regs)
+        {
+            regs.addAll(currentRegs);
+            currentRegs.clear();
+        }
 
         // start shell on a separate thread...
         executor = Executors.newSingleThreadExecutor(new ThreadFactory()
@@ -127,20 +141,31 @@ public class Activator implements BundleActivator
                 return new Thread(runnable, "Gogo shell");
             }
         });
-        executor.submit(new StartShellJob(context, processor));
+        shellJob = new StartShellJob(context, processor);
+        executor.submit(shellJob);
     }
 
     private void stopShell()
     {
         if (executor != null && !(executor.isShutdown() || executor.isTerminated()))
         {
-            executor.shutdownNow();
+            if (shellJob != null)
+            {
+                shellJob.terminate();
+            }
+            executor.shutdown();
 
             try
             {
                 if (!executor.awaitTermination(5, TimeUnit.SECONDS))
                 {
                     System.err.println("!!! FAILED TO STOP EXECUTOR !!!");
+                    Map<Thread, StackTraceElement[]> allStackTraces = Thread.getAllStackTraces();
+                    for (Map.Entry<Thread, StackTraceElement[]> entry : allStackTraces.entrySet())
+                    {
+                        Thread t = entry.getKey();
+                        System.err.printf("Thread: %s (%s): %s\n", t.getName(), t.getState(), Arrays.toString(entry.getValue()));
+                    }
                 }
             }
             catch (InterruptedException e)
@@ -156,6 +181,7 @@ public class Activator implements BundleActivator
     {
         private final BundleContext context;
         private final CommandProcessor processor;
+        private volatile CommandSession session;
 
         public StartShellJob(BundleContext context, CommandProcessor processor)
         {
@@ -165,7 +191,7 @@ public class Activator implements BundleActivator
 
         public void run()
         {
-            CommandSession session = processor.createSession(System.in, System.out, System.err);
+            session = processor.createSession(System.in, System.out, System.err);
             try
             {
                 // wait for gosh command to be registered
@@ -177,6 +203,11 @@ public class Activator implements BundleActivator
                 String args = context.getProperty("gosh.args");
                 args = (args == null) ? "" : args;
                 session.execute("gosh --login " + args);
+            }
+            catch (InterruptedException e)
+            {
+                // Ok, back off...
+                Thread.currentThread().interrupt();
             }
             catch (Exception e)
             {
@@ -191,8 +222,18 @@ public class Activator implements BundleActivator
             }
             finally
             {
-                session.close();
+                terminate();
             }
+        }
+
+        public void terminate()
+        {
+            if (session != null)
+            {
+                session.close();
+                session = null;
+            }
+            Thread.currentThread().interrupt();
         }
     }
 }

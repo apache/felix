@@ -24,7 +24,7 @@ import org.apache.felix.service.command.CommandSession;
 public class Context extends CommandProcessorImpl
 {
     public static final String EMPTY = "";
-    
+
     private static final ThreadIOImpl threadio;
     private final CommandSession session;
 
@@ -34,13 +34,26 @@ public class Context extends CommandProcessorImpl
         threadio.start();
     }
 
-    public Context()
+    public Context(boolean foo)
     {
         super(threadio);
         addCommand("osgi", this, "addCommand");
         addCommand("osgi", this, "removeCommand");
         addCommand("osgi", this, "eval");
         session = (CommandSessionImpl) createSession(System.in, System.out, System.err);
+    }
+
+    @Override
+    public void stop()
+    {
+        try
+        {
+            super.stop();
+        }
+        finally
+        {
+            threadio.stop();
+        }
     }
 
     public Object execute(CharSequence source) throws Exception

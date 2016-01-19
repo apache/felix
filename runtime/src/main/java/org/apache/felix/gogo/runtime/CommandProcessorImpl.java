@@ -68,7 +68,7 @@ public class CommandProcessorImpl implements CommandProcessor
         }
     }
 
-    void closeSession(CommandSessionImpl session)
+    void removeSession(CommandSessionImpl session)
     {
         synchronized (sessions)
         {

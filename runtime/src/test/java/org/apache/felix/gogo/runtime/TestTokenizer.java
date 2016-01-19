@@ -28,15 +28,11 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
-import junit.framework.TestCase;
-
 import org.apache.felix.gogo.runtime.Tokenizer.Type;
-import org.apache.felix.gogo.runtime.threadio.ThreadIOImpl;
-import org.junit.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
-public class TestTokenizer extends TestCase
+public class TestTokenizer extends BaseTestCase
 {
     private final Map<String, Object> vars = new HashMap<String, Object>();
     private final Evaluate evaluate;
@@ -62,7 +58,6 @@ public class TestTokenizer extends TestCase
         };
     }
 
-    @Test
     public void testHello() throws Exception
     {
         testHello("hello world\n");
@@ -103,8 +98,7 @@ public class TestTokenizer extends TestCase
         assertEquals(Type.NEWLINE, t.next());
         assertEquals(Type.EOT, t.next());
     }
-    
-    @Test
+
     public void testString() throws Exception
     {
         testString("'single $quote' \"double $quote\"\n");
@@ -122,7 +116,6 @@ public class TestTokenizer extends TestCase
         assertEquals(Type.EOT, t.next());
     }
 
-    @Test
     public void testClosure() throws Exception
     {
         testClosure2("x = { echo '}' $args //comment's\n}\n");
@@ -134,7 +127,6 @@ public class TestTokenizer extends TestCase
     /*
      * x = {echo $args};
      */
-    @Test
     private void testClosure2(CharSequence text) throws Exception
     {
         Tokenizer t = new Tokenizer(text);
@@ -155,7 +147,6 @@ public class TestTokenizer extends TestCase
         return type;
     }
 
-    @Test
     public void testExpand() throws Exception
     {
         final URI home = new URI("/home/derek");
@@ -278,7 +269,6 @@ public class TestTokenizer extends TestCase
         return Tokenizer.expand(word, evaluate);
     }
 
-    @Test
     public void testParser() throws Exception
     {
         new Parser("// comment\n" + "a=\"who's there?\"; ps -ef;\n" + "ls | \n grep y\n").program();
@@ -290,31 +280,19 @@ public class TestTokenizer extends TestCase
     /**
      * FELIX-4679 / FELIX-4671. 
      */
-    @Test
     public void testScriptFelix4679() throws Exception
     {
         String script = "addcommand system (((${.context} bundles) 0) loadclass java.lang.System)";
 
-        ThreadIOImpl tio = new ThreadIOImpl();
-        tio.start();
+        BundleContext bc = createMockContext();
 
-        try
-        {
-            BundleContext bc = createMockContext();
+        m_ctx.addCommand("gogo", m_ctx, "addcommand");
+        m_ctx.addConstant(".context", bc);
 
-            CommandProcessorImpl processor = new CommandProcessorImpl(tio);
-            processor.addCommand("gogo", processor, "addcommand");
-            processor.addConstant(".context", bc);
+        CommandSessionImpl session = new CommandSessionImpl(m_ctx, new ByteArrayInputStream(script.getBytes()), System.out, System.err);
 
-            CommandSessionImpl session = new CommandSessionImpl(processor, new ByteArrayInputStream(script.getBytes()), System.out, System.err);
-
-            Closure c = new Closure(session, null, script);
-            assertNull(c.execute(session, null));
-        }
-        finally
-        {
-            tio.stop();
-        }
+        Closure c = new Closure(session, null, script);
+        assertNull(c.execute(session, null));
     }
 
     private BundleContext createMockContext() throws ClassNotFoundException

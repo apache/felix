@@ -38,31 +38,33 @@ public class Parser
     public List<List<List<Token>>> program()
     {
         List<List<List<Token>>> program = new ArrayList<List<List<Token>>>();
-        
-        while (tz.next() != Type.EOT)
+
+        outer: while (tz.next() != Type.EOT)
         {
             program.add(pipeline());
-            
+
             switch (tz.type())
             {
                 case SEMICOLON:
                 case NEWLINE:
                     continue;
+
+                default:
+                    break outer;
             }
-            
-            break;
         }
 
         if (tz.next() != Type.EOT)
+        {
             throw new RuntimeException("Program has trailing text: " + tz.value());
-
+        }
         return program;
     }
 
     private List<List<Token>> pipeline()
     {
         List<List<Token>> pipeline = new ArrayList<List<Token>>();
-        
+
         while (true)
         {
             pipeline.add(command());
@@ -89,7 +91,7 @@ public class Parser
         while (true)
         {
             Token t = tz.token();
-            
+
             switch (t.type)
             {
                 case WORD:
@@ -99,13 +101,13 @@ public class Parser
                 case ASSIGN:
                 case EXPR:
                     break;
-                    
+
                 default:
                     throw new SyntaxError(t.line, t.column, "unexpected token: " + t.type);
             }
-            
+
             command.add(t);
-            
+
             switch (tz.next())
             {
                 case PIPE:
@@ -113,10 +115,13 @@ public class Parser
                 case NEWLINE:
                 case EOT:
                     return command;
+
+                default:
+                    break;
             }
         }
     }
-    
+
     public void array(List<Token> list, Map<Token, Token> map) throws Exception
     {
         Token lt = null;
