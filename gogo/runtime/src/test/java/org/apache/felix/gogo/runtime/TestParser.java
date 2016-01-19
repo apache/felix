@@ -18,13 +18,6 @@
  */
 package org.apache.felix.gogo.runtime;
 
-import junit.framework.TestCase;
-
-import org.apache.felix.gogo.runtime.Parser;
-import org.apache.felix.gogo.runtime.Token;
-import org.apache.felix.service.command.CommandSession;
-import org.apache.felix.service.command.Function;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -34,27 +27,28 @@ import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
 
-public class TestParser extends TestCase
+import org.apache.felix.service.command.CommandSession;
+import org.apache.felix.service.command.Function;
+
+public class TestParser extends BaseTestCase
 {
     int beentheredonethat = 0;
 
     public void testEvaluatation() throws Exception
     {
-        Context c = new Context();
-        c.addCommand("echo", this);
-        c.addCommand("capture", this);
+        m_ctx.addCommand("echo", this);
+        m_ctx.addCommand("capture", this);
 
-        assertEquals("a", c.execute("echo a | capture"));
-        assertEquals("a", c.execute("(echo a) | capture"));
-        assertEquals("a", c.execute("((echo a)) | capture"));
+        assertEquals("a", m_ctx.execute("echo a | capture"));
+        assertEquals("a", m_ctx.execute("(echo a) | capture"));
+        assertEquals("a", m_ctx.execute("((echo a)) | capture"));
     }
 
     public void testUnknownCommand() throws Exception
     {
-        Context c = new Context();
         try
         {
-            c.execute("echo");
+            m_ctx.execute("echo");
             fail("Execution should have failed due to missing command");
         }
         catch (IllegalArgumentException e)
@@ -65,111 +59,103 @@ public class TestParser extends TestCase
 
     public void testSpecialValues() throws Exception
     {
-        Context c = new Context();
-        assertEquals(false, c.execute("false"));
-        assertEquals(true, c.execute("true"));
-        assertEquals(null, c.execute("null"));
+        assertEquals(false, m_ctx.execute("false"));
+        assertEquals(true, m_ctx.execute("true"));
+        assertEquals(null, m_ctx.execute("null"));
     }
 
     public void testQuotes() throws Exception
     {
-        Context c = new Context();
-        c.addCommand("echo", this);
-        c.set("c", "a");
+        m_ctx.addCommand("echo", this);
+        m_ctx.set("c", "a");
 
-        assertEquals("a b", c.execute("echo a b"));
-        assertEquals("a b", c.execute("echo 'a b'"));
-        assertEquals("a b", c.execute("echo \"a b\""));
-        assertEquals("a b", c.execute("echo a  b"));
-        assertEquals("a  b", c.execute("echo 'a  b'"));
-        assertEquals("a  b", c.execute("echo \"a  b\""));
-        assertEquals("a b", c.execute("echo $c  b"));
-        assertEquals("$c  b", c.execute("echo '$c  b'"));
-        assertEquals("a  b", c.execute("echo \"$c  b\""));
-        assertEquals("a b", c.execute("echo ${c}  b"));
-        assertEquals("${c}  b", c.execute("echo '${c}  b'"));
-        assertEquals("a  b", c.execute("echo \"${c}  b\""));
-        assertEquals("aa", c.execute("echo $c$c"));
-        assertEquals("a ;a", c.execute("echo a\\ \\;a"));
-        assertEquals("baabab", c.execute("echo b${c}${c}b${c}b"));
+        assertEquals("a b", m_ctx.execute("echo a b"));
+        assertEquals("a b", m_ctx.execute("echo 'a b'"));
+        assertEquals("a b", m_ctx.execute("echo \"a b\""));
+        assertEquals("a b", m_ctx.execute("echo a  b"));
+        assertEquals("a  b", m_ctx.execute("echo 'a  b'"));
+        assertEquals("a  b", m_ctx.execute("echo \"a  b\""));
+        assertEquals("a b", m_ctx.execute("echo $c  b"));
+        assertEquals("$c  b", m_ctx.execute("echo '$c  b'"));
+        assertEquals("a  b", m_ctx.execute("echo \"$c  b\""));
+        assertEquals("a b", m_ctx.execute("echo ${c}  b"));
+        assertEquals("${c}  b", m_ctx.execute("echo '${c}  b'"));
+        assertEquals("a  b", m_ctx.execute("echo \"${c}  b\""));
+        assertEquals("aa", m_ctx.execute("echo $c$c"));
+        assertEquals("a ;a", m_ctx.execute("echo a\\ \\;a"));
+        assertEquals("baabab", m_ctx.execute("echo b${c}${c}b${c}b"));
 
-        c.set("d", "a  b ");
-        assertEquals("a  b ", c.execute("echo \"$d\""));
+        m_ctx.set("d", "a  b ");
+        assertEquals("a  b ", m_ctx.execute("echo \"$d\""));
     }
 
     public void testScope() throws Exception
     {
-        Context c = new Context();
-        c.addCommand("echo", this);
-        assertEquals("$a", c.execute("test:echo \\$a"));
-        assertEquals("file://poo", c.execute("test:echo file://poo"));
+        m_ctx.addCommand("echo", this);
+        assertEquals("$a", m_ctx.execute("test:echo \\$a"));
+        assertEquals("file://poo", m_ctx.execute("test:echo file://poo"));
     }
 
     public void testPipe() throws Exception
     {
-        Context c = new Context();
-        c.addCommand("echo", this);
-        c.addCommand("capture", this);
-        c.addCommand("grep", this);
-        c.addCommand("echoout", this);
-        c.execute("myecho = { echoout $args }");
-        assertEquals("def", c.execute("echo def|grep d.*|capture"));
-        assertEquals("def", c.execute("echoout def|grep d.*|capture"));
-        assertEquals("def", c.execute("myecho def|grep d.*|capture"));
+        m_ctx.addCommand("echo", this);
+        m_ctx.addCommand("capture", this);
+        m_ctx.addCommand("grep", this);
+        m_ctx.addCommand("echoout", this);
+        m_ctx.execute("myecho = { echoout $args }");
+        assertEquals("def", m_ctx.execute("echo def|grep d.*|capture"));
+        assertEquals("def", m_ctx.execute("echoout def|grep d.*|capture"));
+        assertEquals("def", m_ctx.execute("myecho def|grep d.*|capture"));
         assertEquals("def",
-            c.execute("(echoout abc; echoout def; echoout ghi)|grep d.*|capture"));
-        assertEquals("", c.execute("echoout def; echoout ghi | grep d.* | capture"));
-        assertEquals("hello world", c.execute("echo hello world|capture"));
+            m_ctx.execute("(echoout abc; echoout def; echoout ghi)|grep d.*|capture"));
+        assertEquals("", m_ctx.execute("echoout def; echoout ghi | grep d.* | capture"));
+        assertEquals("hello world", m_ctx.execute("echo hello world|capture"));
         assertEquals("defghi",
-            c.execute("(echoout abc; echoout def; echoout ghi)|grep 'def|ghi'|capture"));
+            m_ctx.execute("(echoout abc; echoout def; echoout ghi)|grep 'def|ghi'|capture"));
     }
 
     public void testAssignment() throws Exception
     {
-        Context c = new Context();
-        c.addCommand("echo", this);
-        c.addCommand("grep", this);
-        assertEquals("a", c.execute("a = a; echo ${$a}"));
+        m_ctx.addCommand("echo", this);
+        m_ctx.addCommand("grep", this);
+        assertEquals("a", m_ctx.execute("a = a; echo ${$a}"));
 
-        assertEquals("hello", c.execute("echo hello"));
-        assertEquals("hello", c.execute("a = (echo hello)"));
-      //assertEquals("a", c.execute("a = a; echo $(echo a)")); // #p2 - no eval in var expansion
-        assertEquals("3", c.execute("a=3; echo $a"));
-        assertEquals("3", c.execute("a = 3; echo $a"));
-        assertEquals("a", c.execute("a = a; echo ${$a}"));
+        assertEquals("hello", m_ctx.execute("echo hello"));
+        assertEquals("hello", m_ctx.execute("a = (echo hello)"));
+        //assertEquals("a", m_ctx.execute("a = a; echo $(echo a)")); // #p2 - no eval in var expansion
+        assertEquals("3", m_ctx.execute("a=3; echo $a"));
+        assertEquals("3", m_ctx.execute("a = 3; echo $a"));
+        assertEquals("a", m_ctx.execute("a = a; echo ${$a}"));
     }
 
     public void testComment() throws Exception
     {
-        Context c = new Context();
-        c.addCommand("echo", this);
-        assertEquals("1", c.execute("echo 1 // hello"));
+        m_ctx.addCommand("echo", this);
+        assertEquals("1", m_ctx.execute("echo 1 // hello"));
     }
 
     public void testClosure() throws Exception
     {
-        Context c = new Context();
-        c.addCommand("echo", this);
-        c.addCommand("capture", this);
+        m_ctx.addCommand("echo", this);
+        m_ctx.addCommand("capture", this);
 
-        assertEquals("a", c.execute("e = { echo $1 } ; e a   b"));
-        assertEquals("b", c.execute("e = { echo $2 } ; e a   b"));
-        assertEquals("b", c.execute("e = { eval $args } ; e echo  b"));
-        assertEquals("ca b", c.execute("e = { echo c$args } ; e a  b"));
-        assertEquals("c a b", c.execute("e = { echo c $args } ; e a  b"));
-        assertEquals("ca  b", c.execute("e = { echo c$args } ; e 'a  b'"));
+        assertEquals("a", m_ctx.execute("e = { echo $1 } ; e a   b"));
+        assertEquals("b", m_ctx.execute("e = { echo $2 } ; e a   b"));
+        assertEquals("b", m_ctx.execute("e = { eval $args } ; e echo  b"));
+        assertEquals("ca b", m_ctx.execute("e = { echo c$args } ; e a  b"));
+        assertEquals("c a b", m_ctx.execute("e = { echo c $args } ; e a  b"));
+        assertEquals("ca  b", m_ctx.execute("e = { echo c$args } ; e 'a  b'"));
     }
 
     public void testArray() throws Exception
     {
-        Context c = new Context();
-        c.set("echo", true);
+        m_ctx.set("echo", this);
         assertEquals("http://www.aqute.biz?com=2&biz=1",
-            c.execute("['http://www.aqute.biz?com=2&biz=1'] get 0"));
-        assertEquals("{a=2, b=3}", c.execute("[a=2 b=3]").toString());
-        assertEquals(3L, c.execute("[a=2 b=3] get b"));
-        assertEquals("[3, 4]", c.execute("[1 2 [3 4] 5 6] get 2").toString());
-        assertEquals(5, c.execute("[1 2 [3 4] 5 6] size"));
+            m_ctx.execute("['http://www.aqute.biz?com=2&biz=1'] get 0"));
+        assertEquals("{a=2, b=3}", m_ctx.execute("[a=2 b=3]").toString());
+        assertEquals(3L, m_ctx.execute("[a=2 b=3] get b"));
+        assertEquals("[3, 4]", m_ctx.execute("[1 2 [3 4] 5 6] get 2").toString());
+        assertEquals(5, m_ctx.execute("[1 2 [3 4] 5 6] size"));
     }
 
     public void testParentheses()
@@ -185,9 +171,8 @@ public class TestParser extends TestCase
 
     public void testEcho() throws Exception
     {
-        Context c = new Context();
-        c.addCommand("echo", this);
-        c.execute("echo peter");
+        m_ctx.addCommand("echo", this);
+        m_ctx.execute("echo peter");
     }
 
     public void grep(String match) throws IOException
@@ -220,22 +205,20 @@ public class TestParser extends TestCase
 
     public void testVars() throws Exception
     {
-        Context c = new Context();
-        c.addCommand("echo", this);
+        m_ctx.addCommand("echo", this);
 
-        assertEquals("", c.execute("echo ${very.likely.that.this.does.not.exist}"));
-        assertNotNull(c.execute("echo ${java.shell.name}"));
-        assertEquals("a", c.execute("a = a; echo ${a}"));
+        assertEquals("", m_ctx.execute("echo ${very.likely.that.this.does.not.exist}"));
+        assertNotNull(m_ctx.execute("echo ${java.shell.name}"));
+        assertEquals("a", m_ctx.execute("a = a; echo ${a}"));
     }
 
     public void testFunny() throws Exception
     {
-        Context c = new Context();
-        c.addCommand("echo", this);
-        assertEquals("a", c.execute("echo a") + "");
-        assertEquals("a", c.execute("eval (echo echo) a") + "");
-        //assertEquals("a", c.execute("((echo echo) echo) (echo a)") + "");
-        assertEquals("3", c.execute("[a=2 (echo b)=(echo 3)] get b").toString());
+        m_ctx.addCommand("echo", this);
+        assertEquals("a", m_ctx.execute("echo a") + "");
+        assertEquals("a", m_ctx.execute("eval (echo echo) a") + "");
+        //assertEquals("a", m_ctx.execute("((echo echo) echo) (echo a)") + "");
+        assertEquals("3", m_ctx.execute("[a=2 (echo b)=(echo 3)] get b").toString());
     }
 
     public CharSequence echo(Object args[])
@@ -265,22 +248,21 @@ public class TestParser extends TestCase
 
     public void testContext() throws Exception
     {
-        Context c = new Context();
-        c.addCommand("ls", this);
+        m_ctx.addCommand("ls", this);
         beentheredonethat = 0;
-        c.execute("ls");
+        m_ctx.execute("ls");
         assertEquals(1, beentheredonethat);
 
         beentheredonethat = 0;
-        c.execute("ls 10");
+        m_ctx.execute("ls 10");
         assertEquals(10, beentheredonethat);
 
         beentheredonethat = 0;
-        c.execute("ls a b c d e f g h i j");
+        m_ctx.execute("ls a b c d e f g h i j");
         assertEquals(10, beentheredonethat);
 
         beentheredonethat = 0;
-        Integer result = (Integer) c.execute("ls (ls 5)");
+        Integer result = (Integer) m_ctx.execute("ls (ls 5)");
         assertEquals(10, beentheredonethat);
         assertEquals((Integer) 5, result);
     }
@@ -336,8 +318,7 @@ public class TestParser extends TestCase
     public void testSimpleValue()
     {
         List<Token> x = new Parser(
-            "abc def.ghi http://www.osgi.org?abc=&x=1 [1,2,3] {{{{{{{xyz}}}}}}} (immediate) {'{{{{{'} {\\{} 'abc{}'")
-            .program().get(0).get(0);
+            "abc def.ghi http://www.osgi.org?abc=&x=1 [1,2,3] {{{{{{{xyz}}}}}}} (immediate) {'{{{{{'} {\\{} 'abc{}'").program().get(0).get(0);
         assertEquals("abc", x.get(0).toString());
         assertEquals("def.ghi", x.get(1).toString());
         assertEquals("http://www.osgi.org?abc=&x=1", x.get(2).toString());

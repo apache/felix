@@ -21,10 +21,11 @@
 // DWB10: add SCOPE support: https://www.osgi.org/bugzilla/show_bug.cgi?id=51
 package org.apache.felix.gogo.runtime;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -48,7 +49,7 @@ public class CommandSessionImpl implements CommandSession, Converter
 
     protected InputStream in;
     protected PrintStream out;
-    PrintStream err;
+    protected PrintStream err;
 
     private final CommandProcessorImpl processor;
     protected final Map<String, Object> variables = new HashMap<String, Object>();
@@ -71,8 +72,10 @@ public class CommandSessionImpl implements CommandSession, Converter
     {
         if (!this.closed)
         {
-            this.processor.closeSession(this);
+            this.processor.removeSession(this);
             this.closed = true;
+
+            this.in = closeSilently(in);
         }
     }
 
@@ -344,18 +347,21 @@ public class CommandSessionImpl implements CommandSession, Converter
     {
         boolean found = false;
         Formatter f = new Formatter();
+        f.close();
+
         Method methods[] = b.getClass().getMethods();
         for (Method m : methods)
         {
             try
             {
                 String name = m.getName();
-                if (m.getName().startsWith("get") && !m.getName().equals("getClass") && m.getParameterTypes().length == 0 && Modifier.isPublic(m.getModifiers()))
+                if (!name.equals("getClass") && name.startsWith("get") && m.getParameterTypes().length == 0)
                 {
+                    m.setAccessible(true);
+                    Object value = m.invoke(b);
+
                     found = true;
                     name = name.substring(3);
-                    m.setAccessible(true);
-                    Object value = m.invoke(b, (Object[]) null);
                     f.format(COLUMN, name, format(value, Converter.LINE, this));
                 }
             }
@@ -400,4 +406,19 @@ public class CommandSessionImpl implements CommandSession, Converter
         return processor.expr(this, expr);
     }
 
+    private static <T extends Closeable> T closeSilently(T resource)
+    {
+        if (resource != null)
+        {
+            try
+            {
+                resource.close();
+            }
+            catch (IOException e)
+            {
+                // Ignore, nothing we can do here...
+            }
+        }
+        return resource;
+    }
 }
