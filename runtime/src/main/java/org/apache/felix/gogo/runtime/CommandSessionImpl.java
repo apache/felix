@@ -343,40 +343,46 @@ public class CommandSessionImpl implements CommandSession, Converter
     {
         boolean found = false;
         Formatter f = new Formatter();
-        f.close();
 
-        Method methods[] = b.getClass().getMethods();
-        for (Method m : methods)
+        try
         {
-            try
+            Method methods[] = b.getClass().getMethods();
+            for (Method m : methods)
             {
-                String name = m.getName();
-                if (!name.equals("getClass") && name.startsWith("get") && m.getParameterTypes().length == 0)
+                try
                 {
-                    m.setAccessible(true);
-                    Object value = m.invoke(b);
+                    String name = m.getName();
+                    if (!name.equals("getClass") && name.startsWith("get") && m.getParameterTypes().length == 0)
+                    {
+                        m.setAccessible(true);
+                        Object value = m.invoke(b);
 
-                    found = true;
-                    name = name.substring(3);
-                    f.format(COLUMN, name, format(value, Converter.LINE, this));
+                        found = true;
+                        name = name.substring(3);
+                        f.format(COLUMN, name, format(value, Converter.LINE, this));
+                    }
+                }
+                catch (IllegalAccessException e)
+                {
+                    // Ignore
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
                 }
             }
-            catch (IllegalAccessException e)
+            if (found)
             {
-                // Ignore
+                return (StringBuilder) f.out();
             }
-            catch (Exception e)
+            else
             {
-                e.printStackTrace();
+                return b.toString();
             }
         }
-        if (found)
+        finally
         {
-            return (StringBuilder) f.out();
-        }
-        else
-        {
-            return b.toString();
+            f.close();
         }
     }
 

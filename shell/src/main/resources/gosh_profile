@@ -30,8 +30,8 @@ try {
   # set prompt
   prompt = 'g! '
 
-  # print welcome message
-  cat ($0 resolve motd)
+  # print welcome message, unless we're explicitly told not to...
+  if {$.gosh_quiet} {} { cat ($0 resolve motd) }
 } {
     echo "$0: ERROR: $exception"
 }
