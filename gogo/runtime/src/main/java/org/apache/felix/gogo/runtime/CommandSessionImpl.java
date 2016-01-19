@@ -21,8 +21,6 @@
 // DWB10: add SCOPE support: https://www.osgi.org/bugzilla/show_bug.cgi?id=51
 package org.apache.felix.gogo.runtime;
 
-import java.io.Closeable;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
@@ -395,28 +393,12 @@ public class CommandSessionImpl implements CommandSession, Converter
         }
         catch (Exception e)
         {
-            return "<can not format " + result + ":" + e;
+            return "<can not format " + result + ">:" + e;
         }
     }
 
     public Object expr(CharSequence expr)
     {
         return processor.expr(this, expr);
-    }
-
-    private static <T extends Closeable> T closeSilently(T resource)
-    {
-        if (resource != null)
-        {
-            try
-            {
-                resource.close();
-            }
-            catch (IOException e)
-            {
-                // Ignore, nothing we can do here...
-            }
-        }
-        return resource;
     }
 }
