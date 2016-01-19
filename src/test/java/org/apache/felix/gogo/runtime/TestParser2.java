@@ -20,26 +20,23 @@ package org.apache.felix.gogo.runtime;
 
 import java.io.EOFException;
 
-import junit.framework.TestCase;
-
 /*
  * Test features of the new parser/tokenizer, many of which are not supported
  * by the original parser.
  */
-public class TestParser2 extends TestCase
+public class TestParser2 extends BaseTestCase
 {
     public void testComment() throws Exception
     {
-        Context c = new Context();
-        c.addCommand("echo", this);
+        m_ctx.addCommand("echo", this);
 
-        assertEquals("file://wibble#tag", c.execute("echo file://wibble#tag"));
-        assertEquals("file:", c.execute("echo file: //wibble#tag"));
+        assertEquals("file://wibble#tag", m_ctx.execute("echo file://wibble#tag"));
+        assertEquals("file:", m_ctx.execute("echo file: //wibble#tag"));
 
-        assertEquals("PWD/*.java", c.execute("echo PWD/*.java"));
+        assertEquals("PWD/*.java", m_ctx.execute("echo PWD/*.java"));
         try
         {
-            c.execute("echo PWD /*.java");
+            m_ctx.execute("echo PWD /*.java");
             fail("expected EOFException");
         }
         catch (EOFException e)
@@ -47,44 +44,42 @@ public class TestParser2 extends TestCase
             // expected
         }
 
-        assertEquals("ok", c.execute("// can't quote\necho ok\n"));
+        assertEquals("ok", m_ctx.execute("// can't quote\necho ok\n"));
 
         // quote in comment in closure
-        assertEquals("ok", c.execute("x = { // can't quote\necho ok\n}; x"));
-        assertEquals("ok", c.execute("x = {\n// can't quote\necho ok\n}; x"));
-        assertEquals("ok", c.execute("x = {// can't quote\necho ok\n}; x"));
+        assertEquals("ok", m_ctx.execute("x = { // can't quote\necho ok\n}; x"));
+        assertEquals("ok", m_ctx.execute("x = {\n// can't quote\necho ok\n}; x"));
+        assertEquals("ok", m_ctx.execute("x = {// can't quote\necho ok\n}; x"));
     }
 
     public void testCoercion() throws Exception
     {
-        Context c = new Context();
-        c.addCommand("echo", this);
+        m_ctx.addCommand("echo", this);
         // FELIX-2432
-        assertEquals("null x", c.execute("echo $expandsToNull x"));
+        assertEquals("null x", m_ctx.execute("echo $expandsToNull x"));
     }
 
     public void testStringExecution() throws Exception
     {
-        Context c = new Context();
-        c.addCommand("echo", this);
-        c.addCommand("new", this);
+        m_ctx.addCommand("echo", this);
+        m_ctx.addCommand("new", this);
         
         // FELIX-2433
-        assertEquals("helloworld", c.execute("echo \"$(echo hello)world\""));
+        assertEquals("helloworld", m_ctx.execute("echo \"$(echo hello)world\""));
         
          // FELIX-1473 - allow method calls on String objects
-        assertEquals("hello", c.execute("cmd = echo; eval $cmd hello"));
-        assertEquals(4, c.execute("'four' length"));
+        assertEquals("hello", m_ctx.execute("cmd = echo; eval $cmd hello"));
+        assertEquals(4, m_ctx.execute("'four' length"));
         try {
-            c.execute("four length");
+            m_ctx.execute("four length");
             fail("expected: command not found: four");
         } catch (IllegalArgumentException e) {
         }
         
         // check CharSequence types are preserved
-        Object b = c.execute("b = new java.lang.StringBuilder");
+        Object b = m_ctx.execute("b = new java.lang.StringBuilder");
         assertTrue(b instanceof StringBuilder);
-        assertEquals(b, c.execute("c = $b"));
+        assertEquals(b, m_ctx.execute("c = $b"));
     }
 
     public CharSequence echo(Object args[])
