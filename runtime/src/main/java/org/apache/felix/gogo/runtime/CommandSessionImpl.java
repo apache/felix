@@ -74,8 +74,6 @@ public class CommandSessionImpl implements CommandSession, Converter
         {
             this.processor.removeSession(this);
             this.closed = true;
-
-            this.in = closeSilently(in);
         }
     }
 
