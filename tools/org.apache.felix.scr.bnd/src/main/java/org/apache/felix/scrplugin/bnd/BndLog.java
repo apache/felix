@@ -28,6 +28,7 @@ import java.util.Date;
 
 import org.apache.felix.scrplugin.Log;
 
+import aQute.bnd.osgi.Analyzer;
 import aQute.service.reporter.Reporter;
 
 /**
@@ -51,6 +52,16 @@ public class BndLog implements Log {
 	private final PrintWriter logWriter;
 
 	/**
+	 * The Bnd Analyzer (only used to enable trace mode if at least info log is enabled).
+	 */
+	private final Analyzer analyzer;
+
+	/**
+	 * Was Reporter traces enabled before our plugin is running ?
+	 */
+	private boolean previousTrace;
+
+	/**
 	 * DateFormat used when logging.
 	 */
 	private final static SimpleDateFormat dateFormat = new SimpleDateFormat(
@@ -68,24 +79,33 @@ public class BndLog implements Log {
 	 * 
 	 * @param reporter
 	 *            the bnd logger
-	 * @param logLevel
-	 * @param bsn
+	 * @param analyzer
+	 * @param logToFile
+	 *            Set to false to suppress writing log of plugin action additionally to temp dir.
 	 */
-	BndLog(Reporter reporter, String bsn) {
+	BndLog(Reporter reporter, Analyzer analyzer, boolean logToFile) {
 		this.reporter = reporter;
-		File logFilePath = new File(System.getProperty("java.io.tmpdir")
-				+ File.separator + "scrplugin" + File.separator + bsn + ".log");
-		new File(logFilePath.getParent()).mkdirs();
-		
-		PrintWriter writer = null;
-		try {
-			writer = new PrintWriter(new FileWriter(logFilePath, false));
-		} catch (IOException e) {
-			reporter.exception(e, "Could not create scrplugin log file: %s",
-					logFilePath);
-			writer = null;
-		}
-		this.logWriter = writer;
+		this.analyzer = analyzer;
+		String bsn = analyzer.getBsn();
+        
+        if (logToFile) {
+            File logFilePath = new File(System.getProperty("java.io.tmpdir")
+            		+ File.separator + "scrplugin" + File.separator + bsn + ".log");
+            new File(logFilePath.getParent()).mkdirs();
+            
+            PrintWriter writer = null;
+            try {
+            	writer = new PrintWriter(new FileWriter(logFilePath, false));
+            } catch (IOException e) {
+            	reporter.exception(e, "Could not create scrplugin log file: %s",
+            			logFilePath);
+            	writer = null;
+            }
+            this.logWriter = writer;
+        }
+        else {
+            this.logWriter = null;
+        }
 	}
 
 	/**
@@ -95,6 +115,9 @@ public class BndLog implements Log {
 		if (logWriter != null) {
 			logWriter.close();
 		}
+		if (this.logEnabled.ordinal() >= Level.Info.ordinal()) {
+			this.analyzer.setTrace(this.previousTrace);
+		}		
 	}
 
 	/**
@@ -108,6 +131,11 @@ public class BndLog implements Log {
 			level = Character.toUpperCase(level.charAt(0))
 					+ level.substring(1).toLowerCase();
 			this.logEnabled = Level.valueOf(level);
+			if (this.logEnabled.ordinal() >= Level.Info.ordinal()) {
+				// We have to enable traces, if not the bnd reporter won't log info or debug messages.
+				this.previousTrace = analyzer.isTrace();
+				analyzer.setTrace(true);
+			}
 		} catch (IllegalArgumentException e) {
 			this.logEnabled = Level.Warn;
 			warn("Bnd scrplugin logger initialized with invalid log level: "
