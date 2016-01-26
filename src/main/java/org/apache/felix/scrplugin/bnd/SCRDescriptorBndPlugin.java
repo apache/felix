@@ -84,6 +84,11 @@ public class SCRDescriptorBndPlugin implements AnalyzerPlugin, Plugin {
 	 */
 	private static final String LOGLEVEL = "log";
 
+    /**
+     * "logToFile" parameter, which may be set to false to suppress writing log of plugin action additionally to temp dir. Default: true.
+     */
+    private static final String LOGTOFILE = "logToFile";
+
 	/**
 	 * The name of the directory where the descriptor files are generated into.
 	 */
@@ -141,7 +146,8 @@ public class SCRDescriptorBndPlugin implements AnalyzerPlugin, Plugin {
 	 * Scan scr or ds annotation from the target jar.
 	 */
 	public boolean analyzeJar(Analyzer analyzer) throws Exception {
-		this.log = new BndLog(reporter, analyzer.getBsn());
+		this.log = new BndLog(reporter, analyzer,
+		        parseOption(properties, LOGTOFILE, false));
 
 		try {
 			init(analyzer);
