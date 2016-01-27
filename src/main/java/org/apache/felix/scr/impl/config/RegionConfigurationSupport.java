@@ -170,8 +170,8 @@ public class RegionConfigurationSupport implements ConfigurationListener
                                     for ( Configuration config: factory )
                                     {
                                         Activator.log( LogService.LOG_DEBUG, null,
-                                                "Configuring holder {0} with factory configuration {1}", new Object[] {
-                                                        holder, config }, null );
+                                                "Configuring holder {0} with factory configuration {1}, change count {2}", new Object[] {
+                                                        holder, config, config.getChangeCount() }, null );
                                         config = getConfiguration( ca, config.getPid() );
                                         if ( checkBundleLocation( config, bundleContext.getBundle() ) )
                                         {
@@ -196,8 +196,8 @@ public class RegionConfigurationSupport implements ConfigurationListener
                                     {
                                         singleton = getConfiguration( ca, singleton.getPid() );
                                         Activator.log( LogService.LOG_DEBUG, null,
-                                                "Configuring holder {0} with configuration {1}", new Object[] { holder,
-                                                        singleton }, null );
+                                                "Configuring holder {0} with configuration {1}, change count {2}", new Object[] { holder,
+                                                        singleton, singleton.getChangeCount() }, null );
                                         if ( singleton != null
                                                 && checkBundleLocation( singleton, bundleContext.getBundle() ) )
                                         {
@@ -360,8 +360,8 @@ public class RegionConfigurationSupport implements ConfigurationListener
                         final ConfigurationInfo configInfo = getConfigurationInfo( pid, targetedPid, componentHolder, bundleContext );
                         if ( configInfo != null )
                         {
-                            Activator.log(LogService.LOG_DEBUG, null, "LocationChanged event, same targetedPID {0}, location now {1}",
-                                    new Object[] {targetedPid, configInfo.getBundleLocation()},
+                            Activator.log(LogService.LOG_DEBUG, null, "LocationChanged event, same targetedPID {0}, location now {1}, change count {2}",
+                                    new Object[] {targetedPid, configInfo.getBundleLocation(), configInfo.getChangeCount()},
                                     null);
                             if (configInfo.getProps() == null)
                             {
@@ -389,8 +389,8 @@ public class RegionConfigurationSupport implements ConfigurationListener
                         final ConfigurationInfo configInfo = getConfigurationInfo( pid, targetedPid, componentHolder, bundleContext );
                         if ( configInfo != null )
                         {
-                            Activator.log(LogService.LOG_DEBUG, null, "LocationChanged event, better targetedPID {0} compared to {1}, location now {2}",
-                                    new Object[] {targetedPid, oldTargetedPID, configInfo.getBundleLocation()},
+                            Activator.log(LogService.LOG_DEBUG, null, "LocationChanged event, better targetedPID {0} compared to {1}, location now {2}, change count {3}",
+                                    new Object[] {targetedPid, oldTargetedPID, configInfo.getBundleLocation(), configInfo.getChangeCount()},
                                     null);
                             if (configInfo.getProps() == null)
                             {
