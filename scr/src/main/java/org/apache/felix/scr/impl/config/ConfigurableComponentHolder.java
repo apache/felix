@@ -344,8 +344,8 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
      */
     public boolean configurationUpdated( TargetedPID pid, TargetedPID factoryPid, final Dictionary<String, Object> props, long changeCount )
     {
-        log( LogService.LOG_DEBUG, "ConfigurableComponentHolder configuration updated for pid {0} with properties {1}",
-            new Object[] {pid, props}, null);
+        log( LogService.LOG_DEBUG, "ConfigurableComponentHolder configuration updated for pid {0} with properties {1} and change count {2}",
+            new Object[] {pid, props, changeCount}, null);
 
         // component to update or create
         final Map<AbstractComponentManager<S>, Map<String, Object>> scms = new HashMap< AbstractComponentManager<S>, Map<String, Object>>();
