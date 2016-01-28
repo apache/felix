@@ -40,6 +40,7 @@ import org.apache.felix.http.base.internal.context.ExtServletContext;
  * The session wrapper keeps track of the internal session, manages their attributes
  * separately and also handles session timeout.
  */
+@SuppressWarnings("deprecation")
 public class HttpSessionWrapper implements HttpSession
 {
     /** All special attributes are prefixed with this prefix. */
@@ -51,10 +52,10 @@ public class HttpSessionWrapper implements HttpSession
     /** The created time for the internal session (appended with context id) */
     private static final String ATTR_CREATED = PREFIX + "created.";
 
-    /** The last accessed time for the internal session (appended with context id) */
+    /** The last accessed time for the internal session (appended with context id), as Epoch time (milliseconds). */
     private static final String ATTR_LAST_ACCESSED = PREFIX + "lastaccessed.";
 
-    /** The max inactive time (appended with context id) */
+    /** The max inactive time (appended with context id), in seconds. */
     private static final String ATTR_MAX_INACTIVE = PREFIX + "maxinactive.";
 
     /** The underlying container session. */
@@ -95,19 +96,20 @@ public class HttpSessionWrapper implements HttpSession
     public static Set<Long> getExpiredSessionContextIds(final HttpSession session)
     {
         final long now = System.currentTimeMillis();
+
         final Set<Long> ids = new HashSet<Long>();
         final Enumeration<String> names = session.getAttributeNames();
-        while ( names.hasMoreElements() )
+        while (names.hasMoreElements())
         {
             final String name = names.nextElement();
-            if ( name.startsWith(ATTR_LAST_ACCESSED) )
+            if (name.startsWith(ATTR_LAST_ACCESSED))
             {
                 final String id = name.substring(ATTR_LAST_ACCESSED.length());
 
-                final long lastAccess = (Long)session.getAttribute(name);
-                final Integer maxTimeout = (Integer)session.getAttribute(ATTR_MAX_INACTIVE + id);
+                final long lastAccess = (Long) session.getAttribute(name);
+                final long maxTimeout = 1000L * ((Integer) session.getAttribute(ATTR_MAX_INACTIVE + id));
 
-                if ( maxTimeout > 0 && lastAccess + maxTimeout < now )
+                if ((maxTimeout > 0) && (lastAccess + maxTimeout) < now)
                 {
                     ids.add(Long.valueOf(id));
                 }
@@ -120,10 +122,10 @@ public class HttpSessionWrapper implements HttpSession
     {
         final Set<Long> ids = new HashSet<Long>();
         final Enumeration<String> names = session.getAttributeNames();
-        while ( names.hasMoreElements() )
+        while (names.hasMoreElements())
         {
             final String name = names.nextElement();
-            if ( name.startsWith(ATTR_LAST_ACCESSED) )
+            if (name.startsWith(ATTR_LAST_ACCESSED))
             {
                 final String id = name.substring(ATTR_LAST_ACCESSED.length());
                 ids.add(Long.valueOf(id));
@@ -152,7 +154,7 @@ public class HttpSessionWrapper implements HttpSession
             {
                 this.created = now;
                 this.maxTimeout = session.getMaxInactiveInterval();
-                isNew = true;
+                this.isNew = true;
 
                 session.setAttribute(ATTR_CREATED + this.sessionId, this.created);
                 session.setAttribute(ATTR_MAX_INACTIVE + this.sessionId, this.maxTimeout);
@@ -166,7 +168,7 @@ public class HttpSessionWrapper implements HttpSession
             {
                 this.created = (Long)session.getAttribute(ATTR_CREATED + this.sessionId);
                 this.maxTimeout = (Integer)session.getAttribute(ATTR_MAX_INACTIVE + this.sessionId);
-                isNew = false;
+                this.isNew = false;
             }
 
             this.lastAccessed = now;
@@ -442,7 +444,6 @@ public class HttpSessionWrapper implements HttpSession
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public HttpSessionContext getSessionContext()
     {
         // no need to check validity conforming to the javadoc
