@@ -19,7 +19,6 @@
 package org.apache.felix.dm.impl;
 
 import java.util.Dictionary;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -62,7 +61,6 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     protected volatile Object m_factory;
     protected volatile String m_factoryCreateMethod;
     protected volatile Dictionary<String, Object> m_serviceProperties;
-    private final Map<DependencyContext, Object> m_dependencyCallbacks = new HashMap<>();
 
     public FilterComponent(Component service) {
         m_component = (ComponentImpl) service;
@@ -79,37 +77,21 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     }
 
     public Component add(Dependency ... dependencies) {
-        // First, detect if one of the added dependencies is required, and also, remove any callback instance found in
-        // dependencies. We'll store such dependency callback instance in our m_dependencyCallbacks map and will
-        // re-add them later, in concrete aspect or adapter instances (see the copyDependencies method).
-        // We remove dependency callback instance because we don't want to call with internal abstract decorator instances).
-        
-        boolean allDependenciesOptional = true;
+        m_component.add(dependencies);
+        // Add the dependencies to all already instantiated services.
+        // If one dependency from the list is required, we have nothing to do, since our internal
+        // service will be stopped/restarted.
         for (Dependency dependency : dependencies) {
-            DependencyContext dc = (DependencyContext) dependency;
-            if (dc.isRequired()) {
-                allDependenciesOptional = false;
-            }
-            
-            // Temporarily remove dependency callback instance (if set), because we don't want to call it twice (one time from the
-            // internal aspect/adapter AbstractDecorator object, and another one time from the actual aspect/adapter component instances).
-            // See FELIX-5155.            
-            if (dc.getCallbackInstance() != null) {
-                m_dependencyCallbacks.put(dc, dc.setCallbackInstance(null));
+            if (((DependencyContext) dependency).isRequired()) {
+                return this;
             }
         }
-        
-        // Now, add the dependencies in the internal abstract decorator component.
-        m_component.add(dependencies);
-        
-        // If all dependencies are optional, add them to already instantiated aspect or adapter components.
-        if (allDependenciesOptional) {
-            Object[] instances = m_component.getInstances();
-            if (instances.length > 0) {
-                AbstractDecorator ad = (AbstractDecorator) instances[0];
-                if (ad != null) {
-                    ad.addDependency(dependencies);
-                }
+        // Ok, the list contains no required dependencies: add optionals dependencies in already instantiated services.
+        Object[] instances = m_component.getInstances();
+        if (instances.length > 0) {
+            AbstractDecorator ad = (AbstractDecorator) instances[0];
+            if (ad != null) {
+                ad.addDependency(dependencies);
             }
         }
         return this;
@@ -160,8 +142,6 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
                 }
             }
         }
-        // Cleanup possibly cached depenedncy callack instances.
-        m_dependencyCallbacks.remove((DependencyContext) dependency);
         return this;
     }
 
@@ -380,10 +360,7 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     protected void copyDependencies(List<DependencyContext> dependencies, Component component) {
         for (DependencyContext dc : dependencies) {
             DependencyContext copy = dc.createCopy();
-            Object callbackInstance = m_dependencyCallbacks.get(dc);
-            if (callbackInstance != null) {
-                copy.setCallbackInstance(callbackInstance);
-            }
+
             component.add(copy);
         }
     }
