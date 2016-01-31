@@ -1,0 +1,2 @@
+Private-Package: org.apache.felix.dm.lambda.samples.future
+Bundle-Activator: org.apache.felix.dm.lambda.samples.future.Activator

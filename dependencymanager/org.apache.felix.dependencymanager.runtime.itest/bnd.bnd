@@ -32,7 +32,7 @@
 	org.apache.felix.dependencymanager.shell;version=latest,\
 	biz.aQute.junit;version=3.0.0	
 -runee: JavaSE-1.7
--runfw: org.apache.felix.framework;version='[4.4.0,4.4.0]'
+-runfw: org.apache.felix.framework;version='[5.2.0,5.2.0]'
 -runsystempackages: \
 	sun.reflect
 -runvm:-ea
@@ -42,6 +42,11 @@ Private-Package:  \
 	org.apache.felix.dm.itest.util
 -plugin: org.apache.felix.dm.annotation.plugin.bnd.AnnotationPlugin;log=debug;\
 		 path:=${workspace}/org.apache.felix.dependencymanager.annotation/generated/org.apache.felix.dependencymanager.annotation.jar
+-runproperties:  \
+	org.apache.felix.dependencymanager.loglevel=2,\
+	org.apache.felix.log.maxSize=100000,\
+	org.apache.felix.log.storeDebug=true,\
+	gosh.args=--noshutdown
 Test-Cases:  \
 	${classes;CONCRETE;EXTENDS;junit.framework.TestCase}
 Bundle-Name: Apache Felix Dependency Manager Runtime integration tests
