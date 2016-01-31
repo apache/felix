@@ -1438,6 +1438,16 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 			return;
 		}
 		if (m_invokeCallbackCache.put(event, event) == null) {
+		    // FELIX-5155: we must not invoke callbacks on our special internal components (adapters/aspects) if the dependency is not the first one, or 
+		    // if the internal component is a Factory Pid Adapter.
+		    // For aspects/adapters, the first dependency only need to be injected, not the other extra dependencies added by user.
+		    // (in fact, we do this because extra dependencies (added by user) may contain a callback instance, and we really don't want to invoke the callbacks twice !		    
+		    Object mainComponentImpl = getInstance();
+		    if (mainComponentImpl instanceof AbstractDecorator) {
+		        if (mainComponentImpl instanceof FactoryConfigurationAdapterImpl || dc != m_dependencies.get(0)) {
+		            return;
+		        }
+		    }
 			dc.invokeCallback(type, event);
 		}		
 	}
