@@ -1,0 +1,2 @@
+Private-Package: org.apache.felix.dm.lambda.samples.dictionary
+Bundle-Activator: org.apache.felix.dm.lambda.samples.dictionary.Activator

@@ -1,0 +1,16 @@
+The purpose of this sample is to show an example usage of the new "CompletableFuture" dependency that has been
+added in the dm-lambda library. CompletableFuture java8 class provides functional operations and promotes an asynchronous event-driven model.
+
+In such model, you can use the new dm-lambda library to add dependencies on asynchronous events using the standard JDK CompletableFuture class.
+
+In this example, the Activator first defines a PageLink component that is used to download a given page from the web. The service then parses 
+the content of the page and returns all available hrefs (links) found from the web page.
+
+The PageLink is initialized with the Felix web site URL, which is asynchronously downloaded from the PageLink::init method, using a CompletableFuture. 
+The CF is then added as a "FutureDependency" in the PageLinkImpl.init() method, and when the CF completes, the PageLinkImpl.start() callback is invoked 
+and the service is registered.
+
+The Activator is then getting injected with the PageLink service, and displays the links (hrefs) found from the Felix web site.
+
+Caution: if you are using a corporate http proxy, you have to fix the Activator in order to configure the ip addr and port number of your
+http proxy.

@@ -1,0 +1,13 @@
+javac.source:          1.8
+javac.target:          1.8
+Bundle-Version: 1.0.0
+-buildpath: \
+	org.apache.felix.dependencymanager;version=latest,\
+	osgi.core;version=6.0,\
+	osgi.cmpn;version=6.0
+Export-Package: \
+	org.apache.felix.dm.lambda,\
+	org.apache.felix.dm.lambda.callbacks
+-runfw: org.apache.felix.framework;version='[4.4.1,4.4.1]'
+-runee: JavaSE-1.8
+Private-Package: org.apache.felix.dm.lambda.impl
