@@ -21,3 +21,9 @@ To see logs, just type this under gogo shell:
 
 g! log info|grep hello.annot
 
+and you should see the following logs:
+
+2016.02.01 10:12:02 INFO - Bundle: org.apache.felix.dependencymanager.lambda.samples.hello - ServiceProviderImpl.hello
+2016.02.01 10:12:02 INFO - Bundle: org.apache.felix.dependencymanager.lambda.samples.hello - ServiceConsumer.start: calling service.hello()
+
+
