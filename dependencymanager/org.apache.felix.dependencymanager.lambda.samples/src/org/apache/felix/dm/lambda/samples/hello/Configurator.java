@@ -8,7 +8,11 @@ import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 
 public class Configurator {
-    volatile ConfigurationAdmin m_cm; // injected by reflection.
+    ConfigurationAdmin m_cm; 
+    
+    void bind(ConfigurationAdmin cm) {
+        m_cm = cm;
+    }
     
     void start() throws IOException {
         // Configure the ServiceConsumer component

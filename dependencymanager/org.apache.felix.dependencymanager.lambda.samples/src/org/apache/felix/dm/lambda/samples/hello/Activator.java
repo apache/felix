@@ -33,22 +33,22 @@ public class Activator extends DependencyManagerActivator {
     public void activate() throws Exception {
     	out.println("type \"log info\" to see the logs emitted by this test.");
     	
-    	// Creates a Service Provider
-        component(comp -> comp
-            .impl(ServiceProviderImpl.class)
-            .provides(ServiceProvider.class, property1 -> "value1", property2 -> 123) // property names are deduced from lambda parameter names
+    	// Creates a Service Provider (property names are deduced from lambda parameter names).
+    	// (service dependencies are required by default)
+        component(comp -> comp.impl(ServiceProviderImpl.class)
+            .provides(ServiceProvider.class, p1 -> "v1", p2 -> 123)
             .withSrv(LogService.class));
-
+            
         // Creates a Service Consumer. we depend on LogService, EventAdmin and on our ServiceProvider.
         // (LogService and EventAdmin are declared in one single method call).
-        
-        component(comp -> comp
-            .impl(ServiceConsumer.class)
+        component(comp -> comp.impl(ServiceConsumer.class)
             .withSrv(LogService.class, EventAdmin.class)
-            .withSrv(ServiceProvider.class, srv -> srv.filter("(property1=value1)")) 
+            .withSrv(ServiceProvider.class, srv -> srv.filter("(p1=v1)")) 
             .withCnf(ServiceConsumer.class));  
         
         // Creates a component that populates some properties in the Configuration Admin.
-        component(comp -> comp.impl(Configurator.class).withSrv(ConfigurationAdmin.class));
+        // Here, we inject the CM (Configuration Admin) service dependency using a method reference:
+        component(comp -> comp.impl(Configurator.class)
+            .withSrv(ConfigurationAdmin.class, srv -> srv.cb(Configurator::bind)));
     }
 }
