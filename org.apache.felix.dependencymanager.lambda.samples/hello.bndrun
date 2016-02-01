@@ -14,6 +14,7 @@
 	org.apache.felix.dependencymanager.lambda.samples.hello;version=latest,\
 	org.apache.felix.dependencymanager;version=4.2.0,\
 	org.apache.felix.dependencymanager.shell;version=4.0.3,\
-	org.apache.felix.dependencymanager.lambda;version=latest
+	org.apache.felix.dependencymanager.lambda;version=latest,\
+	org.apache.felix.eventadmin;version=1.4.4
 
 	

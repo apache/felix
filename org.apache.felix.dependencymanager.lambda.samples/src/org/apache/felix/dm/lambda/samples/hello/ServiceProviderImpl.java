@@ -28,12 +28,10 @@ import org.osgi.service.log.LogService;
 public class ServiceProviderImpl implements ServiceProvider {
     volatile LogService log;
 
-    void bind(LogService log) { this.log = log; }
-    
-    void activate() {
-        log.log(LogService.LOG_INFO, "ServiceProviderImpl.start");
+    void start() {
+        // default lifecycle start calback (all required dependencies have been injected when start is called.        
     }
-
+    
     @Override
     public void hello() {
         log.log(LogService.LOG_INFO, "ServiceProviderImpl.hello");
