@@ -20,6 +20,7 @@ package org.apache.felix.dm.lambda.samples.hello;
 
 import java.util.Dictionary;
 
+import org.osgi.service.event.EventAdmin;
 import org.osgi.service.log.LogService;
 
 /**
@@ -30,10 +31,9 @@ import org.osgi.service.log.LogService;
 public class ServiceConsumer {
     volatile ServiceProvider service;
     volatile LogService log;
-    Dictionary<?, ?> conf;
+    volatile EventAdmin eventAdmin;
 
     public void updated(Dictionary<String, Object> conf) {
-        this.conf = conf;
     }
     
     public void start() {

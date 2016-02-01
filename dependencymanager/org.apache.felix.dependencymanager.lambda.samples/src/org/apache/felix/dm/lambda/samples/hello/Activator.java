@@ -22,6 +22,7 @@ import static java.lang.System.out;
 
 import org.apache.felix.dm.lambda.DependencyManagerActivator;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.event.EventAdmin;
 import org.osgi.service.log.LogService;
 
 /**
@@ -36,25 +37,17 @@ public class Activator extends DependencyManagerActivator {
         component(comp -> comp
             .impl(ServiceProviderImpl.class)
             .provides(ServiceProvider.class, property1 -> "value1", property2 -> 123) // property names are deduced from lambda parameter names
-            .start(ServiceProviderImpl::activate)
-            .withSrv(LogService.class, log -> log.cb(ServiceProviderImpl::bind)));
+            .withSrv(LogService.class));
 
-        // Creates a Service Consumer. Notice that if your configuration callback is "updated", you can 
-        // simply use "withCnf(pid)" instead of explicitely providing the method reference.
+        // Creates a Service Consumer. we depend on LogService, EventAdmin and on our ServiceProvider.
+        // (LogService and EventAdmin are declared in one single method call).
         
         component(comp -> comp
             .impl(ServiceConsumer.class)
-            .withSrv(LogService.class)
+            .withSrv(LogService.class, EventAdmin.class)
             .withSrv(ServiceProvider.class, srv -> srv.filter("(property1=value1)")) 
-            .withCnf(conf -> conf.pid(ServiceConsumer.class).cb(ServiceConsumer::updated)));  
+            .withCnf(ServiceConsumer.class));  
         
-        // Same as above, but using a shorter form of "withCnf" declaration
-//        component(comp -> comp
-//            .impl(ServiceConsumer.class)
-//            .withSrv(LogService.class)
-//            .withSrv(ServiceProvider.class, srv -> srv.filter("(property1=value1)")) 
-//            .withCnf(ServiceConsumer.class));  
-
         // Creates a component that populates some properties in the Configuration Admin.
         component(comp -> comp.impl(Configurator.class).withSrv(ConfigurationAdmin.class));
     }
