@@ -21,6 +21,9 @@ Welcome to Apache Felix Dependency Manager
 Apache Felix Dependency Manager is a versatile java API, allowing to declaratively
 register, acquire, and manage dynamic OSGi services.
 
+In addition to the original DM API, a new DM-lambda library also allows to define
+OSGI components using a fluent, concise, and more type-safe API, based on java8 lambdas.
+
 Building and testing Apache Felix Dependency Manager
 ====================================================
 
@@ -34,7 +37,7 @@ Building and testing Apache Felix Dependency Manager
   you also have to unfold the org.apache.felix.dependencymanager-r<n>-deps.zip on the same directory where you have unfolded the source archive.
   (no need to do this if you have checked out from the felix-trunk).
 
-- Install java7.
+- Install java8.
 
 - Compile Dependendency Manager annotations bndtools plugin:
   
@@ -54,14 +57,10 @@ $ ./gradlew check
 
 ** Compilation Using Eclipse:
 
-- Install latest Eclipse Mars, and configure two JREs for both java7 and java8:
+- Install latest Eclipse Mars, and configure a JRE for java8:
 
 * go to Windows -> Preferences -> Java -> Installed JREs
-* Then add two JREs: one for java7, and the other for java8.
-* Declare the java7 JRE as the default one.
-
-Java8 is only used to build and run the org.apache.felix.dependencymanager.benchmark module, which is used to perform
-DM performance tests within eclipse bndtools.
+* Then add a java8 JRE of your choice.
 
 - Install BndTools 3.0.0
 
