@@ -24,7 +24,7 @@ import org.apache.felix.dm.lambda.callbacks.SerializableLambda;
  * }</pre>
  */
 @FunctionalInterface
-public interface FluentProperties extends SerializableLambda {
+public interface FluentProperty extends SerializableLambda {
     /**
      * Represents a fluent property
      * 

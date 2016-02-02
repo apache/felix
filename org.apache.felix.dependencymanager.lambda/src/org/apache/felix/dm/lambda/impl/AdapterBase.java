@@ -9,7 +9,7 @@ import java.util.function.Supplier;
 import org.apache.felix.dm.lambda.BundleDependencyBuilder;
 import org.apache.felix.dm.lambda.ComponentBuilder;
 import org.apache.felix.dm.lambda.ConfigurationDependencyBuilder;
-import org.apache.felix.dm.lambda.FluentProperties;
+import org.apache.felix.dm.lambda.FluentProperty;
 import org.apache.felix.dm.lambda.FutureDependencyBuilder;
 import org.apache.felix.dm.lambda.ServiceDependencyBuilder;
 import org.apache.felix.dm.lambda.callbacks.CbComponent;
@@ -71,7 +71,7 @@ public interface AdapterBase<B extends ComponentBuilder<B>> extends ComponentBui
         return (B) this;
     }
     
-    default B provides(Class<?>  iface, FluentProperties ... properties) {
+    default B provides(Class<?>  iface, FluentProperty ... properties) {
         andThenBuild(compBuilder -> compBuilder.provides(iface, properties));
         return (B) this;
     }
@@ -91,7 +91,7 @@ public interface AdapterBase<B extends ComponentBuilder<B>> extends ComponentBui
         return (B) this;  
     }
     
-    default B provides(Class<?>[] ifaces, FluentProperties ... properties) {
+    default B provides(Class<?>[] ifaces, FluentProperty ... properties) {
         andThenBuild(compBuilder -> compBuilder.provides(ifaces, properties));
         return (B) this;
     }
@@ -111,7 +111,7 @@ public interface AdapterBase<B extends ComponentBuilder<B>> extends ComponentBui
         return (B) this;
     }
     
-    default B provides(String  iface, FluentProperties ... properties) {
+    default B provides(String  iface, FluentProperty ... properties) {
         andThenBuild(compBuilder -> compBuilder.provides(iface, properties));
         return (B) this;
     }
@@ -131,7 +131,7 @@ public interface AdapterBase<B extends ComponentBuilder<B>> extends ComponentBui
         return (B) this;  
     }
     
-    default B provides(String[] ifaces, FluentProperties ... properties) {
+    default B provides(String[] ifaces, FluentProperty ... properties) {
         andThenBuild(compBuilder -> compBuilder.provides(ifaces, properties));
         return (B) this;
     }
@@ -151,7 +151,7 @@ public interface AdapterBase<B extends ComponentBuilder<B>> extends ComponentBui
         return (B) this;
     }
     
-    default B properties(FluentProperties ...properties) {
+    default B properties(FluentProperty ...properties) {
         andThenBuild(compBuilder -> compBuilder.properties(properties));
         return (B) this;
     }

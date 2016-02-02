@@ -15,27 +15,27 @@
  * limitations under the License.
  */
 
-This sample shows a "SpellChecker" application (using DM API) which provides a
+This sample shows a "SpellChecker" application which provides a
 "dictionary:spellcheck" GOGO shell command. The GOGO "dictionary:spellcheck" command accepts a
-string as parameter, which is checked for proper existence. The SpellChecker class has a
+string as parameter, which is checked for proper exactness. The SpellChecker class has a
 required/multiple (1..N) dependency over every available "DictionaryService" services, which are
-internally used by the SpellChecker command, when checking word existence.
+internally used by the SpellChecker command, when checking word exactness.
 
 A DictionaryService is defined using a FactoryConfigurationAdapterService , allowing to instantiate
 many "DictionaryService" instances for each configuration that are added to the
-factory pid "Spell Checker Configuration (api)" from web console.
+factory pid "Spell Checker Configuration" from web console.
 The factory pid configuration metatypes are defined using the bnd "metatype" annotations
 (see DictionaryConfiguration.java).
 
 The DictionaryService is decorated with a DictionaryAspect, which you can instantiate by adding a
-configuration to the "Spell Checker Aspect Dictionary (api)" pid from web console. The
+configuration to the "Spell Checker Aspect Dictionary" pid from web console. The
 aspect configuration metatype is also declared using the bnd metatype annotations (see
 DictionaryAspectConfiguration.java). 
 
-Before running this sample, go to webconsole, and add some words in the Spell Checker Configuration (api) factory PID, and
-in the Spell Checker Aspect Dictionary (api) PID.
+Before running this sample, go to webconsole, and add some words in the "Spell Checker Configuration"factory PID, and
+in the "Spell Checker Dictionary Aspect" PID.
 
 Then go to gogo shell, and type dm help. You will normally see the dictionary:spellcheck command.
 Type dictionary:spellcheck <some words configured either in the spell checker configuration, or in the spell checker aspect configuration, 
-and the dictionary will check for proper word existance in the configuration.
+and the dictionary will check for proper word exactness in the configuration.
 

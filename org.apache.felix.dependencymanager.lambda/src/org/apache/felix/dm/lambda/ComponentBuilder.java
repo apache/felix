@@ -152,10 +152,10 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
      *
      * @param iface the public interfaces to register in the OSGI service registry.
 	 * @param properties a list of fluent service properties for the provided service. You can specify a list of lambda expression, each one implementing the
-	 * {@link FluentProperties} interface that allows to define a property name using a lambda parameter.
+	 * {@link FluentProperty} interface that allows to define a property name using a lambda parameter.
      * @return this builder.
 	 */
-	B provides(Class<?>  iface, FluentProperties ... properties);
+	B provides(Class<?>  iface, FluentProperty ... properties);
 	
 	/**
      * Sets the public interface under which this component should be registered in the OSGi service registry.
@@ -195,10 +195,10 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
      *
      * @param ifaces the public interfaces to register in the OSGI service registry.
      * @param properties a list of fluent service properties for the provided service. You can specify a list of lambda expression, each one implementing the
-     * {@link FluentProperties} interface that allows to define a property name using a lambda parameter.
+     * {@link FluentProperty} interface that allows to define a property name using a lambda parameter.
      * @return this builder.
      */
-    B provides(Class<?>[] ifaces, FluentProperties ... properties);
+    B provides(Class<?>[] ifaces, FluentProperty ... properties);
     
     /**
      * Sets the public interfaces under which this component should be registered in the OSGi service registry.
@@ -238,10 +238,10 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
      *
      * @param iface the public interfaces to register in the OSGI service registry.
      * @param properties a list of fluent service properties for the provided service. You can specify a list of lambda expression, each one implementing the
-     * {@link FluentProperties} interface that allows to define a property name using a lambda parameter.
+     * {@link FluentProperty} interface that allows to define a property name using a lambda parameter.
      * @return this builder.
      */
-    B provides(String iface, FluentProperties ... properties);
+    B provides(String iface, FluentProperty ... properties);
     
     /**
      * Sets the public interface under which this component should be registered in the OSGi service registry.
@@ -281,10 +281,10 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
      * 
      * @param ifaces the public interfaces to register in the OSGI service registry.
      * @param properties a list of fluent service properties for the provided service. You can specify a list of lambda expression, each one implementing the
-     * {@link FluentProperties} interface that allows to define a property name using a lambda parameter.
+     * {@link FluentProperty} interface that allows to define a property name using a lambda parameter.
      * @return this builder.
      */
-    B provides(String[] ifaces, FluentProperties ... properties);
+    B provides(String[] ifaces, FluentProperty ... properties);
     
     /**
      * Sets the public interfaces under which this component should be registered in the OSGi service registry.
@@ -330,7 +330,7 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
      * @param properties the fluent properties
      * @return this builder
      */
-    B properties(FluentProperties ... properties);  
+    B properties(FluentProperty ... properties);  
 
     /**
      * Adds a required/autoconfig service dependency.

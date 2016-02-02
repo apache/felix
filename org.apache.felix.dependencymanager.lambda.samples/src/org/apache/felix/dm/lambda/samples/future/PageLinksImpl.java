@@ -37,7 +37,7 @@ public class PageLinksImpl implements PageLinks {
 	        .thenApply(this::parseLinks);	       
 
 	    // Add the future dependency so we'll be started once the CompletableFuture "futureLinks" has completed.
-	    component(c, comp -> comp.withFuture(futureLinks, links -> links.cbi(this::setLinks)));
+	    component(c, comp -> comp.withFuture(futureLinks, future -> future.cbi(this::setLinks)));
 	}
 	
 	// Called when our future has completed.
