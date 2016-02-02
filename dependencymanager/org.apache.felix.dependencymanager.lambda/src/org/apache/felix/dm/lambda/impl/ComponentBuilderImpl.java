@@ -26,7 +26,7 @@ import org.apache.felix.dm.lambda.BundleDependencyBuilder;
 import org.apache.felix.dm.lambda.ComponentBuilder;
 import org.apache.felix.dm.lambda.ConfigurationDependencyBuilder;
 import org.apache.felix.dm.lambda.DependencyBuilder;
-import org.apache.felix.dm.lambda.FluentProperties;
+import org.apache.felix.dm.lambda.FluentProperty;
 import org.apache.felix.dm.lambda.FutureDependencyBuilder;
 import org.apache.felix.dm.lambda.ServiceDependencyBuilder;
 import org.apache.felix.dm.lambda.callbacks.CbComponent;
@@ -98,7 +98,7 @@ public class ComponentBuilderImpl implements ComponentBuilder<ComponentBuilderIm
     }
     
     @Override
-    public ComponentBuilderImpl provides(Class<?>  iface, FluentProperties ... properties) {
+    public ComponentBuilderImpl provides(Class<?>  iface, FluentProperty ... properties) {
         provides(iface);
         properties(properties);
         return this;
@@ -125,7 +125,7 @@ public class ComponentBuilderImpl implements ComponentBuilder<ComponentBuilderIm
     }
     
     @Override
-    public ComponentBuilderImpl provides(Class<?>[] ifaces, FluentProperties ... properties) {
+    public ComponentBuilderImpl provides(Class<?>[] ifaces, FluentProperty ... properties) {
         provides(ifaces);
         properties(properties);
         return this;
@@ -152,7 +152,7 @@ public class ComponentBuilderImpl implements ComponentBuilder<ComponentBuilderIm
     }
     
     @Override
-    public ComponentBuilderImpl provides(String iface, FluentProperties ... properties) {
+    public ComponentBuilderImpl provides(String iface, FluentProperty ... properties) {
         provides(iface);
         properties(properties);
         return this;
@@ -179,7 +179,7 @@ public class ComponentBuilderImpl implements ComponentBuilder<ComponentBuilderIm
     }
     
     @Override
-    public ComponentBuilderImpl provides(String[] ifaces, FluentProperties ... properties) {
+    public ComponentBuilderImpl provides(String[] ifaces, FluentProperty ... properties) {
         provides(ifaces);
         properties(properties);
         return this;
@@ -218,7 +218,7 @@ public class ComponentBuilderImpl implements ComponentBuilder<ComponentBuilderIm
     }
     
     @Override
-    public ComponentBuilderImpl properties(FluentProperties ... properties) {
+    public ComponentBuilderImpl properties(FluentProperty ... properties) {
     	Dictionary<Object, Object> props = new Hashtable<>();
     	Stream.of(properties).forEach(property -> {
     		String name = Helpers.getLambdaParameterName(property, 0);
