@@ -80,7 +80,7 @@ public abstract class DependencyManagerActivator implements BundleActivator {
     @Override
     public void start(BundleContext context) throws Exception {
         m_manager = new DependencyManager(context);
-        init(context, m_manager);
+        activate();
     }
 
     /**
@@ -88,23 +88,21 @@ public abstract class DependencyManagerActivator implements BundleActivator {
      */
     @Override
     public void stop(BundleContext context) throws Exception {
-        destroy();
+        deactivate();
     }
 
     /**
      * Sub classes must override this method in order to build some DM components.
      * 
-     * @param ctx the BundleContext associated to the bundle activator.
-     * @param dm the DependencyManager object that can be used to add/remove components.
      * @throws Exception if the activation fails
      */
-    protected abstract void init(BundleContext ctx, DependencyManager dm) throws Exception;
+    protected abstract void activate() throws Exception;
 
     /**
      * Sub classes may override this method that is called when the Activator is stopped.
      * @throws Exception if the deactivation fails
      */
-    protected void destroy() throws Exception {
+    protected void deactivate() throws Exception {
     }
     
     /**
@@ -112,7 +110,7 @@ public abstract class DependencyManagerActivator implements BundleActivator {
      * 
      * @return the DependencyManager associated to this Activator
      */
-    protected DependencyManager getDependencyManager() {
+    public DependencyManager getDM() {
         return m_manager;
     }
     
@@ -121,7 +119,7 @@ public abstract class DependencyManagerActivator implements BundleActivator {
      * 
      * @return the bundle context
      */
-    protected BundleContext getBundleContext() {
+    public BundleContext getBC() {
         return m_manager.getBundleContext();
     }
     

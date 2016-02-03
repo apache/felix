@@ -20,9 +20,7 @@ package org.apache.felix.dm.lambda.samples.future;
 
 import static java.lang.System.out;
 
-import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.lambda.DependencyManagerActivator;
-import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 
 /**
@@ -40,7 +38,7 @@ public class Activator extends DependencyManagerActivator {
      * Initialize our components using new DM-lambda activator base.
      */
     @Override
-    public void init(BundleContext ctx, DependencyManager dm) throws Exception {
+    public void activate() throws Exception {
     	out.println("type \"log info\" to see the logs emitted by this test.");
     	
     	// System.setProperty("http.proxyHost","your.http.proxy.host");
