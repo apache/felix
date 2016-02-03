@@ -19,20 +19,18 @@
 package org.apache.felix.dm.lambda.samples.dictionary;
 
 import static java.lang.System.out;
-
-import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.lambda.DependencyManagerActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.service.log.LogService;
 import static org.apache.felix.service.command.CommandProcessor.COMMAND_FUNCTION;
 import static org.apache.felix.service.command.CommandProcessor.COMMAND_SCOPE;
+
+import org.apache.felix.dm.lambda.DependencyManagerActivator;
+import org.osgi.service.log.LogService;
 
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class Activator extends DependencyManagerActivator {
     @Override
-    public void init(BundleContext ctx, DependencyManager dm) throws Exception {
+    public void activate() throws Exception {
     	out.println("type \"log info\" to see the logs emitted by this test.");
 
         // Create the factory configuration for our DictionaryImpl service. An instance of the DictionaryImpl is created for each
