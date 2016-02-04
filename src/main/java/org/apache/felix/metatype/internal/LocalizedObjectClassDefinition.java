@@ -154,7 +154,7 @@ public class LocalizedObjectClassDefinition extends LocalizedBase implements Obj
 
         // just create an URL based on the source of the metadata
         // see FELIX2868
-        URL url = this.bundle.getEntry( iconPath );
+        URL url = this.bundle.getResource( iconPath );
         if ( url == null )
         {
             url = new URL( this.ocd.getMetadata().getSource(), iconPath );
