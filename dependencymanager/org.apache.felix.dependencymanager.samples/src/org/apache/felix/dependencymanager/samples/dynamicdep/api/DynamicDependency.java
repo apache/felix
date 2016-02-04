@@ -49,10 +49,8 @@ public class DynamicDependency {
 	/**
 	 * This is the first callback: we are injected with our configuration.
 	 */
-	public void updated(Dictionary<String, Object> properties) throws ConfigurationException {
-        // We use the bnd "Configurable" helper in order to get an implementation for our DictionaryConfiguration interface.
-		if (properties != null) {
-		    DynamicDependencyConfiguration cnf = Configurable.createConfigurable(DynamicDependencyConfiguration.class, properties);
+	public void updated(DynamicDependencyConfiguration cnf) throws ConfigurationException {
+		if (cnf != null) {
 		    storageType = cnf.storageType();
 		    storageRequired = cnf.storageRequired();
 		}
