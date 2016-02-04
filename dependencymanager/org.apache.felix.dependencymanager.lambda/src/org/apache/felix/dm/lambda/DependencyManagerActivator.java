@@ -24,7 +24,7 @@ import org.osgi.framework.BundleContext;
  * 
  * <pre> {@code
  * 
- * import static org.apache.felix.dm.builder.lambda.DependencyActivatorBase.*;
+ * import org.apache.felix.dm.lambda.DependencyManagerActivator;
  *
  * public class Activator extends DependencyManagerActivator {    
  *     public void activate() throws Exception {
@@ -39,7 +39,7 @@ import org.osgi.framework.BundleContext;
  * Code example using reflection callbacks:
  * 
  * <pre> {@code
- * import static org.apache.felix.dm.builder.lambda.DependencyActivatorBase.*;
+ * import org.apache.felix.dm.lambda.DependencyManagerActivator;
  *
  * public class Activator extends DependencyManagerActivator {    
  *     public void activate() throws Exception {
@@ -55,7 +55,7 @@ import org.osgi.framework.BundleContext;
  * Code example using method references:
  * 
  * <pre> {@code
- * import static org.apache.felix.dm.lambda.DependencyActivatorBase.*;
+ * import org.apache.felix.dm.lambda.DependencyManagerActivator;
  *
  * public class Activator extends DependencyManagerActivator {    
  *     public void activate() throws Exception {
