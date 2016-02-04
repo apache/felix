@@ -59,8 +59,8 @@ public interface ConfigurationDependency extends Dependency, ComponentDependency
      * is available. The contract for this method is identical to that of
      * <code>ManagedService.updated(Dictionary) throws ConfigurationException</code>.
      * By default, if this method is not called, the callback name is "updated".
-     * The callback is always invoked with an already instantiated component (the component implementation class(es) are
-     * always instantiated before the updated callback is invoked).
+     * 
+     * <p> The callback is invoked on the instantiated component.
      * 
      * @param callback the name of the callback method
      */
@@ -70,10 +70,11 @@ public interface ConfigurationDependency extends Dependency, ComponentDependency
      * Sets the name of the callback method that should be invoked when a configuration
      * is available. The contract for this method is identical to that of
      * <code>ManagedService.updated(Dictionary) throws ConfigurationException</code>.
-     * The callback is called with a component that is not yet instantiated. This allows factory objects to get
-     * injected with a configuration before its <code>create</code> method is called.
      * 
-     * @param instance the instance to call the callbacks on
+     * <p> the callback is invoked on the callback instance, and the component is not 
+     * yet instantiated at the time the callback is invoked.
+     * 
+     * @param instance the object to invoke the callback on
      * @param callback the name of the callback method
      */
     ConfigurationDependency setCallback(Object instance, String callback);
@@ -82,18 +83,61 @@ public interface ConfigurationDependency extends Dependency, ComponentDependency
      * Sets the name of the callback method that should be invoked when a configuration
      * is available. The contract for this method is identical to that of
      * <code>ManagedService.updated(Dictionary) throws ConfigurationException</code>.
-     * The component instance is instantiated before the callback is invoked only the the <code>needsInstance</code> parameter is set to true.
      * 
-     * @param instance the instance to call the callback on
+     * <p> the callback is invoked on the callback instance, and if <code>needsInstance</code> is true, 
+     * the component is instantiated at the time the callback is invoked 
+     * 
+     * @param instance the object to invoke the callback on.
      * @param callback the name of the callback method
-     * @param needsInstance true if the component implementation class(es) must be created before the
-     *        callback instance is invoked, else false.
+     * @param needsInstance true if the component must be instantiated before the callback is invoked on the callback instance.
      */
     ConfigurationDependency setCallback(Object instance, String callback, boolean needsInstance);
-    
+
     /**
-     * Sets the <code>service.pid</code> of the configuration you are depending
-     * on.
+     * Sets the name of the callback method that should be invoked when a configuration
+     * is available. The contract for this method is identical to that of
+     * <code>ManagedService.updated(Dictionary) throws ConfigurationException</code> with the difference that 
+     * instead of a Dictionary it accepts an interface of the given configuration type.<br>
+     * 
+     * <p>The callback is invoked on the instantiated component.
+     * 
+     * @param callback the name of the callback method
+     * @param configType the configuration type that the callback method accepts.
+     */
+    ConfigurationDependency setCallback(String callback, Class<?> configType);
+
+    /**
+     * Sets the name of the callback method that should be invoked when a configuration
+     * is available. The contract for this method is identical to that of
+     * <code>ManagedService.updated(Dictionary) throws ConfigurationException</code> with the difference that 
+     * instead of a Dictionary it accepts an interface of the given configuration type.<br>
+     * 
+     * <p> The callback is invoked on the callback instance, and at this point the component is not yet instantiated.
+     * 
+     * @param instance the object to invoke the callback on.
+     * @param callback the name of the callback method
+     * @param configType the configuration type that the callback method accepts.
+     */
+    ConfigurationDependency setCallback(Object instance, String callback, Class<?> configType);
+
+    /**
+     * Sets the name of the callback method that should be invoked when a configuration
+     * is available. The contract for this method is identical to that of
+     * <code>ManagedService.updated(Dictionary) throws ConfigurationException</code> with the difference that 
+     * instead of a Dictionary it accepts an interface of the given configuration type.<br>
+     * 
+     * <p> the callback is invoked on the callback instance, and if <code>needsInstance</code> is true, 
+     * the component is instantiated at the time the callback is invoked 
+     * 
+     * @param instance the object to invoke the callback on.
+     * @param callback the name of the callback method
+     * @param configType the configuration type that the callback method accepts.
+     * @param needsInstance true if the component must be instantiated before the callback is invoked on the callback instance.
+     */
+    ConfigurationDependency setCallback(Object instance, String callback, Class<?> configType, boolean needsInstance);
+
+    /**
+     * Sets the <code>service.pid</code> of the configuration you are depending on.
      */
 	ConfigurationDependency setPid(String pid);
 

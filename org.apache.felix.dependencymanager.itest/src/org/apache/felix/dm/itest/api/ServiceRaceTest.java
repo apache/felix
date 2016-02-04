@@ -47,7 +47,7 @@ import org.osgi.service.cm.ConfigurationException;
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class ServiceRaceTest extends TestBase {
     volatile ConfigurationAdmin m_cm;
-    final static int STEP_WAIT = 5000;
+    final static int STEP_WAIT = 15000;
     final static int DEPENDENCIES = 10;
     final static int LOOPS = 3000;
     final Ensure m_done = new Ensure(true);

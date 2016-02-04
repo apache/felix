@@ -49,9 +49,11 @@ import org.osgi.service.cm.ManagedService;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ConfigurationDependencyImpl extends AbstractDependency<ConfigurationDependency> implements ConfigurationDependency, ManagedService {
+    // Our fields are not volatile because they are "safely published" using the DM thread model (based on a Concurrent queue).
     private Dictionary<String, Object> m_settings;
 	private String m_pid;
 	private ServiceRegistration m_registration;
+	private Class<?> m_configType;
     private MetaTypeProviderImpl m_metaType;
 	private final AtomicBoolean m_updateInvokedCache = new AtomicBoolean();
 	private final Logger m_logger;
@@ -77,6 +79,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 	    m_logger = prototype.m_logger;
         m_metaType = prototype.m_metaType != null ? new MetaTypeProviderImpl(prototype.m_metaType, this, null) : null;
         m_needsInstance = prototype.needsInstance();
+        m_configType = prototype.m_configType;
 	}
 	
     @Override
@@ -89,21 +92,64 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 	    return new ConfigurationDependencyImpl(this);
 	}
 
+	/**
+	 * Sets a callback method invoked on the instantiated component.
+	 */
     public ConfigurationDependencyImpl setCallback(String callback) {
         super.setCallbacks(callback, null);
         return this;
     }
     
+    /**
+     * Sets a callback method on an external callback instance object.
+     * The component is not yet instantiated at the time the callback is invoked.
+     * We check if callback instance is null, in this case, the callback will be invoked on the instantiated component.
+     */
     public ConfigurationDependencyImpl setCallback(Object instance, String callback) {
-    	return setCallback(instance, callback, false);
+        boolean needsInstantiatedComponent = (instance == null);
+    	return setCallback(instance, callback, needsInstantiatedComponent);
     }
 
+    /**
+     * Sets a callback method on an external callback instance object.
+     * If needsInstance == true, the component is instantiated at the time the callback is invoked.
+     * We check if callback instance is null, in this case, the callback will be invoked on the instantiated component.
+     */
     public ConfigurationDependencyImpl setCallback(Object instance, String callback, boolean needsInstance) {
         super.setCallbacks(instance, callback, null);
         m_needsInstance = needsInstance;
         return this;
     }
+        
+    /**
+     * Sets a type-safe callback method invoked on the instantiated component.
+     */
+    public ConfigurationDependency setCallback(String callback, Class<?> configType) {
+        setCallback(callback);
+        m_configType = configType;
+        return this;
+    }
 
+    /**
+     * Sets a type-safe callback method on an external callback instance object.
+     * The component is not yet instantiated at the time the callback is invoked.
+     */
+    public ConfigurationDependency setCallback(Object instance, String callback, Class<?> configType) {
+        setCallback(instance, callback);
+        m_configType = configType;
+        return this;
+    }
+    
+    /**
+     * Sets a type-safe callback method on an external callback instance object.
+     * If needsInstance == true, the component is instantiated at the time the callback is invoked.
+     */
+    public ConfigurationDependencyImpl setCallback(Object instance, String callback, Class<?> configType, boolean needsInstance) {
+        setCallback(instance, callback, needsInstance);
+        m_configType = configType;
+        return this;
+    }
+    
     @Override
     public boolean needsInstance() {
         return m_needsInstance;
@@ -295,48 +341,54 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
         }
     }
     
-    private void invokeUpdated(Dictionary<?,?> settings) throws ConfigurationException {
-    	if (m_updateInvokedCache.compareAndSet(false, true)) {
-			Object[] instances = super.getInstances(); // either the callback instance or the component instances
-			if (instances != null) {
-				for (int i = 0; i < instances.length; i++) {
-					try {
-						InvocationUtil.invokeCallbackMethod(instances[i],
-								m_add, new Class[][] {
-										{ Dictionary.class },
-										{ Component.class, Dictionary.class },
-										{} },
-								new Object[][] { 
-						            { settings }, 
-						            { m_component, settings },
-						            {} });
-					}
+    private void invokeUpdated(Dictionary<?, ?> settings) throws ConfigurationException {
+        if (m_updateInvokedCache.compareAndSet(false, true)) {
+            Object[] instances = super.getInstances(); // either the callback instance or the component instances
+            if (instances == null) {
+                return;
+            }
 
-					catch (InvocationTargetException e) {
-						// The component has thrown an exception during it's
-						// callback invocation.
-						if (e.getTargetException() instanceof ConfigurationException) {
-							// the callback threw an OSGi
-							// ConfigurationException: just re-throw it.
-							throw (ConfigurationException) e
-									.getTargetException();
-						} else {
-							// wrap the callback exception into a
-							// ConfigurationException.
-							throw new ConfigurationException(null,
-									"Configuration update failed",
-									e.getTargetException());
-						}
-					} catch (NoSuchMethodException e) {
-						// if the method does not exist, ignore it
-					} catch (Throwable t) {
-						// wrap any other exception as a ConfigurationException.
-						throw new ConfigurationException(null,
-								"Configuration update failed", t);
-					}
-				}
-			}
-    	}
+            Class<?>[][] sigs = new Class[][] { { Dictionary.class }, { Component.class, Dictionary.class }, {} };
+            Object[][] args = new Object[][] { { settings }, { m_component, settings }, {} };
+
+            if (m_configType != null) {
+                Object configurable;
+                try {
+                    configurable = Configurable.create(m_configType, settings);
+
+                    sigs = new Class[][] { { Dictionary.class }, { Component.class, Dictionary.class }, { Component.class, m_configType }, { m_configType }, {} };
+                    args = new Object[][] { { settings }, { m_component, settings }, { m_component, configurable }, { configurable }, {} };
+                }
+                catch (Exception e) {
+                    // This is not something we can recover from, use the defaults above...
+                    m_component.getLogger().warn("Failed to create configurable for method %s and configuration type %s!", e, m_add, m_configType);
+                }
+            }
+
+            for (int i = 0; i < instances.length; i++) {
+                try {
+                    InvocationUtil.invokeCallbackMethod(instances[i], m_add, sigs, args);
+                }
+                catch (InvocationTargetException e) {
+                    // The component has thrown an exception during it's callback invocation.
+                    if (e.getTargetException() instanceof ConfigurationException) {
+                        // the callback threw an OSGi ConfigurationException: just re-throw it.
+                        throw (ConfigurationException) e.getTargetException();
+                    }
+                    else {
+                        // wrap the callback exception into a ConfigurationException.
+                        throw new ConfigurationException(null, "Configuration update failed", e.getTargetException());
+                    }
+                }
+                catch (NoSuchMethodException e) {
+                    // if the method does not exist, ignore it
+                }
+                catch (Throwable t) {
+                    // wrap any other exception as a ConfigurationException.
+                    throw new ConfigurationException(null, "Configuration update failed", t);
+                }
+            }
+        }
     }
     
     private synchronized void createMetaTypeImpl() {
