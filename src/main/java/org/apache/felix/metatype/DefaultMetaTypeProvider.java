@@ -39,7 +39,7 @@ import org.osgi.service.metatype.ObjectClassDefinition;
 
 /**
  * The <code>DefaultMetaTypeProvider</code> class is an implementation of the
- * <code>MetaTypeProvider</code> interface whichis configured for a given
+ * <code>MetaTypeProvider</code> interface which is configured for a given
  * bundle using a {@link MetaData} object.
  * <p>
  * This class may be used by clients, e.g. <code>ManagedService</code> or
