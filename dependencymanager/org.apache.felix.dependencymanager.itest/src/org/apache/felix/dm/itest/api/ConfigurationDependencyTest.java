@@ -42,6 +42,26 @@ import org.osgi.service.cm.ManagedService;
 public class ConfigurationDependencyTest extends TestBase {
     final static String PID = "ConfigurationDependencyTest.pid";
     
+    /**
+     * Tests that we can provision a type-safe configuration to a component.
+     */
+    public void testComponentWithRequiredConfigurationWithTypeSafeConfiguration() {
+        DependencyManager m = getDM();
+        // helper class that ensures certain steps get executed in sequence
+        Ensure e = new Ensure();
+        // create a service provider and consumer
+        Component s1 = m.createComponent().setImplementation(new ConfigurationConsumerWithTypeSafeConfiguration(e)).add(m.createConfigurationDependency().setCallback(null, "updated", MyConfig.class).setPid(PID).setPropagate(true));
+        Component s2 = m.createComponent().setImplementation(new ConfigurationCreator(e, PID)).add(m.createServiceDependency().setService(ConfigurationAdmin.class).setRequired(true));
+        m.add(s1);
+        m.add(s2);
+        e.waitForStep(3, 5000); // component called in updated(), then in init()
+        m.remove(s1);
+        m.remove(s2);
+        // ensure we executed all steps inside the component instance
+        e.waitForStep(3, 5000); // conf creator is called in destroy and is about to delete the conf
+        e.waitForStep(4, 5000); // type safe conf consumer is destroyed
+    }
+    
     public void testComponentWithRequiredConfigurationAndServicePropertyPropagation() {
         DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
@@ -53,7 +73,7 @@ public class ConfigurationDependencyTest extends TestBase {
         m.add(s1);
         m.add(s2);
         m.add(s3);
-        e.waitForStep(4, 50000000);
+        e.waitForStep(4, 5000);
         m.remove(s1);
         m.remove(s2);
         m.remove(s3);
@@ -341,5 +361,36 @@ public class ConfigurationDependencyTest extends TestBase {
             m_ensure.step(3);
             m_runnable.run();
         }
+    }
+    
+    static interface MyConfig {
+        String getTestkey();
+    }
+
+    static class ConfigurationConsumerWithTypeSafeConfiguration {
+        private final Ensure m_ensure;
+
+        public ConfigurationConsumerWithTypeSafeConfiguration(Ensure e) {
+            m_ensure = e;
+        }
+
+        // configuration updates is always the first invoked callback (before init).
+        public void updated(Component component, MyConfig cfg) throws ConfigurationException {
+            Assert.assertNotNull(component);
+            Assert.assertNotNull(cfg);
+            m_ensure.step(2);
+            if (!"testvalue".equals(cfg.getTestkey())) {
+                Assert.fail("Could not find the configured property.");
+            }
+        }
+
+        // called after configuration has been injected.
+        public void init() {
+            m_ensure.step(3); 
+        }
+        
+        public void destroy() {
+            m_ensure.step(4); 
+        }        
     }
 }
