@@ -41,7 +41,7 @@ public class Activator extends DependencyActivatorBase {
         // Create the Dictionary Aspect
         dm.add(createAspectService(DictionaryService.class, "(lang=en)", 10)
             .setImplementation(DictionaryAspect.class)
-            .add(createConfigurationDependency().setPid(DictionaryAspectConfiguration.class.getName()))
+            .add(createConfigurationDependency().setPid(DictionaryAspectConfiguration.class.getName()).setCallback("updated", DictionaryConfiguration.class))
             .add(createServiceDependency().setService(LogService.class))); // NullObject
         
         // Create the SpellChecker component
