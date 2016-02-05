@@ -150,6 +150,13 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
         return this;
     }
     
+    /**
+     * This method indicates to ComponentImpl if the component must be instantiated when this Dependency is started.
+     * If the callback has to be invoked on the component instance, then the component
+     * instance must be instantiated at the time the Dependency is started because when "CM" calls ConfigurationDependencyImpl.updated()
+     * callback, then at this point we have to synchronously delegate the callback to the component instance, and re-throw to CM
+     * any exceptions (if any) thrown by the component instance updated callback.
+     */
     @Override
     public boolean needsInstance() {
         return m_needsInstance;
