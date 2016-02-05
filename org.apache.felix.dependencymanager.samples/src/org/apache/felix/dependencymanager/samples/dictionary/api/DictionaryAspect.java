@@ -11,12 +11,9 @@
  */
 package org.apache.felix.dependencymanager.samples.dictionary.api;
 
-import java.util.Dictionary;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.osgi.service.log.LogService;
-
-import aQute.bnd.annotation.metatype.Configurable;
 
 /**
  * This aspect applies to the English DictionaryService, and allows to decorate it with some
@@ -46,12 +43,10 @@ public class DictionaryAspect implements DictionaryService {
      * Defines a configuration dependency for retrieving our english custom words (by default,
      * our PID is our full class name).
      */
-    protected void updated(Dictionary<String, ?> config) {
+    protected void updated(DictionaryConfiguration config) {
         if (config != null) {
-            // We use the bnd "Configurable" helper in order to get an implementation for our DictionaryConfiguration interface.
-            DictionaryConfiguration cnf = Configurable.createConfigurable(DictionaryConfiguration.class, config);
             m_words.clear();
-            for (String word : cnf.words()) {
+            for (String word : config.words()) {
                 m_words.add(word);
             }
         }
