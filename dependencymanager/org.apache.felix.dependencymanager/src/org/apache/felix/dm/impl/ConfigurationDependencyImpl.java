@@ -49,11 +49,10 @@ import org.osgi.service.cm.ManagedService;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ConfigurationDependencyImpl extends AbstractDependency<ConfigurationDependency> implements ConfigurationDependency, ManagedService {
-    // Our fields are not volatile because they are "safely published" using the DM thread model (based on a Concurrent queue).
     private Dictionary<String, Object> m_settings;
 	private String m_pid;
 	private ServiceRegistration m_registration;
-	private Class<?> m_configType;
+	private volatile Class<?> m_configType;
     private MetaTypeProviderImpl m_metaType;
 	private final AtomicBoolean m_updateInvokedCache = new AtomicBoolean();
 	private final Logger m_logger;
