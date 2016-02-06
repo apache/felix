@@ -31,15 +31,15 @@ import java.lang.annotation.Target;
  * can be invoked in order to start/register (or stop/unregister) a Service at any time. When this annotation 
  * is used, then the Service on which this annotation is applied is not activated by default, and you have to 
  * call the injected Runnable yourself. 
- * <p>
+ *
  * <h3>Usage Examples</h3>
  * <blockquote>
  * 
  * <pre>
  * &#47;**
- *   * This Service will be registered programatically into the OSGi registry, using the LifecycleController annotation.
+ *   * This Service will be registered programmatically into the OSGi registry, using the LifecycleController annotation.
  *   *&#47;
- * &#64;Service
+ * &#64;Component
  * class X implements Z {
  *     &#64;LifecycleController
  *     Runnable starter
@@ -69,7 +69,7 @@ import java.lang.annotation.Target;
  *         // This method will be called after we invoke our starter Runnable, and our service will be
  *         // published after our method returns, as in normal case.
  *     }
-
+ *
  *     &#64;Stop
  *     public void stop() {
  *         // This method will be called after we invoke our "stop" Runnable, and our service will be
@@ -87,9 +87,11 @@ import java.lang.annotation.Target;
 public @interface LifecycleController
 {
     /**
-     * Specifies the action to be performed when the Injected runnable is invoked. By default, the
+     * Specifies the action to be performed when the injected runnable is invoked. By default, the
      * Runnable will fire a Service Component activation, when invoked. If you specify this attribute
      * to false, then the Service Component will be stopped, when the runnable is invoked.
+     * @return true if the component must be started when you invoke the injected runnable, or false if
+     * the component must stopped when invoking the runnable.
      */
     public boolean start() default true;
 }

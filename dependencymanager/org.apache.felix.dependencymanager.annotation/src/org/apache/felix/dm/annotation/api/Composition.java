@@ -40,7 +40,7 @@ import java.lang.annotation.Target;
  * 
  * <p> Here, the "MyComponent" component is composed of the Helper class, which is also injected with 
  * service dependencies. The lifecycle callbacks are also invoked in the Helper (if the Helper defines 
- * them):<p>
+ * them):
  * <blockquote>
  * <pre>
  *

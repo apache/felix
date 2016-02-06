@@ -27,7 +27,7 @@ import java.lang.annotation.Target;
 /**
  * This annotation describes the data types of a configuration Property.
  * It can be used by other annotations which require meta type support.
- * For now, the following annotations are using <code>PropertyMetaData</code:
+ * For now, the following annotations are using <code>PropertyMetaData</code>:
  * <ul>
  *   <li>{@link ConfigurationDependency}: This dependency allows to define a 
  *   dependency over a <code>Configuration Admin</code> configuration dictionaries, whose 
@@ -56,7 +56,7 @@ public @interface PropertyMetaData
     String id();
 
     /**
-     * Return the property primitive type. If must be either one of the following types:<p>
+     * Return the property primitive type. If must be either one of the following types:
      * <ul>
      *    <li>String.class</li>
      *    <li>Long.class</li>
@@ -67,15 +67,17 @@ public @interface PropertyMetaData
      *    <li>Float.class</li>
      *    <li>Boolean.class</li>
      * </ul>
+     * @return the property type
      */
     Class<?> type() default String.class;
 
     /**
-     * Return a default for this property. The object must be of the appropriate type as defined by the cardinality and getType(). 
+     * Return default value(s) for this property. The object must be of the appropriate type as defined by the cardinality and getType(). 
      * The return type is a list of String  objects that can be converted to the appropriate type. The cardinality of the return 
      * array must follow the absolute cardinality of this type. E.g. if the cardinality = 0, the array must contain 1 element. 
      * If the cardinality is 1, it must contain 0 or 1 elements. If it is -5, it must contain from 0 to max 5 elements. Note that 
-     * the special case of a 0 cardinality, meaning a single value, does not allow arrays or vectors of 0 elements. 
+     * the special case of a 0 cardinality, meaning a single value, does not allow arrays or vectors of 0 elements.
+     * @return the default values 
      */
     String[] defaults() default {};
 
@@ -88,20 +90,22 @@ public @interface PropertyMetaData
 
     /**
      * Return the cardinality of this property. The OSGi environment handles multi valued properties in arrays ([]) or in Vector objects. 
-     * The return value is defined as follows:<p>
+     * The return value is defined as follows:
      *
      * <ul>
      * <li> x = Integer.MIN_VALUE    no limit, but use Vector</li>
-     * <li> x < 0                    -x = max occurrences, store in Vector</li>
-     * <li> x > 0                     x = max occurrences, store in array []</li>
-     * <li> x = Integer.MAX_VALUE    no limit, but use array []</li>
-     * <li> x = 0                     1 occurrence required</li>
+     * <li> x lower than 0                    -x = max occurrences, store in Vector</li>
+     * <li> x greater than 0                     x = max occurrences, store in array []</li>
+     * <li> x equals Integer.MAX_VALUE    no limit, but use array []</li>
+     * <li> x equals 0                     1 occurrence required</li>
      * </ul>
+     * @return the property cardinality
      */
     int cardinality() default 0;
 
     /**
      * Tells if this property is required or not.
+     * @return true if the property is required, false if not
      */
     boolean required() default true;
 
@@ -116,6 +120,7 @@ public @interface PropertyMetaData
     /**
      * Return a list of option values that this property can take. This list must be in the same sequence as the {@link #optionLabels()} 
      * attribute.
+     * @return the option values
      */
    String[] optionValues() default {};
 }

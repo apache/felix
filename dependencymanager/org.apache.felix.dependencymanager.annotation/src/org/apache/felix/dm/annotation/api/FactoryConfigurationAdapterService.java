@@ -29,7 +29,7 @@ import java.lang.annotation.Target;
  * factory configuration matching the specified factoryPid, an instance of this service will be created.
  * The adapter will be registered with the specified interface, and with the specified adapter service properties.
  * Depending on the <code>propagate</code> parameter, every public factory configuration properties 
- * (which don't start with ".") will be propagated along with the adapter service properties. <p>
+ * (which don't start with ".") will be propagated along with the adapter service properties.
  * 
  * <h3>Usage Examples</h3>
  * Here, a "Dictionary" service instance is created for each existing "sample.DictionaryConfiguration" factory pids.
@@ -50,7 +50,7 @@ import java.lang.annotation.Target;
  *   String lang();
  *
  *   &#64;AD(description = "Declare here the list of words supported by this dictionary.")
- *   List<String> words();
+ *   List&#60;String&#62; words();
  * }
  * </pre>
  * </blockquote>
@@ -88,18 +88,21 @@ public @interface FactoryConfigurationAdapterService
     /**
      * The interface(s) to use when registering adapters. By default, directly implemented 
      * interfaces will be registered in the OSGi registry.
+     * @return the registered service interfaces
      */
     Class<?>[] provides() default {};
 
     /**
      * Adapter Service properties. Notice that public factory configuration is also registered in service properties,
      * (only if propagate is true). Public factory configuration properties are those which don't starts with a dot (".").
+     * @return the adapter service properties
      */
     Property[] properties() default {};
 
     /**
      * Returns the factory pid whose configurations will instantiate the annotated service class. (By default, the pid is the 
      * service class name).
+     * @return the factory pid
      */
     String factoryPid() default "";
     
@@ -107,11 +110,13 @@ public @interface FactoryConfigurationAdapterService
      * Returns the factory pid from a class name. The full class name will be used as the configuration PID.
      * You can use this method when you use an interface annoted with standard bndtols metatype annotations.
      * (see http://www.aqute.biz/Bnd/MetaType).
+     * @return the factory pid class
      */
     Class<?> factoryPidClass() default Object.class;
 
     /**
      * The Update method to invoke (defaulting to "updated"), when a factory configuration is created or updated
+     * @return the updated callback
      */
     String updated() default "updated";
 
@@ -145,6 +150,7 @@ public @interface FactoryConfigurationAdapterService
     
     /**
      * Sets the static method used to create the adapter instance.
+     * @return the factory method
      */
     String factoryMethod() default "";
 }

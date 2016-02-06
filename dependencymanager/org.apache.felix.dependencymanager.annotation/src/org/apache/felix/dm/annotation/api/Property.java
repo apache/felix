@@ -19,6 +19,7 @@
 package org.apache.felix.dm.annotation.api;
 
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -28,9 +29,10 @@ import java.lang.annotation.Target;
  * declaring {@link Component#properties()} attribute.<p>
  * 
  * Property value(s) type is String by default, and the type is scalar if the value is single-valued, 
- * or an array if the value is multi-valued.
+ * or an array if the value is multi-valued. You can apply this annotation on a component class multiple times
+ * (it's a java8 repeatable property).
  * 
- * Eight primitive types are supported:<p>
+ * Eight primitive types are supported:
  * <ul>
  * <li> String (default type)
  * <li> Long
@@ -48,17 +50,15 @@ import java.lang.annotation.Target;
  * Notice that you can also specify service properties dynamically by returning a Map from a method
  * annotated with {@link Start}.
  * 
- * <p>
  * <h3>Usage Examples</h3>
  * <blockquote>
- * 
  * <pre>
- * &#64;Component(properties={
- *     &#64;Property(name="p1", value="v")})                    // String value type (scalar)
- *     &#64;Property(name="p2", value={"s1", "s2")})            // Array of Strings
- *     &#64;Property(name="service.ranking", intValue=10)       // Integer value type (scalar)
- *     &#64;Property(name="p3", intValue={1,2})                 // Array of Integers
- *     &#64;Property(name="p3", value={"1"), type=Long.class})  // Long value (scalar)
+ * &#64;Component
+ * &#64;Property(name="p1", value="v")                      // String value type (scalar)
+ * &#64;Property(name="p2", value={"s1", "s2"})             // Array of Strings
+ * &#64;Property(name="service.ranking", intValue=10)       // Integer value type (scalar)
+ * &#64;Property(name="p3", intValue={1,2})                 // Array of Integers
+ * &#64;Property(name="p3", value="1", type=Long.class)     // Long value (scalar)
  * class ServiceImpl implements Service {
  * }
  * </pre>
@@ -67,7 +67,8 @@ import java.lang.annotation.Target;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @Retention(RetentionPolicy.CLASS)
-@Target( { ElementType.ANNOTATION_TYPE })
+@Target( { ElementType.TYPE, ElementType.ANNOTATION_TYPE })
+@Repeatable(RepeatableProperty.class)
 public @interface Property
 {
     /**
@@ -96,41 +97,49 @@ public @interface Property
     
     /**
      * A Long value or an array of Long values. 
+     * @return the long value(s). 
      */
     long[] longValue() default {};
 
     /**
      * A Double value or an array of Double values. 
+     * @return the double value(s). 
      */
     double[] doubleValue() default {};
 
     /**
      * A Float value or an array of Float values. 
+     * @return the float value(s). 
      */
     float[] floatValue() default {};
 
     /**
      * An Integer value or an array of Integer values. 
+     * @return the int value(s). 
      */
     int[] intValue() default {};
 
     /**
      * A Byte value or an array of Byte values. 
+     * @return the byte value(s). 
      */
     byte[] byteValue() default {};
 
     /**
      * A Character value or an array of Character values. 
+     * @return the char value(s). 
      */
     char[] charValue() default {};
 
     /**
-     * A Boolean value or an array of Boolean values. 
+     * A Boolean value or an array of Boolean values.
+     * @return the boolean value(s). 
      */
     boolean[] booleanValue() default {};
 
     /**
      * A Short value or an array of Short values. 
+     * @return the short value(s). 
      */
     short[] shortValue() default {};
     

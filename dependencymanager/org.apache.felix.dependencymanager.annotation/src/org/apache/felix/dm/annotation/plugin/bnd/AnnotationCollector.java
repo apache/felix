@@ -38,6 +38,7 @@ import org.apache.felix.dm.annotation.api.Init;
 import org.apache.felix.dm.annotation.api.Inject;
 import org.apache.felix.dm.annotation.api.LifecycleController;
 import org.apache.felix.dm.annotation.api.Registered;
+import org.apache.felix.dm.annotation.api.RepeatableProperty;
 import org.apache.felix.dm.annotation.api.ResourceAdapterService;
 import org.apache.felix.dm.annotation.api.ResourceDependency;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
@@ -72,6 +73,7 @@ public class AnnotationCollector extends ClassDataCollector
     private final static String A_LIFCLE_CTRL = LifecycleController.class.getName();
 
     private final static String A_COMPONENT = Component.class.getName();
+    private final static String A_REPEATABLE_PROPERTY = RepeatableProperty.class.getName();
     private final static String A_SERVICE_DEP = ServiceDependency.class.getName();
     private final static String A_CONFIGURATION_DEPENDENCY = ConfigurationDependency.class.getName();
     private final static String A_BUNDLE_DEPENDENCY = BundleDependency.class.getName();
@@ -93,7 +95,7 @@ public class AnnotationCollector extends ClassDataCollector
     private String m_method;
     private String m_descriptor;
     private Set<String> m_dependencyNames = new HashSet<String>();
-    private List<EntryWriter> m_writers = new ArrayList<EntryWriter>(); // Last elem is either Service or AspectService
+    private List<EntryWriter> m_writers = new ArrayList<EntryWriter>();
     private MetaType m_metaType;
     private String m_startMethod;
     private String m_stopMethod;
@@ -109,11 +111,9 @@ public class AnnotationCollector extends ClassDataCollector
     private String m_componentField;
     private String m_registeredMethod;
     private String m_unregisteredMethod;
-
-    /**
-     * This class represents a DependencyManager component descriptor entry.
-     * (Service, a ServiceDependency ... see EntryType enum).
-     */
+    private Annotation m_repeatableProperty;
+    private final List<EntryType> m_componentTypes = Arrays.asList(EntryType.Component, EntryType.AspectService, EntryType.AdapterService,
+        EntryType.BundleAdapterService, EntryType.ResourceAdapterService, EntryType.FactoryConfigurationAdapterService);
 
     /**
      * Makes a new Collector for parsing a given class.
@@ -263,7 +263,11 @@ public class AnnotationCollector extends ClassDataCollector
         else if (annotation.getName().getFQN().equals(A_INJECT))
         {
             parseInject(annotation);
-        }
+        } 
+        else if (annotation.getName().getFQN().equals(A_REPEATABLE_PROPERTY))
+        {
+            parseRepeatableProperties(annotation);
+        } 
     }
 
     /**
@@ -278,10 +282,24 @@ public class AnnotationCollector extends ClassDataCollector
             return false;
         }
 
-        // We must have at least a Service annotation.
-        checkServiceDeclared(EntryType.Component, EntryType.AspectService, EntryType.AdapterService,
-            EntryType.BundleAdapterService,
-            EntryType.ResourceAdapterService, EntryType.FactoryConfigurationAdapterService);
+        // We must have at least a valid component annotation type (component, aspect, or adapters)
+        
+        EntryWriter componentWriter = m_writers.stream()
+            .filter(writer -> m_componentTypes.indexOf(writer.getEntryType()) != -1)
+            .findFirst()
+            .orElseThrow(() -> new IllegalStateException(": the class " + m_className + " must be annotated with either one of the following types: " + m_componentTypes));                   
+        
+        // Add any repeated @Property annotation to the component (or to the aspect, or adapter).
+                
+        if (m_repeatableProperty != null)
+        {
+            Object[] properties = m_repeatableProperty.get("value");
+            for (Object property : properties)
+            {
+                // property is actually a @Property annotation.
+                parseProperty((Annotation) property, componentWriter);
+            }
+        }
         
         StringBuilder sb = new StringBuilder();
         sb.append("Parsed annotation for class ");
@@ -328,6 +346,15 @@ public class AnnotationCollector extends ClassDataCollector
         return m_exportService;
     }
     
+    /**
+     * Parses a Property annotation that is applied on the component class.
+     * @param property the Property annotation.
+     */
+    private void parseRepeatableProperties(Annotation repeatedProperties)
+    {
+        m_repeatableProperty = repeatedProperties;
+    }
+    
     private void parseComponentAnnotation(Annotation annotation)
     {
         EntryWriter writer = new EntryWriter(EntryType.Component);
@@ -340,7 +367,7 @@ public class AnnotationCollector extends ClassDataCollector
         writer.put(EntryParam.impl, m_className);
 
         // properties attribute
-        parseProperties(annotation, EntryParam.properties, writer);
+        parseProperties(annotation, writer);
 
         // provides attribute.
         if (writer.putClassArray(annotation, EntryParam.provides, m_interfaces, m_exportService) == 0)
@@ -642,7 +669,7 @@ public class AnnotationCollector extends ClassDataCollector
         writer.put(EntryParam.impl, m_className);
 
         // Parse Aspect properties.
-        parseProperties(annotation, EntryParam.properties, writer);
+        parseProperties(annotation, writer);
         
         // Parse field/added/changed/removed attributes
         parseAspectOrAdapterCallbackMethods(annotation, writer);
@@ -727,7 +754,7 @@ public class AnnotationCollector extends ClassDataCollector
         writer.putClass(annotation, EntryParam.adapteeService);
 
         // Parse Adapter properties.
-        parseProperties(annotation, EntryParam.properties, writer);
+        parseProperties(annotation, writer);
 
         // Parse the provided adapter service (use directly implemented interface by default).
         if (writer.putClassArray(annotation, EntryParam.provides, m_interfaces, m_exportService) == 0)
@@ -774,7 +801,7 @@ public class AnnotationCollector extends ClassDataCollector
             Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE).toString());
 
         // Parse Adapter properties.
-        parseProperties(annotation, EntryParam.properties, writer);
+        parseProperties(annotation, writer);
 
         // Parse the optional adapter service (use directly implemented interface by default).
         if (writer.putClassArray(annotation, EntryParam.provides, m_interfaces, m_exportService) == 0)
@@ -813,7 +840,7 @@ public class AnnotationCollector extends ClassDataCollector
         }
 
         // Parse Adapter properties.
-        parseProperties(annotation, EntryParam.properties, writer);
+        parseProperties(annotation, writer);
 
         // Parse the provided adapter service (use directly implemented interface by default).
         if (writer.putClassArray(annotation, EntryParam.provides, m_interfaces, m_exportService) == 0)
@@ -862,7 +889,7 @@ public class AnnotationCollector extends ClassDataCollector
         }
 
         // Parse Adapter properties.
-        parseProperties(annotation, EntryParam.properties, writer);
+        parseProperties(annotation, writer);
 
         // Parse optional meta types for configuration description.
         parseMetaTypes(annotation, factoryPid, true);
@@ -1036,96 +1063,111 @@ public class AnnotationCollector extends ClassDataCollector
      *  }
      * }
      * 
-     * @param annotation the annotation where the Param annotation is defined
-     * @param attribute the attribute name which is of Param type
-     * @param writer the object where the parsed attributes are written
+     * @param component the component annotation which contains a "properties" attribute. The component can be either a @Component, or an aspect, or an adapter.
+     * @param writer the object where the parsed attributes are written.
      */
-    private void parseProperties(Annotation annotation, EntryParam attribute, EntryWriter writer)
+    private void parseProperties(Annotation component, EntryWriter writer)
+    {            
+        Object[] properties = component.get(EntryParam.properties.toString());
+        if (properties != null)
+        {
+            for (Object property : properties)
+            {
+                Annotation propertyAnnotation = (Annotation) property;
+                parseProperty(propertyAnnotation, writer);
+            }             
+        }
+    }
+    
+    /**
+     * Parses a Property annotation. The result is added to the associated writer object
+     * @param annotation the @Property annotation.
+     * @param writer the writer object where the parsed property will be added to.
+     */
+    private void parseProperty(Annotation property, EntryWriter writer)
     {
+        EntryParam attribute = EntryParam.properties;
         try
         {
-            Object[] parameters = annotation.get(attribute.toString());
-            if (parameters != null)
+            JSONObject properties = writer.getJsonObject(attribute);
+            if (properties == null) {
+                properties = new JSONObject();
+            }
+                        
+            String name = (String) property.get("name");
+            String type = parseClassAttrValue(property.get("type"));
+            Class<?> classType;
+            try
             {
-                JSONObject properties = new JSONObject();
-                for (Object p : parameters)
-                {
-                    Annotation a = (Annotation) p;
-                    String name = (String) a.get("name");
+                classType = (type == null) ? String.class : Class.forName(type);
+            }
+            catch (ClassNotFoundException e)
+            {
+                // Theorically impossible
+                throw new IllegalArgumentException("Invalid Property type " + type
+                    + " from annotation " + property + " in class " + m_className);
+            }
 
-                    String type = parseClassAttrValue(a.get("type"));
-                    Class<?> classType;
-                    try
-                    {
-                        classType = (type == null) ? String.class : Class.forName(type);
-                    }
-                    catch (ClassNotFoundException e)
-                    {
-                        // Theorically impossible
-                        throw new IllegalArgumentException("Invalid Property type " + type
-                            + " from annotation " + annotation + " in class " + m_className);
-                    }
+            Object[] values;
 
-                    Object[] values;
+            if ((values = property.get("value")) != null)
+            {
+                values = checkPropertyType(name, classType, values);
+                addProperty(properties, name, values, classType);
+            }
+            else if ((values = property.get("values")) != null)
+            { // deprecated
+                values = checkPropertyType(name, classType, values);
+                addProperty(properties, name, values, classType);
+            }
+            else if ((values = property.get("longValue")) != null)
+            {
+                addProperty(properties, name, values, Long.class);
+            }
+            else if ((values = property.get("doubleValue")) != null)
+            {
+                addProperty(properties, name, values, Double.class);
+            }
+            else if ((values = property.get("floatValue")) != null)
+            {
+                addProperty(properties, name, values, Float.class);
+            }
+            else if ((values = property.get("intValue")) != null)
+            {
+                addProperty(properties, name, values, Integer.class);
+            }
+            else if ((values = property.get("byteValue")) != null)
+            {
+                addProperty(properties, name, values, Byte.class);
+            }
+            else if ((values = property.get("charValue")) != null)
+            {
+                addProperty(properties, name, values, Character.class);
+            }
+            else if ((values = property.get("booleanValue")) != null)
+            {
+                addProperty(properties, name, values, Boolean.class);
+            }
+            else if ((values = property.get("shortValue")) != null)
+            {
+                addProperty(properties, name, values, Short.class);
+            }
+            else
+            {
+                throw new IllegalArgumentException(
+                    "Missing Property value from annotation " + property + " in class " + m_className);
+            }
 
-                    if ((values = a.get("value")) != null)
-                    {
-                        values = checkPropertyType(name, classType, values);
-                        addProperty(properties, name, values, classType);
-                    }
-                    else if ((values = a.get("values")) != null)
-                    { // deprecated
-                        values = checkPropertyType(name, classType, values);
-                        addProperty(properties, name, values, classType);
-                    }
-                    else if ((values = a.get("longValue")) != null)
-                    {
-                        addProperty(properties, name, values, Long.class);
-                    }
-                    else if ((values = a.get("doubleValue")) != null)
-                    {
-                        addProperty(properties, name, values, Double.class);
-                    }
-                    else if ((values = a.get("floatValue")) != null)
-                    {
-                        addProperty(properties, name, values, Float.class);
-                    }
-                    else if ((values = a.get("intValue")) != null)
-                    {
-                        addProperty(properties, name, values, Integer.class);
-                    }
-                    else if ((values = a.get("byteValue")) != null)
-                    {
-                        addProperty(properties, name, values, Byte.class);
-                    }
-                    else if ((values = a.get("charValue")) != null)
-                    {
-                        addProperty(properties, name, values, Character.class);
-                    }
-                    else if ((values = a.get("booleanValue")) != null)
-                    {
-                        addProperty(properties, name, values, Boolean.class);
-                    }
-                    else if ((values = a.get("shortValue")) != null)
-                    {
-                        addProperty(properties, name, values, Short.class);
-                    }
-                    else
-                    {
-                        throw new IllegalArgumentException("Missing Property value from annotation "
-                            + annotation + " in class " + m_className);
-                    }
-                }
+            if (properties.length() > 0) {
                 writer.putJsonObject(attribute, properties);
             }
         }
         catch (JSONException e)
         {
-            throw new IllegalArgumentException("UNexpected exception while parsing Property from annotation "
-                + annotation + " in class " + m_className, e);
+            throw new IllegalArgumentException("Unexpected exception while parsing Property from class " + m_className, e);
         }
     }
-    
+
     /**
      * Checks if a property contains values that are compatible with a give primitive type.
      * 
@@ -1290,35 +1332,6 @@ public class AnnotationCollector extends ClassDataCollector
         }
     }
     
-    /**
-     * Checks if the class is annotated with some given annotations. Notice that the Service
-     * is always parsed at end of parsing, so, we have to check the last element of our m_writers
-     * List.
-     * @return true if one of the provided annotations has been found from the parsed class.
-     */
-    private void checkServiceDeclared(EntryType... types)
-    {
-        boolean ok = false;
-        if (m_writers.size() > 0)
-        {
-            for (EntryType type: types)
-            {
-                if (m_writers.get(m_writers.size() - 1).getEntryType() == type)
-                {
-                    ok = true;
-                    break;
-                }
-            }
-        }
-
-        if (!ok)
-        {
-            throw new IllegalStateException(
-                ": the class must be annotated with either one of the following types: "
-                    + Arrays.toString(types));
-        }
-    }
-
     /**
      * This method checks if the @Registered and/or @Unregistered annotations have been defined
      * while they should not, because the component does not provide a service.

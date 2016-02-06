@@ -47,7 +47,7 @@ import java.lang.annotation.Target;
  * <blockquote>
  * <pre>
  * 
- * &#64;ResourceAdapterService(filter = "(&(path=/videos/*.mkv)(host=localhost))", propagate = true)
+ * &#64;ResourceAdapterService(filter = "(&#38;(path=/videos/*.mkv)(host=localhost))", propagate = true)
  * public class VideoPlayerImpl implements VideoPlayer {
  *     // Injected by reflection
  *     URL resource;
@@ -128,31 +128,37 @@ public @interface ResourceAdapterService
 {
     /**
      * The interface(s) to use when registering adapters
+     * @return the provided interfaces
      */
     Class<?>[] provides() default {};
 
     /**
      * Additional properties to use with the adapter service registration
+     * @return the properties
      */
     Property[] properties() default {};
 
    /**
      * The filter condition to use with the resource.
+     * @return the filter
      */
     String filter();
 
     /**
      * <code>true</code> if properties from the resource should be propagated to the service properties.
+     * @return the propagate flag
      */
     boolean propagate() default false;
     
     /**
      * The callback method to be invoked when the Resource has changed.
+     * @return the changed callback
      */
     String changed() default "";
 
     /**
      * Sets the static method used to create the AdapterService implementation instance.
+     * @return the factory method
      */
     String factoryMethod() default "";
 }

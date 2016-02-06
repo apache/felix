@@ -29,7 +29,6 @@ import java.lang.annotation.Target;
  * The method is called when the component's bundle is stopped, or when one of its
  * required dependency is lost, or when a {@link LifecycleController} is programatically used to
  * stop a service.
- * </ul>
  * 
  * <h3>Usage Examples</h3>
  * <blockquote>

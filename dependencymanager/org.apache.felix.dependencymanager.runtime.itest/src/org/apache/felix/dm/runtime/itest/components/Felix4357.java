@@ -33,49 +33,37 @@ import org.osgi.framework.ServiceRegistration;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@Component(properties={
-        @Property(name="v1", value="s"),
-        @Property(name="v2", value={"s1", "s2"}),
-        @Property(name="v3", values={"s1", "s2"}),
-
-        @Property(name="v4", value="1", type=Long.class),
-        @Property(name="v5", longValue=1),
-        @Property(name="v6", longValue={1, 2}),
-        
-        @Property(name="v7", value="1", type=Double.class),
-        @Property(name="v8", doubleValue=1),
-        @Property(name="v9", doubleValue={1, 2}),
-
-        @Property(name="v10", value="1", type=Float.class),
-        @Property(name="v11", floatValue=1),
-        @Property(name="v12", floatValue={1, 2}),
-
-        @Property(name="v13", value="1", type=Integer.class),
-        @Property(name="v14", intValue=1),
-        @Property(name="v15", intValue={1, 2}),
-
-        @Property(name="v16", value="65", type=Byte.class),
-        @Property(name="v17", byteValue=65),
-        @Property(name="v18", byteValue={65, 66}),
-
-        @Property(name="v19", value="A", type=Character.class),
-        @Property(name="v20", charValue='A'),
-        @Property(name="v21", charValue={'A', 'B'}),
-
-        @Property(name="v22", value="true", type=Boolean.class),
-        @Property(name="v23", booleanValue=true),
-        @Property(name="v24", booleanValue={true, false}),
-
-        @Property(name="v25", value="1", type=Short.class),
-        @Property(name="v26", shortValue=1),
-        @Property(name="v27", shortValue={1, 2}),
-        
-        @Property(name="v28", value="65", type=Character.class),
-        @Property(name="v29", charValue=65),
-        @Property(name="v30", charValue={65, 66}),
-    },
-    provides=Felix4357.class
-)
+@Component(provides=Felix4357.class)
+@Property(name="v1", value="s")
+@Property(name="v2", value={"s1", "s2"})
+@Property(name="v3", values={"s1", "s2"})
+@Property(name="v4", value="1", type=Long.class)
+@Property(name="v5", longValue=1)
+@Property(name="v6", longValue={1, 2})
+@Property(name="v7", value="1", type=Double.class)
+@Property(name="v8", doubleValue=1)
+@Property(name="v9", doubleValue={1, 2})
+@Property(name="v10", value="1", type=Float.class)
+@Property(name="v11", floatValue=1)
+@Property(name="v12", floatValue={1, 2})
+@Property(name="v13", value="1", type=Integer.class)
+@Property(name="v14", intValue=1)
+@Property(name="v15", intValue={1, 2})
+@Property(name="v16", value="65", type=Byte.class)
+@Property(name="v17", byteValue=65)
+@Property(name="v18", byteValue={65, 66})
+@Property(name="v19", value="A", type=Character.class)
+@Property(name="v20", charValue='A')
+@Property(name="v21", charValue={'A', 'B'})
+@Property(name="v22", value="true", type=Boolean.class)
+@Property(name="v23", booleanValue=true)
+@Property(name="v24", booleanValue={true, false})
+@Property(name="v25", value="1", type=Short.class)
+@Property(name="v26", shortValue=1)
+@Property(name="v27", shortValue={1, 2})
+@Property(name="v28", value="65", type=Character.class)
+@Property(name="v29", charValue=65)
+@Property(name="v30", charValue={65, 66})
 public class Felix4357 {
     public final static String ENSURE = "Felix4357";
     

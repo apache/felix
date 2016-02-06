@@ -46,37 +46,44 @@ public @interface ServiceDependency
     /**
      * The type if the service this dependency is applying on. By default, the method parameter 
      * (or the class field) is used as the type.
+     * @return the service dependency
      */
     Class<?> service() default Object.class;
 
     /**
      * The Service dependency OSGi filter.
+     * @return the service filter
      */
     String filter() default "";
 
     /**
      * The class for the default implementation, if the dependency is not available.
+     * @return the default implementation class
      */
     Class<?> defaultImpl() default Object.class;
 
     /**
      * Whether the Service dependency is required or not.
+     * @return the required flag
      */
     boolean required() default true;
 
     /**
      * The callback method to be invoked when the service is available. This attribute is only meaningful when 
      * the annotation is applied on a class field.
+     * @return the add callback
      */
     String added() default "";
 
     /**
      * The callback method to be invoked when the service properties have changed.
+     * @return the change callback
      */
     String changed() default "";
 
     /**
      * The callback method to invoke when the service is lost.
+     * @return the remove callback
      */
     String removed() default "";
     
@@ -89,13 +96,12 @@ public @interface ServiceDependency
      * the service dependency criteria. If no service replacement is available, then any method invocation 
      * (through the dynamic proxy) will block during a configurable timeout. On timeout, an unchecked 
      * <code>IllegalStateException</code> exception is raised (but the service is not deactivated).<p>
-     * Notice that the changed/removed callbacks are not used when the timeout parameter is > -1.
-     * <p> 
+     * Notice that the changed/removed callbacks are not used when the timeout parameter is greater than -1. 
      * 
      * -1 means no timeout at all (default). 0 means that invocation on a missing service will fail 
      * immediately. A positive number represents the max timeout in millis to wait for the service availability.
      * 
-     * <p> Sample Code:<p>
+     * Sample Code:
      * <blockquote><pre>
      * &#64;Component
      * class MyServer implements Runnable {
@@ -115,6 +121,7 @@ public @interface ServiceDependency
      *     }
      *   }   
      * </pre></blockquote>
+     * @return the wait time when the dependency is unavailable
      */
     long timeout() default -1;
     
@@ -127,6 +134,7 @@ public @interface ServiceDependency
      * your named dependencies, which will then be calculated once the init() method returns.
      * 
      * <p> See {@link Init} annotation for an example usage of a dependency dynamically configured from the init method.
+     * @return the dependency name used to dynamically configure the filter and required flag from the init callback.
      */
     String name() default "";
     

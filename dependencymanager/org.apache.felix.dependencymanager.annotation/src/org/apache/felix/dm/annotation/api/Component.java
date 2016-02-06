@@ -41,7 +41,7 @@ import java.lang.annotation.Target;
  *
  * <h3>Usage Examples</h3>
  * 
- * <p> Here is a sample showing a X component, which depends on a configuration dependency:<p>
+ * Here is a sample showing a X component, which depends on a configuration dependency:
  * <blockquote>
  * 
  * <pre>
@@ -69,7 +69,7 @@ import java.lang.annotation.Target;
  * </blockquote>
  * 
  * Here is a sample showing how a Y component may dynamically instantiate several X component instances, 
- * using the {@link #factoryName()} attribute:<p>
+ * using the {@link #factoryName()} attribute:
  * <blockquote>
  * 
  * <pre>
@@ -157,11 +157,14 @@ public @interface Component
 
     /**
      * Sets list of provided interfaces. By default, the directly implemented interfaces are provided.
+     * @return the provided interfaces
      */
     Class<?>[] provides() default {};
 
     /**
-     * Sets list of provided service properties.
+     * Sets list of provided service properties. Since R7 version, Property annotation is repeatable and you can directly
+     * apply it on top of the component class multiple times, instead of using the Component properties attribute.
+     * @return the component properties.
      */
     Property[] properties() default {};
 
@@ -186,6 +189,7 @@ public @interface Component
      * using the {@value #FACTORY_INSTANCE} key. 
      * 
      * @deprecated use {@link #factoryName()} instead of a factorySet.
+     * @return the factory set name
      */
     String factorySet() default "";
     
@@ -204,6 +208,7 @@ public @interface Component
      * 
      * <p>Optionally, the dictionary registered into the factory set may provide an implementation instance for the component to be created,
      * using a "dm.runtime.factory.instance" key.
+     * @return the factory name
      */
     String factoryName() default "";
 
@@ -212,11 +217,13 @@ public @interface Component
      * {@link #factoryName()} attribute is used. If specified, then this attribute references a callback method, which is called 
      * for providing the configuration supplied by the factory that instantiated this component. The current component service properties will be 
      * also updated with all public properties (which don't start with a dot).
+     * @return the factory configure callback name
      */
     String factoryConfigure() default "";
     
     /**
      * Sets the static method used to create the components implementation instance.
+     * @return the factory method used to instantiate the component
      */
     String factoryMethod() default "";        
 }

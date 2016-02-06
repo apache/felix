@@ -40,7 +40,7 @@ import org.osgi.framework.Bundle;
  * 
  * <p> In the following example, a "VideoPlayer" Service is registered into the OSGi registry each time
  * an active bundle containing a "Video-Path" manifest header is detected:
- * <p>
+ * 
  * <blockquote>
  * <pre>
  * &#64;BundleAdapterService(filter = "(Video-Path=*)", stateMask = Bundle.ACTIVE, propagate=true)
@@ -66,31 +66,37 @@ public @Retention(RetentionPolicy.CLASS)
     /**
      * The interface(s) to use when registering adapters. By default, the interface(s) directly implemented
      * by the annotated class is (are) used.
+     * @return the interface(s) to use when registering adapters
      */
     Class<?>[] provides() default {};
     
     /**
      * Additional properties to use with the service registration
+     * @return the bundle adapter properties
      */
     Property[] properties() default {};
     
    /**
      * The filter used to match a given bundle.
+     * @return the bundle adapter filter
      */
     String filter();
     
     /**
      * the bundle state mask to apply
+     * @return the bundle state mask to apply
      */
     int stateMask() default Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE;
     
     /**
      * Specifies if manifest headers from the bundle should be propagated to the service properties.
+     * @return the propagation flag
      */
     boolean propagate() default true;
     
     /**
      * Sets the static method used to create the BundleAdapterService implementation instance.
+     * @return the factory method
      */
     String factoryMethod() default "";
 }

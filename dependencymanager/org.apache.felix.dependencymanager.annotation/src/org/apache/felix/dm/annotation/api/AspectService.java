@@ -30,7 +30,7 @@ import java.lang.annotation.Target;
  * The aspect will be applied to any service that matches the specified interface and filter and 
  * will be registered with the same interface and properties as the original service, plus any 
  * extra properties you supply here. It will also inherit all dependencies, 
- * and if you declare the original service as a member it will be injected.<p>
+ * and if you declare the original service as a member it will be injected.
  * 
  * <h3>Usage Examples</h3>
  * 
@@ -38,11 +38,12 @@ import java.lang.annotation.Target;
  * is found from the registry. The AspectService class intercepts the InterceptedService, and decorates
  * its "doWork()" method. This aspect uses a rank with value "10", meaning that it will intercept some
  * other eventual aspects with lower ranks. The Aspect also uses a service property (param=value), and 
- * include eventual service properties found from the InterceptedService:<p>
+ * include eventual service properties found from the InterceptedService:
  * <blockquote>
  * <pre>
  * 
- * &#64;AspectService(ranking=10), properties={&#64;Property(name="param", value="value")})
+ * &#64;AspectService(ranking=10))
+ * &#64;Property(name="param", value="value")
  * class AspectService implements InterceptedService {
  *     // The service we are intercepting (injected by reflection)
  *     protected InterceptedService intercepted;
@@ -62,52 +63,60 @@ public @interface AspectService
 {
     /**
      * Sets the service interface to apply the aspect to. By default, the directly implemented interface is used.
+     * @return the service aspect
      */
     Class<?> service() default Object.class;
 
     /**
      * Sets the filter condition to use with the service interface this aspect is applying to.
+     * @return the service aspect filter
      */
     String filter() default "";
     
     /**
      * Sets Additional properties to use with the aspect service registration
+     * @return the aspect service properties.
      */
     Property[] properties() default {};
     
     /**
      * Sets the ranking of this aspect. Since aspects are chained, the ranking defines the order in which they are chained.
-     * Chain ranking is implemented as a service ranking so service lookups automatically retrieve the top of the
-     * chain.
+     * Chain ranking is implemented as a service ranking so service lookups automatically retrieve the top of the chain.
+     * @return the aspect service rank
      */
     int ranking();
     
     /**
      * Sets the field name where to inject the original service. By default, the original service is injected
      * in any attributes in the aspect implementation that are of the same type as the aspect interface.
+     * @return the field used to inject the original service
      */
     String field() default "";
     
     /**
      * The callback method to be invoked when the original service is available. This attribute can't be mixed with
      * the field attribute.
+     * @return the add callback
      */
     String added() default "";
 
     /**
      * The callback method to be invoked when the original service properties have changed. When this attribute is used, 
      * then the added attribute must also be used.
+     * @return the changed callback
      */
     String changed() default "";
 
     /**
      * The callback method to invoke when the service is lost. When this attribute is used, then the added attribute 
      * must also be used.
+     * @return the remove callback
      */
     String removed() default "";
     
     /**
      * name of the callback method to invoke on swap.
+     * @return the swap callback
      */
     String swap() default "";
 
@@ -115,6 +124,7 @@ public @interface AspectService
      * Sets the static method used to create the AspectService implementation instance. The
      * default constructor of the annotated class is used. The factoryMethod can be used to provide a specific
      * aspect implements, like a DynamicProxy.
+     * @return the aspect service factory method
      */
     String factoryMethod() default "";
 }

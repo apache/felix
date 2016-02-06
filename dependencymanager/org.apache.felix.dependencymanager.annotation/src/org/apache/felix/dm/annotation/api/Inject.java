@@ -33,7 +33,6 @@ import java.lang.annotation.Target;
  * <li>Component: the component instance of the dependency manager
  * </ul>
  * 
- * <p>
  * <h3>Usage Examples</h3>
  * <blockquote>
  * 

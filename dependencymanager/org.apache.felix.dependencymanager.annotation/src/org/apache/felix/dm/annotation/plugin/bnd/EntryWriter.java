@@ -118,6 +118,22 @@ public class EntryWriter
     {
         m_json.put(param.toString(),  jsonObject);
     }
+    
+    /**
+     * Gets a json object associated to the given parameter name.
+     * @throws JSONException 
+     */
+    public JSONObject getJsonObject(EntryParam param) 
+    {
+        try
+        {
+            return (JSONObject) m_json.get(param.toString());
+        }
+        catch (JSONException e)
+        {
+            return null;
+        }
+    }
 
     /**
      * Get a String attribute value from an annotation and write it into this descriptor entry.

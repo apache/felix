@@ -27,7 +27,7 @@ import java.lang.annotation.Target;
  * Annotates a method used to configure dynamic dependencies.
  * When this method is invoked, all required dependencies (except the ones declared with a <code>name</code> 
  * attribute) are already injected, and optional dependencies on class fields 
- * are also already injected (possibly with NullObjects).<p>
+ * are also already injected (possibly with NullObjects).
  * 
  * The purpose of the @Init method is to either declare more dynamic dependencies using the DM API, or to
  * return a Map used to dynamically configure dependencies that are annotated using a <code>name</code> attribute. 
@@ -66,9 +66,9 @@ import java.lang.annotation.Target;
  * 
  *     // Dynamically configure the dependency declared with a "storage" name.
  *     &#64;Init
- *     Map<String, String> init() {
+ *     Map&#60;String, String&#62; init() {
  *        log.log(LogService.LOG_WARNING, "init: storage type=" + storageType + ", storageRequired=" + storageRequired);
- *        Map<String, String> props = new HashMap<>();
+ *        Map&#60;String, String&#62; props = new HashMap&#60;&#62;();
  *        props.put("storage.required", Boolean.toString(_xmlConfiguration.isStorageRequired()))
  *        props.put("storage.filter", "(type=" + _xmlConfiguration.getStorageType() + ")");
  *        return props;       
@@ -80,7 +80,7 @@ import java.lang.annotation.Target;
  *        log.log(LogService.LOG_WARNING, "start");
  *     }
  * 
- *     @Override
+ *     &#64;Override
  *     void store(String key, String value) {
  *        storage.store(key, value);
  *     }
