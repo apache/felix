@@ -24,33 +24,18 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * This annotation can be used to be notified when a component is unregistered from the registry. 
- * At this point, the component has been unregistered from the OSGI registry (if it provides some services).
- * The method must not take any parameters.
- * 
- * <h3>Usage Examples</h3>
- * <blockquote>
- * 
- * <pre>
- * &#64;Component
- * class X implements Z {     
- *     &#64;Stop
- *     void stop(ServiceRegistration sr) {
- *        // Our service must stop because it is about to be unregistered from the registry.
- *     }
- *     
- *     &#64;Unregistered
- *     void unregistered() {
- *        // At this point, our service has been unregistered from the OSGi registry
- *     }
- * }
- * </pre>
- * </blockquote>
+ * Annotation used to describe repeated Property annotation. You actually don't have to use directly this annotation,
+ * which is used used to allow to repeat several times the {@link Property} annotation on a given component class.
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @Retention(RetentionPolicy.CLASS)
-@Target(ElementType.METHOD)
-public @interface Unregistered
+@Target( { ElementType.TYPE, ElementType.ANNOTATION_TYPE })
+public @interface RepeatableProperty
 {
+    /**
+     * Returns the set of repeated {@link Property} applied on a given component class.
+     * @return the set of repeated {@link Property} applied on a given component class.
+     */
+    Property[] value();
 }

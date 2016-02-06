@@ -160,8 +160,9 @@ public class ResourceAdapterServiceTestWithPublisher {
             }
         }
     }
-
-    @ResourceAdapterService(filter = "(&(path=/path/to/test1.txt)(host=localhost))", properties = {@Property(name = "foo", value = "bar")}, propagate = true)
+    
+    @ResourceAdapterService(filter = "(&(path=/path/to/test1.txt)(host=localhost))", propagate = true)
+    @Property(name = "foo", value = "bar")
     public static class ProviderImpl implements Provider {
         @LifecycleController
         volatile Runnable m_publisher; // injected and used to register our service

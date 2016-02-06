@@ -30,7 +30,6 @@ import java.lang.annotation.Target;
  * a Map which will be propagated to the provided service properties.<p>
  * Service activation/deactivation can be programatically controlled using {@link LifecycleController}.
  *      
- * <p>
  * <h3>Usage Examples</h3>
  * <blockquote>
  * 

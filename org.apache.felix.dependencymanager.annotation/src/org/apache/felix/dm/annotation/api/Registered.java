@@ -29,7 +29,6 @@ import java.lang.annotation.Target;
  * When a service is registered, the ServiceRegistration used to register the service is
  * also passed to the method (if it takes a ServiceRegistration as parameter).
  * 
- * <p>
  * <h3>Usage Examples</h3>
  * <blockquote>
  * 

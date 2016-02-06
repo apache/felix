@@ -37,7 +37,7 @@ import org.osgi.framework.Bundle;
  * <p> In the following example, the "SCR" Component allows to track 
  * all bundles containing a specific "Service-Component" OSGi header, in order to load
  * and manage all Declarative Service components specified in the SCR xml documents referenced by the header:
- * <p>
+ * 
  * <blockquote>
  * <pre>
  * &#64;Component
@@ -66,32 +66,38 @@ public @interface BundleDependency
 {
     /**
      * Returns the callback method to be invoked when the service have changed.
+     * @return the change callback
      */
     String changed() default "";
 
     /**
      * Returns the callback method to invoke when the service is lost.
+     * @return the remove callback
      */
     String removed() default "";
     
     /**
      * Returns whether the dependency is required or not.
+     * @return the required flag
      */
     boolean required() default true;
     
     /**
      * Returns the filter dependency
+     * @return the filter
      */
     String filter() default "";
      
     /**
      * Returns the bundle state mask
+     * @return the state mask
      */
     int stateMask() default Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE;
 
     /**
      * Specifies if the manifest headers from the bundle should be propagated to 
      * the service properties.
+     * @return the propagation flag
      */
     boolean propagate() default false;
     
@@ -104,6 +110,7 @@ public @interface BundleDependency
      * your named dependencies, which will then be calculated once the init() method returns.
      * 
      * <p> See {@link Init} annotation for an example usage of a dependency dynamically configured from the init method.
+     * @return the dependency name used to dynamically configure the dependency from the init callback
      */
     String name() default "";
 }

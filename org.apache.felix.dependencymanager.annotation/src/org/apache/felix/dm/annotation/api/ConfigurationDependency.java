@@ -91,6 +91,7 @@ public @interface ConfigurationDependency
      * Returns the pid from a class name. The full class name will be used as the configuration PID.
      * You can use this method when you use an interface annoted with standard bndtols metatype annotations.
      * (see http://www.aqute.biz/Bnd/MetaType).
+     * @return the pid class
      */
     Class<?> pidClass() default Object.class;
 
@@ -150,6 +151,7 @@ public @interface ConfigurationDependency
      *      }
      *  }
      *  </pre></blockquote>
+     *  @return the dependency name used to configure the dependency dynamically from init callback
      */
     String name() default "";
     

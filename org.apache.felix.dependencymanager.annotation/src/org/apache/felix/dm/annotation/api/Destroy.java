@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
  * The method is called when the component's bundle is stopped, or when one of its
  * required dependency is lost (unless the dependency has been defined as an "instance bound" 
  * dependency using the Dependency Manager API).
- * </ul>
+ * 
  * 
  * <h3>Usage Examples</h3>
  * <blockquote>

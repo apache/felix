@@ -113,26 +113,31 @@ public @interface ResourceDependency
     /**
      * Returns the callback method to be invoked when the service is available. This attribute is only meaningful when 
      * the annotation is applied on a class field.
+     * @return the add callback
      */
     String added() default "";
 
     /**
      * Returns the callback method to be invoked when the service properties have changed.
+     * @return the change callback
      */
     String changed() default "";
 
     /**
      * Returns the callback method to invoke when the service is lost.
+     * @return the remove callback
      */
     String removed() default "";
 
     /**
      * Returns whether the Service dependency is required or not.
+     * @return the required flag
      */
     boolean required() default true;
     
     /**
      * Returns the Service dependency OSGi filter.
+     * @return the filter
      */
     String filter() default "";
 
@@ -140,6 +145,7 @@ public @interface ResourceDependency
      * Specifies if the resource URL properties must be propagated. If set to true, then the URL properties 
      * ("protocol"/"host"/"port"/"path") will be propagated to the service properties of the component which 
      * is using this dependency. 
+     * @return the propagate flag
      */
     boolean propagate() default false;
     
@@ -152,6 +158,7 @@ public @interface ResourceDependency
      * your named dependencies, which will then be calculated once the init() method returns.
      * 
      * <p> See {@link Init} annotation for an example usage of a dependency dynamically configured from the init method.
+     * @return the dependency name
      */
     String name() default "";   
 }
