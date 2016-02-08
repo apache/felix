@@ -360,7 +360,10 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
             if (m_configType != null) {
                 Object configurable;
                 try {
-                    configurable = Configurable.create(m_configType, settings);
+                    // if the configuration is null, it means we are losing it, and since we pass a null dictionary for other callback
+                    // (that accepts a Dictionary), then we should have the same behavior and also pass a null conf proxy object when
+                    // the configuration is lost.
+                    configurable = settings != null ? Configurable.create(m_configType, settings) : null;
 
                     sigs = new Class[][] { { Dictionary.class }, { Component.class, Dictionary.class }, { Component.class, m_configType }, { m_configType }, {} };
                     args = new Object[][] { { settings }, { m_component, settings }, { m_component, configurable }, { configurable }, {} };
