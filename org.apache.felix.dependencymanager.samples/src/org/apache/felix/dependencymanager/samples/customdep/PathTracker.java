@@ -24,18 +24,18 @@ public class PathTracker {
     volatile LogService logService;
     
     void start() {
-        logService.log(LogService.LOG_INFO, "PathTracker.start");
+        logService.log(LogService.LOG_WARNING, "PathTracker.start");
     }
     
     void stop() {
-        logService.log(LogService.LOG_INFO, "PathTracker.stop");
+        logService.log(LogService.LOG_WARNING, "PathTracker.stop");
     }
 
     void add(String path) {
-        logService.log(LogService.LOG_INFO, "PathTracker.add: " + path);
+        logService.log(LogService.LOG_WARNING, "PathTracker.add: " + path);
     }
     
     void remove(String path) {
-        logService.log(LogService.LOG_INFO, "PathTracker.remove: " + path);
+        logService.log(LogService.LOG_WARNING, "PathTracker.remove: " + path);
     }
 }

@@ -16,28 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.dependencymanager.samples.hello.api;
-
-import java.util.Dictionary;
-
-import org.osgi.service.log.LogService;
+package org.apache.felix.dependencymanager.samples.tpool;
 
 /**
- * Our service consumer. We depend on a ServiceProvider, and on a configuration.
- * 
+ * A first component that is not handled in parallel.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ServiceConsumer {
-    volatile ServiceProvider service;
-    volatile LogService log;
-    Dictionary<?, ?> conf;
-
-    protected void update(Dictionary<?, ?> conf) {
-        this.conf = conf;
+public class MyComponent {
+    private final String m_name;
+    
+    MyComponent(String name) {
+        m_name = name;
     }
 
-    public void start() {
-        log.log(LogService.LOG_WARNING, "ServiceConsumer.start: calling service.hello()");
-        this.service.hello();
+    public void start() throws InterruptedException {
+        System.out.println("Starting Component " + m_name + " current thread=" + Thread.currentThread());
     }
 }

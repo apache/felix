@@ -16,23 +16,35 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.dependencymanager.samples.tpool;
+package org.apache.felix.dependencymanager.samples.tpool.executor;
 
+import java.util.Dictionary;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import org.apache.felix.dm.Component;
+import org.apache.felix.dm.ComponentDeclaration;
 import org.apache.felix.dm.ComponentExecutorFactory;
 
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ComponentExecutorFactoryImpl implements ComponentExecutorFactory {
-    final static int SIZE = Runtime.getRuntime().availableProcessors();
-    final static Executor m_threadPool = Executors.newFixedThreadPool(SIZE);
+    final static Executor m_threadPool = Executors.newFixedThreadPool(4);
 
+    /**
+     * Make concurrent a component only if it has a "parallel=true" property.
+     */
     @Override
     public Executor getExecutorFor(Component component) {
-        return m_threadPool;
+        ComponentDeclaration decl = component.getComponentDeclaration();
+        Dictionary<String, Object> properties = decl.getServiceProperties();
+        if (properties != null && "true".equals(properties.get("parallel"))) {
+            // the component will be handled in the threadpool.
+            return m_threadPool;
+        } else {
+            // the component won't be handled in parallel.
+            return null; 
+        }
     }
 }

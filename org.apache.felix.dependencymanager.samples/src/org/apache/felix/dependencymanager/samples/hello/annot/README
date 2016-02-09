@@ -18,7 +18,13 @@
 This sample provides an example with one service consumer and a service provider, both declared
 using DM Annotations. The ServiceConsumer is also depending on a configuration pid  (see
 org.apache.felix.dependencymanager.samples.conf.Configurator).
-To see logs, just type this under gogo shell:
 
-g! log info|grep hello.annot
+Click on "hello.annot.bndrun" descriptor and run it. Then just type:
+
+g! log warn
+
+and you should see:
+
+2016.02.08 21:57:47 WARNING - Bundle: org.apache.felix.dependencymanager.samples.hello.annot - ServiceProviderImpl.hello
+2016.02.08 21:57:47 WARNING - Bundle: org.apache.felix.dependencymanager.samples.hello.annot - ServiceConsumer.start: calling service.hello() ...
 

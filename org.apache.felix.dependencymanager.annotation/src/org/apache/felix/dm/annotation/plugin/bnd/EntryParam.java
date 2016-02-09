@@ -44,6 +44,7 @@ public enum EntryParam
     autoConfig, 
     pid,
     pidClass,
+    confProxyType, // inject a proxy configuration type 
     factoryPid,
     factoryPidClass,
     propagate, 

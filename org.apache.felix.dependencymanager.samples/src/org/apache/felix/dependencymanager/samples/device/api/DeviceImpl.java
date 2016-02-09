@@ -32,4 +32,9 @@ public class DeviceImpl implements Device {
     public int getDeviceId() {
         return id;
     }
+    
+    @Override
+    public String toString() {
+        return "Device #" + id;
+    }
 }

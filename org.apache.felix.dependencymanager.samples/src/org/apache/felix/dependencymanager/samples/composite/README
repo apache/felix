@@ -17,11 +17,17 @@
 
 This sample is an example usage of DM composite components. A composite component is implemented
 using a composition of multiple object instances, which are used to implement a given complex
-service. Here, we define a "Provider" service, which is implemented by three object instances:
-ProviderImpl, ProviderParticipant1, ProviderParticipant2.
+service. In this example, we define a "Provider" service, which is implemented by three object instances:
+ProviderImpl (which is the main implementation class that provides the service), ProviderParticipant1, 
+and ProviderParticipant2.
 
 Dependencies are injected in all objects being part of the composition.
 
-To see logs, type this command under the gogo shell:
+To test, run click on the bndtools "composite.bndrun" descriptor, and run it, then type "log warn" in gogo shell: 
 
-g! log info|grep composite
+g! log warn
+
+2016.02.08 23:00:34 WARNING - Bundle: org.apache.felix.dependencymanager.samples.composite - ProviderParticipant2.start()
+2016.02.08 23:00:34 WARNING - Bundle: org.apache.felix.dependencymanager.samples.composite - ProviderParticipant1.start()
+2016.02.08 23:00:34 WARNING - Bundle: org.apache.felix.dependencymanager.samples.composite - ProviderImpl.start(): participants=ProviderParticipant1,ProviderParticipant2, conf={key=value, service.pid=org.apache.felix.dependencymanager.samples.composite.ProviderImpl}
+

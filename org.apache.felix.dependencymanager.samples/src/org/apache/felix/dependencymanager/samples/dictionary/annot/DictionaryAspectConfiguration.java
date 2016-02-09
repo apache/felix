@@ -29,7 +29,7 @@ import aQute.bnd.annotation.metatype.Meta.OCD;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@OCD(name="Spell Checker Aspect Dictionary (annotation)",
+@OCD(name="Spell Checker Aspect Dictionary",
      description = "Declare here the list of english words to be added into the default english dictionary")
 public interface DictionaryAspectConfiguration {
     @AD(description = "Dictionary aspect words")

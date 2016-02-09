@@ -27,7 +27,7 @@ import aQute.bnd.annotation.metatype.Meta.OCD;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@OCD(name = "Dynamic Dependency Configuration (annotation)",
+@OCD(name = "Dynamic Dependency Configuration",
      description = "Declare here the configuration for the DynamicDependency component.")
 public interface DynamicDependencyConfiguration {
     

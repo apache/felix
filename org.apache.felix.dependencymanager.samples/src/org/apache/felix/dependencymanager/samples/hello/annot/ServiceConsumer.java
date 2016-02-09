@@ -48,7 +48,7 @@ public class ServiceConsumer {
 
     @Start
     public void start() {
-        log.log(LogService.LOG_INFO, "ServiceConsumer.start: calling service.hello() ...");
+        log.log(LogService.LOG_WARNING, "ServiceConsumer.start: calling service.hello() ...");
         this.service.hello();
     }
 }

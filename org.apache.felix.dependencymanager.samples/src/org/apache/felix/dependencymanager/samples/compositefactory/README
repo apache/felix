@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-This Activator is an example usage of DM composite components. A composite component is implemented
+This Activator is an example usage of DM composite. A composite component is implemented
 using a composition of multiple object instances, which are used to implement a given service. 
 
 The sample also uses a Factory approach in order to instantiate the composition of objects: A
@@ -24,9 +24,10 @@ and configure all the composites.
 
 Dependencies are injected in all objects in the composition.
 
-To see logs, type this command under the gogo shell:
+To test, run click on "compositefactory.bndrun" descriptor, and run it, then type "log warn" in gogo shell: 
 
-g! log info|grep compositefactory
+g! log warn
 
-
-
+2016.02.08 22:26:05 WARNING - Bundle: org.apache.felix.dependencymanager.samples.compositefactory - ProviderParticipant2.start()
+2016.02.08 22:26:05 WARNING - Bundle: org.apache.felix.dependencymanager.samples.compositefactory - ProviderParticipant1.start()
+2016.02.08 22:26:05 WARNING - Bundle: org.apache.felix.dependencymanager.samples.compositefactory - ProviderImpl.start(): participants=ProviderParticipant1,ProviderParticipant2

@@ -17,7 +17,13 @@
 
 This sample provides a DM Activator declaring one service consumer and a service provider. The
 ServiceConsumer is also depending on a configuration pid  (see org.apache.felix.dependencymanager.samples.conf.Configurator).
-To see logs, just type this under gogo shell:
 
-g! log info|grep hello.annot
+Click on "hello.api.bndrun" descriptor and run it. Then just type:
+
+g! log warn
+
+and you should see:
+
+2016.02.08 21:59:31 WARNING - Bundle: org.apache.felix.dependencymanager.samples.hello.api - ServiceProviderImpl.hello
+2016.02.08 21:59:31 WARNING - Bundle: org.apache.felix.dependencymanager.samples.hello.api - ServiceConsumer.start: calling service.hello()
 

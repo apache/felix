@@ -18,6 +18,9 @@
  */
 package org.apache.felix.dependencymanager.samples.tpool;
 
+import java.util.Properties;
+
+import org.apache.felix.dependencymanager.samples.tpool.executor.ComponentExecutorFactoryImpl;
 import org.apache.felix.dm.ComponentExecutorFactory;
 import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.DependencyManager;
@@ -32,7 +35,18 @@ public class Activator extends DependencyActivatorBase {
     @Override
     public void init(BundleContext context, DependencyManager mgr) throws Exception {
         mgr.add(createComponent()
-            .setInterface(ComponentExecutorFactory.class.getName(), null)
-            .setImplementation(ComponentExecutorFactoryImpl.class));
+           .setInterface(ComponentExecutorFactory.class.getName(), null)
+           .setImplementation(ComponentExecutorFactoryImpl.class));
+        
+        // Create two synchronous components
+        mgr.add(createComponent().setImplementation(new MyComponent("Component 1")));
+        mgr.add(createComponent().setImplementation(new MyComponent("Component 2")));
+
+        // And two components which will be managed and started concurrently.
+        Properties properties = new Properties();
+        properties.put("parallel", "true");
+
+        mgr.add(createComponent().setImplementation(new MyComponent("Parallel Component 3")).setServiceProperties(properties));
+        mgr.add(createComponent().setImplementation(new MyComponent("Parallel Component 4")).setServiceProperties(properties));
     }
 }

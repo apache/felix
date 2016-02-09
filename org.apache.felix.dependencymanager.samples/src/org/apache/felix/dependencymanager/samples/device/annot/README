@@ -25,6 +25,20 @@ a "DeviceAccess" service, which provides the union of each pair of Device/Device
 same device.id . The adapter also dynamically propagate the service properties of the adapted Device
 service.
 
-So see logs, just type this command under gogo shell:
+Start the test by clicking on the "device.annot.bndrun" descriptor, then run it, and type under gogo shell:
 
-g! log info|grep device.annot
+g! log warn
+
+2016.02.08 22:05:45 WARNING - Bundle: org.apache.felix.dependencymanager.samples.device.annot - Handling device access: id=1
+	 device=Device #1
+	 device parameter=DeviceParameter #1
+	 device access properties={service.bundleid=12, service.id=31, service.scope=singleton, objectClass=[Ljava.lang.String;@6e38921c, device.id=1, device.access.id=1}
+2016.02.08 22:05:45 WARNING - Bundle: org.apache.felix.dependencymanager.samples.device.annot - DeviceAccessImpl.start
+2016.02.08 22:05:45 WARNING - Bundle: org.apache.felix.dependencymanager.samples.device.annot - DeviceAccessImpl.init: device id=1
+2016.02.08 22:05:45 WARNING - Bundle: org.apache.felix.dependencymanager.samples.device.annot - Handling device access: id=0
+	 device=Device #0
+	 device parameter=DeviceParameter #0
+	 device access properties={service.bundleid=12, service.id=28, service.scope=singleton, device.id=0, objectClass=[Ljava.lang.String;@6e38921c, device.access.id=0}
+2016.02.08 22:05:45 WARNING - Bundle: org.apache.felix.dependencymanager.samples.device.annot - DeviceAccessImpl.start
+2016.02.08 22:05:45 WARNING - Bundle: org.apache.felix.dependencymanager.samples.device.annot - DeviceAccessImpl.init: device id=0
+

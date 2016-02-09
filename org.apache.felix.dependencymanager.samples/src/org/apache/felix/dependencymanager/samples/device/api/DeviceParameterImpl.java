@@ -32,4 +32,9 @@ public class DeviceParameterImpl implements DeviceParameter {
     public int getDeviceId() {
         return id;
     }
+    
+    @Override
+    public String toString() {
+        return "DeviceParameter #" + id;
+    }
 }

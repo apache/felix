@@ -41,6 +41,6 @@ public class ProviderImpl implements Provider {
     }
 
     void start() {
-        m_log.log(LogService.LOG_INFO, "ProviderImpl.start(): participants=" + m_participant1 + "," + m_participant2);
+        m_log.log(LogService.LOG_WARNING, "ProviderImpl.start(): participants=" + m_participant1 + "," + m_participant2);
     }
 }

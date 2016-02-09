@@ -64,5 +64,6 @@ public enum Params
     dependencyManagerField, 
     componentField,
     registered, 
-    unregistered
+    unregistered,
+    confProxyType
 }
