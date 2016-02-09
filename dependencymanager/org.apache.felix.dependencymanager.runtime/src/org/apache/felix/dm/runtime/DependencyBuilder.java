@@ -71,7 +71,7 @@ public class DependencyBuilder
                 break;
 
             case ConfigurationDependency:
-                dp = createConfigurationDependency(dm);
+                dp = createConfigurationDependency(b, dm);
                 break;
 
             case BundleDependency:
@@ -137,17 +137,17 @@ public class DependencyBuilder
         return sd;
     }
 
-    private Dependency createConfigurationDependency(DependencyManager dm)
+    private Dependency createConfigurationDependency(Bundle b, DependencyManager dm) throws Exception
     {
+        String confProxyType = m_metaData.getString(Params.confProxyType, null);
         String pid = m_metaData.getString(Params.pid);
         boolean propagate = "true".equals(m_metaData.getString(Params.propagate, "false"));
         String callback = m_metaData.getString(Params.updated, "updated");
-        Dependency dp = createConfigurationDependency(dm, pid, callback, propagate);
-        return dp;
+        return createConfigurationDependency(dm, b, pid, callback, confProxyType, propagate);
     }
 
-    private Dependency createConfigurationDependency(DependencyManager dm, String pid, String callback,
-    	boolean propagate)
+    private Dependency createConfigurationDependency(DependencyManager dm, Bundle b, String pid, String callback, String confProxyType, boolean propagate) 
+        throws ClassNotFoundException
     {
         if (pid == null)
         {
@@ -156,7 +156,15 @@ public class DependencyBuilder
         }
         ConfigurationDependency cd = dm.createConfigurationDependency();
         cd.setPid(pid);
-        cd.setCallback(callback);
+        if (confProxyType != null) 
+        {
+            Class<?> confProxyTypeClass = b.loadClass(confProxyType); 
+            cd.setCallback(callback, confProxyTypeClass);            
+        }
+        else
+        {
+            cd.setCallback(callback);            
+        }
         cd.setPropagate(propagate);
         return cd;
     }

@@ -52,12 +52,9 @@ public class DictionaryAspect implements DictionaryService {
      * Defines a configuration dependency for retrieving our english custom words (by default,
      * our PID is our full class name).
      */
-    @ConfigurationDependency(pidClass = DictionaryAspectConfiguration.class, propagate = false)
-    protected void updated(Dictionary<String, ?> config) {
-        if (config != null) {
-            // We use the bnd "Configurable" helper in order to get an implementation for our DictionaryConfiguration interface.
-            DictionaryConfiguration cnf = Configurable.createConfigurable(
-                DictionaryConfiguration.class, config);
+    @ConfigurationDependency(propagate = false)
+    protected void updated(DictionaryAspectConfiguration cnf) {
+        if (cnf != null) {
             m_words.clear();
             for (String word : cnf.words()) {
                 m_words.add(word);

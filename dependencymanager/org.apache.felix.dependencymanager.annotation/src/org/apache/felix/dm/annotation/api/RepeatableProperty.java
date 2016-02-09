@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
 
 /**
  * Annotation used to describe repeated Property annotation. You actually don't have to use directly this annotation,
- * which is used used to allow to repeat several times the {@link Property} annotation on a given component class.
+ * which is used to allow repeating several times the {@link Property} annotation on a given component class.
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */

@@ -21,6 +21,7 @@ package org.apache.felix.dm.annotation.plugin.bnd;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -622,9 +623,58 @@ public class AnnotationCollector extends ClassDataCollector
         EntryWriter writer = new EntryWriter(EntryType.ConfigurationDependency);
         m_writers.add(writer);
 
-        // pid attribute (can be specified using the pid attribute, or using the classPid attribute)
+        // The pid is either:
+        //
+        // - the fqdn of the configuration proxy type, if the callback accepts an interface (not a Dictionary).
+        // - or the fqdn of the class specified by the pidFromClass attribute 
+        // - or the value of the pid attribute
+        // - or by default the fdqn of the class where the annotation is found
+
         String pidFromClass = parseClassAttrValue(annotation.get(EntryParam.pidClass.toString()));
-        String pid = pidFromClass != null ? pidFromClass : get(annotation, EntryParam.pid.toString(), m_className);
+        String pid = pidFromClass != null ? pidFromClass : get(annotation, EntryParam.pid.toString(), null);
+
+        // Check if annotation is applied on "updated(ConfigProxyType)"
+        String confProxyType =   Patterns.parseClass(m_descriptor, Patterns.BIND_CLASS5, 1, false);
+        if (confProxyType != null)
+        {
+            if (! Dictionary.class.getName().equals(confProxyType)) 
+            {
+                // It's a conf proxy type.
+                writer.put(EntryParam.confProxyType, confProxyType);
+            }
+            else
+            {
+                confProxyType = null;
+            }
+            
+        } 
+        else
+        {
+            // Check if annotation is applied on "updated(Component, ConfigProxyType)"
+            confProxyType = Patterns.parseClass(m_descriptor, Patterns.BIND_CLASS2, 2, false); 
+            m_logger.warn("XX:%s/%s", m_descriptor, confProxyType);
+            if (! Dictionary.class.getName().equals(confProxyType)) 
+            {
+                // It's a conf proxy type.
+                writer.put(EntryParam.confProxyType, confProxyType);
+            }
+            else
+            {
+                confProxyType = null;
+            }
+        }
+        
+        if (pid == null) 
+        {
+            if (confProxyType != null)
+            {
+                pid = confProxyType;
+            }
+            else 
+            {
+                pid = m_className;
+            }
+        }
 
         writer.put(EntryParam.pid, pid);
         

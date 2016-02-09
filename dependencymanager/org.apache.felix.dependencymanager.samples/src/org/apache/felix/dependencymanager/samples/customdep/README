@@ -20,15 +20,15 @@ This dependency tracks all created files in /tmp and injects them in the PathTra
 
 The PathDependendency is a low level DM example, but shows how to create any custom dependencies.
 
-To test this sample, start the samples under bndtools, then type:
+To test this sample, start the "customdep.bndrun" descriptor, then create a file in /tmp:
 
-   g! log info|grep customdep
+   $ echo "test" > /tmp/foo
 
-Then create a "test" file under /tmp:
+Then display logs (your Tracker component has normally been injected with the added file and has been started):
 
-   $ echo "test" > /tmp/test
-
-Then redisplay logs (your Tracker component has normally been injected with the added file and has been started):
-
-   g! log info|grep customdep
+   g! log warn
+   
+2016.02.08 22:17:46 WARNING - Bundle: org.apache.felix.dependencymanager.samples.customdep - PathTracker.start
+2016.02.08 22:17:46 WARNING - Bundle: org.apache.felix.dependencymanager.samples.customdep - PathTracker.add: foo
+   
 

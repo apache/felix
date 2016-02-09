@@ -29,7 +29,7 @@ import aQute.bnd.annotation.metatype.Meta.OCD;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@OCD(name="Spell Checker Dictionary (api)",
+@OCD(name="Spell Checker Dictionary",
      factory = true, 
      description = "Declare here some Dictionary instances, allowing to instantiates some DictionaryService services for a given dictionary language")
 public interface DictionaryConfiguration {

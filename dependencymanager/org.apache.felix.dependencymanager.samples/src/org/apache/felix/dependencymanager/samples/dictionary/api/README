@@ -23,22 +23,23 @@ internally used by the SpellChecker command, when checking word existence.
 
 A DictionaryService is defined using a FactoryConfigurationAdapterService , allowing to instantiate
 many "DictionaryService" instances when some configurations are added to the
-"Spell Checker Configuration (api)" factory pid from web
+"Spell Checker Configuration" factory pid from web
 console. The factory pid configuration metatypes are defined using the bnd "metatype" annotations
 (see DictionaryConfiguration.java).
 
 The DictionaryService is decorated with a DictionaryAspect, which you can instantiate by adding a
-configuration to the "Spell Checker Aspect Dictionary (api)" pid from web console. The
+configuration to the "Spell Checker Aspect Dictionary" pid from web console. The
 aspect configuration metatype is also declared using the bnd metatype annotations (see
 DictionaryAspectConfiguration.java). 
 
-Before running this sample, go to webconsole (http://localhost:8080/system/console/configMgr), and add some 
-words in the "Spell Checker Dictionary (api)" and in the "Spell Checker Aspect Dictionary (api)" configurations.
+Start the test: click on "dictionary.api.bndrun" descriptor, and run it.
+Then go to webconsole (http://localhost:8080/system/console/configMgr), and add some words in the 
+"Spell Checker Dictionary" section, and in the "Spell Checker Aspect Dictionary" configurations.
 
-Then go to gogo shell, and type dm help. You will normally see the dictionary:spellcheck command.
+Then go to gogo shell, and type dm help. You will normally see the dictionary.annotation:spellcheck command.
 Then type:
+ 
+   spellcheck <some words that you have configured in webconsole>
 
-  dictionary:spellcheck <some words that you have configured in webconsole> 
-
-and the command will check for proper word existence in the configuration.
+and the command will check for proper word existence.
 

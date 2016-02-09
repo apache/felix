@@ -24,7 +24,17 @@ a "DeviceAccess" service, which provides the union of each pair of Device/Device
 same device.id . The adapter also dynamically propagate the service properties of the adapted Device
 service.
 
-So see logs, just type this command under gogo shell:
+Start the test by clicking on the "device.api.bndrun" descriptor, then run it, and type under gogo shell:
 
-g! log info|grep device.api
+g! log warn
 
+You will then see:
+
+2016.02.08 23:04:46 WARNING - Bundle: org.apache.felix.dependencymanager.samples.device.api - DeviceAccessConsumer: Handling device access: id=2
+	 device=Device #2
+	 device parameter=DeviceParameter #2
+	 device access properties={service.bundleid=12, service.id=28, service.scope=singleton, objectClass=[Ljava.lang.String;@679b62af, device.access.id=2, device.id=2}
+2016.02.08 23:04:46 WARNING - Bundle: org.apache.felix.dependencymanager.samples.device.api - DeviceAccessConsumer: Handling device access: id=1
+	 device=Device #1
+	 device parameter=DeviceParameter #1
+	 device access properties={service.bundleid=12, service.id=29, service.scope=singleton, objectClass=[Ljava.lang.String;@679b62af, device.id=1, device.access.id=1}

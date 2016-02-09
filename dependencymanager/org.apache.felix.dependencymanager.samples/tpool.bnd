@@ -14,8 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-Private-Package:  \
-	org.apache.felix.dependencymanager.samples.tpool
+Private-Package: \
+	org.apache.felix.dependencymanager.samples.tpool,\
+	org.apache.felix.dependencymanager.samples.tpool.executor
 Bundle-Activator: org.apache.felix.dependencymanager.samples.tpool.Activator
 Bundle-Description: Dependency Manager threadpool used by examples 
 Bundle-Name: Dependency Manager Examples ThreadPool

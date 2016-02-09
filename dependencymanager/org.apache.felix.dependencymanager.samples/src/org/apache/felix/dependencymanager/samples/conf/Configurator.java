@@ -38,8 +38,8 @@ public class Configurator {
     
     public void start() {
         try {
-            System.out.println("Configuring sample components ... please consult log service messages for each sample you want to play with.");
-            System.out.println("For example: \"log info|grep org.apache.felix.dependencymanager.samples.device.api\"");
+            System.out.println("Configuring sample components ... please consult log messages to see example output, like this:");
+            System.out.println("\"log warn\"");
             // Provide configuration to the hello.ServiceConsumer component
             m_serviceConsumerConf = m_ca.getConfiguration("org.apache.felix.dependencymanager.samples.hello.api.ServiceConsumer", null);
             Hashtable<String, String> props = new Hashtable<>();
