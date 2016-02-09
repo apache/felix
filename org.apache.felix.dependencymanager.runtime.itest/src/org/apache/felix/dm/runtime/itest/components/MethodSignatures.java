@@ -77,11 +77,17 @@ public class MethodSignatures {
 		Ensure m_ensure;
 	}
 	
+	public interface ConsumerConfig {
+	    String getFoo();
+	}
+	
 	// This consumer depends on the configuration and on the provider, using multiple method signatures.
 	@Component
 	public static class Consumer {
 		Dictionary<String, Object> m_properties;
 		Dictionary<String, Object> m_properties2;
+		ConsumerConfig m_config;
+        ConsumerConfig m_config2;
 
 		@ConfigurationDependency
 		void updated(Dictionary<String, Object> properties) {
@@ -92,6 +98,19 @@ public class MethodSignatures {
 		void updated2(org.apache.felix.dm.Component component, Dictionary<String, Object> properties) {
 			Assert.assertNotNull(component);
 			m_properties2 = properties;			
+		}
+		
+		@ConfigurationDependency(pidClass=Consumer.class)
+		void updated3(ConsumerConfig cnf) {
+		    Assert.assertNotNull(cnf);
+		    m_config = cnf;         
+		}
+
+		@ConfigurationDependency(pidClass=Consumer.class)
+		void updated4(org.apache.felix.dm.Component comp, ConsumerConfig cnf) {
+		    Assert.assertNotNull(comp);
+		    Assert.assertNotNull(cnf);
+		    m_config2 = cnf;         
 		}
 
 		@ServiceDependency(filter="(name=" + ENSURE_SERVICE_DEPENDENCY + ")")
@@ -167,6 +186,9 @@ public class MethodSignatures {
 			Assert.assertNotNull(m_properties2);
 			Assert.assertEquals("bar", m_properties.get("foo"));
 			Assert.assertEquals("bar", m_properties2.get("foo"));
+			Assert.assertNotNull(m_config);
+			Assert.assertEquals("bar", m_config.getFoo());
+			Assert.assertEquals("bar", m_config2.getFoo());
 			m_ensure.step(10);
 		}
 	}
