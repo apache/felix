@@ -27,7 +27,6 @@ import java.util.Map;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentStateListener;
-import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ServiceDependency;
 import org.apache.felix.dm.context.DependencyContext;

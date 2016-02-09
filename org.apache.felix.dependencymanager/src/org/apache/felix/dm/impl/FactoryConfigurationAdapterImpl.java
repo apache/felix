@@ -24,17 +24,17 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 
 import org.apache.felix.dm.Component;
-import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Logger;
 import org.apache.felix.dm.PropertyMetaData;
-import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.impl.metatype.MetaTypeProviderImpl;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.service.cm.ManagedServiceFactory;
 import org.osgi.service.metatype.MetaTypeProvider;
 import org.osgi.service.metatype.ObjectClassDefinition;
+
+import static org.apache.felix.dm.impl.ConfigurationDependencyImpl.createCallbackType;
 
 /**
  * Factory configuration adapter service implementation. This class extends the FilterService in order to catch
@@ -49,7 +49,7 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
     // Our logger
     protected final Logger m_logger;
     
-    public FactoryConfigurationAdapterImpl(DependencyManager dm, String factoryPid, String update, boolean propagate, Object updateCallbackInstance) {
+    public FactoryConfigurationAdapterImpl(DependencyManager dm, String factoryPid, String update, boolean propagate, Object updateCallbackInstance, Class<?> configType) {
         super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
         m_factoryPid = factoryPid;
         m_logger = ((ComponentImpl) m_component).getLogger();
@@ -58,7 +58,7 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
         props.put(Constants.SERVICE_PID, factoryPid);
         m_component
             .setInterface(ManagedServiceFactory.class.getName(), props)
-            .setImplementation(new AdapterImpl(update, propagate, updateCallbackInstance))
+            .setImplementation(new AdapterImpl(update, propagate, updateCallbackInstance, configType))
             .setCallbacks("init", null, "stop", null);
     }
     
@@ -80,7 +80,7 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
     public String getName() {
         return "Adapter for factory pid " + m_factoryPid;
     }
-    
+
     /**
      * Creates, updates, or removes a service, when a ConfigAdmin factory configuration is created/updated or deleted.
      */
@@ -93,6 +93,9 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
         
         // A specific callback instance where the update callback is invoked on (or null if default component instances should be used).
         protected final Object m_updateCallbackInstance;
+        
+        // the configuration type to use as alternative to the dictionary/map when propagating the configuration to the service
+        protected final Class<?> m_configType;
 
         /**
          * Creates a new CM factory configuration adapter.
@@ -105,10 +108,11 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
          * @param propagate
          * @param updateCallbackObject null if update should be called on all component instances (composition), or a specific update callback instance.
          */
-        public AdapterImpl(String updateMethod, boolean propagate, Object updateCallbackObject) {
+        public AdapterImpl(String updateMethod, boolean propagate, Object updateCallbackObject, Class<?> configType) {
             m_update = updateMethod;
             m_propagate = propagate;
             m_updateCallbackInstance = updateCallbackObject;
+            m_configType = configType;
         }
 
         /**
@@ -142,23 +146,23 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
             
             // Instantiate the component, because we need to invoke the updated callback synchronously, in the CM calling thread.
             ((ComponentImpl) newService).instantiateComponent();
-                        
-            try {                
-                for (Object instance : getCompositionInstances(newService)) {
-                    InvocationUtil.invokeCallbackMethod(instance, m_update, 
-                        new Class[][] {
-                            {Dictionary.class},
-                            {Component.class, Dictionary.class},
-                            {}}, 
-                        new Object[][] {
-                            {settings}, 
-                            {newService, settings},
-                            {}});
+
+            CallbackTypeDef callbackInfo = createCallbackType(m_logger, newService, m_configType, settings);
+
+            for (Object instance : getCompositionInstances(newService)) {
+                try {
+                    InvocationUtil.invokeCallbackMethod(instance, m_update, callbackInfo.m_sigs, callbackInfo.m_args);
                 }
-            }
-            
-            catch (Throwable t) {
-               handleException(t); // will rethrow a runtime exception.
+                catch (InvocationTargetException e) {
+                    // The component has thrown an exception during it's callback invocation.
+                    handleException(e.getTargetException());
+                }
+                catch (NoSuchMethodException e) {
+                    // if the method does not exist, ignore it
+                }
+                catch (Throwable t) {
+                    handleException(t); // will rethrow a runtime exception.
+                }
             }
 
             return newService;
@@ -174,18 +178,11 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
             Component service = (Component) properties[1];
             Object[] instances = getUpdateCallbackInstances(service);
 
+            CallbackTypeDef callbackInfo = createCallbackType(m_logger, service, m_configType, cmSettings);
+
             try {
                 for (Object instance : instances) {
-                    InvocationUtil.invokeCallbackMethod(instance, m_update, 
-                        new Class[][] {
-                            { Dictionary.class },
-                            { Component.class, Dictionary.class },
-                            {}}, 
-                        new Object[][] {
-                            { cmSettings }, 
-                            { service, cmSettings },
-                        {}
-                    });
+                    InvocationUtil.invokeCallbackMethod(instance, m_update, callbackInfo.m_sigs, callbackInfo.m_args); 
                 }
                 if (m_serviceInterfaces != null && m_propagate == true) {
                     Dictionary<String, ?> serviceProperties = getServiceProperties(cmSettings);
@@ -251,11 +248,10 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
                     }
                 }
             }
-
             
             return props;
         }
-        
+
         private void handleException(Throwable t) {
             m_logger.log(Logger.LOG_ERROR, "Got exception while handling configuration update for factory pid " + m_factoryPid, t);
             if (t instanceof InvocationTargetException) {
@@ -285,7 +281,7 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
                                    BundleContext bctx, Logger logger, String heading, 
                                    String description, String localization,
                                    PropertyMetaData[] properyMetaData) {
-            super(updateMethod, propagate, updateCallbackInstance);
+            super(updateMethod, propagate, updateCallbackInstance, null /* configType */);
             m_metaType = new MetaTypeProviderImpl(m_factoryPid, bctx, logger, null, this);
             m_metaType.setName(heading);
             m_metaType.setDescription(description);

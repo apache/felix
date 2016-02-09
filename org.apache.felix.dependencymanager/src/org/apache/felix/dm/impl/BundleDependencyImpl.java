@@ -234,7 +234,8 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
             Bundle bundle = (Bundle) event.getEvent();
             if (m_propagateCallbackInstance != null && m_propagateCallbackMethod != null) {
                 try {
-                    return (Dictionary<String, Object>) InvocationUtil.invokeCallbackMethod(m_propagateCallbackInstance, m_propagateCallbackMethod, new Class[][] {{ Bundle.class }}, new Object[][] {{ bundle }});
+                    CallbackTypeDef callbackInfo = new CallbackTypeDef(Bundle.class, bundle);
+                    return (Dictionary<String, Object>) InvocationUtil.invokeCallbackMethod(m_propagateCallbackInstance, m_propagateCallbackMethod, callbackInfo.m_sigs, callbackInfo.m_args);
                 }
                 catch (InvocationTargetException e) {
                     m_component.getLogger().warn("Exception while invoking callback method", e.getCause());

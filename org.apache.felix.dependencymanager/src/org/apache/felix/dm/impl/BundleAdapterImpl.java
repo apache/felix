@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentStateListener;
-import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.context.DependencyContext;
 import org.osgi.framework.Bundle;

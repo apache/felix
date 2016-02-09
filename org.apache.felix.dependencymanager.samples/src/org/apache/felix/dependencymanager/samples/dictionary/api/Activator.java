@@ -33,7 +33,7 @@ public class Activator extends DependencyActivatorBase {
     @Override
     public void init(BundleContext context, DependencyManager dm) throws Exception {
         // Create the factory configuration for our DictionaryImpl service.
-        dm.add(createFactoryConfigurationAdapterService(DictionaryConfiguration.class.getName(), "updated", true)
+        dm.add(createFactoryConfigurationAdapterService(DictionaryConfiguration.class.getName(), "updated", true, DictionaryConfiguration.class)
             .setInterface(DictionaryService.class.getName(), null)
             .setImplementation(DictionaryImpl.class)
             .add(createServiceDependency().setService(LogService.class))); // NullObject 

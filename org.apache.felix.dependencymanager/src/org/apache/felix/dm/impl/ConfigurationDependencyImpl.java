@@ -347,6 +347,38 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
         }
     }
     
+    /**
+     * Creates the various signatures and arguments combinations used for the configuration-type style callbacks.
+     * 
+     * @param service the service for which the callback should be applied;
+     * @param configType the configuration type to use (can be <code>null</code>);
+     * @param settings the actual configuration settings.
+     */
+    static CallbackTypeDef createCallbackType(Logger logger, Component service, Class<?> configType, Dictionary<?, ?> settings) {
+        Class<?>[][] sigs = new Class[][] { { Dictionary.class }, { Component.class, Dictionary.class }, {} };
+        Object[][] args = new Object[][] { { settings }, { service, settings }, {} };
+
+        if (configType != null) {
+            try {
+                // if the configuration is null, it means we are losing it, and since we pass a null dictionary for other callback
+                // (that accepts a Dictionary), then we should have the same behavior and also pass a null conf proxy object when
+                // the configuration is lost.
+                Object configurable = settings != null ? Configurable.create(configType, settings) : null;
+                
+                logger.debug("Using configuration-type injecting using %s as possible configType.", configType.getSimpleName());
+
+                sigs = new Class[][] { { Dictionary.class }, { Component.class, Dictionary.class }, { Component.class, configType }, { configType }, {} };
+                args = new Object[][] { { settings }, { service, settings }, { service, configurable }, { configurable }, {} };
+            }
+            catch (Exception e) {
+                // This is not something we can recover from, use the defaults above...
+                logger.warn("Failed to create configurable for configuration type %s!", e, configType);
+            }
+        }
+
+        return new CallbackTypeDef(sigs, args);
+    }
+
     private void invokeUpdated(Dictionary<?, ?> settings) throws ConfigurationException {
         if (m_updateInvokedCache.compareAndSet(false, true)) {
             Object[] instances = super.getInstances(); // either the callback instance or the component instances
@@ -354,29 +386,11 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
                 return;
             }
 
-            Class<?>[][] sigs = new Class[][] { { Dictionary.class }, { Component.class, Dictionary.class }, {} };
-            Object[][] args = new Object[][] { { settings }, { m_component, settings }, {} };
-
-            if (m_configType != null) {
-                Object configurable;
-                try {
-                    // if the configuration is null, it means we are losing it, and since we pass a null dictionary for other callback
-                    // (that accepts a Dictionary), then we should have the same behavior and also pass a null conf proxy object when
-                    // the configuration is lost.
-                    configurable = settings != null ? Configurable.create(m_configType, settings) : null;
-
-                    sigs = new Class[][] { { Dictionary.class }, { Component.class, Dictionary.class }, { Component.class, m_configType }, { m_configType }, {} };
-                    args = new Object[][] { { settings }, { m_component, settings }, { m_component, configurable }, { configurable }, {} };
-                }
-                catch (Exception e) {
-                    // This is not something we can recover from, use the defaults above...
-                    m_component.getLogger().warn("Failed to create configurable for method %s and configuration type %s!", e, m_add, m_configType);
-                }
-            }
+            CallbackTypeDef callbackInfo = createCallbackType(m_logger, m_component, m_configType, settings);
 
             for (int i = 0; i < instances.length; i++) {
                 try {
-                    InvocationUtil.invokeCallbackMethod(instances[i], m_add, sigs, args);
+                    InvocationUtil.invokeCallbackMethod(instances[i], m_add, callbackInfo.m_sigs, callbackInfo.m_args);
                 }
                 catch (InvocationTargetException e) {
                     // The component has thrown an exception during it's callback invocation.

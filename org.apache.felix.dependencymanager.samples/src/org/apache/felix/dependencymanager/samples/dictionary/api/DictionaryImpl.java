@@ -61,16 +61,11 @@ public class DictionaryImpl implements DictionaryService {
      * Our service will be initialized from ConfigAdmin.
      * @param config The configuration where we'll lookup our words list (key=".words").
      */
-    protected void updated(Dictionary<String, ?> config) {
-        if (config != null) {
-            // We use the bnd "Configurable" helper in order to get an implementation for our DictionaryConfiguration interface.
-            DictionaryConfiguration cnf = Configurable.createConfigurable(DictionaryConfiguration.class, config);
-
-            m_lang = cnf.lang();
-            m_words.clear();
-            for (String word : cnf.words()) {
-                m_words.add(word);
-            }
+    protected void updated(DictionaryConfiguration cnf) {
+        m_lang = cnf.lang();
+        m_words.clear();
+        for (String word : cnf.words()) {
+            m_words.add(word);
         }
     }
 
