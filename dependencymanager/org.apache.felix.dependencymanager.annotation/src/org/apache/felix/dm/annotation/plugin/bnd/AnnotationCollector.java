@@ -652,7 +652,6 @@ public class AnnotationCollector extends ClassDataCollector
         {
             // Check if annotation is applied on "updated(Component, ConfigProxyType)"
             confProxyType = Patterns.parseClass(m_descriptor, Patterns.BIND_CLASS2, 2, false); 
-            m_logger.warn("XX:%s/%s", m_descriptor, confProxyType);
             if (! Dictionary.class.getName().equals(confProxyType)) 
             {
                 // It's a conf proxy type.
