@@ -18,7 +18,6 @@
  */
 package org.apache.felix.dependencymanager.samples.dynamicdep.annot;
 
-import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,8 +29,6 @@ import org.apache.felix.dm.annotation.api.Start;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.log.LogService;
-
-import aQute.bnd.annotation.metatype.Configurable;
 
 /**
  * This Component depends on the following services declared from the Activator:

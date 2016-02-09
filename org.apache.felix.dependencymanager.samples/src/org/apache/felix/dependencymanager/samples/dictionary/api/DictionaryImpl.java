@@ -18,12 +18,9 @@
  */
 package org.apache.felix.dependencymanager.samples.dictionary.api;
 
-import java.util.Dictionary;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.osgi.service.log.LogService;
-
-import aQute.bnd.annotation.metatype.Configurable;
 
 /**
  * A Dictionary Service, instantiated from webconsole, when you add some configurations instances to the

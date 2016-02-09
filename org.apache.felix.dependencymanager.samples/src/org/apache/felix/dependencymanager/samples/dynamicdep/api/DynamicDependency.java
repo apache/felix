@@ -18,15 +18,11 @@
  */
 package org.apache.felix.dependencymanager.samples.dynamicdep.api;
 
-import java.util.Dictionary;
-
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.log.LogService;
-
-import aQute.bnd.annotation.metatype.Configurable;
 
 /**
  * This Component depends on the following services declared from the Activator:
