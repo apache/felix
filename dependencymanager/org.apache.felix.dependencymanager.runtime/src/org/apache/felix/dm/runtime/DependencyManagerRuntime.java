@@ -88,7 +88,7 @@ public class DependencyManagerRuntime
      */
     protected void start()
     {
-        Log.instance().info("Starting Dependency Manager annotation runtime");
+        Log.instance().info("Starting Dependency Manager annotation runtime.");
     }
 
     /**
