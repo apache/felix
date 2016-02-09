@@ -64,6 +64,8 @@ public class Activator extends DependencyActivatorBase
     @Override
     public void init(BundleContext context, DependencyManager dm) throws Exception
     {
+        boolean logEnabled = "true".equalsIgnoreCase(context.getProperty(CONF_LOG));
+        Log.instance().enableLogs(logEnabled);
 		Component component = createComponent()
 				.setImplementation(DependencyManagerRuntime.class)
 				.setComposition("getComposition")
@@ -76,7 +78,7 @@ public class Activator extends DependencyActivatorBase
 						.setRequired(true)
 						.setService(PackageAdmin.class))
 				.add(createServiceDependency()
-						.setRequired("true".equalsIgnoreCase(context.getProperty(CONF_LOG)))
+						.setRequired(logEnabled)
 						.setService(LogService.class));
 				                
         dm.add(component);

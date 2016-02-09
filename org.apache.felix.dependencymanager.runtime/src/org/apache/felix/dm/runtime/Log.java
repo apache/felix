@@ -29,6 +29,9 @@ public class Log
 {
     /** The wrap log service which is actually used (Injected by Activator) */
     private volatile LogService m_logService;
+
+    /** Log INFO/DEBUG only if logs are enabled, else only log ERROR/WARN messages */
+    private volatile boolean m_logEnabled;
     
     /** Our sole instance */
     private static Log m_instance = new Log();
@@ -38,6 +41,11 @@ public class Log
         return m_instance;
     }
     
+    public void enableLogs(boolean logEnabled) 
+    {
+        m_logEnabled = logEnabled;
+    }
+
     public void error(String format, Object ... args) 
     {
         m_logService.log(LogService.LOG_ERROR, String.format(format, args));
@@ -60,21 +68,25 @@ public class Log
     
     public void info(String format, Object ... args) 
     {
-        m_logService.log(LogService.LOG_INFO, String.format(format, args));
+        if (m_logEnabled)
+            m_logService.log(LogService.LOG_INFO, String.format(format, args));
     }
     
     public void info(String format, Throwable t, Object ... args) 
     {
-        m_logService.log(LogService.LOG_INFO, String.format(format, args), t);
+        if (m_logEnabled)
+                    m_logService.log(LogService.LOG_INFO, String.format(format, args), t);
     }
     
     public void debug(String format, Object ... args) 
     {
-        m_logService.log(LogService.LOG_DEBUG, String.format(format, args));
+        if (m_logEnabled)
+                    m_logService.log(LogService.LOG_DEBUG, String.format(format, args));
     }
     
     public void debug(String format, Throwable t, Object ... args) 
     {
-        m_logService.log(LogService.LOG_DEBUG, String.format(format, args), t);
+        if (m_logEnabled)
+                    m_logService.log(LogService.LOG_DEBUG, String.format(format, args), t);
     }
 }
