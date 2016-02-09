@@ -356,9 +356,9 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
         if (se != null) {
             if (m_propagateCallbackInstance != null && m_propagateCallbackMethod != null) {
                 try {
-                    return (Dictionary<String, Object>) InvocationUtil.invokeCallbackMethod(m_propagateCallbackInstance, m_propagateCallbackMethod,
-                            new Class[][]{{ServiceReference.class, Object.class}, {ServiceReference.class}}, new Object[][]{
-                                    {se.getReference(), se.getEvent()}, {se.getReference()}});
+                    CallbackTypeDef callbackInfo = new CallbackTypeDef(new Class[][] { { ServiceReference.class, Object.class }, { ServiceReference.class } },
+                        new Object[][] { { se.getReference(), se.getEvent() }, { se.getReference() } });
+                    return (Dictionary<String, Object>) InvocationUtil.invokeCallbackMethod(m_propagateCallbackInstance, m_propagateCallbackMethod, callbackInfo.m_sigs, callbackInfo.m_args);
                 } catch (InvocationTargetException e) {
                     m_component.getLogger().warn("Exception while invoking callback method", e.getCause());
                 } catch (Throwable e) {

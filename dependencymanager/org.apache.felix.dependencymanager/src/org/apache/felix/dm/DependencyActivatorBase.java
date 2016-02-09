@@ -364,6 +364,26 @@ public abstract class DependencyActivatorBase implements BundleActivator {
     }
   
     /**
+     * Creates a new factory configuration adapter service, using a specific callback instance
+     * 
+     * @return the factory configuration adapter service
+     * @see DependencyManager#createFactoryConfigurationAdapterService(String, String, boolean, Class)
+     */
+    public Component createFactoryConfigurationAdapterService(String factoryPid, String update, boolean propagate, Class<?> configType) {
+        return m_manager.createFactoryConfigurationAdapterService(factoryPid, update, propagate, configType);
+    }
+
+    /**
+     * Creates a new factory configuration adapter service, using a specific callback instance
+     * 
+     * @return the factory configuration adapter service
+     * @see DependencyManager#createFactoryConfigurationAdapterService(String, String, boolean, Object, Class)
+     */
+    public Component createFactoryConfigurationAdapterService(String factoryPid, String update, boolean propagate, Object callbackInstance, Class<?> configType) {
+        return m_manager.createFactoryConfigurationAdapterService(factoryPid, update, propagate, callbackInstance, configType);
+    }
+
+    /**
      * Creates a new factory configuration adapter service.
      * 
      * @return the factory configuration adapter service

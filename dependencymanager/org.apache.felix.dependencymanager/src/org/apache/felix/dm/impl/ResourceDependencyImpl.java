@@ -194,7 +194,8 @@ public class ResourceDependencyImpl extends AbstractDependency<ResourceDependenc
             Dictionary<String, Object> resourceProperties = re.getProperties();
             if (m_propagateCallbackInstance != null && m_propagateCallbackMethod != null) {
                 try {
-                    return (Dictionary<String, Object>) InvocationUtil.invokeCallbackMethod(m_propagateCallbackInstance, m_propagateCallbackMethod, new Class[][] {{ URL.class }}, new Object[][] {{ resource }});
+                    CallbackTypeDef callbackInfo = new CallbackTypeDef(URL.class, resource);
+                    return (Dictionary<String, Object>) InvocationUtil.invokeCallbackMethod(m_propagateCallbackInstance, m_propagateCallbackMethod, callbackInfo.m_sigs, callbackInfo.m_args);
                 }
                 catch (InvocationTargetException e) {
                     m_component.getLogger().warn("Exception while invoking callback method", e.getCause());
