@@ -163,17 +163,11 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
             Component service = (Component) properties[1];
             CallbackTypeDef callbackInfo = createCallbackType(m_logger, service, m_configType, cmSettings);
 
-            try {
-                invokeUpdated(service, callbackInfo);
+            invokeUpdated(service, callbackInfo);
 
-                if (m_serviceInterfaces != null && m_propagate == true) {
-                    Dictionary<String, ?> serviceProperties = getServiceProperties(cmSettings);
-                    service.setServiceProperties(serviceProperties);
-                }
-            }
-            
-            catch (Throwable t) {
-                handleException(t);
+            if (m_serviceInterfaces != null && m_propagate == true) {
+                Dictionary<String, ?> serviceProperties = getServiceProperties(cmSettings);
+                service.setServiceProperties(serviceProperties);
             }
         }
         
