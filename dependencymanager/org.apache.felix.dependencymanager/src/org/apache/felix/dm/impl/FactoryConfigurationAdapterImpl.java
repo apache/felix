@@ -148,8 +148,37 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
             ((ComponentImpl) newService).instantiateComponent();
 
             CallbackTypeDef callbackInfo = createCallbackType(m_logger, newService, m_configType, settings);
+            invokeUpdated(newService, callbackInfo);
 
-            for (Object instance : getCompositionInstances(newService)) {
+            return newService;
+        }
+
+        /**
+         * Method called from our superclass, when we need to update a Service, because 
+         * the configuration has changed.
+         */
+        @SuppressWarnings("unchecked")
+        public void updateService(Object[] properties) {
+            Dictionary<String, ?> cmSettings = (Dictionary<String, ?>) properties[0];
+            Component service = (Component) properties[1];
+            CallbackTypeDef callbackInfo = createCallbackType(m_logger, service, m_configType, cmSettings);
+
+            try {
+                invokeUpdated(service, callbackInfo);
+
+                if (m_serviceInterfaces != null && m_propagate == true) {
+                    Dictionary<String, ?> serviceProperties = getServiceProperties(cmSettings);
+                    service.setServiceProperties(serviceProperties);
+                }
+            }
+            
+            catch (Throwable t) {
+                handleException(t);
+            }
+        }
+        
+        private void invokeUpdated(Component service, CallbackTypeDef callbackInfo) {
+            for (Object instance : getUpdateCallbackInstances(service)) {
                 try {
                     InvocationUtil.invokeCallbackMethod(instance, m_update, callbackInfo.m_sigs, callbackInfo.m_args);
                 }
@@ -164,35 +193,6 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
                     handleException(t); // will rethrow a runtime exception.
                 }
             }
-
-            return newService;
-        }
-
-        /**
-         * Method called from our superclass, when we need to update a Service, because 
-         * the configuration has changed.
-         */
-        @SuppressWarnings("unchecked")
-        public void updateService(Object[] properties) {
-            Dictionary<String, ?> cmSettings = (Dictionary<String, ?>) properties[0];
-            Component service = (Component) properties[1];
-            Object[] instances = getUpdateCallbackInstances(service);
-
-            CallbackTypeDef callbackInfo = createCallbackType(m_logger, service, m_configType, cmSettings);
-
-            try {
-                for (Object instance : instances) {
-                    InvocationUtil.invokeCallbackMethod(instance, m_update, callbackInfo.m_sigs, callbackInfo.m_args); 
-                }
-                if (m_serviceInterfaces != null && m_propagate == true) {
-                    Dictionary<String, ?> serviceProperties = getServiceProperties(cmSettings);
-                    service.setServiceProperties(serviceProperties);
-                }
-            }
-            
-            catch (Throwable t) {
-                handleException(t);
-            }
         }
         
         /**
@@ -206,14 +206,6 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
             }
         }
         
-        private Object[] getCompositionInstances(Component component) {
-            if (m_updateCallbackInstance != null) {
-                return new Object[] { m_updateCallbackInstance };
-            } else {
-                return component.getInstances();
-            }         
-        }
-
         /**
          * Merge CM factory configuration setting with the adapter service properties. The private CM factory configuration 
          * settings are ignored. A CM factory configuration property is private if its name starts with a dot (".").
@@ -267,10 +259,9 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
             }
         }
     }
-
     
     /**
-     * Extends AdapterImpl for MetaType support.
+     * Extends AdapterImpl for MetaType support (deprecated, now users can directly use bnd metatypes).
      */
     class MetaTypeAdapterImpl extends AdapterImpl implements MetaTypeProvider {
         // Our MetaType Provider for describing our properties metadata
