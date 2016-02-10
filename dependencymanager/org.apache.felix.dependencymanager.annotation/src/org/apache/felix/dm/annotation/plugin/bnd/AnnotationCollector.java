@@ -921,6 +921,12 @@ public class AnnotationCollector extends ClassDataCollector
 
         // factory pid attribute (can be specified using the factoryPid attribute, or using the factoryPidClass attribute)
         String factoryPidClass = parseClassAttrValue(annotation.get(EntryParam.factoryPidClass.toString()));
+        
+        // If a factory pid class is specified, consider it as a possible candidate for a configuration proxy.
+        if (factoryPidClass != null) {
+            writer.put(EntryParam.confProxyType, factoryPidClass);
+        }
+        
         String factoryPid = factoryPidClass != null ? factoryPidClass : get(annotation, EntryParam.factoryPid.toString(), m_className);
         
         writer.put(EntryParam.factoryPid, factoryPid);
