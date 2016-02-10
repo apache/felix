@@ -45,7 +45,7 @@ public class MethodSignaturesTest extends TestBase {
     public void testFactoryPidUpdatedSignature1() {
         Ensure e = new Ensure();
         ServiceRegistration sr = register(e, MethodSignatures.ENSURE_FACTORYPID);
-        e.waitForStep(2, 5000);
+        e.waitForStep(3, 5000);
         sr.unregister();
     }
 }
