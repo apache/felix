@@ -193,6 +193,10 @@ public class MethodSignatures {
 		}
 	}
 	
+	public interface Config {
+	    String getFoo();
+	}	   
+
     // This component configures the FactoryPidComponent / FactoryPidComponent2 components.
 	@Component
 	public static class FactoryPidConfigurator {
@@ -204,6 +208,7 @@ public class MethodSignatures {
 
 		private Configuration m_conf1;
 		private Configuration m_conf2;
+        private Configuration m_conf3;
 
 		@Start
 		void start() throws IOException {
@@ -216,12 +221,18 @@ public class MethodSignatures {
 			props = new Hashtable<>();
 			props.put("foo", "bar");
 			m_conf2.update(props);
+			
+			m_conf3 = m_cm.createFactoryConfiguration(Config.class.getName());
+			props = new Hashtable<>();
+			props.put("foo", "bar");
+			m_conf3.update(props);
 		}
 		
 		@Stop
 		void stop() throws IOException {
 			m_conf1.delete();
 			m_conf2.delete();
+			m_conf3.delete();
 		}
 	}
 
@@ -265,4 +276,25 @@ public class MethodSignatures {
 			m_ensure.step();
 		}
 	}
+	
+	// This is a factory pid component with an updated callback having the "updated(Config)" signature
+    @FactoryConfigurationAdapterService(factoryPidClass=Config.class)
+    public static class FactoryPidComponent3 {
+        Config m_properties;
+        
+        void updated(Config properties) {
+            m_properties = properties;
+        }
+        
+        @ServiceDependency(filter="(name=" + ENSURE_FACTORYPID + ")")
+        Ensure m_ensure;
+        
+        @Start
+        void start() {
+            Thread.dumpStack();
+            Assert.assertNotNull(m_properties);
+            Assert.assertEquals("bar", m_properties.getFoo());
+            m_ensure.step();
+        }
+    }
 }
