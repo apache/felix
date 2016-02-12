@@ -3,6 +3,7 @@ Changes from 1.1.2 to ...
 
 ** Bug
     * [FELIX-5173] - Metatype service's BundleResources ignore properties provided by fragment bundles
+    * [FELIX-5185] - Fix description of metatype bundle
 
 
 Changes from 1.1.0 to 1.1.2
