@@ -265,7 +265,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 boolean open = dm.open( componentContext, componentContext.getEdgeInfo( dm ) );
                 if ( !open )
                 {
-                    log( LogService.LOG_ERROR, "Cannot create component instance due to failure to bind reference {0}",
+                    log( LogService.LOG_DEBUG, "Cannot create component instance due to failure to bind reference {0}",
                             new Object[] { dm.getName() }, null );
 
                     failedDm = dm;
