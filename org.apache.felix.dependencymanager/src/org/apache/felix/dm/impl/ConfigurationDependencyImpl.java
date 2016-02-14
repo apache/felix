@@ -429,7 +429,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
             
             if (! callbackFound) {
                 String[] instanceClasses = Stream.of(instances).map(c -> c.getClass().getName()).toArray(String[]::new);
-                log("\"" + m_add + "\" configuration callback not found in any of the component classes: " + Arrays.toString(instanceClasses));                    
+                m_logger.log(Logger.LOG_ERROR, "\"" + m_add + "\" configuration callback not found in any of the component classes: " + Arrays.toString(instanceClasses));                    
             }
         }
     }
@@ -439,23 +439,8 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
             m_metaType = new MetaTypeProviderImpl(m_pid, m_context, m_logger, this, null);
         }
     }
-    
-    private void log(String msg) {
-        if (m_logger != null) {
-            m_logger.log(Logger.LOG_ERROR, msg);
-        } else {
-            System.err.println(msg);
-        }
-    }
-    
+        
     private void logConfigurationException(ConfigurationException e) {
-        if (m_logger != null) {
-            m_logger.log(Logger.LOG_ERROR, "Got exception while handling configuration update for pid " + m_pid, e);
-        } else {
-            System.err.println("Got exception while handling configuration update for pid " + m_pid);
-            if (e != null) {
-                e.printStackTrace();
-            }
-        }
+        m_logger.log(Logger.LOG_ERROR, "Got exception while handling configuration update for pid " + m_pid, e);
     }
 }
