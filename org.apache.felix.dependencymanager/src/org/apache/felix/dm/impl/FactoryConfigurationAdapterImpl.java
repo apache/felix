@@ -19,9 +19,11 @@
 package org.apache.felix.dm.impl;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.stream.Stream;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
@@ -172,9 +174,12 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
         }
         
         private void invokeUpdated(Component service, CallbackTypeDef callbackInfo) {
-            for (Object instance : getUpdateCallbackInstances(service)) {
+            boolean callbackFound = false;
+            Object[] instances = getUpdateCallbackInstances(service);
+            for (Object instance : instances) {
                 try {
                     InvocationUtil.invokeCallbackMethod(instance, m_update, callbackInfo.m_sigs, callbackInfo.m_args);
+                    callbackFound |= true;
                 }
                 catch (InvocationTargetException e) {
                     // The component has thrown an exception during it's callback invocation.
@@ -186,6 +191,11 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
                 catch (Throwable t) {
                     handleException(t); // will rethrow a runtime exception.
                 }
+            }
+            
+            if (! callbackFound) {
+                String[] instanceClasses = Stream.of(instances).map(c -> c.getClass().getName()).toArray(String[]::new);
+                m_logger.log(Logger.LOG_ERROR, "\"" + m_update + "\" configuration callback not found in any of the component classes: " + Arrays.toString(instanceClasses));                    
             }
         }
         
@@ -239,7 +249,11 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
         }
 
         private void handleException(Throwable t) {
-            m_logger.log(Logger.LOG_ERROR, "Got exception while handling configuration update for factory pid " + m_factoryPid, t);
+            if (m_logger != null) {
+                m_logger.log(Logger.LOG_ERROR, "Got exception while handling configuration update for factory pid " + m_factoryPid, t);
+            } else {
+                
+            }
             if (t instanceof InvocationTargetException) {
                 // Our super class will check if the target exception is itself a ConfigurationException.
                 // In this case, it will simply re-thrown.
