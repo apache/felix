@@ -381,6 +381,18 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 
     private void invokeUpdated(Dictionary<?, ?> settings) throws ConfigurationException {
         if (m_updateInvokedCache.compareAndSet(false, true)) {
+            
+            // FELIX-5155: if component impl is an internal DM adapter, we must not invoke the callback on it
+            // because in case there is an external callback instance specified for the configuration callback,
+            // then we don't want to invoke it now. The external callback instance will be invoked
+            // on the other actual configuration dependency copied into the actual component instance created by the
+            // adapter.
+            
+            Object mainComponentInstance = m_component.getInstances();
+            if (mainComponentInstance instanceof AbstractDecorator) {
+                return;
+            }
+            
             Object[] instances = super.getInstances(); // either the callback instance or the component instances
             if (instances == null) {
                 return;
