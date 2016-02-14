@@ -19,6 +19,7 @@
 package org.apache.felix.dm.impl;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Properties;
 import java.util.concurrent.Callable;
@@ -27,6 +28,7 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Stream;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ConfigurationDependency;
@@ -388,7 +390,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
             // on the other actual configuration dependency copied into the actual component instance created by the
             // adapter.
             
-            Object mainComponentInstance = m_component.getInstances();
+            Object mainComponentInstance = m_component.getInstance();
             if (mainComponentInstance instanceof AbstractDecorator) {
                 return;
             }
@@ -399,10 +401,11 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
             }
 
             CallbackTypeDef callbackInfo = createCallbackType(m_logger, m_component, m_configType, settings);
-
+            boolean callbackFound = false;
             for (int i = 0; i < instances.length; i++) {
                 try {
                     InvocationUtil.invokeCallbackMethod(instances[i], m_add, callbackInfo.m_sigs, callbackInfo.m_args);
+                    callbackFound |= true;
                 }
                 catch (InvocationTargetException e) {
                     // The component has thrown an exception during it's callback invocation.
@@ -423,6 +426,11 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
                     throw new ConfigurationException(null, "Configuration update failed", t);
                 }
             }
+            
+            if (! callbackFound) {
+                String[] instanceClasses = Stream.of(instances).map(c -> c.getClass().getName()).toArray(String[]::new);
+                log("\"" + m_add + "\" configuration callback not found in any of the component classes: " + Arrays.toString(instanceClasses));                    
+            }
         }
     }
     
@@ -432,9 +440,22 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
         }
     }
     
+    private void log(String msg) {
+        if (m_logger != null) {
+            m_logger.log(Logger.LOG_ERROR, msg);
+        } else {
+            System.err.println(msg);
+        }
+    }
+    
     private void logConfigurationException(ConfigurationException e) {
         if (m_logger != null) {
             m_logger.log(Logger.LOG_ERROR, "Got exception while handling configuration update for pid " + m_pid, e);
+        } else {
+            System.err.println("Got exception while handling configuration update for pid " + m_pid);
+            if (e != null) {
+                e.printStackTrace();
+            }
         }
     }
 }
