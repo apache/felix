@@ -640,7 +640,7 @@ public class AnnotationCollector extends ClassDataCollector
             if (! Dictionary.class.getName().equals(confProxyType)) 
             {
                 // It's a conf proxy type.
-                writer.put(EntryParam.confProxyType, confProxyType);
+                writer.put(EntryParam.configType, confProxyType);
             }
             else
             {
@@ -655,7 +655,7 @@ public class AnnotationCollector extends ClassDataCollector
             if (! Dictionary.class.getName().equals(confProxyType)) 
             {
                 // It's a conf proxy type.
-                writer.put(EntryParam.confProxyType, confProxyType);
+                writer.put(EntryParam.configType, confProxyType);
             }
             else
             {
@@ -922,12 +922,19 @@ public class AnnotationCollector extends ClassDataCollector
         // factory pid attribute (can be specified using the factoryPid attribute, or using the factoryPidClass attribute)
         String factoryPidClass = parseClassAttrValue(annotation.get(EntryParam.factoryPidClass.toString()));
         
-        // If a factory pid class is specified, consider it as a possible candidate for a configuration proxy.
-        if (factoryPidClass != null) {
-            writer.put(EntryParam.confProxyType, factoryPidClass);
+        // Test if a type safe configuration type is provided.
+        String configType = parseClassAttrValue(annotation.get(EntryParam.configType.toString()));
+        
+        if (configType != null) {
+            writer.put(EntryParam.configType, configType);
         }
         
-        String factoryPid = factoryPidClass != null ? factoryPidClass : get(annotation, EntryParam.factoryPid.toString(), m_className);
+        String factoryPid = null;
+        
+        factoryPid = get(annotation, EntryParam.factoryPid.toString(), factoryPidClass);
+        if (factoryPid == null) {
+            factoryPid = configType != null ? configType : m_className;
+        }
         
         writer.put(EntryParam.factoryPid, factoryPid);
 

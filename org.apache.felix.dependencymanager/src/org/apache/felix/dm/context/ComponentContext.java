@@ -18,6 +18,7 @@
  */
 package org.apache.felix.dm.context;
 
+import java.util.Dictionary;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executor;
@@ -156,4 +157,15 @@ public interface ComponentContext extends Component {
      * @return all the available dependency services for a given dependency
      */
     public Set<Event> getDependencyEvents(DependencyContext dc);
+    
+    /**
+     * Creates a configuration for a given type backed by a given dictionary.
+     * This method can be used by any custom Dependency Manager dependency that
+     * needs to expose some configuration through a dynamic proxy interface.
+     * 
+     * @param type the configuration class, cannot be <code>null</code>;
+     * @param config the configuration to wrap, cannot be <code>null</code>.
+     * @return an instance of the given type that wraps the given configuration.
+     */
+    public <T> T createConfigurationProxy(Class<T> type, Dictionary<?, ?> config);
 }

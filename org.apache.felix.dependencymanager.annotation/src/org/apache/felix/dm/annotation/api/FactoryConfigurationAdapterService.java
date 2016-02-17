@@ -31,6 +31,13 @@ import java.lang.annotation.Target;
  * Depending on the <code>propagate</code> parameter, every public factory configuration properties 
  * (which don't start with ".") will be propagated along with the adapter service properties.
  * 
+ * <p> If you specify a configuration type, then the fqdn of the configuration interface is used as the factory pid,
+ * else you can specify the factory pid explicitly using the factoryPid attribute.
+ * If no configuration type is used and no factoryPid attribute is specified, then the factory pid will be set to the fqdn of
+ * the class on which this annotation is applied.
+ * 
+ * <p> (see javadoc from {@link ConfigurationDependency} for more informations about configuration types).
+ * 
  * <h3>Usage Examples</h3>
  * Here, a "Dictionary" service instance is created for each existing "sample.DictionaryConfiguration" factory pids.
  * 
@@ -55,19 +62,16 @@ import java.lang.annotation.Target;
  * </pre>
  * </blockquote>
  *
- * And here is the Dictionary service:
- *
+ * And here is the factory pid adapter service, which is instantiated for each instance of the "sample.DictionaryConfiguration" factory pid:
+ * 
  * <blockquote>
  * <pre>
  * import java.util.List;
  * import aQute.bnd.annotation.metatype.Configurable;
  *
- * &#64;FactoryConfigurationAdapterService(factoryPidClass=DictionaryConfiguration.class)  
+ * &#64;FactoryConfigurationAdapterService(configType=DictionaryConfiguration.class)  
  * public class DictionaryImpl implements DictionaryService {
- *     protected void updated(Dictionary&#60;String, ?&#62; props) {
- *         // load configuration from the provided dictionary, or throw an exception of any configuration error.
- *         DictionaryConfiguration cnf = Configurable.createConfigurable(DictionaryConfiguration.class, props);
- * 
+ *     protected void updated(DictionaryConfiguration config) {
  *         m_lang = config.lang();
  *         m_words.clear();
  *         for (String word : conf.words()) {
@@ -78,6 +82,7 @@ import java.lang.annotation.Target;
  * }
  * </pre>
  * </blockquote>
+ * 
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
@@ -100,6 +105,15 @@ public @interface FactoryConfigurationAdapterService
     Property[] properties() default {};
 
     /**
+     * Returns the type safe configuration class which will be injected in the updated callback.
+     * By default, the factory pid is assumed to match the fqdn of the configuration type.
+     * see javadoc from {@link ConfigurationDependency} for more informations about configuration types.
+     * @return the configuration type to pass in the "updated" callback argument.
+     * @see ConfigurationDependency
+     */
+    Class<?> configType() default Object.class;
+    
+    /**
      * Returns the factory pid whose configurations will instantiate the annotated service class. (By default, the pid is the 
      * service class name).
      * @return the factory pid
@@ -111,6 +125,8 @@ public @interface FactoryConfigurationAdapterService
      * You can use this method when you use an interface annoted with standard bndtols metatype annotations.
      * (see http://www.aqute.biz/Bnd/MetaType).
      * @return the factory pid class
+     * @deprecated use {@link #configType()} and accept a configuration type parameter from your updated callback. The pid
+     * is then assumed to match the fqdn of the configuration type.
      */
     Class<?> factoryPidClass() default Object.class;
 

@@ -16,55 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.dm.annotation.plugin.bnd;
+package org.apache.felix.dependencymanager.samples.hello.api;
 
 /**
- * The type of parameters which can be found in a component descriptor.
+ * This is our type-safe configuration for the ServiceConsumer component.
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public enum EntryParam
-{
-    init, 
-    start, 
-    stop, 
-    destroy, 
-    impl, 
-    provides, 
-    properties, 
-    composition, 
-    service,
-    filter, 
-    defaultImpl, 
-    required, 
-    added, 
-    changed,
-    removed,
-    swap,
-    autoConfig, 
-    pid,
-    pidClass,
-    configType, // inject a proxy configuration type 
-    factoryPid,
-    factoryPidClass,
-    propagate, 
-    updated, 
-    timeout,
-    adapteeService,
-    adapteeFilter,
-    stateMask,
-    ranking,
-    factorySet,
-    factoryName,
-    factoryConfigure,
-    factoryMethod,
-    field,
-    name, 
-    starter,
-    stopper,
-    bundleContextField, 
-    dependencyManagerField, 
-    componentField, 
-    registered, 
-    unregistered
+public interface ServiceConsumerConf {
+    String getKey();
 }

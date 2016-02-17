@@ -39,15 +39,16 @@ public class ServiceConsumer {
     @ServiceDependency
     volatile LogService log;
 
-    Dictionary<?, ?> conf;
+    ServiceConsumerConf conf;
 
-    @ConfigurationDependency
-    protected void update(Dictionary<?, ?> conf) {
+    @ConfigurationDependency 
+    protected void update(ServiceConsumerConf conf) { // type safe config
         this.conf = conf;
     }
 
     @Start
     public void start() {
+        log.log(LogService.LOG_WARNING, "ServiceConsumer.start: configured key=" + conf.getKey());
         log.log(LogService.LOG_WARNING, "ServiceConsumer.start: calling service.hello() ...");
         this.service.hello();
     }

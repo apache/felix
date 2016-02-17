@@ -21,6 +21,7 @@ package org.apache.felix.dependencymanager.samples.conf;
 import java.io.IOException;
 import java.util.Hashtable;
 
+import org.apache.felix.dependencymanager.samples.hello.api.ServiceConsumerConf;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.log.LogService;
@@ -41,13 +42,13 @@ public class Configurator {
             System.out.println("Configuring sample components ... please consult log messages to see example output, like this:");
             System.out.println("\"log warn\"");
             // Provide configuration to the hello.ServiceConsumer component
-            m_serviceConsumerConf = m_ca.getConfiguration("org.apache.felix.dependencymanager.samples.hello.api.ServiceConsumer", null);
+            m_serviceConsumerConf = m_ca.getConfiguration("org.apache.felix.dependencymanager.samples.hello.api.ServiceConsumerConf", null);
             Hashtable<String, String> props = new Hashtable<>();
             props.put("key", "value");
             m_serviceConsumerConf.update(props);
             
             // Provide configuration to the hello.annot.ServiceConsumer component
-            m_serviceConsumerAnnotConf = m_ca.getConfiguration("org.apache.felix.dependencymanager.samples.hello.annot.ServiceConsumer", null);
+            m_serviceConsumerAnnotConf = m_ca.getConfiguration("org.apache.felix.dependencymanager.samples.hello.annot.ServiceConsumerConf", null);
             props = new Hashtable<>();
             props.put("key", "value");
             m_serviceConsumerAnnotConf.update(props);

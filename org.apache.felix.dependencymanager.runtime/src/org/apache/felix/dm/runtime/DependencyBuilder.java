@@ -139,7 +139,7 @@ public class DependencyBuilder
 
     private Dependency createConfigurationDependency(Bundle b, DependencyManager dm) throws Exception
     {
-        String confProxyType = m_metaData.getString(Params.confProxyType, null);
+        String confProxyType = m_metaData.getString(Params.configType, null);
         String pid = m_metaData.getString(Params.pid);
         boolean propagate = "true".equals(m_metaData.getString(Params.propagate, "false"));
         String callback = m_metaData.getString(Params.updated, "updated");

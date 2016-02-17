@@ -467,8 +467,10 @@ public class DependencyManager {
      *        <li> updated(Component, Dictionary)
      *        </ul>
      * @param propagate true if public factory configuration should be propagated to the adapter service properties
-     * @param configType the configuration type to use instead of a dictionary or map.
+     * @param configType the configuration type to use instead of a dictionary. See the javadoc from {@link ConfigurationDependency} for
+     * more informations about type-safe configuration.
      * @return a service that acts as a factory for generating the managed service factory configuration adapter
+     * @see ConfigurationDependency
      */
     public Component createFactoryConfigurationAdapterService(String factoryPid, String update, boolean propagate, Class<?> configType) {
         return new FactoryConfigurationAdapterImpl(this, factoryPid, update, propagate, null, configType);
@@ -491,7 +493,8 @@ public class DependencyManager {
      *        </ul>
      * @param propagate true if public factory configuration should be propagated to the adapter service properties
      * @param callbackInstance the object on which the updated callback will be invoked.
-     * @param configType the configuration type to use instead of a dictionary or map.
+     * @param configType the configuration type to use instead of a dictionary.  See the javadoc from {@link ConfigurationDependency} for
+     * more informations about type-safe configuration.
      * @return a service that acts as a factory for generating the managed service factory configuration adapter
      */
     public Component createFactoryConfigurationAdapterService(String factoryPid, String update, boolean propagate, Object callbackInstance, Class<?> configType) {

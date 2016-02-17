@@ -51,7 +51,7 @@ public class FactoryConfigurationAdapterServiceBuilder extends AbstractBuilder
         String[] provides = srvMeta.getStrings(Params.provides, null);
         Dictionary<String, Object> properties = srvMeta.getDictionary(Params.properties, null);
         boolean propagate = "true".equals(srvMeta.getString(Params.propagate, "false"));
-        String configProxyClassName = srvMeta.getString(Params.confProxyType, null);
+        String configProxyClassName = srvMeta.getString(Params.configType, null);
         Component c = null;
         
         if (configProxyClassName != null)
