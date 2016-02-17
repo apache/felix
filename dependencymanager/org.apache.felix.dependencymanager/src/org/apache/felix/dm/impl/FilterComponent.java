@@ -67,6 +67,11 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     }
     
     @Override
+    public <T> T createConfigurationProxy(Class<T> type, Dictionary<?, ?> config) {
+        return m_component.createConfigurationProxy(type, config);
+    }
+    
+    @Override
     public Executor getExecutor() {
         return m_component.getExecutor();
     }

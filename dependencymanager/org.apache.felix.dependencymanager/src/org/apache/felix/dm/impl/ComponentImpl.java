@@ -341,6 +341,11 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     }
 
     @Override
+    public <T> T createConfigurationProxy(Class<T> type, Dictionary<?, ?> config) {
+        return Configurable.create(type,  config);
+    }
+    
+    @Override
     public Executor getExecutor() {
         return m_executor;
     }

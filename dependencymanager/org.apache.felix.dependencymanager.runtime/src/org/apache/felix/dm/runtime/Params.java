@@ -65,5 +65,5 @@ public enum Params
     componentField,
     registered, 
     unregistered,
-    confProxyType
+    configType
 }

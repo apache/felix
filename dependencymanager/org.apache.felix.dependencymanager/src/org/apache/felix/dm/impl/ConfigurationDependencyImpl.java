@@ -21,6 +21,7 @@ package org.apache.felix.dm.impl;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Dictionary;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -126,8 +127,10 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
      * Sets a type-safe callback method invoked on the instantiated component.
      */
     public ConfigurationDependency setCallback(String callback, Class<?> configType) {
+        Objects.nonNull(configType);
         setCallback(callback);
         m_configType = configType;
+        m_pid = (m_pid == null) ? configType.getName() : m_pid;
         return this;
     }
 
@@ -136,8 +139,10 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
      * The component is not yet instantiated at the time the callback is invoked.
      */
     public ConfigurationDependency setCallback(Object instance, String callback, Class<?> configType) {
+        Objects.nonNull(configType);
         setCallback(instance, callback);
         m_configType = configType;
+        m_pid = (m_pid == null) ? configType.getName() : m_pid;
         return this;
     }
     

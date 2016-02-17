@@ -37,8 +37,7 @@ public class Activator extends DependencyActivatorBase {
         dm.add(createComponent()
             .setImplementation(ServiceConsumer.class)            
             .add(createServiceDependency().setService(LogService.class).setRequired(true))
-            .add(createConfigurationDependency()
-                .setPid(ServiceConsumer.class.getName()).setCallback("updated"))
+            .add(createConfigurationDependency().setCallback("updated", ServiceConsumerConf.class))
             .add(createServiceDependency().setService(ServiceProvider.class).setRequired(true)));
     }
 }
