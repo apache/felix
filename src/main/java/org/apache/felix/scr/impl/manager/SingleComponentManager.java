@@ -887,7 +887,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
         // log that the delayed component cannot be created (we don't
         // know why at this moment; this should already have been logged)
-        log( LogService.LOG_ERROR, "Failed creating the component instance; see log for reason", null );
+        log( LogService.LOG_DEBUG, "Failed creating the component instance; see log for reason", null );
 
         // component could not really be created. This may be temporary
         // so we stay in the registered state but ensure the component

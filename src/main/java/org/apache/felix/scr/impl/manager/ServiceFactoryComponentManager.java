@@ -137,7 +137,7 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
         {
             // log that the service factory component cannot be created (we don't
             // know why at this moment; this should already have been logged)
-            log( LogService.LOG_ERROR, "Failed creating the component instance; see log for reason", null );
+            log( LogService.LOG_DEBUG, "Failed creating the component instance; see log for reason", null );
         } 
         else 
         {
