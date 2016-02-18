@@ -20,7 +20,9 @@ package org.apache.felix.dm.lambda.samples.future;
 
 import static java.lang.System.out;
 
+import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.lambda.DependencyManagerActivator;
+import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 
 /**
@@ -38,21 +40,21 @@ public class Activator extends DependencyManagerActivator {
      * Initialize our components using new DM-lambda activator base.
      */
     @Override
-    public void activate() throws Exception {
-    	out.println("type \"log info\" to see the logs emitted by this test.");
+    public void init(BundleContext ctx, DependencyManager dm) throws Exception {
+    	out.println("type \"log warn\" to see the logs emitted by this test.");
     	
     	// System.setProperty("http.proxyHost","your.http.proxy.host");
     	// System.setProperty("http.proxyPort", "your.http.proxy.port");
     	    	
-        // Create the PageLinks service, which asynchronously download the content of the Felix web page.
+        // Create the PageLinks service, which asynchronously downloads the content of the Felix web page.
     	// The PageLink service will be started once the page has been downloaded (using a CompletableFuture).
         component(comp -> comp
             .factory(() -> new PageLinksImpl("http://felix.apache.org/"))
             .provides(PageLinks.class)
-            .withSrv(LogService.class, log -> log.cb(PageLinksImpl::bind)));
+            .withSvc(LogService.class, log -> log.add(PageLinksImpl::bind)));
         
         // Just wait for the PageLinks service and display all links found from the Felix web site.
-        component(comp -> comp.impl(this).withSrv(PageLinks.class, page -> page.cbi(this::setPageLinks))); 
+        component(comp -> comp.impl(this).withSvc(PageLinks.class, page -> page.add(this::setPageLinks))); 
     }
         
     /**

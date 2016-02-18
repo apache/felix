@@ -67,8 +67,8 @@ public class RemovedDependencyTest extends TestBase {
         ServiceConsumer consumer = new ServiceConsumer(e, d3);
         Component sc = component(m).impl(consumer).build();
         
-        Dependency d1 = serviceDependency(sc, ServiceInterface.class).filter("(name=provider1)").cb("add", "remove").build();
-        Dependency d2 = serviceDependency(sc, ServiceInterface.class).filter("(name=provider2)").cb("add", "remove").build();
+        Dependency d1 = serviceDependency(sc, ServiceInterface.class).filter("(name=provider1)").add("add").remove("remove").build();
+        Dependency d2 = serviceDependency(sc, ServiceInterface.class).filter("(name=provider2)").add("add").remove("remove").build();
         
         sc.add(d1, d2);
             

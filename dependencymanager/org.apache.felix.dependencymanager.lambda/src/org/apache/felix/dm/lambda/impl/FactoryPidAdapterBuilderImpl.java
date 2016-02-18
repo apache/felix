@@ -9,12 +9,17 @@ import java.util.stream.Stream;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.context.ComponentContext;
 import org.apache.felix.dm.lambda.ComponentBuilder;
 import org.apache.felix.dm.lambda.FactoryPidAdapterBuilder;
-import org.apache.felix.dm.lambda.callbacks.CbComponentDictionary;
+import org.apache.felix.dm.lambda.callbacks.CbConfiguration;
+import org.apache.felix.dm.lambda.callbacks.CbConfigurationComponent;
 import org.apache.felix.dm.lambda.callbacks.CbDictionary;
-import org.apache.felix.dm.lambda.callbacks.CbTypeComponentDictionary;
-import org.apache.felix.dm.lambda.callbacks.CbTypeDictionary;
+import org.apache.felix.dm.lambda.callbacks.CbDictionaryComponent;
+import org.apache.felix.dm.lambda.callbacks.InstanceCbConfiguration;
+import org.apache.felix.dm.lambda.callbacks.InstanceCbConfigurationComponent;
+import org.apache.felix.dm.lambda.callbacks.InstanceCbDictionary;
+import org.apache.felix.dm.lambda.callbacks.InstanceCbDictionaryComponent;
 
 public class FactoryPidAdapterBuilderImpl implements AdapterBase<FactoryPidAdapterBuilder>, FactoryPidAdapterBuilder {
     private String m_factoryPid;
@@ -27,6 +32,7 @@ public class FactoryPidAdapterBuilderImpl implements AdapterBase<FactoryPidAdapt
     private boolean m_hasReflectionCallback;
     private Consumer<ComponentBuilder<?>> m_compBuilder = (componentBuilder -> {});
     private final List<MethodRef<Object>> m_refs = new ArrayList<>();
+    private Class<?> m_configType;
 
     @FunctionalInterface
     interface MethodRef<I> {
@@ -58,12 +64,6 @@ public class FactoryPidAdapterBuilderImpl implements AdapterBase<FactoryPidAdapt
     }
 
     @Override
-    public FactoryPidAdapterBuilder factoryPid(Class<?> pidClass) {
-        m_factoryPid = pidClass.getName();
-        return this;
-    }
-
-    @Override
     public FactoryPidAdapterBuilder propagate() {
         m_propagate = true;
         return this;
@@ -75,39 +75,91 @@ public class FactoryPidAdapterBuilderImpl implements AdapterBase<FactoryPidAdapt
         return this;
     }
 
-    public FactoryPidAdapterBuilder cb(String update) {
+    @Override
+    public FactoryPidAdapterBuilder update(String update) {
         checkHasNoMethodRefs();
         m_hasReflectionCallback = true;
         m_updateMethodName = update;
         return this;
     }
     
-    public FactoryPidAdapterBuilder cb(Object callbackInstance, String update) {
-        cb(update);
+    @Override
+    public FactoryPidAdapterBuilder update(Class<?> configType, String updateMethod) {
+        update(updateMethod);
+        m_configType = configType;
+        return this;
+    }
+    
+    @Override
+    public FactoryPidAdapterBuilder update(Object callbackInstance, String update) {
+        update(update);
         m_updateCallbackInstance = callbackInstance;
         return this;
     }
     
     @Override
-    public <U> FactoryPidAdapterBuilder cb(CbTypeDictionary<U> callback) {
-        Class<U> type = Helpers.getLambdaArgType(callback, 0);
-        return setComponentCallbackRef(type, (instance, component, props) -> { callback.accept((U) instance, props); });
+    public FactoryPidAdapterBuilder update(Class<?> configType, Object callbackInstance, String updateMethod) {
+        update(callbackInstance, updateMethod);
+        m_configType = configType;
+        return this;
     }
     
     @Override
-    public <U> FactoryPidAdapterBuilder cb(CbTypeComponentDictionary<U> callback) {
-        Class<U> type = Helpers.getLambdaArgType(callback, 0);
-        return setComponentCallbackRef(type, (instance, component, props) -> { callback.accept((U) instance, component, props); });
+    public <T> FactoryPidAdapterBuilder update(CbDictionary<T> callback) {
+        Class<T> type = Helpers.getLambdaArgType(callback, 0);
+        return setComponentCallbackRef(type, (instance, component, props) -> { callback.accept((T) instance, props); });
+    }
+    
+    @Override
+    public <T, U> FactoryPidAdapterBuilder update(Class<U> configType, CbConfiguration<T, U> callback) {
+        Class<T> type = Helpers.getLambdaArgType(callback, 0);
+        m_factoryPid = m_factoryPid == null ? configType.getName() : m_factoryPid;
+        return setComponentCallbackRef(type, (instance, component, props) -> {
+            U configProxy = ((ComponentContext) component).createConfigurationProxy(configType, props);            
+            callback.accept((T) instance, configProxy); 
+        });
+    }
+    
+    @Override
+    public <T> FactoryPidAdapterBuilder update(CbDictionaryComponent<T> callback) {
+        Class<T> type = Helpers.getLambdaArgType(callback, 0);
+        return setComponentCallbackRef(type, (instance, component, props) -> { callback.accept((T) instance, props, component); });
     }
 
     @Override
-    public FactoryPidAdapterBuilder cbi(CbDictionary callback) {
+    public <T, U> FactoryPidAdapterBuilder update(Class<U> configType, CbConfigurationComponent<T, U> callback) {
+        Class<T> type = Helpers.getLambdaArgType(callback, 0);
+        m_factoryPid = m_factoryPid == null ? configType.getName() : m_factoryPid;
+        return setComponentCallbackRef(type, (instance, component, props) -> { 
+            U configProxy = ((ComponentContext) component).createConfigurationProxy(configType, props);            
+            callback.accept((T) instance, configProxy, component); 
+        });
+    }
+
+    @Override
+    public FactoryPidAdapterBuilder update(InstanceCbDictionary callback) {
         return setInstanceCallbackRef((instance, component, props) -> { callback.accept(props); });
     }
+    
+    @Override
+    public <T> FactoryPidAdapterBuilder update(Class<T> configType, InstanceCbConfiguration<T> callback) {
+        return setInstanceCallbackRef((instance, component, props) -> { 
+            T configProxy = ((ComponentContext) component).createConfigurationProxy(configType, props);            
+            callback.accept(configProxy);
+        });
+    }
 
     @Override
-    public FactoryPidAdapterBuilder cbi(CbComponentDictionary callback) {
-        return setInstanceCallbackRef((instance, component, props) -> { callback.accept(component, props); });
+    public FactoryPidAdapterBuilder update(InstanceCbDictionaryComponent callback) {
+        return setInstanceCallbackRef((instance, component, props) -> { callback.accept(props, component); });
+    }
+
+    @Override
+    public <T> FactoryPidAdapterBuilder update(Class<T> configType, InstanceCbConfigurationComponent<T> callback) {
+        return setInstanceCallbackRef((instance, component, props) -> { 
+            T configProxy = ((ComponentContext) component).createConfigurationProxy(configType, props);            
+            callback.accept(configProxy, component);
+        });
     }
 
     @Override
@@ -124,14 +176,14 @@ public class FactoryPidAdapterBuilderImpl implements AdapterBase<FactoryPidAdapt
             };
             c = m_dm.createFactoryConfigurationAdapterService(m_factoryPid, "updated", m_propagate, wrapCallback);
         } else {
-            c = m_dm.createFactoryConfigurationAdapterService(m_factoryPid, m_updateMethodName, m_propagate, m_updateCallbackInstance);
+            c = m_dm.createFactoryConfigurationAdapterService(m_factoryPid, m_updateMethodName, m_propagate, m_updateCallbackInstance, m_configType);
         }
         ComponentBuilderImpl cb = new ComponentBuilderImpl(c, false);
         m_compBuilder.accept (cb);
         return cb.build();
     }
     
-    private <U> FactoryPidAdapterBuilder setInstanceCallbackRef(MethodRef<U> ref) {
+    private <T> FactoryPidAdapterBuilder setInstanceCallbackRef(MethodRef<T> ref) {
         checkHasNoReflectionCallbacks();
         m_hasMethodRefs = true;
         m_refs.add((instance, component, props) -> ref.accept(null, component, props));
@@ -139,7 +191,7 @@ public class FactoryPidAdapterBuilderImpl implements AdapterBase<FactoryPidAdapt
     }
     
     @SuppressWarnings("unchecked")
-    private <U> FactoryPidAdapterBuilder setComponentCallbackRef(Class<U> type, MethodRef<U> ref) {
+    private <T> FactoryPidAdapterBuilder setComponentCallbackRef(Class<T> type, MethodRef<T> ref) {
         checkHasNoReflectionCallbacks();
         m_hasMethodRefs = true;
         m_refs.add((instance, component, props) -> {
@@ -147,7 +199,7 @@ public class FactoryPidAdapterBuilderImpl implements AdapterBase<FactoryPidAdapt
                 .filter(impl -> Helpers.getClass(impl).equals(type))
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("The method reference " + ref + " does not match any available component impl classes."));
-            ref.accept((U) componentImpl, component, props);
+            ref.accept((T) componentImpl, component, props);
         });
         return this;
     }

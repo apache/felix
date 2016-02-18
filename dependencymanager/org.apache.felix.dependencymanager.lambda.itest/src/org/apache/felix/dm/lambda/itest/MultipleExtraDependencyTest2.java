@@ -127,8 +127,8 @@ public class MultipleExtraDependencyTest2 extends TestBase {
 
         public void init(Component s) {
             component(s, comp->comp
-                .withSrv(Sequencer.class, srv->srv.autoConfig("m_sequencer"))
-                .withSrv(ServiceInterface.class, srv->srv.filter("(foo=bar)").autoConfig("m_service")));
+                .withSvc(Sequencer.class, srv->srv.autoConfig("m_sequencer"))
+                .withSvc(ServiceInterface.class, srv->srv.filter("(foo=bar)").autoConfig("m_service")));
         }
         
         void start() {
@@ -150,8 +150,8 @@ public class MultipleExtraDependencyTest2 extends TestBase {
         public void init(Component c)
         {
             component(c, comp->comp
-                .withSrv(Sequencer.class, srv->srv.autoConfig("m_sequencer"))
-                .withSrv(ServiceProvider2.class, srv->srv.cb("bind", "unbind")));
+                .withSvc(Sequencer.class, srv->srv.autoConfig("m_sequencer"))
+                .withSvc(ServiceProvider2.class, srv->srv.add("bind").remove("unbind")));
         }
         
         void bind(ServiceProvider2 provider2)
@@ -191,8 +191,8 @@ public class MultipleExtraDependencyTest2 extends TestBase {
         public void init(Component c)
         {
             component(c, comp->comp
-		      .withSrv(Runnable.class, srv->srv.optional().filter("(foo=bar)"))
-		      .withSrv(Sequencer.class, srv->srv.cb("bind")));
+		      .withSvc(Runnable.class, srv->srv.optional().filter("(foo=bar)"))
+		      .withSvc(Sequencer.class, srv->srv.add("bind")));
         }
         
         void bind(Sequencer seq)

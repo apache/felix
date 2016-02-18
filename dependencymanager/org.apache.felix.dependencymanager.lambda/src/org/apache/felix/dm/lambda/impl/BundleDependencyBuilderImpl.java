@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.apache.felix.dm.BundleDependency;
@@ -14,9 +14,9 @@ import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.lambda.BundleDependencyBuilder;
 import org.apache.felix.dm.lambda.callbacks.CbBundle;
-import org.apache.felix.dm.lambda.callbacks.CbComponentBundle;
-import org.apache.felix.dm.lambda.callbacks.CbTypeBundle;
-import org.apache.felix.dm.lambda.callbacks.CbTypeComponentBundle;
+import org.apache.felix.dm.lambda.callbacks.CbBundleComponent;
+import org.apache.felix.dm.lambda.callbacks.InstanceCbBundle;
+import org.apache.felix.dm.lambda.callbacks.InstanceCbBundleComponent;
 import org.osgi.framework.Bundle;
 
 @SuppressWarnings("unchecked")
@@ -34,7 +34,7 @@ public class BundleDependencyBuilderImpl implements BundleDependencyBuilder {
 	private boolean m_propagate;
 	private Object m_propagateInstance;
 	private String m_propagateMethod;
-	private Supplier<Dictionary<?, ?>> m_propagateSupplier;
+	private Function<Bundle, Dictionary<?, ?>> m_propagateCallback;
 	private final Component m_component;
     
     enum Cb {
@@ -55,13 +55,14 @@ public class BundleDependencyBuilderImpl implements BundleDependencyBuilder {
 	 */
 	private class Propagate {
 		@SuppressWarnings("unused")
-		Dictionary<?, ?> propagate() {
-			return m_propagateSupplier.get();
+		Dictionary<?, ?> propagate(Bundle bundle) {
+			return m_propagateCallback.apply(bundle);
 		}
 	}
 
     public BundleDependencyBuilderImpl (Component component) {
         m_component = component;
+        m_required = Helpers.isDependencyRequiredByDefault(component);
     }
 
     @Override
@@ -121,7 +122,7 @@ public class BundleDependencyBuilderImpl implements BundleDependencyBuilder {
 
     @Override
     public BundleDependencyBuilder propagate(Object instance, String method) {
-        if (m_propagateSupplier != null || m_propagate) throw new IllegalStateException("Propagate callback already set.");
+        if (m_propagateCallback != null || m_propagate) throw new IllegalStateException("Propagate callback already set.");
         Objects.nonNull(method);
         Objects.nonNull(instance);
         m_propagateInstance = instance;
@@ -130,42 +131,38 @@ public class BundleDependencyBuilderImpl implements BundleDependencyBuilder {
     }
 
     @Override
-    public BundleDependencyBuilder propagate(Supplier<Dictionary<?, ?>> instance) {
+    public BundleDependencyBuilder propagate(Function<Bundle, Dictionary<?, ?>> instance) {
         if (m_propagateInstance != null || m_propagate) throw new IllegalStateException("Propagate callback already set.");
-        m_propagateSupplier = instance;
+        m_propagateCallback = instance;
         return this;
-    }
-        
-    public BundleDependencyBuilder cb(String ... callbacks) {
-        return cb(null, callbacks);
     }
     
     @Override
-    public BundleDependencyBuilder cb(Object callbackInstance, String ... callbacks) {
-        switch (callbacks.length) {
-        case 1:
-            cbi(callbackInstance, callbacks[0], null, null);
-            break;
-            
-        case 2:
-            cbi(callbackInstance, callbacks[0], null, callbacks[1]);
-            break;
-            
-        case 3:
-            cbi(callbackInstance, callbacks[0], callbacks[1], callbacks[2]);
-            break;
-            
-        default:
-            throw new IllegalArgumentException("wrong number of arguments: " + callbacks.length + ". " +
-                "Possible arguments: [add], [add, remove] or [add, change, remove]");
-        }
+    public BundleDependencyBuilder callbackInstance(Object callbackInstance) {
+        m_instance = callbackInstance;
+        return this;
+    }
 
+    @Override
+    public BundleDependencyBuilder add(String add) {
+        callbacks(add, null, null);
         return this;
     }
     
-    private BundleDependencyBuilder cbi(Object callbackInstance, String added, String changed, String removed) {
+    @Override
+    public BundleDependencyBuilder change(String change) {
+        callbacks(null, change, null);
+        return this;
+    }
+    
+    @Override
+    public BundleDependencyBuilder remove(String remove) {
+        callbacks(null, null, remove);
+        return this;
+    }
+            
+    private BundleDependencyBuilder callbacks(String added, String changed, String removed) {
         requiresNoMethodRefs();
-        m_instance = callbackInstance;
         m_added = added != null ? added : m_added;
         m_changed = changed != null ? changed : m_changed;
         m_removed = removed != null ? removed : m_removed;
@@ -174,17 +171,21 @@ public class BundleDependencyBuilderImpl implements BundleDependencyBuilder {
     }
 
     @Override
-    public <T> BundleDependencyBuilder cb(CbTypeBundle<T> add) {
-        return cb(add, null, null);
+    public <T> BundleDependencyBuilder add(CbBundle<T> add) {
+        return callbacks(add, null, null);
     }
     
     @Override
-    public <T> BundleDependencyBuilder cb(CbTypeBundle<T> add, CbTypeBundle<T> remove) {
-        return cb(add, null, remove);
+    public <T> BundleDependencyBuilder change(CbBundle<T> change) {
+        return callbacks(null, change, null);
     }
     
     @Override
-    public <T> BundleDependencyBuilder cb(CbTypeBundle<T> add, CbTypeBundle<T> change, CbTypeBundle<T> remove) {
+    public <T> BundleDependencyBuilder remove(CbBundle<T> remove) {
+        return callbacks(null, null, remove);
+    }
+    
+    private <T> BundleDependencyBuilder callbacks(CbBundle<T> add, CbBundle<T> change, CbBundle<T> remove) {
         if (add != null) {
             setComponentCallbackRef(Cb.ADD, Helpers.getLambdaArgType(add, 0), (inst, component, bundle) -> add.accept ((T) inst, bundle));
         }
@@ -198,41 +199,49 @@ public class BundleDependencyBuilderImpl implements BundleDependencyBuilder {
     }
 
     @Override
-    public <T> BundleDependencyBuilder cb(CbTypeComponentBundle<T> add) {
-        return cb(add, null, null);
+    public <T> BundleDependencyBuilder add(CbBundleComponent<T> add) {
+        return callbacks(add, null, null);
     }
     
     @Override
-    public <T> BundleDependencyBuilder cb(CbTypeComponentBundle<T> add, CbTypeComponentBundle<T> remove) {
-        return cb(add, null, remove);
+    public <T> BundleDependencyBuilder change(CbBundleComponent<T> change) {
+        return callbacks(null, change, null);
     }
     
     @Override
-    public <T> BundleDependencyBuilder cb(CbTypeComponentBundle<T> add, CbTypeComponentBundle<T> change, CbTypeComponentBundle<T> remove) {
+    public <T> BundleDependencyBuilder remove(CbBundleComponent<T> remove) {
+        return callbacks(null, null, remove);
+    }
+    
+    private <T> BundleDependencyBuilder callbacks(CbBundleComponent<T> add, CbBundleComponent<T> change, CbBundleComponent<T> remove) {
         if (add != null) {
-            setComponentCallbackRef(Cb.ADD, Helpers.getLambdaArgType(add, 0), (inst, component, bundle) -> add.accept ((T) inst, component, bundle));
+            setComponentCallbackRef(Cb.ADD, Helpers.getLambdaArgType(add, 0), (inst, component, bundle) -> add.accept ((T) inst, bundle, component));
         }
         if (change != null) {
-            setComponentCallbackRef(Cb.CHG, Helpers.getLambdaArgType(change, 0), (inst, component, bundle) -> change.accept ((T) inst, component, bundle));
+            setComponentCallbackRef(Cb.CHG, Helpers.getLambdaArgType(change, 0), (inst, component, bundle) -> change.accept ((T) inst, bundle, component));
         }
         if (remove != null) {
-            setComponentCallbackRef(Cb.REM, Helpers.getLambdaArgType(remove, 0), (inst, component, bundle) -> remove.accept ((T) inst, component, bundle));
+            setComponentCallbackRef(Cb.REM, Helpers.getLambdaArgType(remove, 0), (inst, component, bundle) -> remove.accept ((T) inst, bundle, component));
         }
         return this;  
     }
     
     @Override
-    public BundleDependencyBuilder cbi(CbBundle add) {
-        return cbi(add, null, null);
+    public BundleDependencyBuilder add(InstanceCbBundle add) {
+        return callbacks(add, null, null);
     }
     
     @Override
-    public BundleDependencyBuilder cbi(CbBundle add, CbBundle remove) {
-        return cbi(add, null, remove);
+    public BundleDependencyBuilder change(InstanceCbBundle change) {
+        return callbacks(null, change, null);
     }
     
     @Override
-    public BundleDependencyBuilder cbi(CbBundle add, CbBundle change, CbBundle remove) {
+    public BundleDependencyBuilder remove(InstanceCbBundle remove) {
+        return callbacks(null, null, remove);
+    }
+    
+    private BundleDependencyBuilder callbacks(InstanceCbBundle add, InstanceCbBundle change, InstanceCbBundle remove) {
         if (add != null) setInstanceCallbackRef(Cb.ADD, (inst, component, bundle) -> add.accept(bundle));
         if (change != null) setInstanceCallbackRef(Cb.CHG, (inst, component, bundle) -> change.accept(bundle));
         if (remove != null) setInstanceCallbackRef(Cb.REM, (inst, component, bundle) -> remove.accept(bundle));
@@ -240,20 +249,24 @@ public class BundleDependencyBuilderImpl implements BundleDependencyBuilder {
     }
 
     @Override
-    public BundleDependencyBuilder cbi(CbComponentBundle add) {
-        return cbi(add, null, null);
+    public BundleDependencyBuilder add(InstanceCbBundleComponent add) {
+        return callbacks(add, null, null);
     }
     
     @Override
-    public BundleDependencyBuilder cbi(CbComponentBundle add, CbComponentBundle remove) {
-        return cbi(add, null, remove);
+    public BundleDependencyBuilder change(InstanceCbBundleComponent add) {
+        return callbacks(add, null, null);
+    }
+
+    @Override
+    public BundleDependencyBuilder remove(InstanceCbBundleComponent remove) {
+        return callbacks(null, null, remove);
     }
     
-    @Override
-    public BundleDependencyBuilder cbi(CbComponentBundle add, CbComponentBundle change, CbComponentBundle remove) {
-        if (add != null) setInstanceCallbackRef(Cb.ADD, (inst, component, bundle) -> add.accept(component, bundle));
-        if (change != null) setInstanceCallbackRef(Cb.CHG, (inst, component, bundle) -> change.accept(component, bundle));
-        if (remove != null) setInstanceCallbackRef(Cb.REM, (inst, component, bundle) -> remove.accept(component, bundle));
+    private BundleDependencyBuilder callbacks(InstanceCbBundleComponent add, InstanceCbBundleComponent change, InstanceCbBundleComponent remove) {
+        if (add != null) setInstanceCallbackRef(Cb.ADD, (inst, component, bundle) -> add.accept(bundle, component));
+        if (change != null) setInstanceCallbackRef(Cb.CHG, (inst, component, bundle) -> change.accept(bundle, component));
+        if (remove != null) setInstanceCallbackRef(Cb.REM, (inst, component, bundle) -> remove.accept(bundle, component));
         return this;
     }
 
@@ -280,7 +293,7 @@ public class BundleDependencyBuilderImpl implements BundleDependencyBuilder {
             dep.setPropagate(true);
         } else if (m_propagateInstance != null) {
             dep.setPropagate(m_propagateInstance, m_propagateMethod);
-        } else if (m_propagateSupplier != null) {
+        } else if (m_propagateCallback != null) {
         	dep.setPropagate(new Propagate(), "propagate");
         }
         

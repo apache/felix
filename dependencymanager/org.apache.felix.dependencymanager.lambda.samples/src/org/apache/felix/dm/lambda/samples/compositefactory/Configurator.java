@@ -12,7 +12,7 @@ public class Configurator {
     
     void start() throws IOException {
         // Configure the ServiceConsumer component
-        Configuration c = m_cm.getConfiguration(ProviderFactory.class.getName(), null);
+        Configuration c = m_cm.getConfiguration(MyConfig.class.getName(), null);
         Dictionary<String, Object> props = new Hashtable<>();
         props.put("foo", "bar");
         c.update(props);

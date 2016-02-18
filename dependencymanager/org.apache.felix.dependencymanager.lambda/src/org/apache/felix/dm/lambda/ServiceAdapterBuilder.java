@@ -10,7 +10,7 @@ package org.apache.felix.dm.lambda;
  * 
  * <pre> {@code
  * public class Activator extends DependencyManagerActivator {
- *    public void activate() throws Exception { 
+ *    public void init(BundleContext ctx, DependencyManager dm) throws Exception { 
  *        adapter(Device.class, adapt -> adapt.impl(DeviceServlet.class).provides(HttpServlet.class).properties(alias -> "/device");                    
  *    }
  * }}</pre>

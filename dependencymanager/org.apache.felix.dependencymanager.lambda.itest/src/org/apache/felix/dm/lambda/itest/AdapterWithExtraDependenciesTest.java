@@ -36,7 +36,7 @@ public class AdapterWithExtraDependenciesTest extends TestBase {
         Ensure e = new Ensure();
         
         // create a service adapter that adapts to services S1 and has an optional dependency on services S2
-        Component sa = adapter(m, S1.class).impl(SA.class).withSrv(S2.class, s2 -> s2.cb("add", "remove")).build();
+        Component sa = adapter(m, S1.class).impl(SA.class).withSvc(S2.class, s2 -> s2.add("add").remove("remove")).build();
         m.add(sa);
         
         // create a service S1, which triggers the creation of the first adapter instance (A1)
@@ -71,7 +71,7 @@ public class AdapterWithExtraDependenciesTest extends TestBase {
         Ensure e = new Ensure();
         
         // create a service adapter that adapts to services S1 and has an optional dependency on services S2
-        Component sa = adapter(m, S1.class).impl(SA.class).withSrv(S2.class, s2 -> s2.cb(SA::add, SA::remove)).build();
+        Component sa = adapter(m, S1.class).impl(SA.class).withSvc(S2.class, s2 -> s2.add(SA::add).remove(SA::remove)).build();
         m.add(sa);
         
         // create a service S1, which triggers the creation of the first adapter instance (A1)

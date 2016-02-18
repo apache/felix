@@ -35,8 +35,8 @@ public class AspectWithCallbacksServiceDependencyTest extends TestBase {
         Ensure e = new Ensure();
         // create a service provider and consumer
         Component sp = component(m).impl(new ServiceProvider(e)).provides(ServiceInterface.class.getName()).build();
-        Component sc = component(m).impl(new ServiceConsumer(e)).withSrv(ServiceInterface.class, s->s.cb("add", "remove")).build();
-        Component asp = aspect(m, ServiceInterface.class).rank(100).cb("add", null, "remove", "swap").impl(ServiceProviderAspect.class).build();
+        Component sc = component(m).impl(new ServiceConsumer(e)).withSvc(ServiceInterface.class, s->s.add("add").remove("remove")).build();
+        Component asp = aspect(m, ServiceInterface.class).rank(100).add("add").remove("remove").swap("swap").impl(ServiceProviderAspect.class).build();
             
         m.add(sp);
         m.add(sc);
@@ -55,10 +55,10 @@ public class AspectWithCallbacksServiceDependencyTest extends TestBase {
         Ensure e = new Ensure();
         // create a service provider and consumer
         Component sp = component(m).impl(new ServiceProvider(e)).provides(ServiceInterface.class.getName()).build();
-        Component sc = component(m).impl(new ServiceConsumer(e)).withSrv(ServiceInterface.class, s->s.cb(ServiceConsumer::add, ServiceConsumer::remove)).build();            
+        Component sc = component(m).impl(new ServiceConsumer(e)).withSvc(ServiceInterface.class, s->s.add(ServiceConsumer::add).remove(ServiceConsumer::remove)).build();            
         Component asp = aspect(m, ServiceInterface.class)
             .impl(ServiceProviderAspect.class).rank(100)
-            .cb(ServiceProviderAspect::add, ServiceProviderAspect::remove).sw(ServiceProviderAspect::swap)
+            .add(ServiceProviderAspect::add).remove(ServiceProviderAspect::remove).swap(ServiceProviderAspect::swap)
             .build();
                 
         m.add(sp);
@@ -78,11 +78,11 @@ public class AspectWithCallbacksServiceDependencyTest extends TestBase {
         Ensure e = new Ensure();
         // create a service provider and consumer
         Component sp = component(m).impl(new ServiceProvider(e)).provides(ServiceInterface.class).build();
-        Component sc = component(m).impl(new ServiceConsumer(e)).withSrv(ServiceInterface.class, s->s.cb("add", "remove")).build();
+        Component sc = component(m).impl(new ServiceConsumer(e)).withSvc(ServiceInterface.class, s->s.add("add").remove("remove")).build();
                 
         ServiceProviderAspect providerAspect = new ServiceProviderAspect();
         ServiceProviderAspectCallbackInstance aspectCb = new ServiceProviderAspectCallbackInstance(providerAspect);
-        Component asp = aspect(m, ServiceInterface.class).rank(100).impl(providerAspect).cbi(aspectCb::add, aspectCb::remove).swi(aspectCb::swap).build();
+        Component asp = aspect(m, ServiceInterface.class).rank(100).impl(providerAspect).add(aspectCb::add).remove(aspectCb::remove).swap(aspectCb::swap).build();
             
         m.add(sp);
         m.add(sc);

@@ -1,9 +1,9 @@
 package org.apache.felix.dm.lambda;
 
 import org.apache.felix.dm.lambda.callbacks.CbBundle;
-import org.apache.felix.dm.lambda.callbacks.CbComponentBundle;
-import org.apache.felix.dm.lambda.callbacks.CbTypeBundle;
-import org.apache.felix.dm.lambda.callbacks.CbTypeComponentBundle;
+import org.apache.felix.dm.lambda.callbacks.CbBundleComponent;
+import org.apache.felix.dm.lambda.callbacks.InstanceCbBundle;
+import org.apache.felix.dm.lambda.callbacks.InstanceCbBundleComponent;
 
 /**
  * Builds a Dependency Manager bundle adapter. The adapter created by this builder will be applied to any bundle that matches the specified 
@@ -12,12 +12,14 @@ import org.apache.felix.dm.lambda.callbacks.CbTypeComponentBundle;
  * you supply here. The bundle is injected by reflection in adapter class fields having a Bundle type, or using a callback method that you can 
  * specify.
  * 
+ * You can specify reflection based (using method names), or java8 method references for callbacks.
+ * 
  * <p> Example which creates a BundleAdapter service for each started bundle (the bundle is added by reflection on
  * a class field that has a "Bundle" type):
  * 
  * <pre> {@code
  * public class Activator extends DependencyManagerActivator {
- *     public void activate() throws Exception { 
+ *     public void init(BundleContext ctx, DependencyManager dm) throws Exception { 
  *       bundleAdapter(adapt -> adapt
  *           .impl(BundleAdapterImpl.class)
  *           .provides(BundleAdapter.class)
@@ -30,12 +32,12 @@ import org.apache.felix.dm.lambda.callbacks.CbTypeComponentBundle;
  * 
  * <pre> {@code
  * public class Activator extends DependencyManagerActivator {
- *     public void activate() throws Exception { 
+ *     public void init(BundleContext ctx, DependencyManager dm) throws Exception { 
  *       bundleAdapter(adapt -> adapt
  *           .impl(BundleAdapterImpl.class)
  *           .provides(BundleAdapter.class)
  *           .mask(Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE)
- *           .cb(BundleAdapterImpl::setBundle));
+ *           .add(BundleAdapterImpl::setBundle));
  *    }
  * }
  * }</pre>
@@ -44,12 +46,12 @@ import org.apache.felix.dm.lambda.callbacks.CbTypeComponentBundle;
  * 
  * <pre> {@code
  * public class Activator extends DependencyManagerActivator {
- *     public void activate() throws Exception { 
+ *     public void init(BundleContext ctx, DependencyManager dm) throws Exception { 
  *       bundleAdapter(adapt -> adapt
  *           .impl(BundleAdapterImpl.class)
  *           .provides(BundleAdapter.class)
  *           .mask(Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE)
- *           .cb("setBundle"));
+ *           .add("setBundle"));
  *    }
  * }
  * }</pre>
@@ -92,152 +94,187 @@ public interface BundleAdapterBuilder extends ComponentBuilder<BundleAdapterBuil
     BundleAdapterBuilder propagate();
     
     /**
-     * Sets some <code>callbacks</code> invoked on the component implementation instances. When a bundle state matches the bundle 
-     * adapter filter, then the bundle is injected using the specified callback methods. When you specify one callback, it stands for the "add" callback.
-     * When you specify two callbacks, the first one corresponds to the "add" callback, and the second one to the "remove" callback. When you specify three
-     * callbacks, the first one stands for the "add" callback, the second one for the "change" callback, and the third one for the "remove" callback.
+     * Sets a "add" callback name invoked on the component implementation instance(s).
+     * The callback can be used as hooks whenever the dependency is added. When you specify a callback, 
+     * the auto configuration feature is automatically turned off, because we're assuming you don't need it in this case.
      * 
-     * @param callbacks a list of callbacks (1 param : "add", 2 params : "add"/remove", 3 params : "add"/"change"/"remove").
-     * @return this builder
+     * @param callback the method to call when a bundle was added
+     * 
+     * The following method signature are supported:
+     * <pre>{@code
+     * callback(Bundle b)
+     * callback(Component c, Bundle b)
+     * }</pre>
+     * 
+     * @param callback the callback name
+     * @return this builder.
      */
-    BundleAdapterBuilder cb(String ... callbacks);
+    BundleAdapterBuilder add(String callback);
     
     /**
-     * Sets some <code>callback instance</code> methods invoked on a given Object instance. When a bundle state matches the bundle 
-     * adapter filter, then the bundle is injected using the specified callback methods. When you specify one callback, it stands for the "add" callback.
-     * When you specify two callbacks, the first one corresponds to the "add" callback, and the second one to the "remove" callback. 
-     * When you specify three callbacks, the first one stands for the "add" callback, the second one for the "change" callback, and the third one for 
-     * the "remove" callback.
+     * Sets a "change" callback name invoked on the component implementation instance(s).
+     * The callback can be used as hooks whenever the dependency is changed. When you specify a callback, 
+     * the auto configuration feature is automatically turned off, because we're assuming you don't need it in this case.
      * 
-     * @param callbackInstance the Object instance where the callbacks are invoked on
-     * @param callbacks a list of callbacks (1 param : "add", 2 params : "add"/remove", 3 params : "add"/"change"/"remove").
-     * @return this builder
+     * @param callback the method to call when a bundle was changed
+     * 
+     * The following method signature are supported:
+     * <pre>{@code
+     * callback(Bundle b)
+     * callback(Component c, Bundle b)
+     * }</pre>
+     * 
+     * @param callback the callback name
+     * @return this builder.
      */
-    BundleAdapterBuilder cbi(Object callbackInstance, String ... callbacks);
+     BundleAdapterBuilder change(String callback);
+ 
+     /**
+      * Sets a "remove" callback name invoked on the component implementation instance(s).
+      * The callback can be used as hooks whenever the dependency is removed. When you specify a callback, 
+      * the auto configuration feature is automatically turned off, because we're assuming you don't need it in this case.
+      * 
+      * @param callback the method to call when a bundle was removed
+      * 
+      * The following method signature are supported:
+      * <pre>{@code
+      * callback(Bundle b)
+      * callback(Component c, Bundle b)
+      * }</pre>
+      * 
+      * @param callback the callback name
+      * @return this builder.
+      */
+     BundleAdapterBuilder remove(String callback);
+     
+     /**
+      * Sets a callback instance to use when invoking reflection based callbacks.
+      * 
+      * @param callbackInstance the instance to call the reflection based callbacks on
+      * @return this builder.
+      * @see #add(String)
+      * @see #change(String)
+      * @see #remove(String)
+      */
+     BundleAdapterBuilder callbackInstance(Object callbackInstance);
 
     /**
-     * Sets a <code>callback</code> invoked on a component implementation instance when a bundle is added.
-     * The method reference must point to a Component implementation class method, and take as argument a Bundle.
+     * Sets a reference to a callback method invoked on one of the component implementation classes.
+     * The method reference must point to a Component implementation class method, it is called when the bundle is added
+     * and takes as argument a Bundle.
      * 
      * @param <T> the type of the component instance class on which the callback is invoked.
      * @param add the method reference invoked when a bundle is added.
      * @return this builder
      */
-    <T> BundleAdapterBuilder cb(CbTypeBundle<T> add);
+    <T> BundleAdapterBuilder add(CbBundle<T> add);
     
     /**
-     * Sets some <code>callbacks</code> invoked on a component implementation instance when a bundle is added/removed.
-     * The method references must point to a Component implementation class method, and take as argument a Bundle.
+     * Sets a reference to a callback method invoked on one of the component implementation classes.
+     * The method reference must point to a Component implementation class method, it is called when the bundle is changed
+     * and takes as argument a Bundle.
      * 
      * @param <T> the type of the component instance class on which the callback is invoked.
-     * @param add the method reference invoked when a bundle is added.
-     * @param remove the method reference invoked when a bundle is removed.
-     * @return this builder
-     */
-    <T> BundleAdapterBuilder cb(CbTypeBundle<T> add, CbTypeBundle<T> remove);
-    
-    /**
-     * Sets some <code>callbacks</code> invoked on a component implementation instance when a bundle is added, changed or removed.
-     * The method references must point to a Component implementation class method, and take as argument a Bundle.
-     * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
-     * @param add the method reference invoked when a bundle is added.
      * @param change the method reference invoked when a bundle has changed.
+     * @return this builder
+     */
+    <T> BundleAdapterBuilder change(CbBundle<T> change);
+    
+    /**
+     * Sets a reference to a callback method invoked on one of the component implementation classes.
+     * The method reference must point to a Component implementation class method, it is called when the bundle is removed
+     * and takes as argument a Bundle.
+     * 
+     * @param <T> the type of the component instance class on which the callback is invoked.
      * @param remove the method reference invoked when a bundle is removed.
      * @return this builder
      */
-    <T> BundleAdapterBuilder cb(CbTypeBundle<T> add, CbTypeBundle<T> change, CbTypeBundle<T> remove);
+    <T> BundleAdapterBuilder remove(CbBundle<T> remove);
     
     /**
-     * Sets a <code>callback</code> invoked on a component implementation instance when a bundle is added.
-     * The method reference must point to a Component implementation class method, and take as argument a Component and a Bundle.
+     * Sets a reference to a callback method invoked on one of the component implementation classes.
+     * The method reference must point to a Component implementation class method, it is called when the bundle is added
+     * and takes as argument a Bundle and a Component.
      * 
      * @param <T> the type of the component instance class on which the callback is invoked.
      * @param add the method reference invoked when a bundle is added.
      * @return this builder
      */
-    <T> BundleAdapterBuilder cb(CbTypeComponentBundle<T> add);    
+    <T> BundleAdapterBuilder add(CbBundleComponent<T> add);    
     
     /**
-     * Sets some <code>callbacks</code> invoked on a component implementation instance when a bundle is added, or removed.
-     * The method references must point to a Component implementation class method, and take as argument a Component and a Bundle.
+     * Sets a reference to a callback method invoked on one of the component implementation classes.
+     * The method reference must point to a Component implementation class method, it is called when the bundle is changed
+     * and takes as argument a Bundle and a Component.
      * 
      * @param <T> the type of the component instance class on which the callback is invoked.
-     * @param add the method reference invoked when a bundle is added.
-     * @param remove the method reference invoked when a bundle is removed.
-     * @return this builder
-     */
-    <T> BundleAdapterBuilder cb(CbTypeComponentBundle<T> add, CbTypeComponentBundle<T> remove);   
-    
-    /**
-     * Sets some <code>callbacks</code> invoked on a component implementation instance when a bundle is added, changed or removed.
-     * The method references must point to a Component implementation class method, and take as argument a Component and a Bundle.
-     * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
-     * @param add the method reference invoked when a bundle is added.
      * @param change the method reference invoked when a bundle has changed.
+     * @return this builder
+     */
+    <T> BundleAdapterBuilder change(CbBundleComponent<T> change);    
+    
+    /**
+     * Sets a reference to a callback method invoked on one of the component implementation classes.
+     * The method reference must point to a Component implementation class method, it is called when the bundle is removed
+     * and takes as argument a Bundle and a Component.
+     * 
+     * @param <T> the type of the component instance class on which the callback is invoked.
      * @param remove the method reference invoked when a bundle is removed.
      * @return this builder
      */
-    <T> BundleAdapterBuilder cb(CbTypeComponentBundle<T> add, CbTypeComponentBundle<T> change, CbTypeComponentBundle<T> remove);         
+    <T> BundleAdapterBuilder remove(CbBundleComponent<T> remove);    
 
     /**
-     * Sets a <code>callback instance</code> invoked on a given Object instance when a bundle is added. 
-     * The method reference must point to an Object instance method, and takes as argument a Bundle parameter.
+     * Sets a reference to a callback method invoked on a given Object instance.
+     * The method reference is invoked when the bundle is added and takes as argument a Bundle.
      * 
      * @param add the method reference invoked when a bundle is added.
      * @return this builder
      */
-    BundleAdapterBuilder cbi(CbBundle add);
+    BundleAdapterBuilder add(InstanceCbBundle add);
     
     /**
-     * Sets some <code>callback instance</code> invoked on a given Object instance when a bundle is added or removed. 
-     * The method references must point to an Object instance method, and take as argument a Bundle parameter.
+     * Sets a reference to a callback method invoked on a given Object instance.
+     * The method reference is invoked when the bundle has changed and takes as argument a Bundle.
      * 
-     * @param add the method reference invoked when a bundle is added.
-     * @param remove the method reference invoked when a bundle is removed.
-     * @return this builder
-     */
-    BundleAdapterBuilder cbi(CbBundle add, CbBundle remove);
-    
-    /**
-     * Sets some <code>callback instance</code> invoked on a given Object instance when a bundle is added, changed or removed.
-     * The method references must point to an Object instance method, and take as argument a Bundle parameter.
-     * 
-     * @param add the method reference invoked when a bundle is added.
      * @param change the method reference invoked when a bundle has changed.
+     * @return this builder
+     */
+    BundleAdapterBuilder change(InstanceCbBundle change);
+    
+    /**
+     * Sets a reference to a callback method invoked on a given Object instance.
+     * The method reference is invoked when the bundle is removed and takes as argument a Bundle.
+     * 
      * @param remove the method reference invoked when a bundle is removed.
      * @return this builder
      */
-    BundleAdapterBuilder cbi(CbBundle add, CbBundle change, CbBundle remove);
+    BundleAdapterBuilder remove(InstanceCbBundle remove);
 
     /**
-     * Sets a <code>callback instance</code> invoked on a given Object instance when a bundle is added. 
-     * The method reference must point to an Object instance method, and takes as arguments a Component and a Bundle.
+     * Sets a reference to a callback method invoked on a given Object instance.
+     * The method reference is invoked when the bundle is added and takes as argument a Bundle and a Component.
      * 
      * @param add the method reference invoked when a bundle is added.
      * @return this builder
      */
-    BundleAdapterBuilder cbi(CbComponentBundle add);
+    BundleAdapterBuilder add(InstanceCbBundleComponent add);
     
     /**
-     * Sets some <code>callback instance</code> invoked on a given Object instance when a bundle is added or removed. 
-     * The method references must point to an Object instance method, and take as argument a Component and a Bundle.
+     * Sets a reference to a callback method invoked on a given Object instance.
+     * The method reference is invoked when the bundle has changed and takes as argument a Bundle and a Component.
      * 
-     * @param add the method reference invoked when a bundle is added.
-     * @param remove the method reference invoked when a bundle is removed.
-     * @return this builder
-     */
-    BundleAdapterBuilder cbi(CbComponentBundle add, CbComponentBundle remove);
-    
-    /**
-     * Sets some <code>callback instance</code> invoked on a given Object instance when a bundle is added, changed or removed.
-     * The method references must point to an Object instance method, and take as argument a Component and a Bundle.
-     * 
-     * @param add the method reference invoked when a bundle is added.
      * @param change the method reference invoked when a bundle has changed.
+     * @return this builder
+     */
+    BundleAdapterBuilder change(InstanceCbBundleComponent change);
+    
+    /**
+     * Sets a reference to a callback method invoked on a given Object instance.
+     * The method reference is invoked when the bundle is removed and takes as argument a Bundle and a Component.
+     * 
      * @param remove the method reference invoked when a bundle is removed.
      * @return this builder
      */
-    BundleAdapterBuilder cbi(CbComponentBundle add, CbComponentBundle change, CbComponentBundle remove);
+    BundleAdapterBuilder remove(InstanceCbBundleComponent remove);
 }

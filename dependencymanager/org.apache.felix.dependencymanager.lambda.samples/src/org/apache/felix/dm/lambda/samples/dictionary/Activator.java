@@ -22,7 +22,9 @@ import static java.lang.System.out;
 import static org.apache.felix.service.command.CommandProcessor.COMMAND_FUNCTION;
 import static org.apache.felix.service.command.CommandProcessor.COMMAND_SCOPE;
 
+import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.lambda.DependencyManagerActivator;
+import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 
 /**
@@ -30,7 +32,7 @@ import org.osgi.service.log.LogService;
  */
 public class Activator extends DependencyManagerActivator {
     @Override
-    public void activate() throws Exception {
+    public void init(BundleContext ctx, DependencyManager dm) throws Exception {
     	out.println("type \"log info\" to see the logs emitted by this test.");
 
         // Create the factory configuration for our DictionaryImpl service. An instance of the DictionaryImpl is created for each
@@ -38,25 +40,24 @@ public class Activator extends DependencyManagerActivator {
         factoryPidAdapter(adapter -> adapter
             .impl(DictionaryImpl.class)
             .provides(DictionaryService.class)
-            .factoryPid(DictionaryConfiguration.class)
             .propagate()
-            .cb(DictionaryImpl::updated)
-            .withSrv(LogService.class));
+            .update(DictionaryConfiguration.class, DictionaryImpl::updated)
+            .withSvc(LogService.class));
                             
         // Create the Dictionary Aspect that decorates any registered Dictionary service. For each Dictionary, an instance of the 
         // DictionaryAspect service is created).
         aspect(DictionaryService.class, aspect -> aspect
             .impl(DictionaryAspect.class)
             .filter("(lang=en)").rank(10)
-            .withCnf(conf -> conf.pid(DictionaryAspectConfiguration.class).cb(DictionaryAspect::addWords))
-            .withSrv(LogService.class));
+            .withCnf(conf -> conf.update(DictionaryAspectConfiguration.class, DictionaryAspect::addWords))
+            .withSvc(LogService.class));
                     
         // Create the SpellChecker component. It depends on all available DictionaryService instances, possibly
         // decorated by some DictionaryAspects.
         component(comp -> comp
             .impl(SpellChecker.class)
             .provides(SpellChecker.class, COMMAND_SCOPE, "dictionary", COMMAND_FUNCTION, new String[] {"spellcheck"}) 
-            .withSrv(DictionaryService.class)
-            .withSrv(LogService.class));
+            .withSvc(DictionaryService.class)
+            .withSvc(LogService.class));
     }
 }

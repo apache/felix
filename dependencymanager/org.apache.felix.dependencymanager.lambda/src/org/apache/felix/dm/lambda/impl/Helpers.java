@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.apache.felix.dm.Component;
+import org.apache.felix.dm.context.ComponentContext;
 import org.apache.felix.dm.lambda.callbacks.SerializableLambda;
 
 /**
@@ -19,7 +20,30 @@ import org.apache.felix.dm.lambda.callbacks.SerializableLambda;
  */
 public class Helpers {
 	private final static Pattern LAMBDA_INSTANCE_METHOD_TYPE = Pattern.compile("(L[^;]+)+");
+	private final static String DEFAULT_DEPENDENCY_MODE = "org.apache.felix.dependencymanager.lambda.dependencymode";
+	private final static String REQUIRED = "required";
+	private final static String OPTIONAL = "optional";
 
+	/**
+	 * Tests if a dependency is required by default.
+	 * By default, a dependency is required, but you can configure the mode of a dependency, by configure the
+	 * DEFAULT_DEPENDENCY_MODE property in the bundle context properties. This property can take as value:
+	 * <ul><li>"required" meaning that dependencies are required by default,
+	 * <li>"optional" meaning that dependencies are optional by default.
+	 * </ul>
+	 * By default, a dependency is required.
+	 */
+	static boolean isDependencyRequiredByDefault(Component component) {
+	    String property = ((ComponentContext) component).getBundleContext().getProperty(DEFAULT_DEPENDENCY_MODE);
+	    if (REQUIRED.equalsIgnoreCase(property)) {
+	        return true;
+	    } else if (OPTIONAL.equalsIgnoreCase(property)) {
+	        return false;
+	    } else {
+	        return true;
+	    }
+	}
+	
 	/**
 	 * Gets the class name of a given object.
 	 * @param obj the object whose class has to be returned.

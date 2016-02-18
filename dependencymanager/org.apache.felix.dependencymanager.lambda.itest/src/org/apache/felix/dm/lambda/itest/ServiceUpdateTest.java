@@ -43,11 +43,11 @@ public class ServiceUpdateTest extends TestBase {
         // activate it
         component(m, comp -> comp
         		.impl(new ServiceProvider(e))
-        		.withSrv(ServiceInterface.class, srv -> srv
-        				.cb(ServiceProvider::add, ServiceProvider::change, ServiceProvider::remove)));
+        		.withSvc(ServiceInterface.class, srv -> srv
+        				.add(ServiceProvider::add).change(ServiceProvider::change).remove(ServiceProvider::remove)));
         component(m, comp -> comp
         		.impl(provider)
-        		.withSrv(ResourceHandler.class, srv -> srv.cb(ResourceProvider::add, ResourceProvider::remove)));
+        		.withSvc(ResourceHandler.class, srv -> srv.add(ResourceProvider::add).remove(ResourceProvider::remove)));
                
         // TODO implement resource adapters in new builder API and use it for the following resource adapter.
         

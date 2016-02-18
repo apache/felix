@@ -38,8 +38,8 @@ public class MultipleExtraDependenciesTest extends TestBase {
          DependencyManager m = getDM();
          // Helper class that ensures certain steps get executed in sequence
          Ensure e = new Ensure();
-         Component c1 = component(m).provides(Service1.class).impl(new MyComponent1(e)).withSrv(Service2.class, srv->srv.autoConfig("m_service2")).build();
-         Component c2 = component(m).impl(new MyComponent2(e)).withSrv(Service1.class, srv->srv.required(false).autoConfig(false).cb("added")).build();
+         Component c1 = component(m).provides(Service1.class).impl(new MyComponent1(e)).withSvc(Service2.class, srv->srv.autoConfig("m_service2")).build();
+         Component c2 = component(m).impl(new MyComponent2(e)).withSvc(Service1.class, srv->srv.required(false).autoConfig(false).add("added")).build();
          Component c3 = component(m).provides(Service2.class).impl(Service2Impl.class).build();
          Component c4 = component(m).impl(Service3Impl1.class).provides(Service3.class, type -> "xx").build();
          Component c5 = component(m).impl(Service3Impl2.class).provides(Service3.class, type -> "yy").build();
@@ -72,8 +72,8 @@ public class MultipleExtraDependenciesTest extends TestBase {
         DependencyManager m = getDM();
         // Helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
-        Component c1 = component(m).provides(Service1.class).impl(new MyComponent1(e)).withSrv(Service2.class, srv->srv.autoConfig("m_service2")).build();
-        Component c2 = component(m).impl(new MyComponent2(e)).withSrv(Service1.class, srv->srv.required(false).autoConfig(false).cb("added")).build();
+        Component c1 = component(m).provides(Service1.class).impl(new MyComponent1(e)).withSvc(Service2.class, srv->srv.autoConfig("m_service2")).build();
+        Component c2 = component(m).impl(new MyComponent2(e)).withSvc(Service1.class, srv->srv.required(false).autoConfig(false).add("added")).build();
         Component c3 = component(m).provides(Service2.class).impl(Service2Impl.class).build();
         Component c4 = component(m).impl(Service3Impl1.class).provides(Service3.class, type -> "xx").build();
         Component c5 = component(m).impl(Service3Impl2.class).provides(Service3.class, type -> "yy").build();
@@ -121,8 +121,8 @@ public class MultipleExtraDependenciesTest extends TestBase {
             // Service3/yy not yet available
 
             component(c, comp -> comp
-                .withSrv(Service3.class, srv->srv.filter("(type=xx)").autoConfig("m_service3_xx"))
-                .withSrv(Service3.class, srv->srv.filter("(type=yy)").autoConfig("m_service3_yy")));
+                .withSvc(Service3.class, srv->srv.filter("(type=xx)").autoConfig("m_service3_xx"))
+                .withSvc(Service3.class, srv->srv.filter("(type=yy)").autoConfig("m_service3_yy")));
         }
         
         void start() {

@@ -45,7 +45,7 @@ public class AspectBaseTest extends TestBase {
         ServiceConsumer c = new ServiceConsumer(e);
         
         Component sp = component(m).impl(p).provides(ServiceInterface.class).properties(name -> "a").build();
-        Component sc = component(m).impl(c).withSrv(ServiceInterface.class, srv -> srv.cb("add", "remove").autoConfig("m_service")).build();
+        Component sc = component(m).impl(c).withSvc(ServiceInterface.class, srv -> srv.add("add").remove("remove").autoConfig("m_service")).build();
         Component sa = aspect(m, ServiceInterface.class).rank(20).impl(ServiceAspect.class).build();
             
         m.add(sc);
@@ -81,7 +81,7 @@ public class AspectBaseTest extends TestBase {
         
         Component sp = component(m).impl(p).provides(ServiceInterface.class).properties(name -> "a").build();        
         Component sc = component(m)
-            .impl(c).withSrv(ServiceInterface.class, srv -> srv.cbi(c::add, c::remove).autoConfig("m_service")).build();
+            .impl(c).withSvc(ServiceInterface.class, srv -> srv.add(c::addRef).remove(c::removeRef).autoConfig("m_service")).build();
         Component sa = aspect(m, ServiceInterface.class).rank(20).impl(ServiceAspect.class).build();
         
         m.add(sc);
@@ -116,7 +116,7 @@ public class AspectBaseTest extends TestBase {
         ServiceProvider p = new ServiceProvider(e, "a");
         ServiceConsumer c = new ServiceConsumer(e);
         Component sp = component(m).impl(p).provides(ServiceInterface.class).properties(name -> "a").build();            
-        Component sc = component(m).impl(c).withSrv(ServiceInterface.class, srv -> srv.cb("add", "remove").autoConfig("m_service")).build();
+        Component sc = component(m).impl(c).withSvc(ServiceInterface.class, srv -> srv.add("add").remove("remove").autoConfig("m_service")).build();
         Component sa = aspect(m, ServiceInterface.class).rank(20).impl(ServiceAspect.class).build();
 
         // we first add the aspect
@@ -158,7 +158,7 @@ public class AspectBaseTest extends TestBase {
         ServiceConsumer c = new ServiceConsumer(e);
         
         Component sp = component(m).impl(p).provides(ServiceInterface.class).properties(name -> "a").build();
-        Component sc = component(m).impl(c).withSrv(ServiceInterface.class, srv -> srv.cbi(c::add, c::remove).autoConfig("m_service")).build();
+        Component sc = component(m).impl(c).withSvc(ServiceInterface.class, srv -> srv.add(c::addRef).remove(c::removeRef).autoConfig("m_service")).build();
         Component sa = aspect(m, ServiceInterface.class).rank(20).impl(ServiceAspect.class).build();
 
         // we first add the aspect
@@ -199,7 +199,7 @@ public class AspectBaseTest extends TestBase {
         ServiceConsumer c = new ServiceConsumer(e);
         Component sp = component(m).impl(new ServiceProvider(e, "a")).provides(ServiceInterface.class).properties(name -> "a").build();
         Component sp2 = component(m).impl(new ServiceProvider(e, "b")).provides(ServiceInterface.class).properties(name -> "b").build();
-        Component sc = component(m).impl(c).withSrv(ServiceInterface.class, srv -> srv.cb("add", "remove")).build();
+        Component sc = component(m).impl(c).withSvc(ServiceInterface.class, srv -> srv.add("add").remove("remove")).build();
 
         Component sa = aspect(m, ServiceInterface.class).rank(20).impl(ServiceAspect.class).build();
         Component sa2 = aspect(m, ServiceInterface.class).rank(10).impl(ServiceAspect.class).build();
@@ -241,7 +241,7 @@ public class AspectBaseTest extends TestBase {
         ServiceConsumer c = new ServiceConsumer(e);
         Component sp = component(m).impl(new ServiceProvider(e, "a")).provides(ServiceInterface.class).properties(name -> "a").build();
         Component sp2 = component(m).impl(new ServiceProvider(e, "b")).provides(ServiceInterface.class).properties(name -> "b").build();
-        Component sc = component(m).impl(c).withSrv(ServiceInterface.class, srv -> srv.cbi(c::add, c::remove)).build();
+        Component sc = component(m).impl(c).withSvc(ServiceInterface.class, srv -> srv.add(c::addRef).remove(c::removeRef)).build();
 
         Component sa = aspect(m, ServiceInterface.class).rank(20).impl(ServiceAspect.class).build();
         Component sa2 = aspect(m, ServiceInterface.class).rank(10).impl(ServiceAspect.class).build();
@@ -310,13 +310,21 @@ public class AspectBaseTest extends TestBase {
             m_ensure = e;
         }
         
-        public void add(ServiceReference<ServiceInterface> ref, ServiceInterface si) {
+        public void addRef(ServiceInterface si, ServiceReference<ServiceInterface> ref) { // method ref callback
+            add(ref, si);
+        }
+        
+        public void add(ServiceReference<ServiceInterface> ref, ServiceInterface si) { // reflection callback
             System.out.println("add: " + ServiceUtil.toString(ref));
             m_services.add(si);
             m_ensure.step();
         }
         
-        public void remove(ServiceReference<ServiceInterface> ref, ServiceInterface si) {
+        public void removeRef(ServiceInterface si, ServiceReference<ServiceInterface> ref) { // method ref callback
+            remove(ref, si);
+        }
+        
+        public void remove(ServiceReference<ServiceInterface> ref, ServiceInterface si) { // reflection callback
             System.out.println("rem: " + ServiceUtil.toString(ref));
             m_services.remove(si);
             m_ensure.step();

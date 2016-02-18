@@ -29,9 +29,10 @@ import org.apache.felix.dm.lambda.DependencyBuilder;
 import org.apache.felix.dm.lambda.FluentProperty;
 import org.apache.felix.dm.lambda.FutureDependencyBuilder;
 import org.apache.felix.dm.lambda.ServiceDependencyBuilder;
+import org.apache.felix.dm.lambda.callbacks.Cb;
 import org.apache.felix.dm.lambda.callbacks.CbComponent;
-import org.apache.felix.dm.lambda.callbacks.CbConsumer;
-import org.apache.felix.dm.lambda.callbacks.CbTypeComponent;
+import org.apache.felix.dm.lambda.callbacks.InstanceCb;
+import org.apache.felix.dm.lambda.callbacks.InstanceCbComponent;
 
 public class ComponentBuilderImpl implements ComponentBuilder<ComponentBuilderImpl> {
     private final List<DependencyBuilder<?>> m_dependencyBuilders = new ArrayList<>();
@@ -369,12 +370,12 @@ public class ComponentBuilderImpl implements ComponentBuilder<ComponentBuilderIm
     }
 
     @Override
-    public ComponentBuilderImpl withSrv(Class<?> service, String filter) {
-        return withSrv(service, srv->srv.filter(filter));
+    public ComponentBuilderImpl withSvc(Class<?> service, String filter) {
+        return withSvc(service, srv->srv.filter(filter));
     }   
 
     @Override
-    public ComponentBuilderImpl withSrv(Class<?> ... services) {
+    public ComponentBuilderImpl withSvc(Class<?> ... services) {
         for (Class<?> s : services) {
             doWithService(s);
         }
@@ -387,7 +388,7 @@ public class ComponentBuilderImpl implements ComponentBuilder<ComponentBuilderIm
     }
 
     @Override
-    public <U> ComponentBuilderImpl withSrv(Class<U> service, Consumer<ServiceDependencyBuilder<U>> consumer) {
+    public <U> ComponentBuilderImpl withSvc(Class<U> service, Consumer<ServiceDependencyBuilder<U>> consumer) {
         ServiceDependencyBuilder<U> dep = new ServiceDependencyBuilderImpl<>(m_component, service);
         consumer.accept(dep);
         m_dependencyBuilders.add(dep);
@@ -418,6 +419,11 @@ public class ComponentBuilderImpl implements ComponentBuilder<ComponentBuilderIm
         return this;
     }
     
+    public ComponentBuilderImpl lifecycleCallbackInstance(Object callbackInstance) {
+        m_callbackInstance = callbackInstance;
+        return this;
+    }    
+
     public ComponentBuilderImpl init(String callback) {
         ensureHasNoLifecycleMethodRefs();
         m_init = callback;
@@ -442,132 +448,112 @@ public class ComponentBuilderImpl implements ComponentBuilder<ComponentBuilderIm
         return this;
     }
     
-    public ComponentBuilderImpl init(Object callbackInstance, String callback) {
-        m_callbackInstance = callbackInstance;
-        return init(callback);
-    }    
-
-    public ComponentBuilderImpl start(Object callbackInstance, String callback) {
-        m_callbackInstance = callbackInstance;
-        return start(callback);
-    }    
-
-    public ComponentBuilderImpl stop(Object callbackInstance, String callback) {
-        m_callbackInstance = callbackInstance;
-        return stop(callback);
-    }    
-
-    public ComponentBuilderImpl destroy(Object callbackInstance, String callback) {
-        m_callbackInstance = callbackInstance;
-        return destroy(callback);
-    }    
-
     @SuppressWarnings("unchecked")
     @Override
-    public <U> ComponentBuilderImpl init(CbConsumer<U> callback) {
+    public <T> ComponentBuilderImpl init(Cb<T> callback) {
         if (callback != null) {
-            setComponentCallbackRef(INIT, Helpers.getLambdaArgType(callback, 0), (inst, component) -> callback.accept((U) inst));
+            setComponentCallbackRef(INIT, Helpers.getLambdaArgType(callback, 0), (inst, component) -> callback.accept((T) inst));
         }
         return this;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <U> ComponentBuilderImpl start(CbConsumer<U> callback) {
+    public <T> ComponentBuilderImpl start(Cb<T> callback) {
         if (callback != null) {
-            setComponentCallbackRef(START, Helpers.getLambdaArgType(callback, 0), (inst, component) -> callback.accept((U) inst));
+            setComponentCallbackRef(START, Helpers.getLambdaArgType(callback, 0), (inst, component) -> callback.accept((T) inst));
         }
         return this;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <U> ComponentBuilderImpl stop(CbConsumer<U> callback) {
+    public <T> ComponentBuilderImpl stop(Cb<T> callback) {
         if (callback != null) {
-            setComponentCallbackRef(STOP, Helpers.getLambdaArgType(callback, 0), (inst, component) -> callback.accept((U) inst));
+            setComponentCallbackRef(STOP, Helpers.getLambdaArgType(callback, 0), (inst, component) -> callback.accept((T) inst));
         }
         return this;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <U> ComponentBuilderImpl destroy(CbConsumer<U> callback) {
+    public <T> ComponentBuilderImpl destroy(Cb<T> callback) {
         if (callback != null) {
-            setComponentCallbackRef(DESTROY, Helpers.getLambdaArgType(callback, 0), (inst, component) -> callback.accept((U) inst));
+            setComponentCallbackRef(DESTROY, Helpers.getLambdaArgType(callback, 0), (inst, component) -> callback.accept((T) inst));
         }
         return this;
     }
 
    @SuppressWarnings("unchecked")
    @Override
-    public <U> ComponentBuilderImpl init(CbTypeComponent<U> callback) {
+    public <T> ComponentBuilderImpl init(CbComponent<T> callback) {
         if (callback != null) {
-            setComponentCallbackRef(INIT, Helpers.getLambdaArgType(callback, 0), (inst, component) -> callback.accept((U) inst, component));
+            setComponentCallbackRef(INIT, Helpers.getLambdaArgType(callback, 0), (inst, component) -> callback.accept((T) inst, component));
         }
         return this;
     }
             
    @SuppressWarnings("unchecked")
    @Override
-    public <U> ComponentBuilderImpl start(CbTypeComponent<U> callback) {
+    public <T> ComponentBuilderImpl start(CbComponent<T> callback) {
         if (callback != null) {
-            setComponentCallbackRef(START, Helpers.getLambdaArgType(callback, 0), (inst, component) -> callback.accept((U) inst, component));
+            setComponentCallbackRef(START, Helpers.getLambdaArgType(callback, 0), (inst, component) -> callback.accept((T) inst, component));
         }
         return this;
     }
             
    @SuppressWarnings("unchecked")
    @Override
-    public <U> ComponentBuilderImpl stop(CbTypeComponent<U> callback) {
+    public <T> ComponentBuilderImpl stop(CbComponent<T> callback) {
         if (callback != null) {
-            setComponentCallbackRef(STOP, Helpers.getLambdaArgType(callback, 0), (inst, component) -> callback.accept((U) inst, component));
+            setComponentCallbackRef(STOP, Helpers.getLambdaArgType(callback, 0), (inst, component) -> callback.accept((T) inst, component));
         }
         return this;
     }
             
    @SuppressWarnings("unchecked")
    @Override
-    public <U> ComponentBuilderImpl destroy(CbTypeComponent<U> callback) {
+    public <T> ComponentBuilderImpl destroy(CbComponent<T> callback) {
         if (callback != null) {
-            setComponentCallbackRef(DESTROY, Helpers.getLambdaArgType(callback, 0), (inst, component) -> callback.accept((U) inst, component));
+            setComponentCallbackRef(DESTROY, Helpers.getLambdaArgType(callback, 0), (inst, component) -> callback.accept((T) inst, component));
         }
         return this;
     }
             
     @Override
-    public ComponentBuilderImpl initInstance(Runnable callback) {
+    public ComponentBuilderImpl initInstance(InstanceCb callback) {
         if (callback != null) {
-            setInstanceCallbackRef(INIT, (inst, component) -> callback.run());
+            setInstanceCallbackRef(INIT, (inst, component) -> callback.cb());
         }
         return this;
     }
     
     @Override
-    public ComponentBuilderImpl startInstance(Runnable callback) {
+    public ComponentBuilderImpl startInstance(InstanceCb callback) {
         if (callback != null) {
-            setInstanceCallbackRef(START, (inst, component) -> callback.run());
+            setInstanceCallbackRef(START, (inst, component) -> callback.cb());
         }
         return this;
     }
 
     @Override
-    public ComponentBuilderImpl stopInstance(Runnable callback) {
+    public ComponentBuilderImpl stopInstance(InstanceCb callback) {
         if (callback != null) {
-            setInstanceCallbackRef(STOP, (inst, component) -> callback.run());
+            setInstanceCallbackRef(STOP, (inst, component) -> callback.cb());
         }
         return this;
     }
 
     @Override
-    public ComponentBuilderImpl destroyInstance(Runnable callback) {
+    public ComponentBuilderImpl destroyInstance(InstanceCb callback) {
         if (callback != null) {
-            setInstanceCallbackRef(DESTROY, (inst, component) -> callback.run());
+            setInstanceCallbackRef(DESTROY, (inst, component) -> callback.cb());
         }
         return this;
     }
         
     @Override
-    public ComponentBuilderImpl initInstance(CbComponent callback) {
+    public ComponentBuilderImpl initInstance(InstanceCbComponent callback) {
         if (callback != null) {
             setInstanceCallbackRef(INIT, (inst, component) -> callback.accept(component));
         }
@@ -575,7 +561,7 @@ public class ComponentBuilderImpl implements ComponentBuilder<ComponentBuilderIm
     }
   
     @Override
-    public ComponentBuilderImpl startInstance(CbComponent callback) {
+    public ComponentBuilderImpl startInstance(InstanceCbComponent callback) {
         if (callback != null) {
             setInstanceCallbackRef(START, (inst, component) -> callback.accept(component));
         }
@@ -583,7 +569,7 @@ public class ComponentBuilderImpl implements ComponentBuilder<ComponentBuilderIm
     }
 
     @Override
-    public ComponentBuilderImpl stopInstance(CbComponent callback) {
+    public ComponentBuilderImpl stopInstance(InstanceCbComponent callback) {
         if (callback != null) {
             setInstanceCallbackRef(STOP, (inst, component) -> callback.accept(component));
         }
@@ -591,7 +577,7 @@ public class ComponentBuilderImpl implements ComponentBuilder<ComponentBuilderIm
     }
 
     @Override
-    public ComponentBuilderImpl destroyInstance(CbComponent callback) {
+    public ComponentBuilderImpl destroyInstance(InstanceCbComponent callback) {
         if (callback != null) {
             setInstanceCallbackRef(DESTROY, (inst, component) -> callback.accept(component));
         }

@@ -35,7 +35,7 @@ public class AspectServiceDependencyWithSwapCallbackTest extends TestBase {
         Ensure e = new Ensure();
         // create a service provider and consumer
         Component sp = component(m).impl(new ServiceProvider(e)).provides(ServiceInterface.class).build();
-        Component sc = component(m).impl(new ServiceConsumer(e)).withSrv(ServiceInterface.class, s->s.cb("add", null, "remove", "swap")).build();
+        Component sc = component(m).impl(new ServiceConsumer(e)).withSvc(ServiceInterface.class, s->s.add("add").remove("remove").swap("swap")).build();
         Component asp = aspect(m, ServiceInterface.class).rank(100).impl(ServiceProviderAspect.class).build();
         m.add(sp);
         m.add(sc);
@@ -55,7 +55,7 @@ public class AspectServiceDependencyWithSwapCallbackTest extends TestBase {
         // create a service provider and consumer
         ServiceConsumer scimpl = new ServiceConsumer(e);
         Component sp = component(m).impl(new ServiceProvider(e)).provides(ServiceInterface.class).build();
-        Component sc = component(m).impl(scimpl).withSrv(ServiceInterface.class, s->s.cbi(scimpl::add, scimpl::remove).swi(scimpl::swap)).build();
+        Component sc = component(m).impl(scimpl).withSvc(ServiceInterface.class, s->s.add(scimpl::add).remove(scimpl::remove).swap(scimpl::swap)).build();
         Component asp = aspect(m, ServiceInterface.class).rank(100).impl(ServiceProviderAspect.class).build();
         m.add(sp);
         m.add(sc);

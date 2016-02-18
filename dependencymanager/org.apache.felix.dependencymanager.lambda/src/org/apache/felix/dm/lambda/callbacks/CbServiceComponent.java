@@ -5,26 +5,26 @@ import java.util.Objects;
 import org.apache.felix.dm.Component;
 
 /**
- * Represents a callback(Component, Service) that is invoked on a Component implementation class. 
+ * Represents a callback(Service, Component) that is invoked on a Component implementation class. 
  * The type of the class on which the callback is invoked on is represented by the T generic parameter.
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @FunctionalInterface
-public interface CbTypeComponentService<T, S> extends SerializableLambda {
+public interface CbServiceComponent<T, S> extends SerializableLambda {
     /**
      * Handles the given arguments.
      * @param instance the Component implementation instance on which the callback is invoked on. 
-     * @param c first callback param
-     * @param service second callback param
+     * @param service the first callback argument
+     * @param c the second callback argument
      */
-    void accept(T instance, Component c, S service);
+    void accept(T instance, S service, Component c);
 
-    default CbTypeComponentService<T, S> andThen(CbTypeComponentService<T, S> after) {
+    default CbServiceComponent<T, S> andThen(CbServiceComponent<T, S> after) {
         Objects.requireNonNull(after);
-        return (T instance, Component c, S s) -> {
-            accept(instance, c, s);
-            after.accept(instance, c, s);
+        return (T instance, S s, Component c) -> {
+            accept(instance, s, c);
+            after.accept(instance, s, c);
         };
     }
 }

@@ -41,13 +41,13 @@ public class AdapterWithCallbackInstanceTest extends TestBase {
 
         ServiceProvider serviceProvider = new ServiceProvider(e);
         Component provider = component(m).provides(OriginalService.class).impl(serviceProvider).build();
-        Component consumer = component(m).impl(new ServiceConsumer(e)).withSrv(AdaptedService.class).build();
+        Component consumer = component(m).impl(new ServiceConsumer(e)).withSvc(AdaptedService.class).build();
         
         ServiceAdapterCallbackInstance callbackInstance = new ServiceAdapterCallbackInstance(e);
         Component adapter = adapter(m, OriginalService.class)
             .provides(AdaptedService.class).impl(new ServiceAdapter(e)).propagate(true)
             .autoConfig("m_originalService")
-            .cbi(callbackInstance, "set", "changed", "unset")
+            .callbackInstance(callbackInstance).add("set").change("changed").remove("unset")
             .build();
        
         // add the provider and the adapter
@@ -82,14 +82,14 @@ public class AdapterWithCallbackInstanceTest extends TestBase {
 
         ServiceProvider serviceProvider = new ServiceProvider(e);
         Component provider = component(m).provides(OriginalService.class).impl(serviceProvider).build();
-        Component consumer = component(m).impl(new ServiceConsumer(e)).withSrv(AdaptedService.class).build();
+        Component consumer = component(m).impl(new ServiceConsumer(e)).withSvc(AdaptedService.class).build();
         
         ServiceAdapterCallbackInstance callbackInstance = new ServiceAdapterCallbackInstance(e);
         Component adapter = adapter(m, OriginalService.class, adp -> adp
             .provides(AdaptedService.class).impl(new ServiceAdapter(e))
             .autoAdd(false).propagate(true)
             .autoConfig("m_originalService")
-            .cbi(callbackInstance::set, callbackInstance::changed, callbackInstance::unset));
+            .add(callbackInstance::set).change(callbackInstance::changed).remove(callbackInstance::unset));
        
         // add the provider and the adapter
         m.add(provider);

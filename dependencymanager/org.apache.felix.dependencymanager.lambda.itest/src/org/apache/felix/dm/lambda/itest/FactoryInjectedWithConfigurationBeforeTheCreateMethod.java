@@ -45,13 +45,13 @@ public class FactoryInjectedWithConfigurationBeforeTheCreateMethod extends TestB
         m_e = new Ensure();
         
         // Create the component that creates a configuration.
-        Component configurator = component(m).impl(new Configurator("foobar")).withSrv(ConfigurationAdmin.class).build();
+        Component configurator = component(m).impl(new Configurator("foobar")).withSvc(ConfigurationAdmin.class).build();
         
         // Create the object that has to be injected with the configuration before its create method is called.
         MyFactory factory = new MyFactory();
         
         // Create the Component for the MyComponent class that is created using the factory above.
-        Component myComponent = component(m).factory(factory, "create").withCnf(b->b.pid("foobar").cbi(factory, "updated")).build();
+        Component myComponent = component(m).factory(factory, "create").withCnf(b->b.pid("foobar").update(factory, "updated")).build();
         
         // provide the configuration
         m.add(configurator);
@@ -67,13 +67,13 @@ public class FactoryInjectedWithConfigurationBeforeTheCreateMethod extends TestB
         m_e = new Ensure();
         
         // Create the component that creates a configuration.
-        Component configurator = component(m).impl(new Configurator("foobar")).withSrv(ConfigurationAdmin.class).build();
+        Component configurator = component(m).impl(new Configurator("foobar")).withSvc(ConfigurationAdmin.class).build();
         
         // Create the object that has to be injected with the configuration before its create method is called.
         MyFactory factory = new MyFactory();
         
         // Create the Component for the MyComponent class that is created using the factory above.
-        Component myComponent = component(m).factory(factory, "create").withCnf(b->b.pid("foobar").cbi(factory::updated)).build();
+        Component myComponent = component(m).factory(factory, "create").withCnf(b->b.pid("foobar").update(factory::updated)).build();
         
         // provide the configuration
         m.add(configurator);

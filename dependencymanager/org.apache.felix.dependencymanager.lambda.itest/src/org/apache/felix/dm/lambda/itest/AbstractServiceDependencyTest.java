@@ -37,7 +37,7 @@ public class AbstractServiceDependencyTest extends TestBase {
        Component sp = 
            component(m).provides(ServiceAbstract.class).impl(new ServiceProvider(e)).build();
        Component sc = 
-           component(m).impl(new ServiceConsumer(e)).withSrv(ServiceAbstract.class, srv -> srv.cb(ServiceConsumer::bind, ServiceConsumer::unbind)).build();
+           component(m).impl(new ServiceConsumer(e)).withSvc(ServiceAbstract.class, srv -> srv.add(ServiceConsumer::bind).remove(ServiceConsumer::unbind)).build();
            
        m.add(sp);
        m.add(sc);

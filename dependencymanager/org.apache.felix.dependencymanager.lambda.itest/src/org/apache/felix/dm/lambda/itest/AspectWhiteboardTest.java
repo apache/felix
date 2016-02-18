@@ -43,7 +43,7 @@ public class AspectWhiteboardTest extends TestBase {
         Component sp1 = component(m).impl(new ServiceProvider(e)).provides(ServiceInterface.class.getName()).build();
         Component sp2 = component(m).impl(new ServiceProvider(e)).provides(ServiceInterface.class.getName()).build();
         ServiceConsumer sci = new ServiceConsumer(e);
-        Component sc = component(m).impl(sci).withSrv(ServiceInterface.class, srv->srv.required(false).cb("add", "remove")).build();
+        Component sc = component(m).impl(sci).withSvc(ServiceInterface.class, srv->srv.required(false).add("add").remove("remove")).build();
         Component sa2 = aspect(m, ServiceInterface.class).rank(20).autoAdd(false).impl(new ServiceAspect(e, 3)).build();
         Component sa1 = aspect(m, ServiceInterface.class).rank(10).autoAdd(false).impl(new ServiceAspect(e, 4)).build();
         
@@ -120,9 +120,9 @@ public class AspectWhiteboardTest extends TestBase {
         Component sp1 = component(m).impl(new ServiceProvider(e)).provides(ServiceInterface.class.getName()).build();
         Component sp2 = component(m).impl(new ServiceProvider(e)).provides(ServiceInterface.class.getName()).build();
         ServiceConsumer sci = new ServiceConsumer(e);
-        Component sc = component(m).impl(sci).withSrv(ServiceInterface.class, srv->srv.required(false).cbi(sci::add, sci::remove)).build();
-        Component sa2 = aspect(m, ServiceInterface.class).rank(20).autoAdd(false).impl(new ServiceAspect(e, 3)).build();
-        Component sa1 = aspect(m, ServiceInterface.class).rank(10).autoAdd(false).impl(new ServiceAspect(e, 4)).build();
+        Component sc = component(m).impl(sci).withSvc(ServiceInterface.class, srv->srv.optional().add(sci::addRef).remove(sci::removeRef)).build();
+        Component sa2 = aspect(m, ServiceInterface.class).rank(20).impl(new ServiceAspect(e, 3)).build();
+        Component sa1 = aspect(m, ServiceInterface.class).rank(10).impl(new ServiceAspect(e, 4)).build();
         
         // start with a service consumer
         System.out.println("Adding consumer");
@@ -265,13 +265,26 @@ public class AspectWhiteboardTest extends TestBase {
             return ranking;
         }
         
+        // method ref callback
+        public void addRef(ServiceInterface svc, ServiceReference ref) {
+            add(ref, svc);
+        }
+        
+        // refection callback
         public void add(ServiceReference ref, ServiceInterface svc) {
             System.out.println("Added: " + ServiceUtil.toString(ref));
             m_services.add(ref);
         }
+        
+        // method ref callback
+        public void removeRef(ServiceInterface svc, ServiceReference ref) {
+            remove(ref, svc);
+        }
+
+        // refection callback
         public void remove(ServiceReference ref, ServiceInterface svc) {
             System.out.println("Removed: " + ServiceUtil.toString(ref));
             m_services.remove(ref);
-        }
+        }        
     }
 }

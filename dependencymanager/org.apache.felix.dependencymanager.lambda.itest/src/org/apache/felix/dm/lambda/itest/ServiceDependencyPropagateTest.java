@@ -45,12 +45,12 @@ public class ServiceDependencyPropagateTest extends TestBase {
         
         Component c1 = component(m)
                       .impl(new C1(e))
-                      .withSrv(C2.class, s->s.cb("bind")).build();
+                      .withSvc(C2.class, s->s.add("bind")).build();
 
         Component c2 = component(m)
                       .provides(C2.class.getName(), new Hashtable() {{ put("foo", "bar"); }})
                       .impl(new C2())
-                      .withSrv(C3.class, s->s.propagate()).build();
+                      .withSvc(C3.class, s->s.propagate()).build();
 
         Component c3 = component(m)
                       .provides(C3.class.getName(), new Hashtable() {{ put("foo2", "bar2"); put("foo", "overriden");}})
@@ -78,13 +78,13 @@ public class ServiceDependencyPropagateTest extends TestBase {
         Ensure e = new Ensure();
         Component c1 = component(m)
                       .impl(new C1(e))
-                      .withSrv(C2.class, s->s.cb("bind")).build();
+                      .withSvc(C2.class, s->s.add("bind")).build();
 
         C2 c2Impl = new C2();
         Component c2 = component(m)
                       .provides(C2.class.getName(), new Hashtable() {{ put("foo", "bar"); }})
                       .impl(c2Impl)
-                      .withSrv(C3.class, s->s.propagate(c2Impl, "getServiceProperties")).build();
+                      .withSvc(C3.class, s->s.propagate(c2Impl, "getServiceProperties")).build();
         
         Component c3 = component(m)
                       .provides(C3.class.getName())
@@ -104,13 +104,13 @@ public class ServiceDependencyPropagateTest extends TestBase {
         Ensure e = new Ensure();
         Component c1 = component(m)
                       .impl(new C1(e))
-                      .withSrv(C2.class, s->s.cb(C1::bind)).build();
+                      .withSvc(C2.class, s->s.add(C1::bind)).build();
 
         C2 c2Impl = new C2();
         Component c2 = component(m)
                       .provides(C2.class.getName(), new Hashtable() {{ put("foo", "bar"); }})
                       .impl(c2Impl)
-                      .withSrv(C3.class, s->s.propagate(c2Impl::getServiceProperties)).build();
+                      .withSvc(C3.class, s->s.propagate(c2Impl::getServiceProperties)).build();
         
         Component c3 = component(m)
                       .provides(C3.class.getName())

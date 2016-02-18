@@ -52,7 +52,7 @@ public class ServiceDependencyThroughCallbackInstanceTest extends TestBase {
 		CallbackInstance instance = new CallbackInstance();
 		component(m, comp -> comp
 				.impl(new SimpleService() {})
-				.withSrv(Service.class, srv -> srv.cbi(instance::added, instance::removed)));
+				.withSvc(Service.class, srv -> srv.add(instance::added).remove(instance::removed)));
 		
 		Assert.assertEquals(numberOfServices, instance.getCount());
 		m.clear();

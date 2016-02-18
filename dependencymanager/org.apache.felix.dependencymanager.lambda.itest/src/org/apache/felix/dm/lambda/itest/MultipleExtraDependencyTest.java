@@ -37,8 +37,8 @@ public class MultipleExtraDependencyTest extends TestBase {
         
         Component sp2 = component(m)
               .impl(ServiceProvider2.class).provides(ServiceProvider2.class)
-              .withSrv(Runnable.class, srv->srv.filter("(foo=bar)").required(false).autoConfig("m_runnable"))
-              .withSrv(Sequencer.class, srv->srv.cb("bind"))
+              .withSvc(Runnable.class, srv->srv.filter("(foo=bar)").required(false).autoConfig("m_runnable"))
+              .withSvc(Sequencer.class, srv->srv.add("bind"))
               .composition("getComposition")
               .build();
 
@@ -46,15 +46,15 @@ public class MultipleExtraDependencyTest extends TestBase {
               .impl(ServiceProvider.class)
               .provides(ServiceInterface.class, foo -> "bar")
               .start("start").stop("stop")
-              .withSrv(Sequencer.class, srv->srv.autoConfig("m_sequencer"))
-              .withSrv(ServiceProvider2.class, srv->srv.cb("bind", "unbind"))
+              .withSvc(Sequencer.class, srv->srv.autoConfig("m_sequencer"))
+              .withSvc(ServiceProvider2.class, srv->srv.add("bind").remove("unbind"))
               .build();
         
         Component sc = component(m)
               .impl(ServiceConsumer.class)
               .start("start").stop("stop")
-              .withSrv(Sequencer.class, srv->srv.autoConfig("m_sequencer"))
-              .withSrv(ServiceInterface.class, srv->srv.filter("(foo=bar)").autoConfig("m_service"))
+              .withSvc(Sequencer.class, srv->srv.autoConfig("m_sequencer"))
+              .withSvc(ServiceInterface.class, srv->srv.filter("(foo=bar)").autoConfig("m_service"))
               .build();
         
         Component sequencer = component(m)

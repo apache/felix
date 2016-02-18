@@ -38,7 +38,7 @@ public class BundleAdapterWithCallbacksNotAutoConfiguredTest extends TestBase {
         String bsn = "org.apache.felix.dependencymanager";
         String filter = "(Bundle-SymbolicName=" + bsn + ")";
 
-        Component adapter = bundleAdapter(m).mask(Bundle.ACTIVE).filter(filter).cb("add").impl(baWithCb).build();
+        Component adapter = bundleAdapter(m).mask(Bundle.ACTIVE).filter(filter).add("add").impl(baWithCb).build();
                     												 
         // add the bundle adapter
         m.add(adapter);

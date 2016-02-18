@@ -99,7 +99,7 @@ public class AspectWithPropagationTest extends TestBase {
         		}
         	}
         };
-        Component clientComp = component(m).impl(client).withSrv(S.class, srv->srv.cb("add", "change", null)).build();
+        Component clientComp = component(m).impl(client).withSvc(S.class, srv->srv.add("add").change("change")).build();
         
         // Add components in dependency manager
         m.add(sComp);
@@ -151,12 +151,12 @@ public class AspectWithPropagationTest extends TestBase {
                 
         // Create an aspect aware client, depending on "S" service.
         Client clientImpl;
-        Component client = component(m).impl((clientImpl = new Client())).withSrv(S.class, srv -> srv.cb("add", "change", "remove", "swap")).build();     
+        Component client = component(m).impl((clientImpl = new Client())).withSvc(S.class, srv -> srv.add("add").change("change").remove("remove").swap("swap")).build();     
 
         // Create some "S" aspects
         Component[] aspects = new Component[ASPECTS];
         for (int rank = 1; rank <= ASPECTS; rank ++) {
-            aspects[rank-1] = aspect(m, S.class).rank(rank).impl(new A("A" + rank, rank)).cb("add", "change", "remove", "swap").build();
+            aspects[rank-1] = aspect(m, S.class).rank(rank).impl(new A("A" + rank, rank)).add("add").change("change").remove("remove").swap("swap").build();
             props = new Hashtable();
             props.put("a" + rank, "v" + rank);
             aspects[rank-1].setServiceProperties(props);
@@ -261,7 +261,7 @@ public class AspectWithPropagationTest extends TestBase {
         
         // Create an aspect aware client, depending on "S" service.
         Client clientImpl;
-        Component client = component(m).impl((clientImpl = new Client())).withSrv(S.class, srv->srv.cb("add", "change", "remove")).build();            
+        Component client = component(m).impl((clientImpl = new Client())).withSvc(S.class, srv->srv.add("add").change("change").remove("remove")).build();            
 
         // Create some "S" aspects
         Component[] aspects = new Component[ASPECTS];
@@ -354,18 +354,18 @@ public class AspectWithPropagationTest extends TestBase {
         // Create some "S" aspects
         Component[] aspects = new Component[ASPECTS];
         for (int rank = 1; rank <= ASPECTS; rank ++) {
-            aspects[rank-1] = aspect(m, S.class).rank(rank).impl(new A("A" + rank, rank)).cb("add", "change", "remove", "swap").build();
+            aspects[rank-1] = aspect(m, S.class).rank(rank).impl(new A("A" + rank, rank)).add("add").change("change").remove("remove").swap("swap").build();
             props = new Hashtable();
             props.put("a" + rank, "v" + rank);
             aspects[rank-1].setServiceProperties(props);
         } 
         
         // Create S2 adapter (which adapts S1 to S2 interface)
-        Component adapter = adapter(m, S.class).cb("add", "change", "remove", "swap").provides(S2.class).impl(new S2Impl()).build();
+        Component adapter = adapter(m, S.class).add("add").change("change").remove("remove").swap("swap").provides(S2.class).impl(new S2Impl()).build();
         
         // Create Client2, which depends on "S2" service.
         Client2 client2Impl;
-        Component client2 = component(m).impl((client2Impl = new Client2())).withSrv(S2.class, srv -> srv.cb("add", "change", null)).build();
+        Component client2 = component(m).impl((client2Impl = new Client2())).withSvc(S2.class, srv -> srv.add("add").change("change")).build();
               
         // Register client2
         m.add(client2);
@@ -451,7 +451,7 @@ public class AspectWithPropagationTest extends TestBase {
         
         // Create Client2, which depends on "S2" service.
         Client2 client2Impl;
-        Component client2 = component(m).impl((client2Impl = new Client2())).withSrv(S2.class, srv->srv.cb("add", "change", null)).build();
+        Component client2 = component(m).impl((client2Impl = new Client2())).withSvc(S2.class, srv->srv.add("add").change("change")).build();
               
         // Register client2
         m.add(client2);

@@ -3,23 +3,25 @@ package org.apache.felix.dm.lambda.callbacks;
 import java.util.Objects;
 
 /**
- * Represents a callback(Service) on an Object instance.
+ * Represents a callback(Service) that is invoked on a Component implementation class. 
+ * The type of the class on which the callback is invoked on is represented by the T generic parameter.
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @FunctionalInterface
-public interface CbService<S> {
+public interface CbService<T, S> extends SerializableLambda {
     /**
-     * Handles the given argument.
-     * @param service a Service
+     * Handles the given arguments.
+     * @param instance the Component implementation instance on which the callback is invoked on. 
+     * @param service the callback argument.
      */
-    void accept(S service);
+    void accept(T instance, S service);
 
-    default CbService<S> andThen(CbService<S> after) {
+    default CbFuture<T, S> andThen(CbFuture<? super T, S> after) {
         Objects.requireNonNull(after);
-        return (S service) -> {
-            accept(service);
-            after.accept(service);
+        return (T instance, S service) -> {
+            accept(instance, service);
+            after.accept(instance, service);
         };
     }
 }
