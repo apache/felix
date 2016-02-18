@@ -278,7 +278,7 @@ public class MethodSignatures {
 	}
 	
 	// This is a factory pid component with an updated callback having the "updated(Config)" signature
-    @FactoryConfigurationAdapterService(factoryPidClass=Config.class)
+    @FactoryConfigurationAdapterService(configType=Config.class)
     public static class FactoryPidComponent3 {
         Config m_properties;
         
