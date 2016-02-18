@@ -64,7 +64,7 @@ public class ModifiedBundleDependencyTest extends TestBase {
 
         void init(Component c) {
             m_e.step(2);
-            component(c, comp -> comp.withSrv(A.class, srv -> srv.cb("add", "remove")));
+            component(c, comp -> comp.withSvc(A.class, srv -> srv.add("add").remove("remove")));
         }
         
         public void add(A a) {
@@ -105,7 +105,7 @@ public class ModifiedBundleDependencyTest extends TestBase {
         String filter = "(Bundle-SymbolicName=org.apache.felix.metatype)";
         int mask = Bundle.INSTALLED|Bundle.ACTIVE|Bundle.RESOLVED|Bundle.STARTING;
         Component b = component(m)
-            .provides(B.class).impl(new BImpl(e)).withBundle(bd -> bd.filter(filter).mask(mask).cb("add", "change", "remove")).build();     	
+            .provides(B.class).impl(new BImpl(e)).withBundle(bd -> bd.filter(filter).mask(mask).add("add").change("change").remove("remove")).build();     	
         						                    
         Bundle dmtest = getBundle("org.apache.felix.metatype");
         try {
@@ -141,7 +141,7 @@ public class ModifiedBundleDependencyTest extends TestBase {
         String filter = "(Bundle-SymbolicName=org.apache.felix.metatype)";
         int mask = Bundle.INSTALLED|Bundle.ACTIVE|Bundle.RESOLVED|Bundle.STARTING;
         Component b = component(m).provides(B.class).impl(impl)
-            .withBundle(bd -> bd.filter(filter).mask(mask).cbi(impl::add, impl::change, impl::remove)).build();        	
+            .withBundle(bd -> bd.filter(filter).mask(mask).add(impl::add).change(impl::change).remove(impl::remove)).build();        	
         
         Bundle dmtest = getBundle("org.apache.felix.metatype");
         try {

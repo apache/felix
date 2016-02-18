@@ -8,7 +8,12 @@ import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 
 public class Configurator {
-    ConfigurationAdmin m_cm; 
+    ConfigurationAdmin m_cm;
+    final String m_pid;
+    
+    Configurator(String pid) {
+        m_pid = pid;
+    }
     
     void bind(ConfigurationAdmin cm) {
         m_cm = cm;
@@ -16,7 +21,7 @@ public class Configurator {
     
     void start() throws IOException {
         // Configure the ServiceConsumer component
-        Configuration c = m_cm.getConfiguration(ServiceConsumer.class.getName(), null);
+        Configuration c = m_cm.getConfiguration(m_pid, null);
         Dictionary<String, Object> props = new Hashtable<>();
         props.put("foo", "bar");
         c.update(props);

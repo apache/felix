@@ -18,8 +18,6 @@
  */
 package org.apache.felix.dm.lambda.samples.hello;
 
-import java.util.Dictionary;
-
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.log.LogService;
 
@@ -33,11 +31,12 @@ public class ServiceConsumer {
     volatile LogService log;
     volatile EventAdmin eventAdmin;
 
-    public void updated(Dictionary<String, Object> conf) {
+    public void updated(Configuration conf) {
+        // conf.getFoo() returns "bar"
     }
     
     public void start() {
-        log.log(LogService.LOG_INFO, "ServiceConsumer.start: calling service.hello()");
+        log.log(LogService.LOG_WARNING, "ServiceConsumer.start: calling service.hello()");
         this.service.hello();
     }
 }

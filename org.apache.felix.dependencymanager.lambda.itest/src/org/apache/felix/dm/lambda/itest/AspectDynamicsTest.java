@@ -37,7 +37,7 @@ public class AspectDynamicsTest extends TestBase {
         // create a service provider and consumer
         Component provider = component(m).impl(new ServiceProvider(e)).provides(ServiceInterface.class).build();
         Component provider2 = component(m).impl(new ServiceProvider2(e)).provides(ServiceInterface2.class.getName()).build();
-        Component consumer = component(m).impl(new ServiceConsumer(e)).withSrv(ServiceInterface.class, s->s.cb("add", null, null, "swap")).build();
+        Component consumer = component(m).impl(new ServiceConsumer(e)).withSvc(ServiceInterface.class, s->s.add("add").swap("swap")).build();
         Component aspect = aspect(m, ServiceInterface.class).autoAdd(false).rank(1).impl(new ServiceAspect(e, aspectStopEnsure)).build();
         
         m.add(consumer);
@@ -94,7 +94,7 @@ public class AspectDynamicsTest extends TestBase {
         // create a service provider and consumer
         Component provider = component(m).impl(new ServiceProvider(e)).provides(ServiceInterface.class.getName()).build();
         Component provider2 = component(m).impl(new ServiceProvider2(e)).provides(ServiceInterface2.class.getName()).build();
-        Component consumer = component(m).impl(new ServiceConsumer(e)).withSrv(ServiceInterface.class, s->s.cb(ServiceConsumer::add).sw(ServiceConsumer::swap)).build();
+        Component consumer = component(m).impl(new ServiceConsumer(e)).withSvc(ServiceInterface.class, s->s.add(ServiceConsumer::add).swap(ServiceConsumer::swap)).build();
         Component aspect = aspect(m, ServiceInterface.class).autoAdd(false).rank(1).impl(new ServiceAspect(e, aspectStopEnsure)).build();
         
         m.add(consumer);

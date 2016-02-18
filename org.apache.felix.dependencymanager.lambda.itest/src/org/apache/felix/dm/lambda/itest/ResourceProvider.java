@@ -66,7 +66,7 @@ class ResourceProvider {
     }
 
     @SuppressWarnings({ "deprecation", "unchecked" })
-	public void add(ServiceReference<ResourceHandler> ref, ResourceHandler handler) {
+	public void add(ResourceHandler handler, ServiceReference<ResourceHandler> ref) {
         String filterString = (String) ref.getProperty("filter");
         Filter filter = null;
         if (filterString != null) {
@@ -88,7 +88,7 @@ class ResourceProvider {
         }
     }
 
-    public void remove(ServiceReference<ResourceHandler> ref, ResourceHandler handler) {
+    public void remove(ResourceHandler handler, ServiceReference<ResourceHandler> ref) {
         Filter filter;
         synchronized (m_handlers) {
             filter = (Filter) m_handlers.remove(handler);

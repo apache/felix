@@ -22,5 +22,7 @@ package org.apache.felix.dm.lambda.samples.compositefactory;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ProviderComposite2 {
-
+    public String toString() {
+        return "ProviderComposite2";
+    }
 }

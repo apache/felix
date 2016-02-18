@@ -27,11 +27,11 @@ import org.osgi.framework.BundleContext;
  * import org.apache.felix.dm.lambda.DependencyManagerActivator;
  *
  * public class Activator extends DependencyManagerActivator {    
- *     public void activate() throws Exception {
+ *     public void init(BundleContext ctx, DependencyManager dm) throws Exception {
  *         component(comp -> comp
  *             .provides(Service.class, property -> "value")
  *             .impl(ServiceImpl.class)            
- *             .withSrv(LogService.class, ConfigurationAdmni.class) // both services are required and injected in class fields with compatible types.           
+ *             .withSvc(LogService.class, ConfigurationAdmni.class) // both services are required and injected in class fields with compatible types.           
  *     }
  * }
  * }</pre>
@@ -42,12 +42,12 @@ import org.osgi.framework.BundleContext;
  * import org.apache.felix.dm.lambda.DependencyManagerActivator;
  *
  * public class Activator extends DependencyManagerActivator {    
- *     public void activate() throws Exception {
+ *     public void init(BundleContext ctx, DependencyManager dm) throws Exception {
  *         component(comp -> comp
  *             .provides(Service.class, property -> "value")
  *             .impl(ServiceImpl.class)            
- *             .withSrv(LogService.class, log -> log.cb("setLog"))              
- *             .withSrv(ConfigurationAdmni.class, cm -> cm.cb("setConfigAdmin")))                
+ *             .withSvc(LogService.class, svc -> svc.add("setLog"))              
+ *             .withSvc(ConfigurationAdmni.class, svc -> svc.add("setConfigAdmin")))                
  *     }
  * }
  * }</pre>
@@ -58,12 +58,12 @@ import org.osgi.framework.BundleContext;
  * import org.apache.felix.dm.lambda.DependencyManagerActivator;
  *
  * public class Activator extends DependencyManagerActivator {    
- *     public void activate() throws Exception {
+ *     public void init(BundleContext ctx, DependencyManager dm) throws Exception {
  *         component(comp -> comp
  *             .provides(Service.class, property -> "value")
  *             .impl(ServiceImpl.class)            
- *             .withSrv(LogService.class, log -> log.cb(ServiceImpl::setLog))              
- *             .withSrv(ConfigurationAdmni.class, cm -> cm.cb(ServiceImpl::setConfigAdmin)))                
+ *             .withSvc(LogService.class, svc -> svc.add(ServiceImpl::setLog))              
+ *             .withSvc(ConfigurationAdmni.class, svc -> svc.add(ServiceImpl::setConfigAdmin)))                
  *     }
  * }
  * }</pre>
@@ -80,7 +80,7 @@ public abstract class DependencyManagerActivator implements BundleActivator {
     @Override
     public void start(BundleContext context) throws Exception {
         m_manager = new DependencyManager(context);
-        activate();
+        init(context, m_manager);
     }
 
     /**
@@ -88,21 +88,22 @@ public abstract class DependencyManagerActivator implements BundleActivator {
      */
     @Override
     public void stop(BundleContext context) throws Exception {
-        deactivate();
+        destroy();
     }
 
     /**
      * Sub classes must override this method in order to build some DM components.
-     * 
+     * @param ctx the context associated to the bundle
+     * @param dm the DependencyManager assocaited to this activator
      * @throws Exception if the activation fails
      */
-    protected abstract void activate() throws Exception;
+    protected abstract void init(BundleContext ctx, DependencyManager dm) throws Exception;
 
     /**
      * Sub classes may override this method that is called when the Activator is stopped.
      * @throws Exception if the deactivation fails
      */
-    protected void deactivate() throws Exception {
+    protected void destroy() throws Exception {
     }
     
     /**

@@ -74,7 +74,7 @@ public class AdapterWithModifiedInstanceBoundDependencyTest extends TestBase {
         
         void init(Component comp) {
             m_e.step(2);
-            component(comp, c->c.withSrv(C.class, s->s.cb("addC", "removeC")));
+            component(comp, c->c.withSvc(C.class, s->s.add("addC").remove("removeC")));
         }      
         
         void addA(A a, Map<String, Object> properties) {
@@ -116,8 +116,8 @@ public class AdapterWithModifiedInstanceBoundDependencyTest extends TestBase {
         Ensure e = new Ensure();
 
         Component a = component(m).impl(new AImpl(e)).provides(A.class).properties(foo -> "bar").build();
-        Component b = adapter(m, A.class).provides(B.class).impl(new BImpl(e)).cb("addA", "changeA", "removeA").build();
-        Component c = component(m).impl(new CImpl()).provides(C.class).withSrv(A.class, "(foo=bar)").build();
+        Component b = adapter(m, A.class).provides(B.class).impl(new BImpl(e)).add("addA").change("changeA").remove("removeA").build();
+        Component c = component(m).impl(new CImpl()).provides(C.class).withSvc(A.class, "(foo=bar)").build();
                       
         m.add(a);
         m.add(c);
@@ -144,8 +144,8 @@ public class AdapterWithModifiedInstanceBoundDependencyTest extends TestBase {
         Ensure e = new Ensure();
 
         Component a = component(m).impl(new AImpl(e)).provides(A.class).properties(foo -> "bar").build();        
-        Component b = adapter(m, A.class).impl(new BImpl(e)).provides(B.class).cb(BImpl::addA, BImpl::changeA, BImpl::removeA).build();        
-        Component c = component(m).impl(new CImpl()).provides(C.class).withSrv(A.class, s -> s.filter("(foo=bar)")).build();
+        Component b = adapter(m, A.class).impl(new BImpl(e)).provides(B.class).add(BImpl::addA).change(BImpl::changeA).remove(BImpl::removeA).build();        
+        Component c = component(m).impl(new CImpl()).provides(C.class).withSvc(A.class, s -> s.filter("(foo=bar)")).build();
                       
         m.add(a);
         m.add(c);

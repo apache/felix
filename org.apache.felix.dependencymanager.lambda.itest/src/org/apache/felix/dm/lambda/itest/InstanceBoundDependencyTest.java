@@ -46,7 +46,7 @@ public class InstanceBoundDependencyTest extends TestBase {
         // Create a "C" component: it depends on some S1 services, and on some S2 instance-bound services (declared from C.init() method)        
         C cimpl = new C();
         Component c = component(m).impl(cimpl)
-            .withSrv(S1.class, sb->sb.cb("addS1", "changeS1", "removeS1").autoConfig(true)).build();
+            .withSvc(S1.class, sb->sb.add("addS1").change("changeS1").remove("removeS1").autoConfig(true)).build();
         m.add(c);
         
         // Add S1 (s1_1): C.add(S1 s1) is called, then init() is called where a dependency is declared on S2
@@ -108,6 +108,7 @@ public class InstanceBoundDependencyTest extends TestBase {
     }
     
     // Our "C" component: it depends on S1 (required) and S2 (required/instance bound)
+    // Class tested with reflection based callbacks
     class C {        
         final Map<String, ServiceReference> m_s1Map = new HashMap();
         final Map<String, ServiceReference> m_s2Map = new HashMap();
@@ -150,7 +151,7 @@ public class InstanceBoundDependencyTest extends TestBase {
         }
         
         void init(Component c) {
-            component(c, comp->comp.withSrv(S2.class, srv -> srv.cb(C::addS2, C::changeS2, C::removeS2)));
+            component(c, comp->comp.withSvc(S2.class, srv -> srv.add("addS2").change("changeS2").remove("removeS2")));
             m_e.step(1);
         }
     }

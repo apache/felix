@@ -33,6 +33,6 @@ public class ProviderImpl implements Provider {
     void set(LogService log) { m_log = log; }
 
     void start() {
-        m_log.log(LogService.LOG_INFO, "ProviderImpl.start()");
+        m_log.log(LogService.LOG_WARNING, "ProviderImpl.start()");
     }
 }

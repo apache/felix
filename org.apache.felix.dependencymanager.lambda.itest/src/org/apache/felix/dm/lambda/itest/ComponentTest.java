@@ -37,8 +37,8 @@ public class ComponentTest extends TestBase {
         // Create consumer (dependency is required by default using builder api).
         component(dm, comp -> comp
         		.factory(Consumer::new)
-        		.withSrv(Provider.class, srv -> srv.filter("(name=provider2)").cb(Consumer::add, Consumer::remove))
-        		.withSrv(Provider.class, srv -> srv.filter("(name=provider1)").autoConfig("m_autoConfiguredProvider")));
+        		.withSvc(Provider.class, srv -> srv.filter("(name=provider2)").add(Consumer::add).remove(Consumer::remove))
+        		.withSvc(Provider.class, srv -> srv.filter("(name=provider1)").autoConfig("m_autoConfiguredProvider")));
                 
         // Create providers (auto added to dependency manager)
         component(dm, comp -> comp

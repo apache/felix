@@ -20,7 +20,9 @@ package org.apache.felix.dm.lambda.samples.device;
 
 import static java.lang.System.out;
 
+import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.lambda.DependencyManagerActivator;
+import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 
 /**
@@ -28,8 +30,8 @@ import org.osgi.service.log.LogService;
  */
 public class Activator extends DependencyManagerActivator {
     @Override
-    public void activate() throws Exception {
-    	out.println("type \"log info\" to see the logs emitted by this test.");
+    public void init(BundleContext ctx, DependencyManager dm) throws Exception {
+    	out.println("type \"log warn\" to see the logs emitted by this test.");
 
     	// Create a pair of Device/DeviceParameter service with id=1
         createDeviceAndParameter(1);
@@ -44,8 +46,8 @@ public class Activator extends DependencyManagerActivator {
         // Creates a component that simply displays all available DeviceParameter adapter services.
         component(comp -> comp
             .impl(DeviceAccessConsumer.class)
-            .withSrv(LogService.class)
-            .withSrv(DeviceAccess.class, device -> device.cb(DeviceAccessConsumer::add)));       
+            .withSvc(LogService.class)
+            .withSvc(DeviceAccess.class, device -> device.add(DeviceAccessConsumer::add)));       
     }
     
     private void createDeviceAndParameter(int id) {

@@ -34,20 +34,20 @@ public class ServiceDependencyInjectionTest extends TestBase {
         // create a service provider and consumer
         ServiceProvider provider = new ServiceProvider(e);
         Component sp = component(m).impl(provider).provides(ServiceInterface2.class.getName()).build();
-        Component sc = component(m).impl(new ServiceConsumer()).withSrv(ServiceInterface2.class).build();
+        Component sc = component(m).impl(new ServiceConsumer()).withSvc(ServiceInterface2.class).build();
            
         Component sc2 = component(m) // all dependencies are optional
             .impl(new ServiceConsumerNamedInjection(false, false)) 
-            .withSrv(ServiceInterface2.class, s->s.optional().autoConfig("m_service"))
-            .withSrv(ServiceInterface2.class, s->s.optional().autoConfig("m_service2"))
-            .withSrv(ServiceInterface2.class, s->s.optional().autoConfig("m_service3"))
+            .withSvc(ServiceInterface2.class, s->s.optional().autoConfig("m_service"))
+            .withSvc(ServiceInterface2.class, s->s.optional().autoConfig("m_service2"))
+            .withSvc(ServiceInterface2.class, s->s.optional().autoConfig("m_service3"))
             .build();
         
         Component sc3 = component(m) // second dependency is required, first and third are optional
             .impl(new ServiceConsumerNamedInjection(false, false))
-            .withSrv(ServiceInterface2.class, s->s.optional().autoConfig("m_service"))
-            .withSrv(ServiceInterface2.class, s->s.required().autoConfig("m_service2"))
-            .withSrv(ServiceInterface2.class, s->s.optional().autoConfig("m_service3"))
+            .withSvc(ServiceInterface2.class, s->s.optional().autoConfig("m_service"))
+            .withSvc(ServiceInterface2.class, s->s.required().autoConfig("m_service2"))
+            .withSvc(ServiceInterface2.class, s->s.optional().autoConfig("m_service3"))
             .build();
         
         Component sc4 = component(m)

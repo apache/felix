@@ -11,12 +11,9 @@
  */
 package org.apache.felix.dm.lambda.samples.dictionary;
 
-import java.util.Dictionary;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.osgi.service.log.LogService;
-
-import aQute.bnd.annotation.metatype.Configurable;
 
 /**
  * This aspect applies to the English DictionaryService, and allows to decorate it with some
@@ -43,13 +40,13 @@ public class DictionaryAspect implements DictionaryService {
     private LogService m_log;
 
     /**
-     * Defines a configuration dependency for retrieving our english custom words (by default,
-     * our PID is our full class name).
+     * Defines a configuration dependency for retrieving our english custom words.
+     * Dependency Manager will inject a dynamic proxy that implements our DictionaryAspectConfiguration interface.
+     * The dynamic proxy is used to wrap the actual Dictionary configuration.
+     * The pid for our configuration is by default the fqdn of our DictionaryAspectConfiguration interface.
      */
-    protected void addWords(Dictionary<String, ?> config) {
-        if (config != null) {
-            // We use the bnd "Configurable" helper in order to get an implementation for our DictionaryConfiguration interface.
-            DictionaryConfiguration cnf = Configurable.createConfigurable(DictionaryConfiguration.class, config);
+    protected void addWords(DictionaryAspectConfiguration cnf) {
+        if (cnf != null) {
             m_words.clear();
             for (String word : cnf.words()) {
                 m_words.add(word);

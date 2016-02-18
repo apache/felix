@@ -4,7 +4,7 @@ import java.util.concurrent.Executor;
 
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.lambda.callbacks.CbFuture;
-import org.apache.felix.dm.lambda.callbacks.CbTypeFuture;
+import org.apache.felix.dm.lambda.callbacks.InstanceCbFuture;
 
 /**
  * Defines a builder for a CompletableFuture dependency.
@@ -22,7 +22,7 @@ import org.apache.felix.dm.lambda.callbacks.CbTypeFuture;
  * <pre>{@code
  * 
  * public class Activator extends DependencyManagerActivator {
- *   public void activate() throws Exception {    	
+ *   public void init(BundleContext ctx, DependencyManager dm) throws Exception {    	
  *      String url = "http://felix.apache.org/";
  *      CompletableFuture<String> page = CompletableFuture.supplyAsync(() -> downloadSite(url));				
  *
@@ -32,7 +32,7 @@ import org.apache.felix.dm.lambda.callbacks.CbTypeFuture;
  *      component(comp -> comp
  *          .impl(MyComponent.class)
  *          .withService(LogService.class)
- *          .withFuture(page, result -> result.cb(MyComponent::setPage)));
+ *          .withFuture(page, result -> result.complete(MyComponent::setPage)));
  *   }
  * }
  * 
@@ -58,7 +58,15 @@ public interface FutureDependencyBuilder<F> extends DependencyBuilder<Dependency
      * @param callback the callback method name to invoke on the component instances, once the CompletableFuture on which we depend has completed.
      * @return this dependency.
      */
-    FutureDependencyBuilder<F> cb(String callback);
+    FutureDependencyBuilder<F> complete(String callback);
+    
+    /**
+     * Sets the callback instance method name to invoke on a given Object instance, once the CompletableFuture has completed.
+     * @param callbackInstance the object instance on which the callback must be invoked
+     * @param callback the callback method name to invoke on Object instance, once the CompletableFuture has completed.
+     * @return this dependency.
+     */
+    FutureDependencyBuilder<F> complete(Object callbackInstance, String callback);
     
     /**
      * Sets the function to invoke when the future task has completed. The function is from one of the Component implementation classes, and it accepts the
@@ -68,7 +76,7 @@ public interface FutureDependencyBuilder<F> extends DependencyBuilder<Dependency
      * @param callback the function to perform when the future task as completed. 
      * @return this dependency
      */
-    <T> FutureDependencyBuilder<F> cb(CbTypeFuture<T, ? super F> callback);
+    <T> FutureDependencyBuilder<F> complete(CbFuture<T, ? super F> callback);
     
     /**
      * Sets the function to invoke asynchronously when the future task has completed. The function is from one of the Component implementation classes, 
@@ -79,7 +87,7 @@ public interface FutureDependencyBuilder<F> extends DependencyBuilder<Dependency
      * @param async true if the callback should be invoked asynchronously using the default jdk execution facility, false if not.
      * @return this dependency
      */
-    <T> FutureDependencyBuilder<F> cb(CbTypeFuture<T, ? super F> callback, boolean async);
+    <T> FutureDependencyBuilder<F> complete(CbFuture<T, ? super F> callback, boolean async);
 
     /**
      * Sets the function to invoke asynchronously when the future task has completed. The function is from one of the Component implementation classes, 
@@ -90,23 +98,15 @@ public interface FutureDependencyBuilder<F> extends DependencyBuilder<Dependency
      * @param executor the executor used to schedule the callback.
      * @return this dependency
      */
-    <T> FutureDependencyBuilder<F> cb(CbTypeFuture<T, ? super F> callback, Executor executor);   
+    <T> FutureDependencyBuilder<F> complete(CbFuture<T, ? super F> callback, Executor executor);   
         
-    /**
-     * Sets the callback instance method name to invoke on a given Object instance, once the CompletableFuture has completed.
-     * @param callbackInstance the object instance on which the callback must be invoked
-     * @param callback the callback method name to invoke on Object instance, once the CompletableFuture has completed.
-     * @return this dependency.
-     */
-    FutureDependencyBuilder<F> cbi(Object callbackInstance, String callback);
-    
     /**
      * Sets the callback instance to invoke when the future task has completed. The callback is a Consumer instance which accepts the
      * result of the completed future.
      * @param callback a Consumer instance which accepts the result of the completed future.
      * @return this dependency
      */
-    FutureDependencyBuilder<F> cbi(CbFuture<? super F> callback);
+    FutureDependencyBuilder<F> complete(InstanceCbFuture<? super F> callback);
     
     /**
      * Sets the callback instance to invoke when the future task has completed. The callback is a Consumer instance which accepts the
@@ -116,7 +116,7 @@ public interface FutureDependencyBuilder<F> extends DependencyBuilder<Dependency
      * @param async true if the callback should be invoked asynchronously using the default jdk execution facility, false if not.
      * @return this dependency
      */
-    FutureDependencyBuilder<F> cbi(CbFuture<? super F> callback, boolean async);
+    FutureDependencyBuilder<F> complete(InstanceCbFuture<? super F> callback, boolean async);
 
     /**
      * Sets the callback instance to invoke when the future task has completed. The callback is a Consumer instance which accepts the
@@ -125,5 +125,5 @@ public interface FutureDependencyBuilder<F> extends DependencyBuilder<Dependency
      * @param executor the executor to use for asynchronous execution of the callback.
      * @return this dependency
      */
-    FutureDependencyBuilder<F> cbi(CbFuture<? super F> callback, Executor executor);   
+    FutureDependencyBuilder<F> complete(InstanceCbFuture<? super F> callback, Executor executor);   
 }

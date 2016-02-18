@@ -37,7 +37,7 @@ public class PageLinksImpl implements PageLinks {
 	        .thenApply(this::parseLinks);	       
 
 	    // Add the future dependency so we'll be started once the CompletableFuture "futureLinks" has completed.
-	    component(c, comp -> comp.withFuture(futureLinks, future -> future.cbi(this::setLinks)));
+	    component(c, comp -> comp.withFuture(futureLinks, future -> future.complete(this::setLinks)));
 	}
 	
 	// Called when our future has completed.
@@ -47,7 +47,7 @@ public class PageLinksImpl implements PageLinks {
     
 	// once our future has completed, our component is started.
 	void start() {
-		m_log.log(LogService.LOG_INFO, "Service starting: number of links found from Felix web site: " + m_links.size());
+		m_log.log(LogService.LOG_WARNING, "Service starting: number of links found from Felix web site: " + m_links.size());
 	}
 	
 	@Override

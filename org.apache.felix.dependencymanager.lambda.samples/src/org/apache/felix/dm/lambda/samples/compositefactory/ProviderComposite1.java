@@ -31,6 +31,10 @@ public class ProviderComposite1 {
     }
 
     void start() {
-        m_log.log(LogService.LOG_INFO, "ProviderParticipant1.start()");
+        m_log.log(LogService.LOG_WARNING, "ProviderParticipant1.start()");
+    }
+    
+    public String toString() {
+        return "ProviderComposite1";
     }
 }

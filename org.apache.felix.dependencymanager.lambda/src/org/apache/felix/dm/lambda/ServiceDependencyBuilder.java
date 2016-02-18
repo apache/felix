@@ -8,8 +8,10 @@ import org.apache.felix.dm.ServiceDependency;
 import org.osgi.framework.ServiceReference;
 
 /**
- * Builds a Dependency Manager Service Dependency. Dependency callbacks can be defined using methods reflection like 
- * in original DM API, or using Java8 method references.
+ * Builds a Dependency Manager Service Dependency. 
+ * The Dependency is required by default, but you can
+ * control the default mode (required or optional) using the "org.apache.felix.dependencymanager.lambda.dependencymode"
+ * system property which can be set to either "required" or "optional" ("required" by default).
  * 
  * Unlike with original DM, dependencies are required by default.
  *
@@ -31,19 +33,22 @@ public interface ServiceDependencyBuilder<S> extends DependencyBuilder<ServiceDe
     ServiceDependencyBuilder<S> ref(ServiceReference<S> ref);
     
     /**
-     * Configures this dependency as optional. By default, a dependency is required.
+     * Configures this dependency as optional. By default, the dependency is required, but you can specify the default mode
+     * using the "org.apache.felix.dependencymanager.lambda.dependencymode" system property.
      * @return this builder
      */
     ServiceDependencyBuilder<S> optional();
 
     /**
-     * Configures this dependency as required. By default, a dependency is required.
+     * Configures this dependency as required.  By default, the dependency is required, but you can specify the default mode
+     * using the "org.apache.felix.dependencymanager.lambda.dependencymode" system property.
 	 * @return this builder
      */
     ServiceDependencyBuilder<S> required();
     
     /**
-     * Configures whether this dependency is required or not.
+     * Configures whether this dependency is required or not.  By default, the dependency is required, but you can specify the default mode
+     * using the "org.apache.felix.dependencymanager.lambda.dependencymode" system property.
      * 
      * @param required true if the dependency is required, false if not. Unlike with the original DM API, service dependencies are required by default.
 	 * @return this builder

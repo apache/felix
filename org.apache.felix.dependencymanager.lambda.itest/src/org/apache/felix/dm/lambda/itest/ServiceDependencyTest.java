@@ -33,10 +33,10 @@ public class ServiceDependencyTest extends TestBase {
         Ensure e = new Ensure();
         // create a service provider and consumer
         Component sp = component(m).impl(new ServiceProvider(e)).provides(ServiceInterface.class).build();
-        Component sc = component(m).impl(new ServiceConsumer(e)).withSrv(ServiceInterface.class).build();
+        Component sc = component(m).impl(new ServiceConsumer(e)).withSvc(ServiceInterface.class).build();
         		
         Component sc2 = component(m).impl(new ServiceConsumerCallbacks(e))
-            .withSrv(ServiceInterface.class, srv -> srv.required(false).cb(ServiceConsumerCallbacks::add, ServiceConsumerCallbacks::remove))
+            .withSvc(ServiceInterface.class, srv -> srv.required(false).add(ServiceConsumerCallbacks::add).remove(ServiceConsumerCallbacks::remove))
             .build();
 
         m.add(sp);

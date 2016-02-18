@@ -35,7 +35,7 @@ public class BundleDependencyTest extends TestBase {
         DependencyManager m = getDM();
         // create a service provider and consumer
         MyConsumer c = new MyConsumer();        
-        Component consumer = component(m, comp -> comp.impl(c).withBundle(bundle -> bundle.cb("add", "remove")));
+        Component consumer = component(m, comp -> comp.impl(c).withBundle(bundle -> bundle.add("add").remove("remove")));
         
         // check if at least one bundle was found
         c.check();
@@ -48,7 +48,7 @@ public class BundleDependencyTest extends TestBase {
         Ensure e = new Ensure();
         String filter = "(Bundle-SymbolicName=" + BSN + ")";
         Component consumerWithFilter = component(m, comp -> comp.impl(new FilteredConsumer(e))
-            .withBundle(bundle-> bundle.filter(filter).cb("add", "remove")));
+            .withBundle(bundle-> bundle.filter(filter).add("add").remove("remove")));
         e.step(2);
         // remove the consumer again
         m.remove(consumerWithFilter);
@@ -59,7 +59,7 @@ public class BundleDependencyTest extends TestBase {
         DependencyManager m = getDM();
         // create a service provider and consumer
         MyConsumer c = new MyConsumer();        
-        Component consumer = component(m, comp -> comp.impl(c).withBundle(bundle -> bundle.cb(MyConsumer::add, MyConsumer::remove)));
+        Component consumer = component(m, comp -> comp.impl(c).withBundle(bundle -> bundle.add(MyConsumer::add).remove(MyConsumer::remove)));
         
         // check if at least one bundle was found
         c.check();
@@ -72,7 +72,7 @@ public class BundleDependencyTest extends TestBase {
         Ensure e = new Ensure();
         String filter = "(Bundle-SymbolicName=" + BSN + ")";
         Component consumerWithFilter = component(m, comp -> comp.impl(new FilteredConsumer(e))
-            .withBundle(bundle-> bundle.filter(filter).cb(FilteredConsumer::add, FilteredConsumer::remove)));
+            .withBundle(bundle-> bundle.filter(filter).add(FilteredConsumer::add).remove(FilteredConsumer::remove)));
         e.step(2);
         // remove the consumer again
         m.remove(consumerWithFilter);
@@ -85,7 +85,7 @@ public class BundleDependencyTest extends TestBase {
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         Component consumerWithFilter = component(m, c -> c.impl(new FilteredConsumerRequired(e))
-            .withBundle(b -> b.filter("(Bundle-SymbolicName=" + BSN + ")").cb("add", "remove")));
+            .withBundle(b -> b.filter("(Bundle-SymbolicName=" + BSN + ")").add("add").remove("remove")));
         e.waitForStep(1, 5000);
         // remove the consumer again
         m.remove(consumerWithFilter);
@@ -99,7 +99,7 @@ public class BundleDependencyTest extends TestBase {
         Ensure e = new Ensure();
         FilteredConsumerRequired impl = new FilteredConsumerRequired(e);
         Component consumerWithFilter = component(m, c -> c.impl(impl)
-            .withBundle(b -> b.filter("(Bundle-SymbolicName=" + BSN + ")").cbi(impl::add, impl::remove)));
+            .withBundle(b -> b.filter("(Bundle-SymbolicName=" + BSN + ")").add(impl::add).remove(impl::remove)));
         e.waitForStep(1, 5000);
         // remove the consumer again
         m.remove(consumerWithFilter);
@@ -114,7 +114,7 @@ public class BundleDependencyTest extends TestBase {
         // add a consumer with a filter
         FilteredConsumerRequiredWithComponentArg impl = new FilteredConsumerRequiredWithComponentArg(e);
         Component consumerWithFilter = component(m, c -> c.impl(impl)
-            .withBundle(b -> b.filter("(Bundle-SymbolicName=" + BSN + ")").cb("add", "remove")));
+            .withBundle(b -> b.filter("(Bundle-SymbolicName=" + BSN + ")").add("add").remove("remove")));
         e.waitForStep(1, 5000);
         // remove the consumer again
         m.remove(consumerWithFilter);
@@ -128,7 +128,7 @@ public class BundleDependencyTest extends TestBase {
         Ensure e = new Ensure();
         FilteredConsumerRequiredWithComponentArg impl = new FilteredConsumerRequiredWithComponentArg(e);
         Component consumerWithFilter = component(m).impl(impl)
-        		.withBundle(b -> b.filter("(Bundle-SymbolicName=" + BSN + ")").cbi(impl::add, impl::remove)).build();
+        		.withBundle(b -> b.filter("(Bundle-SymbolicName=" + BSN + ")").add(impl::addRef).remove(impl::removeRef)).build();
         // add a consumer with a filter
         m.add(consumerWithFilter);
         e.waitForStep(1, 5000);
@@ -206,15 +206,23 @@ public class BundleDependencyTest extends TestBase {
             m_ensure = e;
         }
                 
-        public void add(Component component, Bundle b) {
-        	Assert.assertNotNull(component);
+        public void add(Component component, Bundle b) { // method ref callback
+            Assert.assertNotNull(component);
             if (b.getSymbolicName().equals(BSN)) {
                 m_ensure.step(1);
             }
         }
         
-        public void remove(Component component, Bundle b) {
-        	Assert.assertNotNull(component);
+        public void addRef(Bundle b, Component component) { // method ref callback
+            add(component, b);
+        }
+        
+        public void removeRef(Bundle b, Component component) { // method ref callback
+            remove(component, b);
+        }
+
+        public void remove(Component component, Bundle b) { // method ref callback
+            Assert.assertNotNull(component);
             Assert.assertNotNull(b);
             if (b.getSymbolicName().equals(BSN)) {
                 m_ensure.step(2);

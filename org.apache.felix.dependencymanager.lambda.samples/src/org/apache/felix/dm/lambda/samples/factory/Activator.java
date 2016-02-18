@@ -20,7 +20,9 @@ package org.apache.felix.dm.lambda.samples.factory;
 
 import static java.lang.System.out;
 
+import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.lambda.DependencyManagerActivator;
+import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 
 /**
@@ -28,13 +30,13 @@ import org.osgi.service.log.LogService;
  */
 public class Activator extends DependencyManagerActivator {
     @Override
-    public void activate() throws Exception {
-    	out.println("type \"log info\" to see the logs emitted by this test.");
+    public void init(BundleContext ctx, DependencyManager dm) throws Exception {
+    	out.println("type \"log warn\" to see the logs emitted by this test.");
 
         component(comp -> comp
             .factory(ProviderFactory::new, ProviderFactory::create)       
             .provides(Provider.class)
             .start(ProviderImpl::start)                      
-            .withSrv(LogService.class, log -> log.cb(ProviderImpl::set)));
+            .withSvc(LogService.class, log -> log.add(ProviderImpl::set)));
     }
 }

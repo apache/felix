@@ -35,7 +35,7 @@ public class DeviceAccessImpl implements DeviceAccess {
                 
         component(c, builder -> builder
             .properties("device.access.id", device.getDeviceId())
-            .withSrv(DeviceParameter.class, srv -> srv.filter("(device.id=" + device.getDeviceId() + ")")));
+            .withSvc(DeviceParameter.class, srv -> srv.filter("(device.id=" + device.getDeviceId() + ")")));
     }
     
     @Override

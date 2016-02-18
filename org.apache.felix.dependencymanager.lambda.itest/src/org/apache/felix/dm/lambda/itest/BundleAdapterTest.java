@@ -66,7 +66,8 @@ public class BundleAdapterTest extends TestBase {
         
         Component adapter = bundleAdapter(m)
             .mask(Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE)
-            .cbi(cbInstance, "add", "remove")
+            .callbackInstance(cbInstance)
+            .add("add").remove("remove")
             .impl(baWithCb)
             .provides(BundleAdapter.class.getName())
             .build();
@@ -75,7 +76,7 @@ public class BundleAdapterTest extends TestBase {
         Consumer c = new Consumer();
         Component consumer = component(m)
             .impl(c)
-            .withSrv(BundleAdapter.class, s->s.cb("add", "remove"))
+            .withSvc(BundleAdapter.class, s->s.add("add").remove("remove"))
             .build();
         
         // add the bundle adapter
@@ -100,7 +101,7 @@ public class BundleAdapterTest extends TestBase {
         
         Component adapter = bundleAdapter(m)
             .mask(Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE)
-            .cbi(cbInstance::add, cbInstance::remove)
+            .add(cbInstance::addRef).remove(cbInstance::removeRef)
             .impl(baWithCb)
             .provides(BundleAdapter.class.getName())
             .build();
@@ -109,7 +110,7 @@ public class BundleAdapterTest extends TestBase {
         Consumer c = new Consumer();
         Component consumer = component(m)
             .impl(c)
-            .withSrv(BundleAdapter.class, s->s.cb("add", "remove"))
+            .withSvc(BundleAdapter.class, s->s.add("add").remove("remove"))
             .build();
         
         // add the bundle adapter
@@ -151,12 +152,20 @@ public class BundleAdapterTest extends TestBase {
     		m_ba = ba;
     	}
     	
-        void add(Component c, Bundle b) {
+        void add(Component c, Bundle b) { // reflection callback
         	m_ba.add(b);	
         }
-        
-        void remove(Component c, Bundle b) {
+         
+        void addRef(Bundle b, Component c) { // method reference callback
+            add(c, b);  
+        }
+
+        void remove(Component c, Bundle b) { // reflection callback
         	m_ba.remove(b);
+        }
+        
+        void removeRef(Bundle b, Component c) { // method reference callback
+            remove (c, b);
         }
     }
     

@@ -4,23 +4,25 @@ import java.util.Dictionary;
 import java.util.Objects;
 
 /**
- * Represents a callback(Dictionary) on an Object instance.
+ * Represents a callback(Dictionary) that is invoked on a Component implementation class. 
+ * The type of the class on which the callback is invoked on is represented by the T generic parameter.
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @FunctionalInterface
-public interface CbDictionary {
+public interface CbDictionary<T> extends SerializableLambda {
     /**
-     * Handles the given argument.
-     * @param conf the properties
+     * Handles the given arguments.
+     * @param instance the Component implementation instance on which the callback is invoked on. 
+     * @param conf the callback argument
      */
-    void accept(Dictionary<String, Object> conf);
+    void accept(T instance, Dictionary<String, Object> conf);
 
-    default CbDictionary andThen(CbDictionary after) {
+    default CbDictionary<T> andThen(CbDictionary<? super T> after) {
         Objects.requireNonNull(after);
-        return (Dictionary<String, Object> conf) -> {
-            accept(conf);
-            after.accept(conf);
+        return (T instance, Dictionary<String, Object> conf) -> {
+            accept(instance, conf);
+            after.accept(instance, conf);
         };
     }
 }

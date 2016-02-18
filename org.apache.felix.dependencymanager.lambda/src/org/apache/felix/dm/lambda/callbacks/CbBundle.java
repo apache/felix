@@ -5,23 +5,25 @@ import java.util.Objects;
 import org.osgi.framework.Bundle;
 
 /**
- * Represents a callback(Bundle) on an Object instance.
+ * Represents a callback(Bundle) that is invoked on a Component implementation class. 
+ * The type of the class on which the callback is invoked on is represented by the T generic parameter.
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @FunctionalInterface
-public interface CbBundle extends SerializableLambda {
+public interface CbBundle<T> extends SerializableLambda {
     /**
-     * Handles the given argument.
+     * Handles the given arguments.
+     * @param instance the Component implementation instance on which the callback is invoked on. 
      * @param bundle the callback parameter
      */
-    void accept(Bundle bundle);
+    void accept(T instance, Bundle bundle);
 
-    default CbBundle andThen(CbBundle after) {
+    default CbBundle<T> andThen(CbBundle<? super T> after) {
         Objects.requireNonNull(after);
-        return (Bundle bundle) -> {
-            accept(bundle);
-            after.accept(bundle);
+        return (T instance, Bundle bundle) -> {
+            accept(instance, bundle);
+            after.accept(instance, bundle);
         };
     }
 }

@@ -35,7 +35,7 @@ public class CompositionTest extends TestBase {
         // create a service provider and consumer
         Component sp = component(m).impl(new ServiceProvider(e)).provides(ServiceInterface.class).build();
         Component sc = component(m).impl(new ServiceConsumer(e)).composition("getComposition")
-            .withSrv(ServiceInterface.class, sb->sb.cb("add")).build();
+            .withSvc(ServiceInterface.class, sb->sb.add("add")).build();
         m.add(sp);
         m.add(sc);
         // ensure we executed all steps inside the component instance
@@ -51,7 +51,7 @@ public class CompositionTest extends TestBase {
         Component sp = component(m).impl(new ServiceProvider(e)).provides(ServiceInterface.class).build();
         ServiceConsumer scimpl = new ServiceConsumer(e);
         Component sc = component(m).impl(scimpl).composition(scimpl::getComposition)
-            .withSrv(ServiceInterface.class, sb->sb.cb("add")).build();
+            .withSvc(ServiceInterface.class, sb->sb.add("add")).build();
         m.add(sp);
         m.add(sc);
         // ensure we executed all steps inside the component instance

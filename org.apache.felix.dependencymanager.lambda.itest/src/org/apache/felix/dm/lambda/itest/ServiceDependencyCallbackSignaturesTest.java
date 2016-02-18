@@ -47,15 +47,15 @@ public class ServiceDependencyCallbackSignaturesTest extends TestBase {
         Component provider = component(m)
             .impl(new ProviderImpl()).provides(Provider.class.getName(), props).build();
         
-        component(m, c->c.impl(new Consumer1()).withSrv(Provider.class, srv->srv.cb("bind", "change", "remove")));
-        component(m, c->c.impl(new Consumer2()).withSrv(Provider.class, srv->srv.cb("bind", "change", "remove")));
-        component(m, c->c.impl(new Consumer3()).withSrv(Provider.class, srv->srv.cb("bind", "change", "remove")));
-        component(m, c->c.impl(new Consumer4()).withSrv(Provider.class, srv->srv.cb("bind", "change", "remove")));
-        component(m, c->c.impl(new Consumer5()).withSrv(Provider.class, srv->srv.cb("bind", "change", "remove")));
-        component(m, c->c.impl(new Consumer6()).withSrv(Provider.class, srv->srv.cb("bind", "change", "remove")));
-        component(m, c->c.impl(new Consumer7()).withSrv(Provider.class, srv->srv.cb("bind", "change", "remove")));
-        component(m, c->c.impl(new Consumer8()).withSrv(Provider.class, srv->srv.cb("bind", "change", "remove")));
-        component(m, c->c.impl(new Consumer9()).withSrv(Provider.class, srv->srv.cb("bind", "change", "remove")));
+        component(m, c->c.impl(new Consumer1()).withSvc(Provider.class, srv->srv.add("bind").change("change").remove("remove")));
+        component(m, c->c.impl(new Consumer2()).withSvc(Provider.class, srv->srv.add("bind").change("change").remove("remove")));
+        component(m, c->c.impl(new Consumer3()).withSvc(Provider.class, srv->srv.add("bind").change("change").remove("remove")));
+        component(m, c->c.impl(new Consumer4()).withSvc(Provider.class, srv->srv.add("bind").change("change").remove("remove")));
+        component(m, c->c.impl(new Consumer5()).withSvc(Provider.class, srv->srv.add("bind").change("change").remove("remove")));
+        component(m, c->c.impl(new Consumer6()).withSvc(Provider.class, srv->srv.add("bind").change("change").remove("remove")));
+        component(m, c->c.impl(new Consumer7()).withSvc(Provider.class, srv->srv.add("bind").change("change").remove("remove")));
+        component(m, c->c.impl(new Consumer8()).withSvc(Provider.class, srv->srv.add("bind").change("change").remove("remove")));
+        component(m, c->c.impl(new Consumer9()).withSvc(Provider.class, srv->srv.add("bind").change("change").remove("remove")));
 
         m.add(provider);
         m_ensure.waitForStep(9, 5000);
@@ -68,7 +68,7 @@ public class ServiceDependencyCallbackSignaturesTest extends TestBase {
         m.remove(provider);
         m_ensure.waitForStep(26, 5000);
     }
-    
+        
     /**
      * Tests if all possible dependency callbacks signatures supported by ServiceDependency.
      */
@@ -80,15 +80,15 @@ public class ServiceDependencyCallbackSignaturesTest extends TestBase {
         Component provider = component(m)
             .impl(new ProviderImpl()).provides(Provider.class.getName(), props).build();
         
-        component(m, c->c.impl(new Consumer1()).withSrv(Provider.class, srv->srv.cb(Consumer1::bind, Consumer1::change, Consumer1::remove)));
-        component(m, c->c.impl(new Consumer2()).withSrv(Provider.class, srv->srv.cb(Consumer2::bind, Consumer2::change, Consumer2::remove)));
-        component(m, c->c.impl(new Consumer3()).withSrv(Provider.class, srv->srv.cb(Consumer3::bind, Consumer3::change, Consumer3::remove)));
-        component(m, c->c.impl(new Consumer4()).withSrv(Provider.class, srv->srv.cb(Consumer4::bind, Consumer4::change, Consumer4::remove)));
-        component(m, c->c.impl(new Consumer5()).withSrv(Provider.class, srv->srv.cb(Consumer5::bind, Consumer5::change, Consumer5::remove)));
-        component(m, c->c.impl(new Consumer6()).withSrv(Provider.class, srv->srv.cb(Consumer6::bind, Consumer6::change, Consumer6::remove)));
-        component(m, c->c.impl(new Consumer7()).withSrv(Provider.class, srv->srv.cb(Consumer7::bind, Consumer7::change, Consumer7::remove)));
-        component(m, c->c.impl(new Consumer8()).withSrv(Provider.class, srv->srv.cb(Consumer8::bind, Consumer8::change, Consumer8::remove)));
-        component(m, c->c.impl(new Consumer9()).withSrv(Provider.class, srv->srv.cb(Consumer9::bind, Consumer9::change, Consumer9::remove)));
+        component(m, c->c.impl(new Consumer1()).withSvc(Provider.class, srv->srv.add(Consumer1::bind).change(Consumer1::change).remove(Consumer1::remove)));
+        component(m, c->c.impl(new Consumer2()).withSvc(Provider.class, srv->srv.add(Consumer2::bind).change(Consumer2::change).remove(Consumer2::remove)));
+        component(m, c->c.impl(new Consumer3()).withSvc(Provider.class, srv->srv.add(Consumer3::bind).change(Consumer3::change).remove(Consumer3::remove)));
+        component(m, c->c.impl(new Consumer4()).withSvc(Provider.class, srv->srv.add(Consumer4::bindRef).change(Consumer4::changeRef).remove(Consumer4::removeRef)));
+        component(m, c->c.impl(new Consumer5()).withSvc(Provider.class, srv->srv.add(Consumer5::bindRef).change(Consumer5::changeRef).remove(Consumer5::removeRef)));
+        component(m, c->c.impl(new Consumer6()).withSvc(Provider.class, srv->srv.add(Consumer6::bindRef).change(Consumer6::changeRef).remove(Consumer6::removeRef)));
+        component(m, c->c.impl(new Consumer7()).withSvc(Provider.class, srv->srv.add(Consumer7::bindRef).change(Consumer7::changeRef).remove(Consumer7::removeRef)));
+        component(m, c->c.impl(new Consumer8()).withSvc(Provider.class, srv->srv.add(Consumer8::bindRef).change(Consumer8::changeRef).remove(Consumer8::removeRef)));
+        component(m, c->c.impl(new Consumer9()).withSvc(Provider.class, srv->srv.add(Consumer9::bindRef).change(Consumer9::changeRef).remove(Consumer9::removeRef)));
 
         m.add(provider);
         m_ensure.waitForStep(9, 5000);
@@ -100,14 +100,6 @@ public class ServiceDependencyCallbackSignaturesTest extends TestBase {
         
         m.remove(provider);
         m_ensure.waitForStep(26, 5000);
-    }
-    
-    private void declareConsumer(DependencyManager m, Object consumerImpl) {
-        Component consumer = component(m)
-            .impl(consumerImpl)
-            .withSrv(Provider.class, srv->srv.cb("bind", "change", "change"))
-            .build();
-        m.add(consumer);
     }
 
     public static interface Provider {        
@@ -169,19 +161,33 @@ public class ServiceDependencyCallbackSignaturesTest extends TestBase {
     }
 
     class Consumer4 {        
-        void bind(ServiceReference ref, Provider provider) {
+        void bindRef(Provider provider, ServiceReference ref) { // method ref callback
+            bind(ref, provider);
+        }
+        
+        void bind(ServiceReference ref, Provider provider) { // reflection based callback
             Assert.assertNotNull(ref);
             Assert.assertNotNull(provider);
             Assert.assertEquals("bar", ref.getProperty("foo"));
             m_ensure.step();
         }
-        void change(ServiceReference ref, Provider provider) {
+        
+        void changeRef(Provider provider, ServiceReference ref) { // method ref callback
+            change(ref, provider);
+        }
+        
+        void change(ServiceReference ref, Provider provider) { // reflection based callback
             Assert.assertNotNull(ref);
             Assert.assertNotNull(provider);
             Assert.assertEquals("zoo", ref.getProperty("foo"));
             m_ensure.step();
         }
-        void remove(ServiceReference ref, Provider provider) {
+        
+        void removeRef(Provider provider, ServiceReference ref) { // method ref callback
+            remove(ref, provider);
+        }
+        
+        void remove(ServiceReference ref, Provider provider) { // reflection based callback
             Assert.assertNotNull(ref);
             Assert.assertNotNull(provider);
             Assert.assertEquals("zoo", ref.getProperty("foo"));
@@ -190,40 +196,73 @@ public class ServiceDependencyCallbackSignaturesTest extends TestBase {
     }
         
     class Consumer5 {        
-        void bind(ServiceReference ref) {
+        void bindRef(Provider provider, ServiceReference ref) { // method ref callback
+            bind(ref);
+        }
+        
+        void bind(ServiceReference ref) { // reflection based callback
             Assert.assertNotNull(ref);
             Assert.assertEquals("bar", ref.getProperty("foo"));
             m_ensure.step();
         }
-        void change(ServiceReference ref) {
+      
+        void changeRef(Provider provider, ServiceReference ref) { // method ref callback
+            change(ref);
+        }
+        
+        void change(ServiceReference ref) { // reflection based callback
             Assert.assertNotNull(ref);
             Assert.assertEquals("zoo", ref.getProperty("foo"));
             m_ensure.step();
         }
-        void remove(ServiceReference ref) {
+        
+        void removeRef(Provider provider, ServiceReference ref) { // method ref callback
+            remove(ref);
+        }
+
+        void remove(ServiceReference ref) { // reflection based callback
             Assert.assertNotNull(ref);
             Assert.assertEquals("zoo", ref.getProperty("foo"));
             m_ensure.step();
         }
     }
 
-    class Consumer6 {        
-        void bind(Component c) {
+    class Consumer6 {     
+        
+        void bindRef(Provider p, Component c) { // method ref callback
+            bind(c);
+        }
+        
+        void bind(Component c) { // reflection based callback
             Assert.assertNotNull(c);
             m_ensure.step();
         }
-        void change(Component c) {
+        
+        void changeRef(Provider p, Component c) { // method ref callback
+            change(c);
+        }
+
+        void change(Component c) { // reflection based callback
             Assert.assertNotNull(c);
             m_ensure.step();
         }
-        void remove(Component c) {
+        
+        void removeRef(Provider p, Component c) { // method ref callback
+            remove(c);
+        }
+
+        void remove(Component c) { // reflection based callback
             Assert.assertNotNull(c);
             m_ensure.step();
         }
     }
         
     class Consumer7 {
-        void bind(Component c, ServiceReference ref) {
+        void bindRef(Provider p, Component c, ServiceReference ref) { // reflection callback
+            bind(c, ref);
+        }
+        
+        void bind(Component c, ServiceReference ref) { // reflection callback
             Assert.assertNotNull(c);
             Assert.assertNotNull(ref);
             Assert.assertEquals("bar", ref.getProperty("foo"));
@@ -231,7 +270,12 @@ public class ServiceDependencyCallbackSignaturesTest extends TestBase {
             Assert.assertEquals(context.getService(ref).getClass(), ProviderImpl.class);
             m_ensure.step();
         }
-        void change(Component c, ServiceReference ref) {
+        
+        void changeRef(Provider p, Component c, ServiceReference ref) { // reflection callback
+            change(c, ref);
+        }
+        
+        void change(Component c, ServiceReference ref) { // reflection callback
             Assert.assertNotNull(c);
             Assert.assertNotNull(ref);
             Assert.assertEquals("zoo", ref.getProperty("foo"));
@@ -239,7 +283,12 @@ public class ServiceDependencyCallbackSignaturesTest extends TestBase {
             Assert.assertEquals(context.getService(ref).getClass(), ProviderImpl.class);
             m_ensure.step();
         }
-        void remove(Component c, ServiceReference ref) {
+        
+        void removeRef(Provider p, Component c, ServiceReference ref) { // reflection callback
+            remove(c, ref);
+        }
+        
+        void remove(Component c, ServiceReference ref) { // reflection callback
             Assert.assertNotNull(c);
             Assert.assertNotNull(ref);
             Assert.assertEquals("zoo", ref.getProperty("foo"));
@@ -250,17 +299,31 @@ public class ServiceDependencyCallbackSignaturesTest extends TestBase {
     }
         
     class Consumer8 {
-        void bind(Component c, Provider provider) {
+        void bindRef(Provider p, Component c) { // method ref callback
+            bind(c, p);
+        }
+        
+        void bind(Component c, Provider provider) { // reflection callback
             Assert.assertNotNull(c);
             Assert.assertNotNull(provider);
             m_ensure.step();
         }
-        void change(Component c, Provider provider) {
+        
+        void changeRef(Provider p, Component c) { // method ref callback
+            change(c, p);
+        }
+        
+        void change(Component c, Provider provider) { // reflection callback
             Assert.assertNotNull(c);
             Assert.assertNotNull(provider);
             m_ensure.step();
         }
-        void remove(Component c, Provider provider) {
+        
+        void removeRef(Provider p, Component c) { // method ref callback
+            remove(c, p);
+        }
+        
+        void remove(Component c, Provider provider) { // reflection callback
             Assert.assertNotNull(c);
             Assert.assertNotNull(provider);
             m_ensure.step();
@@ -268,7 +331,11 @@ public class ServiceDependencyCallbackSignaturesTest extends TestBase {
     }
     
     class Consumer9 {
-        void bind(Component c, ServiceReference ref, Provider provider) {
+        void bindRef(Provider provider, Component c, ServiceReference ref) { // method ref callback
+            bind(c, ref, provider);
+        }
+        
+        void bind(Component c, ServiceReference ref, Provider provider) { // reflection callback
             Assert.assertNotNull(c);
             Assert.assertNotNull(ref);
             Assert.assertNotNull(provider);
@@ -276,7 +343,12 @@ public class ServiceDependencyCallbackSignaturesTest extends TestBase {
             Assert.assertEquals(context.getService(ref), provider);
             m_ensure.step();
         }
-        void change(Component c, ServiceReference ref, Provider provider) {
+        
+        void changeRef(Provider provider, Component c, ServiceReference ref) { // method ref callback
+            change(c, ref, provider);
+        }
+        
+        void change(Component c, ServiceReference ref, Provider provider) { // reflection callback
             Assert.assertNotNull(c);
             Assert.assertNotNull(ref);
             Assert.assertNotNull(provider);
@@ -284,7 +356,12 @@ public class ServiceDependencyCallbackSignaturesTest extends TestBase {
             Assert.assertEquals(context.getService(ref), provider);
             m_ensure.step();
         }
-        void remove(Component c, ServiceReference ref, Provider provider) {
+        
+        void removeRef(Provider provider, Component c, ServiceReference ref) { // method ref callback
+            remove(c, ref, provider);
+        }
+        
+        void remove(Component c, ServiceReference ref, Provider provider) { // reflection callback
             Assert.assertNotNull(c);
             Assert.assertNotNull(ref);
             Assert.assertNotNull(provider);

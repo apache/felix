@@ -48,6 +48,6 @@ public class ServiceProviderImpl implements ServiceProvider {
     
     @Override
     public void hello() {
-        log.log(LogService.LOG_INFO, "ServiceProviderImpl.hello");
+        log.log(LogService.LOG_WARNING, "ServiceProviderImpl.hello");
     }
 }

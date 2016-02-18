@@ -40,7 +40,7 @@ public class AdapterNoAutoConfigIfInstanceCallbackIsUsed extends TestBase {
         
         // Declare S1 adapter
         S1AdapterCallback s1AdapterCB = new S1AdapterCallback();
-        adapter(m, S1.class, a -> a.impl(S1Adapter.class).cbi(s1AdapterCB, "set"));
+        adapter(m, S1.class, a -> a.impl(S1Adapter.class).callbackInstance(s1AdapterCB).add("set"));
         
         // At this point, the s1AdapterCB.set(S1 s1) method should be called, and s1Adapter.start() method should then be called.
         // but s1 should not be injected on s1Adapter class fields.
@@ -58,7 +58,7 @@ public class AdapterNoAutoConfigIfInstanceCallbackIsUsed extends TestBase {
         
         // Declare S1 adapter
         S1AdapterCallback s1AdapterCB = new S1AdapterCallback();
-        adapter(m, S1.class, a -> a.impl(S1Adapter.class).cbi(s1AdapterCB::set));
+        adapter(m, S1.class, a -> a.impl(S1Adapter.class).add(s1AdapterCB::set));
         
         // At this point, the s1AdapterCB.set(S1 s1) method should be called, and s1Adapter.start() method should then be called.
         // but s1 should not be injected on s1Adapter class fields.

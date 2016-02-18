@@ -27,6 +27,7 @@ public class ServiceDependencyBuilderImpl<S> extends ServiceCallbacksBuilderImpl
         super(service);
         m_serviceIface = service;
         m_component = component;
+        m_required = Helpers.isDependencyRequiredByDefault(component);
     }
 
     public ServiceDependencyBuilder<S> filter(String filter) {

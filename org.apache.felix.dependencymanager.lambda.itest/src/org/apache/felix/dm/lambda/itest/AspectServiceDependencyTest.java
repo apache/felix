@@ -35,7 +35,7 @@ public class AspectServiceDependencyTest extends TestBase {
         Ensure e = new Ensure();
         // create a service provider and consumer
         Component sp = component(m).impl(new ServiceProvider(e)).provides(ServiceInterface.class.getName()).build();
-        Component sc = component(m).impl(new ServiceConsumer(e)).withSrv(ServiceInterface.class, s->s.cb("add", "remove")).build();
+        Component sc = component(m).impl(new ServiceConsumer(e)).withSvc(ServiceInterface.class, s->s.add("add").remove("remove")).build();
         Component asp = aspect(m, ServiceInterface.class).rank(100).impl(ServiceProviderAspect.class).build();
         		
         m.add(sp);

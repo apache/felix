@@ -9,7 +9,7 @@ import org.apache.felix.dm.lambda.callbacks.SerializableLambda;
  * 
  * <pre>{@code
  * public class Activator extends DependencyManagerActivator {
- *   public void activate() throws Exception {
+ *   public void init(BundleContext ctx, DependencyManager dm) throws Exception {
  *       component(comp -> comp.impl(MyComponentImpl.class).provides(MyService.class, foo->"bar", foo2 -> 123));
  *   }
  * } 

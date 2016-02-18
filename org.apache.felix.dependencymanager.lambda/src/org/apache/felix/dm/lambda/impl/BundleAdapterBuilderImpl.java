@@ -12,9 +12,9 @@ import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.lambda.BundleAdapterBuilder;
 import org.apache.felix.dm.lambda.ComponentBuilder;
 import org.apache.felix.dm.lambda.callbacks.CbBundle;
-import org.apache.felix.dm.lambda.callbacks.CbComponentBundle;
-import org.apache.felix.dm.lambda.callbacks.CbTypeBundle;
-import org.apache.felix.dm.lambda.callbacks.CbTypeComponentBundle;
+import org.apache.felix.dm.lambda.callbacks.CbBundleComponent;
+import org.apache.felix.dm.lambda.callbacks.InstanceCbBundle;
+import org.apache.felix.dm.lambda.callbacks.InstanceCbBundleComponent;
 import org.osgi.framework.Bundle;
 
 public class BundleAdapterBuilderImpl implements AdapterBase<BundleAdapterBuilder>, BundleAdapterBuilder {
@@ -82,45 +82,44 @@ public class BundleAdapterBuilderImpl implements AdapterBase<BundleAdapterBuilde
         return this;
     }
 
-    public BundleAdapterBuilder cb(String ... callbacks) {
-        return cbi(null, callbacks);
+    public BundleAdapterBuilder add(String callback) {
+        return callbacks(callback, null, null);
     }
     
-    public BundleAdapterBuilder cbi(Object callbackInstance, String ... callbacks) {
-        switch (callbacks.length) {
-        case 1:
-            return cbi(callbackInstance, callbacks[0], null, null);
-            
-        case 2:
-            return cbi(callbackInstance, callbacks[0], null, callbacks[1]);
-            
-        case 3:
-            return cbi(callbackInstance, callbacks[0], callbacks[1], callbacks[2]);
-            
-        default:
-            throw new IllegalArgumentException("wrong number of arguments: " + callbacks.length + ". " +
-                "Possible arguments: [add], [add, remove] or [add, change, remove]");
-        }
+    public BundleAdapterBuilder change(String callback) {
+        return callbacks(null, callback, null);
     }
     
-    private BundleAdapterBuilder cbi(Object callbackInstance, String add, String change, String remove) {
-        checkHasNoMethodRefs();
+    public BundleAdapterBuilder remove(String callback) {
+        return callbacks(null, null, callback);
+    }
+    
+    public BundleAdapterBuilder callbackInstance(Object callbackInstance) {
         m_callbackInstance = callbackInstance;
-        m_add = add;
-        m_change = change;
-        m_remove = remove;
         return this;
     }
     
-    public <T> BundleAdapterBuilder cb(CbTypeBundle<T> add) {
-        return cb(add, (CbTypeBundle<T>) null, (CbTypeBundle<T>) null);
+    private BundleAdapterBuilder callbacks(String add, String change, String remove) {
+        checkHasNoMethodRefs();
+        m_add = add != null ? add : m_add;
+        m_change = change != null ? change : m_change;
+        m_remove = remove != null ? remove : m_remove;
+        return this;
+    }
+    
+    public <T> BundleAdapterBuilder add(CbBundle<T> add) {
+        return callbacks(add, (CbBundle<T>) null, (CbBundle<T>) null);
     }
 
-    public <T> BundleAdapterBuilder cb(CbTypeBundle<T> add, CbTypeBundle<T> remove) {
-        return cb(add, null, remove);
+    public <T> BundleAdapterBuilder change(CbBundle<T> change) {
+        return callbacks(null, change, null);
     }
 
-    public <T> BundleAdapterBuilder cb(CbTypeBundle<T> add, CbTypeBundle<T> change, CbTypeBundle<T> remove) {
+    public <T> BundleAdapterBuilder remove(CbBundle<T> remove) {
+        return callbacks(null, null, remove);
+    }
+
+    private <T> BundleAdapterBuilder callbacks(CbBundle<T> add, CbBundle<T> change, CbBundle<T> remove) {
         if (add != null) {
             Class<T> type = Helpers.getLambdaArgType(add, 0);
             setComponentCallbackRef(Cb.ADD, type, (instance, component, bundle) -> { add.accept((T) instance, bundle); });
@@ -136,57 +135,69 @@ public class BundleAdapterBuilderImpl implements AdapterBase<BundleAdapterBuilde
         return this;
     }
     
-    public BundleAdapterBuilder cbi(CbBundle add) {
-        return cbi(add, null, null);
-    }
-
-    public BundleAdapterBuilder cbi(CbBundle add, CbBundle remove) {
-        return cbi(add, null, remove);
+    public BundleAdapterBuilder add(InstanceCbBundle add) {
+        return callbacks(add, null, null);
     }
     
-    public BundleAdapterBuilder cbi(CbBundle add, CbBundle change, CbBundle remove) {
+    public BundleAdapterBuilder change(InstanceCbBundle change) {
+        return callbacks(null, change, null);
+    }
+
+    public BundleAdapterBuilder remove(InstanceCbBundle remove) {
+        return callbacks(null, null, remove);
+    }
+
+    public BundleAdapterBuilder callbacks(InstanceCbBundle add, InstanceCbBundle change, InstanceCbBundle remove) {
         if (add != null) setInstanceCallbackRef(Cb.ADD, (instance, component, bundle) -> { add.accept(bundle); });
         if (change != null) setInstanceCallbackRef(Cb.CHG, (instance, component, bundle) -> { change.accept(bundle); });
         if (remove != null) setInstanceCallbackRef(Cb.REM, (instance, component, bundle) -> { remove.accept(bundle); });
         return this;
     }
     
-    public <T> BundleAdapterBuilder cb(CbTypeComponentBundle<T> add) {
-        return cb((CbTypeComponentBundle<T>) add, (CbTypeComponentBundle<T>) null, (CbTypeComponentBundle<T>) null);
+    public <T> BundleAdapterBuilder add(CbBundleComponent<T> add) {
+        return callbacks(add, null, null);
     }
     
-    public <T> BundleAdapterBuilder cb(CbTypeComponentBundle<T> add, CbTypeComponentBundle<T> remove) {
-        return cb(add, null, remove);
+    public <T> BundleAdapterBuilder change(CbBundleComponent<T> change) {
+        return callbacks(null, change, null);
     }
     
-    public <T> BundleAdapterBuilder cb(CbTypeComponentBundle<T> add, CbTypeComponentBundle<T> change, CbTypeComponentBundle<T> remove) {
+    public <T> BundleAdapterBuilder remove(CbBundleComponent<T> remove) {
+        return callbacks(null, null, remove);
+    }
+    
+    public <T> BundleAdapterBuilder callbacks(CbBundleComponent<T> add, CbBundleComponent<T> change, CbBundleComponent<T> remove) {
         if (add != null) {
             Class<T> type = Helpers.getLambdaArgType(add, 0);
-            return setComponentCallbackRef(Cb.ADD, type, (instance, component, bundle) -> { add.accept((T) instance, component, bundle); });
+            return setComponentCallbackRef(Cb.ADD, type, (instance, component, bundle) -> { add.accept((T) instance, bundle, component); });
         }
         if (change != null) {
             Class<T> type = Helpers.getLambdaArgType(change, 0);
-            return setComponentCallbackRef(Cb.CHG, type, (instance, component, bundle) -> { change.accept((T) instance, component, bundle); });
+            return setComponentCallbackRef(Cb.CHG, type, (instance, component, bundle) -> { change.accept((T) instance, bundle, component); });
         }
         if (remove != null) {
             Class<T> type = Helpers.getLambdaArgType(remove, 0);
-            return setComponentCallbackRef(Cb.ADD, type, (instance, component, bundle) -> { remove.accept((T) instance, component, bundle); });
+            return setComponentCallbackRef(Cb.ADD, type, (instance, component, bundle) -> { remove.accept((T) instance, bundle, component); });
         }
         return this;
     }
     
-    public BundleAdapterBuilder cbi(CbComponentBundle add) {
-        return cbi(add, null, null);
+    public BundleAdapterBuilder add(InstanceCbBundleComponent add) {
+        return callbacks(add, null, null);
     }
     
-    public BundleAdapterBuilder cbi(CbComponentBundle add, CbComponentBundle remove) {
-        return cbi(add, null, remove);
+    public BundleAdapterBuilder change(InstanceCbBundleComponent change) {
+        return callbacks(null, change, null);
     }
-
-    public BundleAdapterBuilder cbi(CbComponentBundle add, CbComponentBundle change, CbComponentBundle remove) {
-        if (add != null) setInstanceCallbackRef(Cb.ADD, (instance, component, bundle) -> { add.accept(component, bundle); });
-        if (change != null) setInstanceCallbackRef(Cb.CHG, (instance, component, bundle) -> { change.accept(component, bundle); });
-        if (remove != null) setInstanceCallbackRef(Cb.REM, (instance, component, bundle) -> { remove.accept(component, bundle); });
+    
+    public BundleAdapterBuilder remove(InstanceCbBundleComponent remove) {
+        return callbacks(null, null, remove);
+    }
+    
+    public BundleAdapterBuilder callbacks(InstanceCbBundleComponent add, InstanceCbBundleComponent change, InstanceCbBundleComponent remove) {
+        if (add != null) setInstanceCallbackRef(Cb.ADD, (instance, component, bundle) -> { add.accept(bundle, component); });
+        if (change != null) setInstanceCallbackRef(Cb.CHG, (instance, component, bundle) -> { change.accept(bundle, component); });
+        if (remove != null) setInstanceCallbackRef(Cb.REM, (instance, component, bundle) -> { remove.accept(bundle, component); });
         return this;
     }
 

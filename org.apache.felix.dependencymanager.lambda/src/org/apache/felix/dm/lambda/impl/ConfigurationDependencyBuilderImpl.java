@@ -8,23 +8,28 @@ import java.util.stream.Stream;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ConfigurationDependency;
+import org.apache.felix.dm.context.ComponentContext;
 import org.apache.felix.dm.lambda.ConfigurationDependencyBuilder;
-import org.apache.felix.dm.lambda.callbacks.CbComponentDictionary;
+import org.apache.felix.dm.lambda.callbacks.CbConfiguration;
+import org.apache.felix.dm.lambda.callbacks.CbConfigurationComponent;
 import org.apache.felix.dm.lambda.callbacks.CbDictionary;
-import org.apache.felix.dm.lambda.callbacks.CbTypeComponentDictionary;
-import org.apache.felix.dm.lambda.callbacks.CbTypeDictionary;
+import org.apache.felix.dm.lambda.callbacks.CbDictionaryComponent;
+import org.apache.felix.dm.lambda.callbacks.InstanceCbConfiguration;
+import org.apache.felix.dm.lambda.callbacks.InstanceCbConfigurationComponent;
+import org.apache.felix.dm.lambda.callbacks.InstanceCbDictionary;
+import org.apache.felix.dm.lambda.callbacks.InstanceCbDictionaryComponent;
 
 public class ConfigurationDependencyBuilderImpl implements ConfigurationDependencyBuilder {
     private String m_pid;
     private boolean m_propagate;
     private final Component m_component;
-    private String m_updateMethodName;
+    private String m_updateMethodName = "updated";
     private Object m_updateCallbackInstance;
     private boolean m_hasMethodRefs;
     private boolean m_hasReflectionCallback;
     private final List<MethodRef<Object>> m_refs = new ArrayList<>();
     private boolean m_hasComponentCallbackRefs;
-    private boolean m_needsInstance = false;
+    private Class<?> m_configType;
     
     @FunctionalInterface
     interface MethodRef<I> {
@@ -40,13 +45,7 @@ public class ConfigurationDependencyBuilderImpl implements ConfigurationDependen
         m_pid = pid;
         return this;
     }
-
-    @Override
-    public ConfigurationDependencyBuilder pid(Class<?> pidClass) {
-        m_pid = pidClass.getName();
-        return this;
-    }
-
+    
     @Override
     public ConfigurationDependencyBuilder propagate() {
         m_propagate = true;
@@ -59,58 +58,107 @@ public class ConfigurationDependencyBuilderImpl implements ConfigurationDependen
         return this;
     }
 
-    public ConfigurationDependencyBuilder cb(String update) {
+    public ConfigurationDependencyBuilder update(String update) {
         checkHasNoMethodRefs();
         m_hasReflectionCallback = true;
         m_updateMethodName = update;
         return this;
     }
     
-    public ConfigurationDependencyBuilder cbi(Object callbackInstance, String update) {
+    public ConfigurationDependencyBuilder update(Class<?> configType, String updateMethod) {
+        m_configType = configType;
+        return update(updateMethod);
+    }
+
+    public ConfigurationDependencyBuilder update(Object callbackInstance, String update) {
         m_updateCallbackInstance = callbackInstance;
-        cb(update);
+        update(update);
         return this;
     }
-
-    public ConfigurationDependencyBuilder needsInstance(boolean needsInstance) {
-        m_needsInstance = needsInstance;
-        return this;
+    
+    public ConfigurationDependencyBuilder update(Class<?> configType, Object callbackInstance, String update) {
+        m_updateCallbackInstance = callbackInstance;
+        return update(callbackInstance, update);        
     }
 
     @Override
-    public <T> ConfigurationDependencyBuilder cb(CbTypeDictionary<T>  callback) {
-        Class<T> type = Helpers.getLambdaArgType(callback, 0);
-        return setComponentCallbackRef(type, (instance, component, props) -> { callback.accept((T) instance, props); });
+    public <T> ConfigurationDependencyBuilder update(CbDictionary<T> callback) {
+        Class<T> componentType = Helpers.getLambdaArgType(callback, 0);
+        return setComponentCallbackRef(componentType, (instance, component, props) -> { 
+            callback.accept((T) instance, props);
+        }); 
     }
 
     @Override
-    public <T> ConfigurationDependencyBuilder cb(CbTypeComponentDictionary<T>  callback) {
-        Class<T> type = Helpers.getLambdaArgType(callback, 0);
-        return setComponentCallbackRef(type, (instance, component, props) -> { callback.accept((T) instance, component, props); });
+    public <T> ConfigurationDependencyBuilder update(CbDictionaryComponent<T> callback) {
+        Class<T> componentType = Helpers.getLambdaArgType(callback, 0);
+        return setComponentCallbackRef(componentType, (instance, component, props) -> { 
+            callback.accept((T) instance, props, component);
+        }); 
     }
 
     @Override
-    public ConfigurationDependencyBuilder cbi(CbDictionary callback) {
-        return setInstanceCallbackRef((instance, component, props) -> { callback.accept(props); });
+    public <T, U> ConfigurationDependencyBuilder update(Class<U> configClass, CbConfiguration<T, U> callback) {
+        Class<T> componentType = Helpers.getLambdaArgType(callback, 0);
+        m_pid = m_pid == null ? configClass.getName() : m_pid;
+        return setComponentCallbackRef(componentType, (instance, component, props) -> { 
+            U configProxy = ((ComponentContext) m_component).createConfigurationProxy(configClass, props);            
+            callback.accept((T) instance, configProxy);
+        }); 
+    }
+
+    @Override
+    public <T, U> ConfigurationDependencyBuilder update(Class<U> configClass, CbConfigurationComponent<T, U> callback) {
+        Class<T> componentType = Helpers.getLambdaArgType(callback, 0);
+        m_pid = m_pid == null ? configClass.getName() : m_pid;
+        return setComponentCallbackRef(componentType, (instance, component, props) -> { 
+            U configProxy = ((ComponentContext) m_component).createConfigurationProxy(configClass, props);            
+            callback.accept((T) instance, configProxy, component);
+        }); 
+    }
+
+    @Override
+    public ConfigurationDependencyBuilder update(InstanceCbDictionary callback) {
+        return setInstanceCallbackRef((instance, component, props) -> { 
+            callback.accept(props);
+        });
+    }
+
+    @Override
+    public ConfigurationDependencyBuilder update(InstanceCbDictionaryComponent callback) {
+        return setInstanceCallbackRef((instance, component, props) -> { 
+            callback.accept(props, component);
+        });
+    }
+
+    public <T> ConfigurationDependencyBuilder update(Class<T> configClass, InstanceCbConfiguration<T> updated) {
+        m_pid = m_pid == null ? configClass.getName() : m_pid;
+        return setInstanceCallbackRef((instance, component, props) -> { 
+            T configProxy = ((ComponentContext) m_component).createConfigurationProxy(configClass, props);
+            updated.accept(configProxy);
+        });
+    }
+    
+    public <T> ConfigurationDependencyBuilder update(Class<T> configClass, InstanceCbConfigurationComponent<T> updated) {
+        m_pid = m_pid == null ? configClass.getName() : m_pid;
+        return setInstanceCallbackRef((instance, component, props) -> { 
+            T configProxy = ((ComponentContext) m_component).createConfigurationProxy(configClass, props);
+            updated.accept(configProxy, component);
+        });
     }
     
     @Override
-    public ConfigurationDependencyBuilder cbi(CbComponentDictionary callback) {
-        return setInstanceCallbackRef((instance, component, props) -> { callback.accept(component, props); });
-    }
-
-    @Override
     public ConfigurationDependency build() {
+        String pid = m_pid == null ? (m_configType != null ? m_configType.getName() : null) : m_pid;
+        if (pid == null) {
+            throw new IllegalStateException("Pid not specified");
+        }
         ConfigurationDependency dep = m_component.getDependencyManager().createConfigurationDependency();
         Objects.nonNull(m_pid);
-        dep.setPid(m_pid);
+        dep.setPid(pid);
         dep.setPropagate(m_propagate);
         if (m_updateMethodName != null) {
-            if (m_updateCallbackInstance != null) {
-                dep.setCallback(m_updateCallbackInstance, m_updateMethodName, m_needsInstance);
-            } else {
-                dep.setCallback(m_updateMethodName);
-            }
+            dep.setCallback(m_updateCallbackInstance, m_updateMethodName, m_configType);
         } else if (m_refs.size() > 0) {
             // setup an internal callback object. When config is updated, we have to call each registered 
             // method references. 
@@ -121,7 +169,7 @@ public class ConfigurationDependencyBuilderImpl implements ConfigurationDependen
                 void updated(Component comp, Dictionary<String, Object> props) {
                     m_refs.forEach(mref -> mref.accept(null, comp, props));
                 }
-            }, "updated", m_hasComponentCallbackRefs||m_needsInstance);
+            }, "updated", m_hasComponentCallbackRefs);
         }
         return dep;
     }
@@ -129,6 +177,7 @@ public class ConfigurationDependencyBuilderImpl implements ConfigurationDependen
     private <T> ConfigurationDependencyBuilder setInstanceCallbackRef(MethodRef<T> ref) {
         checkHasNoReflectionCallbacks();
         m_hasMethodRefs = true;
+        m_updateMethodName = null;
         m_refs.add((instance, component, props) -> ref.accept(null, component, props));
         return this;
     }
@@ -136,6 +185,7 @@ public class ConfigurationDependencyBuilderImpl implements ConfigurationDependen
     @SuppressWarnings("unchecked")
     private <T> ConfigurationDependencyBuilder setComponentCallbackRef(Class<T> type, MethodRef<T> ref) {
         checkHasNoReflectionCallbacks();
+        m_updateMethodName = null;
         m_hasMethodRefs = true;
         m_hasComponentCallbackRefs = true;
         m_refs.add((instance, component, props) -> {

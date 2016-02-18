@@ -45,11 +45,11 @@ public class AdapterWithoutPropagationTest extends TestBase {
 
         // The Adapter will see the "foo=bar" property from the adaptee
         Component adapter = adapter(m, OriginalService.class)
-            .propagate(false).cb("set", "change", null).provides(AdaptedService.class).impl(new ServiceAdapter(e)).build();
+            .propagate(false).add("set").change("change").provides(AdaptedService.class).impl(new ServiceAdapter(e)).build();
 
         // The consumer depends on the AdaptedService, but won't see foo=bar property from the adaptee 
         Component consumer = component(m) 
-            .impl(new ServiceConsumer(e)).withSrv(AdaptedService.class, b -> b.cb("set", "change", null)).build();
+            .impl(new ServiceConsumer(e)).withSvc(AdaptedService.class, b -> b.add("set").change("change")).build();
         
         // add the provider and the adapter
         m.add(provider);
@@ -80,11 +80,11 @@ public class AdapterWithoutPropagationTest extends TestBase {
 
         // The Adapter will see the "foo=bar" property from the adaptee
         ServiceAdapter saimpl = new ServiceAdapter(e);
-        Component adapter = adapter(m, OriginalService.class).propagate(false).impl(saimpl).provides(AdaptedService.class).cbi(saimpl::set, saimpl::change, null).build();           
+        Component adapter = adapter(m, OriginalService.class).propagate(false).impl(saimpl).provides(AdaptedService.class).add(saimpl::set).change(saimpl::change).build();           
 
         // The consumer depends on the AdaptedService, but won't see foo=bar property from the adaptee 
         ServiceConsumer scimpl = new ServiceConsumer(e);
-        Component consumer = component(m).impl(scimpl).withSrv(AdaptedService.class, s -> s.cbi(scimpl::set, scimpl::change, null)).build();
+        Component consumer = component(m).impl(scimpl).withSvc(AdaptedService.class, s -> s.add(scimpl::set).change(scimpl::change)).build();
         
         // add the provider and the adapter
         m.add(provider);

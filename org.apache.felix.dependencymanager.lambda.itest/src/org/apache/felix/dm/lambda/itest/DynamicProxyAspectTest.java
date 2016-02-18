@@ -62,7 +62,7 @@ public class DynamicProxyAspectTest extends TestBase {
         // through the proxy twice
         Component sc = component(m)
             .impl(new ServiceConsumer(e))
-            .withSrv(ServiceInterface.class, ServiceInterface2.class).build();
+            .withSvc(ServiceInterface.class, ServiceInterface2.class).build();
         
         // register both producers, validate that both services are started
         m.add(sp1);
@@ -114,7 +114,7 @@ public class DynamicProxyAspectTest extends TestBase {
         // through the proxy twice
         Component sc = component(m)
             .impl(new ServiceConsumer(e))
-            .withSrv(ServiceInterface.class, ServiceInterface2.class).build();
+            .withSvc(ServiceInterface.class, ServiceInterface2.class).build();
         
         // register both producers, validate that both services are started
         m.add(sp1);

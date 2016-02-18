@@ -20,7 +20,9 @@ package org.apache.felix.dm.lambda.samples.compositefactory;
 
 import static java.lang.System.out;
 
+import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.lambda.DependencyManagerActivator;
+import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.log.LogService;
 
@@ -39,8 +41,8 @@ import org.osgi.service.log.LogService;
  */
 public class Activator extends DependencyManagerActivator {
     @Override
-    public void activate() throws Exception {
-    	out.println("type \"log info\" to see the logs emitted by this test.");
+    public void init(BundleContext ctx, DependencyManager dm) throws Exception {
+    	out.println("type \"log warn\" to see the logs emitted by this test.");
 
     	// Create the Factory used to instantiate ProvuderImpl, ProviderComposite1 and ProviderComposite2
         ProviderFactory factory = new ProviderFactory();
@@ -51,13 +53,11 @@ public class Activator extends DependencyManagerActivator {
         // before creating the composition of classes.
         component(comp -> comp
             .factory(factory::create, factory::getComposition)
-            .start(ProviderImpl::start) // only call start on ProviderImpl          
-            .withSrv(LogService.class, srv -> srv.cb(ProviderImpl::bind).cb(ProviderComposite1::bind))
-            .withCnf(conf -> conf.pid(ProviderFactory.class).cbi(factory::updated)));
+            .start(ProviderImpl::start) // only call start on ProviderImpl
+            .withSvc(LogService.class, srv -> srv.add(ProviderImpl::bind).add(ProviderComposite1::bind))
+            .withCnf(conf -> conf.update(MyConfig.class, factory::updated)));
                 
         // Creates a configuration with pid name = "org.apache.felix.dependencymanager.lambda.samples.compositefactory.ProviderFactory"
-        component(comp -> comp
-            .impl(Configurator.class)
-            .withSrv(ConfigurationAdmin.class));
-    }
+        component(comp -> comp.impl(Configurator.class).withSvc(ConfigurationAdmin.class));
+    }    
 }

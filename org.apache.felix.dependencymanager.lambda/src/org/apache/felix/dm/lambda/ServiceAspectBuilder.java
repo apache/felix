@@ -13,8 +13,8 @@ package org.apache.felix.dm.lambda;
  * 
  * <pre>{@code
  * public class Activator extends DependencyManagerActivator {
- *    public void activate() throws Exception { 
- *       aspect(LogService.class, asp -> asp.impl(SpellCheckLogAspect.class).rank(10).withSrv(Dictionary.class));
+ *    public void init(BundleContext ctx, DependencyManager dm) throws Exception { 
+ *       aspect(LogService.class, asp -> asp.impl(SpellCheckLogAspect.class).rank(10).withSvc(Dictionary.class));
  *    }
  * }} </pre>
  *
@@ -22,10 +22,11 @@ package org.apache.felix.dm.lambda;
  * 
  * <pre>{@code
  * public class Activator extends DependencyManagerActivator {
- *    public void activate() throws Exception { 
- *       aspect(LogService.class, asp -> asp.impl(SpellCheckLogAspect.class).rank(10)
- *          .cb(SpellCheckLogAspect::setLogService)
- *          .withSrv(Dictionary.class, dict -> dict.cb(SpellCheckLogAspect::setDictionary)));
+ *    public void init(BundleContext ctx, DependencyManager dm) throws Exception { 
+ *       aspect(LogService.class, asp -> asp
+ *          .impl(SpellCheckLogAspect.class).rank(10)
+ *          .add(SpellCheckLogAspect::setLogService)
+ *          .withSvc(Dictionary.class, svc -> svc.add(SpellCheckLogAspect::setDictionary)));
  *    }
  * }} </pre>
  *

@@ -18,8 +18,6 @@
  */
 package org.apache.felix.dm.lambda.samples.compositefactory;
 
-import java.util.Dictionary;
-
 /**
  * Pojo used to create all the objects composition used to implements the "Provider" Service.
  * The manager is using a Configuration injected by Config Admin, in order to configure the 
@@ -32,11 +30,10 @@ public class ProviderFactory {
     private ProviderComposite2 m_composite2;
     private ProviderImpl m_providerImpl;
     @SuppressWarnings("unused")
-	private Dictionary<String, Object> m_conf;
+	private MyConfig m_conf;
 
-    public void updated(Dictionary<String, Object> conf) {
-        // validate configuration and throw an exception if the properties are invalid
-        m_conf = conf;
+    public void updated(MyConfig conf) {
+        m_conf = conf; // conf.getFoo() returns "bar"
     }
 
     /**
