@@ -13,8 +13,6 @@ import org.osgi.framework.ServiceReference;
  * control the default mode (required or optional) using the "org.apache.felix.dependencymanager.lambda.dependencymode"
  * system property which can be set to either "required" or "optional" ("required" by default).
  * 
- * Unlike with original DM, dependencies are required by default.
- *
  * @param <S> the type of the service dependency
  */
 public interface ServiceDependencyBuilder<S> extends DependencyBuilder<ServiceDependency>, ServiceCallbacksBuilder<S, ServiceDependencyBuilder<S>> {
@@ -107,7 +105,7 @@ public interface ServiceDependencyBuilder<S> extends DependencyBuilder<ServiceDe
     ServiceDependencyBuilder<S> defImpl(Object defaultImpl);
     
     /**
-     * Sets a timeout for this dependency. A timed dependency blocks the invoker thread is the required dependency is currently unavailable, until it comes up again.
+     * Sets a timeout for this dependency. A timed dependency blocks the invoker thread if the required dependency is currently unavailable, until it comes up again.
      * @param timeout the timeout to wait in milliseconds when the service disappears. If the timeout expires, an IllegalStateException is thrown
      * when the missing service is invoked.
      * 

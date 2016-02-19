@@ -46,7 +46,7 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
     B impl(Object impl);   
     
     /**
-     * Sets the factory to use to create the implementation. You can specify both the factory class and method to invoke. The method should return the implementation, 
+     * Sets the factory to use when creating the implementation. You can specify both the factory class and method to invoke. The method should return the implementation, 
      * and can use any method to create it. Actually, this can be used together with setComposition to create a composition of instances that work together to implement 
      * a component. The factory itself can also be instantiated lazily by not specifying an instance, but a Class. 
      * 
@@ -88,7 +88,7 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
     /**
      * Configures a factory used to create this component implementation using a Factory object and a "getComposition" factory method.
      * the Factory method may then return multiple objects that will be part of this component implementation, and 
-     * all of them will be searched for injecting any of the dependencies.
+     * all of them will be searched when injecting any of the dependencies.
      * 
      * Example:
      * 
@@ -424,7 +424,7 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
      * This method is useful because when it is invoked, all required dependencies defines in the Activator
      * are already injected, and you can then add more extra dependencies from the init() method.
      * And once all extra dependencies will be available and injected, then the "start" callback will be invoked.
-     * The dependency manager will look for a method of this name with the following signatures,
+     * <p>The dependency manager will look for a method of this name with the following signatures,
      * in this order:
      * <ol>
      * <li>method(Component component)</li>
@@ -438,7 +438,7 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
     
     /**
      * Sets the name of the method used as the "start" callback. This method, when found, is
-     * invoked as part of the life cycle management of the component implementation. The
+     * invoked as part of the life cycle management of the component implementation. <p>The
      * dependency manager will look for a method of this name with the following signatures,
      * in this order:
      * <ol>
@@ -453,7 +453,7 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
     
     /**
      * Sets the name of the method used as the "stop" callback. This method, when found, is
-     * invoked as part of the life cycle management of the component implementation. The
+     * invoked as part of the life cycle management of the component implementation. <p>The
      * dependency manager will look for a method of this name with the following signatures,
      * in this order:
      * <ol>
@@ -468,7 +468,7 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
     
     /**
      * Sets the name of the method used as the "destroy" callback. This method, when found, is
-     * invoked as part of the life cycle management of the component implementation. The
+     * invoked as part of the life cycle management of the component implementation. <p>The
      * dependency manager will look for a method of this name with the following signatures,
      * in this order:
      * <ol>

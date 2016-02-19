@@ -7,7 +7,7 @@ package org.apache.felix.dm.lambda;
  * The aspect will be registered with the same interface and properties as the original service, plus any extra properties you supply here.
  * Multiple Aspects of the same service are chained and ordered using aspect ranks.
  * 
- * <p> Code example that provides a "LogService" aspect that performs spell-checking of each log message. 
+ * <p> Code example which provides a "LogService" aspect that performs spell-checking of each log message. 
  * The aspect decorates a LogService. The aspect also depends on an Dictionary service that is internally used to perform log spell checking.
  * The LogService and Dictionary services are injected in the aspect implementation using reflection on class fields:
  * 

@@ -5,7 +5,7 @@ import org.apache.felix.dm.lambda.callbacks.SerializableLambda;
 /**
  * Lambda allowing to define fluent service properties. Property names are deduces from the lambda parameter name.
  * 
- * <p> Example of a component which provides fluent properties ("foo=bar"; "foo2=Integer(123)):
+ * <p> Example of a component which provides fluent properties {"foo"="bar"; "foo2"=Integer(123)}:
  * 
  * <pre>{@code
  * public class Activator extends DependencyManagerActivator {

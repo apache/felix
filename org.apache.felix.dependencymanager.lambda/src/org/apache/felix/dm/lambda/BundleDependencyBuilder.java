@@ -94,7 +94,7 @@ public interface BundleDependencyBuilder extends DependencyBuilder<BundleDepende
 
     /**
      * Sets property propagation. If set to <code>true</code> any bundle manifest properties will be added
-     * to the service properties of the component that has this dependency (if it registers as a service).
+     * to the service properties of the component that declares this dependency (if it provides a service).
      * 
      * @param propagate <code>true</code> to propagate the bundle manifest properties
      * @return the bundle dependency builder
@@ -173,7 +173,7 @@ public interface BundleDependencyBuilder extends DependencyBuilder<BundleDepende
     
     /**
      * Specifies a callback instance used to invoke the reflection based callbacks on it.
-     * @param callbackInstance the instance to invoke the callbacks on
+     * @param callbackInstance the instance to invoke the reflection based callbacks on
      * @return this builder
      * @see #add(String)
      * @see #change(String)

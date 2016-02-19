@@ -156,7 +156,9 @@ public interface ConfigurationDependencyBuilder extends DependencyBuilder<Config
         
     /**
      * Sets a callback method to call on the component implementation class(es) when the configuration is updated. When the configuration is lost, the callback is invoked
-     * with a null dictionary. The following callback signatures are supported and searched in the following order:
+     * with a null dictionary. 
+     * 
+     * <p>The following callback signatures are supported and searched in the following order:
      * <ol>
      * <li>method(Dictionary)</li>
      * <li>method(Component, Dictionary)</li>
@@ -170,6 +172,14 @@ public interface ConfigurationDependencyBuilder extends DependencyBuilder<Config
     /**
      * Sets a callback method to call on the component implementation class(es) when the configuration is updated. The callback is invoked with a configuration type
      * argument (null if the configuration is lost).
+     * 
+     * <p>The following callback signatures are supported and searched in the following order:
+     * <ol>
+     * <li>method(Dictionary)</li>
+     * <li>method(Component, Dictionary)</li>
+     * <li>method(Configuration) // same type as the one specified in the "configType" argument</li>
+     * <li>method(Component, Configuration) // Configuration has the same type as the one specified in the "configType" argument</li>
+     * </ol>
      * 
      * @param configType the type of a configuration that is passed as argument to the callback
      * @param updateMethod the callback to call on the component instance(s) when the configuration is updated.
@@ -201,6 +211,14 @@ public interface ConfigurationDependencyBuilder extends DependencyBuilder<Config
      * can be typically used by a Factory object which needs the configuration before it can create the actual 
      * component implementation instance(s).
      * The callback is invoked with a configuration type argument (null of the configuration is lost).
+     * 
+     * <p>The following callback signatures are supported and searched in the following order:
+     * <ol>
+     * <li>method(Dictionary)</li>
+     * <li>method(Component, Dictionary)</li>
+     * <li>method(Configuration) // same type as the one specified in the "configType" argument</li>
+     * <li>method(Component, Configuration) // Configuration has the same type as the one specified in the "configType" argument</li>
+     * </ol>
      * 
      * @param configType the type of a configuration that is passed as argument to the callback
      * @param callbackInstance the object instance on which the updatedMethod is invoked
@@ -244,7 +262,7 @@ public interface ConfigurationDependencyBuilder extends DependencyBuilder<Config
     <T, U> ConfigurationDependencyBuilder update(Class<U> configType, CbConfiguration<T, U> callback);
     
     /**
-     * Sets a reference to a "callback(configType, Component)" method from one of the component implementation classes. 
+     * Sets a reference to a "callback(Configuration, Component)" method from one of the component implementation classes. 
      * The method is invoked with two args: configuration type, Component. The configuration type argument is null if the configuration is lost.
      *
      * @param <T> The type of the target component implementation class on which the method is invoked
@@ -275,7 +293,7 @@ public interface ConfigurationDependencyBuilder extends DependencyBuilder<Config
     ConfigurationDependencyBuilder update(InstanceCbDictionaryComponent callback);
 
     /**
-     * Sets a reference to a "callback(ConfigType)" method from an Object instance. The configuration type argument is null if the configuration is lost.
+     * Sets a reference to a "callback(Configuration)" method from an Object instance. The configuration type argument is null if the configuration is lost.
      *
      * @param <T> the type of the configuration interface accepted by the callback method.
      * @param configType the class of the configuration that is passed as argument to the callback
