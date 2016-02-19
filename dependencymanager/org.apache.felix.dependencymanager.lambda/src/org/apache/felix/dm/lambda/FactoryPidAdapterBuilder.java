@@ -17,8 +17,10 @@ import org.apache.felix.dm.lambda.callbacks.InstanceCbDictionaryComponent;
  * 
  * This builded supports type safe configuration types. For a given factory configuration, you can specify an interface of your choice,
  * and DM will implement it using a dynamic proxy that converts interface methods to lookups in the actual factory configuration dictionary. 
+ * For more information about configuration types, please refer to {@link ConfigurationDependencyBuilder}.
  * 
- * <p> Example that defines a factory configuration adapter service for the "foo.bar" factory pid:
+ * <p> Example that defines a factory configuration adapter service for the "foo.bar" factory pid. For each factory pid instance, 
+ * an instance of the DictionaryImpl component will be created.
  * 
  * <pre> {@code
  * public class Activator extends DependencyManagerActivator {
@@ -64,16 +66,16 @@ public interface FactoryPidAdapterBuilder extends ComponentBuilder<FactoryPidAda
     FactoryPidAdapterBuilder factoryPid(String pid);
         
     /**
-     * Specifies if the public properties (not starting with a dot) should be propagated in the adapter service properties (false by default).
+     * Specifies if the public properties (not starting with a dot) should be propagated to the adapter service properties (false by default).
      * 
      * @return this builder.
      */
     FactoryPidAdapterBuilder propagate();
     
     /**
-     * Specifies if the public properties (not starting with a dot) should be propagated in the adapter service properties (false by default).
+     * Specifies if the public properties (not starting with a dot) should be propagated to the adapter service properties (false by default).
      * 
-     * @param propagate true if the public properties should be propagated in the adapter service properties (false by default).
+     * @param propagate true if the public properties should be propagated to the adapter service properties (false by default).
      * @return this builder.
      */
     FactoryPidAdapterBuilder propagate(boolean propagate);
@@ -82,12 +84,12 @@ public interface FactoryPidAdapterBuilder extends ComponentBuilder<FactoryPidAda
      * Specifies a callback method that will be called on the component instances when the configuration is injected.
      * 
      * @param updateMethod the method to call on the component instances when the configuration is available ("updated" by default).
-     * The following method signatures are supported:
      * 
-     * <pre> {@code
-     *    method(Dictionary properties)
-     *    method(Component component, Dictionary properties)
-     * }</pre>
+     * <p>The following method signatures are supported:
+     * <ol>
+     * <li> method(Dictionary properties)
+     * <li> method(Component component, Dictionary properties)
+     * </ol>
      * 
      * @return this builder
      */
@@ -96,6 +98,14 @@ public interface FactoryPidAdapterBuilder extends ComponentBuilder<FactoryPidAda
     /**
      * Sets a callback method to call on the component implementation class(es) when the configuration is updated. 
      * The callback is invoked with a configuration type argument.
+     * 
+     * <p>The following callback signatures are supported and searched in the following order:
+     * <ol>
+     * <li>method(Dictionary)</li>
+     * <li>method(Component, Dictionary)</li>
+     * <li>method(Configuration) // same type as the one specified in the "configType" argument</li>
+     * <li>method(Component, Configuration) // Configuration has the same type as the one specified in the "configType" argument</li>
+     * </ol>
      * 
      * @param configType the type of a configuration that is passed as argument to the callback
      * @param updateMethod the callback to call on the component instance(s) when the configuration is updated.
@@ -122,6 +132,14 @@ public interface FactoryPidAdapterBuilder extends ComponentBuilder<FactoryPidAda
     /**
      * Specifies a callback instance method that will be called on a given object instance when the configuration is injected.
      * The callback is invoked with a configuration type argument.
+     * 
+     * <p>The following callback signatures are supported and searched in the following order:
+     * <ol>
+     * <li>method(Dictionary)</li>
+     * <li>method(Component, Dictionary)</li>
+     * <li>method(Configuration) // same type as the one specified in the "configType" argument</li>
+     * <li>method(Component, Configuration) // Configuration has the same type as the one specified in the "configType" argument</li>
+     * </ol>
      * 
      * @param configType the type of a configuration that is passed as argument to the callback
      * @param callbackInstance the Object instance on which the updated callback will be invoked.
@@ -157,7 +175,7 @@ public interface FactoryPidAdapterBuilder extends ComponentBuilder<FactoryPidAda
      * Specifies a method reference that will be called on one of the component classes when the configuration is injected
      * 
      * @param <T> the type of the component implementation class on which the callback is invoked on.
-     * @param callback the reference to a method on one of the component classes. The method may takes as parameter a Dictionary and a Component.
+     * @param callback the reference to a method on one of the component classes. The method may takes as arguments a Dictionary and a Component.
      * @return this builder
      */
     <T> FactoryPidAdapterBuilder update(CbDictionaryComponent<T> callback);
@@ -169,7 +187,7 @@ public interface FactoryPidAdapterBuilder extends ComponentBuilder<FactoryPidAda
      * @param <T> the type of the component implementation class on which the callback is invoked on.
      * @param <U> the configuration type accepted by the callback method.
      * @param configType the type of a configuration that is passed as argument to the callback
-     * @param callback the reference to a method on one of the component classes. The method may takes as parameter a configuration type and a Component.
+     * @param callback the reference to a method on one of the component classes. The method may takes as arguments a configuration type and a Component.
      * @return this builder
      */
     <T, U> FactoryPidAdapterBuilder update(Class<U> configType, CbConfigurationComponent<T, U> callback);
@@ -209,7 +227,7 @@ public interface FactoryPidAdapterBuilder extends ComponentBuilder<FactoryPidAda
      * 
      * @param <T> the configuration type accepted by the callback method.
      * @param configType the type of a configuration that is passed as argument to the callback
-     * @param callback the method to call on a given object instance when the configuration is available. The callback takes as argument a
+     * @param callback the method to call on a given object instance when the configuration is available. The callback takes as arguments a
      * configuration type, and a Component parameter. 
      * @return this builder
      */

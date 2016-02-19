@@ -24,8 +24,6 @@ import org.apache.felix.dm.lambda.callbacks.InstanceCbServiceServiceComponent;
 /**
  * Builds a service dependency callback (required by default).
  * 
- * TODO: fix javadoc for method reference (do the same as in ConfigurationDependencyBuilder: use double quotes ...
- * 
  * A Service may be injected in a bind-method of a component or an object instance using this builder.
  * The builder supports reflection based callbacks (same as with the original DM API), as well as java8 method reference based callbacks.
  * 
@@ -62,23 +60,23 @@ import org.apache.felix.dm.lambda.callbacks.InstanceCbServiceServiceComponent;
  * swapMethod(ServiceReference<S> oldRef, S old, ServiceReference<S> newRef, S newService, Component component)
  * }</pre>
  * 
- * <p> Here is an example of a Component that defines a dependency of a LogService which is injected in the "bindLogService" method using a ServiceCallbacksBuilder:
- * The withSvc(...)" declaration defines a method reference on the "ComponentImpl::bindLogService" method (using a lambda):
+ * <p> Here is an example of a Component that defines a dependency of a LogService which is injected in the "setLog" method using a ServiceCallbacksBuilder:
+ * The withSvc(...)" declaration defines a method reference on the "Pojo::setLog" method (using a lambda):
  * 
  * <pre> {@code
  * public class Activator extends DependencyManagerActivator {
  *    public void init(BundleContext ctx, DependencyManager dm) throws Exception { 
- *       component(comp -> comp.impl(ComponentImpl.class).withSvc(LogService.class, log -> log.add(ComponentImpl::bindLogService)));
+ *       component(comp -> comp.impl(Pojo.class).withSvc(LogService.class, log -> log.add(Pojo::setLog)));
  *    }
  * }}</pre>
  *
- * <p> Same example, but we inject the dependency in an object instance that we already have in hand:
+ * <p> Same example, but we inject the dependency to an object instance that we already have in hand:
  * 
  * <pre> {@code
  * public class Activator extends DependencyManagerActivator {
  *    public void init(BundleContext ctx, DependencyManager dm) throws Exception {
- *       ComponentImpl impl = new ComponentImpl();
- *       component(comp -> comp.impl(impl).withSvc(LogService.class, log -> log.add(impl::bindLogService)));
+ *       Pojo impl = new Pojo();
+ *       component(comp -> comp.impl(impl).withSvc(LogService.class, log -> log.add(impl::setLog)));
  *    }
  * }}</pre>
  * 
@@ -87,17 +85,7 @@ import org.apache.felix.dm.lambda.callbacks.InstanceCbServiceServiceComponent;
  * <pre> {@code
  * public class Activator extends DependencyManagerActivator {
  *    public void init(BundleContext ctx, DependencyManager dm) throws Exception {
- *       component(comp -> comp.impl(ComponentImpl::class).withSvc(LogService.class, log -> log.add("bindLogService")));
- *    }
- * }}</pre>
- *
- * <p> Same example, but we inject the dependency in an object instance that we already have in hand:
- * 
- * <pre> {@code
- * public class Activator extends DependencyManagerActivator {
- *    public void init(BundleContext ctx, DependencyManager dm) throws Exception {
- *       ComponentImpl impl = new ComponentImpl();
- *       component(comp -> comp.impl(impl).withSvc(LogService.class, log -> log.callbackInstance(impl).add("bindLogService")));
+ *       component(comp -> comp.impl(Pojo::class).withSvc(LogService.class, log -> log.add("setLog")));
  *    }
  * }}</pre>
  *

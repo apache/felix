@@ -5,7 +5,7 @@ import java.util.Objects;
 import org.apache.felix.dm.Component;
 
 /**
- * Represents a callback(Component)  on an Object instance.
+ * Represents a callback(Component) invoked on an Object instance.
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
