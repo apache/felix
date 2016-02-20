@@ -299,17 +299,6 @@ public class ScenarioControllerImpl implements Runnable, ScenarioController {
     }
     
     /**
-     * Initialize the latches used to track when all scenario bundle components are started or stopped.
-     */
-    private void initLatches() {
-        m_startLatch = new CountDownLatch(ARTISTS
-            + (ARTISTS * (ALBUMS + (ALBUMS * TRACKS))));
-        
-        m_stopLatch = new CountDownLatch(ARTISTS
-            + (ARTISTS * (ALBUMS + (ALBUMS * TRACKS))));
-    }
-
-    /**
      * Returns the time consumed by the given runnable, ²ch is executed by this method.
      */
     private long durationOf(Runnable scenario) {

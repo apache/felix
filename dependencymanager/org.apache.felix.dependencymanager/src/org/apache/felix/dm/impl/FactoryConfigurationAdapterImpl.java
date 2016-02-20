@@ -18,7 +18,8 @@
  */
 package org.apache.felix.dm.impl;
 
-import java.lang.reflect.InvocationTargetException;
+import static org.apache.felix.dm.impl.ConfigurationDependencyImpl.createCallbackType;
+
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Enumeration;
@@ -35,8 +36,6 @@ import org.osgi.framework.Constants;
 import org.osgi.service.cm.ManagedServiceFactory;
 import org.osgi.service.metatype.MetaTypeProvider;
 import org.osgi.service.metatype.ObjectClassDefinition;
-
-import static org.apache.felix.dm.impl.ConfigurationDependencyImpl.createCallbackType;
 
 /**
  * Factory configuration adapter service implementation. This class extends the FilterService in order to catch
@@ -128,7 +127,7 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
          * Method called from our superclass, when we need to create a service.
          */
         @SuppressWarnings("unchecked")
-        public Component createService(Object[] properties) {
+        public Component createService(Object[] properties) throws Exception {
             Dictionary<String, ?> settings = (Dictionary<String, ?>) properties[0];     
             Component newService = m_manager.createComponent();        
 
@@ -160,7 +159,7 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
          * the configuration has changed.
          */
         @SuppressWarnings("unchecked")
-        public void updateService(Object[] properties) {
+        public void updateService(Object[] properties) throws Exception {
             Dictionary<String, ?> cmSettings = (Dictionary<String, ?>) properties[0];
             Component service = (Component) properties[1];
             CallbackTypeDef callbackInfo = createCallbackType(m_logger, service, m_configType, cmSettings);
@@ -173,7 +172,7 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
             }
         }
         
-        private void invokeUpdated(Component service, CallbackTypeDef callbackInfo) {
+        private void invokeUpdated(Component service, CallbackTypeDef callbackInfo) throws Exception {
             boolean callbackFound = false;
             Object[] instances = getUpdateCallbackInstances(service);
             for (Object instance : instances) {
@@ -181,15 +180,8 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
                     InvocationUtil.invokeCallbackMethod(instance, m_update, callbackInfo.m_sigs, callbackInfo.m_args);
                     callbackFound |= true;
                 }
-                catch (InvocationTargetException e) {
-                    // The component has thrown an exception during it's callback invocation.
-                    handleException(e.getTargetException());
-                }
                 catch (NoSuchMethodException e) {
                     // if the method does not exist, ignore it
-                }
-                catch (Throwable t) {
-                    handleException(t); // will rethrow a runtime exception.
                 }
             }
             
@@ -246,25 +238,6 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
             }
             
             return props;
-        }
-
-        private void handleException(Throwable t) {
-            if (m_logger != null) {
-                m_logger.log(Logger.LOG_ERROR, "Got exception while handling configuration update for factory pid " + m_factoryPid, t);
-            } else {
-                
-            }
-            if (t instanceof InvocationTargetException) {
-                // Our super class will check if the target exception is itself a ConfigurationException.
-                // In this case, it will simply re-thrown.
-                throw new RuntimeException(((InvocationTargetException) t).getTargetException());
-            }
-            else if (t instanceof RuntimeException) {
-                throw (RuntimeException) t;
-            }
-            else {
-                throw new RuntimeException(t);
-            }
         }
     }
     

@@ -40,14 +40,16 @@ import org.osgi.service.cm.ConfigurationException;
 public abstract class AbstractDecorator  {
     protected volatile DependencyManager m_manager;
     private final Map<Object, Component> m_services = new ConcurrentHashMap<>();
-    
-    public abstract Component createService(Object[] properties);
+    private volatile ComponentContext m_decoratorComponent;
+
+    public abstract Component createService(Object[] properties) throws Exception;
     
     /**
      * Catches our DependencyManager handle from our component init method.
      */
     public void init(Component c) {
         m_manager = c.getDependencyManager();
+        m_decoratorComponent = (ComponentContext) c;
     }
     
     /**
@@ -55,8 +57,8 @@ public abstract class AbstractDecorator  {
      * For now, it's only used by the FactoryConfigurationAdapterImpl class, 
      * but it might also make sense to use this for Resource Adapters ...
      */
-    public void updateService(Object[] properties) {
-        throw new NoSuchMethodError("Method updateService not implemented");
+    public void updateService(Object[] properties) throws Exception {
+        throw new NoSuchMethodException("Method updateService not implemented");
     }
     
     /**
@@ -104,29 +106,27 @@ public abstract class AbstractDecorator  {
         }
     }
     
-    // callbacks for FactoryConfigurationAdapterImpl
-    public void updated(String pid, @SuppressWarnings("rawtypes") Dictionary properties) throws ConfigurationException {
-        try {
-            Component service = m_services.get(pid);
-            if (service == null) { 
-                service = createService(new Object[] { properties });
-                m_services.put(pid, service);
-                m_manager.add(service);
-            }
-            else {
-                updateService(new Object[] { properties, service });
-            }
+    // callbacks for FactoryConfigurationAdapterImpl from the ConfigAdmin thread
+    @SuppressWarnings("rawtypes")
+    public void updated(String pid, Dictionary properties) throws ConfigurationException {
+        // FELIX-5193: invoke the updated callback in the internal decorator component queue, in order
+        // to safely detect if the component is still active or not.
+        InvocationUtil.invokeUpdated(m_decoratorComponent.getExecutor(), () -> updatedSafe(pid, properties));
+    }
+    
+    @SuppressWarnings("rawtypes")
+    private void updatedSafe(String pid, Dictionary properties) throws Exception {
+        if (!m_decoratorComponent.isActive()) {
+            // Our decorator component has been removed: ignore the configuration update.
+            return;
         }
-        catch (Throwable t) {
-            if (t instanceof ConfigurationException) {
-                throw (ConfigurationException) t;
-            }
-            else if (t.getCause() instanceof ConfigurationException) {
-                throw (ConfigurationException) t.getCause();
-            }
-            else {
-                throw new ConfigurationException(null, "Could not create service for ManagedServiceFactory Pid " + pid, t);
-            }
+        Component service = m_services.get(pid);
+        if (service == null) {
+            service = createService(new Object[] { properties });
+            m_services.put(pid, service);
+            m_manager.add(service);
+        } else {
+            updateService(new Object[] { properties, service });
         }
     }
 
@@ -138,7 +138,7 @@ public abstract class AbstractDecorator  {
     }
 
     // callbacks for resources
-    public void added(URL resource) {
+    public void added(URL resource) throws Exception {
         Component newService = createService(new Object[] { resource });
         m_services.put(resource, newService);
         m_manager.add(newService);
@@ -153,7 +153,7 @@ public abstract class AbstractDecorator  {
     }
     
     // callbacks for services
-    public void added(ServiceReference ref, Object service) {
+    public void added(ServiceReference ref, Object service) throws Exception {
         Component newService = createService(new Object[] { ref, service });
         m_services.put(ref, newService);
         m_manager.add(newService);
@@ -177,7 +177,7 @@ public abstract class AbstractDecorator  {
     }
     
     // callbacks for bundles
-    public void added(Bundle bundle) {
+    public void added(Bundle bundle) throws Exception {
         Component newService = createService(new Object[] { bundle });
         m_services.put(bundle, newService);
         m_manager.add(newService);

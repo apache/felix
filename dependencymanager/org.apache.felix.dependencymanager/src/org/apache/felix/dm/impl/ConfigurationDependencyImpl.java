@@ -18,16 +18,10 @@
  */
 package org.apache.felix.dm.impl;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
@@ -61,7 +55,6 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 	private final Logger m_logger;
 	private final BundleContext m_context;
 	private boolean m_needsInstance = true;
-	private final static int UPDATE_MAXWAIT = 30000; // max time to wait until a component has handled a configuration change event.
 
     public ConfigurationDependencyImpl() {
         this(null, null);
@@ -250,7 +243,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 		}
 		return m_settings;
 	}
-    
+	    
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public void updated(final Dictionary settings) throws ConfigurationException {
@@ -272,43 +265,12 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
         // callback is invoked safely. So, we use a Callable and a FutureTask that allows to handle the 
         // configuration update through the component executor. We still wait for the result because
         // in case of any configuration error, we have to return it from the current thread.
+        // Notice that scheduling the handling of the configuration update in the component queue also
+        // allows to safely check if the component is still active (it could be being stopped concurrently:
+        // see the invokeUpdated method which tests if our dependency is still alive (by calling super.istarted()
+        // method).
         
-        Callable<ConfigurationException> result = new Callable<ConfigurationException>() {
-            @Override
-            public ConfigurationException call() throws Exception {
-                try {
-                    invokeUpdated(settings); // either the callback instance or the component instances, if available.
-                } catch (ConfigurationException e) {
-                    return e;
-                }
-                return null;
-            }            
-        };
-        
-        // Schedule the configuration update in the component executor. In Normal case, the task is immediately executed.
-        // But in a highly concurrent system, and if the component is being reconfigured, the component may be currently busy
-        // (handling a service dependency event for example), so the task will be enqueued in the component executor, and
-        // we'll wait for the task execution by using a FutureTask:
-        
-        FutureTask<ConfigurationException> ft = new FutureTask<>(result);
-        m_component.getExecutor().execute(ft);
-        
-        try {
-            ConfigurationException confError = ft.get(UPDATE_MAXWAIT, TimeUnit.MILLISECONDS);
-            if (confError != null) {
-                throw confError; // will be logged by the Configuration Admin service;
-            }
-          }
-
-        catch (ExecutionException error) {
-            throw new ConfigurationException(null, "Configuration update error, unexpected exception.", error);
-        } catch (InterruptedException error) {
-            // will be logged by the Configuration Admin service;
-            throw new ConfigurationException(null, "Configuration update interrupted.", error);
-        } catch (TimeoutException error) {
-            // will be logged by the Configuration Admin service;
-            throw new ConfigurationException(null, "Component did not handle configuration update timely.", error);
-        }
+        InvocationUtil.invokeUpdated(m_component.getExecutor(), () -> invokeUpdated(settings));
         
         // At this point, we have accepted the configuration.
         synchronized (this) {
@@ -337,8 +299,8 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
         case ADDED:
             try {
                 invokeUpdated(m_settings);
-            } catch (ConfigurationException e) {
-                logConfigurationException(e);
+            } catch (Throwable err) {
+                logConfigurationException(err);
             }
             break;
         case CHANGED:
@@ -386,8 +348,17 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
         return new CallbackTypeDef(sigs, args);
     }
 
-    private void invokeUpdated(Dictionary<?, ?> settings) throws ConfigurationException {
+    // Called from the configuration component internal queue. 
+    private void invokeUpdated(Dictionary<?, ?> settings) throws Exception {
         if (m_updateInvokedCache.compareAndSet(false, true)) {
+            
+            // FELIX-5192: we have to handle the following race condition: one thread stops a component (removes it from a DM object);
+            // another thread removes the configuration (from ConfigurationAdmin). in this case we may be called in our
+            // ManagedService.updated(null), but our component instance has been destroyed and does not exist anymore.
+            // In this case: do nothing.            
+            if (! super.isStarted()) {
+                return;
+            }
             
             // FELIX-5155: if component impl is an internal DM adapter, we must not invoke the callback on it
             // because in case there is an external callback instance specified for the configuration callback,
@@ -400,11 +371,8 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
                 return;
             }
             
-            Object[] instances = super.getInstances(); // either the callback instance or the component instances
-            if (instances == null) {
-                return;
-            }
-
+            Object[] instances = super.getInstances(); // never null, either the callback instance or the component instances            
+            
             CallbackTypeDef callbackInfo = createCallbackType(m_logger, m_component, m_configType, settings);
             boolean callbackFound = false;
             for (int i = 0; i < instances.length; i++) {
@@ -412,23 +380,8 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
                     InvocationUtil.invokeCallbackMethod(instances[i], m_add, callbackInfo.m_sigs, callbackInfo.m_args);
                     callbackFound |= true;
                 }
-                catch (InvocationTargetException e) {
-                    // The component has thrown an exception during it's callback invocation.
-                    if (e.getTargetException() instanceof ConfigurationException) {
-                        // the callback threw an OSGi ConfigurationException: just re-throw it.
-                        throw (ConfigurationException) e.getTargetException();
-                    }
-                    else {
-                        // wrap the callback exception into a ConfigurationException.
-                        throw new ConfigurationException(null, "Configuration update failed", e.getTargetException());
-                    }
-                }
                 catch (NoSuchMethodException e) {
                     // if the method does not exist, ignore it
-                }
-                catch (Throwable t) {
-                    // wrap any other exception as a ConfigurationException.
-                    throw new ConfigurationException(null, "Configuration update failed", t);
                 }
             }
             
@@ -445,7 +398,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
         }
     }
         
-    private void logConfigurationException(ConfigurationException e) {
-        m_logger.log(Logger.LOG_ERROR, "Got exception while handling configuration update for pid " + m_pid, e);
+    private void logConfigurationException(Throwable err) {
+        m_logger.log(Logger.LOG_ERROR, "Got exception while handling configuration update for pid " + m_pid, err);
     }
 }
