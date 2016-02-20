@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.felix.dm.lambda;
 
 import java.util.Dictionary;
@@ -12,9 +30,7 @@ import org.osgi.framework.Bundle;
 
 /**
  * Builds a Dependency Manager Bundle Dependency. 
- * The Dependency is required by default, but you can
- * control the default mode (required or optional) using the "org.apache.felix.dependencymanager.lambda.dependencymode"
- * system property which can be set to either "required" or "optional" ("required" by default).
+ * When a bundle dependency is not explicitly defined as "required" or "optional", then it is assumed to be required by default.
  * 
  * <p> Example of a Pojo Component which tracks a started bundle having a given bundle symbolic name:
  * 
@@ -25,7 +41,6 @@ import org.osgi.framework.Bundle;
  *         component(comp -> comp
  *             .impl(Pojo.class)
  *             .withBundle(b -> b.mask(Bundle.ACTIVE).filter("(Bundle-SymbolicName=" + BSN + ")").add(Pojo::add).remove(Pojo::remove)));
- *                  
  *    }
  * }
  * } </pre>
@@ -51,17 +66,14 @@ public interface BundleDependencyBuilder extends DependencyBuilder<BundleDepende
     public BundleDependencyBuilder autoConfig();
 
     /**
-     * Sets the dependency to be required. By default, the dependency is required, but you can specify the default mode
-     * using the "org.apache.felix.dependencymanager.lambda.dependencymode" system property.
-     * 
-     * @param required <code>true</code> if this bundle dependency is required (true by default).
+     * Sets the dependency to be required.
+     * @param required <code>true</code> if this bundle dependency is required.
      * @return the bundle dependency builder
      */
     public BundleDependencyBuilder required(boolean required);
 
     /**
-     * Sets the dependency to be required.  By default, the dependency is required, but you can specify the default mode
-     * using the "org.apache.felix.dependencymanager.lambda.dependencymode" system property.
+     * Sets the dependency to be required.
      * 
      * @return the bundle dependency builder
      */

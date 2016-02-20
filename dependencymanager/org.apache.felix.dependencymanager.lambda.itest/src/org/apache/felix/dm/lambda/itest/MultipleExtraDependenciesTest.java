@@ -27,7 +27,6 @@ import org.junit.Assert;
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@SuppressWarnings({"unchecked", "rawtypes"})
 public class MultipleExtraDependenciesTest extends TestBase {
     /**
      * Check that list of extra dependencies (defined from init method) are handled properly.

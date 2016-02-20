@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.felix.dm.lambda;
 
 import org.apache.felix.dm.lambda.callbacks.CbConfiguration;
@@ -10,7 +28,7 @@ import org.apache.felix.dm.lambda.callbacks.InstanceCbDictionary;
 import org.apache.felix.dm.lambda.callbacks.InstanceCbDictionaryComponent;
 
 /**
- * Builds a Dependency Manager Factory Configuration Adapter Component. For each new Config Admin factory configuration matching the factoryPid, 
+ * Builds a Dependency Manager Factory Configuration Adapter Component. <p> For each new Config Admin factory configuration matching a given factory pid, 
  * an adapter will be created based on the adapter implementation class. The adapter will be registered with the specified interface, 
  * and with the specified adapter service properties. Depending on the propagate parameter, every public factory configuration properties 
  * (which don't start with ".") will be propagated along with the adapter service properties.
@@ -81,9 +99,9 @@ public interface FactoryPidAdapterBuilder extends ComponentBuilder<FactoryPidAda
     FactoryPidAdapterBuilder propagate(boolean propagate);
     
     /**
-     * Specifies a callback method that will be called on the component instances when the configuration is injected.
+     * Specifies a callback method that will be called on the component implementation when the configuration is injected.
      * 
-     * @param updateMethod the method to call on the component instances when the configuration is available ("updated" by default).
+     * @param updateMethod the method to call on the component implementation when the configuration is available ("updated" by default).
      * 
      * <p>The following method signatures are supported:
      * <ol>
@@ -96,7 +114,7 @@ public interface FactoryPidAdapterBuilder extends ComponentBuilder<FactoryPidAda
     FactoryPidAdapterBuilder update(String updateMethod);
     
     /**
-     * Sets a callback method to call on the component implementation class(es) when the configuration is updated. 
+     * Sets a callback method to call on the component implementation when the configuration is updated. 
      * The callback is invoked with a configuration type argument.
      * 
      * <p>The following callback signatures are supported and searched in the following order:
@@ -108,7 +126,7 @@ public interface FactoryPidAdapterBuilder extends ComponentBuilder<FactoryPidAda
      * </ol>
      * 
      * @param configType the type of a configuration that is passed as argument to the callback
-     * @param updateMethod the callback to call on the component instance(s) when the configuration is updated.
+     * @param updateMethod the callback to call on the component implementation when the configuration is updated.
      * @return this builder
      */
     FactoryPidAdapterBuilder update(Class<?> configType, String updateMethod);

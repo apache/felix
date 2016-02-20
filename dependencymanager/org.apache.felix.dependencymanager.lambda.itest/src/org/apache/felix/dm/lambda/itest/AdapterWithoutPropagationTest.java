@@ -111,7 +111,7 @@ public class AdapterWithoutPropagationTest extends TestBase {
     }
     
     static class ServiceProvider implements OriginalService {
-        private volatile ServiceRegistration m_registration; // auto injected when started.
+        private volatile ServiceRegistration<?> m_registration; // auto injected when started.
         public ServiceProvider(Ensure e) {
         }
         public void changeServiceProperties() {

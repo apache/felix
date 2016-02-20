@@ -100,7 +100,6 @@ public class AdapterWithInstanceBoundDependencyTest extends TestBase {
         private volatile ServiceInterface m_originalService;
         private volatile ServiceInterface2 m_injectedService;
         private volatile Component m_component;
-        private volatile DependencyManager m_manager;
         
         public ServiceAdapter(Ensure e) {
             m_ensure = e;

@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.felix.dm.lambda;
 
 import org.apache.felix.dm.lambda.callbacks.CbBundle;
@@ -6,7 +24,7 @@ import org.apache.felix.dm.lambda.callbacks.InstanceCbBundle;
 import org.apache.felix.dm.lambda.callbacks.InstanceCbBundleComponent;
 
 /**
- * Builds a Dependency Manager bundle adapter. The adapter created by this builder will be applied to any bundle that matches the specified 
+ * Builds a Dependency Manager bundle adapter. <p> The adapter created by this builder will be applied to any bundle that matches the specified 
  * bundle state mask and filter condition. For each matching bundle an adapter service will be created based on the adapter implementation class. 
  * The adapter will be registered with the specified interface and existing properties from the original bundle plus any extra properties 
  * you supply here. The bundle is injected by reflection in adapter class fields having a Bundle type, or using a callback method that you can 
@@ -163,7 +181,7 @@ public interface BundleAdapterBuilder extends ComponentBuilder<BundleAdapterBuil
      * The method reference must point to a Component implementation class method, it is called when the bundle is added
      * and takes as argument a Bundle.
      * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
+     * @param <T> the type of the component implementation class on which the callback is invoked.
      * @param add the method reference invoked when a bundle is added.
      * @return this builder
      */
@@ -174,7 +192,7 @@ public interface BundleAdapterBuilder extends ComponentBuilder<BundleAdapterBuil
      * The method reference must point to a Component implementation class method, it is called when the bundle is changed
      * and takes as argument a Bundle.
      * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
+     * @param <T> the type of the component implementation class on which the callback is invoked.
      * @param change the method reference invoked when a bundle has changed.
      * @return this builder
      */
@@ -185,7 +203,7 @@ public interface BundleAdapterBuilder extends ComponentBuilder<BundleAdapterBuil
      * The method reference must point to a Component implementation class method, it is called when the bundle is removed
      * and takes as argument a Bundle.
      * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
+     * @param <T> the type of the component implementation class on which the callback is invoked.
      * @param remove the method reference invoked when a bundle is removed.
      * @return this builder
      */
@@ -196,7 +214,7 @@ public interface BundleAdapterBuilder extends ComponentBuilder<BundleAdapterBuil
      * The method reference must point to a Component implementation class method, it is called when the bundle is added
      * and takes as argument a Bundle and a Component.
      * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
+     * @param <T> the type of the component implementation class on which the callback is invoked.
      * @param add the method reference invoked when a bundle is added.
      * @return this builder
      */
@@ -207,7 +225,7 @@ public interface BundleAdapterBuilder extends ComponentBuilder<BundleAdapterBuil
      * The method reference must point to a Component implementation class method, it is called when the bundle is changed
      * and takes as argument a Bundle and a Component.
      * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
+     * @param <T> the type of the component implementation class on which the callback is invoked.
      * @param change the method reference invoked when a bundle has changed.
      * @return this builder
      */
@@ -218,7 +236,7 @@ public interface BundleAdapterBuilder extends ComponentBuilder<BundleAdapterBuil
      * The method reference must point to a Component implementation class method, it is called when the bundle is removed
      * and takes as argument a Bundle and a Component.
      * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
+     * @param <T> the type of the component implementation class on which the callback is invoked.
      * @param remove the method reference invoked when a bundle is removed.
      * @return this builder
      */

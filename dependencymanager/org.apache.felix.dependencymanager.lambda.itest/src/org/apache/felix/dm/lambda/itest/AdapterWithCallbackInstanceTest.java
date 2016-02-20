@@ -126,7 +126,7 @@ public class AdapterWithCallbackInstanceTest extends TestBase {
     
     static class ServiceProvider implements OriginalService {
         private final Ensure m_ensure;
-        private volatile ServiceRegistration m_registration; // auto injected when started.
+        private volatile ServiceRegistration<?> m_registration; // auto injected when started.
         public ServiceProvider(Ensure e) {
             m_ensure = e;
         }

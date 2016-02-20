@@ -36,7 +36,7 @@ import org.osgi.framework.Constants;
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@SuppressWarnings({"unchecked", "rawtypes"})
+@SuppressWarnings("rawtypes")
 public class AutoConfigTest extends TestBase {
     private final Ensure m_ensure = new Ensure();
 
