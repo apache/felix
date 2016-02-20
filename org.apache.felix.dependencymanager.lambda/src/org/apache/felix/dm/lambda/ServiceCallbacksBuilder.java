@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.felix.dm.lambda;
 
 import org.apache.felix.dm.lambda.callbacks.CbRefServiceRefService;
@@ -22,9 +40,10 @@ import org.apache.felix.dm.lambda.callbacks.InstanceCbServiceService;
 import org.apache.felix.dm.lambda.callbacks.InstanceCbServiceServiceComponent;
 
 /**
- * Builds a service dependency callback (required by default).
+ * Builds a service dependency callback. When a service dependency is not explicitly defined as "required" or "optional", 
+ * then it is assumed to be required by default.
  * 
- * A Service may be injected in a bind-method of a component or an object instance using this builder.
+ * <p> A Service may be injected in a bind-method of a component or an object instance using this builder.
  * The builder supports reflection based callbacks (same as with the original DM API), as well as java8 method reference based callbacks.
  * 
  * <p> <b> List of signatures supported using reflection based callbacks (same as original DM API): </b>
@@ -104,8 +123,8 @@ public interface ServiceCallbacksBuilder<S, B extends ServiceCallbacksBuilder<S,
     B callbackInstance(Object callbackInstance);
     
     /**
-     * Sets <code>callback</code> methods to invoke when a service is added. When a service matches the service 
-     * filter, then the service is injected using the specified callback method. The callback is invoked on the component instances, or on the callback
+     * Sets a <code>callback</code> method to invoke when a service is added. When a service matches the service 
+     * filter, then the service is injected using the specified callback method. The callback is invoked on the component implementation, or on the callback
      * instance, is specified using the {@link #callbackInstance(Object)} method.
      * 
      * The following method signature are supported:
@@ -128,8 +147,8 @@ public interface ServiceCallbacksBuilder<S, B extends ServiceCallbacksBuilder<S,
     B add(String callback);
     
     /**
-     * Sets <code>callback</code> methods to invoke when a service is changed. When a changed service matches the service 
-     * filter, then the service is injected using the specified callback method. The callback is invoked on the component instances, or on the callback
+     * Sets a <code>callback</code> methods to invoke when a service is changed. When a changed service matches the service 
+     * filter, then the service is injected using the specified callback method. The callback is invoked on the component implementation, or on the callback
      * instance, is specified using the {@link #callbackInstance(Object)} method.
      * 
      * The following method signature are supported:
@@ -152,8 +171,8 @@ public interface ServiceCallbacksBuilder<S, B extends ServiceCallbacksBuilder<S,
     B change(String callback);
 
     /**
-     * Sets <code>callback</code> methods to invoke when a service is removed. When a removed service matches the service 
-     * filter, then the specified callback in invoked with the removed service. The callback is invoked on the component instances, or on the callback
+     * Sets a <code>callback</code> method to invoke when a service is removed. When a removed service matches the service 
+     * filter, then the specified callback in invoked with the removed service. The callback is invoked on the component implementation, or on the callback
      * instance, is specified using the {@link #callbackInstance(Object)} method.
      * 
      * The following method signature are supported:
@@ -176,7 +195,7 @@ public interface ServiceCallbacksBuilder<S, B extends ServiceCallbacksBuilder<S,
     B remove(String callback);
     
     /**
-     * Sets <code>callback</code> methods to invoke when a service is swapped. The callback is invoked on the component instances, or on the callback
+     * Sets a <code>callback</code> method to invoke when a service is swapped. The callback is invoked on the component implementation, or on the callback
      * instance, is specified using the {@link #callbackInstance(Object)} method.
      * 
      * The following method signature are supported:
@@ -194,186 +213,186 @@ public interface ServiceCallbacksBuilder<S, B extends ServiceCallbacksBuilder<S,
     B swap(String callback);
     
     /**
-     * Sets a <code>component instance callback(Service)</code> callback. The callback is invoked when a service is added.
+     * Sets a <code>component callback(Service)</code> method reference. The callback is invoked when a service is added.
      * The method reference must point to a Component implementation class method.
      * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
+     * @param <T> the type of the component implementation class on which the callback is invoked.
      * @param add the method reference invoked when a service is added.
      * @return this builder
      */
     <T> B add(CbService<T, S> add);
     
     /**
-     * Sets a <code>component instance callback(Service)</code> callback. The callback is invoked when a service is changed.
+     * Sets a <code>component callback(Service)</code> method reference. The callback is invoked when a service is changed.
      * The method reference must point to a Component implementation class method. 
      * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
+     * @param <T> the type of the component implementation class on which the callback is invoked.
      * @param change the method reference invoked when a service is changed.
      * @return this builder
      */
     <T> B change(CbService<T, S> change);
     
     /**
-     * Sets a <code>component instance callback(Service)</code> callback. The callback is invoked when a service is removed.
+     * Sets a <code>component callback(Service)</code> method reference. The callback is invoked when a service is removed.
      * The method reference must point to a Component implementation class method. 
      * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
+     * @param <T> the type of the component implementation class on which the callback is invoked.
      * @param remove the method reference invoked when a service is removed.
      * @return this builder
      */
     <T> B remove(CbService<T, S> remove);
   
     /**
-     * Sets a {@code component instance callback(Service, Map<String, Object>)} callback. The callback is  invoked when a service is added.
+     * Sets a {@code component callback(Service, Map<String, Object>)} method reference. The callback is  invoked when a service is added.
      * The method reference must point to a Component implementation class method. 
      * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
+     * @param <T> the type of the component implementation class on which the callback is invoked.
      * @param add the method reference invoked when a service is added.
      * @return this builder
      */
     <T> B add(CbServiceMap<T, S> add);
     
     /**
-     * Sets a {@code component instance callback(Service, Map<String, Object>)} callback. The callback is  invoked when a service is changed.
+     * Sets a {@code component callback(Service, Map<String, Object>)} method reference. The callback is  invoked when a service is changed.
      * The method reference must point to a Component implementation class method. 
      * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
+     * @param <T> the type of the component implementation class on which the callback is invoked.
      * @param change the method reference invoked when a service is changed.
      * @return this builder
      */
     <T> B change(CbServiceMap<T, S> change);
   
     /**
-     * Sets a {@code component instance callback(Service, Map<String, Object></code>)} callback. The callback is  invoked when a service is removed.
+     * Sets a {@code component callback(Service, Map<String, Object></code>)} method reference. The callback is  invoked when a service is removed.
      * The method reference must point to a Component implementation class method. 
      * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
+     * @param <T> the type of the component implementation class on which the callback is invoked.
      * @param remove the method reference invoked when a service is removed.
      * @return this builder
      */
     <T> B remove(CbServiceMap<T, S> remove);
     
     /**
-     * Sets a {@code component instance callback(Service, Dictionary<String, Object>)} callback. The callback is  invoked when a service is added.
+     * Sets a {@code component callback(Service, Dictionary<String, Object>)} method reference. The callback is  invoked when a service is added.
      * The method reference must point to a Component implementation class method. 
      * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
+     * @param <T> the type of the component implementation class on which the callback is invoked.
      * @param add the method reference invoked when a service is added.
      * @return this builder
      */
     <T> B add(CbServiceDict<T, S> add);
     
     /**
-     * Sets a {@code component instance callback(Service, Dictionary<String, Object>)} callback. The callback is  invoked when a service is changed.
+     * Sets a {@code component callback(Service, Dictionary<String, Object>)} method reference. The callback is  invoked when a service is changed.
      * The method reference must point to a Component implementation class method. 
      * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
+     * @param <T> the type of the component implementation class on which the callback is invoked.
      * @param change the method reference invoked when a service is changed.
      * @return this builder
      */
     <T> B change(CbServiceDict<T, S> change);
 
     /**
-     * Sets a {@code component instance callback(Service, Dictionary<String, Object>)} callback. The callback is  invoked when a service is removed.
+     * Sets a {@code component callback(Service, Dictionary<String, Object>)} method reference. The callback is  invoked when a service is removed.
      * The method reference must point to a Component implementation class method. 
      * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
+     * @param <T> the type of the component implementation class on which the callback is invoked.
      * @param remove the method reference invoked when a service is removed.
      * @return this builder
      */
     <T> B remove(CbServiceDict<T, S> remove);
     
     /**
-     * Sets a <code>component instance callback(Service, ServiceReference)</code> callback. The callback is  invoked when a service is added.
+     * Sets a <code>component callback(Service, ServiceReference)</code> method reference. The callback is  invoked when a service is added.
      * The method reference must point to a Component implementation class method. 
-     * @param <T> the type of the component instance class on which the callback is invoked.
+     * @param <T> the type of the component implementation class on which the callback is invoked.
      * @param add the method reference invoked when a service is added.
      * @return this builder
      */
     <T> B add(CbServiceRef<T, S> add);
   
     /**
-     * Sets a <code>component instance callback(Service, ServiceReference)</code> callback. The callback is  invoked when a service is changed.
+     * Sets a <code>component callback(Service, ServiceReference)</code> method reference. The callback is  invoked when a service is changed.
      * The method reference must point to a Component implementation class method. 
      * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
+     * @param <T> the type of the component implementation class on which the callback is invoked.
      * @param change the method reference invoked when a service is changed.
      * @return this builder
      */
     <T> B change(CbServiceRef<T, S> change);
 
     /**
-     * Sets a <code>component instance callback(Service, ServiceReference)</code> callback. The callback is  invoked when a service is removed.
+     * Sets a <code>component callback(Service, ServiceReference)</code> method reference. The callback is  invoked when a service is removed.
      * The method reference must point to a Component implementation class method. 
      * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
+     * @param <T> the type of the component implementation class on which the callback is invoked.
      * @param remove the method reference invoked when a service is removed.
      * @return this builder
      */
     <T> B remove(CbServiceRef<T, S> remove);
       
     /**
-     * Sets a <code>component instance callback(Service, Component)</code> callback. The callback is invoked when a service is added.
+     * Sets a <code>component callback(Service, Component)</code> method reference. The callback is invoked when a service is added.
      * The method reference must point to a Component implementation class method. 
      * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
+     * @param <T> the type of the component implementation class on which the callback is invoked.
      * @param add the method reference invoked when a service is added.
      * @return this builder
      */
     <T> B add(CbServiceComponent<T, S> add);
 
     /**
-     * Sets a <code>component instance callback(Service, Component)</code> callback. The callback is invoked when a service is changed.
+     * Sets a <code>component callback(Service, Component)</code> method reference. The callback is invoked when a service is changed.
      * The method reference must point to a Component implementation class method. 
      * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
+     * @param <T> the type of the component implementation class on which the callback is invoked.
      * @param change the method reference invoked when a service is changed.
      * @return this builder
      */
     <T> B change(CbServiceComponent<T, S> change);
 
     /**
-     * Sets a <code>component instance callback(Service, Component)</code> callback. The callback is invoked when a service is removed.
+     * Sets a <code>component callback(Service, Component)</code> method reference. The callback is invoked when a service is removed.
      * The method reference must point to a Component implementation class method. 
      * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
+     * @param <T> the type of the component implementation class on which the callback is invoked.
      * @param remove the method reference invoked when a service is removed.
      * @return this builder
      */
     <T> B remove(CbServiceComponent<T, S> remove);
     
     /**
-     * Sets a <code>component instance callback(Service, Component, ServiceReference ref)</code> callback. The callback is invoked when a service is added.
+     * Sets a <code>component callback(Service, Component, ServiceReference ref)</code> method reference. The callback is invoked when a service is added.
      * The method reference must point to a Component implementation class method.
      * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
+     * @param <T> the type of the component implementation class on which the callback is invoked.
      * @param add the method reference invoked when a service is added.
      * @return this builder
      */
     <T> B add(CbServiceComponentRef<T, S> add);
  
     /**
-     * Sets a <code>component instance callback(Service, Component, ServiceReference)</code> callback. The callback is invoked when a service is changed.
+     * Sets a <code>component callback(Service, Component, ServiceReference)</code> method reference. The callback is invoked when a service is changed.
      * The method reference must point to a Component implementation class method.
      * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
+     * @param <T> the type of the component implementation class on which the callback is invoked.
      * @param change the method reference invoked when a service is changed.
      * @return this builder
      */
     <T> B change(CbServiceComponentRef<T, S> change);
 
     /**
-     * Sets a <code>component instance callback(Service, Component, ServiceReference)</code> callback. The callback is invoked when a service is removed.
+     * Sets a <code>component callback(Service, Component, ServiceReference)</code> method reference. The callback is invoked when a service is removed.
      * The method reference must point to a Component implementation class method.
      * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
+     * @param <T> the type of the component implementation class on which the callback is invoked.
      * @param remove the method reference invoked when a service is removed.
      * @return this builder
      */
     <T> B remove(CbServiceComponentRef<T, S> remove);
     
     /**
-     * Sets an <code>object instance callback(Service)</code> callback. The callback is invoked when a service is added.
+     * Sets an <code>Object instance callback(Service)</code> method reference. The callback is invoked when a service is added.
      * The method reference must point to a method from an Object instance. 
      * 
      * @param add the method reference invoked when a service is added.
@@ -382,7 +401,7 @@ public interface ServiceCallbacksBuilder<S, B extends ServiceCallbacksBuilder<S,
     B add(InstanceCbService<S> add);
     
     /**
-     * Sets an <code>object instance callback(Service)</code> callback. The callback is invoked when a service is changed.
+     * Sets an <code>Object instance callback(Service)</code> method reference. The callback is invoked when a service is changed.
      * The method reference must point to method from an Object instance.
      * 
      * @param change the method reference invoked when a service is changed.
@@ -391,7 +410,7 @@ public interface ServiceCallbacksBuilder<S, B extends ServiceCallbacksBuilder<S,
     B change(InstanceCbService<S> change);
 
     /**
-     * Sets an <code>object instance callback(Service)</code> callback. The callback is invoked when a service is removed.
+     * Sets an <code>Object instance callback(Service)</code> method reference. The callback is invoked when a service is removed.
      * The method reference must point to method from an Object instance. 
      * 
      * @param remove the method reference invoked when a service is removed.
@@ -400,7 +419,7 @@ public interface ServiceCallbacksBuilder<S, B extends ServiceCallbacksBuilder<S,
     B remove(InstanceCbService<S> remove);
   
     /**
-     * Sets an {@code object instance callback(Service, Map<String, Object>)} callback. The callback is invoked when a service is added.
+     * Sets an {@code Object instance callback(Service, Map<String, Object>)} method reference. The callback is invoked when a service is added.
      * The method reference must point to a method from an Object instance. 
      * 
      * @param add the method reference invoked when a service is added.
@@ -409,7 +428,7 @@ public interface ServiceCallbacksBuilder<S, B extends ServiceCallbacksBuilder<S,
     B add(InstanceCbServiceMap<S> add);
   
     /**
-     * Sets an {@code object instance callback(Service, Map<String, Object>)} callback. The callback is invoked when a service is changed.
+     * Sets an {@code Object instance callback(Service, Map<String, Object>)} method reference. The callback is invoked when a service is changed.
      * The method reference must point to method from an Object instance. 
      * 
      * @param change the method reference invoked when a service is changed.
@@ -418,7 +437,7 @@ public interface ServiceCallbacksBuilder<S, B extends ServiceCallbacksBuilder<S,
     B change(InstanceCbServiceMap<S> change);
 
     /**
-     * Sets an {@code object instance callback(Service, Map<String, Object>)} callback. The callback is invoked when a service is removed.
+     * Sets an {@code Object instance callback(Service, Map<String, Object>)} method reference. The callback is invoked when a service is removed.
      * The method reference must point to method from an Object instance. 
      * 
      * @param remove the method reference invoked when a service is removed.
@@ -427,7 +446,7 @@ public interface ServiceCallbacksBuilder<S, B extends ServiceCallbacksBuilder<S,
     B remove(InstanceCbServiceMap<S> remove);
   
     /**
-     * Sets an {@code object instance callback(Service svc, Dictionary<String, Object>} callback. The callback is invoked when a service is added.
+     * Sets an {@code Object instance callback(Service svc, Dictionary<String, Object>} method reference. The callback is invoked when a service is added.
      * The method reference must point to a method from an Object instance. 
      * 
      * @param add the method reference invoked when a service is added.
@@ -436,7 +455,7 @@ public interface ServiceCallbacksBuilder<S, B extends ServiceCallbacksBuilder<S,
     B add(InstanceCbServiceDict<S> add);
    
     /**
-     * Sets an {@code object instance callback(Service, Dictionary<String, Object>)} callback. The callback is invoked when a service is changed.
+     * Sets an {@code Object instance callback(Service, Dictionary<String, Object>)} method reference. The callback is invoked when a service is changed.
      * The method reference must point to method from an Object instance. 
      * 
      * @param change the method reference invoked when a service is changed.
@@ -445,7 +464,7 @@ public interface ServiceCallbacksBuilder<S, B extends ServiceCallbacksBuilder<S,
     B change(InstanceCbServiceDict<S> change);
 
     /**
-     * Sets an {@code object instance callback(Service, Dictionary<String, Object>)} callback. The callback is invoked when a service is removed.
+     * Sets an {@code Object instance callback(Service, Dictionary<String, Object>)} method reference. The callback is invoked when a service is removed.
      * The method reference must point to method from an Object instance.
      * 
      * @param remove the method reference invoked when a service is removed.
@@ -454,7 +473,7 @@ public interface ServiceCallbacksBuilder<S, B extends ServiceCallbacksBuilder<S,
     B remove(InstanceCbServiceDict<S> remove);
  
     /**
-     * Sets an <code>object instance callback(Service, ServiceReference)</code> callback. The callback is invoked when a service is added.
+     * Sets an <code>Object instance callback(Service, ServiceReference)</code> method reference. The callback is invoked when a service is added.
      * The method reference must point to a method from an Object instance. 
      * 
      * @param add the method reference invoked when a service is added.
@@ -463,7 +482,7 @@ public interface ServiceCallbacksBuilder<S, B extends ServiceCallbacksBuilder<S,
     B add(InstanceCbServiceRef<S> add);
   
     /**
-     * Sets an <code>object instance callback(Service, ServiceReference)</code> callback. The callback is invoked when a service is changed.
+     * Sets an <code>Object instance callback(Service, ServiceReference)</code> method reference. The callback is invoked when a service is changed.
      * The method reference must point to method from an Object instance. 
      * 
      * @param change the method reference invoked when a service is changed.
@@ -472,7 +491,7 @@ public interface ServiceCallbacksBuilder<S, B extends ServiceCallbacksBuilder<S,
     B change(InstanceCbServiceRef<S> change);
 
     /**
-     * Sets an <code>object instance callback(Service, ServiceReference)</code> callback. The callback is invoked when a service is removed.
+     * Sets an <code>Object instance callback(Service, ServiceReference)</code> method reference. The callback is invoked when a service is removed.
      * The method reference must point to method from an Object instance. 
      * 
      * @param remove the method reference invoked when a service is removed.
@@ -481,7 +500,7 @@ public interface ServiceCallbacksBuilder<S, B extends ServiceCallbacksBuilder<S,
     B remove(InstanceCbServiceRef<S> remove);
     
     /**
-     * Sets an <code>object instance callback(Service, Component)</code> callback invoked. The callback is when a service is added.
+     * Sets an <code>Object instance callback(Service, Component)</code> method reference. The callback is when a service is added.
      * The method reference must point to a method from an Object instance. 
      * 
      * @param add the method reference invoked when a service is added.
@@ -490,7 +509,7 @@ public interface ServiceCallbacksBuilder<S, B extends ServiceCallbacksBuilder<S,
     B add(InstanceCbServiceComponent<S> add);    
   
     /**
-     * Sets an <code>object instance callback(Service, Component)</code> callback invoked. The callback is when a service is changed.
+     * Sets an <code>Object instance callback(Service, Component)</code> method reference. The callback is when a service is changed.
      * The method reference must point to method from an Object instance.
      * 
      * @param change the method reference invoked when a service is changed.
@@ -499,7 +518,7 @@ public interface ServiceCallbacksBuilder<S, B extends ServiceCallbacksBuilder<S,
     B change(InstanceCbServiceComponent<S> change);
 
     /**
-     * Sets an <code>object instance callback(Service, Component)</code> callback. The callback is invoked when a service is removed.
+     * Sets an <code>Object instance callback(Service, Component)</code> method reference. The callback is invoked when a service is removed.
      * The method reference must point to method from an Object instance. 
      * 
      * @param remove the method reference invoked when a service is removed.
@@ -508,7 +527,7 @@ public interface ServiceCallbacksBuilder<S, B extends ServiceCallbacksBuilder<S,
     B remove(InstanceCbServiceComponent<S> remove);
    
     /**
-     * Sets an <code>object instance callback(Service, Component, ServiceReference)</code> callback. The callback is invoked when a service is added.
+     * Sets an <code>Object instance callback(Service, Component, ServiceReference)</code> method reference. The callback is invoked when a service is added.
      * The method reference must point to a method from an Object instance. 
      * 
      * @param add the method reference invoked when a service is added.
@@ -517,7 +536,7 @@ public interface ServiceCallbacksBuilder<S, B extends ServiceCallbacksBuilder<S,
     B add(InstanceCbServiceComponentRef<S> add);
    
     /**
-     * Sets an <code>object instance callback(Service, Component, ServiceReference)</code> callback. The callback is invoked when a service is changed.
+     * Sets an <code>Object instance callback(Service, Component, ServiceReference)</code> method reference. The callback is invoked when a service is changed.
      * The method reference must point to method from an Object instance. 
      * 
      * @param change the method reference invoked when a service is changed.
@@ -526,7 +545,7 @@ public interface ServiceCallbacksBuilder<S, B extends ServiceCallbacksBuilder<S,
     B change(InstanceCbServiceComponentRef<S> change);
     
     /**
-     * Sets an <code>object instance callback(Service, Component, ServiceReference)</code> callback. The callback is invoked when a service is removed.
+     * Sets an <code>Object instance callback(Service, Component, ServiceReference)</code> method reference. The callback is invoked when a service is removed.
      * The method reference must point to method from an Object instance. 
      * 
      * @param remove the method reference invoked when a service is removed.
@@ -535,42 +554,42 @@ public interface ServiceCallbacksBuilder<S, B extends ServiceCallbacksBuilder<S,
     B remove(InstanceCbServiceComponentRef<S> remove);
   
     /**
-     * Sets a swap <code>component instance callback(Service, Service)</code> method reference. The callback is invoked when a service is swapped.
+     * Sets a swap <code>component callback(Service, Service)</code> method reference. The callback is invoked when a service is swapped.
      * The method reference must point to a Component implementation class method.
      * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
+     * @param <T> the type of the component implementation class on which the callback is invoked.
      * @param swap the method reference invoked when the service is swapped.
      * @return this builder
      */
     <T> B swap(CbServiceService<T, S> swap);
  
     /**
-     * Sets a wap <code>component instance callback(Service, Service, Component)</code> method reference. The callback is invoked when a service is swapped.
+     * Sets a wap <code>component callback(Service, Service, Component)</code> method reference. The callback is invoked when a service is swapped.
      * The method reference must point to a Component implementation class method.
      * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
+     * @param <T> the type of the component implementation class on which the callback is invoked.
      * @param swap the method reference invoked when the service is swapped.
      * @return this builder
      */
     <T> B swap(CbServiceServiceComponent<T, S> swap);
     
     /**
-     * Sets a swap <code>component instance callback(ServiceReference, Service, ServiceReference, Service)</code> method reference. The callback is invoked when a service is swapped.
+     * Sets a swap <code>component callback(ServiceReference, Service, ServiceReference, Service)</code> method reference. The callback is invoked when a service is swapped.
      * The method reference must point to a Component implementation class method. 
      * the new service.
      * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
+     * @param <T> the type of the component implementation class on which the callback is invoked.
      * @param swap the method reference invoked when the service is swapped.
      * @return this builder
      */
     <T> B swap(CbRefServiceRefService<T, S> swap);
     
     /**
-     * Sets a swap <code>component instance callback(ServiceReference, Service, ServiceReference, Service, Component</code> method reference. The callback is invoked when a service is swapped.
+     * Sets a swap <code>component callback(ServiceReference, Service, ServiceReference, Service, Component</code> method reference. The callback is invoked when a service is swapped.
      * The method reference must point to a Component implementation class method. 
      * the new service.
      * 
-     * @param <T> the type of the component instance class on which the callback is invoked.
+     * @param <T> the type of the component implementation class on which the callback is invoked.
      * @param swap the method reference invoked when the service is swapped.
      * @return this builder
      */

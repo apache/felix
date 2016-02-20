@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.felix.dm.lambda;
 
 import java.util.Dictionary;
@@ -9,9 +27,22 @@ import org.osgi.framework.ServiceReference;
 
 /**
  * Builds a Dependency Manager Service Dependency. 
- * The Dependency is required by default, but you can
- * control the default mode (required or optional) using the "org.apache.felix.dependencymanager.lambda.dependencymode"
- * system property which can be set to either "required" or "optional" ("required" by default).
+ * <p> When a service dependency is not explicitly defined as "required" or "optional", then it is assumed to be required by default.
+ * 
+ * <p> Sample code:
+ * 
+ * <pre> {@code
+ * public class Activator extends DependencyManagerActivator {
+ *    public void init(BundleContext ctx, DependencyManager dm) throws Exception {
+ *       component(comp -> comp
+ *          .impl(Pojo.class)
+ *          .withSrv(ConfigurationAdmin.class, "(vendor=apache)") // required service with a filter, injected in class field
+ *          .withSrv(Coordinator.class, LogService.class) // varargs of required dependencies injected on class fields
+ *          .withSrv(HttpService.class, svc -> srv.add(Pojo::setHttpService)) // required dependency injected using a method ref
+ *          .withSrv(ConnectorService.class, svc -> svc.optional()) // optional dependency, injected in class field with a NullObject if unavailable (before start() callback).
+ *          .withSrv(Tracked.class, srv -> srv.optional().add(Pojo::addTracked)) // optional dependency, injected using method ref, after the start() callback
+ *    }
+ * }}</pre>
  * 
  * @param <S> the type of the service dependency
  */
@@ -31,24 +62,21 @@ public interface ServiceDependencyBuilder<S> extends DependencyBuilder<ServiceDe
     ServiceDependencyBuilder<S> ref(ServiceReference<S> ref);
     
     /**
-     * Configures this dependency as optional. By default, the dependency is required, but you can specify the default mode
-     * using the "org.apache.felix.dependencymanager.lambda.dependencymode" system property.
+     * Configures this dependency as optional.
      * @return this builder
      */
     ServiceDependencyBuilder<S> optional();
 
     /**
-     * Configures this dependency as required.  By default, the dependency is required, but you can specify the default mode
-     * using the "org.apache.felix.dependencymanager.lambda.dependencymode" system property.
+     * Configures this dependency as required.
 	 * @return this builder
      */
     ServiceDependencyBuilder<S> required();
     
     /**
-     * Configures whether this dependency is required or not.  By default, the dependency is required, but you can specify the default mode
-     * using the "org.apache.felix.dependencymanager.lambda.dependencymode" system property.
+     * Configures whether this dependency is required or not.
      * 
-     * @param required true if the dependency is required, false if not. Unlike with the original DM API, service dependencies are required by default.
+     * @param required true if the dependency is required, false if not.
 	 * @return this builder
      */
     ServiceDependencyBuilder<S> required(boolean required);

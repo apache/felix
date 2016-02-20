@@ -62,7 +62,7 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     private volatile boolean m_errorsLogged;
 
     // We implement OSGI log service.
-    protected ServiceRegistration logService;
+    protected ServiceRegistration<LogService> logService;
     
     // Our bundle context
     protected BundleContext context;
@@ -71,7 +71,7 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     protected volatile DependencyManager m_dm;
 
     // The Registration for the DM threadpool.
-    private ServiceRegistration m_componentExecutorFactoryReg;
+    private ServiceRegistration<?> m_componentExecutorFactoryReg;
 
     public TestBase() {
     }
@@ -85,7 +85,7 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     	context = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
     	Hashtable<String, Object> props = new Hashtable<>();
     	props.put(Constants.SERVICE_RANKING, new Integer(Integer.MAX_VALUE));
-        logService = context.registerService(LogService.class.getName(), this, props);
+        logService = context.registerService(LogService.class, this, props);
         context.addFrameworkListener(this);
         m_dm = new DependencyManager(context);
         if (m_parallel) {
@@ -130,8 +130,8 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     /**
      * Creates and provides an Ensure object with a name service property into the OSGi service registry.
      */
-    protected ServiceRegistration register(Ensure e, String name) {
-        Hashtable<String, String> props = new Hashtable<String, String>();
+    protected ServiceRegistration<?> register(Ensure e, String name) {
+        Hashtable<String, String> props = new Hashtable<>();
         props.put("name", name);
         return context.registerService(Ensure.class.getName(), e, props);
     }
@@ -230,6 +230,7 @@ public abstract class TestBase extends TestCase implements LogService, Framework
         }
     }
 
+    @SuppressWarnings("rawtypes")
     public void log(ServiceReference sr, int level, String message) {
         checkError(level, null);
         if (LOG_LEVEL >= level) {
@@ -240,6 +241,7 @@ public abstract class TestBase extends TestCase implements LogService, Framework
         }
     }
 
+    @SuppressWarnings("rawtypes")
     public void log(ServiceReference sr, int level, String message, Throwable exception) {
         checkError(level, exception);
         if (LOG_LEVEL >= level) {

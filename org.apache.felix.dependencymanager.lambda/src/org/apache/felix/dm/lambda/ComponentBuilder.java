@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.felix.dm.lambda;
 
 import java.util.Dictionary;
@@ -14,12 +32,11 @@ import org.apache.felix.dm.lambda.callbacks.InstanceCb;
 import org.apache.felix.dm.lambda.callbacks.InstanceCbComponent;
 
 /**
- * Builds a Dependency Manager Component. Components are the main building blocks for OSGi applications. 
+ * Builds a Dependency Manager Component. <p> Components are the main building blocks for OSGi applications. 
  * They can publish themselves as a service, and they can have dependencies. 
  * These dependencies will influence their life cycle as component will only be activated when all 
- * required dependencies are available.
- * 
- * <p> This interface is also the base interface for extended components like aspects, adapters, etc ...
+ * required dependencies are available. This interface is also the base interface for extended components like 
+ * aspects, adapters, etc ...
  *
  * <p> Example of a component that depends on a ConfigurationAdmin service. The dependency is injected by reflection
  * on a class field which type matches the ConfigurationAdmin interface:
@@ -51,7 +68,7 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
      * a component. The factory itself can also be instantiated lazily by not specifying an instance, but a Class. 
      * 
      * @param factory the factory instance, or the factory class.
-     * @param createMethod the create method called on the factory in order to instantiate the component instance.
+     * @param createMethod the create method called on the factory in order to instantiate the component.
      * @return this builder
      */
     B factory(Object factory, String createMethod);
@@ -490,7 +507,7 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
      * And once all extra dependencies will be available and injected, then the "start" callback will be invoked.
      * 
      * @param <T> the type of the component class on which the callback is invoked on.
-     * @param callback a method reference must point to method from the component instance class(es).
+     * @param callback a method reference must point to method from the component implementation class(es).
      * @return this builder
      */
     <T> B init(Cb<T> callback);
@@ -501,7 +518,7 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
      * invoked as part of the life cycle management of the component implementation.
      * 
      * @param <T> the type of the component class on which the callback is invoked on.
-     * @param callback  a method reference must point to method from one of the component instance classes.
+     * @param callback  a method reference must point to method from one of the component implementation classes.
      * @return this builder.
      */
     <T> B start(Cb<T> callback);
@@ -512,7 +529,7 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
      * invoked as part of the life cycle management of the component implementation.
      * 
      * @param <T> the type of the component class on which the callback is invoked on.
-     * @param callback  a method reference must point to method from one of the component instance classes.
+     * @param callback  a method reference must point to method from one of the component implementation classes.
      * @return this builder.
      */
     <T> B stop(Cb<T> callback);
@@ -523,7 +540,7 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
      * invoked as part of the life cycle management of the component implementation.
      * 
      * @param <T> the type of the component class on which the callback is invoked on.
-     * @param callback  a method reference must point to method from one of the component instance classes.
+     * @param callback  a method reference must point to method from one of the component implementation classes.
      * @return this builder.
      */
     <T> B destroy(Cb<T> callback);
@@ -537,7 +554,7 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
      * And once all extra dependencies will be available and injected, then the "start" callback will be invoked.
      * 
      * @param <T> the type of the component class on which the callback is invoked on.
-     * @param callback a method reference must point to method from one of the component instance classes. The method takes as argument a Component parameter.
+     * @param callback a method reference must point to method from one of the component implementation classes. The method takes as argument a Component parameter.
      * @return this builder
      */
     <T> B init(CbComponent<T> callback);
@@ -548,7 +565,7 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
      * invoked as part of the life cycle management of the component implementation.
      * 
      * @param <T> the type of the component class on which the callback is invoked on.
-     * @param callback a method reference must point to method from one of the component instance classes. The method takes as argument a Component parameter.
+     * @param callback a method reference must point to method from one of the component implementation classes. The method takes as argument a Component parameter.
      * @return this builder.
      */
     <T> B start(CbComponent<T> callback);
@@ -559,7 +576,7 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
      * invoked as part of the life cycle management of the component implementation.
      * 
      * @param <T> the type of the component class on which the callback is invoked on.
-     * @param callback a method reference must point to method from one of the component instance classes. The method takes as argument a Component parameter.
+     * @param callback a method reference must point to method from one of the component implementation classes. The method takes as argument a Component parameter.
      * @return this builder.
      */
     <T> B stop(CbComponent<T> callback);
@@ -570,7 +587,7 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
      * invoked as part of the life cycle management of the component implementation.
      * 
      * @param <T> the type of the component class on which the callback is invoked on.
-     * @param callback a method reference must point to method from one of the component instance classes. The method takes as argument a Component parameter.
+     * @param callback a method reference must point to method from one of the component implementation classes. The method takes as argument a Component parameter.
      * @return this builder.
      */
     <T> B destroy(CbComponent<T> callback);
@@ -589,8 +606,8 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
     B initInstance(InstanceCb callback);
  
     /**
-     * Sets an Object instance method reference used as the "start" callback. This method reference must point to method from one 
-     * of the component instance classes. This method is invoked as part of the life cycle management of the component implementation. 
+     * Sets an Object instance method reference used as the "start" callback. 
+     * This method is invoked as part of the life cycle management of the component implementation. 
      * The method does not take any parameters.
      *
      * @param callback an Object instance method reference. The method does not take any parameters.
@@ -638,8 +655,8 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
     B initInstance(InstanceCbComponent callback);
    
     /**
-     * Sets an Object instance method reference used as the "start" callback. This method reference must point to method from one 
-     * of the component instance classes. This method is invoked as part of the life cycle management of the component implementation. 
+     * Sets an Object instance method reference used as the "start" callback.
+     * This method is invoked as part of the life cycle management of the component implementation. 
      * The method takes as argument a Component parameter.
      *
      * @param callback an Object instance method reference. The method takes as argument a Component parameter.
@@ -648,8 +665,8 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
     B startInstance(InstanceCbComponent callback);
     
     /**
-     * Sets an Object instance method reference used as the "stop" callback. This method reference must point to method from one 
-     * of the component instance classes. This method is invoked as part of the life cycle management of the component implementation. 
+     * Sets an Object instance method reference used as the "stop" callback. 
+     * This method is invoked as part of the life cycle management of the component implementation. 
      * The method takes as argument a Component parameter.
      *
      * @param callback an Object instance method reference. The method takes as argument a Component parameter.
@@ -658,8 +675,8 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
     B stopInstance(InstanceCbComponent callback);
   
     /**
-     * Sets an Object instance method reference used as the "destroy" callback. This method reference must point to method from one 
-     * of the component instance classes. This method is invoked as part of the life cycle management of the component implementation. 
+     * Sets an Object instance method reference used as the "destroy" callback. 
+     * This method is invoked as part of the life cycle management of the component implementation. 
      * The method takes as argument a Component parameter.
      *
      * @param callback an Object instance method reference. The method takes as argument a Component parameter.
@@ -731,7 +748,7 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
      * @return this builder
      */
     B composition(Supplier<Object[]> getCompositionMethod);
-
+    
     /**
      * Builds the real DependencyManager Component.
      * @return the real DependencyManager Component.

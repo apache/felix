@@ -34,7 +34,6 @@ import org.junit.Assert;
 @SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class TemporalServiceDependencyTest extends TestBase {
     public void testServiceConsumptionAndIntermittentAvailability() {
-        if (true) return;
         final DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
@@ -66,7 +65,6 @@ public class TemporalServiceDependencyTest extends TestBase {
     }
 
     public void testServiceConsumptionWithCallbackAndIntermittentAvailability() {
-        if (true) return;
         final DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
@@ -103,7 +101,6 @@ public class TemporalServiceDependencyTest extends TestBase {
     // Same test as testServiceConsumptionWithCallbackAndIntermittentAvailability, but the consumer is now
     // an adapter for the Adaptee interface.
     public void testFELIX4858_ServiceAdapterConsumptionWithCallbackAndIntermittentAvailability() {
-        if (true) return;
         final DependencyManager m = getDM();
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
@@ -143,7 +140,6 @@ public class TemporalServiceDependencyTest extends TestBase {
     }
 
     public void testFelix4602_PropagateServiceInvocationException() {
-        if (true) return;
         final DependencyManager m = getDM();
         final Ensure ensure = new Ensure();
         Runnable provider = new Runnable() {

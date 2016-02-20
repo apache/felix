@@ -27,7 +27,6 @@ import org.osgi.framework.Constants;
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class MultipleServiceDependencyTest extends TestBase {
    public void testMultipleServiceRegistrationAndConsumption() {
        DependencyManager m = getDM();

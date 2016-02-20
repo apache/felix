@@ -28,7 +28,6 @@ import org.apache.felix.dm.DependencyManager;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@SuppressWarnings({"unchecked", "rawtypes", "serial"})
 public class MultipleExtraDependencyTest extends TestBase {
     public void testMultipleExtraDependencies()
     {
