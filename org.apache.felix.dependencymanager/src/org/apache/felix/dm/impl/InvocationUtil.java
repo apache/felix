@@ -25,6 +25,12 @@ import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executor;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
+
+import org.osgi.service.cm.ConfigurationException;
 
 /**
  * Utility methods for invoking callbacks. Lookups of callbacks are accellerated by using a LRU cache.
@@ -45,6 +51,19 @@ public class InvocationUtil {
 //        catch (Exception e) {}
         m_methodCache = new LRUMap(Math.max(size, 64));
     }
+    
+    /**
+     * Interface internally used to handle a ConfigurationAdmin update synchronously, in a component executor queue.
+     */
+    @FunctionalInterface
+    public interface ConfigurationHandler {
+        public void handle() throws Exception;
+    }
+
+    /**
+     * Max time to wait until a configuration update callback has returned.
+     */
+    private final static int UPDATED_MAXWAIT = 30000; // max time to wait until a CM update has completed
     
     /**
      * Invokes a callback method on an instance. The code will search for a callback method with
@@ -200,6 +219,46 @@ public class InvocationUtil {
         
         protected boolean removeEldestEntry(java.util.Map.Entry<Key, Method> eldest) {
             return size() > m_size;
+        }
+    }
+    
+    /**
+     * Invokes a configuration update callback synchronously, but through the component executor queue.
+     */
+    public static void invokeUpdated(Executor queue, ConfigurationHandler handler) throws ConfigurationException {
+        Callable<Exception> result = () -> {
+            try {
+                handler.handle();
+            } catch (Exception e) {
+                return e;
+            }
+            return null;
+        };
+        
+        FutureTask<Exception> ft = new FutureTask<>(result);
+        queue.execute(ft);
+                
+        try {
+            Exception err = ft.get(UPDATED_MAXWAIT, TimeUnit.MILLISECONDS);
+            if (err != null) {
+                throw err;
+            }
+        }
+        
+        catch (ConfigurationException e) {
+            throw e;
+        }
+
+        catch (Throwable error) {
+            Throwable rootCause = error.getCause();
+            if (rootCause != null) {
+                if (rootCause instanceof ConfigurationException) {
+                    throw (ConfigurationException) rootCause;
+                }
+                throw new ConfigurationException("", "Configuration update error, unexpected exception.", rootCause);
+            } else {
+                throw new ConfigurationException("", "Configuration update error, unexpected exception.", error);
+            }
         }
     }
 }

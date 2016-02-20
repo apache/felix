@@ -20,11 +20,8 @@ package org.apache.felix.dm.itest.api;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.itest.api.AspectBaseTest.ServiceAspect;
-import org.apache.felix.dm.itest.api.AspectBaseTest.ServiceInterface;
 import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
-import org.osgi.framework.ServiceReference;
 
 
 /**

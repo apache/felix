@@ -75,6 +75,7 @@ public class ConfigurationDependencyImplTest {
             super(ensure);
         }
 
+        @SuppressWarnings("rawtypes")
         @Override
         public void updated(Dictionary config) throws ConfigurationException {
             super.updated(config);
@@ -126,6 +127,7 @@ public class ConfigurationDependencyImplTest {
             m_ensure = ensure;
         }
 
+        @SuppressWarnings("rawtypes")
         public void updated(Dictionary config) throws ConfigurationException {
             m_ensure.step();
 
@@ -141,6 +143,7 @@ public class ConfigurationDependencyImplTest {
             m_ensure.step();
         }
 
+        @SuppressWarnings("rawtypes")
         private void assertConfiguration(Dictionary cfg) {
             assertEquals("isTrue", "true", cfg.get("true"));
             assertEquals("getValue", "42", cfg.get("value"));
@@ -229,9 +232,11 @@ public class ConfigurationDependencyImplTest {
         ConfigurationDependencyImpl result = new ConfigurationDependencyImpl(bc, mockLogger);
         result.setCallback(service, "updated").setPid("does.not.matter");
         result.setComponentContext(component);
+        result.start();
         return result;
     }
 
+    @SuppressWarnings("rawtypes")
     private Dictionary createDictionary() {
         Dictionary<String, Object> result = new Hashtable<>();
         result.put("true", "true");

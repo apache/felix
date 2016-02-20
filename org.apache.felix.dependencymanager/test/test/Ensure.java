@@ -49,7 +49,7 @@ public class Ensure {
         }
     }
 
-    public void setStream(PrintStream output) {
+    public static void setStream(PrintStream output) {
         STREAM = output;
     }
     

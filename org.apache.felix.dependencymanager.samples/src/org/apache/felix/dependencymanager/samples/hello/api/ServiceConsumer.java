@@ -18,8 +18,7 @@
  */
 package org.apache.felix.dependencymanager.samples.hello.api;
 
-import java.util.Dictionary;
-
+import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.log.LogService;
 
 /**
@@ -32,7 +31,7 @@ public class ServiceConsumer {
     volatile LogService log;
     ServiceConsumerConf conf;
     
-    protected void updated(ServiceConsumerConf conf) {
+    protected void updated(ServiceConsumerConf conf) throws ConfigurationException {
         this.conf = conf;
     }
 

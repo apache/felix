@@ -21,7 +21,6 @@ package org.apache.felix.dependencymanager.samples.conf;
 import java.io.IOException;
 import java.util.Hashtable;
 
-import org.apache.felix.dependencymanager.samples.hello.api.ServiceConsumerConf;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.log.LogService;

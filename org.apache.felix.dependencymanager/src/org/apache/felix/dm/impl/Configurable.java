@@ -112,6 +112,7 @@ public final class Configurable {
             return result;
         }
 
+        @SuppressWarnings("unchecked")
         private Object convert(ParameterizedType type, String key, Object value) throws Exception {
             Class<?> resultType = (Class<?>) type.getRawType();
             if (Class.class.isAssignableFrom(resultType)) {
@@ -171,6 +172,7 @@ public final class Configurable {
             throw new RuntimeException("Unhandled type: " + type);
         }
 
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         private Object convert(Type type, String key, Object value, boolean useImplicitDefault) throws Exception {
             if (type instanceof ParameterizedType) {
                 return convert((ParameterizedType) type, key, value);

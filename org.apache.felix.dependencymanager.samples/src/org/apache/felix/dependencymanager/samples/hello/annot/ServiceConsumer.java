@@ -18,8 +18,6 @@
  */
 package org.apache.felix.dependencymanager.samples.hello.annot;
 
-import java.util.Dictionary;
-
 import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ConfigurationDependency;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
