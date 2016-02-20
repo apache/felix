@@ -360,49 +360,42 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 
 	@Override
 	public Component add(final Dependency ... dependencies) {
-		getExecutor().execute(new Runnable() {
-			@Override
-			public void run() {
-				List<DependencyContext> instanceBoundDeps = new ArrayList<>();
-				for (Dependency d : dependencies) {
-					DependencyContext dc = (DependencyContext) d;
-					if (dc.getComponentContext() != null) {
-                        m_logger.err("%s can't be added to %s (dependency already added to another component).", dc,
-                            ComponentImpl.this);
-                        continue;
-					}
-					m_dependencyEvents.put(dc,  new ConcurrentSkipListSet<Event>());
-					m_dependencies.add(dc);
-					dc.setComponentContext(ComponentImpl.this);
-					if (!(m_state == ComponentState.INACTIVE)) {
-						dc.setInstanceBound(true);
-						instanceBoundDeps.add(dc);
-					}
-				}
-				startDependencies(instanceBoundDeps);
-				handleChange();
-			}
+		getExecutor().execute(() -> {
+            List<DependencyContext> instanceBoundDeps = new ArrayList<>();
+            for (Dependency d : dependencies) {
+                DependencyContext dc = (DependencyContext) d;
+                if (dc.getComponentContext() != null) {
+                    m_logger.err("%s can't be added to %s (dependency already added to another component).", dc, ComponentImpl.this);
+                    continue;
+                }
+                m_dependencyEvents.put(dc, new ConcurrentSkipListSet<Event>());
+                m_dependencies.add(dc);
+                dc.setComponentContext(ComponentImpl.this);
+                if (!(m_state == ComponentState.INACTIVE)) {
+                    dc.setInstanceBound(true);
+                    instanceBoundDeps.add(dc);
+                }
+            }
+            startDependencies(instanceBoundDeps);
+            handleChange();
 		});
 		return this;
 	}
 
 	@Override
 	public Component remove(final Dependency d) {
-		getExecutor().execute(new Runnable() {
-			@Override
-			public void run() {
-				DependencyContext dc = (DependencyContext) d;
-				// First remove this dependency from the dependency list
-                m_dependencies.remove(d);
-                // Now we can stop the dependency (our component won't be deactivated, it will only be unbound with
-                // the removed dependency).
-				if (!(m_state == ComponentState.INACTIVE)) {
-					dc.stop();
-				}
-				// Finally, cleanup the dependency events.
-                m_dependencyEvents.remove(d);
-				handleChange();
-			}
+		getExecutor().execute(() -> {
+		    DependencyContext dc = (DependencyContext) d;
+		    // First remove this dependency from the dependency list
+		    m_dependencies.remove(d);
+		    // Now we can stop the dependency (our component won't be deactivated, it will only be unbound with
+		    // the removed dependency).
+		    if (!(m_state == ComponentState.INACTIVE)) {
+		        dc.stop();
+		    }
+		    // Finally, cleanup the dependency events.
+		    m_dependencyEvents.remove(d);
+		    handleChange();
 		});
 		return this;
 	}
@@ -410,12 +403,9 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	@Override
 	public void start() {
 	    if (m_active.compareAndSet(false, true)) {
-            getExecutor().execute(new Runnable() {
-                @Override
-                public void run() {
-                    m_isStarted = true;
-                    handleChange();
-                }
+            getExecutor().execute(() -> {
+                m_isStarted = true;
+                handleChange();
             });
 	    }
 	}
@@ -426,13 +416,10 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	        Executor executor = getExecutor();
 
 	        // First, declare the task that will stop our component in our executor.
-	        final Runnable stopTask = new Runnable() {
-                @Override
-                public void run() {
-                	m_isStarted = false;
-                	handleChange();
-                }
-            };
+	        final Runnable stopTask = () -> {
+	            m_isStarted = false;
+	            handleChange();
+	        };
             
             // Now, we have to schedule our stopTask in our component executor. But we have to handle a special case:
             // if the component bundle is stopping *AND* if the executor is a parallel dispatcher, then we want 
@@ -472,9 +459,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         // since this method can be invoked by anyone from any thread, we need to
         // pass on the event to a runnable that we execute using the component's
         // executor
-        getExecutor().execute(new Runnable() {
-            @Override
-            public void run() {
+        getExecutor().execute(() -> {
                 try {
                     switch (type) {
                     case ADDED:
@@ -495,8 +480,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
                 	// (See FELIX-4913).
                     clearInvokeCallbackCache();
                 }
-            }
-        });
+            });        
 	}
 
     @Override
@@ -636,15 +620,12 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     @Override
     @SuppressWarnings("unchecked")
     public Component setServiceProperties(final Dictionary<?, ?> serviceProperties) {
-        getExecutor().execute(new Runnable() {
-            @Override
-            public void run() {
-                Dictionary<Object, Object> properties = null;
-                m_serviceProperties = (Dictionary<Object, Object>) serviceProperties;
-                if ((m_registration != null) && (m_serviceName != null)) {
-                    properties = calculateServiceProperties();
-                    m_registration.setProperties(properties);
-                }
+        getExecutor().execute(() -> {
+            Dictionary<Object, Object> properties = null;
+            m_serviceProperties = (Dictionary<Object, Object>) serviceProperties;
+            if ((m_registration != null) && (m_serviceName != null)) {
+                properties = calculateServiceProperties();
+                m_registration.setProperties(properties);
             }
         });
         return this;
@@ -1449,7 +1430,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		    // (in fact, we do this because extra dependencies (added by user) may contain a callback instance, and we really don't want to invoke the callbacks twice !		    
 		    Object mainComponentImpl = getInstance();
 		    if (mainComponentImpl instanceof AbstractDecorator) {
-		        if (mainComponentImpl instanceof FactoryConfigurationAdapterImpl || dc != m_dependencies.get(0)) {
+		        if (mainComponentImpl instanceof FactoryConfigurationAdapterImpl.AdapterImpl || dc != m_dependencies.get(0)) {
 		            return;
 		        }
 		    }
