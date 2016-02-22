@@ -37,6 +37,8 @@ public class MethodSignaturesTest extends TestBase {
         ServiceRegistration sr = register(e, MethodSignatures.ENSURE_SERVICE_DEPENDENCY);
         e.waitForStep(10, 5000);
         sr.unregister();
+        // make sure configurations are deleted
+        e.waitForStep(14, 5000);
     }
     
     /**
@@ -47,5 +49,7 @@ public class MethodSignaturesTest extends TestBase {
         ServiceRegistration sr = register(e, MethodSignatures.ENSURE_FACTORYPID);
         e.waitForStep(3, 5000);
         sr.unregister();
+        // make sure configurations are deleted
+        e.waitForStep(6, 5000);
     }
 }
