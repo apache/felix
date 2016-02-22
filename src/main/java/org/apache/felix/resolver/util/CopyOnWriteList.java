@@ -19,14 +19,10 @@
 package org.apache.felix.resolver.util;
 
 import java.lang.reflect.Array;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.*;
 
 @SuppressWarnings("NullableProblems")
-public class CopyOnWriteList<E> implements List<E>, Cloneable {
+public class CopyOnWriteList<E> implements List<E>, Cloneable, RandomAccess {
 
     Object[] data;
 
@@ -100,19 +96,65 @@ public class CopyOnWriteList<E> implements List<E>, Cloneable {
     }
 
     public Iterator<E> iterator() {
-        return new Iterator<E>() {
-            int idx = 0;
-            public boolean hasNext() {
-                return idx < data.length;
+        return new CopyOnWriteListIterator(0);
+    }
+
+    class CopyOnWriteListIterator implements ListIterator<E> {
+        int idx;
+        CopyOnWriteListIterator(int idx) {
+            this.idx = idx;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return idx < data.length;
+        }
+
+        @Override
+        public E next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
             }
-            @SuppressWarnings("unchecked")
-            public E next() {
-                return (E) data[idx++];
+            return (E) data[idx++];
+        }
+
+        @Override
+        public boolean hasPrevious() {
+            return idx >= 0;
+        }
+
+        @Override
+        public E previous() {
+            if (!hasPrevious()) {
+                throw new NoSuchElementException();
             }
-            public void remove() {
-                CopyOnWriteList.this.remove(--idx);
-            }
-        };
+            return (E) data[idx--];
+        }
+
+        @Override
+        public int nextIndex() {
+            return idx;
+        }
+
+        @Override
+        public int previousIndex() {
+            return idx - 1;
+        }
+
+        @Override
+        public void remove() {
+            CopyOnWriteList.this.remove(--idx);
+        }
+
+        @Override
+        public void set(E e) {
+            new UnsupportedOperationException();
+        }
+
+        @Override
+        public void add(E e) {
+            CopyOnWriteList.this.add(idx, e);
+        }
     }
 
     public Object[] toArray() {
@@ -132,7 +174,8 @@ public class CopyOnWriteList<E> implements List<E>, Cloneable {
     }
 
     public boolean add(E e) {
-        throw new UnsupportedOperationException();
+        add(size(), e);
+        return true;
     }
 
     public boolean remove(Object o) {
@@ -170,11 +213,14 @@ public class CopyOnWriteList<E> implements List<E>, Cloneable {
     }
 
     public boolean addAll(Collection<? extends E> c) {
-        throw new UnsupportedOperationException();
+        return addAll(size(), c);
     }
 
     public boolean addAll(int index, Collection<? extends E> c) {
-        throw new UnsupportedOperationException();
+        for (E e : c) {
+            add(index++, e);
+        }
+        return !(c.isEmpty());
     }
 
     public boolean removeAll(Collection<?> c) {
@@ -215,11 +261,11 @@ public class CopyOnWriteList<E> implements List<E>, Cloneable {
     }
 
     public ListIterator<E> listIterator() {
-        throw new UnsupportedOperationException();
+        return new CopyOnWriteListIterator(0);
     }
 
     public ListIterator<E> listIterator(int index) {
-        throw new UnsupportedOperationException();
+        return new CopyOnWriteListIterator(index);
     }
 
     public List<E> subList(int fromIndex, int toIndex) {
