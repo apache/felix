@@ -33,7 +33,7 @@ import aQute.bnd.annotation.ProviderType;
  * you can use 
  * {@link DependencyManager#createFactoryConfigurationAdapterService(String, String, boolean)}.
  * There are a couple of things you need to be aware of when implementing the 
- * <code>updated(Dictionary)</code> method:
+ * <code>updated(Dictionary)</code> method:<p>
  * <ul>
  * <li>Make sure it throws a <code>ConfigurationException</code> or any other exception when you 
  * get a configuration that is invalid. In this case, the dependency will not change: 
@@ -49,14 +49,14 @@ import aQute.bnd.annotation.ProviderType;
  * <li>When the DM component is stopped, then updated(null) is not invoked.
  * </ul>
  * 
- * The callback invoked when a configuration dependency is updated can supports the following signatures:<p>
+ * <p> The callback invoked when a configuration dependency is updated can supports the following signatures:<p>
  * <ul><li> updated(Dictionary)
  *     <li> updated(Component, Dictionary)
- *     <li> updated(Configuration interface)
- *     <li> updated(Component, Configuration interface)
+ *     <li> updated(ConfigurationType)
+ *     <li> updated(Component, ConfigurationType)
  * </ul>
  * 
- * <p> Configuration interface is a new feature that allows you to specify an interface that is implemented 
+ * <p> Support for a custom Configuration type is a new feature that allows you to specify an interface that is implemented 
  * by DM and such interface is then injected to your callback instead of the actual Dictionary.
  * Using such configuration interface provides a way for creating type-safe configurations from a actual {@link Dictionary} that is
  * normally injected by Dependency Manager.
