@@ -56,6 +56,29 @@ public class ResolverImplTest extends TestCase
         assertTrue(resolver.resolve());
     }
 
+    public void testSpec() throws Exception
+    {
+        URL url = getClass().getResource("/spec_repository.xml");
+        RepositoryAdminImpl repoAdmin = createRepositoryAdmin();
+        RepositoryImpl repo = (RepositoryImpl) repoAdmin.addRepository(url);
+
+        System.out.println(repo.getResources().length + " Resources in Repo");
+
+        Resolver resolver = repoAdmin.resolver();
+
+        RequirementImpl requirement = new RequirementImpl("foo");
+        requirement.setFilter("(bar=toast)");
+
+        Requirement[] requirements = { requirement };
+
+        Resource[] discoverResources = repoAdmin.discoverResources(requirements);
+        assertNotNull(discoverResources);
+        assertEquals(1, discoverResources.length);
+
+        resolver.add(discoverResources[0]);
+        assertTrue("Resolver could not resolve", resolver.resolve());
+    }
+
     public void testMatchingReq() throws Exception
     {
         RepositoryAdminImpl repoAdmin = createRepositoryAdmin();

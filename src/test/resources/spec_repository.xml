@@ -34,6 +34,15 @@
     <capability namespace='foo'>
       <attribute name='bar' value='toast'/>
     </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='com.foo'/>
+      <attribute name='version' type='Version' value='1.0.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.felix.bundlerepository.test_file_3'/>
+      <attribute name='bundle-version' type='Version' value='1.2.3.something'/>
+    </capability>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=com.foo)'/>
+    </requirement>
   </resource>
   <resource>
     <capability namespace='osgi.identity'>

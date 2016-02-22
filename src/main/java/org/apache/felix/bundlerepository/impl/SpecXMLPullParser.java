@@ -150,7 +150,7 @@ public class SpecXMLPullParser
 
         for (Map.Entry<String, Object> entry : attributes.entrySet())
         {
-            capability.addProperty(new FelixPropertyAdapter(entry.getKey(), entry.getValue()));
+            capability.addProperty(new FelixPropertyAdapter(NamespaceTranslator.getFelixNamespace(entry.getKey()), entry.getValue()));
         }
         for (Map.Entry<String, String> entry : directives.entrySet())
         {
