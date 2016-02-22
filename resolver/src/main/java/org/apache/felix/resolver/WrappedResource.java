@@ -18,9 +18,7 @@
  */
 package org.apache.felix.resolver;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import org.osgi.framework.namespace.ExecutionEnvironmentNamespace;
 import org.osgi.framework.namespace.HostNamespace;
 import org.osgi.framework.namespace.IdentityNamespace;
@@ -32,13 +30,60 @@ class WrappedResource implements Resource
 {
     private final Resource m_host;
     private final List<Resource> m_fragments;
-    private List<Capability> m_cachedCapabilities = null;
-    private List<Requirement> m_cachedRequirements = null;
+    private final List<Capability> m_cachedCapabilities;
+    private final List<Requirement> m_cachedRequirements;
 
     public WrappedResource(Resource host, List<Resource> fragments)
     {
         m_host = host;
         m_fragments = fragments;
+ 
+        // Wrap host capabilities.
+        List<Capability> caps = new ArrayList<Capability>();
+        for (Capability cap : m_host.getCapabilities(null))
+        {
+            caps.add(new WrappedCapability(this, cap));
+        }
+
+        // Wrap fragment capabilities.
+        if (m_fragments != null)
+        {
+            for (Resource fragment : m_fragments)
+            {
+                for (Capability cap : fragment.getCapabilities(null))
+                {
+                    caps.add(new WrappedCapability(this,  cap));
+                }
+            }
+        }
+        m_cachedCapabilities = Collections.unmodifiableList(caps);
+
+        // Wrap host requirements.
+        List<Requirement> reqs = new ArrayList<Requirement>();
+        for (Requirement req : m_host.getRequirements(null))
+        {
+            reqs.add(new WrappedRequirement(this, req));
+        }
+
+        // Wrap fragment requirements.
+        if (m_fragments != null)
+        {
+            for (Resource fragment : m_fragments)
+            {
+                for (Requirement req : fragment.getRequirements(null))
+                {
+                    // Filter out host and execution environment requirements,
+                    // since they are not part of the fragment payload.
+                    if (!req.getNamespace().equals(HostNamespace.HOST_NAMESPACE)
+                        && !req.getNamespace().equals(
+                            ExecutionEnvironmentNamespace.EXECUTION_ENVIRONMENT_NAMESPACE))
+                    {
+                        reqs.add(new WrappedRequirement(this, req));
+                    }
+                }
+            }
+        }
+        m_cachedRequirements = Collections.unmodifiableList(reqs);
     }
 
     public Resource getDeclaredResource()
@@ -53,63 +98,28 @@ class WrappedResource implements Resource
 
     public List<Capability> getCapabilities(String namespace)
     {
-        if (m_cachedCapabilities == null)
-        {
-            List<Capability> caps = new ArrayList<Capability>();
-
-            // Wrap host capabilities.
-            for (Capability cap : m_host.getCapabilities(namespace))
-            {
-                caps.add(new WrappedCapability(this, cap));
-            }
-
-            // Wrap fragment capabilities.
-            if (m_fragments != null)
-            {
-                for (Resource fragment : m_fragments)
-                {
-                    for (Capability cap : fragment.getCapabilities(namespace))
-                    {
-                        caps.add(new WrappedCapability(this,  cap));
-                    }
+        if (namespace != null) {
+            List<Capability> filtered = new ArrayList<Capability>();
+            for (Capability capability : m_cachedCapabilities) {
+                if (namespace.equals(capability.getNamespace())) {
+                    filtered.add(capability);
                 }
             }
-            m_cachedCapabilities = Collections.unmodifiableList(caps);
+            return Collections.unmodifiableList(filtered);
         }
         return m_cachedCapabilities;
     }
 
     public List<Requirement> getRequirements(String namespace)
     {
-        if (m_cachedRequirements == null)
-        {
-            List<Requirement> reqs = new ArrayList<Requirement>();
-
-            // Wrap host requirements.
-            for (Requirement req : m_host.getRequirements(null))
-            {
-                reqs.add(new WrappedRequirement(this, req));
-            }
-
-            // Wrap fragment requirements.
-            if (m_fragments != null)
-            {
-                for (Resource fragment : m_fragments)
-                {
-                    for (Requirement req : fragment.getRequirements(null))
-                    {
-                        // Filter out host and execution environment requirements,
-                        // since they are not part of the fragment payload.
-                        if (!req.getNamespace().equals(HostNamespace.HOST_NAMESPACE)
-                            && !req.getNamespace().equals(
-                                ExecutionEnvironmentNamespace.EXECUTION_ENVIRONMENT_NAMESPACE))
-                        {
-                            reqs.add(new WrappedRequirement(this, req));
-                        }
-                    }
+        if (namespace != null) {
+            List<Requirement> filtered = new ArrayList<Requirement>();
+            for (Requirement requirement : m_cachedRequirements) {
+                if (namespace.equals(requirement.getNamespace())) {
+                    filtered.add(requirement);
                 }
             }
-            m_cachedRequirements = Collections.unmodifiableList(reqs);
+            return Collections.unmodifiableList(filtered);
         }
         return m_cachedRequirements;
     }
