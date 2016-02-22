@@ -55,18 +55,25 @@ public class MethodSignatures {
 		ConfigurationAdmin m_cm;
 
 		private Configuration m_conf;
-		
+	      private Configuration m_conf2;
+
 		@Start
 		void start() throws IOException {
 			m_conf = m_cm.getConfiguration(Consumer.class.getName());
 			Hashtable<String, Object> props = new Hashtable<>();
 			props.put("foo", "bar");
 			m_conf.update(props);
+			
+			m_conf2 = m_cm.getConfiguration(ConsumerConfig.class.getName());
+			props = new Hashtable<>();
+			props.put("foo", "bar");
+			m_conf2.update(props);
 		}
 		
 		@Stop
 		void stop() throws IOException {
 			m_conf.delete();
+			m_conf2.delete();
 		}
 	}
 
@@ -89,28 +96,44 @@ public class MethodSignatures {
 		ConsumerConfig m_config;
         ConsumerConfig m_config2;
 
-		@ConfigurationDependency
+		@ConfigurationDependency // pid=Consumer.class
 		void updated(Dictionary<String, Object> properties) {
-			m_properties = properties;			
+		    if (properties != null) {
+		        m_properties = properties;
+		    } else {
+		         m_ensure.step();
+		    }
+		}
+		
+		@ConfigurationDependency // pid = Consumer.class
+		void updated2(org.apache.felix.dm.Component component, Dictionary<String, Object> properties) {
+		    if (properties != null) {
+		        Assert.assertNotNull(component);
+		        m_properties2 = properties;
+		    } else {
+		        m_ensure.step();
+		    }
 		}
 		
 		@ConfigurationDependency
-		void updated2(org.apache.felix.dm.Component component, Dictionary<String, Object> properties) {
-			Assert.assertNotNull(component);
-			m_properties2 = properties;			
-		}
-		
-		@ConfigurationDependency(pidClass=Consumer.class)
 		void updated3(ConsumerConfig cnf) {
-		    Assert.assertNotNull(cnf);
-		    m_config = cnf;         
+		    if (cnf != null) {
+		        Assert.assertNotNull(cnf);
+		        m_config = cnf;
+		    } else {
+		        m_ensure.step();
+		    }
 		}
 
-		@ConfigurationDependency(pidClass=Consumer.class)
+		@ConfigurationDependency
 		void updated4(org.apache.felix.dm.Component comp, ConsumerConfig cnf) {
-		    Assert.assertNotNull(comp);
-		    Assert.assertNotNull(cnf);
-		    m_config2 = cnf;         
+		    if (cnf != null) {
+		        Assert.assertNotNull(comp);
+		        Assert.assertNotNull(cnf);
+		        m_config2 = cnf;
+		    } else {
+		        m_ensure.step();
+		    }
 		}
 
 		@ServiceDependency(filter="(name=" + ENSURE_SERVICE_DEPENDENCY + ")")
@@ -254,6 +277,11 @@ public class MethodSignatures {
 			Assert.assertEquals("bar", m_properties.get("foo"));
 			m_ensure.step();
 		}
+        
+        @Stop
+        void stop() {
+            m_ensure.step();
+        }
 	}
 	
 	// This is a factory pid component with an updated callback having the "updated(Component, Dictionary)" signature
@@ -275,6 +303,11 @@ public class MethodSignatures {
 			Assert.assertEquals("bar", m_properties.get("foo"));
 			m_ensure.step();
 		}
+		
+		@Stop
+		void stop() {
+		    m_ensure.step();
+		}
 	}
 	
 	// This is a factory pid component with an updated callback having the "updated(Config)" signature
@@ -291,9 +324,14 @@ public class MethodSignatures {
         
         @Start
         void start() {
-            Thread.dumpStack();
             Assert.assertNotNull(m_properties);
             Assert.assertEquals("bar", m_properties.getFoo());
+            m_ensure.step();
+        }
+        
+        
+        @Stop
+        void stop() {
             m_ensure.step();
         }
     }
