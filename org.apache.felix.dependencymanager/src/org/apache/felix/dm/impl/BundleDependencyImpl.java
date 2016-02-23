@@ -42,14 +42,14 @@ import org.osgi.framework.InvalidSyntaxException;
  */
 public class BundleDependencyImpl extends AbstractDependency<BundleDependency> implements BundleDependency, BundleTrackerCustomizer, ComponentDependencyDeclaration {
     private BundleTracker m_tracker;
-    private int m_stateMask = Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE;
+    private volatile int m_stateMask = Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE;
     private Bundle m_bundleInstance;
-    private Filter m_filter;
-    private long m_bundleId = -1;
+    private volatile Filter m_filter;
+    private volatile long m_bundleId = -1;
     private Object m_nullObject;
-    private boolean m_propagate;
-    private Object m_propagateCallbackInstance;
-    private String m_propagateCallbackMethod;
+    private volatile boolean m_propagate;
+    private volatile Object m_propagateCallbackInstance;
+    private volatile String m_propagateCallbackMethod;
 
     public BundleDependencyImpl() {
     }

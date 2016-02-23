@@ -36,9 +36,9 @@ import org.apache.felix.dm.context.DependencyContext;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ResourceAdapterImpl extends FilterComponent {
-    private Object m_callbackInstance = null;
-    private String m_callbackChanged = "changed";
-    private String m_callbackAdded = "setResource";
+    private final Object m_callbackInstance;
+    private final String m_callbackChanged;
+    private final String m_callbackAdded;
     private final String m_resourceFilter;
     
     /**

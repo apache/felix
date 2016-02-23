@@ -64,34 +64,34 @@ public abstract class AbstractDependency<T extends Dependency> implements
     /**
      * Component callback used to inject an added dependency.
      */
-    protected String m_add;
+    protected volatile String m_add;
 
     /**
      * Component callback invoked when the dependency has changed.
      */
-    protected String m_change;
+    protected volatile String m_change;
 
     /**
      * Component callback invoked when the dependency becomes unavailable.
      */
-    protected String m_remove;
+    protected volatile String m_remove;
 
     /**
      * Can this Dependency be auto configured in the component instance fields ?
      */
-    protected boolean m_autoConfig = true;
+    protected volatile boolean m_autoConfig = true;
 
     /**
      * The Component field name where the Dependency can be injected (null means any field with a compatible type
      * will be injected).
      */
-    protected String m_autoConfigInstance;
+    protected volatile String m_autoConfigInstance;
 
     /**
      * Indicates if the setAutoConfig method has been invoked. This flag is used to force autoconfig to "false" 
      * when the setCallbacks method is invoked, unless the setAutoConfig method has been called.
      */
-    protected boolean m_autoConfigInvoked;
+    protected volatile boolean m_autoConfigInvoked;
 
     /**
      * Has this Dependency been started by the Component implementation ? Volatile because the getState method 
@@ -103,17 +103,17 @@ public abstract class AbstractDependency<T extends Dependency> implements
      * The object instance on which the dependency callbacks are invoked on. Null means the dependency will be
      * injected to the Component implementation instance(s).
      */
-    protected Object m_callbackInstance;
+    protected volatile Object m_callbackInstance;
 
     /**
      * Tells if the dependency service properties have to be propagated to the Component service properties.
      */
-    protected boolean m_propagate;
+    protected volatile boolean m_propagate;
 
     /**
      * The propagate callback instance that is invoked in order to supply dynamically some dependency service properties.
      */
-    protected Object m_propagateCallbackInstance;
+    protected volatile Object m_propagateCallbackInstance;
 
     /**
      * The propagate callback method that is invoked in order to supply dynamically some dependency service properties.
