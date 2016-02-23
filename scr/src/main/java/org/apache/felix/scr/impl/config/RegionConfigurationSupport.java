@@ -49,28 +49,6 @@ import org.osgi.util.tracker.ServiceTracker;
 public class RegionConfigurationSupport implements ConfigurationListener
 {
 
-    private static final ChangeCount changeCounter;
-    static
-    {
-        ChangeCount cc = null;
-        try
-        {
-            Configuration.class.getMethod( "getChangeCount", (Class<?>[]) null );
-            cc = new R5ChangeCount();
-        }
-        catch ( SecurityException e )
-        {
-        }
-        catch ( NoSuchMethodException e )
-        {
-        }
-        if ( cc == null )
-        {
-            cc = new R4ChangeCount();
-        }
-        changeCounter = cc;
-    }
-
     private final BundleContext caBundleContext;
     private final Long bundleId;
     
@@ -175,7 +153,7 @@ public class RegionConfigurationSupport implements ConfigurationListener
                                         config = getConfiguration( ca, config.getPid() );
                                         if ( checkBundleLocation( config, bundleContext.getBundle() ) )
                                         {
-                                            long changeCount = changeCounter.getChangeCount( config, false, -1 );
+                                            long changeCount = config.getChangeCount();
                                             created |= holder.configurationUpdated( new TargetedPID( config.getPid() ),
                                             		new TargetedPID( config.getFactoryPid() ),
                                                     config.getProperties(),
@@ -201,7 +179,7 @@ public class RegionConfigurationSupport implements ConfigurationListener
                                         if ( singleton != null
                                                 && checkBundleLocation( singleton, bundleContext.getBundle() ) )
                                         {
-                                            long changeCount = changeCounter.getChangeCount( singleton, false, -1 );
+                                            long changeCount = singleton.getChangeCount();
                                             holder.configurationUpdated( new TargetedPID( singleton.getPid() ), null,
                                                     singleton.getProperties(), changeCount );
                                         }
@@ -504,7 +482,7 @@ public class RegionConfigurationSupport implements ConfigurationListener
                             final ConfigurationAdmin ca = ( ConfigurationAdmin ) cao;
                             final Configuration config = getConfiguration( ca, pid.getRawPid() );
                             return new ConfigurationInfo(config.getProperties(), config.getBundleLocation(),
-                                    changeCounter.getChangeCount( config, true, componentHolder.getChangeCount( pid, targetedPid ) ) );
+                            		config.getChangeCount());
                         }
                         else
                         {
@@ -685,28 +663,6 @@ public class RegionConfigurationSupport implements ConfigurationListener
     static final String escape(String value)
     {
         return value.replaceAll( "([\\\\\\*\\(\\)])", "\\\\$1" );
-    }
-
-
-    private interface ChangeCount {
-        long getChangeCount( Configuration configuration, boolean fromEvent, long previous );
-    }
-
-    private static class R5ChangeCount implements ChangeCount {
-
-        public long getChangeCount(Configuration configuration, boolean fromEvent, long previous)
-        {
-            return configuration.getChangeCount();
-        }
-    }
-
-    private static class R4ChangeCount implements ChangeCount {
-
-        public long getChangeCount(Configuration configuration, boolean fromEvent, long previous)
-        {
-            return fromEvent? previous + 1:0;
-        }
-
     }
 
 }

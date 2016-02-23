@@ -76,14 +76,6 @@ public interface ComponentHolder<S>
     boolean configurationUpdated( TargetedPID targetedPid, TargetedPID factoryTargetedPid, Dictionary<String, Object> props, long changeCount );
     
     /**
-     * Change count (or fake R4 imitation)
-     * @param pid a PID for the component we are interested in.
-     * @param targetedPid For a singleton pid, same as "pid"; for a factory pid, the factory pid.
-     * @return the last change count from a configurationUpdated call for the given pid.
-     */
-    long getChangeCount( TargetedPID pid, TargetedPID targetedPid );
-    
-    /**
      * Returns the targeted PID used to configure this component
      * @param pid a targetedPID containing the service pid for the component desired (the rest of the targeted pid is ignored)
      * @param factoryPid a targetedPID containing the factory pid for the component desired.
