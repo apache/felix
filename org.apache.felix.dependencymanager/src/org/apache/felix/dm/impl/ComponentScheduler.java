@@ -27,14 +27,12 @@ import org.apache.felix.dm.ComponentDeclaration;
 import org.apache.felix.dm.ComponentExecutorFactory;
 import org.apache.felix.dm.context.ComponentContext;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.component.ComponentFactory;
 
 /**
  * The Dependency Manager delegates all components addition/removal to this class.
  * If a ComponentExecutorFactory is registered in the OSGi registry, this class will use it to get an 
  * Executor used for components management and lifecycle callbacks.
  * 
- * @see {@link ComponentFactory}
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ComponentScheduler {

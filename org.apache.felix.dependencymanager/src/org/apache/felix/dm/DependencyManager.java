@@ -250,7 +250,7 @@ public class DependencyManager {
      * It will also inherit all dependencies, and if you declare the original
      * service as a member it will be injected.
      * 
-     * <h3>Usage Example</h3>
+     * <p>Usage example:
      * 
      * <blockquote><pre>
      * manager.createAdapterService(AdapteeService.class, "(foo=bar)")
@@ -275,7 +275,7 @@ public class DependencyManager {
      * It will also inherit all dependencies, and if you declare the original
      * service as a member it will be injected.
      * 
-     * <h3>Usage Example</h3>
+     * <p>Usage example:
      * 
      * <blockquote><pre>
      * manager.createAdapterService(AdapteeService.class, "(foo=bar)", "m_service")
@@ -301,7 +301,7 @@ public class DependencyManager {
      * It will also inherit all dependencies, and if you declare the original
      * service as a member it will be injected.
      * 
-     * <h3>Usage Example</h3>
+     * <p>Usage example:
      * 
      * <blockquote><pre>
      * manager.createAdapterService(AdapteeService.class, "(foo=bar)", "add", "change", "remove")
@@ -331,7 +331,7 @@ public class DependencyManager {
      * It will also inherit all dependencies, and if you declare the original
      * service as a member it will be injected.
      * 
-     * <h3>Usage Example</h3>
+     * <p>Usage example:
      * 
      * <blockquote><pre>
      * manager.createAdapterService(AdapteeService.class, "(foo=bar)", "add", "change", "remove", "swap")
@@ -362,7 +362,7 @@ public class DependencyManager {
      * It will also inherit all dependencies, and if you declare the original
      * service as a member it will be injected.
      * 
-     * <h3>Usage Example</h3>
+     * <p>Usage example:
      * 
      * <blockquote><pre>
      * manager.createAdapterService(AdapteeService.class, "(foo=bar)", "add", "change", "remove", "swap")
@@ -389,14 +389,18 @@ public class DependencyManager {
     }
 
     /**
-     * Creates a new Managed Service Factory Configuration Adapter. For each new Config Admin factory configuration matching
+     * Creates a new Factory Configuration Adapter. For each new factory configuration matching
      * the factoryPid, an adapter will be created based on the adapter implementation class.
      * The adapter will be registered with the specified interface, and with the specified adapter service properties.
      * Depending on the <code>propagate</code> parameter, every public factory configuration properties 
      * (which don't start with ".") will be propagated along with the adapter service properties. 
      * It will also inherit all dependencies.
+     * <p> The callback you specify may accept the following method signatures:
+     * <ul><li> updated(Dictionary)
+     * <li> updated(Component, Dictionary)
+     * </ul>
      * 
-     * <h3>Usage Example</h3>
+     * <p>Usage example:
      * 
      * <blockquote><pre>
      *  manager.createFactoryConfigurationAdapterService("MyFactoryPid",  "update", true)
@@ -407,11 +411,7 @@ public class DependencyManager {
      * </pre></blockquote>
      * 
      * @param factoryPid the pid matching the factory configuration
-     * @param update the adapter method name that will be notified when the factory configuration is created/updated.<p>
-     *  The following signatures are supported:<p>
-     *        <ul><li> updated(Dictionary)
-     *        <li> updated(Component, Dictionary)
-     *        </ul>
+     * @param update the adapter method name that will be notified when the factory configuration is created/updated.
      * @param propagate true if public factory configuration should be propagated to the adapter service properties
      * @return a service that acts as a factory for generating the managed service factory configuration adapter
      */
@@ -420,20 +420,20 @@ public class DependencyManager {
     }
 
     /**
-     * Creates a new Managed Service Factory Configuration Adapter using a specific update callback instance. 
-     * For each new Config Admin factory configuration matching the factoryPid, an adapter will be created 
+     * Creates a new Factory Configuration Adapter using a specific update callback instance. 
+     * For each new factory configuration matching the factoryPid, an adapter will be created 
      * based on the adapter implementation class.
      * The adapter will be registered with the specified interface, and with the specified adapter service properties.
      * Depending on the <code>propagate</code> parameter, every public factory configuration properties 
      * (which don't start with ".") will be propagated along with the adapter service properties. 
      * It will also inherit all dependencies.
+     * <p> The callback you specify may accept the following method signatures:
+     * <ul><li> updated(Dictionary)
+     * <li> updated(Component, Dictionary)
+     * </ul>
      * 
      * @param factoryPid the pid matching the factory configuration
-     * @param update the adapter method name that will be notified when the factory configuration is created/updated.<p>
-     *  The following signatures are supported:<p>
-     *        <ul><li> updated(Dictionary)
-     *        <li> updated(Component, Dictionary)
-     *        </ul>
+     * @param update the adapter method name that will be notified when the factory configuration is created/updated.
      * @param propagate true if public factory configuration should be propagated to the adapter service properties
      * @param callbackInstance the object on which the updated callback will be invoked.
      * @return a service that acts as a factory for generating the managed service factory configuration adapter
@@ -443,29 +443,22 @@ public class DependencyManager {
     }
 
     /**
-     * Creates a new Managed Service Factory Configuration Adapter. For each new Config Admin factory configuration matching
+     * Creates a new Factory Configuration Adapter. For each new factory configuration matching
      * the factoryPid, an adapter will be created based on the adapter implementation class.
      * The adapter will be registered with the specified interface, and with the specified adapter service properties.
      * Depending on the <code>propagate</code> parameter, every public factory configuration properties 
      * (which don't start with ".") will be propagated along with the adapter service properties. 
      * It will also inherit all dependencies.
-     * 
-     * <h3>Usage Example</h3>
-     * 
-     * <blockquote><pre>
-     *  manager.createFactoryConfigurationAdapterService("MyFactoryPid",  "update", true)
-     *         // The interface to use when registering adapter
-     *         .setInterface(AdapterService.class.getName(), new Hashtable() {{ put("foo", "bar"); }})
-     *         // the implementation of the adapter
-     *         .setImplementation(AdapterServiceImpl.class);
-     * </pre></blockquote>
+     * <p> The callback you specify may accept the following method signatures:
+     * <ul><li> updated(Dictionary)
+     * <li> updated(Component, Dictionary)
+     * <li> updated(ConfigurationType)
+     * <li> updated(Component, ConfigurationType)
+     * </ul>
+     * <p>The ConfigurationType parameter is an implementation of the <code>configType</code> argument.
      * 
      * @param factoryPid the pid matching the factory configuration
      * @param update the adapter method name that will be notified when the factory configuration is created/updated.<p>
-     *  The following signatures are supported:<p>
-     *        <ul><li> updated(Dictionary)
-     *        <li> updated(Component, Dictionary)
-     *        </ul>
      * @param propagate true if public factory configuration should be propagated to the adapter service properties
      * @param configType the configuration type to use instead of a dictionary. See the javadoc from {@link ConfigurationDependency} for
      * more informations about type-safe configuration.
@@ -477,20 +470,22 @@ public class DependencyManager {
     }
 
     /**
-     * Creates a new Managed Service Factory Configuration Adapter using a specific update callback instance. 
-     * For each new Config Admin factory configuration matching the factoryPid, an adapter will be created 
+     * Creates a new Factory Configuration Adapter using a specific update callback instance. 
+     * For each new factory configuration matching the factoryPid, an adapter will be created 
      * based on the adapter implementation class.
      * The adapter will be registered with the specified interface, and with the specified adapter service properties.
      * Depending on the <code>propagate</code> parameter, every public factory configuration properties 
      * (which don't start with ".") will be propagated along with the adapter service properties. 
      * It will also inherit all dependencies.
+     * <p> The callback you specify may accept the following method signatures:
+     * <ul><li> updated(Dictionary)
+     * <li> updated(Component, Dictionary)
+     * <li> updated(ConfigurationType)
+     * <li> updated(Component, ConfigurationType)
+     * </ul>
+     * <p>The ConfigurationType parameter is an implementation of the <code>configType</code> argument.
      * 
      * @param factoryPid the pid matching the factory configuration
-     * @param update the adapter method name that will be notified when the factory configuration is created/updated.<p>
-     *  The following signatures are supported:<p>
-     *        <ul><li> updated(Dictionary)
-     *        <li> updated(Component, Dictionary)
-     *        </ul>
      * @param propagate true if public factory configuration should be propagated to the adapter service properties
      * @param callbackInstance the object on which the updated callback will be invoked.
      * @param configType the configuration type to use instead of a dictionary.  See the javadoc from {@link ConfigurationDependency} for
@@ -502,14 +497,14 @@ public class DependencyManager {
     }
 
    /**
-     * Creates a new Managed Service Factory Configuration Adapter with meta type support. For each new Config Admin 
+     * Creates a new Managed Service Factory Configuration Adapter with meta type support. For each new 
      * factory configuration matching the factoryPid, an adapter will be created based on the adapter implementation 
      * class. The adapter will be registered with the specified interface, and with the specified adapter service 
      * properties. Depending on the <code>propagate</code> parameter, every public factory configuration properties 
      * (which don't start with ".") will be propagated along with the adapter service properties. 
      * It will also inherit all dependencies.
      * 
-     * <h3>Usage Example</h3>
+     * <p>Usage example:
      * 
      * <blockquote><pre>
      *       PropertyMetaData[] propertiesMetaData = new PropertyMetaData[] {
@@ -568,7 +563,7 @@ public class DependencyManager {
      * It will also inherit all dependencies, and if you declare the original
      * service as a member it will be injected.
      * 
-     * <h3>Usage Example</h3>
+     * <p>Usage example:
      * 
      * <blockquote><pre>
      *  manager.createBundleAdapterService(Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE, 
@@ -618,7 +613,7 @@ public class DependencyManager {
      * It will also inherit all dependencies, and if you declare the original
      * service as a member it will be injected.
      * 
-     * <h3>Usage Example</h3>
+     * <p>Usage example:
      * 
      * <blockquote><pre>
      *  manager.createResourceAdapterService("(&(path=/test)(repository=TestRepository))", true)
@@ -681,7 +676,7 @@ public class DependencyManager {
      * It will also inherit all dependencies, and if you declare the original
      * service as a member it will be injected.
      * 
-     * <h3>Usage Example</h3>
+     * <p>Usage example:
      * 
      * <blockquote><pre>
      * manager.createAspectService(ExistingService.class, "(foo=bar)", 10, "m_service")
@@ -709,7 +704,7 @@ public class DependencyManager {
      * It will also inherit all dependencies, and if you declare the original
      * service as a member it will be injected.
      * 
-     * <h3>Usage Example</h3>
+     * <p>Usage example:
      * 
      * <blockquote><pre>
      * manager.createAspectService(ExistingService.class, "(foo=bar)", 10)
@@ -735,7 +730,7 @@ public class DependencyManager {
      * It will also inherit all dependencies, and if you declare the original
      * service as a member it will be injected.
      * 
-     * <h3>Usage Example</h3>
+     * <p>Usage example:
      * 
      * <blockquote><pre>
      * manager.createAspectService(ExistingService.class, "(foo=bar)", 10, "add", "change", "remove")
@@ -766,7 +761,7 @@ public class DependencyManager {
      * It will also inherit all dependencies, and if you declare the original
      * service as a member it will be injected.
      * 
-     * <h3>Usage Example</h3>
+     * <p>Usage example:
      * 
      * <blockquote><pre>
      * manager.createAspectService(ExistingService.class, "(foo=bar)", 10, "add", "change", "remove")
@@ -798,7 +793,7 @@ public class DependencyManager {
      * It will also inherit all dependencies, and if you declare the original
      * service as a member it will be injected.
      * 
-     * <h3>Usage Example</h3>
+     * <p>Usage example:
      * 
      * <blockquote><pre>
      * manager.createAspectService(ExistingService.class, "(foo=bar)", 10, "add", "change", "remove")
