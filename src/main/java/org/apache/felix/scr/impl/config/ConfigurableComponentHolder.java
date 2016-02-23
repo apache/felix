@@ -351,14 +351,18 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
         final Map<AbstractComponentManager<S>, Map<String, Object>> scms = new HashMap< AbstractComponentManager<S>, Map<String, Object>>();
         boolean created = false;
 
-        //TODO better change count tracking
         synchronized (m_components) {
             //Find or create the component manager, or return if not satisfied.
             if (factoryPid != null) {
                 checkFactoryPidIndex(factoryPid);
+                Long oldChangeCount = m_factoryChangeCount.get(pid.getServicePid());
+                TargetedPID oldTargetedPID = m_factoryTargetedPids.get(pid.getServicePid());
+                if (oldChangeCount != null && changeCount <= oldChangeCount && factoryPid.equals(oldTargetedPID)) {
+                	return false;
+                }
+                m_factoryChangeCount.put(pid.getServicePid(), changeCount);
                 m_factoryConfigurations.put(pid.getServicePid(), props);
                 m_factoryTargetedPids.put(pid.getServicePid(), factoryPid);
-                m_factoryChangeCount.put(pid.getServicePid(), changeCount);
                 if (m_enabled && isSatisfied()) {
                     if (m_singleComponent != null && !m_componentMetadata.isObsoleteFactoryComponentFactory()) {
                         AbstractComponentManager<S> scm = m_singleComponent;
@@ -380,8 +384,11 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
             } else {
                 //singleton pid
                 int index = getSingletonPidIndex(pid);
-                m_targetedPids[index] = pid;
+                if (m_changeCount[index] != null && changeCount <= m_changeCount[index] && pid.equals(m_targetedPids[index])) {
+                	return false;
+                }
                 m_changeCount[index] = changeCount;
+                m_targetedPids[index] = pid;
                 m_configurations[index] = props;
                 if (m_enabled && isSatisfied()) {
                     if (m_singleComponent != null) {
@@ -568,31 +575,6 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
             return false;
         }
         return true;
-    }
-
-    /**
-     * @param pid the Targeted PID we need the change count for
-     * @param targetedPid the targeted factory pid for a factory configuration or the pid for a singleton configuration
-     * @return pid for this service pid.
-     */
-    public long getChangeCount( TargetedPID pid, TargetedPID targetedPid)
-    {
-        int index = m_componentMetadata.getPidIndex(targetedPid);
-        Long result;
-        if ( index == -1 )
-        {
-            throw new IllegalArgumentException("pid not recognized as for this component: " + pid);
-        }
-        if ( m_factoryPidIndex != null && index == m_factoryPidIndex )
-        {
-            result = m_factoryChangeCount.get(pid.getServicePid());
-        }
-        else
-        {
-            result = m_changeCount[index];
-        }
-        return result == null? -1: result;
-
     }
 
     public List<? extends ComponentManager<?>> getComponents()
