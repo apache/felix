@@ -36,7 +36,7 @@ public interface CbComponent<T> extends SerializableLambda {
      * @param instance the Component implementation class instance on which the callback is invoked on. 
      * @param component the callback parameter
      */
-    void accept(T instance, Component bundle);
+    void accept(T instance, Component component);
 
     default CbComponent<T> andThen(CbComponent<? super T> after) {
         Objects.requireNonNull(after);

@@ -39,7 +39,7 @@ import org.apache.felix.dm.lambda.ConfigurationDependencyBuilder;
 public interface InstanceCbConfigurationComponent<T> extends SerializableLambda {
     /**
      * Handles the given arguments
-     * @param instance the Component implementation instance on which the callback is invoked on. 
+     * @param configType the configuration type
      * @param component the callback Component 
      */
     void accept(T configType, Component component);
