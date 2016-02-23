@@ -46,15 +46,15 @@ import org.osgi.service.cm.ManagedService;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ConfigurationDependencyImpl extends AbstractDependency<ConfigurationDependency> implements ConfigurationDependency, ManagedService {
-    private Dictionary<String, Object> m_settings;
-	private String m_pid;
+    private volatile Dictionary<String, Object> m_settings;
+	private volatile String m_pid;
 	private ServiceRegistration m_registration;
 	private volatile Class<?> m_configType;
-    private MetaTypeProviderImpl m_metaType;
+    private volatile MetaTypeProviderImpl m_metaType;
 	private final AtomicBoolean m_updateInvokedCache = new AtomicBoolean();
 	private final Logger m_logger;
 	private final BundleContext m_context;
-	private boolean m_needsInstance = true;
+	private volatile boolean m_needsInstance = true;
 
     public ConfigurationDependencyImpl() {
         this(null, null);
@@ -273,9 +273,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
         InvocationUtil.invokeUpdated(m_component.getExecutor(), () -> invokeUpdated(settings));
         
         // At this point, we have accepted the configuration.
-        synchronized (this) {
-            m_settings = settings;
-        }
+        m_settings = settings;
 
         if ((oldSettings == null) && (settings != null)) {
             // Notify the component that our dependency is available.

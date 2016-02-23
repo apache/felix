@@ -139,7 +139,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     /**
      * The object used to create the component. Can be a class name, or the component implementation instance.
      */
-    private Object m_componentDefinition;
+    private volatile Object m_componentDefinition;
     
     /**
      * The component instance.

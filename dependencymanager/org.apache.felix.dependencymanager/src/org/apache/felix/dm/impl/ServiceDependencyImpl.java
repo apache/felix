@@ -47,7 +47,7 @@ import org.osgi.framework.ServiceReference;
  */
 public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency> implements ServiceDependency, ServiceTrackerCustomizer {
 	protected volatile ServiceTracker m_tracker;
-    protected String m_swap;
+    protected volatile String m_swap;
     protected volatile Class<?> m_trackedServiceName;
     private volatile String m_trackedServiceFilter;
     private volatile String m_trackedServiceFilterUnmodified;
@@ -55,9 +55,9 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
     private volatile Object m_defaultImplementation;
     private volatile Object m_defaultImplementationInstance;
     private volatile Object m_nullObject;
-    private boolean m_debug = false;
-    private String m_debugKey;
-    private long m_trackedServiceReferenceId;
+    private volatile boolean m_debug = false;
+    private volatile String m_debugKey;
+    private volatile long m_trackedServiceReferenceId;
     
     public ServiceDependency setDebug(String debugKey) {
     	m_debugKey = debugKey;
