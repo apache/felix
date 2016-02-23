@@ -120,7 +120,7 @@ public class ConfigurationDependencyBuilderImpl implements ConfigurationDependen
         Class<T> componentType = Helpers.getLambdaArgType(callback, 0);
         m_pid = m_pid == null ? configClass.getName() : m_pid;
         return setComponentCallbackRef(componentType, (instance, component, props) -> { 
-            U configProxy = ((ComponentContext) m_component).createConfigurationProxy(configClass, props);            
+            U configProxy = ((ComponentContext) m_component).createConfigurationType(configClass, props);            
             callback.accept((T) instance, configProxy);
         }); 
     }
@@ -130,7 +130,7 @@ public class ConfigurationDependencyBuilderImpl implements ConfigurationDependen
         Class<T> componentType = Helpers.getLambdaArgType(callback, 0);
         m_pid = m_pid == null ? configClass.getName() : m_pid;
         return setComponentCallbackRef(componentType, (instance, component, props) -> { 
-            U configProxy = ((ComponentContext) m_component).createConfigurationProxy(configClass, props);            
+            U configProxy = ((ComponentContext) m_component).createConfigurationType(configClass, props);            
             callback.accept((T) instance, configProxy, component);
         }); 
     }
@@ -152,7 +152,7 @@ public class ConfigurationDependencyBuilderImpl implements ConfigurationDependen
     public <T> ConfigurationDependencyBuilder update(Class<T> configClass, InstanceCbConfiguration<T> updated) {
         m_pid = m_pid == null ? configClass.getName() : m_pid;
         return setInstanceCallbackRef((instance, component, props) -> { 
-            T configProxy = ((ComponentContext) m_component).createConfigurationProxy(configClass, props);
+            T configProxy = ((ComponentContext) m_component).createConfigurationType(configClass, props);
             updated.accept(configProxy);
         });
     }
@@ -160,7 +160,7 @@ public class ConfigurationDependencyBuilderImpl implements ConfigurationDependen
     public <T> ConfigurationDependencyBuilder update(Class<T> configClass, InstanceCbConfigurationComponent<T> updated) {
         m_pid = m_pid == null ? configClass.getName() : m_pid;
         return setInstanceCallbackRef((instance, component, props) -> { 
-            T configProxy = ((ComponentContext) m_component).createConfigurationProxy(configClass, props);
+            T configProxy = ((ComponentContext) m_component).createConfigurationType(configClass, props);
             updated.accept(configProxy, component);
         });
     }

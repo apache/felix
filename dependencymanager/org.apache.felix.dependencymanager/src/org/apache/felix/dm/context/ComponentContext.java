@@ -167,5 +167,5 @@ public interface ComponentContext extends Component {
      * @param config the configuration to wrap, cannot be <code>null</code>.
      * @return an instance of the given type that wraps the given configuration.
      */
-    public <T> T createConfigurationProxy(Class<T> type, Dictionary<?, ?> config);
+    public <T> T createConfigurationType(Class<T> type, Dictionary<?, ?> config);
 }
