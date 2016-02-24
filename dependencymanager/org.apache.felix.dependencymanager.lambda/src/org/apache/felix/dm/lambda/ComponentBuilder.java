@@ -400,6 +400,16 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
     }
     
     /**
+     * Adds a configuration dependency using a configuration type. The configuration is injected in an updated callback which takes in argument
+     * an implementation of the specified configuration type.
+     * @return this builder
+     * @see ConfigurationDependencyBuilder
+     */
+    default B withCnf(Class<?> configType) {
+        return withCnf(cnf -> cnf.update(configType, "updated"));
+    }
+    
+    /**
      * Adds a bundle dependency.
      * @param consumer the lambda used to build the bundle dependency.
      * @return this builder.
