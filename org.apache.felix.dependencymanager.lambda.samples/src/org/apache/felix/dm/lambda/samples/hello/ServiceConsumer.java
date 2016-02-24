@@ -32,7 +32,7 @@ public class ServiceConsumer {
     volatile EventAdmin eventAdmin;
 
     public void updated(Configuration conf) {
-        // conf.getFoo() returns "bar"
+        System.out.println(conf.getFoo()); 
     }
     
     public void start() {

@@ -43,13 +43,14 @@ public class Activator extends DependencyManagerActivator {
             
         // Creates a Service Consumer. we depend on LogService, EventAdmin and on our ServiceProvider.
         // (LogService and EventAdmin are declared in one single method call).
-        // We also depend on a configuration. Our ServiceConsumer.updated method takes as argument a "Configuration" interface
-        // which is used to wrap the actual properties behind a dynamic proxy for our "Configuration" interface that is implemented by Dependency Manager.
-        // (the pid is assumed to be by default the fqdn of our Configuration interface).
+        // We also depend on a configuration. the configuration callback is assumed to be the "ServiceConsumer.updated" method which 
+        // takes as argument a "Configuration" interface. This interface is used to wrap the actual properties behind a dynamic proxy 
+        // that is implemented by Dependency Manager.
+        // The pid is assumed to be by default the fqdn of the specified Configuration interface ("org.apache.felix.dm.lambda.samples.hello.Configuration").
         component(comp -> comp.impl(ServiceConsumer.class)
             .withSvc(LogService.class, EventAdmin.class)
             .withSvc(ServiceProvider.class, srv -> srv.filter("(p1=v1)")) 
-            .withCnf(cnf -> cnf.update(Configuration.class, ServiceConsumer::updated))); 
+            .withCnf(Configuration.class));  // shortcut for "withCnf(Configuration.class, cnf -> cnf.updated(Configuration.class, ServiceConsumer::updated)"
         
         // Creates a component that populates some properties in the Configuration Admin.
         // Here, we inject the CM (Configuration Admin) service dependency using a method reference:
