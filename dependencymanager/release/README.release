@@ -9,6 +9,7 @@ Prerequisites
 
 To create a release you must:
 
+* Have a Jdk8 (at least version 1.8.0_71) installed on your system;
 * Have Subversion installed on your system;
 * Have gpg installed on your system;
 * Have a public key added to the keys file, and committed to [2] 
