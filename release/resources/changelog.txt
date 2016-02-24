@@ -1,3 +1,28 @@
+Release Notes - Felix - Version org.apache.felix.dependencymanager-r7
+======================================================================
+
+** Bug
+    * [FELIX-5146] - Service adapters turn on autoconf even if callbacks are used
+    * [FELIX-5147] - Bundle Adapter auto configures class fields even if callbacks are used
+    * [FELIX-5153] - DM4 calls stop before ungetService() on ServiceFactory components
+    * [FELIX-5155] - Adapter/Aspect extra service dependencies injected twice if using callback instance
+    * [FELIX-5178] - Make some component parameters as volatile
+    * [FELIX-5181] - Only log info/debug if dm annotation log parameter is enabled
+    * [FELIX-5187] - No errog log when configuration dependency callback is not found
+    * [FELIX-5188] - No error log when a factory pid adapter update callback is not found
+    * [FELIX-5192] - ConfigurationDependency race condition when component is stopped
+    * [FELIX-5193] - Factory Pid Adapter race condition when component is stopped
+
+** Improvement
+    * [FELIX-4689] - Create a more fluent syntax for the dependency manager builder
+    * [FELIX-5164] - Add support for callback instance in Aspects
+    * [FELIX-5177] - Support injecting configuration proxies
+    * [FELIX-5180] - Support for Java8 Repeatable Properties in DM annotations.
+    * [FELIX-5182] - Cleanup DM samples
+
+** New Feature
+    * [FELIX-5126] - Build DM using Java 8
+
 Release Notes - Felix - Version org.apache.felix.dependencymanager-r6
 ======================================================================
 
