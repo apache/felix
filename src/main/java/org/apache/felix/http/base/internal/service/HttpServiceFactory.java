@@ -68,6 +68,7 @@ public final class HttpServiceFactory
     /** Compatibility property with previous versions. */
     private static final String OBSOLETE_REG_PROPERTY_ENDPOINTS = "osgi.http.service.endpoints";
 
+    private volatile boolean active = false;
     private final BundleContext bundleContext;
     private final boolean sharedContextAttributes;
 
@@ -111,10 +112,14 @@ public final class HttpServiceFactory
 
         final String[] ifaces = new String[] { HttpService.class.getName(), ExtHttpService.class.getName() };
         this.httpServiceReg = bundleContext.registerService(ifaces, this, this.httpServiceProps);
+
+        this.active = true;
     }
 
     public void stop()
     {
+        this.active = false;
+
         if ( this.httpServiceReg != null )
         {
             this.httpServiceReg.unregister();
@@ -134,8 +139,7 @@ public final class HttpServiceFactory
     @Override
     public HttpService getService(final Bundle bundle, final ServiceRegistration<HttpService> reg)
     {
-        final ServletContext servletContext = this.context;
-        if ( servletContext != null ) {
+        if ( active ) {
             return new PerBundleHttpServiceImpl(bundle,
                     this.sharedHttpService,
                     this.context,
