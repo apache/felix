@@ -196,6 +196,7 @@ public abstract class AbstractDecorator  {
         for (Component component : m_services.values()) {
             m_manager.remove(component);
         }
+        m_services.clear();
     }    
     
     public void configureAutoConfigState(Component target, ComponentContext source) {
