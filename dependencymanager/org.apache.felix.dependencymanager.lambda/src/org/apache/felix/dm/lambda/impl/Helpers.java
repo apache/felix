@@ -143,7 +143,7 @@ public class Helpers {
         String defaultRequiredDependency = ctx.getProperty(DEFAULT_REQUIRED_DEPENDENCY);
         if (defaultRequiredDependency != null) {
             defaultRequiredDependency = defaultRequiredDependency.trim();
-            String componentName = c.getComponentDeclaration().getName();
+            String componentName = c.getComponentDeclaration().getClassName();
             for (String pkg : defaultRequiredDependency.split(",")) {
                 if (componentName.startsWith(pkg)) {
                     return true;
