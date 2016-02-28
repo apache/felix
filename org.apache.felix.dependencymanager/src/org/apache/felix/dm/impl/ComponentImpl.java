@@ -719,7 +719,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             // The component does not provide a service, use the component definition as the name.
             Object componentDefinition = m_componentDefinition;
             if (componentDefinition != null) {
-                getName(componentDefinition, sb);
+                sb.append(toString(componentDefinition));
             } else { 
                 // No component definition means we are using a factory. If the component instance is available use it as the component name,
                 // alse use teh factory object as the component name.
@@ -730,7 +730,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
                     // Check if a factory is set.
                     Object instanceFactory = m_instanceFactory;
                     if (instanceFactory != null) {
-                        getName(instanceFactory, sb);
+                        sb.append(toString(instanceFactory));
                     } else {
                         sb.append(super.toString());
                     }
@@ -740,22 +740,22 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         return sb.toString();
     }
     
-    private void getName(Object implementation, StringBuffer sb) {
+    private String toString(Object implementation) {
         if (implementation instanceof Class) {
-            sb.append(((Class<?>) implementation).getName());
+            return (((Class<?>) implementation).getName());
         } else {
             // If the implementation instance does not override "toString", just display
             // the class name, else display the component using its toString method
             try {
             Method m = implementation.getClass().getMethod("toString", new Class[0]);
                 if (m.getDeclaringClass().equals(Object.class)) {
-                    sb.append(implementation.getClass().getName());
+                    return implementation.getClass().getName();
                 } else {
-                    sb.append(implementation.toString());
+                    return implementation.toString();
                 }
             }  catch (java.lang.NoSuchMethodException e) {
                 // Just display the class name
-                sb.append(implementation.getClass().getName());
+                return implementation.getClass().getName();
             }
         }
     }
@@ -790,7 +790,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         
         Object instanceFactory = m_instanceFactory;
         if (instanceFactory != null) {
-            return instanceFactory.getClass().getName();
+            return toString(instanceFactory);
         } else {
             // unexpected.
             return ComponentImpl.class.getName();
