@@ -67,7 +67,7 @@ javac.target:          1.8
 
 
 ## To enable baselining, uncomment the following lines:
-#-baseline: *
+-baseline: *
 
 ## If you use git, you might want to uncomment the following lines:
 # Git-Descriptor:       ${system-allow-fail;git describe --dirty --always}
@@ -78,4 +78,4 @@ javac.target:          1.8
 # Removes some headers in order to reduce binary diff between same bundles that are not changed between subsequent releases.
 # see FELIX-4915
 #
--removeheaders: Bnd-LastModified,Tool,Created-By
+-removeheaders: Bnd-LastModified,Tool,Created-By,Include-Resource
