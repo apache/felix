@@ -27,8 +27,6 @@ import org.osgi.framework.ServiceReference;
 
 /**
  * Builds a Dependency Manager Service Dependency. 
- * <p> When a service dependency is not explicitly defined as "required" or "optional", then it is assumed to be required by default.
- * 
  * <p> Sample code:
  * 
  * <pre> {@code
@@ -36,11 +34,13 @@ import org.osgi.framework.ServiceReference;
  *    public void init(BundleContext ctx, DependencyManager dm) throws Exception {
  *       component(comp -> comp
  *          .impl(Pojo.class)
- *          .withSrv(ConfigurationAdmin.class, "(vendor=apache)") // required service with a filter, injected in class field
- *          .withSrv(Coordinator.class, LogService.class) // varargs of required dependencies injected on class fields
- *          .withSrv(HttpService.class, svc -> srv.add(Pojo::setHttpService)) // required dependency injected using a method ref
- *          .withSrv(ConnectorService.class, svc -> svc.optional()) // optional dependency, injected in class field with a NullObject if unavailable (before start() callback).
- *          .withSrv(Tracked.class, srv -> srv.optional().add(Pojo::addTracked)) // optional dependency, injected using method ref, after the start() callback
+ *          .withSvc(ConfigurationAdmin.class, LogService.class) // varargs of optional (possibly NullObjects) dependencies injected in compatible class fields
+ *          .withSvc(true, Coordinator.class, LogService.class) // varargs of required dependencies injected in compatible class fields
+ *          .withSvc(ConfigurationAdmin.class, "(vendor=apache)") // service with a filter, injected in compatible class fields
+ *          .withSvc(ConfigurationAdmin.class, "(vendor=apache)", true) // required service with a filter, injected in compatible class fields
+ *          .withSvc(ConfigurationAdmin.class, "(vendor=apache)", true, "field") // required service with a filter, injected in a given class field name
+ *          .withSvc(HttpService.class, svc -> svc.required().add(Pojo::setHttpService)) // required dependency injected using a method reference
+ *          .withSvc(Tracked.class, svc -> svc.optional().add(Pojo::addTracked)) // optional dependency, injected using method ref, after the start() callback
  *    }
  * }}</pre>
  * 

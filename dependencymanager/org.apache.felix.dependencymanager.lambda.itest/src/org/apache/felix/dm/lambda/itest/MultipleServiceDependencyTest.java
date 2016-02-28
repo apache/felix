@@ -35,7 +35,7 @@ public class MultipleServiceDependencyTest extends TestBase {
        // create a service provider and consumer
        Component provider = component(m).impl(new ServiceProvider(e)).provides(ServiceInterface.class.getName()).build();
        Component providerWithHighRank = component(m).impl(new ServiceProvider2(e)).provides(ServiceInterface.class.getName(), Constants.SERVICE_RANKING, Integer.valueOf(5)).build();
-       Component consumer = component(m).impl(new ServiceConsumer(e)).withSvc(ServiceInterface.class).build();
+       Component consumer = component(m).impl(new ServiceConsumer(e)).withSvc(ServiceInterface.class, true).build();
        m.add(provider);
        m.add(providerWithHighRank);
        m.add(consumer);
@@ -55,7 +55,7 @@ public class MultipleServiceDependencyTest extends TestBase {
        // create a service provider and consumer
        Component provider = component(m).impl(new ServiceProvider(e)).provides(ServiceInterface.class.getName()).build();
        Component provider2 = component(m).impl(new ServiceProvider2(e)).provides(ServiceInterface.class.getName()).build();
-       Component consumer = component(m).impl(new ServiceConsumer(e)).withSvc(ServiceInterface.class).build();
+       Component consumer = component(m).impl(new ServiceConsumer(e)).withSvc(ServiceInterface.class, true).build();
        m.add(provider2);
        m.add(consumer);
        e.waitForStep(3, 5000);

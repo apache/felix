@@ -20,14 +20,16 @@ package org.apache.felix.dm.lambda.samples.future;
 
 import static org.apache.felix.dm.lambda.DependencyManagerActivator.component;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.felix.dm.Component;
 import org.osgi.service.log.LogService;
@@ -73,19 +75,12 @@ public class PageLinksImpl implements PageLinks {
 		return m_links;
 	}
 
-	private String download(String url) {
-		try (Scanner in = new Scanner(new URL(url).openStream())) {
-			StringBuilder builder = new StringBuilder();
-			while (in.hasNextLine()) {
-				builder.append(in.nextLine());
-				builder.append("\n");
-			}
-			return builder.toString();
-		} catch (IOException ex) {
-			RuntimeException rex = new RuntimeException();
-			rex.initCause(ex);
-			throw rex;
-		}
+	public static String download(String url) { 
+	    try (BufferedReader buffer = new BufferedReader(new InputStreamReader(new URL(url).openStream()))) { 
+	        return buffer.lines().collect(Collectors.joining("\n"));
+	    } catch (IOException ex) {
+	        throw new RuntimeException(ex);
+	    }
 	}
 	
 	private List<String> parseLinks(String content) {		 

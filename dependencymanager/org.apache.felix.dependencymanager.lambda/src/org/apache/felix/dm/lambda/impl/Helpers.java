@@ -30,14 +30,17 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.apache.felix.dm.Component;
+import org.apache.felix.dm.context.ComponentContext;
 import org.apache.felix.dm.lambda.callbacks.SerializableLambda;
+import org.osgi.framework.BundleContext;
 
 /**
  * Various helper methods related to generics and lambda expressions.
  */
 public class Helpers {
 	private final static Pattern LAMBDA_INSTANCE_METHOD_TYPE = Pattern.compile("(L[^;]+)+");
-
+	private final static String DEFAULT_REQUIRED_DEPENDENCY = "org.apache.felix.dependencymanager.lambda.defaultRequiredDependency";
+	
 	/**
 	 * Gets the class name of a given object.
 	 * @param obj the object whose class has to be returned.
@@ -129,6 +132,29 @@ public class Helpers {
     }
 
     /**
+     * Is a dependency required by default ?
+     * 
+     * @param c the component on which the dependency is added
+     * @param ctx the bundle context
+     * @return true if the dependency is required by default, false if not
+     */
+    public static boolean isDependencyRequiredByDefault(Component c) {
+        BundleContext ctx = ((ComponentContext) c).getBundleContext();
+        String defaultRequiredDependency = ctx.getProperty(DEFAULT_REQUIRED_DEPENDENCY);
+        if (defaultRequiredDependency != null) {
+            defaultRequiredDependency = defaultRequiredDependency.trim();
+            String componentName = c.getComponentDeclaration().getName();
+            for (String pkg : defaultRequiredDependency.split(",")) {
+                if (componentName.startsWith(pkg)) {
+                    return true;
+                }
+            }            
+        }        
+        
+        return false;
+    }
+    
+    /**
      * Extracts the actual types of all lambda generic parameters.
      * Example: for "BiConsumer<String, Integer>", this method returns ["java.lang.String", "java.lang.Integer"].
      */
@@ -161,5 +187,5 @@ public class Helpers {
             .findFirst()
             .orElseThrow(() -> new RuntimeException("Lambda Method not found"));
     }
-    
+
 }

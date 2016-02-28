@@ -35,7 +35,7 @@ public class AspectChainTest extends TestBase {
         Ensure e = new Ensure();
         // create a service provider and consumer
         Component sp = component(m).impl(new ServiceProvider(e)).provides(ServiceInterface.class).build();
-        Component sc = component(m).impl(new ServiceConsumer(e)).withSvc(ServiceInterface.class).build();
+        Component sc = component(m).impl(new ServiceConsumer(e)).withSvc(ServiceInterface.class, true).build();
         Component sa2 = aspect(m, ServiceInterface.class).rank(20).impl(new ServiceAspect(e, 3)).build();
         Component sa3 = aspect(m, ServiceInterface.class).rank(30).impl(new ServiceAspect(e, 2)).build();
         Component sa1 = aspect(m, ServiceInterface.class).rank(10).impl(new ServiceAspect(e, 4)).build();

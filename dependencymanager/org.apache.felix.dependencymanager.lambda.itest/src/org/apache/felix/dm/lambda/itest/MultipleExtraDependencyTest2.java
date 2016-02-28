@@ -44,7 +44,7 @@ public class MultipleExtraDependencyTest2 extends TestBase {
         Component sp = component(m)
             .impl(ServiceProvider.class)
             .provides(ServiceInterface.class, "foo", "bar")                            
-            .init(ServiceProvider::init).start(ServiceProvider::start).stop(ServiceProvider::stop)
+            .init("init").start("start").stop("stop")
             .build();
         
         Component sc = component(m)

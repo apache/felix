@@ -45,7 +45,7 @@ public class BundleDependencyBuilderImpl implements BundleDependencyBuilder {
 	private Object m_instance;
 	private boolean m_autoConfig = true;
 	private boolean m_autoConfigInvoked = false;
-	private boolean m_required = true;
+	private boolean m_required;
 	private Bundle m_bundle;
 	private String m_filter;
 	private int m_stateMask = -1;
@@ -54,6 +54,7 @@ public class BundleDependencyBuilderImpl implements BundleDependencyBuilder {
 	private String m_propagateMethod;
 	private Function<Bundle, Dictionary<?, ?>> m_propagateCallback;
 	private final Component m_component;
+	private boolean m_requiredSet;
     
     enum Cb {
         ADD,        
@@ -98,7 +99,13 @@ public class BundleDependencyBuilderImpl implements BundleDependencyBuilder {
     @Override
     public BundleDependencyBuilder required(boolean required) {
         m_required = required;
+        m_requiredSet = true;
         return this;
+    }
+    
+    @Override
+    public BundleDependencyBuilder optional() {
+        return required(false);
     }
 
     @Override
@@ -292,6 +299,9 @@ public class BundleDependencyBuilderImpl implements BundleDependencyBuilder {
         DependencyManager dm = m_component.getDependencyManager();
 
         BundleDependency dep = dm.createBundleDependency();
+        if (! m_requiredSet) {
+            m_required = Helpers.isDependencyRequiredByDefault(m_component);
+        }
         dep.setRequired(m_required);
         
         if (m_filter != null) {

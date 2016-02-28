@@ -12,16 +12,18 @@ Release Notes - Felix - Version org.apache.felix.dependencymanager-r7
     * [FELIX-5188] - No error log when a factory pid adapter update callback is not found
     * [FELIX-5192] - ConfigurationDependency race condition when component is stopped
     * [FELIX-5193] - Factory Pid Adapter race condition when component is stopped
-
+    * [FELIX-5200] - Factory configuration adapter not restarted
+    
 ** Improvement
-    * [FELIX-4689] - Create a more fluent syntax for the dependency manager builder
+    * [FELIX-5126] - Build DM using Java 8
     * [FELIX-5164] - Add support for callback instance in Aspects
     * [FELIX-5177] - Support injecting configuration proxies
     * [FELIX-5180] - Support for Java8 Repeatable Properties in DM annotations.
     * [FELIX-5182] - Cleanup DM samples
+    * [FELIX-5201] - Improve how components are displayed with gogo shell
 
 ** New Feature
-    * [FELIX-5126] - Build DM using Java 8
+    * [FELIX-4689] - Create a more fluent syntax for the dependency manager builder
 
 Release Notes - Felix - Version org.apache.felix.dependencymanager-r6
 ======================================================================

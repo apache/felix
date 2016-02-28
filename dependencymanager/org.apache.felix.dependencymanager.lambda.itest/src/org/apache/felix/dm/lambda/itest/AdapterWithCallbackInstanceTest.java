@@ -41,7 +41,7 @@ public class AdapterWithCallbackInstanceTest extends TestBase {
 
         ServiceProvider serviceProvider = new ServiceProvider(e);
         Component provider = component(m).provides(OriginalService.class).impl(serviceProvider).build();
-        Component consumer = component(m).impl(new ServiceConsumer(e)).withSvc(AdaptedService.class).build();
+        Component consumer = component(m).impl(new ServiceConsumer(e)).withSvc(AdaptedService.class, true).build();
         
         ServiceAdapterCallbackInstance callbackInstance = new ServiceAdapterCallbackInstance(e);
         Component adapter = adapter(m, OriginalService.class)
@@ -82,7 +82,7 @@ public class AdapterWithCallbackInstanceTest extends TestBase {
 
         ServiceProvider serviceProvider = new ServiceProvider(e);
         Component provider = component(m).provides(OriginalService.class).impl(serviceProvider).build();
-        Component consumer = component(m).impl(new ServiceConsumer(e)).withSvc(AdaptedService.class).build();
+        Component consumer = component(m).impl(new ServiceConsumer(e)).withSvc(AdaptedService.class, true).build();
         
         ServiceAdapterCallbackInstance callbackInstance = new ServiceAdapterCallbackInstance(e);
         Component adapter = adapter(m, OriginalService.class, adp -> adp

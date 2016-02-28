@@ -40,8 +40,7 @@ import org.apache.felix.dm.lambda.callbacks.InstanceCbServiceService;
 import org.apache.felix.dm.lambda.callbacks.InstanceCbServiceServiceComponent;
 
 /**
- * Builds a service dependency callback. When a service dependency is not explicitly defined as "required" or "optional", 
- * then it is assumed to be required by default.
+ * Builds a service dependency callback. 
  * 
  * <p> A Service may be injected in a bind-method of a component or an object instance using this builder.
  * The builder supports reflection based callbacks (same as with the original DM API), as well as java8 method reference based callbacks.

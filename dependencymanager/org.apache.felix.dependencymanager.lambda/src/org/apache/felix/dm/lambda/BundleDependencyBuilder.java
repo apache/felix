@@ -30,7 +30,6 @@ import org.osgi.framework.Bundle;
 
 /**
  * Builds a Dependency Manager Bundle Dependency. 
- * When a bundle dependency is not explicitly defined as "required" or "optional", then it is assumed to be required by default.
  * 
  * <p> Example of a Pojo Component which tracks a started bundle having a given bundle symbolic name:
  * 
@@ -78,6 +77,13 @@ public interface BundleDependencyBuilder extends DependencyBuilder<BundleDepende
      * @return the bundle dependency builder
      */
     public BundleDependencyBuilder required();
+
+    /**
+     * Sets the dependency to be optional.
+     * 
+     * @return the bundle dependency builder
+     */
+    public BundleDependencyBuilder optional();
 
     /**
      * Sets the bundle to depend on directly.

@@ -53,7 +53,7 @@ public class DictionaryImpl implements DictionaryService {
      * Our Dictionary language.
      */
     private String m_lang;
-
+    
     /**
      * Our service will be initialized from ConfigAdmin.
      * @param config The configuration where we'll lookup our words list (key=".words").

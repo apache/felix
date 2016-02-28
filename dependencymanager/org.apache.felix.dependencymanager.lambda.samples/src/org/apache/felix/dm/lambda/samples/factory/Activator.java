@@ -36,7 +36,6 @@ public class Activator extends DependencyManagerActivator {
         component(comp -> comp
             .factory(ProviderFactory::new, ProviderFactory::create)       
             .provides(Provider.class)
-            .start(ProviderImpl::start)                      
-            .withSvc(LogService.class, log -> log.add(ProviderImpl::set)));
+            .withSvc(LogService.class, log -> log.required().add(ProviderImpl::set)));
     }
 }

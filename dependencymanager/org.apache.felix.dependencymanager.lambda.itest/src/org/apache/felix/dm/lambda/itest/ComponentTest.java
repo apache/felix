@@ -54,6 +54,30 @@ public class ComponentTest extends TestBase {
         m_ensure.waitForStep(5, 5000);
     }
     
+    public void testSimple2() throws Exception {
+        final DependencyManager dm = getDM();
+
+        // Create consumer (dependency is required by default using builder api).
+        component(dm, comp -> comp
+                .factory(Consumer::new)
+                .withSvc(Provider.class, srv -> srv.filter("(name=provider2)").add("add").remove("remove"))
+                .withSvc(Provider.class, "(name=provider1)", "m_autoConfiguredProvider", true));
+                
+        // Create providers (auto added to dependency manager)
+        component(dm, comp -> comp
+                .impl(new Provider() { public String toString() { return "provider1";}})
+                .provides(Provider.class).properties("name", "provider1"));
+                
+        component(dm, comp -> comp
+                .impl(new Provider() { public String toString() { return "provider2";}})
+                .provides(Provider.class).properties("name", "provider2"));
+                
+        m_ensure.waitForStep(2, 5000);
+        dm.clear();
+        m_ensure.waitForStep(5, 5000);
+    }
+
+    
     public static interface Provider {    	
     }
     

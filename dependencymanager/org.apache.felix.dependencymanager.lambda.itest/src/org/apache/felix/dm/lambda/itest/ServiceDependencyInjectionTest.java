@@ -34,7 +34,7 @@ public class ServiceDependencyInjectionTest extends TestBase {
         // create a service provider and consumer
         ServiceProvider provider = new ServiceProvider(e);
         Component sp = component(m).impl(provider).provides(ServiceInterface2.class.getName()).build();
-        Component sc = component(m).impl(new ServiceConsumer()).withSvc(ServiceInterface2.class).build();
+        Component sc = component(m).impl(new ServiceConsumer()).withSvc(ServiceInterface2.class, true).build();
            
         Component sc2 = component(m) // all dependencies are optional
             .impl(new ServiceConsumerNamedInjection(false, false)) 

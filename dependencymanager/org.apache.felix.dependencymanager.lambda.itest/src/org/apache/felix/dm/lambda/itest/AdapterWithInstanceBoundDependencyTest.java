@@ -38,7 +38,7 @@ public class AdapterWithInstanceBoundDependencyTest extends TestBase {
         
         Component sp = component(m).provides(ServiceInterface.class).impl(new ServiceProvider(e)).build();
         Component sp2 = component(m).provides(ServiceInterface2.class).impl(new ServiceProvider2(e)).build();
-        Component sc = component(m).impl(new ServiceConsumer(e)).autoAdd(false).withSvc(ServiceInterface3.class).build();
+        Component sc = component(m).impl(new ServiceConsumer(e)).autoAdd(false).withSvc(ServiceInterface3.class, true).build();
         Component sa = adapter(m, ServiceInterface.class).provides(ServiceInterface3.class).impl(new ServiceAdapter(e)).build();
         m.add(sc);
         m.add(sp);
@@ -106,7 +106,7 @@ public class AdapterWithInstanceBoundDependencyTest extends TestBase {
         }
         public void init() {
             m_ensure.step(1);
-            component(m_component, c->c.withSvc(ServiceInterface2.class));
+            component(m_component, c->c.withSvc(ServiceInterface2.class, true));
         }
         public void start() {
             m_ensure.step(2);

@@ -39,7 +39,7 @@ public class CFDependencyTest extends TestBase {
         // Create a consumer depending on a Provider and on the result of a CF.
         // (the CF dependency is added from the Consumer.init() method).
         CompletableFuture<String> cf = new CompletableFuture<>();
-        Component consumer = component(dm).impl(new Consumer(cf)).withSvc(Provider.class).build();
+        Component consumer = component(dm).impl(new Consumer(cf)).withSvc(Provider.class, true).build();
                         
         // Create provider
         Component provider = component(dm).impl(new ProviderImpl()).provides(Provider.class).build();

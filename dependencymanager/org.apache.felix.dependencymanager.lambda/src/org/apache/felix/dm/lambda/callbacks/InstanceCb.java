@@ -30,13 +30,13 @@ public interface InstanceCb {
     /**
      * Implements the callback method.
      */
-    void cb();
+    void callback();
 
     default InstanceCb andThen(InstanceCb after) {
         Objects.requireNonNull(after);
         return () -> {
-            cb();
-            after.cb();
+            callback();
+            after.callback();
         };
     }
 }

@@ -35,7 +35,7 @@ public interface CbService<T, S> extends SerializableLambda {
      */
     void accept(T instance, S service);
 
-    default CbFuture<T, S> andThen(CbFuture<? super T, S> after) {
+    default CbService<T, S> andThen(CbService<? super T, S> after) {
         Objects.requireNonNull(after);
         return (T instance, S service) -> {
             accept(instance, service);

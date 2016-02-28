@@ -148,7 +148,7 @@ public class AutoConfigTest extends TestBase {
     }
 
     private Component createConsumer(DependencyManager dm, Object consumer) {
-        return component(dm).impl(consumer).withSvc(Provider.class).build();
+        return component(dm).impl(consumer).withSvc(Provider.class, true).build();
     }
 
     public static interface Provider extends Runnable {      
