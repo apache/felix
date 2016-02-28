@@ -117,7 +117,7 @@ public class AdapterWithModifiedInstanceBoundDependencyTest extends TestBase {
 
         Component a = component(m).impl(new AImpl(e)).provides(A.class).properties(foo -> "bar").build();
         Component b = adapter(m, A.class).provides(B.class).impl(new BImpl(e)).add("addA").change("changeA").remove("removeA").build();
-        Component c = component(m).impl(new CImpl()).provides(C.class).withSvc(A.class, "(foo=bar)").build();
+        Component c = component(m).impl(new CImpl()).provides(C.class).withSvc(A.class, "(foo=bar)", true).build();
                       
         m.add(a);
         m.add(c);

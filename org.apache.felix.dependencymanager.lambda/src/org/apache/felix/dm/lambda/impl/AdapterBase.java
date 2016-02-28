@@ -30,8 +30,6 @@ import org.apache.felix.dm.lambda.ConfigurationDependencyBuilder;
 import org.apache.felix.dm.lambda.FluentProperty;
 import org.apache.felix.dm.lambda.FutureDependencyBuilder;
 import org.apache.felix.dm.lambda.ServiceDependencyBuilder;
-import org.apache.felix.dm.lambda.callbacks.Cb;
-import org.apache.felix.dm.lambda.callbacks.CbComponent;
 import org.apache.felix.dm.lambda.callbacks.InstanceCb;
 import org.apache.felix.dm.lambda.callbacks.InstanceCbComponent;
 
@@ -175,16 +173,6 @@ public interface AdapterBase<B extends ComponentBuilder<B>> extends ComponentBui
         return (B) this;
     }
     
-    default B withSvc(Class<?> service, String filter) {
-        andThenBuild(compBuilder -> compBuilder.withSvc(service, filter));
-        return (B) this;
-    }
-
-    default B withSvc(Class<?> ... services) {
-        andThenBuild(compBuilder -> compBuilder.withSvc(services));
-        return (B) this;
-    }
-
     default <U> B withSvc(Class<U> service, Consumer<ServiceDependencyBuilder<U>> consumer) {
         andThenBuild(compBuilder -> compBuilder.withSvc(service, consumer));
         return (B) this;
@@ -204,13 +192,23 @@ public interface AdapterBase<B extends ComponentBuilder<B>> extends ComponentBui
         andThenBuild(compBuilder -> compBuilder.withFuture(future, consumer));
         return (B) this;
     }
-    
-    default B lifecycleCallbackInstance(Object lifecycleCallbackInstance) {
-        andThenBuild(compBuilder -> compBuilder.lifecycleCallbackInstance(lifecycleCallbackInstance));
+        
+    default B init(String callback) {
+        andThenBuild(compBuilder -> compBuilder.init(callback));
         return (B) this;
     }
     
-    default B init(String callback) {
+    default B init(Object callbackInstance, String callback) {
+        andThenBuild(compBuilder -> compBuilder.init(callbackInstance, callback));
+        return (B) this;
+    }
+    
+    default B init(InstanceCb callback) {
+        andThenBuild(compBuilder -> compBuilder.init(callback));
+        return (B) this;
+    }
+        
+    default B init(InstanceCbComponent callback) {
         andThenBuild(compBuilder -> compBuilder.init(callback));
         return (B) this;
     }
@@ -220,7 +218,37 @@ public interface AdapterBase<B extends ComponentBuilder<B>> extends ComponentBui
         return (B) this;
     }
 
+    default B start(Object callbackInstance, String callback) {
+        andThenBuild(compBuilder -> compBuilder.start(callbackInstance, callback));
+        return (B) this;
+    }
+
+    default B start(InstanceCb callback) {
+        andThenBuild(compBuilder -> compBuilder.start(callback));
+        return (B) this;
+    }
+        
+    default B start(InstanceCbComponent callback) {
+        andThenBuild(compBuilder -> compBuilder.start(callback));
+        return (B) this;
+    }
+
     default B stop(String callback) {
+        andThenBuild(compBuilder -> compBuilder.stop(callback));
+        return (B) this;
+    }
+
+    default B stop(Object callbackInstance, String callback) {
+        andThenBuild(compBuilder -> compBuilder.stop(callbackInstance, callback));
+        return (B) this;
+    }
+
+    default B stop(InstanceCb callback) {
+        andThenBuild(compBuilder -> compBuilder.stop(callback));
+        return (B) this;
+    }
+        
+    default B stop(InstanceCbComponent callback) {
         andThenBuild(compBuilder -> compBuilder.stop(callback));
         return (B) this;
     }
@@ -230,83 +258,18 @@ public interface AdapterBase<B extends ComponentBuilder<B>> extends ComponentBui
         return (B) this;
     }
         
-    default <U> B init(Cb<U> callback) {
-        andThenBuild(compBuilder -> compBuilder.init(callback));
+    default B destroy(Object callbackInstance, String callback) {
+        andThenBuild(compBuilder -> compBuilder.destroy(callbackInstance, callback));
         return (B) this;
     }
-    
-    default <U> B start(Cb<U> callback) {
-        andThenBuild(compBuilder -> compBuilder.start(callback));
-        return (B) this;
-    }
-
-    default <U> B stop(Cb<U> callback) {
-        andThenBuild(compBuilder -> compBuilder.stop(callback));
-        return (B) this;
-    }
-
-    default <U> B destroy(Cb<U> callback) {
+        
+    default B destroy(InstanceCb callback) {
         andThenBuild(compBuilder -> compBuilder.destroy(callback));
         return (B) this;
     }
-        
-    default <U> B init(CbComponent<U> callback) {
-        andThenBuild(compBuilder -> compBuilder.init(callback));
-        return (B) this;
-    }
-        
-    default <U> B start(CbComponent<U> callback) {
-        andThenBuild(compBuilder -> compBuilder.start(callback));
-        return (B) this;
-    }
-        
-    default <U> B stop(CbComponent<U> callback) {
-        andThenBuild(compBuilder -> compBuilder.stop(callback));
-        return (B) this;
-    }
-        
-    default <U> B destroy(CbComponent<U> callback) {
+     
+    default B destroy(InstanceCbComponent callback) {
         andThenBuild(compBuilder -> compBuilder.destroy(callback));
-        return (B) this;
-    }
-        
-    default B initInstance(InstanceCb callback) {
-        andThenBuild(compBuilder -> compBuilder.initInstance(callback));
-        return (B) this;
-    }
-        
-    default B startInstance(InstanceCb callback) {
-        andThenBuild(compBuilder -> compBuilder.startInstance(callback));
-        return (B) this;
-    }
-        
-    default B stopInstance(InstanceCb callback) {
-        andThenBuild(compBuilder -> compBuilder.stopInstance(callback));
-        return (B) this;
-    }
-        
-    default B destroyInstance(InstanceCb callback) {
-        andThenBuild(compBuilder -> compBuilder.destroyInstance(callback));
-        return (B) this;
-    }
-        
-    default B initInstance(InstanceCbComponent callback) {
-        andThenBuild(compBuilder -> compBuilder.initInstance(callback));
-        return (B) this;
-    }
-
-    default B startInstance(InstanceCbComponent callback) {
-        andThenBuild(compBuilder -> compBuilder.startInstance(callback));
-        return (B) this;
-    }
-
-    default B stopInstance(InstanceCbComponent callback) {
-        andThenBuild(compBuilder -> compBuilder.stopInstance(callback));
-        return (B) this;
-    }
-
-    default B destroyInstance(InstanceCbComponent callback) {
-        andThenBuild(compBuilder -> compBuilder.destroyInstance(callback));
         return (B) this;
     }
 

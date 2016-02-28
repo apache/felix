@@ -44,8 +44,11 @@ Test-Cases:  \
 javac.source:          1.8
 javac.target:          1.8
 -tester: biz.aQute.junit
+
+# all tests are configured to assume that dependencies are required by default
 -runproperties:  \
 	org.apache.felix.dependencymanager.loglevel=2,\
+	org.apache.felix.dependencymanager.lambda.defaultRequiredDependency=org.apache.felix.dm.lambda.itest,\
 	org.apache.felix.log.maxSize=100000,\
 	org.apache.felix.log.storeDebug=true,\
 	gosh.args=--noshutdown

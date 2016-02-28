@@ -54,13 +54,13 @@ public class FactoryConfigurationAdapterTest extends TestBase
         
         // Create a Configuration instance, which will create/update/remove a configuration for factoryPid "MyFactoryPid"
         ConfigurationCreator configurator = new ConfigurationCreator("MyFactoryPid", "key", "value1");
-        Component s1 = component(m).impl(configurator).withSvc(ConfigurationAdmin.class).build();
+        Component s1 = component(m).impl(configurator).withSvc(ConfigurationAdmin.class, true).build();
            
         // Create an Adapter that will be instantiated, once the configuration is created.
         // This Adapter provides an AdapterService, and depends on an AdapterExtraDependency service.
         Component s2 = factoryPidAdapter(m)
             .factoryPid("MyFactoryPid").impl(adapterImplClass).update(adapterUpdate).propagate().provides(AdapterService.class, "foo", "bar")            
-            .withSvc(AdapterExtraDependency.class)
+            .withSvc(AdapterExtraDependency.class, true)
             .build();
                     
         // Create extra adapter service dependency upon which our adapter depends on.

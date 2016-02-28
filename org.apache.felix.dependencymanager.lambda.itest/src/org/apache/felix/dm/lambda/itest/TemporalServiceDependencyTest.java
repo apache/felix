@@ -18,6 +18,7 @@
  */
 package org.apache.felix.dm.lambda.itest;
 
+import static org.apache.felix.dm.lambda.DependencyManagerActivator.adapter;
 import static org.apache.felix.dm.lambda.DependencyManagerActivator.component;
 import static org.apache.felix.dm.lambda.DependencyManagerActivator.serviceDependency;
 
@@ -110,7 +111,7 @@ public class TemporalServiceDependencyTest extends TestBase {
         TemporalServiceProvider2 provider2 = new TemporalServiceProvider2(e);
         Component sp2 = component(m).impl(provider2).provides(TemporalServiceInterface.class.getName()).build();
         TemporalServiceConsumerAdapterWithCallback consumer = new TemporalServiceConsumerAdapterWithCallback(e);
-        Component sc = m.createAdapterService(Adaptee.class, null).setImplementation(consumer);
+        Component sc = adapter(m, Adaptee.class).impl(consumer).build();
         ServiceDependency temporalDep = serviceDependency(sc, TemporalServiceInterface.class).timeout(10000).add("add").remove("remove").build();
         sc.add(temporalDep);
         Component adaptee = component(m).impl(new Adaptee()).provides(Adaptee.class.getName()).build();

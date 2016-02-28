@@ -51,7 +51,7 @@ public class Activator extends DependencyManagerActivator {
         component(comp -> comp
             .factory(() -> new PageLinksImpl("http://felix.apache.org/"))
             .provides(PageLinks.class)
-            .withSvc(LogService.class, log -> log.add(PageLinksImpl::bind)));
+            .withSvc(LogService.class, log -> log.required().add(PageLinksImpl::bind)));
         
         // Just wait for the PageLinks service and display all links found from the Felix web site.
         component(comp -> comp.impl(this).withSvc(PageLinks.class, page -> page.add(this::setPageLinks))); 

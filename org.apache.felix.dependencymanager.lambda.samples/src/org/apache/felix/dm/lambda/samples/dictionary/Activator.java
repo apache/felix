@@ -42,7 +42,7 @@ public class Activator extends DependencyManagerActivator {
             .provides(DictionaryService.class)
             .propagate()
             .update(DictionaryConfiguration.class, DictionaryImpl::updated)
-            .withSvc(LogService.class));
+            .withSvc(LogService.class, true));
                             
         // Create the Dictionary Aspect that decorates any registered Dictionary service. For each Dictionary, an instance of the 
         // DictionaryAspect service is created).
@@ -50,14 +50,13 @@ public class Activator extends DependencyManagerActivator {
             .impl(DictionaryAspect.class)
             .filter("(lang=en)").rank(10)
             .withCnf(conf -> conf.update(DictionaryAspectConfiguration.class, DictionaryAspect::addWords))
-            .withSvc(LogService.class));
+            .withSvc(LogService.class, true));
                     
         // Create the SpellChecker component. It depends on all available DictionaryService instances, possibly
         // decorated by some DictionaryAspects.
         component(comp -> comp
             .impl(SpellChecker.class)
             .provides(SpellChecker.class, COMMAND_SCOPE, "dictionary", COMMAND_FUNCTION, new String[] {"spellcheck"}) 
-            .withSvc(DictionaryService.class)
-            .withSvc(LogService.class));
+            .withSvc(true, LogService.class, DictionaryService.class));
     }
 }

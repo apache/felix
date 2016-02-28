@@ -85,6 +85,11 @@ import org.osgi.framework.BundleContext;
  *     }
  * }
  * }</pre>
+ * 
+ * When a dependency is not explicitly defined as "required" or "optional", 
+ * then it is assumed to be optional by default, like it is the case with the original DM API.
+ * You can change the default mode using the "org.apache.felix.dependencymanager.lambda.defaultRequiredDependency system property"
+ * (see Felix dm-lambda online documentation).
  */
 public abstract class DependencyManagerActivator implements BundleActivator {    
 	/**

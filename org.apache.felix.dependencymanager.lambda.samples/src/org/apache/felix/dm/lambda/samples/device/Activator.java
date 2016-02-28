@@ -46,8 +46,8 @@ public class Activator extends DependencyManagerActivator {
         // Creates a component that simply displays all available DeviceParameter adapter services.
         component(comp -> comp
             .impl(DeviceAccessConsumer.class)
-            .withSvc(LogService.class)
-            .withSvc(DeviceAccess.class, device -> device.add(DeviceAccessConsumer::add)));       
+            .withSvc(LogService.class, true)
+            .withSvc(DeviceAccess.class, device -> device.required().add(DeviceAccessConsumer::add)));       
     }
     
     private void createDeviceAndParameter(int id) {

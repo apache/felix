@@ -26,8 +26,6 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.apache.felix.dm.Component;
-import org.apache.felix.dm.lambda.callbacks.Cb;
-import org.apache.felix.dm.lambda.callbacks.CbComponent;
 import org.apache.felix.dm.lambda.callbacks.InstanceCb;
 import org.apache.felix.dm.lambda.callbacks.InstanceCbComponent;
 
@@ -38,13 +36,13 @@ import org.apache.felix.dm.lambda.callbacks.InstanceCbComponent;
  * required dependencies are available. This interface is also the base interface for extended components like 
  * aspects, adapters, etc ...
  *
- * <p> Example of a component that depends on a ConfigurationAdmin service. The dependency is injected by reflection
- * on a class field which type matches the ConfigurationAdmin interface:
+ * <p> Example of a component that depends on a LogServce service. The dependency is injected by reflection
+ * on fields having a compatible type with the LogService interface:
  * 
  * <pre>{@code
  * public class Activator extends DependencyManagerActivator {
  *   public void init(BundleContext ctx, DependencyManager dm) throws Exception {
- *       component(comp -> comp.impl(Configurator.class).withSvc(ConfigurationAdmin.class));
+ *       component(comp -> comp.impl(Pojo.class).withSvc(LogService.class));
  *   }
  * }
  * } </pre>
@@ -356,30 +354,79 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
     B properties(FluentProperty ... properties);  
 
     /**
-     * Adds a required/autoconfig service dependency.
-     * 
-     * @param service the service dependency filter
-     * @param filter the service filter
-     * @return this builder
-     */
-    B withSvc(Class<?> service, String filter);
-
-    /**
-     * Adds in one shot multiple required/autoconfig service dependencies.
-     * @param services the dependencies that are required and that will be injected in any field with the same dependency type.
-     * @return this builder
-     */
-    B withSvc(Class<?> ... services);
-           
-    /**
      * Adds a service dependency built using a Consumer lambda that is provided with a ServiceDependencyBuilder. 
      * 
      * @param <U> the type of the dependency service
      * @param service the service
-     * @param consumer the lambda for building the service dependency
+     * @param consumer the lambda used to build the service dependency
      * @return this builder.
      */
     <U> B withSvc(Class<U> service, Consumer<ServiceDependencyBuilder<U>> consumer);
+    
+    /**
+     * Adds in one shot multiple service dependencies injected in compatible class fields.
+     * 
+     * @param services some dependencies to inject in compatible class fields.
+     * @return this builder
+     */
+    @SuppressWarnings("unchecked")
+    default B withSvc(Class<?> ... services) {
+        Stream.of(services).forEach(s -> withSvc(s, svc -> svc.autoConfig()));
+        return (B) this;
+    }
+
+    /**
+     * Adds in one shot multiple service dependencies injected in compatible class fields.
+     * 
+     * @param required true if the dependency is required, false if not
+     * @param services some dependencies to inject in compatible class fields.
+     * @return this builder
+     */
+    @SuppressWarnings("unchecked")
+    default B withSvc(boolean required, Class<?> ... services) {
+        Stream.of(services).forEach(s -> withSvc(s, svc -> svc.required(required)));
+        return (B) this;
+    }
+    
+    /**
+     * Adds a service dependency injected in compatible class fields.
+     * 
+     * @param service a service dependency
+     * @param required true if the dependency is required, false if not
+     * @return this builder
+     */
+    @SuppressWarnings("unchecked")
+    default B withSvc(Class<?> service, boolean required) {
+        withSvc(service, svc -> svc.required(required));
+        return (B) this;
+    }
+      
+    /**
+     * Adds a service dependency injected in compatible class fields.
+     * 
+     * @param <T> the service dependency type
+     * @param service the service dependency.
+     * @param filter the service filter
+     * @param required true if the dependency is required, false if not
+     * @return this builder
+     */
+    default <T> B withSvc(Class<T> service, String filter, boolean required) {
+        return withSvc(service, svc -> svc.filter(filter).required(required));
+    }
+    
+    /**
+     * Adds a service dependency injected in a given compatible class field.
+     * 
+     * @param <T> the service dependency type
+     * @param service the service dependency
+     * @param filter the service filter
+     * @param field the class field when the dependency has to be injected
+     * @param required true if the dependency is required, false if not
+     * @return this builder
+     */
+    default <T> B withSvc(Class<T> service, String filter, String field, boolean required) {
+        return withSvc(service, svc -> svc.filter(filter).autoConfig(field).required(required));
+    }
     
     /**
      * Adds a configuration dependency.
@@ -402,6 +449,8 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
     /**
      * Adds a configuration dependency using a configuration type. The configuration is injected in an updated callback which takes in argument
      * an implementation of the specified configuration type.
+     * 
+     * @param configType the configuration type that will be injected to the "updated" callback
      * @return this builder
      * @see ConfigurationDependencyBuilder
      */
@@ -425,26 +474,7 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
      * @return this builder.
      */
     <U> B withFuture(CompletableFuture<U> future, Consumer<FutureDependencyBuilder<U>> consumer);
-    
-    /**
-     * Sets the instance to invoke with the reflection based lifecycle callbacks. By default, reflection based 
-     * lifecycle callbacks (init/start/stop/destroy) methods are invoked on the component implementation instance(s).
-     * But you can set a specific callback instance using this method.
-     * <p>
-     * Specifying an instance means you can create a manager
-     * that will be invoked whenever the life cycle of a component changes and this manager
-     * can then decide how to expose this life cycle to the actual component, offering an
-     * important indirection when developing your own component models.
-     * 
-     * @see #init(String) 
-     * @see #start(String)
-     * @see #stop(String)
-     * @see #destroy(String)
-     * @param lifecycleCallbackInstance the instance the lifecycle callback will be invoked on.
-     * @return this builder.
-     */
-    B lifecycleCallbackInstance(Object lifecycleCallbackInstance);
-    
+        
     /**
      * Sets the name of the method used as the "init" callback. This method, when found, is
      * invoked as part of the life cycle management of the component implementation. 
@@ -464,7 +494,52 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
     B init(String callback);
     
     /**
-     * Sets the name of the method used as the "start" callback. This method, when found, is
+     * Sets a callback instance and the name of the method used as the "init" callback. This method, when found, is
+     * invoked as part of the life cycle management of the component implementation. 
+     * This method is useful because when it is invoked, all required dependencies defines in the Activator
+     * are already injected, and you can then add more extra dependencies from the init() method.
+     * And once all extra dependencies will be available and injected, then the "start" callback will be invoked.
+     * <p>The dependency manager will look for a method of this name with the following signatures,
+     * in this order:
+     * <ol>
+     * <li>method(Component component)</li>
+     * <li>method()</li>
+     * </ol>
+     * 
+     * @param callbackInstance a callback instance object the callback is invoked on
+     * @param callback the callback name
+     * @return this builder.
+     */
+    B init(Object callbackInstance, String callback);
+
+    /**
+     * Sets an Object instance method reference used as the "init" callback. It is invoked as part of the life cycle management of the component 
+     * implementation. 
+     * This method is useful because when it is invoked, all required dependencies defines in the Activator
+     * are already injected, and you can then add more extra dependencies from the init() method.
+     * And once all extra dependencies will be available and injected, then the "start" callback will be invoked.
+     * The method does not take any parameters.
+     * 
+     * @param callback an Object instance method reference. The method does not take any parameters.
+     * @return this builder
+     */
+    B init(InstanceCb callback);
+ 
+    /**
+     * Sets an Object instance method reference used as the "init" callback. It is invoked as part of the life cycle management of the component 
+     * implementation. 
+     * This method is useful because when it is invoked, all required dependencies defines in the Activator
+     * are already injected, and you can then add more extra dependencies from the init() method.
+     * And once all extra dependencies will be available and injected, then the "start" callback will be invoked.
+     * The method takes as argument a Component parameter.
+     * 
+     * @param callback an Object instance method reference. The method takes as argument a Component parameter.
+     * @return this builder
+     */
+    B init(InstanceCbComponent callback);
+   
+    /**
+     * Sets a callback instance and the name of the method used as the "start" callback. This method, when found, is
      * invoked as part of the life cycle management of the component implementation. <p>The
      * dependency manager will look for a method of this name with the following signatures,
      * in this order:
@@ -477,6 +552,42 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
      * @return this builder.
      */
     B start(String callback);
+    
+    /**
+     * Sets the name of the method used as the "start" callback. This method, when found, is
+     * invoked as part of the life cycle management of the component implementation. <p>The
+     * dependency manager will look for a method of this name with the following signatures,
+     * in this order:
+     * <ol>
+     * <li>method(Component component)</li>
+     * <li>method()</li>
+     * </ol>
+     * 
+     * @param callbackInstance a callback instance object the callback is invoked on
+     * @param callback the callback name
+     * @return this builder.
+     */
+    B start(Object callbackInstance, String callback);
+
+    /**
+     * Sets an Object instance method reference used as the "start" callback. 
+     * This method is invoked as part of the life cycle management of the component implementation. 
+     * The method does not take any parameters.
+     *
+     * @param callback an Object instance method reference. The method does not take any parameters.
+     * @return this builder.
+     */
+    B start(InstanceCb callback);
+  
+    /**
+     * Sets an Object instance method reference used as the "start" callback.
+     * This method is invoked as part of the life cycle management of the component implementation. 
+     * The method takes as argument a Component parameter.
+     *
+     * @param callback an Object instance method reference. The method takes as argument a Component parameter.
+     * @return this builder.
+     */
+    B start(InstanceCbComponent callback);
     
     /**
      * Sets the name of the method used as the "stop" callback. This method, when found, is
@@ -494,6 +605,45 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
     B stop(String callback);
     
     /**
+     * Sets a callback instance and the name of the method used as the "stop" callback. This method, when found, is
+     * invoked as part of the life cycle management of the component implementation. <p>The
+     * dependency manager will look for a method of this name with the following signatures,
+     * in this order:
+     * <ol>
+     * <li>method(Component component)</li>
+     * <li>method()</li>
+     * </ol>
+     * 
+     * @param callbackInstance a callback instance object the callback is invoked on
+     * @param callback the callback name
+     * @return this builder.
+     */
+    B stop(Object callbackInstance, String callback);
+
+    /**
+     * Sets an Object instance method reference used as the "stop" callback. It is invoked as part of the life cycle management of the component 
+     * implementation. 
+     * This method is useful because when it is invoked, all required dependencies defines in the Activator
+     * are already injected, and you can then add more extra dependencies from the init() method.
+     * And once all extra dependencies will be available and injected, then the "start" callback will be invoked.
+     * The method does not take any parameters.
+     * 
+     * @param callback an Object instance method reference. The method does not take any parameters.
+     * @return this builder
+     */
+    B stop(InstanceCb callback);
+  
+    /**
+     * Sets an Object instance method reference used as the "stop" callback. 
+     * This method is invoked as part of the life cycle management of the component implementation. 
+     * The method takes as argument a Component parameter.
+     *
+     * @param callback an Object instance method reference. The method takes as argument a Component parameter.
+     * @return this builder.
+     */
+    B stop(InstanceCbComponent callback);
+  
+    /**
      * Sets the name of the method used as the "destroy" callback. This method, when found, is
      * invoked as part of the life cycle management of the component implementation. <p>The
      * dependency manager will look for a method of this name with the following signatures,
@@ -507,137 +657,23 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
      * @return this builder.
      */
     B destroy(String callback);
-         
-    /**
-     * Sets a reference to a component implementation class "init" callback method. 
-     * This method does not take any arguments and is 
-     * invoked as part of the life cycle management of the component implementation. 
-     * This method is useful because when it is invoked, all required dependencies defines in the Activator
-     * are already injected, and you can then add more extra dependencies from the init() method.
-     * And once all extra dependencies will be available and injected, then the "start" callback will be invoked.
-     * 
-     * @param <T> the type of the component class on which the callback is invoked on.
-     * @param callback a method reference must point to method from the component implementation class(es).
-     * @return this builder
-     */
-    <T> B init(Cb<T> callback);
-  
-    /**
-     * Sets a reference to a component implementation class "start" callback method. 
-     * This method does not take any arguments and is 
-     * invoked as part of the life cycle management of the component implementation.
-     * 
-     * @param <T> the type of the component class on which the callback is invoked on.
-     * @param callback  a method reference must point to method from one of the component implementation classes.
-     * @return this builder.
-     */
-    <T> B start(Cb<T> callback);
-   
-    /**
-     * Sets a reference to a component implementation class "stop" callback method. 
-     * This method does not take any arguments and is 
-     * invoked as part of the life cycle management of the component implementation.
-     * 
-     * @param <T> the type of the component class on which the callback is invoked on.
-     * @param callback  a method reference must point to method from one of the component implementation classes.
-     * @return this builder.
-     */
-    <T> B stop(Cb<T> callback);
-  
-    /**
-     * Sets a reference to a component implementation class "destroy" callback method. 
-     * This method does not take any arguments and is 
-     * invoked as part of the life cycle management of the component implementation.
-     * 
-     * @param <T> the type of the component class on which the callback is invoked on.
-     * @param callback  a method reference must point to method from one of the component implementation classes.
-     * @return this builder.
-     */
-    <T> B destroy(Cb<T> callback);
-
-    /**
-     * Sets a reference to a component implementation class "init" callback method. 
-     * This method takes a Component argument and is  
-     * invoked as part of the life cycle management of the component implementation. 
-     * This method is useful because when it is invoked, all required dependencies defines in the Activator
-     * are already injected, and you can then add more extra dependencies from the init() method.
-     * And once all extra dependencies will be available and injected, then the "start" callback will be invoked.
-     * 
-     * @param <T> the type of the component class on which the callback is invoked on.
-     * @param callback a method reference must point to method from one of the component implementation classes. The method takes as argument a Component parameter.
-     * @return this builder
-     */
-    <T> B init(CbComponent<T> callback);
     
     /**
-     * Sets a reference to a component implementation class "start" callback method. 
-     * This method takes a Component argument and is  
-     * invoked as part of the life cycle management of the component implementation.
+     * Sets a callback instance and the name of the method used as the "destroy" callback. This method, when found, is
+     * invoked as part of the life cycle management of the component implementation. <p>The
+     * dependency manager will look for a method of this name with the following signatures,
+     * in this order:
+     * <ol>
+     * <li>method(Component component)</li>
+     * <li>method()</li>
+     * </ol>
      * 
-     * @param <T> the type of the component class on which the callback is invoked on.
-     * @param callback a method reference must point to method from one of the component implementation classes. The method takes as argument a Component parameter.
+     * @param callbackInstance a callback instance object the callback is invoked on
+     * @param callback the callback name
      * @return this builder.
      */
-    <T> B start(CbComponent<T> callback);
-  
-    /**
-     * Sets a reference to a component implementation class "stop" callback method. 
-     * This method takes a Component argument and is  
-     * invoked as part of the life cycle management of the component implementation.
-     * 
-     * @param <T> the type of the component class on which the callback is invoked on.
-     * @param callback a method reference must point to method from one of the component implementation classes. The method takes as argument a Component parameter.
-     * @return this builder.
-     */
-    <T> B stop(CbComponent<T> callback);
-  
-    /**
-     * Sets a reference to a component implementation class "destroy" callback method. 
-     * This method takes a Component argument and is  
-     * invoked as part of the life cycle management of the component implementation.
-     * 
-     * @param <T> the type of the component class on which the callback is invoked on.
-     * @param callback a method reference must point to method from one of the component implementation classes. The method takes as argument a Component parameter.
-     * @return this builder.
-     */
-    <T> B destroy(CbComponent<T> callback);
+    B destroy(Object callbackInstance, String callback);
 
-    /**
-     * Sets an Object instance method reference used as the "init" callback. It is invoked as part of the life cycle management of the component 
-     * implementation. 
-     * This method is useful because when it is invoked, all required dependencies defines in the Activator
-     * are already injected, and you can then add more extra dependencies from the init() method.
-     * And once all extra dependencies will be available and injected, then the "start" callback will be invoked.
-     * The method does not take any parameters.
-     * 
-     * @param callback an Object instance method reference. The method does not take any parameters.
-     * @return this builder
-     */
-    B initInstance(InstanceCb callback);
- 
-    /**
-     * Sets an Object instance method reference used as the "start" callback. 
-     * This method is invoked as part of the life cycle management of the component implementation. 
-     * The method does not take any parameters.
-     *
-     * @param callback an Object instance method reference. The method does not take any parameters.
-     * @return this builder.
-     */
-    B startInstance(InstanceCb callback);
-  
-    /**
-     * Sets an Object instance method reference used as the "stop" callback. It is invoked as part of the life cycle management of the component 
-     * implementation. 
-     * This method is useful because when it is invoked, all required dependencies defines in the Activator
-     * are already injected, and you can then add more extra dependencies from the init() method.
-     * And once all extra dependencies will be available and injected, then the "start" callback will be invoked.
-     * The method does not take any parameters.
-     * 
-     * @param callback an Object instance method reference. The method does not take any parameters.
-     * @return this builder
-     */
-    B stopInstance(InstanceCb callback);
-  
     /**
      * Sets an Object instance method reference used as the "destroy" callback. It is invoked as part of the life cycle management of the component 
      * implementation. 
@@ -649,41 +685,8 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
      * @param callback an Object instance method reference. The method does not take any parameters.
      * @return this builder
      */
-    B destroyInstance(InstanceCb callback);
+    B destroy(InstanceCb callback);
 
-    /**
-     * Sets an Object instance method reference used as the "init" callback. It is invoked as part of the life cycle management of the component 
-     * implementation. 
-     * This method is useful because when it is invoked, all required dependencies defines in the Activator
-     * are already injected, and you can then add more extra dependencies from the init() method.
-     * And once all extra dependencies will be available and injected, then the "start" callback will be invoked.
-     * The method takes as argument a Component parameter.
-     * 
-     * @param callback an Object instance method reference. The method takes as argument a Component parameter.
-     * @return this builder
-     */
-    B initInstance(InstanceCbComponent callback);
-   
-    /**
-     * Sets an Object instance method reference used as the "start" callback.
-     * This method is invoked as part of the life cycle management of the component implementation. 
-     * The method takes as argument a Component parameter.
-     *
-     * @param callback an Object instance method reference. The method takes as argument a Component parameter.
-     * @return this builder.
-     */
-    B startInstance(InstanceCbComponent callback);
-    
-    /**
-     * Sets an Object instance method reference used as the "stop" callback. 
-     * This method is invoked as part of the life cycle management of the component implementation. 
-     * The method takes as argument a Component parameter.
-     *
-     * @param callback an Object instance method reference. The method takes as argument a Component parameter.
-     * @return this builder.
-     */
-    B stopInstance(InstanceCbComponent callback);
-  
     /**
      * Sets an Object instance method reference used as the "destroy" callback. 
      * This method is invoked as part of the life cycle management of the component implementation. 
@@ -692,7 +695,7 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
      * @param callback an Object instance method reference. The method takes as argument a Component parameter.
      * @return this builder.
      */
-    B destroyInstance(InstanceCbComponent callback);
+    B destroy(InstanceCbComponent callback);
 
     /**
      * Configures OSGi object (BundleContext, Component, etc ...) that will be injected in any field having the same OSGi object type.

@@ -35,7 +35,7 @@ public class AdapterAndConsumerTest extends TestBase {
         Ensure e = new Ensure();
 
         Component provider = component(m).provides(OriginalService.class).impl(new ServiceProvider(e)).build();
-        Component consumer = component(m).impl(new ServiceConsumer(e)).withSvc(AdaptedService.class).build();
+        Component consumer = component(m).impl(new ServiceConsumer(e)).withSvc(AdaptedService.class, true).build();
         Component adapter = adapter(m, OriginalService.class).provides(AdaptedService.class).impl(ServiceAdapter.class).build();
         		        
         // add the provider and the adapter

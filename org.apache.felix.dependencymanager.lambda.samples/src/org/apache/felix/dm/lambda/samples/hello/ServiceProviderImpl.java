@@ -34,7 +34,7 @@ public class ServiceProviderImpl implements ServiceProvider {
      * as volatile will ensure safe publication if the log service is replaced at runtime.
      */
     volatile LogService log;
-
+    
     void start() {
         // Default lifecycle start calback (all required dependencies have been injected when start is called, 
         // and all optional dependency callbacks will be invoked after the start method. This allows to easily 

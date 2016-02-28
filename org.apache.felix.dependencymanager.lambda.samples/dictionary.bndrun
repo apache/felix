@@ -36,9 +36,8 @@
 	org.apache.felix.webconsole;version=4.2.2,\
 	org.apache.felix.http.api;version=2.3.0,\
 	org.apache.felix.http.servlet-api;version=1.0.0,\
-	org.apache.felix.http.jetty;version="[2.3.0,2.3.0]"
+	org.apache.felix.http.jetty;version='[2.3.0,2.3.0]'
 	
-
 -runproperties:  \
 	org.apache.felix.dependencymanager.loglevel=2,\
 	org.apache.felix.log.maxSize=100000,\

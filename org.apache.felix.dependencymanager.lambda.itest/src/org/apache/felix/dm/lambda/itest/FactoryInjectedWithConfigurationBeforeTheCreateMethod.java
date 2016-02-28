@@ -45,7 +45,7 @@ public class FactoryInjectedWithConfigurationBeforeTheCreateMethod extends TestB
         m_e = new Ensure();
         
         // Create the component that creates a configuration.
-        Component configurator = component(m).impl(new Configurator("foobar")).withSvc(ConfigurationAdmin.class).build();
+        Component configurator = component(m).impl(new Configurator("foobar")).withSvc(ConfigurationAdmin.class, true).build();
         
         // Create the object that has to be injected with the configuration before its create method is called.
         MyFactory factory = new MyFactory();
@@ -67,7 +67,7 @@ public class FactoryInjectedWithConfigurationBeforeTheCreateMethod extends TestB
         m_e = new Ensure();
         
         // Create the component that creates a configuration.
-        Component configurator = component(m).impl(new Configurator("foobar")).withSvc(ConfigurationAdmin.class).build();
+        Component configurator = component(m).impl(new Configurator("foobar")).withSvc(ConfigurationAdmin.class, true).build();
         
         // Create the object that has to be injected with the configuration before its create method is called.
         MyFactory factory = new MyFactory();
