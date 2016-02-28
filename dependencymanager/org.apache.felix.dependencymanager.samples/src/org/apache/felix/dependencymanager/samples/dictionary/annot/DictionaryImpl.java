@@ -36,7 +36,7 @@ import org.osgi.service.log.LogService;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@FactoryConfigurationAdapterService(factoryPidClass = DictionaryConfiguration.class, propagate = true, updated = "updated")
+@FactoryConfigurationAdapterService(configType = DictionaryConfiguration.class, propagate = true, updated = "updated")
 public class DictionaryImpl implements DictionaryService {
     /**
      * We store all configured words in a thread-safe data structure, because ConfigAdmin
