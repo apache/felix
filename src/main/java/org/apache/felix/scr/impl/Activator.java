@@ -63,9 +63,12 @@ public class Activator extends AbstractExtender
 
     // this bundle's context
     private static BundleContext m_context;
+    
+    //Either this bundle's context or the framework bundle context, depending on the globalExtender setting.
+    private BundleContext m_globalContext;
 
     // this bundle
-    private static Bundle m_bundle;
+    private Bundle m_bundle;
 
     // the log service to log messages to
     private static volatile ServiceTracker<LogService, LogService> m_logService;
@@ -112,19 +115,20 @@ public class Activator extends AbstractExtender
 
     public void restart( boolean globalExtender )
     {
-        BundleContext context;
+    	BundleContext context = m_globalContext;
         if ( globalExtender )
         {
-            context = m_context.getBundle( Constants.SYSTEM_BUNDLE_LOCATION ).getBundleContext();
+        	m_globalContext = m_context.getBundle( Constants.SYSTEM_BUNDLE_LOCATION ).getBundleContext();
         }
         else
         {
-            context = m_context;
+        	m_globalContext = m_context;
         }
         if ( m_packageAdmin != null )
         {
             log( LogService.LOG_INFO, m_bundle, "Stopping to restart with new globalExtender setting: " + globalExtender, null );
             //this really is a restart, not the initial start
+            // the initial start where m_globalContext is null should skip this as m_packageAdmin should not yet be set.
             try
             {
                 super.stop(context);
@@ -137,7 +141,7 @@ public class Activator extends AbstractExtender
         try
         {
             log( LogService.LOG_INFO, m_bundle, "Starting with globalExtender setting: " + globalExtender, null );
-            super.start( context );
+            super.start( m_globalContext );
         }
         catch ( Exception e )
         {
@@ -153,7 +157,7 @@ public class Activator extends AbstractExtender
         m_componentBundles = new HashMap<Long, BundleComponentActivator>();
         m_componentRegistry = new ComponentRegistry( );
 
-        final ServiceComponentRuntime runtime = new ServiceComponentRuntimeImpl(m_context, m_componentRegistry);
+        final ServiceComponentRuntime runtime = new ServiceComponentRuntimeImpl(m_globalContext, m_componentRegistry);
         m_runtime_reg = m_context.registerService(ServiceComponentRuntime.class,
                 runtime, null);
 
@@ -474,7 +478,7 @@ public class Activator extends AbstractExtender
      * @param message The message to log
      * @param ex An optional <code>Throwable</code> whose stack trace is written,
      *      or <code>null</code> to not log a stack trace.
-     */
+     */ 
     public static void log( int level, Bundle bundle, String message, Throwable ex )
     {
         if ( isLogEnabled( level ) )
