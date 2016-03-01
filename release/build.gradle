@@ -119,7 +119,7 @@ task makeStaging << {
 	    released << latestBundle
     }
 
-    // Before adding all latest released bundles in the binary distribution, check if they contains proper license files.
+    // Before adding all latest released bundles in the binary distribution, check if they contain proper license files.
 	logger.lifecycle("    Checking META-INF mandatory files.")
     released.each { jarfile -> 
     	if (jarfile.isFile()) {
