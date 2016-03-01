@@ -133,7 +133,7 @@ task makeStaging << {
 				def mandatory = ["META-INF/LICENSE", "META-INF/NOTICE", "META-INF/DEPENDENCIES", "META-INF/changelog.txt"]
 				mandatory.each { resource ->			
 					if (! files.contains(resource)) {
-						throw new GradleException("Missing LICENSE file in " + jarfile)
+						throw new GradleException("Missing mandatory license files in " + jarfile)
 					}
 				}
 			}
