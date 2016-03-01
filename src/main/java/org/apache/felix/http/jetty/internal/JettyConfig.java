@@ -44,10 +44,6 @@ public final class JettyConfig
     /** Felix specific property to set http reaching timeout limit */
     public static final String HTTP_TIMEOUT = "org.apache.felix.http.timeout";
 
-    /** Felix specific property to enable debug messages */
-    public static final String FELIX_HTTP_DEBUG = "org.apache.felix.http.debug";
-    public static final String HTTP_DEBUG = "org.apache.felix.http.jetty.debug";
-
     /** Felix specific property to override the keystore file location. */
     public static final String FELIX_KEYSTORE = "org.apache.felix.https.keystore";
     private static final String OSCAR_KEYSTORE = "org.ungoverned.osgi.bundle.https.keystore";
@@ -357,11 +353,6 @@ public final class JettyConfig
     public String getTruststoreType()
     {
         return getProperty(FELIX_TRUSTSTORE_TYPE, KeyStore.getDefaultType());
-    }
-
-    public boolean isDebug()
-    {
-        return getBooleanProperty(FELIX_HTTP_DEBUG, getBooleanProperty(HTTP_DEBUG, false));
     }
 
     public boolean isRegisterMBeans()
