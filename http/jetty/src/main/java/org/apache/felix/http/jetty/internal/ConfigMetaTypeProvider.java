@@ -197,12 +197,6 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 204800,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_MAX_FORM_SIZE)));
 
-        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTP_DEBUG,
-                "Debug Logging",
-                "Whether to write DEBUG level messages or not. Defaults to false.",
-                false,
-                bundle.getBundleContext().getProperty(JettyConfig.FELIX_HTTP_DEBUG)));
-
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTP_PATH_EXCLUSIONS,
                 "Path Exclusions",
                 "Contains a list of context path prefixes. If a Web Application Bundle is started with a context path matching any " +
