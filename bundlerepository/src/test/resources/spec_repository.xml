@@ -44,6 +44,27 @@
       <directive name='filter' value='(osgi.wiring.package=com.foo)'/>
     </requirement>
   </resource>
+    <resource>
+        <capability namespace='osgi.identity'>
+            <attribute name='osgi.identity' value='org.apache.felix.bundlerepository.test_file_5'/>
+            <attribute name='type' value='osgi.bundle'/>
+            <attribute name='version' type='Version' value='2.2.3.something'/>
+            <attribute name='license' value='http://www.opensource.org/licenses/mytestlicense2' />
+        </capability>
+        <capability namespace='osgi.content'>
+            <attribute name='osgi.content' value='a1c64578808c38a63cd6563e9936f025638aeaf9de70f36765367db81c0afc38'/>
+            <attribute name='url' value='repo_files/test_file_5.jar'/>
+            <attribute name='size' type='Long' value='3'/>
+            <attribute name='mime' value='application/vnd.osgi.bundle'/>
+        </capability>
+        <capability namespace='foo'>
+            <attribute name='bar' value='bread'/>
+        </capability>
+        <requirement namespace="osgi.extender">
+            <directive name="filter" value="(&amp;(osgi.extender=osgi.component)(version&gt;=1.0.0)(!(version&gt;=2.0.0)))"/>
+            <directive name="effective" value="active"/>
+        </requirement>
+    </resource>
   <resource>
     <capability namespace='osgi.identity'>
       <attribute name='osgi.identity' value='org.apache.sshd.core'/>
