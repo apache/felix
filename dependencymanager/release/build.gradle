@@ -23,7 +23,7 @@
 import aQute.bnd.build.Workspace
 
 // Our release number, which has to be monotonically incremented each time we make a new release.
-ext.dmRelease = "r7"
+ext.dmRelease = "r8"
 
 // Our Apache svn Staging repo
 ext.svnStagingPath = "https://dist.apache.org/repos/dist/dev/felix"
@@ -111,13 +111,33 @@ task makeStaging << {
     // First, get list of latest released bundles available from our Release repository
     def released = []
     def releaseRepo = workspace.getRepository("Release")
-    logger.lifecycle("releaserepo=" + releaseRepo)
     def bundles=releaseRepo.list(null)
     bundles.each {
 	    def sortedVersions = releaseRepo.versions(it)
 	    def latestVersion = sortedVersions.last()
 	    def latestBundle = releaseRepo.get(it, latestVersion, null)
 	    released << latestBundle
+    }
+
+    // Before adding all latest released bundles in the binary distribution, check if they contains proper license files.
+	logger.lifecycle("    Checking META-INF mandatory files.")
+    released.each { jarfile -> 
+    	if (jarfile.isFile()) {
+       		new ByteArrayOutputStream().withStream { os ->
+				def result = exec {
+	    			executable = 'jar'
+	    			args = ['tf', jarfile, "META-INF"]
+	    			standardOutput = os
+				}
+				def files = os.toString().split("\n")
+				def mandatory = ["META-INF/LICENSE", "META-INF/NOTICE", "META-INF/DEPENDENCIES", "META-INF/changelog.txt"]
+				mandatory.each { resource ->			
+					if (! files.contains(resource)) {
+						throw new GradleException("Missing LICENSE file in " + jarfile)
+					}
+				}
+			}
+		}
     }
 
     // Now, add all the latest released bundles in the binary distribution
