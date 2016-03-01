@@ -1,0 +1,21 @@
+Apache Felix Dependency Manager Lambda
+Copyright 2011-2016 The Apache Software Foundation
+
+This software was developed at the Apache Software Foundation
+(http://www.apache.org) and may have dependencies on other
+Apache software licensed under Apache License 2.0.
+
+I. Included Third-Party Software
+
+n/a
+
+II. Used Third-Party Software
+
+This product uses software developed at
+The OSGi Alliance (http://www.osgi.org/).
+Copyright (c) OSGi Alliance (2000, 2006).
+Licensed under the Apache License 2.0.
+
+III. Overall License Summary
+
+- Apache License 2.0
