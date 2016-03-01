@@ -560,6 +560,7 @@ public class DataModelHelperImpl implements DataModelHelper
         doExports(resource, headers);
         doImports(resource, headers);
         doExecutionEnvironment(resource, headers);
+        doProvides(resource, headers);
     }
 
     private static void doCategories(ResourceImpl resource, Headers headers)
@@ -704,6 +705,17 @@ public class DataModelHelperImpl implements DataModelHelper
         }
     }
 
+    private static void doProvides(ResourceImpl resource, Headers headers) {
+        Clause[] clauses = Parser.parseHeader(headers.getHeader(Constants.PROVIDE_CAPABILITY));
+
+        if (clauses != null) {
+            for (Clause clause : clauses) {
+                CapabilityImpl capability = createCapability(clause.getName(), clause);
+                resource.addCapability(capability);
+            }
+        }
+    }
+
     private static CapabilityImpl createCapability(String name, Clause clause)
     {
         CapabilityImpl capability = new CapabilityImpl(name);
@@ -713,7 +725,7 @@ public class DataModelHelperImpl implements DataModelHelper
         for (int i = 0; attributes != null && i < attributes.length; i++)
         {
             String key = attributes[i].getName();
-            if (key.equalsIgnoreCase(Constants.PACKAGE_SPECIFICATION_VERSION) || key.equalsIgnoreCase(Constants.VERSION_ATTRIBUTE))
+            if (key.equalsIgnoreCase(Constants.PACKAGE_SPECIFICATION_VERSION) || key.equalsIgnoreCase(Constants.VERSION_ATTRIBUTE) || key.equalsIgnoreCase("version:Version"))
             {
                 continue;
             }
@@ -846,6 +858,11 @@ public class DataModelHelperImpl implements DataModelHelper
         {
             v = clause.getAttribute(Constants.BUNDLE_VERSION_ATTRIBUTE);
         }
+        if (v == null)
+        {
+            v = clause.getAttribute("version:Version");
+        }
+
         return VersionCleaner.clean(v);
     }
 
