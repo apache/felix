@@ -53,10 +53,6 @@ public class Server
      * Thread pool limit property
      */
     public static final String CONFIG_PROPERTY_THREADPOOL_LIMIT_PROP = "org.apache.felix.http.threadpool.limit";
-     /**
-     * Flag to enable debugging for this service implementation. The default is false.
-     */
-    public static final String CONFIG_PROPERTY_HTTP_DEBUG = "org.apache.felix.http.debug";
     /**
      * Flag to enable the user of HTTPS. The default is false.
      */
