@@ -1,4 +1,4 @@
-Release Notes - Felix - Version org.apache.felix.dependencymanager-r7
+Release Notes - Felix - Version org.apache.felix.dependencymanager-r8
 ======================================================================
 
 ** Bug
