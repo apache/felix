@@ -871,7 +871,7 @@ public class Felix extends BundleImpl implements Framework
                             {
                                 if (bundle != this)
                                 {
-                                    setBundleProtectionDomain((BundleImpl) bundle, ((BundleImpl) bundle).adapt(BundleRevisionImpl.class));
+                                    setBundleProtectionDomain(((BundleImpl) bundle).adapt(BundleRevisionImpl.class));
                                 }
                             }
                             catch (Exception ex)
@@ -925,18 +925,19 @@ public class Felix extends BundleImpl implements Framework
         }
     }
 
-    void setBundleProtectionDomain(BundleImpl bundleImpl, BundleRevisionImpl revisionImpl) throws Exception
+    void setBundleProtectionDomain(BundleRevisionImpl revisionImpl) throws Exception
     {
         Object certificates = null;
         SecurityProvider sp = getFramework().getSecurityProvider();
         if ((sp != null) && (System.getSecurityManager() != null))
         {
+            BundleImpl bundleImpl = revisionImpl.getBundle();
             sp.checkBundle(bundleImpl);
             Map signers = (Map) sp.getSignerMatcher(bundleImpl, Bundle.SIGNERS_TRUSTED);
-            certificates = signers.keySet().toArray(new java.security.cert.Certificate[0]);
+            certificates = signers.keySet().toArray(new java.security.cert.Certificate[signers.size()]);
         }
         revisionImpl.setProtectionDomain(
-            new BundleProtectionDomain(this, bundleImpl, certificates));
+            new BundleProtectionDomain(revisionImpl, certificates));
     }
 
     /**
