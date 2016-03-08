@@ -46,6 +46,7 @@ import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.cache.JarContent;
+import org.apache.felix.framework.util.FelixConstants;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.PackagePermission;
 
@@ -335,6 +336,17 @@ public class BundleProtectionDomain extends ProtectionDomain
         {
             RevisionAsJarURL handler = new RevisionAsJarURL(revision);
 
+            boolean useCachedUrlForCodeSource = Boolean.parseBoolean(
+                    revision.getBundle().getFramework().getProperty(FelixConstants.USE_CACHEDURLS_PROPS));
+            if (useCachedUrlForCodeSource)
+            {
+                String location = "jar:" + revision.getEntry("/") + "!/";
+                return Felix.m_secureAction.createURL(
+                        Felix.m_secureAction.createURL(null, "jar:", handler),
+                        location,
+                        handler
+                );
+            }
 
             String location = revision.getBundle()._getLocation();
             if (location.startsWith("reference:"))
