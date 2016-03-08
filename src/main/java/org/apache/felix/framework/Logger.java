@@ -18,6 +18,8 @@
  */
 package org.apache.felix.framework;
 
+import java.lang.reflect.Method;
+
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.ServiceReference;
@@ -37,9 +39,34 @@ import org.osgi.framework.ServiceReference;
 **/
 public class Logger extends org.apache.felix.resolver.Logger
 {
+    private Object[] m_logger;
+
     public Logger()
     {
         super(LOG_ERROR);
+    }
+
+    public void setLogger(Object logger)
+    {
+        if (logger == null)
+        {
+            m_logger = null;
+        }
+        else
+        {
+            try
+            {
+                Method mth = logger.getClass().getMethod("log",
+                        Integer.TYPE, String.class, Throwable.class);
+                mth.setAccessible(true);
+                m_logger = new Object[] { logger, mth };
+            }
+            catch (NoSuchMethodException ex)
+            {
+                System.err.println("Logger: " + ex);
+                m_logger = null;
+            }
+        }
     }
 
     public final void log(ServiceReference sr, int level, String msg)
@@ -62,24 +89,55 @@ public class Logger extends org.apache.felix.resolver.Logger
         _log(bundle, null, level, msg, throwable);
     }
 
+    protected void _log(
+            Bundle bundle, ServiceReference sr, int level,
+            String msg, Throwable throwable)
+    {
+        if (getLogLevel() >= level)
+        {
+            // Default logging action.
+            doLog(bundle, sr, level, msg, throwable);
+        }
+    }
+
     protected void doLog(
         Bundle bundle, ServiceReference sr, int level,
         String msg, Throwable throwable)
     {
-        String s = "";
+        StringBuilder s = new StringBuilder();
         if (sr != null)
         {
-            s = s + "SvcRef "  + sr + " ";
+            s.append("SvcRef ").append(sr).append(" ").append(msg);
         }
         else if (bundle != null)
         {
-            s = s + "Bundle " + bundle.toString() + " ";
+            s.append("Bundle ").append(bundle.toString()).append(" ").append(msg);
         }
-        s = s + msg;
+        else
+        {
+            s.append(msg);
+        }
         if (throwable != null)
         {
-            s = s + " (" + throwable + ")";
+            s.append(" (").append(throwable).append(")");
         }
+        doLog(level, s.toString(), throwable);
+    }
+
+    protected void doLog(int level, String msg, Throwable throwable)
+    {
+        if (m_logger != null)
+        {
+            doLogReflectively(level, msg, throwable);
+        }
+        else
+        {
+            doLogOut(level, msg, throwable);
+        }
+    }
+
+    protected void doLogOut(int level, String s, Throwable throwable)
+    {
         switch (level)
         {
             case LOG_DEBUG:
@@ -108,14 +166,20 @@ public class Logger extends org.apache.felix.resolver.Logger
         }
     }
 
-    private void _log(
-        Bundle bundle, ServiceReference sr, int level,
-        String msg, Throwable throwable)
+    protected void doLogReflectively(int level, String msg, Throwable throwable)
     {
-        if (getLogLevel() >= level)
+        try
         {
-            // Default logging action.
-            doLog(bundle, sr, level, msg, throwable);
+            ((Method) m_logger[1]).invoke(
+                    m_logger[0],
+                    level,
+                    msg,
+                    throwable
+            );
+        }
+        catch (Exception ex)
+        {
+            System.err.println("Logger: " + ex);
         }
     }
 }
