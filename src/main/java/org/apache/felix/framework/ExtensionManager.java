@@ -134,7 +134,7 @@ class ExtensionManager extends URLStreamHandler implements Content
     private final Logger m_logger;
     private final Map m_configMap;
     private final Map m_headerMap = new StringMap();
-    private final BundleRevision m_systemBundleRevision;
+    private final BundleRevisionImpl m_systemBundleRevision;
     private volatile List<BundleCapability> m_capabilities = Collections.EMPTY_LIST;
     private volatile Set<String> m_exportNames = Collections.EMPTY_SET;
     private volatile Object m_securityContext = null;
@@ -359,7 +359,7 @@ class ExtensionManager extends URLStreamHandler implements Content
         return aliasCaps;
     }
 
-    public BundleRevision getRevision()
+    public BundleRevisionImpl getRevision()
     {
         return m_systemBundleRevision;
     }
