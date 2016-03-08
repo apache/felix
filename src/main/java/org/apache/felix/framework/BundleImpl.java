@@ -66,7 +66,7 @@ class BundleImpl implements Bundle, BundleRevisions
     private final Felix __m_felix;
 
     private final BundleArchive m_archive;
-    private final List<BundleRevision> m_revisions = new ArrayList<BundleRevision>(0);
+    private final List<BundleRevisionImpl> m_revisions = new ArrayList<BundleRevisionImpl>(0);
     private volatile int m_state;
     private boolean m_useDeclaredActivationPolicy;
     private BundleActivator m_activator = null;
@@ -110,7 +110,7 @@ class BundleImpl implements Bundle, BundleRevisions
         m_context = null;
         m_installingBundle = installingBundle;
 
-        BundleRevision revision = createRevision(false);
+        BundleRevisionImpl revision = createRevision(false);
         addRevision(revision);
     }
 
@@ -166,13 +166,13 @@ class BundleImpl implements Bundle, BundleRevisions
     {
         // Remove the bundle's associated revisions from the resolver state
         // and close them.
-        for (BundleRevision br : m_revisions)
+        for (BundleRevisionImpl br : m_revisions)
         {
             // Remove the revision from the resolver state.
             getFramework().getResolver().removeRevision(br);
 
             // Close the revision's content.
-            ((BundleRevisionImpl) br).close();
+            br.close();
         }
     }
 
@@ -917,9 +917,9 @@ class BundleImpl implements Bundle, BundleRevisions
 
     synchronized boolean isExtension()
     {
-        for (BundleRevision revision : m_revisions)
+        for (BundleRevisionImpl revision : m_revisions)
         {
-            if (((BundleRevisionImpl) revision).isExtension())
+            if (revision.isExtension())
             {
                 return true;
             }
@@ -1216,7 +1216,7 @@ class BundleImpl implements Bundle, BundleRevisions
         m_archive.revise(location, is);
         try
         {
-            BundleRevision revision = createRevision(true);
+            BundleRevisionImpl revision = createRevision(true);
             addRevision(revision);
         }
         catch (Exception ex)
@@ -1243,13 +1243,13 @@ class BundleImpl implements Bundle, BundleRevisions
     // system bundle needs to add its revision directly to the bundle,
     // since it doesn't have an archive from which it will be created,
     // which is the normal case.
-    synchronized void addRevision(BundleRevision revision) throws Exception
+    synchronized void addRevision(BundleRevisionImpl revision) throws Exception
     {
         m_revisions.add(0, revision);
 
         try
         {
-            getFramework().setBundleProtectionDomain(this, (BundleRevisionImpl) revision);
+            getFramework().setBundleProtectionDomain(revision);
         }
         catch (Exception ex)
         {
@@ -1267,7 +1267,7 @@ class BundleImpl implements Bundle, BundleRevisions
         }
     }
 
-    private BundleRevision createRevision(boolean isUpdate) throws Exception
+    private BundleRevisionImpl createRevision(boolean isUpdate) throws Exception
     {
         // Get and parse the manifest from the most recent revision and
         // create an associated revision object for it.
@@ -1356,7 +1356,7 @@ class BundleImpl implements Bundle, BundleRevisions
 
         for (int i = m_revisions.size() - 1; (i >= 0) && (pd == null); i--)
         {
-            pd = ((BundleRevisionImpl) m_revisions.get(i)).getProtectionDomain();
+            pd = m_revisions.get(i).getProtectionDomain();
         }
 
         return pd;

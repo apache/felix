@@ -46,6 +46,7 @@ import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.cache.JarContent;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.PackagePermission;
 
 import org.osgi.framework.wiring.BundleRevision;
@@ -253,7 +254,7 @@ public class BundleProtectionDomain extends ProtectionDomain
 
                     if (revision != null)
                     {
-                        Content content = ((BundleRevisionImpl) m_revision.get()).getContent();
+                        Content content = revision.getContent();
                         if (content instanceof JarContent)
                         {
                             return Felix.m_secureAction.openJarFile(((JarContent) content).getFile());
@@ -268,7 +269,7 @@ public class BundleProtectionDomain extends ProtectionDomain
                             try
                             {
                                 output = new FileOutputStream(target);
-                                input = new BundleInputStream(revision.getContent());
+                                input = new BundleInputStream(content);
                                 byte[] buffer = new byte[64 * 1024];
                                 for (int i = input.read(buffer);i != -1; i = input.read(buffer))
                                 {
@@ -330,18 +331,16 @@ public class BundleProtectionDomain extends ProtectionDomain
             };
         }
 
-        private static URL create(BundleImpl bundle) throws MalformedURLException
+        private static URL create(BundleRevisionImpl revision) throws MalformedURLException
         {
-            String location = bundle._getLocation();
+            RevisionAsJarURL handler = new RevisionAsJarURL(revision);
 
+
+            String location = revision.getBundle()._getLocation();
             if (location.startsWith("reference:"))
             {
                 location = location.substring("reference:".length());
             }
-
-            BundleRevisionImpl revision = bundle.adapt(BundleRevisionImpl.class);
-            RevisionAsJarURL handler = new RevisionAsJarURL(revision);
-
             URL url;
             try
             {
@@ -370,38 +369,33 @@ public class BundleProtectionDomain extends ProtectionDomain
         }
     }
 
-    private final WeakReference m_felix;
-    private final WeakReference m_bundle;
+    private final WeakReference<BundleRevisionImpl> m_revision;
     private final int m_hashCode;
     private final String m_toString;
-    private final WeakReference m_revision;
     private volatile PermissionCollection m_woven;
 
-    BundleProtectionDomain(Felix felix, BundleImpl bundle, Object certificates)
+    BundleProtectionDomain(BundleRevisionImpl revision, Object certificates)
         throws MalformedURLException
     {
         super(
             new CodeSource(
-                RevisionAsJarURL.create(bundle),
+                RevisionAsJarURL.create(revision),
                 (Certificate[]) certificates),
             null, null, null);
-        m_felix = new WeakReference(felix);
-        m_bundle = new WeakReference(bundle);
-        m_revision = new WeakReference(bundle.adapt(BundleRevisionImpl.class));
-        m_hashCode = bundle.hashCode();
-        m_toString = "[" + bundle + "]";
+        m_revision = new WeakReference<BundleRevisionImpl>(revision);
+        m_hashCode = revision.hashCode();
+        m_toString = "[" + revision + "]";
     }
 
-    BundleRevision getRevision()
+    BundleRevisionImpl getRevision()
     {
-        return (BundleRevision) m_revision.get();
+        return m_revision.get();
     }
 
     public boolean implies(Permission permission)
     {
-        Felix felix = (Felix) m_felix.get();
-        return (felix != null) ?
-            felix.impliesBundlePermission(this, permission, false) : false;
+        Felix felix = getFramework();
+        return felix != null && felix.impliesBundlePermission(this, permission, false);
     }
 
     boolean superImplies(Permission permission)
@@ -411,9 +405,8 @@ public class BundleProtectionDomain extends ProtectionDomain
 
     public boolean impliesDirect(Permission permission)
     {
-        Felix felix = (Felix) m_felix.get();
-        return (felix != null) ?
-            felix.impliesBundlePermission(this, permission, true) : false;
+        Felix felix = getFramework();
+        return felix != null && felix.impliesBundlePermission(this, permission, true);
     }
 
     boolean impliesWoven(Permission permission)
@@ -432,7 +425,13 @@ public class BundleProtectionDomain extends ProtectionDomain
 
     BundleImpl getBundle()
     {
-        return (BundleImpl) m_bundle.get();
+        BundleRevisionImpl revision = m_revision.get();
+        return revision != null ? revision.getBundle() : null;
+    }
+
+    Felix getFramework() {
+        BundleRevisionImpl revision = m_revision.get();
+        return revision != null ? revision.getBundle().getFramework() : null;
     }
 
     public int hashCode()
@@ -450,7 +449,7 @@ public class BundleProtectionDomain extends ProtectionDomain
         {
             return false;
         }
-        return m_bundle.get() == ((BundleProtectionDomain) other).m_bundle.get();
+        return m_revision.get() == ((BundleProtectionDomain) other).m_revision.get();
     }
 
     public String toString()
