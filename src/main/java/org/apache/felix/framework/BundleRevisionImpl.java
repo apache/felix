@@ -68,7 +68,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
     private final List<String> m_activationIncludes;
     private final List<String> m_activationExcludes;
 
-    private final Bundle m_bundle;
+    private final BundleImpl m_bundle;
 
     private Content m_content;
     private List<Content> m_contentPath;
@@ -81,14 +81,11 @@ public class BundleRevisionImpl implements BundleRevision, Resource
     /**
      * This constructor is used by the extension manager, since it needs
      * a constructor that does not throw an exception.
-     * @param logger
      * @param bundle
      * @param id
-     * @param bootPkgs
-     * @param bootPkgWildcards
      * @throws org.osgi.framework.BundleException
      */
-    public BundleRevisionImpl(Bundle bundle, String id)
+    public BundleRevisionImpl(BundleImpl bundle, String id)
     {
         m_bundle = bundle;
         m_id = id;
@@ -108,7 +105,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
     }
 
     BundleRevisionImpl(
-        Bundle bundle, String id, Map headerMap, Content content)
+        BundleImpl bundle, String id, Map headerMap, Content content)
         throws BundleException
     {
         m_bundle = bundle;
@@ -117,8 +114,8 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         m_content = content;
 
         ManifestParser mp = new ManifestParser(
-            ((BundleImpl) bundle).getFramework().getLogger(),
-            ((BundleImpl) bundle).getFramework().getConfig(),
+            bundle.getFramework().getLogger(),
+            bundle.getFramework().getConfig(),
             this,
             m_headerMap);
 
@@ -259,7 +256,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         return m_wiring;
     }
 
-    public Bundle getBundle()
+    public BundleImpl getBundle()
     {
         return m_bundle;
     }
@@ -641,11 +638,11 @@ public class BundleRevisionImpl implements BundleRevision, Resource
             return m_secureAction.createURL(null,
                 FelixConstants.BUNDLE_URL_PROTOCOL + "://" +
                 m_id + ":" + port + path,
-                ((BundleImpl) getBundle()).getFramework().getBundleStreamHandler());
+                getBundle().getFramework().getBundleStreamHandler());
         }
         catch (MalformedURLException ex)
         {
-            ((BundleImpl) m_bundle).getFramework().getLogger().log(
+            m_bundle.getFramework().getLogger().log(
                 m_bundle,
                 Logger.LOG_ERROR,
                 "Unable to create resource URL.",
