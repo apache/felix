@@ -613,7 +613,7 @@ public class BundleWiringImpl implements BundleWiring
     {
         if (isInUse())
         {
-            return ((BundleImpl) m_revision.getBundle())
+            return m_revision.getBundle()
                 .getFramework().getDependencies().getProvidedWires(m_revision, namespace);
         }
         return null;
@@ -744,7 +744,7 @@ public class BundleWiringImpl implements BundleWiring
             if (!Util.isFragment(m_revision))
             {
                 Enumeration<URL> e =
-                    ((BundleImpl) m_revision.getBundle()).getFramework()
+                    m_revision.getBundle().getFramework()
                         .findBundleEntries(m_revision, path, filePattern,
                            (options & BundleWiring.FINDENTRIES_RECURSE) > 0);
                 List<URL> entries = new ArrayList<URL>();
@@ -1072,7 +1072,7 @@ public class BundleWiringImpl implements BundleWiring
     }
 
     @Override
-    public Bundle getBundle()
+    public BundleImpl getBundle()
     {
         return m_revision.getBundle();
     }
@@ -1096,7 +1096,7 @@ public class BundleWiringImpl implements BundleWiring
             return BundleRevisionImpl.getSecureAction().createURL(null,
                 FelixConstants.BUNDLE_URL_PROTOCOL + "://" +
                 m_revision.getId() + ":" + port + path,
-                ((BundleImpl) getBundle()).getFramework().getBundleStreamHandler());
+                getBundle().getFramework().getBundleStreamHandler());
         }
         catch (MalformedURLException ex)
         {
@@ -1305,7 +1305,7 @@ public class BundleWiringImpl implements BundleWiring
         {
             for (int i = 0;
                 !result
-                    && (i < ((BundleImpl) getBundle())
+                    && (i < getBundle()
                         .getFramework().getBootPackages().length);
                 i++)
             {
@@ -1313,14 +1313,14 @@ public class BundleWiringImpl implements BundleWiring
                 // A wildcarded boot package will be in the form "foo.",
                 // so a matching subpackage will start with "foo.", e.g.,
                 // "foo.bar".
-                if (((BundleImpl) getBundle()).getFramework().getBootPackageWildcards()[i]
+                if (getBundle().getFramework().getBootPackageWildcards()[i]
                     && pkgName.startsWith(
-                        ((BundleImpl) getBundle()).getFramework().getBootPackages()[i]))
+                        getBundle().getFramework().getBootPackages()[i]))
                 {
                     return true;
                 }
                 // If not wildcarded, then check for an exact match.
-                else if (((BundleImpl) getBundle())
+                else if (getBundle()
                     .getFramework().getBootPackages()[i].equals(pkgName))
                 {
                     return true;
@@ -1993,7 +1993,7 @@ public class BundleWiringImpl implements BundleWiring
         }
 
         @Override
-        public Bundle getBundle()
+        public BundleImpl getBundle()
         {
             return m_wiring.getBundle();
         }
@@ -2094,7 +2094,7 @@ public class BundleWiringImpl implements BundleWiring
                     // or removal, we just get a snapshot and leave any changes
                     // as a race condition, doing any necessary clean up in
                     // the error handling.
-                    Felix felix = ((BundleImpl) m_wiring.m_revision.getBundle()).getFramework();
+                    Felix felix = m_wiring.m_revision.getBundle().getFramework();
 
                     Set<ServiceReference<WeavingHook>> hooks =
                         felix.getHookRegistry().getHooks(WeavingHook.class);
@@ -2290,9 +2290,9 @@ public class BundleWiringImpl implements BundleWiring
                     }
 
                     int activationPolicy =
-                            ((BundleImpl) getBundle()).isDeclaredActivationPolicyUsed()
-                            ? ((BundleRevisionImpl) getBundle()
-                                    .adapt(BundleRevision.class)).getDeclaredActivationPolicy()
+                            getBundle().isDeclaredActivationPolicyUsed()
+                            ? getBundle()
+                                    .adapt(BundleRevisionImpl.class).getDeclaredActivationPolicy()
                                     : EAGER_ACTIVATION;
 
                     // If the revision is using deferred activation, then if
