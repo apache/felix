@@ -278,7 +278,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         ConfigurationAdminFactory caf = new ConfigurationAdminFactory( this );
         Hashtable props = new Hashtable();
         props.put( Constants.SERVICE_PID, "org.apache.felix.cm.ConfigurationAdmin" );
-        props.put( Constants.SERVICE_DESCRIPTION, "Configuration Admin Service Specification 1.2 Implementation" );
+        props.put( Constants.SERVICE_DESCRIPTION, "Configuration Admin Service Specification 1.5 Implementation" );
         props.put( Constants.SERVICE_VENDOR, "Apache Software Foundation" );
         configurationAdminRegistration = bundleContext.registerService( ConfigurationAdmin.class.getName(), caf, props );
 
