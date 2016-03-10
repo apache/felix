@@ -31,7 +31,7 @@ import java.lang.annotation.Target;
  * order and the scope.
  * By default it also generates a component and a service tag,
  * but this generation can be omitted.
- * @see <a href="https://sling.apache.org/documentation/the-sling-engine/filters.html">Sling Servlet Filter Support
+ * @see <a href="https://sling.apache.org/documentation/the-sling-engine/filters.html">Sling Servlet Filter Support</a>
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)
