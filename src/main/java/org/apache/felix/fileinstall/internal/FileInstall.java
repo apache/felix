@@ -317,10 +317,10 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer
     /**
      * Convenience to refresh the packages
      */
-    static void refresh(BundleContext context, Collection<Bundle> bundles) throws InterruptedException
+    static void refresh(Bundle systemBundle, Collection<Bundle> bundles) throws InterruptedException
     {
         final CountDownLatch latch = new CountDownLatch(1);
-        FrameworkWiring wiring = context.getBundle(0).adapt(FrameworkWiring.class);
+        FrameworkWiring wiring = systemBundle.adapt(FrameworkWiring.class);
         wiring.refreshBundles(bundles, new FrameworkListener() {
             public void frameworkEvent(FrameworkEvent event) {
                 latch.countDown();

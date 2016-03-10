@@ -127,6 +127,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
     boolean useStartActivationPolicy;
     String filter;
     BundleContext context;
+    private Bundle systemBundle;
     String originatingFileName;
     boolean noInitialDelay;
     int startLevel;
@@ -161,6 +162,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
         this.fileInstall = fileInstall;
         this.properties = properties;
         this.context = context;
+        systemBundle = context.getBundle(Constants.SYSTEM_BUNDLE_LOCATION);
         poll = getLong(properties, POLL, 2000);
         logLevel = getInt(properties, LOG_LEVEL, Util.getGlobalLogLevel(context));
         originatingFileName = properties.get(FILENAME);
@@ -295,10 +297,10 @@ public class DirectoryWatcher extends Thread implements BundleListener
 
         while (!interrupted()) {
             try {
-                FrameworkStartLevel startLevelSvc = context.getBundle(0).adapt(FrameworkStartLevel.class);
+                FrameworkStartLevel startLevelSvc = systemBundle.adapt(FrameworkStartLevel.class);
                 // Don't access the disk when the framework is still in a startup phase.
                 if (startLevelSvc.getStartLevel() >= activeLevel
-                        && context.getBundle(0).getState() == Bundle.ACTIVE) {
+                        && systemBundle.getState() == Bundle.ACTIVE) {
                     Set<File> files = scanner.scan(false);
                     // Check that there is a result.  If not, this means that the directory can not be listed,
                     // so it's presumably not a valid directory (it may have been deleted by someone).
@@ -311,6 +313,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
                     wait(poll);
                 }
             } catch (InterruptedException e) {
+                interrupt();
                 return;
             } catch (Throwable e) {
                 try {
@@ -669,7 +672,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
      */
     void refresh(Collection<Bundle> bundles) throws InterruptedException
     {
-        FileInstall.refresh(context, bundles);
+        FileInstall.refresh(systemBundle, bundles);
     }
 
     /**
@@ -1188,7 +1191,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
      */
     private void startAllBundles()
     {
-        FrameworkStartLevel startLevelSvc = context.getBundle(0).adapt(FrameworkStartLevel.class);
+        FrameworkStartLevel startLevelSvc = systemBundle.adapt(FrameworkStartLevel.class);
         List<Bundle> bundles = new ArrayList<Bundle>();
         for (Artifact artifact : getArtifacts()) {
             if (artifact.getBundleId() > 0) {
@@ -1226,7 +1229,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
       */
     private boolean startBundle(Bundle bundle)
     {
-        FrameworkStartLevel startLevelSvc = context.getBundle(0).adapt(FrameworkStartLevel.class);
+        FrameworkStartLevel startLevelSvc = systemBundle.adapt(FrameworkStartLevel.class);
         // Fragments can never be started.
         // Bundles can only be started transient when the start level of the framework is high
         // enough. Persistent (i.e. non-transient) starts will simply make the framework start the

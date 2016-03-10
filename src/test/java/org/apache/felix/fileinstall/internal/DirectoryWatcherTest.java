@@ -34,6 +34,7 @@ import org.junit.Assert;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleListener;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.startlevel.FrameworkStartLevel;
 import org.osgi.framework.wiring.BundleRevision;
@@ -74,7 +75,7 @@ public class DirectoryWatcherTest extends TestCase
         EasyMock.expect(mockBundleContext.getServiceReference(LogService.class.getName()))
                         .andStubReturn(null);
         EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
-        EasyMock.expect(mockBundleContext.getBundle(0)).andReturn(mockSysBundle).anyTimes();
+        EasyMock.expect(mockBundleContext.getBundle(Constants.SYSTEM_BUNDLE_LOCATION)).andReturn(mockSysBundle).anyTimes();
         EasyMock.expect(mockSysBundle.getState()).andReturn(Bundle.ACTIVE).anyTimes();
         EasyMock.expect(mockSysBundle.adapt(FrameworkStartLevel.class)).andReturn(mockStartLevel).anyTimes();
         EasyMock.expect(mockStartLevel.getStartLevel()).andReturn(50).anyTimes();
