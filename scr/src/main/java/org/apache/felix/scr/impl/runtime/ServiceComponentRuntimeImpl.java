@@ -342,17 +342,24 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
 		{
 			return null;
 		}
-		Bundle bundle = bundleContext.getBundle();
-		if (bundle == null)
-		{
-			return null;
-		}
-		BundleDTO b = new BundleDTO();
-		b.id = bundle.getBundleId();
-		b.lastModified = bundle.getLastModified();
-		b.state = bundle.getState();
-		b.symbolicName = bundle.getSymbolicName();
-		b.version = bundle.getVersion().toString();
-		return b;
+		try
+        {
+            Bundle bundle = bundleContext.getBundle();
+            if (bundle == null)
+            {
+                return null;
+            }
+            BundleDTO b = new BundleDTO();
+            b.id = bundle.getBundleId();
+            b.lastModified = bundle.getLastModified();
+            b.state = bundle.getState();
+            b.symbolicName = bundle.getSymbolicName();
+            b.version = bundle.getVersion().toString();
+            return b;
+        }
+        catch (IllegalStateException e)
+        {
+            return null;
+        }
 	}
 }
