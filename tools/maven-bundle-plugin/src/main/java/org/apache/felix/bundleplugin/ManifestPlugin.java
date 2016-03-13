@@ -22,7 +22,6 @@ package org.apache.felix.bundleplugin;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -33,23 +32,25 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.jar.Manifest;
 
-import aQute.bnd.header.Parameters;
-import aQute.bnd.osgi.Instructions;
-import aQute.bnd.osgi.Processor;
-import aQute.lib.collections.ExtList;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.shared.dependency.graph.DependencyNode;
+import org.sonatype.plexus.build.incremental.BuildContext;
 
+import aQute.bnd.header.Parameters;
 import aQute.bnd.osgi.Analyzer;
 import aQute.bnd.osgi.Builder;
+import aQute.bnd.osgi.Instructions;
 import aQute.bnd.osgi.Jar;
+import aQute.bnd.osgi.Processor;
 import aQute.bnd.osgi.Resource;
-import org.apache.maven.shared.dependency.graph.DependencyNode;
+import aQute.lib.collections.ExtList;
 
 
 /**
@@ -66,6 +67,9 @@ public class ManifestPlugin extends BundlePlugin
     @Parameter( property = "rebuildBundle" )
     protected boolean rebuildBundle;
 
+    @Component
+    private BuildContext buildContext;
+    
     @Override
     protected void execute( MavenProject project, DependencyNode dependencyGraph, Map<String, String> instructions, Properties properties, Jar[] classpath )
         throws MojoExecutionException
@@ -99,7 +103,7 @@ public class ManifestPlugin extends BundlePlugin
 
         try
         {
-            writeManifest( analyzer, outputFile, niceManifest, exportScr, scrLocation );
+            writeManifest( analyzer, outputFile, niceManifest, exportScr, scrLocation, buildContext );
         }
         catch ( Exception e )
         {
@@ -122,12 +126,12 @@ public class ManifestPlugin extends BundlePlugin
     public Manifest getManifest( MavenProject project, DependencyNode dependencyGraph, Jar[] classpath ) throws IOException, MojoFailureException,
         MojoExecutionException, Exception
     {
-        return getManifest( project, dependencyGraph, new LinkedHashMap<String, String>(), new Properties(), classpath );
+        return getManifest( project, dependencyGraph, new LinkedHashMap<String, String>(), new Properties(), classpath, buildContext );
     }
 
 
-    public Manifest getManifest( MavenProject project, DependencyNode dependencyGraph, Map<String, String> instructions, Properties properties, Jar[] classpath )
-        throws IOException, MojoFailureException, MojoExecutionException, Exception
+    public Manifest getManifest( MavenProject project, DependencyNode dependencyGraph, Map<String, String> instructions, Properties properties, Jar[] classpath,
+            BuildContext buildContext) throws IOException, MojoFailureException, MojoExecutionException, Exception
     {
         Analyzer analyzer = getAnalyzer(project, dependencyGraph, instructions, properties, classpath);
 
@@ -136,7 +140,7 @@ public class ManifestPlugin extends BundlePlugin
 
         if (exportScr)
         {
-            exportScr(analyzer, jar, scrLocation);
+            exportScr(analyzer, jar, scrLocation, buildContext);
         }
 
         // cleanup...
@@ -145,7 +149,7 @@ public class ManifestPlugin extends BundlePlugin
         return manifest;
     }
     
-    private static void exportScr(Analyzer analyzer, Jar jar, File scrLocation) throws Exception {
+    private static void exportScr(Analyzer analyzer, Jar jar, File scrLocation, BuildContext buildContext) throws Exception {
         scrLocation.mkdirs();
 
         String bpHeader = analyzer.getProperty(Analyzer.SERVICE_COMPONENT);
@@ -159,7 +163,7 @@ public class ManifestPlugin extends BundlePlugin
                 Resource resource = jar.getResource(root);
                 if (resource != null)
                 {
-                    writeSCR(resource, location);
+                    writeSCR(resource, location, buildContext);
                 }
             }
             else
@@ -168,16 +172,16 @@ public class ManifestPlugin extends BundlePlugin
                 {
                     String path = entry.getKey();
                     Resource resource = entry.getValue();
-                    writeSCR(resource, new File(location, path));
+                    writeSCR(resource, new File(location, path), buildContext);
                 }
             }
         }
     }
 
-    private static void writeSCR(Resource resource, File destination) throws Exception
+    private static void writeSCR(Resource resource, File destination, BuildContext buildContext) throws Exception
     {
         destination.getParentFile().mkdirs();
-        OutputStream os = new FileOutputStream(destination);
+        OutputStream os = buildContext.newFileOutputStream(destination);
         try
         {
             resource.write(os);
@@ -275,7 +279,7 @@ public class ManifestPlugin extends BundlePlugin
                 if ( !entryFile.exists() || entry.getValue().lastModified() == 0 )
                 {
                     entryFile.getParentFile().mkdirs();
-                    OutputStream os = new FileOutputStream( entryFile );
+                    OutputStream os = buildContext.newFileOutputStream( entryFile );
                     entry.getValue().write( os );
                     os.close();
                 }
@@ -287,7 +291,7 @@ public class ManifestPlugin extends BundlePlugin
 
 
     public static void writeManifest( Analyzer analyzer, File outputFile, boolean niceManifest,
-            boolean exportScr, File scrLocation ) throws Exception
+            boolean exportScr, File scrLocation, BuildContext buildContext ) throws Exception
     {
         Properties properties = analyzer.getProperties();
         Jar jar = analyzer.getJar();
@@ -313,21 +317,21 @@ public class ManifestPlugin extends BundlePlugin
             File parentFile = outputFile.getParentFile();
             parentFile.mkdirs();
         }
-        writeManifest( manifest, outputFile, niceManifest );
+        writeManifest( manifest, outputFile, niceManifest, buildContext );
         
         if (exportScr)
         {
-            exportScr(analyzer, jar, scrLocation);            
+            exportScr(analyzer, jar, scrLocation, buildContext);            
         }
     }
 
 
-    public static void writeManifest( Manifest manifest, File outputFile, boolean niceManifest ) throws IOException
+    public static void writeManifest( Manifest manifest, File outputFile, boolean niceManifest,
+            BuildContext buildContext ) throws IOException
     {
         outputFile.getParentFile().mkdirs();
 
-        FileOutputStream os;
-        os = new FileOutputStream( outputFile );
+        OutputStream os = buildContext.newFileOutputStream( outputFile );
         try
         {
             ManifestWriter.outputManifest( manifest, os, niceManifest );

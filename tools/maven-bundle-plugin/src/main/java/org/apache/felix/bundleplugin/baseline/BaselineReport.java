@@ -19,7 +19,6 @@
 package org.apache.felix.bundleplugin.baseline;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -100,7 +99,7 @@ public final class BaselineReport
 
             try
             {
-                target = new FileOutputStream( targetFile );
+                target = buildContext.newFileOutputStream( targetFile );
                 IOUtil.copy( source, target );
             }
             catch ( IOException e )

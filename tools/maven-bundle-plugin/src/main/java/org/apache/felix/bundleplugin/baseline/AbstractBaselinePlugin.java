@@ -47,6 +47,7 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.StringUtils;
+import org.sonatype.plexus.build.incremental.BuildContext;
 
 import aQute.bnd.differ.Baseline;
 import aQute.bnd.differ.Baseline.Info;
@@ -148,6 +149,9 @@ abstract class AbstractBaselinePlugin
     @Parameter
     protected List<String> supportedProjectTypes = Arrays.asList( new String[] { "jar", "bundle" } );
 
+    @Component
+    protected BuildContext buildContext;
+    
     public final void execute()
         throws MojoExecutionException, MojoFailureException
     {
