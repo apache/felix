@@ -47,7 +47,6 @@ import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.security.HashLoginService;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ConnectorStatistics;
-import org.eclipse.jetty.server.ForwardedRequestCustomizer;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.SecureRequestCustomizer;
@@ -105,6 +104,8 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
     private BundleTracker bundleTracker;
     private ServiceTracker eventAdmintTracker;
     private ServiceTracker connectorTracker;
+    private ServiceTracker loadBalancerCustomizerTracker;
+    private CustomizerWrapper customizerWrapper;
     private EventAdmin eventAdmin;
 
     public JettyService(final BundleContext context,
@@ -218,6 +219,13 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
                 this.connectorTracker.close();
                 this.connectorTracker = null;
             }
+            
+            if (this.loadBalancerCustomizerTracker != null)
+            {
+                this.loadBalancerCustomizerTracker.close();
+                this.loadBalancerCustomizerTracker = null;
+            } 
+            
             try
             {
                 this.server.stop();
@@ -276,8 +284,14 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             this.server.setHandler(this.parent);
             this.server.start();
 
+            if (this.config.isProxyLoadBalancerConnection()) 
+            {
+                customizerWrapper = new CustomizerWrapper();
+                this.loadBalancerCustomizerTracker = new LoadBalancerCustomizerFactoryTracker(this.context, customizerWrapper);
+                this.loadBalancerCustomizerTracker.open();
+            }
+            
             final StringBuilder message = new StringBuilder("Started Jetty ").append(version).append(" at port(s)");
-
             if (this.config.isUseHttp() && initializeHttp())
             {
                 message.append(" HTTP:").append(this.config.getHttpPort());
@@ -290,7 +304,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 
             this.connectorTracker = new ConnectorFactoryTracker(this.context, this.server);
             this.connectorTracker.open();
-
+            
             if (this.server.getConnectors() != null && this.server.getConnectors().length > 0)
             {
                 message.append(" on context path ").append(this.config.getContextPath());
@@ -355,11 +369,10 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 
         configureConnector(connector, this.config.getHttpPort());
 
-        if (this.config.isProxyLoadBalancerConnection())
+        if (this.config.isProxyLoadBalancerConnection()) 
         {
-            connFactory.getHttpConfiguration().addCustomizer(new ForwardedRequestCustomizer());
+            connFactory.getHttpConfiguration().addCustomizer(customizerWrapper);
         }
-
         return startConnector(connector);
     }
 
@@ -382,11 +395,11 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         HttpConfiguration httpConfiguration = connFactory.getHttpConfiguration();
         httpConfiguration.addCustomizer(new SecureRequestCustomizer());
 
-        if (this.config.isProxyLoadBalancerConnection())
+        if (this.config.isProxyLoadBalancerConnection()) 
         {
-            httpConfiguration.addCustomizer(new ForwardedRequestCustomizer());
+            httpConfiguration.addCustomizer(customizerWrapper);
         }
-
+        
         configureConnector(connector, this.config.getHttpsPort());
         return startConnector(connector);
     }

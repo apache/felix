@@ -20,6 +20,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.felix.http.base.internal.AbstractHttpActivator;
+import org.apache.felix.http.jetty.LoadBalancerCustomizerFactory;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceFactory;
@@ -30,6 +31,7 @@ public final class JettyActivator extends AbstractHttpActivator
     private JettyService jetty;
 
     private ServiceRegistration<?> metatypeReg;
+    private ServiceRegistration<LoadBalancerCustomizerFactory> loadBalancerCustomizerFactoryReg;
 
     @Override
     protected void doStart() throws Exception
@@ -58,6 +60,29 @@ public final class JettyActivator extends AbstractHttpActivator
                 }, properties);
         this.jetty = new JettyService(getBundleContext(), getDispatcherServlet(), getEventDispatcher(), getHttpServiceController());
         this.jetty.start();
+
+        final Dictionary<String, Object> propertiesCustomizer = new Hashtable<String, Object>();
+        propertiesCustomizer.put(Constants.SERVICE_DESCRIPTION, "Load Balancer Customizer Factory for Jetty Http Service");
+        propertiesCustomizer.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+        loadBalancerCustomizerFactoryReg = this.getBundleContext().registerService(LoadBalancerCustomizerFactory.class,
+                new ServiceFactory<LoadBalancerCustomizerFactory>()
+                {
+
+                    @Override
+                    public LoadBalancerCustomizerFactory getService(final Bundle bundle,
+                            final ServiceRegistration<LoadBalancerCustomizerFactory> registration)
+                    {
+                        return new ForwardedRequestCustomizerFactory();
+                    }
+
+                    @Override
+                    public void ungetService(final Bundle bundle,
+                            final ServiceRegistration<LoadBalancerCustomizerFactory> registration,
+                            final LoadBalancerCustomizerFactory service)
+                    {
+                        // nothing to do
+                    }
+                }, propertiesCustomizer);
     }
 
     @Override
@@ -69,6 +94,12 @@ public final class JettyActivator extends AbstractHttpActivator
             metatypeReg.unregister();
             metatypeReg = null;
         }
+        if ( loadBalancerCustomizerFactoryReg != null )
+        {
+            loadBalancerCustomizerFactoryReg.unregister();
+            loadBalancerCustomizerFactoryReg = null;
+        }
+
         super.doStop();
     }
 }
