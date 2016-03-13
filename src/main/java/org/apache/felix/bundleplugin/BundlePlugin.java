@@ -90,6 +90,7 @@ import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.PropertyUtils;
 import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.WriterFactory;
+import org.sonatype.plexus.build.incremental.BuildContext;
 
 import aQute.bnd.header.Attrs;
 import aQute.bnd.header.OSGiHeader;
@@ -313,6 +314,9 @@ public class BundlePlugin extends AbstractMojo
     @Parameter( defaultValue = "${session}", readonly = true, required = true )
     private MavenSession m_mavenSession;
 
+    @Component
+    protected BuildContext buildContext;
+    
     private static final String MAVEN_SYMBOLICNAME = "maven-symbolicname";
     private static final String MAVEN_RESOURCES = "{maven-resources}";
     private static final String MAVEN_TEST_RESOURCES = "{maven-test-resources}";
@@ -519,7 +523,7 @@ public class BundlePlugin extends AbstractMojo
 
                 try
                 {
-                    ManifestPlugin.writeManifest( builder, outputFile, niceManifest, exportScr, scrLocation );
+                    ManifestPlugin.writeManifest( builder, outputFile, niceManifest, exportScr, scrLocation, buildContext );
                 }
                 catch ( IOException e )
                 {

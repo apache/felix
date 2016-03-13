@@ -19,7 +19,7 @@
 package org.apache.felix.bundleplugin;
 
 
-import java.io.FileOutputStream;
+import java.io.File;
 import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.Map;
@@ -75,7 +75,7 @@ public class AntPlugin extends BundlePlugin
             // save the BND generated bundle to the same output directory that maven uses
             bndProperties.setProperty( "-output", "${maven.build.dir}/${maven.build.finalName}.jar" );
 
-            OutputStream out = new FileOutputStream( baseDir + BUILD_BND );
+            OutputStream out = buildContext.newFileOutputStream( new File(baseDir + BUILD_BND) );
             bndProperties.store( out, " Merged BND Instructions" );
             IOUtil.close( out );
 
