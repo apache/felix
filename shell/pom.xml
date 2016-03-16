@@ -68,8 +68,8 @@
 				</configuration>
 			</plugin>
 			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>rat-maven-plugin</artifactId>
+				<groupId>org.apache.rat</groupId>
+				<artifactId>apache-rat-plugin</artifactId>
 				<configuration>
 					<excludeSubProjects>false</excludeSubProjects>
 					<useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
@@ -79,6 +79,8 @@
 						<param>maven-eclipse.xml</param>
 						<param>.checkstyle</param>
 						<param>.externalToolBuilders/*</param>
+						<param>src/main/resources/gosh_profile</param>
+						<param>src/main/resources/motd</param>
 					</excludes>
 				</configuration>
 			</plugin>
