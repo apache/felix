@@ -97,7 +97,7 @@ public class WatcherScanner extends Scanner {
             }
             for (File file : removed) {
                 // Make sure we'll handle a file that has been deleted
-                files.addAll(removed);
+                files.add(file);
                 // Remove no longer used checksums
                 lastChecksums.remove(file);
                 storedChecksums.remove(file);
