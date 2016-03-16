@@ -101,6 +101,7 @@ public class WatcherScanner extends Scanner {
                 // Remove no longer used checksums
                 lastChecksums.remove(file);
                 storedChecksums.remove(file);
+                changed.remove(file);
             }
 
             return files;
