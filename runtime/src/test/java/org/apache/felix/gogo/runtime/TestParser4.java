@@ -26,8 +26,6 @@ import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Map.Entry;
 
 /*
  * Test features of the new parser/tokenizer, many of which are not supported
