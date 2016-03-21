@@ -23,9 +23,11 @@ import java.io.File;
 import java.io.PrintStream;
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.gogo.runtime.threadio.ThreadIOImpl;
@@ -183,15 +185,18 @@ public class TestTokenizer
 
         assertEquals("baz", expand("${map[a1]}"));
         assertEquals("baz", expand("${map[$key]}"));
-        assertEquals("az", expand("${map[a1][1,3]}"));
+        assertEquals("az", expand("${map[a1][1,-0]}"));
         assertEquals("AZ", expand("${(U)map[a1][1,3]}"));
         assertEquals(map, expand("${map}"));
         assertEquals("baz bar foo", expand("\"${map}\""));
+        assertEquals("baz bar foo", expand("\"${map[*]}\""));
         assertEquals(Arrays.asList("baz", "bar", "foo"), expand("\"${map[@]}\""));
         assertEquals(Arrays.asList("a1", "a2", "b1"), expand("\"${(k)map[@]}\""));
         assertEquals(Arrays.asList("a1", "baz", "a2", "bar", "b1", "foo"), expand("\"${(kv)map[@]}\""));
         assertEquals(Arrays.asList("a2", "bar"), expand("${${(kv)map[@]}[2,4]}"));
         assertEquals(Arrays.asList("a2", "bar"), expand("${${(kv)=map}[2,4]}"));
+
+        // TODO: test subscripts on array resulting in a single element
     }
 
     @Test
@@ -214,6 +219,41 @@ public class TestTokenizer
         assertEquals("bar", expand("${(L)foo}"));
         assertEquals("BAR", expand("${(U)${foo}}"));
         assertEquals("Bar", expand("${(C)${foo}}"));
+    }
+
+    @Test
+    public void testQuotes() throws Exception {
+        vars.clear();
+        vars.put("foo", "\"{a'}\\b");
+        vars.put("q1", "\"foo\"");
+
+        assertEquals("\\\"\\{a\\'\\}\\\\b", expand("${(q)foo}"));
+        assertEquals("'\"{a'\\''}\\b'", expand("${(qq)foo}"));
+        assertEquals("\"\\\"{a'}\\\\b\"", expand("${(qqq)foo}"));
+        assertEquals("$'\"{a\\'}\\b'", expand("${(qqqq)foo}"));
+        assertEquals("'\"{a'\\''}\\b'", expand("${(q-)foo}"));
+
+        assertEquals("foo", expand("${(Q)q1}"));
+    }
+
+    @Test
+    public void testChars() throws Exception {
+        vars.clear();
+
+        List<Integer> array = new ArrayList<>();
+        for (int i = 0; i < 64; i++) {
+            array.add(i);
+        }
+        vars.put("array", array);
+
+        assertEquals(Arrays.asList("^@", "^A", "^B", "^C", "^D", "^E", "^F", "^G",
+                "^H", "^I", "^J", "^K", "^L", "^M", "^N", "^O",
+                "^P", "^Q", "^R", "^S", "^T", "^U", "^V", "^W",
+                "^X", "^Y", "^Z", "^\\[", "^\\\\", "^\\]", "^^", "^_",
+                "\\ ", "\\!", "\\\"", "\\#", "\\$", "\\%", "\\&", "\\'",
+                "\\(", "\\)", "\\*", "+", ",", "-", ".", "/",
+                "0", "1", "2", "3", "4", "5", "6", "7",
+                "8", "9", ":", "\\;", "\\<", "\\=", "\\>", "\\?"), expand("${(qV#)array}"));
     }
 
     @Test
