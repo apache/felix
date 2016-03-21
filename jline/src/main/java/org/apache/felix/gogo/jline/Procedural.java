@@ -31,7 +31,7 @@ import org.jline.builtins.Options;
 
 public class Procedural {
 
-    static final String[] functions = {"each", "if", "not", "throw", "try", "until", "while", "break"};
+    static final String[] functions = {"each", "if", "not", "throw", "try", "until", "while", "break", "continue"};
 
     public void _main(CommandSession session, Object[] argv) throws Throwable {
         if (argv == null || argv.length < 1) {
@@ -39,7 +39,7 @@ public class Procedural {
         }
         try {
             run(session, argv);
-        } catch (IllegalArgumentException e) {
+        } catch (OptionException e) {
             System.err.println(e.getMessage());
             session.error(2);
         } catch (HelpException e) {
@@ -48,9 +48,12 @@ public class Procedural {
         } catch (ThrownException e) {
             session.error(1);
             throw e.getCause();
-        } catch (Exception e) {
-            System.err.println(argv[0] + ": " + e.getMessage());
-            session.error(1);
+        }
+    }
+
+    protected static class OptionException extends Exception {
+        public OptionException(String message, Throwable cause) {
+            super(message, cause);
         }
     }
 
@@ -69,14 +72,21 @@ public class Procedural {
     protected static class BreakException extends Exception {
     }
 
-    protected Options parseOptions(CommandSession session, String[] usage, Object[] argv) throws HelpException {
-        Options opt = Options.compile(usage, s -> get(session, s)).parse(argv, true);
-        if (opt.isSet("help")) {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            opt.usage(new PrintStream(baos));
-            throw new HelpException(baos.toString());
+    protected static class ContinueException extends Exception {
+    }
+
+    protected Options parseOptions(CommandSession session, String[] usage, Object[] argv) throws HelpException, OptionException {
+        try {
+            Options opt = Options.compile(usage, s -> get(session, s)).parse(argv, true);
+            if (opt.isSet("help")) {
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                opt.usage(new PrintStream(baos));
+                throw new HelpException(baos.toString());
+            }
+            return opt;
+        } catch (IllegalArgumentException e) {
+            throw new OptionException(e.getMessage(), e);
         }
-        return opt;
     }
 
     protected String get(CommandSession session, String name) {
@@ -102,6 +112,8 @@ public class Procedural {
                 return doWhile(session, argv);
             case "break":
                 return doBreak(session, argv);
+            case "continue":
+                return doContinue(session, argv);
             default:
                 throw new UnsupportedOperationException();
         }
@@ -141,6 +153,8 @@ public class Procedural {
                 results.add(functions.get(0).execute(session, args));
             } catch (BreakException b) {
                 break;
+            } catch (ContinueException c) {
+                continue;
             }
         }
 
@@ -185,7 +199,7 @@ public class Procedural {
 
     }
 
-    protected Object doThrow(CommandSession session, Object[] argv) throws ThrownException, HelpException {
+    protected Object doThrow(CommandSession session, Object[] argv) throws ThrownException, HelpException, OptionException {
         String[] usage = {
                 "throw -  throw an exception",
                 "Usage: throw [ message [ cause ] ]",
@@ -264,6 +278,8 @@ public class Procedural {
                 functions.get(1).execute(session, null);
             } catch (BreakException b) {
                 break;
+            } catch (ContinueException c) {
+                continue;
             }
         }
         return null;
@@ -295,8 +311,10 @@ public class Procedural {
         while (!isTrue(session, functions.get(0))) {
             try {
                 functions.get(1).execute(session, null);
-            } catch (BreakException b) {
+            } catch (BreakException e) {
                 break;
+            } catch (ContinueException c) {
+                continue;
             }
         }
         return null;
@@ -310,6 +328,16 @@ public class Procedural {
         };
         parseOptions(session, usage, argv);
         throw new BreakException();
+    }
+
+    protected Object doContinue(CommandSession session, Object[] argv) throws Exception {
+        String[] usage = {
+                "continue -  continue loop",
+                "Usage: continue",
+                "  -? --help                    Show help",
+        };
+        parseOptions(session, usage, argv);
+        throw new ContinueException();
     }
 
     private boolean isTrue(CommandSession session, Function function) throws Exception {
