@@ -103,12 +103,28 @@ public interface CommandSession
 
     Object convert(Class<?> type, Object instance);
 
+    //
+    // Job support
+    //
+
+    /**
+     * List jobs. Always return a non-null list.
+     */
     List<Job> jobs();
 
+    /**
+     * Get the job running in the current thead or null.
+     */
     Job currentJob();
 
+    /**
+     * Get the current foreground job or null.
+     */
     Job foregroundJob();
 
+    /**
+     * Set the job listener for this session.
+     */
     void setJobListener(JobListener listener);
 
 }
