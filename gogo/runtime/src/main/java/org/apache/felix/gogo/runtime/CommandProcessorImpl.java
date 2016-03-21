@@ -21,8 +21,6 @@ package org.apache.felix.gogo.runtime;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.channels.WritableByteChannel;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -68,20 +66,6 @@ public class CommandProcessorImpl implements CommandProcessor
                 throw new IllegalArgumentException();
             }
             CommandSessionImpl session = new CommandSessionImpl(this, (CommandSessionImpl) parent);
-            sessions.put(session, null);
-            return session;
-        }
-    }
-
-    public CommandSessionImpl createSession(ReadableByteChannel in, WritableByteChannel out, WritableByteChannel err)
-    {
-        synchronized (sessions)
-        {
-            if (stopped)
-            {
-                throw new IllegalStateException("CommandProcessor has been stopped");
-            }
-            CommandSessionImpl session = new CommandSessionImpl(this, in, out, err);
             sessions.put(session, null);
             return session;
         }

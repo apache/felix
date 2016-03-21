@@ -29,6 +29,8 @@
     <artifactId>org.apache.felix.gogo.runtime</artifactId>
     <version>0.16.3-SNAPSHOT</version>
     <properties>
+        <!-- Skip because of NPE -->
+        <animal.sniffer.skip>true</animal.sniffer.skip>
         <felix.java.version>8</felix.java.version>
     </properties>
     <dependencies>
@@ -55,6 +57,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
+                <version>3.0.0</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>

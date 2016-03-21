@@ -31,9 +31,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
+import org.apache.felix.gogo.runtime.Job.Status;
 import org.apache.felix.gogo.runtime.Parser.Array;
 import org.apache.felix.gogo.runtime.Parser.Executable;
 import org.apache.felix.gogo.runtime.Parser.Operator;
@@ -254,42 +253,23 @@ public class Closure implements Function, Evaluate
                 pipes.add(new Pipe(this, (Statement) executable, streams, toclose));
             }
 
+            // Create job
+            Token s = pipes.get(0).statement;
+            Token e = pipes.get(pipes.size() - 1).statement;
+            Token t = program.subSequence(s.start - program.start, e.start + e.length - program.start);
+            Job job = session().createJob(t, pipes);
+
             // Start pipe in background
             if (operator != null && Token.eq("&", operator)) {
-
-                for (Pipe pipe : pipes) {
-                    session().getExecutor().submit(pipe);
-                }
-
+                job.start(Status.Background);
                 last = new Result((Object) null);
-
             }
             // Start in foreground and wait for results
             else {
-                List<Future<Result>> results = session().getExecutor().invokeAll(pipes);
-
-                // Get pipe exceptions
-                Exception pipeException = null;
-                for (int i = 0; i < results.size() - 1; i++) {
-                    Future<Result> future = results.get(i);
-                    Throwable e;
-                    try {
-                        Result r = future.get();
-                        e = r.exception;
-                    } catch (ExecutionException ee) {
-                        e = ee.getCause();
-                    }
-                    if (e != null) {
-                        if (pipeException == null) {
-                            pipeException = new Exception("Exception caught during pipe execution");
-                        }
-                        pipeException.addSuppressed(e);
-                    }
-                }
-                session.put(PIPE_EXCEPTION, pipeException);
-
-                last = results.get(results.size() - 1).get();
-                if (last.exception != null) {
+                last = job.start(Status.Foreground);
+                if (last == null) {
+                    last = new Result((Object) null);
+                } else if (last.exception != null) {
                     throw last.exception;
                 }
             }
