@@ -308,6 +308,7 @@ public class Parser
 
     private static final Pattern redirNoArg = Pattern.compile("[0-9]?>&[0-9-]|[0-9-]?<&[0-9-]");
     private static final Pattern redirArg = Pattern.compile("[0-9&]?>|[0-9]?>>|[0-9]?<|[0-9]?<>|<<<");
+    private static final Pattern redirHereDoc = Pattern.compile("<<-?");
 
     public Statement statement()
     {
@@ -365,6 +366,11 @@ public class Parser
             {
                 redirs.add(t);
                 needRedirArg = true;
+            }
+            else if (redirHereDoc.matcher(t).matches())
+            {
+                redirs.add(t);
+                redirs.add(tz.readHereDoc(t.charAt(t.length() - 1) == '-'));
             }
             else
             {
