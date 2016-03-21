@@ -24,6 +24,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -45,6 +48,7 @@ import org.jline.reader.Candidate;
 import org.jline.reader.LineReader;
 import org.jline.reader.ParsedLine;
 import org.jline.reader.Widget;
+import org.jline.reader.impl.completer.completer.FileNameCompleter;
 import org.jline.terminal.Attributes;
 import org.jline.terminal.Terminal;
 import org.jline.utils.InfoCmp.Capability;
@@ -209,7 +213,12 @@ public class JLineCommands {
         ParsedLine line = Shell.getParsedLine(session);
         LineReader reader = Shell.getReader(session);
         List<Candidate> candidates = new ArrayList<>();
-        new FilesCompleter(session.currentDir()).complete(reader, line, candidates);
+        new FilesCompleter(session.currentDir()) {
+            @Override
+            protected String getDisplay(Path p) {
+                return getFileDisplay(session, p);
+            }
+        }.complete(reader, line, candidates);
         return candidates;
     }
 
@@ -217,8 +226,41 @@ public class JLineCommands {
         ParsedLine line = Shell.getParsedLine(session);
         LineReader reader = Shell.getReader(session);
         List<Candidate> candidates = new ArrayList<>();
-        new DirectoriesCompleter(session.currentDir()).complete(reader, line, candidates);
+        new DirectoriesCompleter(session.currentDir()) {
+            @Override
+            protected String getDisplay(Path p) {
+                return getFileDisplay(session, p);
+            }
+        }.complete(reader, line, candidates);
         return candidates;
+    }
+
+    private String getFileDisplay(CommandSession session, Path path) {
+        String type;
+        String suffix;
+        if (Files.isSymbolicLink(path)) {
+            type = "sl";
+            suffix = "@";
+        } else if (Files.isDirectory(path)) {
+            type = "dr";
+            suffix = "/";
+        } else if (Files.isExecutable(path)) {
+            type = "ex";
+            suffix = "*";
+        } else if (!Files.isRegularFile(path)) {
+            type = "ot";
+            suffix = "";
+        } else {
+            type = "";
+            suffix = "";
+        }
+        String col = Posix.getColorMap(session, "LS").get(type);
+        if (col != null && !col.isEmpty()) {
+            return "\033[" + col + "m" + path.getFileName().toString() + "\033[m" + suffix;
+        } else {
+            return path.getFileName().toString() + suffix;
+        }
+
     }
 
     public void __usage_completion(CommandSession session, String command) throws Exception {
