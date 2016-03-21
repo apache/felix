@@ -53,6 +53,7 @@ import org.apache.felix.service.command.Descriptor;
 import org.apache.felix.service.command.Function;
 import org.apache.felix.service.command.Parameter;
 import org.jline.builtins.Completers.CompletionData;
+import org.jline.builtins.Completers.CompletionEnvironment;
 import org.jline.builtins.Options;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
@@ -88,11 +89,11 @@ public class Shell {
     private final Context context;
     private final CommandProcessor processor;
 
-    public Shell(Context context, CommandProcessor processor, Terminal terminal) {
-        this(context, processor, terminal, null);
+    public Shell(Context context, CommandProcessor processor) {
+        this(context, processor, null);
     }
 
-    public Shell(Context context, CommandProcessor processor, Terminal terminal, String profile) {
+    public Shell(Context context, CommandProcessor processor, String profile) {
         this.context = context;
         this.processor = processor;
         String baseDir = context.getProperty("gosh.home");
@@ -243,11 +244,9 @@ public class Shell {
         }
 
         // export variables starting with upper-case to newSession
-        for (String key : getVariables(session)) {
-            if (key.matches("[.]?[A-Z].*")) {
-                newSession.put(key, session.get(key));
-            }
-        }
+        getVariables(session).stream()
+                .filter(key -> key.matches("[.]?[A-Z].*"))
+                .forEach(key -> newSession.put(key, session.get(key)));
 
         Terminal terminal = getTerminal(session);
         newSession.put(Shell.VAR_CONTEXT, context);
@@ -261,10 +260,34 @@ public class Shell {
 
         LineReader reader;
         if (args.isEmpty() && interactive) {
+            CompletionEnvironment completionEnvironment = new CompletionEnvironment() {
+                @Override
+                public Map<String, List<CompletionData>> getCompletions() {
+                    return Shell.getCompletions(newSession);
+                }
+                @Override
+                public Set<String> getCommands() {
+                    return Shell.getCommands(session);
+                }
+                @Override
+                public String resolveCommand(String command) {
+                    return Shell.resolve(session, command);
+                }
+                @Override
+                public String commandName(String command) {
+                    int idx = command.indexOf(':');
+                    return idx >= 0 ? command.substring(idx + 1) : command;
+                }
+                @Override
+                public Object evaluate(LineReader reader, ParsedLine line, String func) throws Exception {
+                    session.put(Shell.VAR_COMMAND_LINE, line);
+                    return session.execute(func);
+                }
+            };
             reader = LineReaderBuilder.builder()
                     .terminal(terminal)
                     .variables(((CommandSessionImpl) newSession).getVariables())
-                    .completer(new org.jline.builtins.Completers.Completer(new JLineCompletionEnvironment(newSession)))
+                    .completer(new org.jline.builtins.Completers.Completer(completionEnvironment))
                     .highlighter(new Highlighter(session))
                     .history(new FileHistory(new File(System.getProperty("user.home"), ".gogo.history")))
                     .parser(new Parser())
@@ -357,6 +380,7 @@ public class Shell {
                             while (true) {
                                 Job job = session.foregroundJob();
                                 if (job != null) {
+                                    //noinspection SynchronizationOnLocalVariableOrMethodParameter
                                     synchronized (job) {
                                         if (job.status() == Status.Foreground) {
                                             job.wait();
@@ -420,6 +444,7 @@ public class Shell {
         return result;
     }
 
+    @Descriptor("start a new shell")
     public Object sh(final CommandSession session, String[] argv) throws Exception {
         return gosh(session, argv);
     }
@@ -428,6 +453,7 @@ public class Shell {
         context.exit();
     }
 
+    @Descriptor("Evaluates contents of file")
     public Object source(CommandSession session, String script) throws Exception {
         URI uri = session.currentDir().toUri().resolve(script);
         session.put("0", uri);
@@ -439,7 +465,7 @@ public class Shell {
     }
 
     private Map<String, List<Method>> getReflectionCommands(CommandSession session) {
-        Map<String, List<Method>> commands = new TreeMap<String, List<Method>>();
+        Map<String, List<Method>> commands = new TreeMap<>();
         Set<String> names = getCommands(session);
         for (String name : names) {
             Function function = (Function) session.get(name);
@@ -471,9 +497,7 @@ public class Shell {
     @Descriptor("displays available commands")
     public void help(CommandSession session) {
         Map<String, List<Method>> commands = getReflectionCommands(session);
-        for (String name : commands.keySet()) {
-            System.out.println(name);
-        }
+        commands.keySet().forEach(System.out::println);
     }
 
     @Descriptor("displays information about a specific command")
@@ -517,7 +541,7 @@ public class Shell {
                 Map<String, String> flagDescs = new TreeMap<>();
                 Map<String, Parameter> options = new TreeMap<>();
                 Map<String, String> optionDescs = new TreeMap<>();
-                List<String> params = new ArrayList<String>();
+                List<String> params = new ArrayList<>();
                 Annotation[][] anns = m.getParameterAnnotations();
                 for (int paramIdx = 0; paramIdx < anns.length; paramIdx++) {
                     Class<?> paramType = m.getParameterTypes()[paramIdx];

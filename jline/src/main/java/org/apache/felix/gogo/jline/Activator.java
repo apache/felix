@@ -25,7 +25,6 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.gogo.jline.Shell.Context;
@@ -47,7 +46,7 @@ public class Activator implements BundleActivator {
     private ExecutorService executor;
 
     public Activator() {
-        regs = new HashSet<ServiceRegistration>();
+        regs = new HashSet<>();
     }
 
     public void start(BundleContext context) throws Exception {
@@ -87,7 +86,7 @@ public class Activator implements BundleActivator {
     }
 
     private void startShell(final BundleContext context, CommandProcessor processor) {
-        Dictionary<String, Object> dict = new Hashtable<String, Object>();
+        Dictionary<String, Object> dict = new Hashtable<>();
         dict.put(CommandProcessor.COMMAND_SCOPE, "gogo");
 
         // register converters
@@ -102,21 +101,17 @@ public class Activator implements BundleActivator {
         regs.add(context.registerService(Procedural.class.getName(), new Procedural(), dict));
 
         dict.put(CommandProcessor.COMMAND_FUNCTION, Posix.functions);
-        regs.add(context.registerService(Posix.class.getName(), new Posix(), dict));
+        regs.add(context.registerService(Posix.class.getName(), new Posix(processor), dict));
 
         dict.put(CommandProcessor.COMMAND_FUNCTION, Telnet.functions);
         regs.add(context.registerService(Telnet.class.getName(), new Telnet(processor), dict));
 
-        Shell shell = new Shell(new ShellContext(), processor, null);
+        Shell shell = new Shell(new ShellContext(), processor);
         dict.put(CommandProcessor.COMMAND_FUNCTION, Shell.functions);
         regs.add(context.registerService(Shell.class.getName(), shell, dict));
 
         // start shell on a separate thread...
-        executor = Executors.newSingleThreadExecutor(new ThreadFactory() {
-            public Thread newThread(Runnable runnable) {
-                return new Thread(runnable, "Gogo shell");
-            }
-        });
+        executor = Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "Gogo shell"));
         executor.submit(new StartShellJob(context, processor));
     }
 
