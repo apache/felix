@@ -579,10 +579,11 @@ public class Expander extends BaseTokenizer
                     }
                     // Parameter expansion
                     else {
-                        Object val = expandVar();
+                        Object val = expandVar(true);
                         if (EOT == ch && buf.length() == 0) {
                             return val;
                         }
+                        rawVariable = false;
                         if (null != val) {
                             buf.append(val);
                         }
@@ -820,6 +821,11 @@ public class Expander extends BaseTokenizer
 
     private Object expandVar() throws Exception
     {
+        return expandVar(false);
+    }
+
+    private Object expandVar(boolean rawVariable) throws Exception
+    {
         assert '$' == ch;
 
         Object val = null;
@@ -853,7 +859,7 @@ public class Expander extends BaseTokenizer
                 {
                     String name = text.subSequence(start, index - 1).toString();
                     val = evaluate.get(name);
-                    rawVariable = true;
+                    this.rawVariable = rawVariable;
                 }
             }
         }
