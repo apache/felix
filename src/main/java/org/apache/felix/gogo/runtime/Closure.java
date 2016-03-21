@@ -221,6 +221,7 @@ public class Closure implements Function, Evaluate
             }
             if (capturingOutput != null) {
                 streams[1] = capturingOutput;
+                toclose[1] = true;
             }
 
             List<Pipe> pipes = new ArrayList<>();
