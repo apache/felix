@@ -32,6 +32,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -636,6 +637,8 @@ public class Expander extends BaseTokenizer
         {
             getch();
 
+            // unique flag
+            boolean flagu = false;
             // sort flags
             boolean flago = false;
             boolean flagO = false;
@@ -662,11 +665,62 @@ public class Expander extends BaseTokenizer
             // quoting
             int flagq = 0;
             boolean flagQ = false;
+            // split / join
+            String flags = null;
+            String flagj = null;
+            // length
+            boolean computeLength = false;
             // Parse flags
             if (ch == '(') {
                 getch();
+                boolean flagp = false;
                 while (ch != EOT && ch != ')') {
                     switch (ch) {
+                        case 'u':
+                            flagu = true;
+                            break;
+                        case 'p':
+                            flagp = true;
+                            break;
+                        case 'f':
+                            flags = "\n";
+                            break;
+                        case 'F':
+                            flagj = "\n";
+                            break;
+                        case 's':
+                        case 'j': {
+                            char opt = ch;
+                            char c = getch();
+                            if (c == EOT) {
+                                throw new IllegalArgumentException("error in flags");
+                            }
+                            int start = index;
+                            while (true) {
+                                char n = getch();
+                                if (n == EOT) {
+                                    throw new IllegalArgumentException("error in flags");
+                                }
+                                else if (n == c) {
+                                    break;
+                                }
+                            }
+                            String s = text.subSequence(start, index - 1).toString();
+                            if (flagp) {
+                                s = ansiEscape(s).toString();
+                            }
+                            if (opt == 's') {
+                                flags = s;
+                            }
+                            else if (opt == 'j') {
+                                flagj = s;
+                            }
+                            else {
+                                throw new IllegalArgumentException("error in flags");
+                            }
+                            flagp = false;
+                            break;
+                        }
                         case 'q':
                             if (flagq != 0) {
                                 throw new IllegalArgumentException("error in flags");
@@ -775,14 +829,14 @@ public class Expander extends BaseTokenizer
                 val = getAndEvaluateName();
             }
             else {
-                boolean computeLength = false;
-                boolean wordSplit = false;
                 if (ch == '#') {
                     computeLength = true;
                     getch();
                 }
                 if (ch == '=') {
-                    wordSplit = true;
+                    if (flags == null) {
+                        flags = "\\s";
+                    }
                     getch();
                 }
 
@@ -872,32 +926,6 @@ public class Expander extends BaseTokenizer
                         } else {
                             val = val1;
                         }
-                    }
-                }
-                if (computeLength) {
-                    if (val instanceof Collection) {
-                        val = ((Collection) val).size();
-                    }
-                    else if (val instanceof Map) {
-                        val = ((Map) val).size();
-                    }
-                    else if (val != null) {
-                        val = val.toString().length();
-                    }
-                    else {
-                        val = 0;
-                    }
-                }
-                if (wordSplit) {
-                    val = mapToList.apply(val);
-                    if (val instanceof Collection) {
-                        val = asCollection(val).stream()
-                                .map(String::valueOf)
-                                .flatMap(s -> Arrays.stream(s.split("\\s+")))
-                                .collect(Collectors.toList());
-                    }
-                    else if (val != null) {
-                        val = Arrays.asList(val.toString().split("\\s"));
                     }
                 }
             }
@@ -1021,6 +1049,53 @@ public class Expander extends BaseTokenizer
                 val = val != null ? evaluate.get(val.toString()) : null;
             }
 
+
+            // Character evaluation
+            if (flagSharp) {
+                val = stringApplyer.apply(this::sharp, val);
+            }
+
+            // Length
+            if (computeLength) {
+                if (val instanceof Collection) {
+                    val = ((Collection) val).size();
+                }
+                else if (val instanceof Map) {
+                    val = ((Map) val).size();
+                }
+                else if (val != null) {
+                    val = val.toString().length();
+                }
+                else {
+                    val = 0;
+                }
+            }
+
+            // Joining
+            if (flagj != null) {
+                val = mapToList.apply(val);
+                if (val instanceof Collection) {
+                    val = asCollection(val).stream()
+                            .map(String::valueOf)
+                            .collect(Collectors.joining(flagj));
+                }
+            }
+
+            // Splitting
+            if (flags != null) {
+                String _flags = flags;
+                val = mapToList.apply(val);
+                if (!(val instanceof Collection)) {
+                    val = Collections.singletonList(val);
+                }
+                val = asCollection(val).stream()
+                        .map(String::valueOf)
+                        .flatMap(s -> Arrays.stream(s.split(_flags)))
+                        .filter(s -> !s.isEmpty())
+                        .collect(Collectors.toList());
+            }
+
+            // Case modification
             if (flagC) {
                 val = stringApplyer.apply(this::toCamelCase, val);
             }
@@ -1031,6 +1106,30 @@ public class Expander extends BaseTokenizer
                 val = stringApplyer.apply(String::toUpperCase, val);
             }
 
+            // Visibility enhancement
+            if (flagV) {
+                val = stringApplyer.apply(this::visible, val);
+            }
+
+            // Quote
+            if (flagq != 0) {
+                int _flagq = flagq;
+                val = stringApplyer.apply(s -> quote(s, _flagq), val);
+                inQuote = true;
+            }
+            else if (flagQ) {
+                val = stringApplyer.apply(this::unquote, val);
+            }
+
+            // Uniqueness
+            if (flagu) {
+                val = mapToList.apply(val);
+                if (val instanceof Collection) {
+                    val = new ArrayList<>(new HashSet<>(asCollection(val)));
+                }
+            }
+
+            // Ordering
             if (flaga || flagi || flagn || flago || flagO) {
                 val = mapToList.apply(val);
                 if (val instanceof Collection) {
@@ -1055,25 +1154,6 @@ public class Expander extends BaseTokenizer
                     }
                     val = list;
                 }
-            }
-
-            if (flagSharp) {
-                val = stringApplyer.apply(this::sharp, val);
-            }
-
-            if (flagV) {
-                val = stringApplyer.apply(this::visible, val);
-            }
-
-            // Quote
-            if (flagq != 0) {
-                int _flagq = flagq;
-                val = stringApplyer.apply(s -> quote(s, _flagq), val);
-                inQuote = true;
-            }
-            // Unquote
-            else if (flagQ) {
-                val = stringApplyer.apply(this::unquote, val);
             }
 
             if (inQuote) {
