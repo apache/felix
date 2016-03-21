@@ -127,4 +127,18 @@ public interface CommandSession
      */
     void setJobListener(JobListener listener);
 
+    //
+    // Process access
+    //
+
+    /**
+     * Check if the given descriptor for the currently running pipe is the terminal or not.
+     */
+    boolean isTty(int fd);
+
+    /**
+     * Set the error code for the currently running pipe.
+     */
+    void error(int error);
+
 }

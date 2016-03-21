@@ -81,6 +81,11 @@ public class Pipe implements Callable<Result>
         return CURRENT.get();
     }
 
+    public static boolean isTty(int fd) {
+        Pipe current = getCurrentPipe();
+        return current != null && !current.toclose[fd];
+    }
+
     public static void error(int error) {
         Pipe current = getCurrentPipe();
         if (current != null) {
