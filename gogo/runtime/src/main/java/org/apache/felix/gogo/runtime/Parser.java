@@ -205,7 +205,7 @@ public class Parser
         int start = tz.index - 1;
         while (true)
         {
-            Executable ex;
+            Statement ex;
             Token t = next();
             if (t == null)
             {
@@ -260,7 +260,7 @@ public class Parser
             {
                 if (pipes == null)
                 {
-                    pipes = new ArrayList<Executable>();
+                    pipes = new ArrayList<>();
                 }
                 pipes.add(ex);
                 pipes.add(new Operator(t));
