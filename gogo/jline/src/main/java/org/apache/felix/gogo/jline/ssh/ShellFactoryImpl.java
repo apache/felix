@@ -235,6 +235,7 @@ public class ShellFactoryImpl implements Factory<Command> {
                 terminal.setAttributes(attr);
                 PrintStream pout = new PrintStream(terminal.output());
                 final CommandSession session = processor.createSession(terminal.input(), pout, pout);
+                session.put(Shell.VAR_TERMINAL, terminal);
                 for (Map.Entry<String, String> e : env.getEnv().entrySet()) {
                     session.put(e.getKey(), e.getValue());
                 }
