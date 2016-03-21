@@ -78,7 +78,7 @@ public class Pipe extends Thread
     private static final int READ = 1;
     private static final int WRITE = 2;
 
-    private void setStream(Channel ch, int fd, int readWrite) throws IOException {
+    private void setStream(Channel ch, int fd, int readWrite, boolean begOfPipe, boolean endOfPipe) throws IOException {
         if ((readWrite & READ) != 0 && !(ch instanceof ReadableByteChannel)) {
             throw new IllegalArgumentException("Channel is not readable");
         }
@@ -106,7 +106,13 @@ public class Pipe extends Thread
                     mrbc = (MultiReadableByteChannel) streams[fd];
                 } else {
                     mrbc = new MultiReadableByteChannel();
-                    mrbc.addChannel((ReadableByteChannel) streams[fd], toclose[fd]);
+                    if (streams[fd] != null && begOfPipe) {
+                        if (toclose[fd]) {
+                            streams[fd].close();
+                        }
+                    } else {
+                        mrbc.addChannel((ReadableByteChannel) streams[fd], toclose[fd]);
+                    }
                     streams[fd] = mrbc;
                     toclose[fd] = true;
                 }
@@ -117,7 +123,13 @@ public class Pipe extends Thread
                     mrbc = (MultiWritableByteChannel) streams[fd];
                 } else {
                     mrbc = new MultiWritableByteChannel();
-                    mrbc.addChannel((WritableByteChannel) streams[fd], toclose[fd]);
+                    if (streams[fd] != null && endOfPipe) {
+                        if (toclose[fd]) {
+                            streams[fd].close();
+                        }
+                    } else {
+                        mrbc.addChannel((WritableByteChannel) streams[fd], toclose[fd]);
+                    }
                     streams[fd] = mrbc;
                     toclose[fd] = true;
                 }
@@ -196,6 +208,11 @@ public class Pipe extends Thread
         WritableByteChannel errChannel = (WritableByteChannel) streams[2];
 
         Channel[] prevStreams = tStreams.get();
+
+        // TODO: not sure this is the correct way
+        boolean begOfPipe = !toclose[0];
+        boolean endOfPipe = !toclose[1];
+
         try
         {
             if (executable instanceof Statement) {
@@ -227,10 +244,10 @@ public class Pipe extends Thread
                         }
                         Channel ch = Files.newByteChannel(outPath, options);
                         if (fd >= 0) {
-                            setStream(ch, fd, WRITE);
+                            setStream(ch, fd, WRITE, begOfPipe, endOfPipe);
                         } else {
-                            setStream(ch, 1, WRITE);
-                            setStream(ch, 2, WRITE);
+                            setStream(ch, 1, WRITE, begOfPipe, endOfPipe);
+                            setStream(ch, 2, WRITE, begOfPipe, endOfPipe);
                         }
                     }
                     else if ((m = Pattern.compile("([0-9])?>&([0-9])").matcher(t)).matches()) {
@@ -262,7 +279,7 @@ public class Pipe extends Thread
                             options.add(StandardOpenOption.CREATE);
                         }
                         Channel ch = Files.newByteChannel(inPath, options);
-                        setStream(ch, fd, READ + (output ? WRITE : 0));
+                        setStream(ch, fd, READ + (output ? WRITE : 0), begOfPipe, endOfPipe);
                     }
                 }
             } else {
@@ -270,9 +287,6 @@ public class Pipe extends Thread
             }
 
             tStreams.set(streams);
-
-            // TODO: not sure this is the correct way
-            boolean endOfPipe = !toclose[1];
 
             in = Channels.newInputStream((ReadableByteChannel) streams[0]);
             out = new PrintStream(Channels.newOutputStream((WritableByteChannel) streams[1]), true);
