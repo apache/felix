@@ -28,7 +28,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.gogo.jline.Shell.Context;
-import org.apache.felix.gogo.jline.telnet.Telnet;
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Converter;
@@ -102,9 +101,6 @@ public class Activator implements BundleActivator {
 
         dict.put(CommandProcessor.COMMAND_FUNCTION, Posix.functions);
         regs.add(context.registerService(Posix.class.getName(), new Posix(processor), dict));
-
-        dict.put(CommandProcessor.COMMAND_FUNCTION, Telnet.functions);
-        regs.add(context.registerService(Telnet.class.getName(), new Telnet(processor), dict));
 
         Shell shell = new Shell(new ShellContext(), processor);
         dict.put(CommandProcessor.COMMAND_FUNCTION, Shell.functions);
