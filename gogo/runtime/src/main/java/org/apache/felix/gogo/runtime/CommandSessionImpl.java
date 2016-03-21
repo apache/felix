@@ -742,4 +742,14 @@ public class CommandSessionImpl implements CommandSession, Converter
         }
 
     }
+
+    @Override
+    public boolean isTty(int fd) {
+        return Pipe.isTty(fd);
+    }
+
+    @Override
+    public void error(int error) {
+        Pipe.error(error);
+    }
 }
