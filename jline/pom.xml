@@ -27,7 +27,7 @@
     <packaging>bundle</packaging>
     <name>Apache Felix Gogo JLine Shell</name>
     <artifactId>org.apache.felix.gogo.jline</artifactId>
-    <version>0.11.0-SNAPSHOT</version>
+    <version>0.1.0-SNAPSHOT</version>
     <properties>
         <!-- Skip because of NPE -->
         <animal.sniffer.skip>true</animal.sniffer.skip>
@@ -69,19 +69,16 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
+                <version>3.0.0</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
                         <Export-Package>
+                            *
                         </Export-Package>
                         <Import-Package>
-                            org.apache.felix.service.command; status="provisional",
                             *
                         </Import-Package>
-                        <Private-Package>
-			                org.apache.felix.gogo.shell,
-			                org.apache.felix.gogo.options
-			            </Private-Package>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                         <Bundle-Activator>org.apache.felix.gogo.jline.Activator</Bundle-Activator>
