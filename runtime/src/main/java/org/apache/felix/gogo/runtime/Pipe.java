@@ -25,7 +25,6 @@ import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.PrintStream;
 import java.net.URI;
-import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
 import java.nio.channels.Channel;
@@ -39,7 +38,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -49,10 +47,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.felix.gogo.runtime.CommandSessionImpl.JobImpl;
 import org.apache.felix.gogo.api.Job;
 import org.apache.felix.gogo.api.Job.Status;
 import org.apache.felix.gogo.api.Process;
+import org.apache.felix.gogo.runtime.CommandSessionImpl.JobImpl;
 import org.apache.felix.gogo.runtime.Parser.Statement;
 import org.apache.felix.gogo.runtime.Pipe.Result;
 import org.apache.felix.service.command.Converter;
@@ -248,17 +246,23 @@ public class Pipe implements Callable<Result>, Process
         try
         {
             List<Token> tokens = statement.redirections();
-            for (int i = 0; i < tokens.size(); i++) {
+            for (int i = 0; i < tokens.size(); i++)
+            {
                 Token t = tokens.get(i);
                 Matcher m;
-                if ((m = Pattern.compile("(?:([0-9])?|(&)?)>(>)?").matcher(t)).matches()) {
+                if ((m = Pattern.compile("(?:([0-9])?|(&)?)>(>)?").matcher(t)).matches())
+                {
                     int fd;
-                    if (m.group(1) != null) {
+                    if (m.group(1) != null)
+                    {
                         fd = Integer.parseInt(m.group(1));
                     }
-                    else if (m.group(2) != null) {
+                    else if (m.group(2) != null)
+                    {
                         fd = -1; // both 1 and 2
-                    } else {
+                    }
+                    else
+                    {
                         fd = 1;
                     }
                     boolean append = m.group(3) != null;
@@ -283,37 +287,45 @@ public class Pipe implements Callable<Result>, Process
                         }
                     }
                 }
-                else if ((m = Pattern.compile("([0-9])?>&([0-9])").matcher(t)).matches()) {
+                else if ((m = Pattern.compile("([0-9])?>&([0-9])").matcher(t)).matches())
+                {
                     int fd0 = 1;
-                    if (m.group(1) != null) {
+                    if (m.group(1) != null)
+                    {
                         fd0 = Integer.parseInt(m.group(1));
                     }
                     int fd1 = Integer.parseInt(m.group(2));
-                    if (streams[fd0] != null && toclose[fd0]) {
+                    if (streams[fd0] != null && toclose[fd0])
+                    {
                         streams[fd0].close();
                     }
                     // If the stream has to be closed, close it when both streams are closed
-                    if (toclose[fd1]) {
+                    if (toclose[fd1])
+                    {
                         Channel channel = streams[fd1];
                         AtomicInteger references = new AtomicInteger();
                         streams[fd0] = new RefByteChannel(channel, references);
                         streams[fd1] = new RefByteChannel(channel, references);
                         toclose[fd0] = true;
                     }
-                    else {
+                    else
+                    {
                         streams[fd0] = streams[fd1];
                         toclose[fd0] = false;
                     }
                 }
-                else if ((m = Pattern.compile("([0-9])?<(>)?").matcher(t)).matches()) {
+                else if ((m = Pattern.compile("([0-9])?<(>)?").matcher(t)).matches())
+                {
                     int fd = 0;
-                    if (m.group(1) != null) {
+                    if (m.group(1) != null)
+                    {
                         fd = Integer.parseInt(m.group(1));
                     }
                     boolean output = m.group(2) != null;
                     Set<StandardOpenOption> options = new HashSet<>();
                     options.add(StandardOpenOption.READ);
-                    if (output) {
+                    if (output)
+                    {
                         options.add(StandardOpenOption.WRITE);
                         options.add(StandardOpenOption.CREATE);
                     }
@@ -348,65 +360,83 @@ public class Pipe implements Callable<Result>, Process
             // the command is about to be executed.
             errChannel = (WritableByteChannel) streams[2];
 
-            if (threadIo != null) {
+            if (threadIo != null)
+            {
                 threadIo.setStreams(in, out, err);
             }
 
             Pipe previous = setCurrentPipe(this);
-            try {
+            try
+            {
                 Object result;
                 // Very special case for empty statements with redirection
-                if (statement.tokens().isEmpty() && toclose[0]) {
+                if (statement.tokens().isEmpty() && toclose[0])
+                {
                     ByteBuffer bb = ByteBuffer.allocate(1024);
-                    while (((ReadableByteChannel) streams[0]).read(bb) >= 0 || bb.position() != 0) {
+                    while (((ReadableByteChannel) streams[0]).read(bb) >= 0 || bb.position() != 0)
+                    {
                         bb.flip();
                         ((WritableByteChannel) streams[1]).write(bb);
                         bb.compact();
                     }
                     result = null;
-                } else {
+                }
+                else
+                {
                     result = closure.execute(statement);
                 }
                 // If an error has been set
-                if (error != 0) {
+                if (error != 0)
+                {
                     return new Result(error);
                 }
                 // We don't print the result if we're at the end of the pipe
-                if (result != null && !endOfPipe && !Boolean.FALSE.equals(closure.session().get(".FormatPipe"))) {
+                if (result != null && !endOfPipe && !Boolean.FALSE.equals(closure.session().get(".FormatPipe")))
+                {
                     out.println(closure.session().format(result, Converter.INSPECT));
                 }
                 return new Result(result);
 
-            } finally {
+            }
+            finally
+            {
                 setCurrentPipe(previous);
             }
         }
         catch (Exception e)
         {
             String msg = "gogo: " + e.getClass().getSimpleName() + ": " + e.getMessage() + "\n";
-            try {
+            try
+            {
                 errChannel.write(ByteBuffer.wrap(msg.getBytes()));
-            } catch (IOException ioe) {
+            }
+            catch (IOException ioe)
+            {
                 e.addSuppressed(ioe);
             }
             return new Result(e);
         }
         finally
         {
-            if (out != null) {
+            if (out != null)
+            {
                 out.flush();
             }
-            if (err != null) {
+            if (err != null)
+            {
                 err.flush();
             }
-            if (threadIo != null) {
+            if (threadIo != null)
+            {
                 threadIo.close();
             }
 
             try
             {
-                for (int i = 0; i < 10; i++) {
-                    if (toclose[i] && streams[i] != null) {
+                for (int i = 0; i < 10; i++)
+                {
+                    if (toclose[i] && streams[i] != null)
+                    {
                         streams[i].close();
                     }
                 }
@@ -472,11 +502,14 @@ public class Pipe implements Callable<Result>, Process
         return null;
     }
 
-    private Channel wrap(Channel channel) {
-        if (channel == null) {
+    private Channel wrap(Channel channel)
+    {
+        if (channel == null)
+        {
             return null;
         }
-        if (channel instanceof MultiChannel) {
+        if (channel instanceof MultiChannel)
+        {
             return channel;
         }
         MultiChannel mch = new MultiChannel();
