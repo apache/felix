@@ -167,14 +167,14 @@ public class Closure implements Function, Evaluate
     {
         if (null != values)
         {
-            parmv = values;
+            parmv = new ArrayList<>(values);
             parms = new ArgList(parmv);
         }
         else if (null != parent)
         {
             // inherit parent closure parameters
-            parms = parent.parms;
-            parmv = parent.parmv;
+            parmv = parent.parmv != null ? new ArrayList<>(parent.parmv) : null;
+            parms = parmv != null ? new ArgList(parmv) : null;
         }
         else
         {
@@ -182,7 +182,7 @@ public class Closure implements Function, Evaluate
             Object args = session.get("args");
             if (null != args && args instanceof List<?>)
             {
-                parmv = (List<Object>) args;
+                parmv = new ArrayList<>((List<Object>) args);
                 parms = new ArgList(parmv);
             }
         }
