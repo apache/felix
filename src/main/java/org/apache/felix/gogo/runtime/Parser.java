@@ -307,7 +307,7 @@ public class Parser
     }
 
     private static final Pattern redirNoArg = Pattern.compile("[0-9]?>&[0-9-]|[0-9-]?<&[0-9-]");
-    private static final Pattern redirArg = Pattern.compile("[0-9&]?>|[0-9]?>>|[0-9]?<|[0-9]?<>");
+    private static final Pattern redirArg = Pattern.compile("[0-9&]?>|[0-9]?>>|[0-9]?<|[0-9]?<>|<<<");
 
     public Statement statement()
     {

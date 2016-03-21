@@ -135,6 +135,21 @@ public class TestParser4 extends AbstractParserTest
         assertEquals("bar\nbar\n", c.execute("cat <$c | tac"));
     }
 
+    @Test
+    public void testHereString() throws Exception
+    {
+        Context c = new Context();
+        c.addCommand("echo", this);
+        c.addCommand("tac", this);
+        c.addCommand("cat", this);
+
+        c.execute("a=foo");
+        assertEquals("foo\n", c.execute("cat <<< $a | tac"));
+
+        c.execute("c = [ ar1 ar2 ]");
+        assertEquals("ar1 ar2\n", c.execute("cat <<<$c | tac"));
+    }
+
     public void echo(String msg)
     {
         System.out.println(msg);
