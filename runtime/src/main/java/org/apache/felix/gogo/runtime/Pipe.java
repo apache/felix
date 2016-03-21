@@ -338,6 +338,37 @@ public class Pipe implements Callable<Result>, Process
                         setStream(ch, fd, READ + (output ? WRITE : 0));
                     }
                 }
+                else if ((m = Pattern.compile("<<-?").matcher(t)).matches())
+                {
+                    Token hereDoc = tokens.get(++i);
+                    boolean stripLeadingTabs = t.charAt(t.length() - 1) == '-';
+                    InputStream doc = new InputStream()
+                    {
+                        final byte[] bytes = hereDoc.toString().getBytes();
+                        int index = 0;
+                        boolean nl = true;
+                        @Override
+                        public int read() throws IOException
+                        {
+                            if (nl && stripLeadingTabs)
+                            {
+                                while (index < bytes.length && bytes[index] == '\t')
+                                {
+                                    index++;
+                                }
+                            }
+                            if (index < bytes.length)
+                            {
+                                int ch = bytes[index++];
+                                nl = ch == '\n';
+                                return ch;
+                            }
+                            return -1;
+                        }
+                    };
+                    Channel ch = Channels.newChannel(doc);
+                    setStream(ch, 0, READ);
+                }
                 else if (Token.eq("<<<", t))
                 {
                     Token word = tokens.get(++i);

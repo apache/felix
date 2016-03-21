@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 public class Tokenizer extends BaseTokenizer
 {
 
-    private final Pattern redir = Pattern.compile("[0-9&]?>|[0-9]?>>|[0-9]?>&|[0-9]?<|[0-9]?<>|<<<");
+    private final Pattern redir = Pattern.compile("[0-9&]?>|[0-9]?>>|[0-9]?>&|[0-9]?<|[0-9]?<>|<<<|<<\\-?");
 
     protected boolean inArray;
     protected int word = 0;
@@ -119,6 +119,17 @@ public class Tokenizer extends BaseTokenizer
                     }
                     word = 0;
                     return token(start);
+                case '-':
+                    t = text.subSequence(start, index);
+                    if (redir.matcher(t).matches())
+                    {
+                        getch();
+                        return token(start);
+                    }
+                    else {
+                        getch();
+                        break;
+                    }
                 case '&':
                     // beginning of token
                     if (start == index - 1) {
@@ -211,4 +222,58 @@ public class Tokenizer extends BaseTokenizer
         this.pushed = token;
     }
 
+    public Token readHereDoc(boolean ignoreLeadingTabs)
+    {
+        final short sLine = line;
+        final short sCol = column;
+        int start;
+        int nlIndex;
+        boolean nl;
+        // Find word
+        skipSpace();
+        start = index - 1;
+        while (ch != '\n' && ch != EOT) {
+            getch();
+        }
+        if (ch == EOT) {
+            throw new EOFError(sLine, sCol, "expected here-doc start", "heredoc", "foo");
+        }
+        Token token = text.subSequence(start, index - 1);
+        getch();
+        start = index - 1;
+        nlIndex = start;
+        nl = true;
+        // Get heredoc
+        while (true)
+        {
+            if (nl)
+            {
+                if (ignoreLeadingTabs && ch == '\t')
+                {
+                    nlIndex++;
+                }
+                else
+                {
+                    nl = false;
+                }
+            }
+            if (ch == '\n' || ch == EOT)
+            {
+                Token s = text.subSequence(nlIndex, index - 1);
+                if (Token.eq(s, token))
+                {
+                    Token hd = text.subSequence(start, s.start());
+                    getch();
+                    return hd;
+                }
+                nlIndex = index;
+                nl = true;
+            }
+            if (ch == EOT)
+            {
+                throw new EOFError(sLine, sCol, "unexpected eof found in here-doc", "heredoc", token.toString());
+            }
+            getch();
+        }
+    }
 }
