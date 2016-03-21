@@ -24,6 +24,7 @@ package org.apache.felix.gogo.runtime;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,7 +33,10 @@ import java.util.Enumeration;
 import java.util.Formatter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
+import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Converter;
 import org.apache.felix.service.command.Function;
@@ -43,14 +47,15 @@ public class CommandSessionImpl implements CommandSession, Converter
     public static final String SESSION_CLOSED = "session is closed";
     public static final String VARIABLES = ".variables";
     public static final String COMMANDS = ".commands";
+    public static final String CONSTANTS = ".constants";
     private static final String COLUMN = "%-20s %s\n";
 
     protected InputStream in;
     protected PrintStream out;
-    protected PrintStream err;
+    PrintStream err;
 
     private final CommandProcessorImpl processor;
-    protected final Map<String, Object> variables = new HashMap<String, Object>();
+    protected final ConcurrentMap<String, Object> variables = new ConcurrentHashMap<String, Object>();
     private volatile boolean closed;
 
     protected CommandSessionImpl(CommandProcessorImpl shell, InputStream in, PrintStream out, PrintStream err)
@@ -66,11 +71,21 @@ public class CommandSessionImpl implements CommandSession, Converter
         return processor.threadIO;
     }
 
+    public CommandProcessor processor()
+    {
+        return processor;
+    }
+
+    public ConcurrentMap<String, Object> getVariables()
+    {
+        return variables;
+    }
+
     public void close()
     {
         if (!this.closed)
         {
-            this.processor.removeSession(this);
+            this.processor.closeSession(this);
             this.closed = true;
         }
     }
@@ -119,6 +134,11 @@ public class CommandSessionImpl implements CommandSession, Converter
             return processor.getCommands();
         }
 
+        if (CONSTANTS.equals(name))
+        {
+            return Collections.unmodifiableSet(processor.constants.keySet());
+        }
+
         Object val = processor.constants.get(name);
         if (val != null)
         {
@@ -152,11 +172,15 @@ public class CommandSessionImpl implements CommandSession, Converter
         return processor.getCommand(name, variables.get("SCOPE"));
     }
 
-    public void put(String name, Object value)
+    public Object put(String name, Object value)
     {
-        synchronized (variables)
+        if (value != null)
         {
-            variables.put(name, value);
+            return variables.put(name, value);
+        }
+        else
+        {
+            return variables.remove(name);
         }
     }
 
@@ -343,52 +367,48 @@ public class CommandSessionImpl implements CommandSession, Converter
     {
         boolean found = false;
         Formatter f = new Formatter();
-
-        try
+        Method methods[] = b.getClass().getMethods();
+        for (Method m : methods)
         {
-            Method methods[] = b.getClass().getMethods();
-            for (Method m : methods)
+            try
             {
-                try
+                String name = m.getName();
+                if (m.getName().startsWith("get") && !m.getName().equals("getClass") && m.getParameterTypes().length == 0 && Modifier.isPublic(m.getModifiers()))
                 {
-                    String name = m.getName();
-                    if (!name.equals("getClass") && name.startsWith("get") && m.getParameterTypes().length == 0)
-                    {
-                        m.setAccessible(true);
-                        Object value = m.invoke(b);
-
-                        found = true;
-                        name = name.substring(3);
-                        f.format(COLUMN, name, format(value, Converter.LINE, this));
-                    }
-                }
-                catch (IllegalAccessException e)
-                {
-                    // Ignore
-                }
-                catch (Exception e)
-                {
-                    e.printStackTrace();
+                    found = true;
+                    name = name.substring(3);
+                    m.setAccessible(true);
+                    Object value = m.invoke(b, (Object[]) null);
+                    f.format(COLUMN, name, format(value, Converter.LINE, this));
                 }
             }
-            if (found)
+            catch (IllegalAccessException e)
             {
-                return (StringBuilder) f.out();
+                // Ignore
             }
-            else
+            catch (Exception e)
             {
-                return b.toString();
+                e.printStackTrace();
             }
         }
-        finally
+        if (found)
         {
-            f.close();
+            return (StringBuilder) f.out();
+        }
+        else
+        {
+            return b.toString();
         }
     }
 
     public Object convert(Class<?> desiredType, Object in)
     {
-        return processor.convert(desiredType, in);
+        return processor.convert(this, desiredType, in);
+    }
+
+    public Object doConvert(Class<?> desiredType, Object in)
+    {
+        return processor.doConvert(desiredType, in);
     }
 
     public CharSequence format(Object result, int inspect)
@@ -399,7 +419,7 @@ public class CommandSessionImpl implements CommandSession, Converter
         }
         catch (Exception e)
         {
-            return "<can not format " + result + ">:" + e;
+            return "<can not format " + result + ":" + e;
         }
     }
 
@@ -407,4 +427,5 @@ public class CommandSessionImpl implements CommandSession, Converter
     {
         return processor.expr(this, expr);
     }
+
 }

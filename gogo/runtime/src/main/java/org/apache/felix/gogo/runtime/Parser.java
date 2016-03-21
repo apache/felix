@@ -16,167 +16,516 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-// DWB14: parser loops if // comment at start of program
-// DWB15: allow program to have trailing ';'
 package org.apache.felix.gogo.runtime;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.gogo.runtime.Tokenizer.Type;
 
 public class Parser
 {
-    private final Tokenizer tz;
 
-    public Parser(CharSequence program)
+    public static abstract class Executable extends Token
     {
-        tz = new Tokenizer(program);
+        public Executable(Token cs)
+        {
+            super(cs);
+        }
     }
 
-    public List<List<List<Token>>> program()
+    public static class Statement extends Executable
     {
-        List<List<List<Token>>> program = new ArrayList<List<List<Token>>>();
+        private final List<Token> tokens;
 
-        outer: while (tz.next() != Type.EOT)
+        public Statement(Token cs, List<Token> tokens)
         {
-            program.add(pipeline());
+            super(cs);
+            this.tokens = tokens;
+        }
 
-            switch (tz.type())
-            {
-                case SEMICOLON:
-                case NEWLINE:
-                    continue;
+        public List<Token> tokens()
+        {
+            return tokens;
+        }
+    }
 
-                default:
-                    break outer;
+    /**
+     * pipe1 ; pipe2 ; ...
+     */
+    public static class Program extends Token
+    {
+        private final List<Executable> tokens;
+
+        public Program(Token cs, List<Executable> tokens)
+        {
+            super(cs);
+            this.tokens = tokens;
+        }
+
+        public List<Executable> tokens()
+        {
+            return tokens;
+        }
+    }
+
+    /**
+     * token1 | token2 | ...
+     */
+    public static class Pipeline extends Executable
+    {
+        private final List<Executable> tokens;
+
+        public Pipeline(Token cs, List<Executable> tokens)
+        {
+            super(cs);
+            this.tokens = tokens;
+        }
+
+        public List<Executable> tokens()
+        {
+            return tokens;
+        }
+
+    }
+
+    /**
+     * ( program )
+     */
+    public static class Sequence extends Executable
+    {
+        private final Program program;
+
+        public Sequence(Token cs, Program program)
+        {
+            super(cs);
+            this.program = program;
+        }
+
+        public Program program()
+        {
+            return program;
+        }
+    }
+
+    /**
+     * { program }
+     */
+    public static class Closure extends Token
+    {
+        private final Program program;
+
+        public Closure(Token cs, Program program)
+        {
+            super(cs);
+            this.program = program;
+        }
+
+        public Program program()
+        {
+            return program;
+        }
+    }
+
+    /**
+     * [ a b ...]
+     * [ k1=v1 k2=v2 ...]
+     */
+    public static class Array extends Token
+    {
+        private final List<Token> list;
+        private final Map<Token, Token> map;
+
+        public Array(Token cs, List<Token> list, Map<Token, Token> map)
+        {
+            super(cs);
+            assert list != null ^ map != null;
+            this.list = list;
+            this.map = map;
+        }
+
+        public List<Token> list()
+        {
+            return list;
+        }
+
+        public Map<Token, Token> map()
+        {
+            return map;
+        }
+    }
+
+    protected final Tokenizer tz;
+    protected final LinkedList<String> stack = new LinkedList<String>();
+    protected final List<Token> tokens = new ArrayList<Token>();
+    protected final List<Statement> statements = new ArrayList<Statement>();
+
+    public Parser(CharSequence line)
+    {
+        this.tz = new Tokenizer(line);
+    }
+
+    public List<Token> tokens() {
+        return Collections.unmodifiableList(tokens);
+    }
+
+    public List<Statement> statements() {
+        Collections.sort(statements, new Comparator<Statement>() {
+            public int compare(Statement o1, Statement o2) {
+                int x = o1.start();
+                int y = o2.start();
+                return (x < y) ? -1 : ((x == y) ? 0 : 1);
             }
-        }
-
-        if (tz.next() != Type.EOT)
-        {
-            throw new RuntimeException("Program has trailing text: " + tz.value());
-        }
-        return program;
+        });
+        return Collections.unmodifiableList(statements);
     }
 
-    private List<List<Token>> pipeline()
+    public Program program()
     {
-        List<List<Token>> pipeline = new ArrayList<List<Token>>();
-
+        List<Executable> tokens = new ArrayList<Executable>();
+        List<Executable> pipes = null;
+        int start = tz.index - 1;
         while (true)
         {
-            pipeline.add(command());
-            switch (tz.type())
+            Executable ex;
+            Token t = next();
+            if (t == null)
             {
-                case PIPE:
-                    if (tz.next() == Type.EOT)
-                    {
-                        Token t = tz.token();
-                        throw new EOFError(t.line, t.column, "unexpected EOT after pipe '|'");
-                    }
-                    break;
-
-                default:
-                    return pipeline;
-            }
-        }
-    }
-
-    private List<Token> command()
-    {
-        List<Token> command = new ArrayList<Token>();
-
-        while (true)
-        {
-            Token t = tz.token();
-
-            switch (t.type)
-            {
-                case WORD:
-                case CLOSURE:
-                case EXECUTION:
-                case ARRAY:
-                case ASSIGN:
-                case EXPR:
-                    break;
-
-                default:
-                    throw new SyntaxError(t.line, t.column, "unexpected token: " + t.type);
-            }
-
-            command.add(t);
-
-            switch (tz.next())
-            {
-                case PIPE:
-                case SEMICOLON:
-                case NEWLINE:
-                case EOT:
-                    return command;
-
-                default:
-                    break;
-            }
-        }
-    }
-
-    public void array(List<Token> list, Map<Token, Token> map) throws Exception
-    {
-        Token lt = null;
-        boolean isMap = false;
-
-        while (tz.next() != Type.EOT)
-        {
-            if (isMap)
-            {
-                Token key = lt;
-                lt = null;
-                if (null == key)
+                if (pipes != null)
                 {
-                    key = tz.token();
-
-                    if (tz.next() != Type.ASSIGN)
-                    {
-                        Token t = tz.token();
-                        throw new SyntaxError(t.line, t.column,
-                            "map expected '=', found: " + t);
-                    }
-
-                    tz.next();
+                    throw new EOFError(tz.line, tz.column, "unexpected EOT while looking for a statement after |", getMissing("pipe"), "0");
                 }
-
-                Token k = (list.isEmpty() ? key : list.remove(0));
-                Token v = tz.token();
-                map.put(k, v);
+                else
+                {
+                    return new Program(whole(tokens, start), tokens);
+                }
+            }
+            if (Token.eq("}", t) || Token.eq(")", t))
+            {
+                if (pipes != null)
+                {
+                    throw new EOFError(t.line, t.column, "unexpected token '" + t + "' while looking for a statement after |", getMissing("pipe"), "0");
+                }
+                else
+                {
+                    push(t);
+                    return new Program(whole(tokens, start), tokens);
+                }
             }
             else
             {
-                switch (tz.type())
+                push(t);
+                ex = statement();
+            }
+            t = next();
+            if (t == null || Token.eq(";", t) || Token.eq("\n", t))
+            {
+                if (pipes != null)
                 {
-                    case WORD:
-                    case CLOSURE:
-                    case EXECUTION:
-                    case ARRAY:
-                        lt = tz.token();
-                        list.add(lt);
-                        break;
-
-                    case ASSIGN:
-                        if (list.size() == 1)
-                        {
-                            isMap = true;
-                            break;
-                        }
-                        // fall through
-                    default:
-                        lt = tz.token();
-                        throw new SyntaxError(lt.line, lt.column,
-                            "unexpected token in list: " + lt);
+                    pipes.add(ex);
+                    tokens.add(new Pipeline(whole(pipes, start), pipes));
+                    pipes = null;
+                }
+                else
+                {
+                    tokens.add(ex);
+                }
+                if (t == null)
+                {
+                    return new Program(whole(tokens, start), tokens);
                 }
             }
+            else if (Token.eq("|", t))
+            {
+                if (pipes == null)
+                {
+                    pipes = new ArrayList<Executable>();
+                }
+                pipes.add(ex);
+            }
+            else
+            {
+                if (pipes != null)
+                {
+                    pipes.add(ex);
+                    tokens.add(new Pipeline(whole(pipes, start), pipes));
+                    pipes = null;
+                }
+                else
+                {
+                    tokens.add(ex);
+                }
+                push(t);
+            }
         }
+    }
+
+    protected void push(Token t) {
+        tz.push(t);
+    }
+
+    protected Token next() {
+        boolean pushed = tz.pushed != null;
+        Token token = tz.next();
+        if (!pushed && token != null) {
+            tokens.add(token);
+        }
+        return token;
+    }
+
+    public Sequence sequence()
+    {
+        Token start = start("(", "sequence");
+        expectNotNull();
+        Program program = program();
+        Token end = end(")");
+        return new Sequence(whole(start, end), program);
+    }
+
+    public Closure closure()
+    {
+        Token start = start("{", "closure");
+        expectNotNull();
+        Program program = program();
+        Token end = end("}");
+        return new Closure(whole(start, end), program);
+    }
+
+    public Statement statement()
+    {
+        List<Token> tokens = new ArrayList<Token>();
+        int start = tz.index;
+        while (true)
+        {
+            Token t = next();
+            if (t == null
+                    || Token.eq("|", t)
+                    || Token.eq("\n", t)
+                    || Token.eq(";", t)
+                    || Token.eq("}", t)
+                    || Token.eq(")", t)
+                    || Token.eq("]", t))
+            {
+                push(t);
+                break;
+            }
+            if (Token.eq("{", t))
+            {
+                push(t);
+                tokens.add(closure());
+            }
+            else if (Token.eq("[", t))
+            {
+                push(t);
+                tokens.add(array());
+            }
+            else if (Token.eq("(", t))
+            {
+                push(t);
+                tokens.add(sequence());
+            }
+            else
+            {
+                tokens.add(t);
+            }
+        }
+        Statement statement = new Statement(whole(tokens, start), tokens);
+        statements.add(statement);
+        return statement;
+    }
+
+    public Array array()
+    {
+        Token start = start("[", "array");
+        Boolean isMap = null;
+        List<Token> list = new ArrayList<Token>();
+        Map<Token, Token> map = new LinkedHashMap<Token, Token>();
+        while (true)
+        {
+            Token key = next();
+            if (key == null)
+            {
+                throw new EOFError(tz.line, tz.column, "unexpected EOT", getMissing(), "]");
+            }
+            if (Token.eq("]", key))
+            {
+                push(key);
+                break;
+            }
+            if (Token.eq("\n", key))
+            {
+                continue;
+            }
+            if (Token.eq("{", key) || Token.eq(";", key)
+                    || Token.eq("|", key) || Token.eq(")", key) || Token.eq("}", key) || Token.eq("=", key))
+            {
+                throw new SyntaxError(key.line(), key.column(), "unexpected token '" + key + "' while looking for array key");
+            }
+            if (Token.eq("(", key))
+            {
+                push(key);
+                key = sequence();
+            }
+            if (Token.eq("[", key))
+            {
+                push(key);
+                key = array();
+            }
+            if (isMap == null)
+            {
+                Token n = next();
+                if (n == null)
+                {
+                    throw new EOFError(tz.line, tz.column, "unexpected EOF while looking for array token", getMissing(), "]");
+                }
+                isMap = Token.eq("=", n);
+                push(n);
+            }
+            if (isMap)
+            {
+                expect("=");
+                Token val = next();
+                if (val == null)
+                {
+                    throw new EOFError(tz.line, tz.column, "unexpected EOF while looking for array value", getMissing(), "0");
+                }
+                else if (Token.eq(";", val) || Token.eq("|", val)
+                        || Token.eq(")", key) || Token.eq("}", key) || Token.eq("=", key))
+                {
+                    throw new SyntaxError(key.line(), key.column(), "unexpected token '" + key + "' while looking for array value");
+                }
+                else if (Token.eq("[", val))
+                {
+                    push(val);
+                    val = array();
+                }
+                else if (Token.eq("(", val))
+                {
+                    push(val);
+                    val = sequence();
+                }
+                else if (Token.eq("{", val))
+                {
+                    push(val);
+                    val = closure();
+                }
+                map.put(key, val);
+            }
+            else
+            {
+                list.add(key);
+            }
+        }
+        Token end = end("]");
+        if (isMap == null || !isMap)
+        {
+            return new Array(whole(start, end), list, null);
+        }
+        else
+        {
+            return new Array(whole(start, end), null, map);
+        }
+    }
+
+    protected void expectNotNull()
+    {
+        Token t = next();
+        if (t == null)
+        {
+            throw new EOFError(tz.line, tz.column,
+                    "unexpected EOT",
+                    getMissing(), "0");
+        }
+        push(t);
+    }
+
+    private String getMissing() {
+        return getMissing(null);
+    }
+
+    private String getMissing(String additional) {
+        StringBuilder sb = new StringBuilder();
+        LinkedList<String> stack = this.stack;
+        if (additional != null) {
+            stack = new LinkedList<String>(stack);
+            stack.addLast(additional);
+        }
+        String last = null;
+        int nb = 0;
+        for (String cur : stack) {
+            if (last == null) {
+                last = cur;
+                nb = 1;
+            } else if (last.equals(cur)) {
+                nb++;
+            } else {
+                if (sb.length() > 0) {
+                    sb.append(" ");
+                }
+                sb.append(last);
+                if (nb > 1) {
+                    sb.append("(").append(nb).append(")");
+                }
+                last = cur;
+                nb = 1;
+            }
+        }
+        if (sb.length() > 0) {
+            sb.append(" ");
+        }
+        sb.append(last);
+        if (nb > 1) {
+            sb.append("(").append(nb).append(")");
+        }
+        return sb.toString();
+    }
+
+    protected Token start(String str, String missing) {
+        stack.addLast(missing);
+        return expect(str);
+    }
+
+    protected Token end(String str) {
+        Token t = expect(str);
+        stack.removeLast();
+        return t;
+    }
+
+    protected Token expect(String str)
+    {
+        Token start = next();
+        if (start == null)
+        {
+            throw new EOFError(tz.line, tz.column,
+                    "unexpected EOT looking for '" + str + "",
+                    getMissing(), str);
+        }
+        if (!Token.eq(str, start))
+        {
+            throw new SyntaxError(start.line, start.column, "expected '" + str + "' but got '" + start.toString() + "'");
+        }
+        return start;
+    }
+
+    protected Token whole(List<? extends Token> tokens, int index)
+    {
+        if (tokens.isEmpty())
+        {
+            index = Math.min(index, tz.text().length());
+            return tz.text().subSequence(index, index);
+        }
+        Token b = tokens.get(0);
+        Token e = tokens.get(tokens.size() - 1);
+        return whole(b, e);
+    }
+
+    protected Token whole(Token b, Token e)
+    {
+        return tz.text.subSequence(b.start, e.start + e.length());
     }
 
 }

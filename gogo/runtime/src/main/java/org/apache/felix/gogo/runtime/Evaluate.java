@@ -25,4 +25,6 @@ public interface Evaluate
     Object get(String key);
     
     Object put(String key, Object value);
+
+    Object expr(Token t);
 }

@@ -21,9 +21,24 @@ package org.apache.felix.gogo.runtime;
 public class EOFError extends SyntaxError
 {
     private static final long serialVersionUID = 1L;
-    
-    public EOFError(int line, int column, String message)
+
+    private final String missing;
+    private final String repair;
+
+    public EOFError(int line, int column, String message, String missing, String repair)
     {
         super(line, column, message);
+        this.missing = missing;
+        this.repair = repair;
     }
+
+    public String repair() {
+        return repair;
+    }
+
+    public String missing()
+    {
+        return missing;
+    }
+
 }
