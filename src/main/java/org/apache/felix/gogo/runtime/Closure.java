@@ -18,6 +18,7 @@
  */
 package org.apache.felix.gogo.runtime;
 
+import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
@@ -144,11 +145,16 @@ public class Closure implements Function, Evaluate
     // implements Function interface
     public Object execute(CommandSession x, List<Object> values) throws Exception
     {
+        return execute(x, values, null);
+    }
+
+    public Object execute(CommandSession x, List<Object> values, Channel capturingOutput) throws Exception
+    {
         try
         {
             location.remove();
             session.put(LOCATION, null);
-            return execute(values);
+            return execute(values, capturingOutput);
         }
         catch (Exception e)
         {
@@ -157,7 +163,7 @@ public class Closure implements Function, Evaluate
     }
 
     @SuppressWarnings("unchecked")
-    private Object execute(List<Object> values) throws Exception
+    private Object execute(List<Object> values, Channel capturingOutput) throws Exception
     {
         if (null != values)
         {
@@ -212,6 +218,9 @@ public class Closure implements Function, Evaluate
             } else {
                 streams = new Channel[10];
                 System.arraycopy(session.channels, 0, streams, 0, 3);
+            }
+            if (capturingOutput != null) {
+                streams[1] = capturingOutput;
             }
 
             List<Pipe> pipes = new ArrayList<>();
@@ -317,8 +326,19 @@ public class Closure implements Function, Evaluate
         }
         else if (t instanceof Sequence)
         {
-            return new Closure(session, this, ((Sequence) t).program())
-                    .execute(session, parms);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            Channel out = Channels.newChannel(baos);
+            Object result = new Closure(session, this, ((Sequence) t).program())
+                    .execute(session, parms, out);
+            if (result != null) {
+                return result;
+            } else {
+                String s = baos.toString();
+                while (s.charAt(s.length() - 1) == '\n') {
+                    s = s.substring(0, s.length() - 1);
+                }
+                return s;
+            }
         }
         else if (t instanceof Array)
         {
@@ -342,7 +362,7 @@ public class Closure implements Function, Evaluate
         }
         else if (executable instanceof Sequence)
         {
-            return new Closure(session, this, ((Sequence) executable).program()).execute(new ArrayList<>());
+            return new Closure(session, this, ((Sequence) executable).program()).execute(new ArrayList<>(), null);
         }
         else
         {
