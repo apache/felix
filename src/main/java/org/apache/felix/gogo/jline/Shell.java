@@ -301,13 +301,6 @@ public class Shell {
                             }
                         } catch (Exception e) {
                             session.put(Shell.VAR_EXCEPTION, e);
-                            Object loc = session.get(Shell.VAR_LOCATION);
-
-                            if (null == loc || !loc.toString().contains(":")) {
-                                loc = "gogo";
-                            }
-                            System.out.println(loc + ": " + e.getClass().getSimpleName() + ": "
-                                    + e.getMessage());
                         }
 
                     } catch (UserInterruptException e) {
