@@ -215,23 +215,17 @@ public class Posix {
     protected void date(CommandSession session, String[] argv) throws Exception {
         String[] usage = {
                 "date -  display date",
-                "Usage: date [-u] [-r seconds] [-v[+|-]val[mwdHMS] ...] [-f input_fmt new_date] [+output_fmt]",
+                "Usage: date [-r seconds] [-v[+|-]val[mwdHMS] ...] [-f input_fmt new_date] [+output_fmt]",
                 "  -? --help                    Show help",
                 "  -u                           Use UTC",
                 "  -r                           Print the date represented by 'seconds' since January 1, 1970",
-                "  -v                           Adjust date",
                 "  -f                           Use 'input_fmt' to parse 'new_date'"
         };
-        boolean utc = false; // TODO: handle UTC
         Date input = new Date();
         String output = null;
-        List<String> adjs = new ArrayList<>();
         for (int i = 1; i < argv.length; i++) {
             if ("-?".equals(argv[i]) || "--help".equals(argv[i])) {
                 throw new HelpException(String.join("\n", usage));
-            }
-            else if ("-u".equals(argv[i])) {
-                utc = true;
             }
             else if ("-r".equals(argv[i])) {
                 if (i + 1 < argv.length) {
@@ -250,9 +244,6 @@ public class Posix {
                     throw new IllegalArgumentException("usage: date [-u] [-r seconds] [-v[+|-]val[mwdHMS] ...] [-f input_fmt new_date] [+output_fmt]");
                 }
             }
-            else if (argv[i].startsWith("-v")) {
-                adjs.add(argv[i].substring(2));
-            }
             else if (argv[i].startsWith("+")) {
                 if (output == null) {
                     output = argv[i].substring(1);
@@ -266,10 +257,6 @@ public class Posix {
         }
         if (output == null) {
             output = "%c";
-        }
-        // Perform adjustments
-        for (String adj : adjs) {
-            // TODO:
         }
         // Print output
         System.out.println(new SimpleDateFormat(toJavaDateFormat(output)).format(input));
