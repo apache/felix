@@ -164,14 +164,14 @@ public class Converters implements Converter {
     private Object convertServiceReference(Object in) throws InvalidSyntaxException {
         String s = in.toString();
         if (s.startsWith("(") && s.endsWith(")")) {
-            ServiceReference refs[] = context.getServiceReferences(null, String.format(
+            ServiceReference refs[] = context.getServiceReferences((String) null, String.format(
                     "(|(service.id=%s)(service.pid=%s))", in, in));
             if (refs != null && refs.length > 0) {
                 return refs[0];
             }
         }
 
-        ServiceReference refs[] = context.getServiceReferences(null, String.format(
+        ServiceReference refs[] = context.getServiceReferences((String) null, String.format(
                 "(|(service.id=%s)(service.pid=%s))", in, in));
         if (refs != null && refs.length > 0) {
             return refs[0];

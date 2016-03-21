@@ -68,6 +68,7 @@
                         <Export-Package>
                             org.apache.felix.service.command;
                             org.apache.felix.service.threadio; version=${project.version}; status="provisional"; mandatory:="status",
+                            org.apache.felix.gogo.runtime*; version=${project.version},
                             org.apache.felix.gogo.api; version=${project.version}
                         </Export-Package>
                         <Import-Package>
@@ -77,7 +78,6 @@
                             org.osgi.service.startlevel*; resolution:=optional,
                             *
                         </Import-Package>
-                        <Private-Package>org.apache.felix.gogo.runtime*</Private-Package>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                         <Bundle-Activator>org.apache.felix.gogo.runtime.activator.Activator</Bundle-Activator>
