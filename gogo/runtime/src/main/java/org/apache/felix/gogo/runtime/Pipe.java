@@ -203,7 +203,10 @@ public class Pipe implements Callable<Result>, Process
 
     public boolean isTty(int fd) {
         // TODO: this assumes that the session is always created with input/output tty streams
-        return !toclose[fd];
+        if (fd < 0 || fd > streams.length) {
+            return false;
+        }
+        return streams[fd] != null && !toclose[fd];
     }
 
     public void error(int error) {
