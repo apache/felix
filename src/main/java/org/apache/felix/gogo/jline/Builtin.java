@@ -459,6 +459,20 @@ public class Builtin {
     }
 
     public void jobs(CommandSession session, String[] argv) {
+        final String[] usage = {"jobs - list jobs",
+                "Usage: jobs [OPTIONS]",
+                "  -? --help                show help",
+        };
+        Options opt = Options.compile(usage).parse(argv);
+        if (opt.isSet("help")) {
+            opt.usage(System.err);
+            return;
+        }
+        if (!opt.args().isEmpty()) {
+            System.err.println("usage: jobs");
+            session.error(2);
+            return;
+        }
         List<Job> jobs = session.jobs();
         Job current = session.currentJob();
         for (Job job : jobs) {
@@ -470,6 +484,20 @@ public class Builtin {
     }
 
     public void fg(CommandSession session, String[] argv) {
+        final String[] usage = {"fg - put job in foreground",
+                "Usage: fg [OPTIONS] [jobid]",
+                "  -? --help                show help",
+        };
+        Options opt = Options.compile(usage).parse(argv);
+        if (opt.isSet("help")) {
+            opt.usage(System.err);
+            return;
+        }
+        if (opt.args().size() > 1) {
+            System.err.println("usage: fg [jobid]");
+            session.error(2);
+            return;
+        }
         List<Job> jobs = session.jobs();
         Collections.reverse(jobs);
         Job current = session.currentJob();
@@ -480,6 +508,7 @@ public class Builtin {
                 job.foreground();
             } else {
                 System.err.println("fg: no current job");
+                session.error(1);
             }
         } else {
             Job job = jobs.stream().filter(j -> j != current && argv[0].equals(Integer.toString(j.id())))
@@ -488,11 +517,26 @@ public class Builtin {
                 job.foreground();
             } else {
                 System.err.println("fg: job not found: " + argv[0]);
+                session.error(1);
             }
         }
     }
 
     public void bg(CommandSession session, String[] argv) {
+        final String[] usage = {"bg - put job in background",
+                "Usage: bg [OPTIONS] [jobid]",
+                "  -? --help                show help",
+        };
+        Options opt = Options.compile(usage).parse(argv);
+        if (opt.isSet("help")) {
+            opt.usage(System.err);
+            return;
+        }
+        if (opt.args().size() > 1) {
+            System.err.println("usage: bg [jobid]");
+            session.error(2);
+            return;
+        }
         List<Job> jobs = session.jobs();
         Collections.reverse(jobs);
         Job current = session.currentJob();
@@ -502,7 +546,8 @@ public class Builtin {
             if (job != null) {
                 job.background();
             } else {
-                System.err.println("fg: no current job");
+                System.err.println("bg: no current job");
+                session.error(1);
             }
         } else {
             Job job = jobs.stream().filter(j -> j != current && argv[0].equals(Integer.toString(j.id())))
@@ -510,7 +555,8 @@ public class Builtin {
             if (job != null) {
                 job.background();
             } else {
-                System.err.println("fg: job not found: " + argv[0]);
+                System.err.println("bg: job not found: " + argv[0]);
+                session.error(1);
             }
         }
     }

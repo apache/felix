@@ -240,6 +240,15 @@ try {
   complete -c gogo:tmux -e
   complete -c gogo:tmux -d "Terminal multiplexer"
 
+  complete -c gogo:bg -e
+  complete -c gogo:bg -d "Put job in background"
+
+  complete -c gogo:fg -e
+  complete -c gogo:fg -d "Put job in foreground"
+
+  complete -c gogo:jobs -e
+  complete -c gogo:jobs -d "List jobs"
+
   # print welcome message
   cat ($0 resolve motd)
 } {
