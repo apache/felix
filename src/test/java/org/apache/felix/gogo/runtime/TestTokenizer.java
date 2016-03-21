@@ -195,6 +195,19 @@ public class TestTokenizer
     }
 
     @Test
+    public void testPatterns() throws Exception {
+        vars.clear();
+        vars.put("foo", "twinkle twinkle little star");
+        vars.put("sub", "t*e");
+        vars.put("rep", "spy");
+
+        assertEquals("spy twinkle little star", expand("${foo/${sub}/${rep}}"));
+        assertEquals("spy star", expand("${foo//${sub}/${rep}}"));
+        assertEquals("spy spy lispy star", expand("${(G)foo/${sub}/${rep}}"));
+        assertEquals("spy star", expand("${(G)foo//${sub}/${rep}}"));
+    }
+
+    @Test
     public void testExpand() throws Exception
     {
         final URI home = new URI("/home/derek");

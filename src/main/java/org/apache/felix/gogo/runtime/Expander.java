@@ -181,7 +181,7 @@ public class Expander extends BaseTokenizer
     protected List<? extends CharSequence> generateFileNames(CharSequence arg) throws IOException {
         // Disable if currentDir is not set
         Path currentDir = evaluate.currentDir();
-        if (currentDir == null) {
+        if (currentDir == null || inQuote) {
             return Collections.singletonList(arg);
         }
         // Search for unquoted escapes
@@ -640,6 +640,7 @@ public class Expander extends BaseTokenizer
             boolean flagC = false;
             boolean flagL = false;
             boolean flagU = false;
+            boolean flagG = false;
             boolean flagExpand = false;
             if (ch == '(') {
                 getch();
@@ -650,6 +651,9 @@ public class Expander extends BaseTokenizer
                             break;
                         case '@':
                             flagExpand = true;
+                            break;
+                        case 'G':
+                            flagG = true;
                             break;
                         case 'k':
                             flagk = true;
@@ -703,7 +707,7 @@ public class Expander extends BaseTokenizer
                 }
                 else {
                     int start = index - 1;
-                    while (ch != EOT && ch != '}' && ":-+=?#%/^|*?".indexOf(ch) >= 0) {
+                    while (ch != EOT && ch != '}' && ":-+=?#%/".indexOf(ch) >= 0) {
                         getch();
                     }
                     Token op = text.subSequence(start, index - 1);
@@ -741,23 +745,45 @@ public class Expander extends BaseTokenizer
                             throw new IllegalArgumentException(name + ": parameter not set");
                         }
                     }
-                    else if (Token.eq("#", op) || Token.eq("##", op) || Token.eq("%", op) || Token.eq("%%", op)) {
+                    else if (Token.eq("#", op) || Token.eq("##", op)
+                            || Token.eq("%", op) || Token.eq("%%", op)
+                            || Token.eq("/", op) || Token.eq("//", op)) {
                         val1 = val1 instanceof Token ? evaluate.get(expand((Token) val1).toString()) : val1;
                         Object val2 = getValue();
                         if (val2 != null) {
                             String p = toRegexPattern(val2.toString(), op.length() == 1);
-                            String m = op.charAt(0) == '#' ? "^" + p : p + "$";
+                            String r;
+                            if (op.charAt(0) == '/') {
+                                if (ch == '/') {
+                                    getch();
+                                    r = getValue().toString();
+                                } else {
+                                    r = "";
+                                }
+                            } else {
+                                p = toRegexPattern(val2.toString(), op.length() == 1);
+                                r = "";
+                            }
+                            String m = op.charAt(0) == '#' ? "^" + p : op.charAt(0) == '%' ? p + "$" : p;
                             if (val1 instanceof Map) {
                                 val1 = toList((Map) val1, flagk, flagv);
                             }
                             if (val1 instanceof Collection) {
                                 List<String> l = new ArrayList<>();
                                 for (Object o : ((Collection) val1)) {
-                                    l.add(o.toString().replaceFirst(m, ""));
+                                    if (flagG) {
+                                        l.add(o.toString().replaceAll(m, r));
+                                    } else {
+                                        l.add(o.toString().replaceFirst(m, r));
+                                    }
                                 }
                                 val = l;
                             } else if (val1 != null) {
-                                val = val1.toString().replaceFirst(m, "");
+                                if (flagG) {
+                                    val = val1.toString().replaceAll(m, r);
+                                } else {
+                                    val = val1.toString().replaceFirst(m, r);
+                                }
                             }
                         } else {
                             val = val1;
