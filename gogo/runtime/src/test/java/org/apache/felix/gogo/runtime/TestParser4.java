@@ -62,6 +62,9 @@ public class TestParser4 extends AbstractParserTest
         Files.deleteIfExists(path.resolve("foo"));
         assertEquals("hello\n", c.execute("echo hello>foo | tac"));
         assertEquals("hello\n", new String(Files.readAllBytes(path.resolve("foo"))));
+
+        Files.deleteIfExists(path.resolve("foo2"));
+        assertEquals("hello\n", c.execute("echo hello>\\\nfoo2 | tac"));
     }
 
     @Test
@@ -150,6 +153,18 @@ public class TestParser4 extends AbstractParserTest
 
         c.execute("c = [ ar1 ar2 ]");
         assertEquals("ar1 ar2\n", c.execute("cat <<<$c | tac"));
+    }
+
+    @Test
+    public void testHereDoc() throws Exception
+    {
+        Context c = new Context();
+        c.addCommand("echo", this);
+        c.addCommand("tac", this);
+        c.addCommand("cat", this);
+
+        assertEquals("bar\nbaz\n", c.execute("cat <<foo\nbar\nbaz\nfoo\n| tac"));
+        assertEquals("bar\nbaz\n", c.execute("cat <<-foo\n\tbar\n\tbaz\n\tfoo\n| tac"));
     }
 
     public void echo(String msg)
