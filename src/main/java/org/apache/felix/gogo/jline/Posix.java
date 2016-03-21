@@ -64,14 +64,15 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.felix.gogo.jline.Shell.Context;
-import org.apache.felix.gogo.runtime.Pipe;
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
 import org.apache.sshd.common.util.OsUtils;
 import org.jline.builtins.Commands;
-import org.jline.builtins.Less.Source;
-import org.jline.builtins.Less.StdInSource;
-import org.jline.builtins.Less.URLSource;
+import org.jline.builtins.Less;
+import org.jline.builtins.Source;
+import org.jline.builtins.Source.PathSource;
+import org.jline.builtins.Source.StdInSource;
+import org.jline.builtins.Nano;
 import org.jline.builtins.Options;
 import org.jline.terminal.Attributes;
 import org.jline.terminal.Terminal;
@@ -114,13 +115,13 @@ public class Posix {
             run(session, argv);
         } catch (IllegalArgumentException e) {
             System.err.println(e.getMessage());
-            Pipe.error(2);
+            session.error(2);
         } catch (HelpException e) {
             System.err.println(e.getMessage());
-            Pipe.error(0);
+            session.error(0);
         } catch (Exception e) {
             System.err.println(argv[0] + ": " + e.getMessage());
-            Pipe.error(1);
+            session.error(1);
         }
     }
 
@@ -301,12 +302,15 @@ public class Posix {
     }
 
     protected void nano(final CommandSession session, String[] argv) throws Exception {
-        Commands.nano(
-                Shell.getTerminal(session),
-                System.out,
-                System.err,
-                session.currentDir(),
-                Arrays.copyOfRange(argv, 1, argv.length));
+        final String[] usage = {
+                "nano -  edit files",
+                "Usage: nano [FILES]",
+                "  -? --help                    Show help",
+        };
+        Options opt = parseOptions(session, usage, argv);
+        Nano edit = new Nano(Shell.getTerminal(session), session.currentDir());
+        edit.open(opt.args());
+        edit.run();
     }
 
     protected void watch(final CommandSession session, String[] argv) throws Exception {
@@ -366,13 +370,56 @@ public class Posix {
         }
     }
 
-    protected void less(CommandSession session, String[] argv) throws IOException, InterruptedException {
-        Commands.less(
-                Shell.getTerminal(session),
-                System.out,
-                System.err,
-                session.currentDir(),
-                Arrays.copyOfRange(argv, 1, argv.length));
+    protected void less(CommandSession session, String[] argv) throws Exception {
+        final String[] usage = {
+                "less -  file pager",
+                "Usage: less [OPTIONS] [FILES]",
+                "  -? --help                    Show help",
+                "  -e --quit-at-eof             Exit on second EOF",
+                "  -E --QUIT-AT-EOF             Exit on EOF",
+                "  -q --quiet --silent          Silent mode",
+                "  -Q --QUIET --SILENT          Completely  silent",
+                "  -S --chop-long-lines         Do not fold long lines",
+                "  -i --ignore-case             Search ignores lowercase case",
+                "  -I --IGNORE-CASE             Search ignores all case",
+                "  -x --tabs                    Set tab stops",
+                "  -N --LINE-NUMBERS            Display line number for each line"
+        };
+        Options opt = parseOptions(session, usage, argv);
+        List<Source> sources = new ArrayList<>();
+        if (opt.args().isEmpty()) {
+            opt.args().add("-");
+        }
+        for (String arg : opt.args()) {
+            if ("-".equals(arg)) {
+                sources.add(new StdInSource());
+            } else {
+                sources.add(new PathSource(session.currentDir().resolve(arg), arg));
+            }
+        }
+
+        if (!session.isTty(1)) {
+            for (Source source : sources) {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(source.read()))) {
+                    cat(reader, opt.isSet("LINE-NUMBERS"));
+                }
+            }
+            return;
+        }
+
+        Less less = new Less(Shell.getTerminal(session));
+        less.quitAtFirstEof = opt.isSet("QUIT-AT-EOF");
+        less.quitAtSecondEof = opt.isSet("quit-at-eof");
+        less.quiet = opt.isSet("quiet");
+        less.veryQuiet = opt.isSet("QUIET");
+        less.chopLongLines = opt.isSet("chop-long-lines");
+        less.ignoreCaseAlways = opt.isSet("IGNORE-CASE");
+        less.ignoreCaseCond = opt.isSet("ignore-case");
+        if (opt.isSet("tabs")) {
+            less.tabs = opt.getNumber("tabs");
+        }
+        less.printLineNumbers = opt.isSet("LINE-NUMBERS");
+        less.run(sources);
     }
 
     protected void sort(CommandSession session, String[] argv) throws Exception {
@@ -873,7 +920,7 @@ public class Posix {
             if ("-".equals(arg)) {
                 sources.add(new StdInSource());
             } else {
-                sources.add(new URLSource(session.currentDir().resolve(arg).toUri().toURL(), arg));
+                sources.add(new PathSource(session.currentDir().resolve(arg), arg));
             }
         }
         boolean match = false;
@@ -957,7 +1004,7 @@ public class Posix {
                 match |= nb > 0;
             }
         }
-        Pipe.error(match ? 0 : 1);
+        session.error(match ? 0 : 1);
     }
 
     protected void sleep(CommandSession session, String[] argv) throws Exception {
