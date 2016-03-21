@@ -195,6 +195,28 @@ public class TestTokenizer
     }
 
     @Test
+    public void testParamFlag() throws Exception {
+        vars.clear();
+        vars.put("foo", "bar");
+        vars.put("bar", "baz");
+
+        assertEquals("bar", expand("${${foo}}"));
+        assertEquals("baz", expand("${(P)foo}"));
+        assertEquals("baz", expand("${(P)${foo}}"));
+    }
+
+    @Test
+    public void testCaseFlags() throws Exception {
+        vars.clear();
+        vars.put("foo", "bAr");
+
+        assertEquals("bAr", expand("${foo}"));
+        assertEquals("bar", expand("${(L)foo}"));
+        assertEquals("BAR", expand("${(U)${foo}}"));
+        assertEquals("Bar", expand("${(C)${foo}}"));
+    }
+
+    @Test
     public void testSorting() throws Exception {
         vars.clear();
         vars.put("array", Arrays.asList("foo1", "foo02", "foo2", "fOo3", "Foo20", "foo23"));
