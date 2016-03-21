@@ -42,7 +42,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.felix.gogo.runtime.Closure;
 import org.apache.felix.gogo.runtime.CommandProxy;
 import org.apache.felix.gogo.runtime.CommandSessionImpl;
-import org.apache.felix.gogo.runtime.Expander;
 import org.apache.felix.gogo.runtime.Job;
 import org.apache.felix.gogo.runtime.Job.Status;
 import org.apache.felix.gogo.runtime.Reflective;
@@ -140,7 +139,7 @@ public class Shell {
         Object prompt = session.get(name);
         if (prompt != null) {
             try {
-                Object o = Expander.expand(
+                Object o = org.apache.felix.gogo.runtime.Expander.expand(
                         prompt.toString(),
                         new Closure((CommandSessionImpl) session, null, null));
                 if (o != null) {
@@ -291,6 +290,7 @@ public class Shell {
                     .highlighter(new Highlighter(session))
                     .history(new FileHistory(new File(System.getProperty("user.home"), ".gogo.history")))
                     .parser(new Parser())
+                    .expander(new Expander(newSession))
                     .build();
             newSession.put(Shell.VAR_READER, reader);
             newSession.put(Shell.VAR_COMPLETIONS, new HashMap());
