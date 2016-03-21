@@ -569,7 +569,7 @@ public class Parser
 
     protected Token whole(Token b, Token e)
     {
-        return tz.text.subSequence(b.start, e.start + e.length());
+        return tz.text.subSequence(b.start - tz.text.start, e.start + e.length() - tz.text.start);
     }
 
     protected boolean isPiped(Token t) {
