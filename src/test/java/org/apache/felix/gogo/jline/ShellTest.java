@@ -35,6 +35,13 @@ public class ShellTest extends AbstractParserTest {
     }
 
     @Test
+    public void testLoopBreak() throws Exception {
+        Context context = new Context();
+        Object result = context.execute("$(each {1..10} { i = $it; if { %(i >= 5) } { break } ; echo $i })");
+        Assert.assertEquals("1\n2\n3\n4", result);
+    }
+
+    @Test
     public void testJobIds() throws Exception {
         Context context = new Context();
         // TODO: not than in zsh, the same thing is achieved using
