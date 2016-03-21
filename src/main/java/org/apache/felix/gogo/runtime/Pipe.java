@@ -42,16 +42,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.felix.gogo.runtime.Job.Status;
+import org.apache.felix.gogo.runtime.CommandSessionImpl.JobImpl;
+import org.apache.felix.gogo.api.Job;
+import org.apache.felix.gogo.api.Job.Status;
+import org.apache.felix.gogo.api.Process;
 import org.apache.felix.gogo.runtime.Parser.Statement;
 import org.apache.felix.gogo.runtime.Pipe.Result;
 import org.apache.felix.service.command.Converter;
+import org.apache.felix.service.threadio.ThreadIO;
 
-public class Pipe implements Callable<Result>
+public class Pipe implements Callable<Result>, Process
 {
     private static final ThreadLocal<Pipe> CURRENT = new ThreadLocal<>();
 
-    public static class Result {
+    public static class Result implements org.apache.felix.gogo.api.Result {
         public final Object result;
         public final Exception exception;
         public final int error;
@@ -77,22 +81,25 @@ public class Pipe implements Callable<Result>
         public boolean isSuccess() {
             return exception == null && error == 0;
         }
+
+        @Override
+        public Object result() {
+            return result;
+        }
+
+        @Override
+        public Exception exception() {
+            return exception;
+        }
+
+        @Override
+        public int error() {
+            return error;
+        }
     }
 
     public static Pipe getCurrentPipe() {
         return CURRENT.get();
-    }
-
-    public static boolean isTty(int fd) {
-        Pipe current = getCurrentPipe();
-        return current != null && !current.toclose[fd];
-    }
-
-    public static void error(int error) {
-        Pipe current = getCurrentPipe();
-        if (current != null) {
-            current.error = error;
-        }
     }
 
     private static Pipe setCurrentPipe(Pipe pipe) {
@@ -102,14 +109,20 @@ public class Pipe implements Callable<Result>
     }
 
     final Closure closure;
+    final Job job;
     final Statement statement;
     final Channel[] streams;
     final boolean[] toclose;
     int error;
 
-    public Pipe(Closure closure, Statement statement, Channel[] streams, boolean[] toclose)
+    InputStream in;
+    PrintStream out;
+    PrintStream err;
+
+    public Pipe(Closure closure, JobImpl job, Statement statement, Channel[] streams, boolean[] toclose)
     {
         this.closure = closure;
+        this.job = job;
         this.statement = statement;
         this.streams = streams;
         this.toclose = toclose;
@@ -169,6 +182,35 @@ public class Pipe implements Callable<Result>
     }
 
     @Override
+    public InputStream in() {
+        return in;
+    }
+
+    @Override
+    public PrintStream out() {
+        return out;
+    }
+
+    @Override
+    public PrintStream err() {
+        return err;
+    }
+
+    @Override
+    public Job job() {
+        return job;
+    }
+
+    public boolean isTty(int fd) {
+        // TODO: this assumes that the session is always created with input/output tty streams
+        return !toclose[fd];
+    }
+
+    public void error(int error) {
+        this.error = error;
+    }
+
+    @Override
     public Result call() throws Exception {
         Thread thread = Thread.currentThread();
         String name = thread.getName();
@@ -182,10 +224,6 @@ public class Pipe implements Callable<Result>
 
     private Result doCall()
     {
-        InputStream in;
-        PrintStream out = null;
-        PrintStream err = null;
-
         // The errChannel will be used to print errors to the error stream
         // Before the command is actually executed (i.e. during the initialization,
         // including the redirection processing), it will be the original error stream.
@@ -194,6 +232,8 @@ public class Pipe implements Callable<Result>
         WritableByteChannel errChannel = (WritableByteChannel) streams[2];
 
         boolean endOfPipe = !toclose[1];
+
+        ThreadIO threadIo = closure.session().threadIO();
 
         try
         {
@@ -283,7 +323,9 @@ public class Pipe implements Callable<Result>
             // the command is about to be executed.
             errChannel = (WritableByteChannel) streams[2];
 
-            closure.session().threadIO().setStreams(in, out, err);
+            if (threadIo != null) {
+                threadIo.setStreams(in, out, err);
+            }
 
             Pipe previous = setCurrentPipe(this);
             try {
@@ -332,7 +374,9 @@ public class Pipe implements Callable<Result>
             if (err != null) {
                 err.flush();
             }
-            closure.session().threadIO().close();
+            if (threadIo != null) {
+                threadIo.close();
+            }
 
             try
             {
@@ -458,28 +502,23 @@ public class Pipe implements Callable<Result>
         }
 
         private void checkSuspend(Channel ch) throws IOException {
-            Job cur = closure.session().currentJob();
-            if (cur != null) {
-                Channel[] sch = closure.session().channels;
-                if (ch == sch[0] || ch == sch[1] || ch == sch[2]) {
-                    synchronized (cur) {
-                        if (cur.status() == Status.Background) {
-                            // TODO: Send SIGTIN / SIGTOU
-                            cur.suspend();
-                        }
+            Channel[] sch = closure.session().channels;
+            if (ch == sch[0] || ch == sch[1] || ch == sch[2]) {
+                synchronized (job) {
+                    if (job.status() == Status.Background) {
+                        // TODO: Send SIGTIN / SIGTOU
+                        job.suspend();
                     }
                 }
-                synchronized (cur) {
-                    while (cur.status() == Status.Suspended) {
-                        try {
-                            cur.wait();
-                        } catch (InterruptedException e) {
-                            throw (IOException) new InterruptedIOException().initCause(e);
-                        }
+            }
+            synchronized (job) {
+                while (job.status() == Status.Suspended) {
+                    try {
+                        job.wait();
+                    } catch (InterruptedException e) {
+                        throw (IOException) new InterruptedIOException().initCause(e);
                     }
                 }
-            } else {
-                String msg = "This is definitely not expected";
             }
         }
     }

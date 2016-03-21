@@ -51,8 +51,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
+import org.apache.felix.gogo.api.Job;
+import org.apache.felix.gogo.api.Job.Status;
 import org.apache.felix.gogo.api.JobListener;
-import org.apache.felix.gogo.runtime.Job.Status;
+import org.apache.felix.gogo.api.Process;
 import org.apache.felix.gogo.runtime.Pipe.Result;
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
@@ -80,7 +82,6 @@ public class CommandSessionImpl implements CommandSession, Converter
     protected final ConcurrentMap<String, Object> variables = new ConcurrentHashMap<>();
     private volatile boolean closed;
     private final List<JobImpl> jobs = new ArrayList<>();
-    private final ThreadLocal<JobImpl> currentJob = new InheritableThreadLocal<>();
     private JobListener jobListener;
 
     private final ExecutorService executor;
@@ -152,7 +153,6 @@ public class CommandSessionImpl implements CommandSession, Converter
     public Object execute(CharSequence commandline) throws Exception
     {
         assert processor != null;
-        assert processor.threadIO != null;
 
         if (closed)
         {
@@ -494,17 +494,12 @@ public class CommandSessionImpl implements CommandSession, Converter
     @Override
     public List<Job> jobs() {
         synchronized (jobs) {
-            return new ArrayList<>(jobs);
+            return Collections.unmodifiableList(jobs);
         }
     }
 
-    @Override
-    public JobImpl currentJob() {
-        JobImpl job = currentJob.get();
-        while (job != null && job.parent != null) {
-            job = job.parent;
-        }
-        return job;
+    public static JobImpl currentJob() {
+        return (JobImpl) Job.current();
     }
 
     @Override
@@ -526,7 +521,7 @@ public class CommandSessionImpl implements CommandSession, Converter
         }
     }
 
-    public Job createJob(CharSequence command, List<Pipe> pipes) {
+    public JobImpl createJob(CharSequence command) {
         synchronized (jobs) {
             int id = 1;
             synchronized (jobs) {
@@ -543,7 +538,7 @@ public class CommandSessionImpl implements CommandSession, Converter
                 } while (found);
             }
             JobImpl cur = currentJob();
-            JobImpl job = new JobImpl(id, cur, command, pipes);
+            JobImpl job = new JobImpl(id, cur, command);
             if (cur == null) {
                 jobs.add(job);
             }
@@ -551,20 +546,23 @@ public class CommandSessionImpl implements CommandSession, Converter
         }
     }
 
-    private class JobImpl implements Job {
+    class JobImpl implements Job {
         private final int id;
         private final JobImpl parent;
         private final CharSequence command;
-        private final List<Pipe> pipes;
+        private final List<Pipe> pipes = new ArrayList<>();
         private Status status = Status.Created;
         private Future<?> future;
         private Result result;
 
-        public JobImpl(int id, JobImpl parent, CharSequence command, List<Pipe> pipes) {
+        public JobImpl(int id, JobImpl parent, CharSequence command) {
             this.id = id;
             this.parent = parent;
             this.command = command;
-            this.pipes = pipes;
+        }
+
+        void addPipe(Pipe pipe) {
+            pipes.add(pipe);
         }
 
         @Override
@@ -606,7 +604,7 @@ public class CommandSessionImpl implements CommandSession, Converter
             if (status == Status.Done) {
                 throw new IllegalStateException("Job is finished");
             }
-            JobImpl cr = currentJob();
+            JobImpl cr = CommandSessionImpl.currentJob();
             JobImpl fg = foregroundJob();
             if (parent == null && fg != null && fg != this && fg != cr) {
                 throw new IllegalStateException("A job is already in foreground");
@@ -667,6 +665,11 @@ public class CommandSessionImpl implements CommandSession, Converter
         }
 
         @Override
+        public Job parent() {
+            return parent;
+        }
+
+        @Override
         public synchronized Result start(Status status) throws InterruptedException {
             if (status == Status.Created || status == Status.Done) {
                 throw new IllegalArgumentException("Illegal start status");
@@ -692,13 +695,22 @@ public class CommandSessionImpl implements CommandSession, Converter
             return result;
         }
 
+        public List<Process> processes() {
+            return Collections.unmodifiableList(pipes);
+        }
+
+        @Override
+        public CommandSession session() {
+            return CommandSessionImpl.this;
+        }
+
         private Void call() throws Exception {
             Thread thread = Thread.currentThread();
             String name = thread.getName();
             try {
                 thread.setName("job controller " + id);
 
-                List<Callable<Result>> wrapped = pipes.stream().map(this::wrap).collect(Collectors.toList());
+                List<Callable<Result>> wrapped = pipes.stream().collect(Collectors.toList());
                 List<Future<Result>> results = executor.invokeAll(wrapped);
 
                 // Get pipe exceptions
@@ -729,27 +741,6 @@ public class CommandSessionImpl implements CommandSession, Converter
             return null;
         }
 
-        private Callable<Result> wrap(Pipe pipe) {
-            return () -> {
-                JobImpl prevJob = currentJob.get();
-                try {
-                    currentJob.set(this);
-                    return pipe.call();
-                } finally {
-                    currentJob.set(prevJob);
-                }
-            };
-        }
-
     }
 
-    @Override
-    public boolean isTty(int fd) {
-        return Pipe.isTty(fd);
-    }
-
-    @Override
-    public void error(int error) {
-        Pipe.error(error);
-    }
 }

@@ -50,6 +50,11 @@ public class CommandProcessorImpl implements CommandProcessor
     protected final WeakHashMap<CommandSession, Object> sessions = new WeakHashMap<>();
     protected boolean stopped;
 
+    public CommandProcessorImpl()
+    {
+        this(null);
+    }
+
     public CommandProcessorImpl(ThreadIO tio)
     {
         threadIO = tio;
