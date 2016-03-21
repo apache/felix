@@ -36,7 +36,6 @@ import org.apache.sshd.server.Environment;
 import org.apache.sshd.server.ExitCallback;
 import org.apache.sshd.server.SessionAware;
 import org.apache.sshd.server.Signal;
-import org.apache.sshd.server.SignalListener;
 import org.apache.sshd.server.session.ServerSession;
 import org.jline.terminal.Attributes;
 import org.jline.terminal.Attributes.ControlChar;

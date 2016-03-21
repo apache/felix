@@ -23,8 +23,6 @@ import java.io.InputStream;
 import java.io.PrintStream;
 
 import org.apache.felix.gogo.jline.Shell.Context;
-import org.apache.felix.gogo.jline.ssh.Ssh;
-import org.apache.felix.gogo.jline.telnet.Telnet;
 import org.apache.felix.gogo.runtime.CommandProcessorImpl;
 import org.apache.felix.gogo.runtime.threadio.ThreadIOImpl;
 import org.apache.felix.service.command.CommandSession;
@@ -57,6 +55,7 @@ public class Main {
                 register(processor, new Procedural(), Procedural.functions);
                 register(processor, new Posix(processor), Posix.functions);
                 register(processor, shell, Shell.functions);
+                /*
                 try {
                     register(processor, new Telnet(processor), Telnet.functions);
                 } catch (Throwable t) {
@@ -67,6 +66,7 @@ public class Main {
                 } catch (Throwable t) {
                     // ignore
                 }
+                */
                 CommandSession session = processor.createSession(terminal.input(), terminal.output(), terminal.output());
                 session.put(Shell.VAR_CONTEXT, context);
                 session.put(Shell.VAR_TERMINAL, terminal);
