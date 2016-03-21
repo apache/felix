@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.PrintStream;
 import java.net.URI;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -31,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.gogo.runtime.threadio.ThreadIOImpl;
+import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -46,6 +48,7 @@ public class TestTokenizer
 {
     private final Map<String, Object> vars = new HashMap<>();
     private final Evaluate evaluate;
+    private Path currentDir = null;
 
     public TestTokenizer()
     {
@@ -71,9 +74,15 @@ public class TestTokenizer
             }
 
             public Path currentDir() {
-                return null;
+                return currentDir;
             }
         };
+    }
+
+    @Before
+    public void setUp() {
+        currentDir = null;
+        vars.clear();
     }
 
     @Test
@@ -179,7 +188,6 @@ public class TestTokenizer
         map.put("a2", "bar");
         map.put("b1", "foo");
 
-        vars.clear();
         vars.put("key", "a1");
         vars.put("map", map);
 
@@ -201,7 +209,6 @@ public class TestTokenizer
 
     @Test
     public void testJoinSplit() throws Exception {
-        vars.clear();
         vars.put("array", Arrays.asList("a", "b", "c"));
         vars.put("string", "a\n\nb\nc");
         vars.put("str", "such a bad bad trip");
@@ -220,7 +227,6 @@ public class TestTokenizer
 
     @Test
     public void testParamFlag() throws Exception {
-        vars.clear();
         vars.put("foo", "bar");
         vars.put("bar", "baz");
 
@@ -231,7 +237,6 @@ public class TestTokenizer
 
     @Test
     public void testCaseFlags() throws Exception {
-        vars.clear();
         vars.put("foo", "bAr");
 
         assertEquals("bAr", expand("${foo}"));
@@ -242,7 +247,6 @@ public class TestTokenizer
 
     @Test
     public void testQuotes() throws Exception {
-        vars.clear();
         vars.put("foo", "\"{a'}\\b");
         vars.put("q1", "\"foo\"");
 
@@ -257,8 +261,6 @@ public class TestTokenizer
 
     @Test
     public void testChars() throws Exception {
-        vars.clear();
-
         List<Integer> array = new ArrayList<>();
         for (int i = 0; i < 64; i++) {
             array.add(i);
@@ -277,7 +279,6 @@ public class TestTokenizer
 
     @Test
     public void testSorting() throws Exception {
-        vars.clear();
         vars.put("array", Arrays.asList("foo1", "foo02", "foo2", "fOo3", "Foo20", "foo23"));
 
         assertEquals(Arrays.asList("Foo20", "fOo3", "foo02", "foo1", "foo2", "foo23"), expand("${(o)array}"));
@@ -296,7 +297,6 @@ public class TestTokenizer
 
     @Test
     public void testPatterns() throws Exception {
-        vars.clear();
         vars.put("foo", "twinkle twinkle little star");
         vars.put("sub", "t*e");
         vars.put("rep", "spy");
@@ -314,7 +314,6 @@ public class TestTokenizer
         final File pwd = new File("/tmp");
         final String user = "derek";
 
-        vars.clear();
         vars.put("HOME", home);
         vars.put("PWD", pwd);
         vars.put("USER", user);
