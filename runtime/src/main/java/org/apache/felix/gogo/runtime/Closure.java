@@ -19,9 +19,14 @@
 package org.apache.felix.gogo.runtime;
 
 import java.io.EOFException;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
+import java.nio.channels.Channel;
+import java.nio.channels.Channels;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +34,7 @@ import java.util.Map.Entry;
 
 import org.apache.felix.gogo.runtime.Parser.Array;
 import org.apache.felix.gogo.runtime.Parser.Executable;
+import org.apache.felix.gogo.runtime.Parser.Operator;
 import org.apache.felix.gogo.runtime.Parser.Pipeline;
 import org.apache.felix.gogo.runtime.Parser.Program;
 import org.apache.felix.gogo.runtime.Parser.Sequence;
@@ -173,52 +179,100 @@ public class Closure implements Function, Evaluate
         }
 
         Pipe last = null;
-        Object[] mark = Pipe.mark();
-
-        for (Executable executable : program.tokens())
+        Operator operator = null;
+        for (Iterator<Executable> iterator = program.tokens().iterator(); iterator.hasNext();)
         {
-            List<Pipe> pipes = toPipes(executable);
-
-            for (int i = 0; i < pipes.size(); i++)
-            {
-                Pipe current = pipes.get(i);
-                if (i == 0)
-                {
-                    if (current.out == null)
-                    {
-                        current.setIn(session.in);
-                        current.setOut(session.out);
-                        current.setErr(session.err);
+            if (operator != null) {
+                if (Token.eq("&&", operator)) {
+                    if (!isSuccess(last)) {
+                        continue;
                     }
                 }
-                else
-                {
-                    Pipe previous = pipes.get(i - 1);
-                    previous.connect(current);
+                else if (Token.eq("||", operator)) {
+                    if (isSuccess(last)) {
+                        continue;
+                    }
                 }
             }
+            Executable executable = iterator.next();
+            if (iterator.hasNext()) {
+                operator = (Operator) iterator.next();
+            } else {
+                operator = null;
+            }
 
+            if (operator != null && Token.eq("&", operator)) {
+                // TODO: need to start in background
+            }
+
+            Channel[] mark = Pipe.mark();
+            Channel[] streams;
+            boolean[] toclose = new boolean[10];
+            if (mark == null) {
+                streams = new Channel[10];
+                streams[0] = Channels.newChannel(session.in);
+                streams[1] = Channels.newChannel(session.out);
+                streams[2] = Channels.newChannel(session.err);
+            } else {
+                streams = mark.clone();
+            }
+
+            List<Pipe> pipes = new ArrayList<Pipe>();
+            if (executable instanceof Pipeline) {
+                Pipeline pipeline = (Pipeline) executable;
+                List<Executable> exec = pipeline.tokens();
+                for (int i = 0; i < exec.size(); i++) {
+                    Executable ex = exec.get(i);
+                    Operator op = i < exec.size() - 1 ? (Operator) exec.get(++i) : null;
+                    Channel[] nstreams;
+                    boolean[] ntoclose;
+                    if (i == exec.size() - 1) {
+                        nstreams = streams;
+                        ntoclose = toclose;
+                    } else if (Token.eq("|", op)) {
+                        PipedInputStream pis = new PipedInputStream();
+                        PipedOutputStream pos = new PipedOutputStream(pis);
+                        nstreams = streams.clone();
+                        nstreams[1] = Channels.newChannel(pos);
+                        ntoclose = toclose.clone();
+                        ntoclose[1] = true;
+                        streams[0] = Channels.newChannel(pis);
+                        toclose[0] = true;
+                    } else if (Token.eq("|&", op)) {
+                        PipedInputStream pis = new PipedInputStream();
+                        PipedOutputStream pos = new PipedOutputStream(pis);
+                        nstreams = streams.clone();
+                        nstreams[1] = nstreams[2] = Channels.newChannel(pos);
+                        ntoclose = toclose.clone();
+                        ntoclose[1] = ntoclose[2] = true;
+                        streams[0] = Channels.newChannel(pis);
+                        toclose[0] = true;
+                    } else {
+                        throw new IllegalStateException("Unrecognized pipe operator: '" + op + "'");
+                    }
+                    pipes.add(new Pipe(this, ex, nstreams, ntoclose));
+                }
+            } else {
+                pipes.add(new Pipe(this, executable, streams, toclose));
+            }
+
+            // Don't start a thread if we have a single pipe
             if (pipes.size() == 1)
             {
                 pipes.get(0).run();
             }
-            else if (pipes.size() > 1)
-            {
-                for (Pipe pipe : pipes)
-                {
+            else {
+                // Start threads
+                for (Pipe pipe : pipes) {
                     pipe.start();
                 }
-                try
-                {
-                    for (Pipe pipe : pipes)
-                    {
+                // Wait for them
+                try {
+                    for (Pipe pipe : pipes) {
                         pipe.join();
                     }
-                }
-                catch (InterruptedException e)
-                {
-                    for (Pipe pipe : pipes)
-                    {
+                } catch (InterruptedException e) {
+                    for (Pipe pipe : pipes) {
                         pipe.interrupt();
                     }
                     throw e;
@@ -231,42 +285,23 @@ public class Closure implements Function, Evaluate
                 if (pipe.exception != null)
                 {
                     // can't throw exception, as result is defined by last pipe
-                    Object oloc = session.get(LOCATION);
-                    String loc = (String.valueOf(oloc).contains(":") ? oloc + ": "
-                        : "pipe: ");
-                    session.err.println(loc + pipe.exception);
                     session.put("pipe-exception", pipe.exception);
                 }
             }
             last = pipes.get(pipes.size() - 1);
-            if (last.exception != null)
+
+            boolean errReturn = true;
+            if (last.exit != 0 && errReturn)
             {
-                Pipe.reset(mark);
                 throw last.exception;
             }
         }
 
-        Pipe.reset(mark); // reset IO in case same thread used for new client
-
         return last == null ? null : last.result;
     }
 
-    private List<Pipe> toPipes(Executable executable)
-    {
-        if (executable instanceof Pipeline)
-        {
-            List<Pipe> pipes = new ArrayList<Pipe>();
-            Pipeline pipeline = (Pipeline) executable;
-            for (Executable ex : pipeline.tokens())
-            {
-                pipes.add(new Pipe(this, ex));
-            }
-            return pipes;
-        }
-        else
-        {
-            return Collections.singletonList(new Pipe(this, executable));
-        }
+    private boolean isSuccess(Pipe pipe) {
+        return pipe.exit == 0;
     }
 
     private Object eval(Object v)

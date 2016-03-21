@@ -18,8 +18,12 @@
  */
 package org.apache.felix.gogo.runtime;
 
+import java.util.regex.Pattern;
+
 public class Tokenizer extends BaseTokenizer
 {
+
+    private final Pattern redir = Pattern.compile("[0-9&]?>|[0-9]?>>|[0-9]?>&|[0-9]?<|[0-9]?<>");
 
     protected boolean inArray;
     protected int word = 0;
@@ -47,6 +51,7 @@ public class Tokenizer extends BaseTokenizer
         }
         skipSpace(last == null || Token.eq(last, "\n"));
         int start = index - 1;
+        Token t, tn;
         while (true)
         {
             switch (ch)
@@ -81,8 +86,46 @@ public class Tokenizer extends BaseTokenizer
                         getch();
                         break;
                     }
-                case ';':
+                case '>':
+                case '<':
+                    t = text.subSequence(start, index);
+                    tn = text.subSequence(start, index + 1);
+                    if (redir.matcher(tn).matches()) {
+                        getch();
+                        break;
+                    }
+                    if (redir.matcher(t).matches() && start < index - 1) {
+                        getch();
+                    }
+                    word = 0;
+                    return token(start);
+                case '&':
+                    // beginning of token
+                    if (start == index - 1) {
+                        if (peek() == '&' || peek() == '>') {
+                            getch();
+                            getch();
+                        }
+                        word = 0;
+                        return token(start);
+                    }
+                    // in the middle of a redirection
+                    else if (redir.matcher(text.subSequence(start, index)).matches()) {
+                        getch();
+                        break;
+                    }
+                    else {
+                        word = 0;
+                        return token(start);
+                    }
                 case '|':
+                    if (start == index - 1 && (peek() == '|' || peek() == '&')) {
+                        getch();
+                        getch();
+                    }
+                    word = 0;
+                    return token(start);
+                case ';':
                     word = 0;
                     return token(start);
                 case '}':

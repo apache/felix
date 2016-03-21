@@ -28,6 +28,9 @@
     <name>Apache Felix Gogo Runtime</name>
     <artifactId>org.apache.felix.gogo.runtime</artifactId>
     <version>0.16.3-SNAPSHOT</version>
+    <properties>
+        <felix.java.version>8</felix.java.version>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
