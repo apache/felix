@@ -168,6 +168,7 @@ public class Telnet {
                         });
                         PrintStream pout = new PrintStream(terminal.output());
                         CommandSession session = processor.createSession(terminal.input(), pout, pout);
+                        session.put(Shell.VAR_TERMINAL, terminal);
                         Context context = new Context() {
                             @Override
                             public String getProperty(String name) {
