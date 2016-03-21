@@ -249,7 +249,7 @@ public class CommandProcessorImpl implements CommandProcessor
         Map<Object, Integer> cmdMap = commands.get(key);
         if (cmdMap == null)
         {
-            commands.putIfAbsent(key, new LinkedHashMap<Object, Integer>());
+            commands.putIfAbsent(key, new LinkedHashMap<>());
             cmdMap = commands.get(key);
         }
         cmdMap.put(target, ranking);
@@ -284,7 +284,7 @@ public class CommandProcessorImpl implements CommandProcessor
     private String[] getFunctions(Class<?> target)
     {
         String[] functions;
-        Set<String> list = new TreeSet<String>();
+        Set<String> list = new TreeSet<>();
         Method methods[] = target.getMethods();
         for (Method m : methods)
         {
@@ -311,7 +311,8 @@ public class CommandProcessorImpl implements CommandProcessor
     {
         int[] cost = new int[1];
         Object ret = Reflective.coerce(session, desiredType, in, cost);
-        if (ret == Reflective.NO_MATCH) {
+        if (ret == Reflective.NO_MATCH)
+        {
             throw new IllegalArgumentException(String.format(
                     "Cannot convert %s(%s) to %s", in, in != null ? in.getClass() : "null", desiredType));
         }
@@ -400,7 +401,8 @@ public class CommandProcessorImpl implements CommandProcessor
         }
     }
 
-    public Object expr(CommandSessionImpl session, CharSequence expr) {
+    public Object expr(CommandSessionImpl session, CharSequence expr)
+    {
         return new Expression(expr.toString()).eval(session.variables);
     }
 }

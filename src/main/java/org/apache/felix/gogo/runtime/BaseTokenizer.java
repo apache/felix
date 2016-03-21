@@ -164,6 +164,7 @@ public class BaseTokenizer
         skipSpace(false);
     }
 
+    @SuppressWarnings("StatementWithEmptyBody")
     protected void skipSpace(boolean skipNewLines)
     {
         while (true)
@@ -283,14 +284,6 @@ public class BaseTokenizer
             ++column;
 
         return c;
-    }
-
-    public void skip(int length)
-    {
-        while (--length >= 0)
-        {
-            getch();
-        }
     }
 
 }

@@ -32,7 +32,8 @@ public class EOFError extends SyntaxError
         this.repair = repair;
     }
 
-    public String repair() {
+    public String repair()
+    {
         return repair;
     }
 

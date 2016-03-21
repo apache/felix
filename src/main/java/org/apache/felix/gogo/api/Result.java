@@ -18,7 +18,8 @@
  */
 package org.apache.felix.gogo.api;
 
-public interface Result {
+public interface Result
+{
 
     boolean isSuccess();
 
