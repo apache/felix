@@ -22,7 +22,9 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.PrintStream;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.felix.gogo.runtime.threadio.ThreadIOImpl;
@@ -39,7 +41,7 @@ import static org.mockito.Mockito.when;
 
 public class TestTokenizer
 {
-    private final Map<String, Object> vars = new HashMap<String, Object>();
+    private final Map<String, Object> vars = new HashMap<>();
     private final Evaluate evaluate;
 
     public TestTokenizer()
@@ -163,6 +165,31 @@ public class TestTokenizer
     }
 
     @Test
+    public void testSubscripts() throws Exception
+    {
+        Map<String, String> map = new LinkedHashMap<>();
+        map.put("a1", "baz");
+        map.put("a2", "bar");
+        map.put("b1", "foo");
+
+        vars.clear();
+        vars.put("key", "a1");
+        vars.put("map", map);
+
+        assertEquals("baz", expand("${map[a1]}"));
+        assertEquals("baz", expand("${map[$key]}"));
+        assertEquals("az", expand("${map[a1][1,3]}"));
+        assertEquals("AZ", expand("${(U)map[a1][1,3]}"));
+        assertEquals(map, expand("${map}"));
+        assertEquals("baz bar foo", expand("\"${map}\""));
+        assertEquals(Arrays.asList("baz", "bar", "foo"), expand("\"${map[@]}\""));
+        assertEquals(Arrays.asList("a1", "a2", "b1"), expand("\"${(k)map[@]}\""));
+        assertEquals(Arrays.asList("a1", "baz", "a2", "bar", "b1", "foo"), expand("\"${(kv)map[@]}\""));
+        assertEquals(Arrays.asList("a2", "bar"), expand("${${(kv)map[@]}[2,4]}"));
+        assertEquals(Arrays.asList("a2", "bar"), expand("${${(kv)=map}[2,4]}"));
+    }
+
+    @Test
     public void testExpand() throws Exception
     {
         final URI home = new URI("/home/derek");
@@ -270,12 +297,22 @@ public class TestTokenizer
             // expected
         }
 
-        assertEquals(user, expand("${USER\\\n:?}"));
+        try {
+            expand("${USER\\\n:?}");
+        }
+        catch (SyntaxError e)
+        {
+            // expected
+        }
         assertEquals(user, expand("${US\\u0045R:?}"));
 
         // bash doesn't supported nested expansions
         // gogo only supports them in the ${} syntax
-        assertEquals("Derek Baum", expand("${$USER}"));
+        assertEquals("Derek Baum", expand("${(P)$USER}"));
+        assertEquals("Derek Baum", expand("${${(P)USER}:-Derek Baum}"));
+        assertEquals("Derek Baum", expand("${${(P)USR}:-$derek}"));
+        assertEquals("derek", expand("${${USER}}"));
+        assertEquals("derek", expand("${${USER:-d}}"));
         assertEquals("x", expand("${$USR:-x}"));
         assertEquals("$" + user, expand("$$USER"));
     }
