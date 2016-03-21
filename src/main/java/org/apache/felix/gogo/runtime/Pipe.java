@@ -20,8 +20,10 @@ package org.apache.felix.gogo.runtime;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
+import java.nio.channels.ByteChannel;
 import java.nio.channels.Channel;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -38,6 +40,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.felix.gogo.runtime.Job.Status;
 import org.apache.felix.gogo.runtime.Parser.Statement;
 import org.apache.felix.gogo.runtime.Pipe.Result;
 import org.apache.felix.service.command.Converter;
@@ -114,6 +117,9 @@ public class Pipe implements Callable<Result>
     private static final int WRITE = 2;
 
     private void setStream(Channel ch, int fd, int readWrite, boolean begOfPipe, boolean endOfPipe) throws IOException {
+        if ((readWrite & (READ | WRITE)) == 0) {
+            throw new IllegalArgumentException("Should specify READ and/or WRITE");
+        }
         if ((readWrite & READ) != 0 && !(ch instanceof ReadableByteChannel)) {
             throw new IllegalArgumentException("Channel is not readable");
         }
@@ -135,43 +141,24 @@ public class Pipe implements Callable<Result>
             if (streams[fd] != null && (readWrite & READ) != 0 && (readWrite & WRITE) != 0) {
                 throw new IllegalArgumentException("Can not do multios with read/write streams");
             }
-            if ((readWrite & READ) != 0) {
-                MultiReadableByteChannel mrbc;
-                if (streams[fd] instanceof MultiReadableByteChannel) {
-                    mrbc = (MultiReadableByteChannel) streams[fd];
-                } else {
-                    mrbc = new MultiReadableByteChannel();
-                    if (streams[fd] != null && begOfPipe) {
-                        if (toclose[fd]) {
-                            streams[fd].close();
-                        }
-                    } else {
-                        mrbc.addChannel((ReadableByteChannel) streams[fd], toclose[fd]);
-                    }
-                    streams[fd] = mrbc;
-                    toclose[fd] = true;
-                }
-                mrbc.addChannel((ReadableByteChannel) ch, true);
-            } else if ((readWrite & WRITE) != 0) {
-                MultiWritableByteChannel mrbc;
-                if (streams[fd] instanceof MultiWritableByteChannel) {
-                    mrbc = (MultiWritableByteChannel) streams[fd];
-                } else {
-                    mrbc = new MultiWritableByteChannel();
-                    if (streams[fd] != null && endOfPipe) {
-                        if (toclose[fd]) {
-                            streams[fd].close();
-                        }
-                    } else {
-                        mrbc.addChannel((WritableByteChannel) streams[fd], toclose[fd]);
-                    }
-                    streams[fd] = mrbc;
-                    toclose[fd] = true;
-                }
-                mrbc.addChannel((WritableByteChannel) ch, true);
+            MultiChannel mrbc;
+            if (streams[fd] instanceof MultiChannel) {
+                mrbc = (MultiChannel) streams[fd];
             } else {
-                throw new IllegalStateException();
+                mrbc = new MultiChannel();
+                if (streams[fd] != null
+                        && ((begOfPipe && (readWrite & READ) != 0)
+                            || (endOfPipe && (readWrite & WRITE) != 0))) {
+                    if (toclose[fd]) {
+                        streams[fd].close();
+                    }
+                } else {
+                    mrbc.addChannel(streams[fd], toclose[fd]);
+                }
+                streams[fd] = mrbc;
+                toclose[fd] = true;
             }
+            mrbc.addChannel(ch, true);
         }
         else {
             if (streams[fd] != null && toclose[fd]) {
@@ -179,59 +166,6 @@ public class Pipe implements Callable<Result>
             }
             streams[fd] = ch;
             toclose[fd] = true;
-        }
-    }
-
-    private static class MultiChannel<T extends Channel> implements Channel {
-        protected final List<T> channels = new ArrayList<>();
-        protected final List<T> toClose = new ArrayList<>();
-        protected final AtomicBoolean opened = new AtomicBoolean(true);
-        public void addChannel(T channel, boolean toclose) {
-            channels.add(channel);
-            if (toclose) {
-                toClose.add(channel);
-            }
-        }
-
-        public boolean isOpen() {
-            return opened.get();
-        }
-
-        public void close() throws IOException {
-            if (opened.compareAndSet(true, false)) {
-                for (T channel : toClose) {
-                    channel.close();
-                }
-            }
-        }
-    }
-
-    private static class MultiReadableByteChannel extends MultiChannel<ReadableByteChannel> implements ReadableByteChannel {
-        int index = 0;
-        public int read(ByteBuffer dst) throws IOException {
-            int nbRead = -1;
-            while (nbRead < 0 && index < channels.size()) {
-                nbRead = channels.get(index).read(dst);
-                if (nbRead < 0) {
-                    index++;
-                } else {
-                    break;
-                }
-            }
-            return nbRead;
-        }
-    }
-
-    private static class MultiWritableByteChannel extends MultiChannel<WritableByteChannel> implements WritableByteChannel {
-        public int write(ByteBuffer src) throws IOException {
-            int pos = src.position();
-            for (WritableByteChannel ch : channels) {
-                src.position(pos);
-                while (src.hasRemaining()) {
-                    ch.write(src);
-                }
-            }
-            return src.position() - pos;
         }
     }
 
@@ -247,7 +181,7 @@ public class Pipe implements Callable<Result>
         }
     }
 
-    public Result doCall()
+    private Result doCall()
     {
         InputStream in;
         PrintStream out = null;
@@ -332,6 +266,10 @@ public class Pipe implements Callable<Result>
                 }
             }
 
+            for (int i = 0; i < streams.length; i++) {
+                streams[i] = wrap(streams[i]);
+            }
+
             // Create streams
             in = Channels.newInputStream((ReadableByteChannel) streams[0]);
             out = new PrintStream(Channels.newOutputStream((WritableByteChannel) streams[1]), true);
@@ -396,4 +334,96 @@ public class Pipe implements Callable<Result>
             }
         }
     }
+
+    private Channel wrap(Channel channel) {
+        if (channel == null) {
+            return null;
+        }
+        if (channel instanceof MultiChannel) {
+            return channel;
+        }
+        MultiChannel mch = new MultiChannel();
+        mch.addChannel(channel, true);
+        return mch;
+    }
+
+    private class MultiChannel implements ByteChannel {
+        protected final List<Channel> channels = new ArrayList<>();
+        protected final List<Channel> toClose = new ArrayList<>();
+        protected final AtomicBoolean opened = new AtomicBoolean(true);
+        int index = 0;
+
+        public void addChannel(Channel channel, boolean toclose) {
+            channels.add(channel);
+            if (toclose) {
+                toClose.add(channel);
+            }
+        }
+
+        public boolean isOpen() {
+            return opened.get();
+        }
+
+        public void close() throws IOException {
+            if (opened.compareAndSet(true, false)) {
+                for (Channel channel : toClose) {
+                    channel.close();
+                }
+            }
+        }
+
+        public int read(ByteBuffer dst) throws IOException {
+            int nbRead = -1;
+            while (nbRead < 0 && index < channels.size()) {
+                Channel ch = channels.get(index);
+                checkSuspend(ch);
+                nbRead = ((ReadableByteChannel) ch).read(dst);
+                if (nbRead < 0) {
+                    index++;
+                } else {
+                    break;
+                }
+            }
+            return nbRead;
+        }
+
+        public int write(ByteBuffer src) throws IOException {
+            int pos = src.position();
+            for (Channel ch : channels) {
+                checkSuspend(ch);
+                src.position(pos);
+                while (src.hasRemaining()) {
+                    ((WritableByteChannel) ch).write(src);
+                }
+            }
+            return src.position() - pos;
+        }
+
+        private void checkSuspend(Channel ch) throws IOException {
+            Job cur = closure.session().currentJob();
+            if (cur != null) {
+                Channel[] sch = closure.session().channels;
+                if (ch == sch[0] || ch == sch[1] || ch == sch[2]) {
+                    synchronized (cur) {
+                        if (cur.status() == Status.Background) {
+                            // TODO: Send SIGTIN / SIGTOU
+                            cur.suspend();
+                        }
+                    }
+                }
+                synchronized (cur) {
+                    while (cur.status() == Status.Suspended) {
+                        try {
+                            cur.wait();
+                        } catch (InterruptedException e) {
+                            throw (IOException) new InterruptedIOException().initCause(e);
+                        }
+                    }
+                }
+            } else {
+                String msg = "This is definitely not expected";
+            }
+        }
+    }
+
 }

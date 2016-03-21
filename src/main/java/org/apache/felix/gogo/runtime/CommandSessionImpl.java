@@ -32,6 +32,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -39,12 +40,20 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Formatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
+import org.apache.felix.gogo.api.JobListener;
+import org.apache.felix.gogo.runtime.Job.Status;
+import org.apache.felix.gogo.runtime.Pipe.Result;
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Converter;
@@ -70,6 +79,9 @@ public class CommandSessionImpl implements CommandSession, Converter
     private final CommandProcessorImpl processor;
     protected final ConcurrentMap<String, Object> variables = new ConcurrentHashMap<>();
     private volatile boolean closed;
+    private final List<JobImpl> jobs = new ArrayList<>();
+    private final ThreadLocal<JobImpl> currentJob = new InheritableThreadLocal<>();
+    private JobListener jobListener;
 
     private final ExecutorService executor;
 
@@ -86,19 +98,6 @@ public class CommandSessionImpl implements CommandSession, Converter
         this.err = parent.err;
         this.pout = parent.pout;
         this.perr = parent.perr;
-    }
-
-    protected CommandSessionImpl(CommandProcessorImpl shell, ReadableByteChannel in, WritableByteChannel out, WritableByteChannel err)
-    {
-        this.currentDir = Paths.get(System.getProperty("user.dir")).toAbsolutePath().normalize();
-        this.executor = Executors.newCachedThreadPool();
-        this.processor = shell;
-        this.channels = new Channel[] { in, out, err };
-        this.in = Channels.newInputStream(in);
-        this.out = Channels.newOutputStream(out);
-        this.err = out == err ? this.out : Channels.newOutputStream(err);
-        this.pout = new PrintStream(this.out, true);
-        this.perr = out == err ? pout : new PrintStream(this.err, true);
     }
 
     protected CommandSessionImpl(CommandProcessorImpl shell, InputStream in, OutputStream out, OutputStream err)
@@ -148,10 +147,6 @@ public class CommandSessionImpl implements CommandSession, Converter
             this.processor.closeSession(this);
             executor.shutdownNow();
         }
-    }
-
-    ExecutorService getExecutor() {
-        return executor;
     }
 
     public Object execute(CharSequence commandline) throws Exception
@@ -370,7 +365,7 @@ public class CommandSessionImpl implements CommandSession, Converter
         }
         if (target instanceof Dictionary)
         {
-            Map<Object, Object> result = new HashMap<Object, Object>();
+            Map<Object, Object> result = new HashMap<>();
             for (Enumeration e = ((Dictionary) target).keys(); e.hasMoreElements();)
             {
                 Object key = e.nextElement();
@@ -496,4 +491,255 @@ public class CommandSessionImpl implements CommandSession, Converter
         return processor.expr(this, expr);
     }
 
+    @Override
+    public List<Job> jobs() {
+        synchronized (jobs) {
+            return new ArrayList<>(jobs);
+        }
+    }
+
+    @Override
+    public JobImpl currentJob() {
+        JobImpl job = currentJob.get();
+        while (job != null && job.parent != null) {
+            job = job.parent;
+        }
+        return job;
+    }
+
+    @Override
+    public JobImpl foregroundJob() {
+        List<JobImpl> jobs;
+        synchronized (this.jobs) {
+            jobs = new ArrayList<>(this.jobs);
+        }
+        return jobs.stream()
+                    .filter(j -> j.parent == null && j.status() == Status.Foreground)
+                    .findFirst()
+                    .orElse(null);
+    }
+
+    @Override
+    public void setJobListener(JobListener listener) {
+        synchronized (jobs) {
+            jobListener = listener;
+        }
+    }
+
+    public Job createJob(CharSequence command, List<Pipe> pipes) {
+        synchronized (jobs) {
+            int id = 1;
+            synchronized (jobs) {
+                boolean found;
+                do {
+                    found = false;
+                    for (Job job : jobs) {
+                        if (job.id() == id) {
+                            found = true;
+                            id++;
+                            break;
+                        }
+                    }
+                } while (found);
+            }
+            JobImpl cur = currentJob();
+            JobImpl job = new JobImpl(id, cur, command, pipes);
+            if (cur == null) {
+                jobs.add(job);
+            }
+            return job;
+        }
+    }
+
+    private class JobImpl implements Job {
+        private final int id;
+        private final JobImpl parent;
+        private final CharSequence command;
+        private final List<Pipe> pipes;
+        private Status status = Status.Created;
+        private Future<?> future;
+        private Result result;
+
+        public JobImpl(int id, JobImpl parent, CharSequence command, List<Pipe> pipes) {
+            this.id = id;
+            this.parent = parent;
+            this.command = command;
+            this.pipes = pipes;
+        }
+
+        @Override
+        public int id() {
+            return id;
+        }
+
+        public CharSequence command() {
+            return command;
+        }
+
+        @Override
+        public synchronized Status status() {
+            return status;
+        }
+
+        @Override
+        public synchronized void suspend() {
+            if (status == Status.Done) {
+                throw new IllegalStateException("Job is finished");
+            }
+            if (status != Status.Suspended) {
+                setStatus(Status.Suspended);
+            }
+        }
+
+        @Override
+        public synchronized void background() {
+            if (status == Status.Done) {
+                throw new IllegalStateException("Job is finished");
+            }
+            if (status != Status.Background) {
+                setStatus(Status.Background);
+            }
+        }
+
+        @Override
+        public synchronized void foreground() {
+            if (status == Status.Done) {
+                throw new IllegalStateException("Job is finished");
+            }
+            JobImpl cr = currentJob();
+            JobImpl fg = foregroundJob();
+            if (parent == null && fg != null && fg != this && fg != cr) {
+                throw new IllegalStateException("A job is already in foreground");
+            }
+            if (status != Status.Foreground) {
+                setStatus(Status.Foreground);
+            }
+        }
+
+        @Override
+        public void interrupt() {
+            Future future;
+            synchronized (this) {
+                future = this.future;
+            }
+            if (future != null) {
+                future.cancel(true);
+            }
+        }
+
+        protected synchronized void done() {
+            if (status == Status.Done) {
+                throw new IllegalStateException("Job is finished");
+            }
+            setStatus(Status.Done);
+        }
+
+        private void setStatus(Status newStatus) {
+            setStatus(newStatus, true);
+        }
+
+        private void setStatus(Status newStatus, boolean callListeners) {
+            Status previous;
+            synchronized (this) {
+                previous = this.status;
+                status = newStatus;
+            }
+            if (callListeners) {
+                JobListener listener;
+                synchronized (jobs) {
+                    listener = jobListener;
+                    if (newStatus == Status.Done) {
+                        jobs.remove(this);
+                    }
+                }
+                if (listener != null) {
+                    listener.jobChanged(this, previous, newStatus);
+                }
+            }
+            synchronized (this) {
+                JobImpl.this.notifyAll();
+            }
+        }
+
+        @Override
+        public synchronized Result result() {
+            return result;
+        }
+
+        @Override
+        public synchronized Result start(Status status) throws InterruptedException {
+            if (status == Status.Created || status == Status.Done) {
+                throw new IllegalArgumentException("Illegal start status");
+            }
+            if (this.status != Status.Created) {
+                throw new IllegalStateException("Job already started");
+            }
+            switch (status) {
+                case Suspended:
+                    suspend();
+                    break;
+                case Background:
+                    background();
+                    break;
+                case Foreground:
+                    foreground();
+                    break;
+            }
+            future = executor.submit(this::call);
+            while (this.status == Status.Foreground) {
+                JobImpl.this.wait();
+            }
+            return result;
+        }
+
+        private Void call() throws Exception {
+            Thread thread = Thread.currentThread();
+            String name = thread.getName();
+            try {
+                thread.setName("job controller " + id);
+
+                List<Callable<Result>> wrapped = pipes.stream().map(this::wrap).collect(Collectors.toList());
+                List<Future<Result>> results = executor.invokeAll(wrapped);
+
+                // Get pipe exceptions
+                Exception pipeException = null;
+                for (int i = 0; i < results.size() - 1; i++) {
+                    Future<Result> future = results.get(i);
+                    Throwable e;
+                    try {
+                        Result r = future.get();
+                        e = r.exception;
+                    } catch (ExecutionException ee) {
+                        e = ee.getCause();
+                    }
+                    if (e != null) {
+                        if (pipeException == null) {
+                            pipeException = new Exception("Exception caught during pipe execution");
+                        }
+                        pipeException.addSuppressed(e);
+                    }
+                }
+                put(Closure.PIPE_EXCEPTION, pipeException);
+
+                result = results.get(results.size() - 1).get();
+            } finally {
+                done();
+                thread.setName(name);
+            }
+            return null;
+        }
+
+        private Callable<Result> wrap(Pipe pipe) {
+            return () -> {
+                JobImpl prevJob = currentJob.get();
+                try {
+                    currentJob.set(this);
+                    return pipe.call();
+                } finally {
+                    currentJob.set(prevJob);
+                }
+            };
+        }
+
+    }
 }
