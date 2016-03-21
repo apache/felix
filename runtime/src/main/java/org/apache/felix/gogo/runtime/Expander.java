@@ -34,9 +34,9 @@ import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.regex.PatternSyntaxException;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("fallthrough")
@@ -57,7 +57,7 @@ public class Expander extends BaseTokenizer
     }
 
     private final Evaluate evaluate;
-    private final boolean inQuote;
+    private boolean inQuote;
 
     public Expander(CharSequence text, Evaluate evaluate, boolean inQuote)
     {
@@ -383,7 +383,7 @@ public class Expander extends BaseTokenizer
                                     .map(String::valueOf)
                                     .map(s -> "\"" + s + "\"").collect(Collectors.toList());
                         } else if (expand instanceof Collection) {
-                            return ((Collection) expand).stream().map(String::valueOf).collect(Collectors.joining(" ", "\"", "\""));
+                            return asCollection(expand).stream().map(String::valueOf).collect(Collectors.joining(" ", "\"", "\""));
                         } else if (expand != null) {
                             return "\"" + expand.toString() + "\"";
                         } else {
@@ -655,10 +655,45 @@ public class Expander extends BaseTokenizer
             boolean flagG = false;
             // expand flag
             boolean flagExpand = false;
+            // visible chars
+            boolean flagV = false;
+            // codepoint
+            boolean flagSharp = false;
+            // quoting
+            int flagq = 0;
+            boolean flagQ = false;
+            // Parse flags
             if (ch == '(') {
                 getch();
                 while (ch != EOT && ch != ')') {
                     switch (ch) {
+                        case 'q':
+                            if (flagq != 0) {
+                                throw new IllegalArgumentException("error in flags");
+                            }
+                            flagq = 1;
+                            if (peek() == '-') {
+                                flagq = -1;
+                                getch();
+                            } else {
+                                while (peek() == 'q') {
+                                    getch();
+                                    flagq++;
+                                }
+                                if (peek() == '-') {
+                                    throw new IllegalArgumentException("error in flags");
+                                }
+                            }
+                            break;
+                        case 'Q':
+                            flagQ = true;
+                            break;
+                        case '#':
+                            flagSharp = true;
+                            break;
+                        case 'V':
+                            flagV = true;
+                            break;
                         case 'o':
                             flago = true;
                             break;
@@ -711,6 +746,29 @@ public class Expander extends BaseTokenizer
                 }
                 getch();
             }
+
+            // Map to List conversion
+            boolean _flagk = flagk;
+            boolean _flagv = flagv;
+            Function<Object, Object> mapToList = v -> v instanceof Map ? toList(asMap(v), _flagk, _flagv) : v;
+
+            //
+            // String transformations
+            //
+            BiFunction<Function<String, String>, Object, Object> stringApplyer = (func, v) -> {
+                v = mapToList.apply(v);
+                if (v instanceof Collection) {
+                    return asCollection(v).stream()
+                            .map(String::valueOf)
+                            .map(func)
+                            .collect(Collectors.toList());
+                }
+                else if (v != null) {
+                    return func.apply(v.toString());
+                }
+                else
+                    return null;
+            };
 
             if (ch == '+') {
                 getch();
@@ -793,9 +851,7 @@ public class Expander extends BaseTokenizer
                                 r = "";
                             }
                             String m = op.charAt(0) == '#' ? "^" + p : op.charAt(0) == '%' ? p + "$" : p;
-                            if (val1 instanceof Map) {
-                                val1 = toList((Map) val1, flagk, flagv);
-                            }
+                            val1 = mapToList.apply(val1);
                             if (val1 instanceof Collection) {
                                 List<String> l = new ArrayList<>();
                                 for (Object o : ((Collection) val1)) {
@@ -833,27 +889,29 @@ public class Expander extends BaseTokenizer
                     }
                 }
                 if (wordSplit) {
-                    if (val instanceof Map) {
-                        List<Object> c = toList((Map) val, flagk, flagv);
-                        val = new ArgList(c);
-                    }
-                    else if (val instanceof Collection) {
-                        if (!(val instanceof ArgList)) {
-                            List<Object> l = val instanceof List ? (List) val : new ArrayList<>((Collection<?>) val);
-                            val = new ArgList(l);
-                        }
+                    val = mapToList.apply(val);
+                    if (val instanceof Collection) {
+                        val = asCollection(val).stream()
+                                .map(String::valueOf)
+                                .flatMap(s -> Arrays.stream(s.split("\\s+")))
+                                .collect(Collectors.toList());
                     }
                     else if (val != null) {
-                        val = new ArgList(Arrays.asList(val.toString().split("\\s")));
+                        val = Arrays.asList(val.toString().split("\\s"));
                     }
                 }
             }
 
+            //
+            // Subscripts
+            //
             while (ch == '[') {
 //                Token leftParam;
                 Object left;
+                boolean nLeft = false;
 //                Token rightParam;
                 Object right;
+                boolean nRight = false;
                 getch();
 //                if (ch == '(') {
 //                    int start = index;
@@ -863,10 +921,19 @@ public class Expander extends BaseTokenizer
 //                } else {
 //                    leftParam = null;
 //                }
-                if (ch == '@') {
+                if (ch == '*') {
                     left = text.subSequence(index - 1, index);
                     getch();
+                }
+                else if (ch == '@') {
+                    left = text.subSequence(index - 1, index);
+                    flagExpand = true;
+                    getch();
                 } else {
+                    if (ch == '-') {
+                        nLeft = true;
+                        getch();
+                    }
                     left = getName(']');
                 }
                 if (ch == ',') {
@@ -879,6 +946,10 @@ public class Expander extends BaseTokenizer
 //                    } else {
 //                        rightParam = null;
 //                    }
+                    if (ch == '-') {
+                        nRight = true;
+                        getch();
+                    }
                     right = getName(']');
                 } else {
 //                    rightParam = null;
@@ -890,41 +961,54 @@ public class Expander extends BaseTokenizer
                 getch();
                 if (right == null) {
                     left = left instanceof Token ? expand((Token) left) : left;
+                    String sLeft = left.toString();
                     if (val instanceof Map) {
-                        if (left.toString().equals("@")) {
-                            val = new ArgList(toList((Map) val, flagk, flagv));
+                        if (sLeft.equals("@") || sLeft.equals("*")) {
+                            val = toList(asMap(val), flagk, flagv);
                         }
                         else {
-                            val = ((Map) val).get(left.toString());
+                            val = ((Map) val).get(sLeft);
                         }
                     }
                     else if (val instanceof List) {
-                        if (left.toString().equals("@")) {
+                        if (sLeft.equals("@") || sLeft.equals("*")) {
                             val = new ArgList((List) val);
                         }
                         else {
-                            val = ((List) val).get(Integer.parseInt(left.toString()));
+                            int iLeft = Integer.parseInt(sLeft);
+                            List list = (List) val;
+                            val = list.get(nLeft ? list.size() - 1 - iLeft : iLeft);
                         }
                     }
                     else if (val != null) {
-                        if (left.toString().equals("@")) {
+                        if (sLeft.equals("@") || sLeft.equals("*")) {
                             val = val.toString();
                         } else {
-                            val = val.toString().charAt(Integer.parseInt(left.toString()));
+                            int iLeft = Integer.parseInt(sLeft);
+                            String str = val.toString();
+                            val = str.charAt(nLeft ? str.length() - 1 - iLeft : iLeft);
                         }
                     }
                 }
                 else {
-                    left = left instanceof Token ? expand((Token) left) : left;
-                    right = right instanceof Token ? expand((Token) right) : right;
                     if (val instanceof Map) {
                         val = null;
                     }
-                    else if (val instanceof List) {
-                        val = ((List) val).subList(Integer.parseInt(left.toString()), Integer.parseInt(right.toString()));
-                    }
                     else {
-                        val = val.toString().substring(Integer.parseInt(left.toString()), Integer.parseInt(right.toString()));
+                        left = left instanceof Token ? expand((Token) left) : left;
+                        right = right instanceof Token ? expand((Token) right) : right;
+                        int iLeft = Integer.parseInt(left.toString());
+                        int iRight = Integer.parseInt(right.toString());
+                        if (val instanceof List) {
+                            List list = (List) val;
+                            val = list.subList(nLeft  ? list.size() - iLeft  : iLeft,
+                                               nRight ? list.size() - iRight : iRight);
+                        }
+                        else {
+                            String str = val.toString();
+                            val = str.substring(nLeft  ? str.length() - iLeft  : iLeft,
+                                                nRight ? str.length() - iRight : iRight);
+                        }
                     }
                 }
             }
@@ -936,116 +1020,66 @@ public class Expander extends BaseTokenizer
             if (flagP) {
                 val = val != null ? evaluate.get(val.toString()) : null;
             }
-            if (flagC || flagL || flagU) {
-                Function<String, String> cnv;
-                if (flagC)
-                    cnv = s -> s.isEmpty() ? s : s.substring(0, 1).toUpperCase() + s.substring(1).toLowerCase();
-                else if (flagL)
-                    cnv = String::toLowerCase;
-                else
-                    cnv = String::toUpperCase;
-                if (val instanceof Map) {
-                    val = toList((Map) val, flagk, flagv);
-                }
+
+            if (flagC) {
+                val = stringApplyer.apply(this::toCamelCase, val);
+            }
+            else if (flagL) {
+                val = stringApplyer.apply(String::toLowerCase, val);
+            }
+            else if (flagU) {
+                val = stringApplyer.apply(String::toUpperCase, val);
+            }
+
+            if (flaga || flagi || flagn || flago || flagO) {
+                val = mapToList.apply(val);
                 if (val instanceof Collection) {
-                    List<String> list = new ArrayList<>();
-                    for (Object o : ((Collection) val)) {
-                        list.add(o != null ? cnv.apply(o.toString()) : null);
+                    List<Object> list;
+                    if (flagn) {
+                        boolean _flagi = flagi;
+                        list = asCollection(val).stream()
+                                .map(String::valueOf)
+                                .sorted((s1, s2) -> numericCompare(s1, s2, _flagi))
+                                .collect(Collectors.toList());
+                    } else if (flaga) {
+                        list = new ArrayList<>(asCollection(val));
+                    } else {
+                        Comparator<String> comparator = flagi ? String.CASE_INSENSITIVE_ORDER : Comparator.naturalOrder();
+                        list = asCollection(val).stream()
+                                .map(String::valueOf)
+                                .sorted(comparator)
+                                .collect(Collectors.toList());
+                    }
+                    if (flagO) {
+                        Collections.reverse(list);
                     }
                     val = list;
-                } else if (val != null) {
-                    val = cnv.apply(val.toString());
                 }
             }
 
-            if (val instanceof Collection && (flaga || flagi || flagn || flago || flagO)) {
-                List<Object> list;
-                if (flagn) {
-                    boolean insensitive = flagi;
-                    Comparator<String> comparator = (s1, s2) -> {
-                        int i1s = 0, i2s = 0;
-                        while (i1s < s1.length() && i2s < s2.length()) {
-                            char c1 = s1.charAt(i1s);
-                            char c2 = s2.charAt(i2s);
-                            if (insensitive) {
-                                c1 = Character.toLowerCase(c1);
-                                c2 = Character.toLowerCase(c2);
-                            }
-                            if (c1 != c2) {
-                                if (c1 >= '0' && c1 <= '9' && c2 >= '0' && c2 <= '9') {
-                                    break;
-                                } else {
-                                    return c1 < c2 ? -1 : 1;
-                                }
-                            }
-                            i1s++;
-                            i2s++;
-                        }
-                        while (i1s > 0) {
-                            char c1 = s1.charAt(i1s-1);
-                            if (c1 < '0' || c1 > '9') {
-                                break;
-                            }
-                            i1s--;
-                        }
-                        while (i2s > 0) {
-                            char c2 = s2.charAt(i2s-1);
-                            if (c2 < '0' || c2 > '9') {
-                                break;
-                            }
-                            i2s--;
-                        }
-                        int i1e = i1s;
-                        int i2e = i2s;
-                        while (i1e < s1.length() - 1) {
-                            char c1 = s1.charAt(i1e+1);
-                            if (c1 < '0' || c1 > '9') {
-                                break;
-                            }
-                            i1e++;
-                        }
-                        while (i2e < s2.length() - 1) {
-                            char c2 = s2.charAt(i2e+1);
-                            if (c2 < '0' || c2 > '9') {
-                                break;
-                            }
-                            i2e++;
-                        }
-                        int i1 = Integer.parseInt(s1.substring(i1s, i1e + 1));
-                        int i2 = Integer.parseInt(s2.substring(i2s, i2e + 1));
-                        if (i1 < i2) {
-                            return -1;
-                        } else if (i1 > i2) {
-                            return 1;
-                        } else {
-                            return i1e > i2e ? -1 : 1;
-                        }
-                    };
-                    list = ((Collection<Object>) val).stream()
-                            .map(String::valueOf)
-                            .sorted(comparator)
-                            .collect(Collectors.toList());
-                } else if (flaga) {
-                    list = new ArrayList<>((Collection<Object>) val);
-                } else {
-                    Comparator<String> comparator = flagi ? String.CASE_INSENSITIVE_ORDER : Comparator.naturalOrder();
-                    list = ((Collection<Object>) val).stream()
-                            .map(String::valueOf)
-                            .sorted(comparator)
-                            .collect(Collectors.toList());
-                }
-                if (flagO) {
-                    Collections.reverse(list);
-                }
-                val = list;
+            if (flagSharp) {
+                val = stringApplyer.apply(this::sharp, val);
+            }
+
+            if (flagV) {
+                val = stringApplyer.apply(this::visible, val);
+            }
+
+            // Quote
+            if (flagq != 0) {
+                int _flagq = flagq;
+                val = stringApplyer.apply(s -> quote(s, _flagq), val);
+                inQuote = true;
+            }
+            // Unquote
+            else if (flagQ) {
+                val = stringApplyer.apply(this::unquote, val);
             }
 
             if (inQuote) {
-                if (val instanceof Map) {
-                    val = toList((Map) val, flagk, flagv);
-                }
+                val = mapToList.apply(val);
                 if (val instanceof Collection) {
-                    List<Object> l = val instanceof List ? (List) val : new ArrayList<>((Collection) val);
+                    List<Object> l = new ArrayList<>(asCollection(val));
                     if (flagExpand) {
                         val = new ArgList(l);
                     } else {
@@ -1063,6 +1097,252 @@ public class Expander extends BaseTokenizer
         }
 
         return val;
+    }
+
+    private String quote(String s, int flagq) {
+        StringBuilder buf = new StringBuilder();
+        // Backslashes
+        if (flagq == 1) {
+            for (int i = 0; i < s.length(); i++) {
+                char ch = s.charAt(i);
+                if (ch < 32 || ch >= 127) {
+                    buf.append("$'\\").append(Integer.toOctalString(ch)).append("\'");
+                } else if (" !\"#$&'()*;<=>?[\\]{|}~%".indexOf(ch) >= 0) {
+                    buf.append("\\").append(ch);
+                } else {
+                    buf.append(ch);
+                }
+            }
+        }
+        // Single quotes
+        else if (flagq == 2) {
+            buf.append("'");
+            for (int i = 0; i < s.length(); i++) {
+                char ch = s.charAt(i);
+                if (ch == '\'') {
+                    buf.append("'\\''");
+                } else {
+                    buf.append(ch);
+                }
+            }
+            buf.append("'");
+        }
+        // Double quotes
+        else if (flagq == 3) {
+            buf.append("\"");
+            for (int i = 0; i < s.length(); i++) {
+                char ch = s.charAt(i);
+                if ("\"\\$%".indexOf(ch) >= 0) {
+                    buf.append("\\").append(ch);
+                } else {
+                    buf.append(ch);
+                }
+            }
+            buf.append("\"");
+        }
+        // Posix
+        else if (flagq == 4) {
+            buf.append("$'");
+            for (int i = 0; i < s.length(); i++) {
+                char ch = s.charAt(i);
+                if (ch < 32 || ch >= 127) {
+                    buf.append("\\").append(Integer.toOctalString(ch));
+                } else {
+                    switch (ch) {
+                        case '\n':
+                            buf.append("\\n");
+                            break;
+                        case '\t':
+                            buf.append("\\t");
+                            break;
+                        case '\r':
+                            buf.append("\\r");
+                            break;
+                        case '\'':
+                            buf.append("\\'");
+                            break;
+                        default:
+                            buf.append(ch);
+                            break;
+                    }
+                }
+            }
+            buf.append("'");
+        }
+        // Readable
+        else {
+            boolean needQuotes = false;
+            for (int i = 0; i < s.length(); i++) {
+                char ch = s.charAt(i);
+                if (ch < 32 || ch >= 127 || " !\"#$&'()*;<=>?[\\]{|}~%".indexOf(ch) >= 0) {
+                    needQuotes = true;
+                    break;
+                }
+            }
+            return needQuotes ? quote(s, 2) : s;
+        }
+        return buf.toString();
+    }
+
+    private String unquote(String arg) {
+        boolean hasEscape = false;
+        for (int i = 0; i < arg.length(); i++) {
+            int c = arg.charAt(i);
+            if (c == '\\' || c == '"' || c == '\'') {
+                hasEscape = true;
+                break;
+            }
+        }
+        if (!hasEscape) {
+            return arg;
+        }
+        boolean singleQuoted = false;
+        boolean doubleQuoted = false;
+        boolean escaped = false;
+        StringBuilder buf = new StringBuilder(arg.length());
+        for (int i = 0; i < arg.length(); i++) {
+            char c = arg.charAt(i);
+            if (doubleQuoted && escaped) {
+                if (c != '"' && c != '\\' && c != '$' && c != '%') {
+                    buf.append('\\');
+                }
+                buf.append(c);
+                escaped = false;
+            }
+            else if (escaped) {
+                buf.append(c);
+                escaped = false;
+            }
+            else if (singleQuoted) {
+                if (c == '\'') {
+                    singleQuoted = false;
+                } else {
+                    buf.append(c);
+                }
+            }
+            else if (doubleQuoted) {
+                if (c == '\\') {
+                    escaped = true;
+                }
+                else if (c == '\"') {
+                    doubleQuoted = false;
+                }
+                else {
+                    buf.append(c);
+                }
+            }
+            else if (c == '\\') {
+                escaped = true;
+            }
+            else if (c == '\'') {
+                singleQuoted = true;
+            }
+            else if (c == '"') {
+                doubleQuoted = true;
+            }
+            else {
+                buf.append(c);
+            }
+        }
+        return buf.toString();
+    }
+
+    private int numericCompare(String s1, String s2, boolean caseInsensitive) {
+        int i1s = 0, i2s = 0;
+        while (i1s < s1.length() && i2s < s2.length()) {
+            char c1 = s1.charAt(i1s);
+            char c2 = s2.charAt(i2s);
+            if (caseInsensitive) {
+                c1 = Character.toLowerCase(c1);
+                c2 = Character.toLowerCase(c2);
+            }
+            if (c1 != c2) {
+                if (c1 >= '0' && c1 <= '9' && c2 >= '0' && c2 <= '9') {
+                    break;
+                } else {
+                    return c1 < c2 ? -1 : 1;
+                }
+            }
+            i1s++;
+            i2s++;
+        }
+        while (i1s > 0) {
+            char c1 = s1.charAt(i1s - 1);
+            if (c1 < '0' || c1 > '9') {
+                break;
+            }
+            i1s--;
+        }
+        while (i2s > 0) {
+            char c2 = s2.charAt(i2s - 1);
+            if (c2 < '0' || c2 > '9') {
+                break;
+            }
+            i2s--;
+        }
+        int i1e = i1s;
+        int i2e = i2s;
+        while (i1e < s1.length() - 1) {
+            char c1 = s1.charAt(i1e + 1);
+            if (c1 < '0' || c1 > '9') {
+                break;
+            }
+            i1e++;
+        }
+        while (i2e < s2.length() - 1) {
+            char c2 = s2.charAt(i2e + 1);
+            if (c2 < '0' || c2 > '9') {
+                break;
+            }
+            i2e++;
+        }
+        int i1 = Integer.parseInt(s1.substring(i1s, i1e + 1));
+        int i2 = Integer.parseInt(s2.substring(i2s, i2e + 1));
+        if (i1 < i2) {
+            return -1;
+        } else if (i1 > i2) {
+            return 1;
+        } else {
+            return i1e > i2e ? -1 : 1;
+        }
+    }
+
+    private String toCamelCase(String s) {
+        return s.isEmpty() ? s : s.substring(0, 1).toUpperCase() + s.substring(1).toLowerCase();
+    }
+
+    private String sharp(String s) {
+        int codepoint = 0;
+        try {
+            codepoint = Integer.parseInt(s);
+        } catch (NumberFormatException e) {
+            // Ignore
+        }
+        return new String(Character.toChars(codepoint));
+    }
+
+    private String visible(String s) {
+        StringBuilder sb = new StringBuilder(s.length() * 2);
+        for (int i = 0; i < s.length(); i++) {
+            char ch = s.charAt(i);
+            if (ch < 32) {
+                sb.append('^');
+                sb.append((char)(ch + '@'));
+            } else {
+                sb.append(ch);
+            }
+        }
+        return sb.toString();
+    }
+
+    @SuppressWarnings("unchecked")
+    private Collection<Object> asCollection(Object val) {
+        return (Collection) val;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<Object, Object> asMap(Object val) {
+        return (Map) val;
     }
 
     private List<Object> toList(Map<Object, Object> val1, boolean flagk, boolean flagv) {
@@ -1165,109 +1445,107 @@ public class Expander extends BaseTokenizer
         boolean inGroup = false;
         StringBuilder sb = new StringBuilder();
         int index = 0;
-        while (true) {
-            while (index < str.length()) {
-                char ch = str.charAt(index++);
-                switch (ch) {
-                    case '*':
-                        sb.append(shortest ? ".*?" : ".*");
-                        break;
-                    case ',':
-                        if (inGroup) {
-                            sb.append(")|(?:");
-                        } else {
-                            sb.append(',');
-                        }
-                        break;
-                    case '?':
-                        sb.append(".");
-                        break;
-                    case '[':
-                        sb.append("[");
-                        if (next(str, index) == '^') {
-                            sb.append("\\^");
+        while (index < str.length()) {
+            char ch = str.charAt(index++);
+            switch (ch) {
+                case '*':
+                    sb.append(shortest ? ".*?" : ".*");
+                    break;
+                case ',':
+                    if (inGroup) {
+                        sb.append(")|(?:");
+                    } else {
+                        sb.append(',');
+                    }
+                    break;
+                case '?':
+                    sb.append(".");
+                    break;
+                case '[':
+                    sb.append("[");
+                    if (next(str, index) == '^') {
+                        sb.append("\\^");
+                        ++index;
+                    } else {
+                        if (next(str, index) == '!') {
+                            sb.append('^');
                             ++index;
-                        } else {
-                            if (next(str, index) == '!') {
-                                sb.append('^');
-                                ++index;
-                            }
-                            if (next(str, index) == '-') {
-                                sb.append('-');
-                                ++index;
-                            }
                         }
-                        boolean inLeft = false;
-                        char left = 0;
-                        while (index < str.length()) {
-                            ch = str.charAt(index++);
-                            if (ch == ']') {
-                                break;
-                            }
-                            if (ch == '\\' || ch == '[' || ch == '&' && next(str, index) == '&') {
-                                sb.append('\\');
-                            }
-                            sb.append(ch);
-                            if (ch == '-') {
-                                if (!inLeft) {
-                                    throw new PatternSyntaxException("Invalid range", str, index - 1);
-                                }
-                                if ((ch = next(str, index++)) == EOL || ch == ']') {
-                                    break;
-                                }
-                                if (ch < left) {
-                                    throw new PatternSyntaxException("Invalid range", str, index - 3);
-                                }
-                                sb.append(ch);
-                                inLeft = false;
-                            } else {
-                                inLeft = true;
-                                left = ch;
-                            }
+                        if (next(str, index) == '-') {
+                            sb.append('-');
+                            ++index;
                         }
-                        if (ch != ']') {
-                            throw new PatternSyntaxException("Missing \']", str, index - 1);
+                    }
+                    boolean inLeft = false;
+                    char left = 0;
+                    while (index < str.length()) {
+                        ch = str.charAt(index++);
+                        if (ch == ']') {
+                            break;
                         }
-                        sb.append("]");
-                        break;
-                    case '\\':
-                        if (index == str.length()) {
-                            throw new PatternSyntaxException("No character to escape", str, index - 1);
-                        }
-                        char ch2 = str.charAt(index++);
-                        if (isGlobMeta(ch2) || isRegexMeta(ch2)) {
-                            sb.append('\\');
-                        }
-                        sb.append(ch2);
-                        break;
-                    case '{':
-                        if (inGroup) {
-                            throw new PatternSyntaxException("Cannot nest groups", str, index - 1);
-                        }
-                        sb.append("(?:(?:");
-                        inGroup = true;
-                        break;
-                    case '}':
-                        if (inGroup) {
-                            sb.append("))");
-                            inGroup = false;
-                        } else {
-                            sb.append('}');
-                        }
-                        break;
-                    default:
-                        if (isRegexMeta(ch)) {
+                        if (ch == '\\' || ch == '[' || ch == '&' && next(str, index) == '&') {
                             sb.append('\\');
                         }
                         sb.append(ch);
-                        break;
-                }
+                        if (ch == '-') {
+                            if (!inLeft) {
+                                throw new PatternSyntaxException("Invalid range", str, index - 1);
+                            }
+                            if ((ch = next(str, index++)) == EOL || ch == ']') {
+                                break;
+                            }
+                            if (ch < left) {
+                                throw new PatternSyntaxException("Invalid range", str, index - 3);
+                            }
+                            sb.append(ch);
+                            inLeft = false;
+                        } else {
+                            inLeft = true;
+                            left = ch;
+                        }
+                    }
+                    if (ch != ']') {
+                        throw new PatternSyntaxException("Missing \']", str, index - 1);
+                    }
+                    sb.append("]");
+                    break;
+                case '\\':
+                    if (index == str.length()) {
+                        throw new PatternSyntaxException("No character to escape", str, index - 1);
+                    }
+                    char ch2 = str.charAt(index++);
+                    if (isGlobMeta(ch2) || isRegexMeta(ch2)) {
+                        sb.append('\\');
+                    }
+                    sb.append(ch2);
+                    break;
+                case '{':
+                    if (inGroup) {
+                        throw new PatternSyntaxException("Cannot nest groups", str, index - 1);
+                    }
+                    sb.append("(?:(?:");
+                    inGroup = true;
+                    break;
+                case '}':
+                    if (inGroup) {
+                        sb.append("))");
+                        inGroup = false;
+                    } else {
+                        sb.append('}');
+                    }
+                    break;
+                default:
+                    if (isRegexMeta(ch)) {
+                        sb.append('\\');
+                    }
+                    sb.append(ch);
+                    break;
             }
-            if (inGroup) {
-                throw new PatternSyntaxException("Missing \'}", str, index - 1);
-            }
-            return sb.toString();
         }
+        if (inGroup) {
+            throw new PatternSyntaxException("Missing \'}", str, index - 1);
+        }
+        return sb.toString();
     }
 
 
