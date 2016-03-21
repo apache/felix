@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.felix.gogo.runtime.Job.Status;
+import org.apache.felix.gogo.api.Job.Status;
 import org.apache.felix.gogo.runtime.Parser.Array;
 import org.apache.felix.gogo.runtime.Parser.Executable;
 import org.apache.felix.gogo.runtime.Parser.Operator;
@@ -224,10 +224,14 @@ public class Closure implements Function, Evaluate
                 toclose[1] = true;
             }
 
-            List<Pipe> pipes = new ArrayList<>();
+            CommandSessionImpl.JobImpl job;
             if (executable instanceof Pipeline) {
                 Pipeline pipeline = (Pipeline) executable;
                 List<Executable> exec = pipeline.tokens();
+                Token s = exec.get(0);
+                Token e = exec.get(exec.size() - 1);
+                Token t = program.subSequence(s.start - program.start, e.start + e.length - program.start);
+                job = session().createJob(t);
                 for (int i = 0; i < exec.size(); i++) {
                     Statement ex = (Statement) exec.get(i);
                     Operator op = i < exec.size() - 1 ? (Operator) exec.get(++i) : null;
@@ -257,17 +261,14 @@ public class Closure implements Function, Evaluate
                     } else {
                         throw new IllegalStateException("Unrecognized pipe operator: '" + op + "'");
                     }
-                    pipes.add(new Pipe(this, ex, nstreams, ntoclose));
+                    Pipe pipe = new Pipe(this, job, ex, nstreams, ntoclose);
+                    job.addPipe(pipe);
                 }
             } else {
-                pipes.add(new Pipe(this, (Statement) executable, streams, toclose));
+                job = session().createJob(executable);
+                Pipe pipe = new Pipe(this, job, (Statement) executable, streams, toclose);
+                job.addPipe(pipe);
             }
-
-            // Create job
-            Token s = pipes.get(0).statement;
-            Token e = pipes.get(pipes.size() - 1).statement;
-            Token t = program.subSequence(s.start - program.start, e.start + e.length - program.start);
-            Job job = session().createJob(t, pipes);
 
             // Start pipe in background
             if (operator != null && Token.eq("&", operator)) {

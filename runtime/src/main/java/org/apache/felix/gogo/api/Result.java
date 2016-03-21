@@ -18,16 +18,13 @@
  */
 package org.apache.felix.gogo.api;
 
-import org.apache.felix.gogo.api.Job.Status;
+public interface Result {
 
-/**
- * Listener for command executions.
- *
- * Such listeners must be registered in the OSGi registry and will be called
- * by the CommandProcessor when a command line is executed in a given session.
- */
-public interface JobListener {
+    boolean isSuccess();
 
-    void jobChanged(Job job, Status previous, Status current);
+    Object result();
 
+    Exception exception();
+
+    int error();
 }

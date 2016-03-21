@@ -23,8 +23,8 @@ import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.List;
 
+import org.apache.felix.gogo.api.Job;
 import org.apache.felix.gogo.api.JobListener;
-import org.apache.felix.gogo.runtime.Job;
 
 public interface CommandSession
 {
@@ -113,11 +113,6 @@ public interface CommandSession
     List<Job> jobs();
 
     /**
-     * Get the job running in the current thead or null.
-     */
-    Job currentJob();
-
-    /**
      * Get the current foreground job or null.
      */
     Job foregroundJob();
@@ -127,18 +122,13 @@ public interface CommandSession
      */
     void setJobListener(JobListener listener);
 
-    //
-    // Process access
-    //
-
     /**
-     * Check if the given descriptor for the currently running pipe is the terminal or not.
+     * Return the current session.
+     * Available inside from a command call.
      */
-    boolean isTty(int fd);
-
-    /**
-     * Set the error code for the currently running pipe.
-     */
-    void error(int error);
+    static CommandSession current() {
+        Job j = Job.current();
+        return j != null ? j.session() : null;
+    }
 
 }

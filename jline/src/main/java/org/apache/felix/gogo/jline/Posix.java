@@ -71,6 +71,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.felix.gogo.api.Process;
 import org.apache.felix.gogo.jline.Shell.Context;
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
@@ -120,17 +121,18 @@ public class Posix {
         if (argv == null || argv.length < 1) {
             throw new IllegalArgumentException();
         }
+        Process process = Process.current();
         try {
-            run(session, argv);
+            run(session, process, argv);
         } catch (IllegalArgumentException e) {
-            System.err.println(e.getMessage());
-            session.error(2);
+            process.err().println(e.getMessage());
+            process.error(2);
         } catch (HelpException e) {
-            System.err.println(e.getMessage());
-            session.error(0);
+            process.err().println(e.getMessage());
+            process.error(0);
         } catch (Exception e) {
-            System.err.println(argv[0] + ": " + e.getMessage());
-            session.error(1);
+            process.err().println(argv[0] + ": " + e.getMessage());
+            process.error(1);
         }
     }
 
@@ -155,64 +157,64 @@ public class Posix {
         return o != null ? o.toString() : null;
     }
 
-    protected Object run(CommandSession session, String[] argv) throws Exception {
+    protected Object run(CommandSession session, Process process, String[] argv) throws Exception {
         switch (argv[0]) {
             case "cat":
-                cat(session, argv);
+                cat(session, process, argv);
                 break;
             case "echo":
-                echo(session, argv);
+                echo(session, process, argv);
                 break;
             case "grep":
-                grep(session, argv);
+                grep(session, process, argv);
                 break;
             case "sort":
-                sort(session, argv);
+                sort(session, process, argv);
                 break;
             case "sleep":
-                sleep(session, argv);
+                sleep(session, process, argv);
                 break;
             case "cd":
-                cd(session, argv);
+                cd(session, process, argv);
                 break;
             case "pwd":
-                pwd(session, argv);
+                pwd(session, process, argv);
                 break;
             case "ls":
-                ls(session, argv);
+                ls(session, process, argv);
                 break;
             case "less":
-                less(session, argv);
+                less(session, process, argv);
                 break;
             case "watch":
-                watch(session, argv);
+                watch(session, process, argv);
                 break;
             case "nano":
-                nano(session, argv);
+                nano(session, process, argv);
                 break;
             case "tmux":
-                tmux(session, argv);
+                tmux(session, process, argv);
                 break;
             case "clear":
-                clear(session, argv);
+                clear(session, process, argv);
                 break;
             case "head":
-                head(session, argv);
+                head(session, process, argv);
                 break;
             case "tail":
-                tail(session, argv);
+                tail(session, process, argv);
                 break;
             case "wc":
-                wc(session, argv);
+                wc(session, process, argv);
                 break;
             case "date":
-                date(session, argv);
+                date(session, process, argv);
                 break;
         }
         return null;
     }
 
-    protected void date(CommandSession session, String[] argv) throws Exception {
+    protected void date(CommandSession session, Process process, String[] argv) throws Exception {
         String[] usage = {
                 "date -  display date",
                 "Usage: date [-r seconds] [-v[+|-]val[mwdHMS] ...] [-f input_fmt new_date] [+output_fmt]",
@@ -259,7 +261,7 @@ public class Posix {
             output = "%c";
         }
         // Print output
-        System.out.println(new SimpleDateFormat(toJavaDateFormat(output)).format(input));
+        process.out().println(new SimpleDateFormat(toJavaDateFormat(output)).format(input));
     }
 
     private String toJavaDateFormat(String format) {
@@ -339,7 +341,7 @@ public class Posix {
         return sb.toString();
     }
 
-    protected void wc(CommandSession session, String[] argv) throws Exception {
+    protected void wc(CommandSession session, Process process, String[] argv) throws Exception {
         String[] usage = {
                 "wc -  word, line, character, and byte count",
                 "Usage: wc [OPTIONS] [FILES]",
@@ -459,7 +461,7 @@ public class Posix {
                 if (!lastNl.get()) {
                     lines.incrementAndGet();
                 }
-                System.out.println(String.format(format, lines.get(), words.get(), chars.get(), bytes.get(), src.getName()));
+                process.out().println(String.format(format, lines.get(), words.get(), chars.get(), bytes.get(), src.getName()));
                 totalBytes += bytes.get();
                 totalChars += chars.get();
                 totalWords += words.get();
@@ -467,11 +469,11 @@ public class Posix {
             }
         }
         if (sources.size() > 1) {
-            System.out.println(String.format(format, totalLines, totalWords, totalChars, totalBytes, "total"));
+            process.out().println(String.format(format, totalLines, totalWords, totalChars, totalBytes, "total"));
         }
     }
 
-    protected void head(CommandSession session, String[] argv) throws Exception {
+    protected void head(CommandSession session, Process process, String[] argv) throws Exception {
         String[] usage = {
                 "head -  displays first lines of file",
                 "Usage: head [-n lines | -c bytes] [file ...]",
@@ -508,9 +510,9 @@ public class Posix {
             int lines = nbLines;
             if (sources.size() > 1) {
                 if (src != sources.get(0)) {
-                    System.out.println();
+                    process.out().println();
                 }
-                System.out.println("==> " + src.getName() + " <==");
+                process.out().println("==> " + src.getName() + " <==");
             }
             try (InputStream is = src.read()) {
                 byte[] buf = new byte[1024];
@@ -526,14 +528,14 @@ public class Posix {
                             }
                         }
                         bytes -= nb;
-                        System.out.write(buf, 0, nb);
+                        process.out().write(buf, 0, nb);
                     }
                 } while (nb > 0 && lines > 0 && bytes > 0);
             }
         }
     }
 
-    protected void tail(CommandSession session, String[] argv) throws Exception {
+    protected void tail(CommandSession session, Process process, String[] argv) throws Exception {
         String[] usage = {
                 "tail -  displays last lines of file",
                 "Usage: tail [-f] [-q] [-c # | -n #] [file ...]",
@@ -703,10 +705,10 @@ public class Posix {
 
             private void print(String toPrint) {
                 if (lastPrinted.get() != this && opt.args().size() > 1 && !opt.isSet("quiet")) {
-                    System.out.println();
-                    System.out.println("==> " + name + " <==");
+                    process.out().println();
+                    process.out().println("==> " + name + " <==");
                 }
-                System.out.print(toPrint);
+                process.out().print(toPrint);
                 lastPrinted.set(this);
             }
         }
@@ -741,22 +743,22 @@ public class Posix {
         }
     }
 
-    protected void clear(CommandSession session, String[] argv) throws Exception {
+    protected void clear(CommandSession session, Process process, String[] argv) throws Exception {
         final String[] usage = {
                 "clear -  clear screen",
                 "Usage: clear [OPTIONS]",
                 "  -? --help                    Show help",
         };
         Options opt = parseOptions(session, usage, argv);
-        if (session.isTty(1)) {
+        if (process.isTty(1)) {
             Shell.getTerminal(session).puts(Capability.clear_screen);
             Shell.getTerminal(session).flush();
         }
     }
 
-    protected void tmux(final CommandSession session, String[] argv) throws Exception {
+    protected void tmux(final CommandSession session, Process process, String[] argv) throws Exception {
         Commands.tmux(Shell.getTerminal(session),
-                System.out, System.err,
+                process.out(), System.err,
                 () -> session.get(".tmux"),
                 t -> session.put(".tmux", t),
                 c -> startShell(session, c),
@@ -794,7 +796,7 @@ public class Posix {
         }
     }
 
-    protected void nano(final CommandSession session, String[] argv) throws Exception {
+    protected void nano(final CommandSession session, Process process, String[] argv) throws Exception {
         final String[] usage = {
                 "nano -  edit files",
                 "Usage: nano [FILES]",
@@ -806,7 +808,7 @@ public class Posix {
         edit.run();
     }
 
-    protected void watch(final CommandSession session, String[] argv) throws Exception {
+    protected void watch(final CommandSession session, Process process, String[] argv) throws Exception {
         final String[] usage = {
                 "watch - watches & refreshes the output of a command",
                 "Usage: watch [OPTIONS] COMMAND",
@@ -863,7 +865,7 @@ public class Posix {
         }
     }
 
-    protected void less(CommandSession session, String[] argv) throws Exception {
+    protected void less(CommandSession session, Process process, String[] argv) throws Exception {
         final String[] usage = {
                 "less -  file pager",
                 "Usage: less [OPTIONS] [FILES]",
@@ -891,10 +893,10 @@ public class Posix {
             }
         }
 
-        if (!session.isTty(1)) {
+        if (!process.isTty(1)) {
             for (Source source : sources) {
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(source.read()))) {
-                    cat(reader, opt.isSet("LINE-NUMBERS"));
+                    cat(process, reader, opt.isSet("LINE-NUMBERS"));
                 }
             }
             return;
@@ -915,7 +917,7 @@ public class Posix {
         less.run(sources);
     }
 
-    protected void sort(CommandSession session, String[] argv) throws Exception {
+    protected void sort(CommandSession session, Process process, String[] argv) throws Exception {
         final String[] usage = {
                 "sort -  writes sorted standard input to standard output.",
                 "Usage: sort [OPTIONS] [FILES]",
@@ -941,7 +943,7 @@ public class Posix {
                 }
             }
         } else {
-            BufferedReader r = new BufferedReader(new InputStreamReader(System.in));
+            BufferedReader r = new BufferedReader(new InputStreamReader(process.in()));
             read(r, lines);
         }
 
@@ -958,13 +960,13 @@ public class Posix {
         String last = null;
         for (String s : lines) {
             if (!unique || last == null || !s.equals(last)) {
-                System.out.println(s);
+                process.out().println(s);
             }
             last = s;
         }
     }
 
-    protected void pwd(CommandSession session, String[] argv) throws Exception {
+    protected void pwd(CommandSession session, Process process, String[] argv) throws Exception {
         final String[] usage = {
                 "pwd - get current directory",
                 "Usage: pwd [OPTIONS]",
@@ -974,10 +976,10 @@ public class Posix {
         if (!opt.args().isEmpty()) {
             throw new IllegalArgumentException("usage: pwd");
         }
-        System.out.println(session.currentDir());
+        process.out().println(session.currentDir());
     }
 
-    protected void cd(CommandSession session, String[] argv) throws Exception {
+    protected void cd(CommandSession session, Process process, String[] argv) throws Exception {
         final String[] usage = {
                 "cd - get current directory",
                 "Usage: cd [OPTIONS] DIRECTORY",
@@ -997,7 +999,7 @@ public class Posix {
         session.currentDir(cwd);
     }
 
-    protected void ls(CommandSession session, String[] argv) throws Exception {
+    protected void ls(CommandSession session, Process process, String[] argv) throws Exception {
         final String[] usage = {
                 "ls - list files",
                 "Usage: ls [OPTIONS] [PATTERNS...]",
@@ -1094,7 +1096,7 @@ public class Posix {
                 }
                 String col = colors.get(type);
                 boolean addSuffix = opt.isSet("F");
-                if (col != null && !col.isEmpty() && session.isTty(1)) { // TODO: ability to force colors if piped
+                if (col != null && !col.isEmpty() && process.isTty(1)) { // TODO: ability to force colors if piped
                     return "\033[" + col + "m" + path.toString() + "\033[m" + (addSuffix ? suffix : "") + link;
                 } else {
                     return path.toString() + (addSuffix ? suffix : "") + link;
@@ -1222,14 +1224,14 @@ public class Posix {
         List<PathEntry> files = all.stream()
                 .filter(PathEntry::isNotDirectory)
                 .collect(Collectors.toList());
-        PrintStream out = System.out;
+        PrintStream out = process.out();
         Consumer<Stream<PathEntry>> display = s -> {
             boolean optLine  = opt.isSet("1");
             boolean optComma = opt.isSet("m");
             boolean optLong  = opt.isSet("l");
             boolean optCol   = opt.isSet("C");
             if (!optLine && !optComma && !optLong && !optCol) {
-                if (session.isTty(1)) {
+                if (process.isTty(1)) {
                     optCol = true;
                 }
                 else {
@@ -1250,7 +1252,7 @@ public class Posix {
             }
             // Column listing
             else if (optCol) {
-                toColumn(session, out, s.map(PathEntry::display), opt.isSet("x"));
+                toColumn(session, process, out, s.map(PathEntry::display), opt.isSet("x"));
             }
         };
         boolean space = false;
@@ -1279,9 +1281,9 @@ public class Posix {
         }
     }
 
-    private void toColumn(CommandSession session, PrintStream out, Stream<String> ansi, boolean horizontal) {
+    private void toColumn(CommandSession session, Process process, PrintStream out, Stream<String> ansi, boolean horizontal) {
         Terminal terminal = Shell.getTerminal(session);
-        int width = session.isTty(1) ? terminal.getWidth() : 80;
+        int width = process.isTty(1) ? terminal.getWidth() : 80;
         List<AttributedString> strings = ansi.map(AttributedString::fromAnsi).collect(Collectors.toList());
         if (!strings.isEmpty()) {
             int max = strings.stream().mapToInt(AttributedString::columnLength).max().getAsInt();
@@ -1318,7 +1320,7 @@ public class Posix {
         }
     }
 
-    protected void cat(CommandSession session, String[] argv) throws Exception {
+    protected void cat(CommandSession session, Process process, String[] argv) throws Exception {
         final String[] usage = {
                 "cat - concatenate and print FILES",
                 "Usage: cat [OPTIONS] [FILES]",
@@ -1334,15 +1336,15 @@ public class Posix {
         for (String arg : args) {
             InputStream is;
             if ("-".equals(arg)) {
-                is = System.in;
+                is = process.in();
             } else {
                 is = cwd.toUri().resolve(arg).toURL().openStream();
             }
-            cat(new BufferedReader(new InputStreamReader(is)), opt.isSet("n"));
+            cat(process, new BufferedReader(new InputStreamReader(is)), opt.isSet("n"));
         }
     }
 
-    protected void echo(CommandSession session, Object[] argv) throws Exception {
+    protected void echo(CommandSession session, Process process, Object[] argv) throws Exception {
         final String[] usage = {
                 "echo - echoes or prints ARGUMENT to standard output",
                 "Usage: echo [OPTIONS] [ARGUMENTS]",
@@ -1425,13 +1427,13 @@ public class Posix {
             }
         }
         if (opt.isSet("n")) {
-            System.out.print(buf);
+            process.out().print(buf);
         } else {
-            System.out.println(buf);
+            process.out().println(buf);
         }
     }
 
-    protected void grep(CommandSession session, String[] argv) throws Exception {
+    protected void grep(CommandSession session, Process process, String[] argv) throws Exception {
         final String[] usage = {
                 "grep -  search for PATTERN in each FILE or standard input.",
                 "Usage: grep [OPTIONS] PATTERN [FILES]",
@@ -1544,12 +1546,12 @@ public class Posix {
                         if (lineMatch != 0 & lineMatch + after + before <= lines.size()) {
                             if (!count) {
                                 if (!firstPrint && before + after > 0) {
-                                    System.out.println("--");
+                                    process.out().println("--");
                                 } else {
                                     firstPrint = false;
                                 }
                                 for (int i = 0; i < lineMatch + after; i++) {
-                                    System.out.println(lines.get(i));
+                                    process.out().println(lines.get(i));
                                 }
                             }
                             while (lines.size() > before) {
@@ -1566,24 +1568,24 @@ public class Posix {
                 }
                 if (!count && lineMatch > 0) {
                     if (!firstPrint && before + after > 0) {
-                        System.out.println("--");
+                        process.out().println("--");
                     } else {
                         firstPrint = false;
                     }
                     for (int i = 0; i < lineMatch + after && i < lines.size(); i++) {
-                        System.out.println(lines.get(i));
+                        process.out().println(lines.get(i));
                     }
                 }
                 if (count) {
-                    System.out.println(nb);
+                    process.out().println(nb);
                 }
                 match |= nb > 0;
             }
         }
-        session.error(match ? 0 : 1);
+        Process.current().error(match ? 0 : 1);
     }
 
-    protected void sleep(CommandSession session, String[] argv) throws Exception {
+    protected void sleep(CommandSession session, Process process, String[] argv) throws Exception {
         final String[] usage = {
                 "sleep -  suspend execution for an interval of time",
                 "Usage: sleep seconds",
@@ -1605,15 +1607,15 @@ public class Posix {
         }
     }
 
-    private static void cat(final BufferedReader reader, boolean displayLineNumbers) throws IOException {
+    private static void cat(Process process, final BufferedReader reader, boolean displayLineNumbers) throws IOException {
         String line;
         int lineno = 1;
         try {
             while ((line = reader.readLine()) != null) {
                 if (displayLineNumbers) {
-                    System.out.print(String.format("%6d  ", lineno++));
+                    process.out().print(String.format("%6d  ", lineno++));
                 }
-                System.out.println(line);
+                process.out().println(line);
             }
         } finally {
             reader.close();
