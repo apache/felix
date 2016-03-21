@@ -34,6 +34,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -43,6 +44,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import org.apache.felix.gogo.runtime.Job;
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Converter;
 import org.jline.builtins.Options;
@@ -52,7 +54,7 @@ import org.jline.builtins.Options;
  */
 public class Builtin {
 
-    static final String[] functions = {"format", "getopt", "new", "set", "tac", "type"};
+    static final String[] functions = {"format", "getopt", "new", "set", "tac", "type", "jobs", "fg", "bg"};
 
     private static final String[] packages = {"java.lang", "java.io", "java.net",
             "java.util"};
@@ -437,6 +439,63 @@ public class Builtin {
         }
 
         return false;
+    }
+
+    public void jobs(CommandSession session, String[] argv) {
+        List<Job> jobs = session.jobs();
+        Job current = session.currentJob();
+        for (Job job : jobs) {
+            if (job != current) {
+                System.out.println("[" + job.id() + "] " + job.status().toString().toLowerCase()
+                        + " " + job.command());
+            }
+        }
+    }
+
+    public void fg(CommandSession session, String[] argv) {
+        List<Job> jobs = session.jobs();
+        Collections.reverse(jobs);
+        Job current = session.currentJob();
+        if (argv.length == 0) {
+            Job job = jobs.stream().filter(j -> j != current)
+                    .findFirst().orElse(null);
+            if (job != null) {
+                job.foreground();
+            } else {
+                System.err.println("fg: no current job");
+            }
+        } else {
+            Job job = jobs.stream().filter(j -> j != current && argv[0].equals(Integer.toString(j.id())))
+                    .findFirst().orElse(null);
+            if (job != null) {
+                job.foreground();
+            } else {
+                System.err.println("fg: job not found: " + argv[0]);
+            }
+        }
+    }
+
+    public void bg(CommandSession session, String[] argv) {
+        List<Job> jobs = session.jobs();
+        Collections.reverse(jobs);
+        Job current = session.currentJob();
+        if (argv.length == 0) {
+            Job job = jobs.stream().filter(j -> j != current)
+                    .findFirst().orElse(null);
+            if (job != null) {
+                job.background();
+            } else {
+                System.err.println("fg: no current job");
+            }
+        } else {
+            Job job = jobs.stream().filter(j -> j != current && argv[0].equals(Integer.toString(j.id())))
+                    .findFirst().orElse(null);
+            if (job != null) {
+                job.background();
+            } else {
+                System.err.println("fg: job not found: " + argv[0]);
+            }
+        }
     }
 
     private boolean isClosure(Object target) {
