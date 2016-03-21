@@ -65,7 +65,8 @@ public class TestParser4 extends AbstractParserTest
     }
 
     @Test
-    public void testRedirInput() throws Exception {
+    public void testRedirInput() throws Exception
+    {
         Context c = new Context();
         c.addCommand("echo", this);
         c.addCommand("tac", this);
@@ -83,7 +84,8 @@ public class TestParser4 extends AbstractParserTest
     }
 
     @Test
-    public void testMultiInput() throws Exception {
+    public void testMultiInput() throws Exception
+    {
         Context c = new Context();
         c.addCommand("echo", this);
         c.addCommand("tac", this);

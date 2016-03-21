@@ -108,11 +108,13 @@ public class Tokenizer extends BaseTokenizer
                 case '<':
                     t = text.subSequence(start, index);
                     tn = text.subSequence(start, index + 1);
-                    if (redir.matcher(tn).matches()) {
+                    if (redir.matcher(tn).matches())
+                    {
                         getch();
                         break;
                     }
-                    if (redir.matcher(t).matches() && start < index - 1) {
+                    if (redir.matcher(t).matches() && start < index - 1)
+                    {
                         getch();
                     }
                     word = 0;
@@ -120,7 +122,8 @@ public class Tokenizer extends BaseTokenizer
                 case '&':
                     // beginning of token
                     if (start == index - 1) {
-                        if (peek() == '&' || peek() == '>') {
+                        if (peek() == '&' || peek() == '>')
+                        {
                             getch();
                             getch();
                         }
@@ -128,16 +131,19 @@ public class Tokenizer extends BaseTokenizer
                         return token(start);
                     }
                     // in the middle of a redirection
-                    else if (redir.matcher(text.subSequence(start, index)).matches()) {
+                    else if (redir.matcher(text.subSequence(start, index)).matches())
+                    {
                         getch();
                         break;
                     }
-                    else {
+                    else
+                    {
                         word = 0;
                         return token(start);
                     }
                 case '|':
-                    if (start == index - 1 && (peek() == '|' || peek() == '&')) {
+                    if (start == index - 1 && (peek() == '|' || peek() == '&'))
+                    {
                         getch();
                         getch();
                     }

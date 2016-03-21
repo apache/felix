@@ -330,7 +330,8 @@ public class Parser
                     || Token.eq(")", t)
                     || Token.eq("]", t))
             {
-                if (needRedirArg) {
+                if (needRedirArg)
+                {
                     throw new EOFError(tz.line, tz.column, "Expected file name for redirection", "redir", "foo");
                 }
                 push(t);
