@@ -19,8 +19,10 @@
 package org.apache.felix.gogo.runtime;
 
 import java.io.InputStream;
-import java.io.PrintStream;
+import java.io.OutputStream;
 import java.lang.reflect.Method;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -42,12 +44,12 @@ import org.apache.felix.service.threadio.ThreadIO;
 
 public class CommandProcessorImpl implements CommandProcessor
 {
-    protected final Set<Converter> converters = new CopyOnWriteArraySet<Converter>();
-    protected final Set<CommandSessionListener> listeners = new CopyOnWriteArraySet<CommandSessionListener>();
-    protected final ConcurrentMap<String, Map<Object, Integer>> commands = new ConcurrentHashMap<String, Map<Object, Integer>>();
-    protected final Map<String, Object> constants = new ConcurrentHashMap<String, Object>();
+    protected final Set<Converter> converters = new CopyOnWriteArraySet<>();
+    protected final Set<CommandSessionListener> listeners = new CopyOnWriteArraySet<>();
+    protected final ConcurrentMap<String, Map<Object, Integer>> commands = new ConcurrentHashMap<>();
+    protected final Map<String, Object> constants = new ConcurrentHashMap<>();
     protected final ThreadIO threadIO;
-    protected final WeakHashMap<CommandSession, Object> sessions = new WeakHashMap<CommandSession, Object>();
+    protected final WeakHashMap<CommandSession, Object> sessions = new WeakHashMap<>();
     protected boolean stopped;
 
     public CommandProcessorImpl(ThreadIO tio)
@@ -55,7 +57,37 @@ public class CommandProcessorImpl implements CommandProcessor
         threadIO = tio;
     }
 
-    public CommandSession createSession(InputStream in, PrintStream out, PrintStream err)
+    @Override
+    public CommandSessionImpl createSession(CommandSession parent) {
+        synchronized (sessions) {
+            if (stopped)
+            {
+                throw new IllegalStateException("CommandProcessor has been stopped");
+            }
+            if (!sessions.containsKey(parent) || !(parent instanceof CommandSessionImpl)) {
+                throw new IllegalArgumentException();
+            }
+            CommandSessionImpl session = new CommandSessionImpl(this, (CommandSessionImpl) parent);
+            sessions.put(session, null);
+            return session;
+        }
+    }
+
+    public CommandSessionImpl createSession(ReadableByteChannel in, WritableByteChannel out, WritableByteChannel err)
+    {
+        synchronized (sessions)
+        {
+            if (stopped)
+            {
+                throw new IllegalStateException("CommandProcessor has been stopped");
+            }
+            CommandSessionImpl session = new CommandSessionImpl(this, in, out, err);
+            sessions.put(session, null);
+            return session;
+        }
+    }
+
+    public CommandSessionImpl createSession(InputStream in, OutputStream out, OutputStream err)
     {
         synchronized (sessions)
         {

@@ -22,9 +22,14 @@
 package org.apache.felix.gogo.runtime;
 
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.nio.channels.Channel;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -37,6 +42,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
@@ -52,23 +59,62 @@ public class CommandSessionImpl implements CommandSession, Converter
     public static final String CONSTANTS = ".constants";
     private static final String COLUMN = "%-20s %s\n";
 
+    // Streams and channels
     protected InputStream in;
-    protected PrintStream out;
-    PrintStream err;
+    protected OutputStream out;
+    protected PrintStream pout;
+    protected OutputStream err;
+    protected PrintStream perr;
+    protected Channel[] channels;
 
     private final CommandProcessorImpl processor;
-    protected final ConcurrentMap<String, Object> variables = new ConcurrentHashMap<String, Object>();
+    protected final ConcurrentMap<String, Object> variables = new ConcurrentHashMap<>();
     private volatile boolean closed;
+
+    private final ExecutorService executor;
 
     private Path currentDir;
 
-    protected CommandSessionImpl(CommandProcessorImpl shell, InputStream in, PrintStream out, PrintStream err)
+    protected CommandSessionImpl(CommandProcessorImpl shell, CommandSessionImpl parent)
     {
+        this.currentDir = parent.currentDir;
+        this.executor = Executors.newCachedThreadPool();
         this.processor = shell;
+        this.channels = parent.channels;
+        this.in = parent.in;
+        this.out = parent.out;
+        this.err = parent.err;
+        this.pout = parent.pout;
+        this.perr = parent.perr;
+    }
+
+    protected CommandSessionImpl(CommandProcessorImpl shell, ReadableByteChannel in, WritableByteChannel out, WritableByteChannel err)
+    {
+        this.currentDir = Paths.get(System.getProperty("user.dir")).toAbsolutePath().normalize();
+        this.executor = Executors.newCachedThreadPool();
+        this.processor = shell;
+        this.channels = new Channel[] { in, out, err };
+        this.in = Channels.newInputStream(in);
+        this.out = Channels.newOutputStream(out);
+        this.err = out == err ? this.out : Channels.newOutputStream(err);
+        this.pout = new PrintStream(this.out, true);
+        this.perr = out == err ? pout : new PrintStream(this.err, true);
+    }
+
+    protected CommandSessionImpl(CommandProcessorImpl shell, InputStream in, OutputStream out, OutputStream err)
+    {
+        this.currentDir = Paths.get(System.getProperty("user.dir")).toAbsolutePath().normalize();
+        this.executor = Executors.newCachedThreadPool();
+        this.processor = shell;
+        ReadableByteChannel inCh = Channels.newChannel(in);
+        WritableByteChannel outCh = Channels.newChannel(out);
+        WritableByteChannel errCh = out == err ? outCh : Channels.newChannel(err);
+        this.channels = new Channel[] { inCh, outCh, errCh };
         this.in = in;
         this.out = out;
         this.err = err;
-        this.currentDir = Paths.get(System.getProperty("user.dir")).toAbsolutePath().normalize();
+        this.pout = out instanceof PrintStream ? (PrintStream) out : new PrintStream(out, true);
+        this.perr = out == err ? pout : err instanceof PrintStream ? (PrintStream) err : new PrintStream(err, true);
     }
 
     ThreadIO threadIO()
@@ -98,9 +144,14 @@ public class CommandSessionImpl implements CommandSession, Converter
     {
         if (!this.closed)
         {
-            this.processor.closeSession(this);
             this.closed = true;
+            this.processor.closeSession(this);
+            executor.shutdownNow();
         }
+    }
+
+    ExecutorService getExecutor() {
+        return executor;
     }
 
     public Object execute(CharSequence commandline) throws Exception
@@ -199,7 +250,7 @@ public class CommandSessionImpl implements CommandSession, Converter
 
     public PrintStream getConsole()
     {
-        return out;
+        return pout;
     }
 
     @SuppressWarnings("unchecked")
