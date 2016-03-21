@@ -121,7 +121,7 @@ public class Pipe implements Callable<Result>
     private static final int READ = 1;
     private static final int WRITE = 2;
 
-    private void setStream(Channel ch, int fd, int readWrite, boolean begOfPipe, boolean endOfPipe) throws IOException {
+    private void setStream(Channel ch, int fd, int readWrite) throws IOException {
         if ((readWrite & (READ | WRITE)) == 0) {
             throw new IllegalArgumentException("Should specify READ and/or WRITE");
         }
@@ -131,13 +131,13 @@ public class Pipe implements Callable<Result>
         if ((readWrite & WRITE) != 0 && !(ch instanceof WritableByteChannel)) {
             throw new IllegalArgumentException("Channel is not writable");
         }
-        if (fd == 0 && !(ch instanceof ReadableByteChannel)) {
+        if (fd == 0 && (readWrite & READ) == 0) {
             throw new IllegalArgumentException("Stdin is not readable");
         }
-        if (fd == 1 && !(ch instanceof WritableByteChannel)) {
+        if (fd == 1 && (readWrite & WRITE) == 0) {
             throw new IllegalArgumentException("Stdout is not writable");
         }
-        if (fd == 2 && !(ch instanceof WritableByteChannel)) {
+        if (fd == 2 && (readWrite & WRITE) == 0) {
             throw new IllegalArgumentException("Stderr is not writable");
         }
         // TODO: externalize
@@ -146,24 +146,27 @@ public class Pipe implements Callable<Result>
             if (streams[fd] != null && (readWrite & READ) != 0 && (readWrite & WRITE) != 0) {
                 throw new IllegalArgumentException("Can not do multios with read/write streams");
             }
-            MultiChannel mrbc;
-            if (streams[fd] instanceof MultiChannel) {
-                mrbc = (MultiChannel) streams[fd];
-            } else {
-                mrbc = new MultiChannel();
-                if (streams[fd] != null
-                        && ((begOfPipe && (readWrite & READ) != 0)
-                            || (endOfPipe && (readWrite & WRITE) != 0))) {
-                    if (toclose[fd]) {
-                        streams[fd].close();
-                    }
-                } else {
-                    mrbc.addChannel(streams[fd], toclose[fd]);
-                }
-                streams[fd] = mrbc;
+            // If channel is inherited (for example standard input / output), replace it
+            if (streams[fd] != null && !toclose[fd]) {
+                streams[fd] = ch;
                 toclose[fd] = true;
             }
-            mrbc.addChannel(ch, true);
+            // Else do multios
+            else {
+                MultiChannel mrbc;
+                // If the channel is already multios
+                if (streams[fd] instanceof MultiChannel) {
+                    mrbc = (MultiChannel) streams[fd];
+                }
+                // Else create a multios channel
+                else {
+                    mrbc = new MultiChannel();
+                    mrbc.addChannel(streams[fd], toclose[fd]);
+                    streams[fd] = mrbc;
+                    toclose[fd] = true;
+                }
+                mrbc.addChannel(ch, true);
+            }
         }
         else {
             if (streams[fd] != null && toclose[fd]) {
@@ -199,8 +202,6 @@ public class Pipe implements Callable<Result>
         // will be effective just before actually running the command.
         WritableByteChannel errChannel = (WritableByteChannel) streams[2];
 
-        // TODO: not sure this is the correct way
-        boolean begOfPipe = !toclose[0];
         boolean endOfPipe = !toclose[1];
 
         try
@@ -232,10 +233,10 @@ public class Pipe implements Callable<Result>
                     }
                     Channel ch = Files.newByteChannel(outPath, options);
                     if (fd >= 0) {
-                        setStream(ch, fd, WRITE, begOfPipe, endOfPipe);
+                        setStream(ch, fd, WRITE);
                     } else {
-                        setStream(ch, 1, WRITE, begOfPipe, endOfPipe);
-                        setStream(ch, 2, WRITE, begOfPipe, endOfPipe);
+                        setStream(ch, 1, WRITE);
+                        setStream(ch, 2, WRITE);
                     }
                 }
                 else if ((m = Pattern.compile("([0-9])?>&([0-9])").matcher(t)).matches()) {
@@ -267,7 +268,7 @@ public class Pipe implements Callable<Result>
                         options.add(StandardOpenOption.CREATE);
                     }
                     Channel ch = Files.newByteChannel(inPath, options);
-                    setStream(ch, fd, READ + (output ? WRITE : 0), begOfPipe, endOfPipe);
+                    setStream(ch, fd, READ + (output ? WRITE : 0));
                 }
             }
 
