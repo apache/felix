@@ -21,6 +21,7 @@ package org.apache.felix.gogo.runtime;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -41,8 +42,8 @@ public class TestParser4 extends AbstractParserTest
         c.addCommand("echoerr", this);
         c.addCommand("tac", this);
 
-        assertEquals("hello", c.execute("echo | tac"));
-        assertEquals("hello", c.execute("echoerr |& tac"));
+        assertEquals("hello\n", c.execute("echo hello| tac"));
+        assertEquals("hello\n", c.execute("echoerr hello|& tac"));
     }
 
     public void testRedir() throws Exception {
@@ -55,31 +56,70 @@ public class TestParser4 extends AbstractParserTest
         c.currentDir(path);
 
         Files.deleteIfExists(path.resolve("foo"));
-        assertEquals("hello", c.execute("echo >foo | tac"));
+        assertEquals("hello\n", c.execute("echo hello>foo | tac"));
         assertEquals("hello\n", new String(Files.readAllBytes(path.resolve("foo"))));
     }
 
-    public void echo()
-    {
-        System.out.println("hello");
+    public void testRedirInput() throws Exception {
+        Context c = new Context();
+        c.addCommand("echo", this);
+        c.addCommand("tac", this);
+        c.addCommand("cat", this);
+
+        Path path = Paths.get("target/tmp");
+        Files.createDirectories(path);
+        c.currentDir(path);
+
+        Files.deleteIfExists(path.resolve("fooa"));
+        Files.deleteIfExists(path.resolve("foob"));
+        c.execute("echo a>fooa");
+        c.execute("echo b>foob");
+        assertEquals("a\nb\n", c.execute("cat <fooa <foob | tac"));
     }
 
-    public void echoerr()
+    public void testMultiInput() throws Exception {
+        Context c = new Context();
+        c.addCommand("echo", this);
+        c.addCommand("tac", this);
+        c.addCommand("cat", this);
+
+        Path path = Paths.get("target/tmp");
+        Files.createDirectories(path);
+        c.currentDir(path);
+
+        Files.deleteIfExists(path.resolve("fooa"));
+        Files.deleteIfExists(path.resolve("foob"));
+        c.execute("echo a>fooa");
+        c.execute("echo b>foob");
+        assertEquals("foo\na\nb\n", c.execute("echo foo | cat <fooa | cat<foob | tac"));
+    }
+
+    public void echo(String msg)
     {
-        System.err.println("hello");
+        System.out.println(msg);
+    }
+
+    public void echoerr(String msg)
+    {
+        System.err.println(msg);
+    }
+
+    public void cat() throws IOException {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+        }
     }
 
     public String tac() throws IOException {
         StringWriter sw = new StringWriter();
-        BufferedReader rdr = new BufferedReader(new InputStreamReader(System.in));
-        boolean first = true;
-        String s;
-        while ((s = rdr.readLine()) != null) {
-            if (!first) {
-                sw.write(' ');
-            }
-            first = false;
-            sw.write(s);
+        Reader rdr = new InputStreamReader(System.in);
+        char[] buf = new char[1024];
+        int len;
+        while ((len = rdr.read(buf)) >= 0) {
+            sw.write(buf, 0, len);
         }
         return sw.toString();
     }
