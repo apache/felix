@@ -18,6 +18,7 @@
  */
 package org.apache.felix.gogo.runtime;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -324,6 +325,14 @@ public class Pipe implements Callable<Result>, Process
                         Channel ch = Files.newByteChannel(p, options);
                         setStream(ch, fd, READ + (output ? WRITE : 0));
                     }
+                }
+                else if (Token.eq("<<<", t))
+                {
+                    Token word = tokens.get(++i);
+                    Object val = Expander.expand("\"" + word + "\"", closure);
+                    String str = val != null ? String.valueOf(val) : "";
+                    Channel ch = Channels.newChannel(new ByteArrayInputStream(str.getBytes()));
+                    setStream(ch, 0, READ);
                 }
             }
 

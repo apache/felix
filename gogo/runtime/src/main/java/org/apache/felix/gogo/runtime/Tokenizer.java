@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 public class Tokenizer extends BaseTokenizer
 {
 
-    private final Pattern redir = Pattern.compile("[0-9&]?>|[0-9]?>>|[0-9]?>&|[0-9]?<|[0-9]?<>");
+    private final Pattern redir = Pattern.compile("[0-9&]?>|[0-9]?>>|[0-9]?>&|[0-9]?<|[0-9]?<>|<<<");
 
     protected boolean inArray;
     protected int word = 0;
