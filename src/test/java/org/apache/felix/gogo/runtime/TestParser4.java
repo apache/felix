@@ -27,6 +27,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+
 /*
  * Test features of the new parser/tokenizer, many of which are not supported
  * by the original parser.
@@ -44,6 +48,7 @@ public class TestParser4 extends AbstractParserTest
         assertEquals("hello\n", c.execute("echoerr hello|& tac"));
     }
 
+    @Test
     public void testRedir() throws Exception {
         Context c = new Context();
         c.addCommand("echo", this);
@@ -58,6 +63,7 @@ public class TestParser4 extends AbstractParserTest
         assertEquals("hello\n", new String(Files.readAllBytes(path.resolve("foo"))));
     }
 
+    @Test
     public void testRedirInput() throws Exception {
         Context c = new Context();
         c.addCommand("echo", this);
@@ -75,6 +81,7 @@ public class TestParser4 extends AbstractParserTest
         assertEquals("a\nb\n", c.execute("cat <fooa <foob | tac"));
     }
 
+    @Test
     public void testMultiInput() throws Exception {
         Context c = new Context();
         c.addCommand("echo", this);

@@ -18,12 +18,17 @@
  */
 package org.apache.felix.gogo.runtime;
 
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+
 /*
  * Test features of the new parser/tokenizer, many of which are not supported
  * by the original parser.
  */
 public class TestParser3 extends AbstractParserTest
 {
+    @Test
     public void testArithmetic() throws Exception
     {
         Context c = new Context();

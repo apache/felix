@@ -21,6 +21,11 @@ package org.apache.felix.gogo.runtime;
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Descriptor;
 import org.apache.felix.service.command.Parameter;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 public class TestCoercion extends AbstractParserTest
 {
@@ -55,6 +60,7 @@ public class TestCoercion extends AbstractParserTest
         return s;
     }
 
+    @Test
     public void testSimpleTypes() throws Exception
     {
         Context c = new Context();
@@ -118,6 +124,7 @@ public class TestCoercion extends AbstractParserTest
         return "string";
     }
 
+    @Test
     public void testBestCoercion() throws Exception
     {
         Context c = new Context();
@@ -145,6 +152,7 @@ public class TestCoercion extends AbstractParserTest
         return flag;
     }
 
+    @Test
     public void testParameter0() throws Exception
     {
         Context c = new Context();
@@ -173,6 +181,7 @@ public class TestCoercion extends AbstractParserTest
         return parm1;
     }
 
+    @Test
     public void testParameter1() throws Exception
     {
         Context c = new Context();

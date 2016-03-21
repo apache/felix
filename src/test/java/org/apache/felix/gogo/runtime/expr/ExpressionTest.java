@@ -21,11 +21,13 @@ package org.apache.felix.gogo.runtime.expr;
 import java.util.HashMap;
 import java.util.Map;
 
-import junit.framework.TestCase;
 import org.apache.felix.gogo.runtime.Expression;
+import org.junit.Assert;
+import org.junit.Test;
 
-public class ExpressionTest extends TestCase {
+public class ExpressionTest {
 
+    @Test
     public void testExpr() {
 
         Map<String, Object> variables = new HashMap<String, Object>();
@@ -36,23 +38,23 @@ public class ExpressionTest extends TestCase {
         variables.put("s", " foo ");
         variables.put("t", "bar");
 
-        assertEquals(4l, new Expression("c+=1, d+=2").eval(variables));
+        Assert.assertEquals(4l, new Expression("c+=1, d+=2").eval(variables));
 
-        assertEquals(" foo ", new Expression("\" foo \"").eval());
-        assertEquals(" foo bar", new Expression("s + t").eval(variables));
-        assertEquals(1l, new Expression("s < t").eval(variables));
-        assertEquals(1l, new Expression("s > t || t == \"bar\"").eval(variables));
+        Assert.assertEquals(" foo ", new Expression("\" foo \"").eval());
+        Assert.assertEquals(" foo bar", new Expression("s + t").eval(variables));
+        Assert.assertEquals(1l, new Expression("s < t").eval(variables));
+        Assert.assertEquals(1l, new Expression("s > t || t == \"bar\"").eval(variables));
 
-        assertEquals(3l, new Expression("a += 1").eval(variables));
-        assertEquals(3l, variables.get("a"));
+        Assert.assertEquals(3l, new Expression("a += 1").eval(variables));
+        Assert.assertEquals(3l, variables.get("a"));
 
-        assertEquals(30l, new Expression("10 + 20 | 30").eval());
+        Assert.assertEquals(30l, new Expression("10 + 20 | 30").eval());
 
-        assertEquals(8l, new Expression("a + b").eval(variables));
-        assertEquals(3l, new Expression("if(a < b, a, b)").eval(variables));
+        Assert.assertEquals(8l, new Expression("a + b").eval(variables));
+        Assert.assertEquals(3l, new Expression("if(a < b, a, b)").eval(variables));
 
-        assertEquals(16l, new Expression("2 + 2 << 2").eval());
-        assertEquals(8l, new Expression("2 | 2 << 2").eval());
+        Assert.assertEquals(16l, new Expression("2 + 2 << 2").eval());
+        Assert.assertEquals(8l, new Expression("2 | 2 << 2").eval());
     }
 
 }
