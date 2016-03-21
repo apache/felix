@@ -20,18 +20,18 @@ package org.apache.felix.gogo.jline;
 
 import java.util.Arrays;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 public class ShellTest extends AbstractParserTest {
-
 
     @Test
     public void testAssignmentWithEcho() throws Exception {
         Context context = new Context();
         context.execute("a = \"foo\"");
-        assertEquals("foo", context.get("a"));
+        Assert.assertEquals("foo", context.get("a"));
         context.execute("a = $(echo bar)");
-        assertEquals("bar", context.get("a"));
+        Assert.assertEquals("bar", context.get("a"));
     }
 
     @Test
@@ -39,8 +39,9 @@ public class ShellTest extends AbstractParserTest {
         Context context = new Context();
         // TODO: not than in zsh, the same thing is achieved using
         // TODO:     ${${${(@f)"$(jobs)"}%]*}#*\[}
-        Object result = context.execute("sleep 1 & sleep 1 & ${${${(f)$(jobs)}%']*'}#'*\\['}");
-        assertEquals(Arrays.asList("1", "2"), result);
+//        Object result = context.execute("sleep 1 & sleep 1 & ${${${(f)\"$(jobs)\"}%']*'}#'*\\['}");
+        Object result = context.execute("sleep 1 & sleep 1 & ${${${(f)$(jobs)}%\\]*}#*\\[}");
+        Assert.assertEquals(Arrays.asList("1", "2"), result);
     }
 
 }

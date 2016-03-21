@@ -208,6 +208,37 @@ public class TestTokenizer
     }
 
     @Test
+    public void testBraces() throws Exception {
+        assertEquals(Arrays.asList("1", "3"), expand("{1..3..2}"));
+        assertEquals(Arrays.asList("3", "1"), expand("{1..3..-2}"));
+        assertEquals(Arrays.asList("1", "3"), expand("{3..1..-2}"));
+        assertEquals(Arrays.asList("3", "1"), expand("{3..1..2}"));
+
+        assertEquals(Arrays.asList("1", "2", "3"), expand("{1..3}"));
+        assertEquals(Arrays.asList("a1b", "a2b", "a3b"), expand("a{1..3}b"));
+
+        assertEquals(Arrays.asList("a1b", "a2b", "a3b"), expand("a{1,2,3}b"));
+
+        assertEquals(Arrays.asList("a1b", "a2b", "a3b"), expand("a{1,2,3}b"));
+        assertEquals(Arrays.asList("a1b", "a,b", "a3b"), expand("a{1,',',3}b"));
+
+        currentDir = Paths.get(".");
+        try {
+            expand("a{1,*,3}b");
+            fail("Expected exception");
+        } catch (Exception e) {
+            assertEquals("no matches found: a*b", e.getMessage());
+        } finally {
+            currentDir = null;
+        }
+
+        vars.put("a", "1");
+        assertEquals(Arrays.asList("a1b", "a\nb", "a3b"), expand("a{$a,$'\\n',3}b"));
+        assertEquals(Arrays.asList("ab1*z", "ab2*z", "arz"), expand("a{b{1..2}'*',r}z"));
+
+    }
+
+    @Test
     public void testJoinSplit() throws Exception {
         vars.put("array", Arrays.asList("a", "b", "c"));
         vars.put("string", "a\n\nb\nc");
@@ -299,12 +330,17 @@ public class TestTokenizer
     public void testPatterns() throws Exception {
         vars.put("foo", "twinkle twinkle little star");
         vars.put("sub", "t*e");
+        vars.put("sb", "*e");
         vars.put("rep", "spy");
 
-        assertEquals("spy twinkle little star", expand("${foo/${sub}/${rep}}"));
-        assertEquals("spy star", expand("${foo//${sub}/${rep}}"));
-        assertEquals("spy spy lispy star", expand("${(G)foo/${sub}/${rep}}"));
-        assertEquals("spy star", expand("${(G)foo//${sub}/${rep}}"));
+        assertEquals("spynkle spynkle little star", expand("${(G)foo/'twi'/$rep}"));
+
+        assertEquals("twinkle twinkle little star", expand("${foo/${sub}/${rep}}"));
+        assertEquals("spy twinkle little star", expand("${foo/${~sub}/${rep}}"));
+        assertEquals("spy star", expand("${foo//${~sub}/${rep}}"));
+        assertEquals("spy spy lispy star", expand("${(G)foo/${~sub}/${rep}}"));
+        assertEquals("spy star", expand("${(G)foo//${~sub}/${rep}}"));
+        assertEquals("spy twinkle little star", expand("${foo/t${~sb}/${rep}}"));
     }
 
     @Test
