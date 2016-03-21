@@ -1,0 +1,67 @@
+Changes from 0.8.0 to 0.10.0
+----------------------------
+
+** Improvement
+    * Added gosh_profile work around for issue with OSGi R4.3 API
+      ambiguity.
+
+Changes from 0.6.1 to 0.8.0
+---------------------------
+
+** Bug
+    * [FELIX-2651] - [Gogo] MOTD formatting is broken under Windows
+
+** Improvement
+    * [FELIX-2661] - [Gogo] It should be easier to start Gogo shell
+      non-interactively
+
+** New Feature
+    * [FELIX-2767] - gogo telnet IP address
+
+Changes from 0.6.0 to 0.6.1
+---------------------------
+
+** Bug
+    * [FELIX-2446] - [Gogo] The bundle context command is not used with a
+      scope in gosh_profile
+    * [FELIX-2477] - [gogo] shell procedural commands don't inherit closure
+      arguments
+
+** Improvement
+    * [FELIX-2445] - [Gogo] Default gosh_profile should be updated to use
+      system bundle to load java.lang.System
+    * [FELIX-2543] - [Gogo] Should avoid using System.getProperty() to get
+      configuration properties
+
+Gogo Shell 0.6.0
+----------------
+
+** Bug
+    * [FELIX-1473] - [gogo] The syntax does not provide a way to call methods
+      on a string
+    * [FELIX-1474] - [gogo] result of commands is implicitly written to pipe
+    * [FELIX-1493] - [gogo] automatic expansion of $args in Closure stops
+      direct access to $args list
+    * [FELIX-2337] - [gogo] no way to access array[] elements produced by
+      assignment
+    * [FELIX-2375] - [gogo] when supplied args can't be coerced, the error
+      message prints the arg values, rather than their types
+    * [FELIX-2380] - [gogo] lock contention in piped writer when reader
+      doesn't read all input
+
+** Improvement
+    * [FELIX-1487] - Support for commands on multiple lines
+    * [FELIX-2328] - [gogo] tidy-up runtime to remove optional code etc
+    * [FELIX-2339] - [gogo] add support for running scripts
+    * [FELIX-2342] - [gogo] remove old felix command adaptor
+
+** New Feature
+    * [FELIX-2363] - [Gogo] Add annotations for creating commands with
+      optional and out-of-order arguments
+
+** Task
+    * [FELIX-1670] - [gogo] launcher bundle not required
+    * [FELIX-1889] - Gogo should depend on the official OSGi jars
+    * [FELIX-2334] - [Gogo] Use org.apache.felix as Maven groupId
+    * [FELIX-2367] - [Gogo] Use org.apache.felix namespace to avoid any
+      perceived legal issues
