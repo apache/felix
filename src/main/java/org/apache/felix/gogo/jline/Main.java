@@ -68,8 +68,7 @@ public class Main {
                 } catch (Throwable t) {
                     // ignore
                 }
-                PrintStream pout = new PrintStream(terminal.output());
-                CommandSession session = processor.createSession(terminal.input(), pout, pout);
+                CommandSession session = processor.createSession(terminal.input(), terminal.output(), terminal.output());
                 session.put(Shell.VAR_CONTEXT, context);
                 session.put(Shell.VAR_TERMINAL, terminal);
                 try {
