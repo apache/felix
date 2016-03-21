@@ -31,6 +31,7 @@
     <properties>
         <!-- Skip because of NPE -->
         <animal.sniffer.skip>true</animal.sniffer.skip>
+        <felix.java.version>8</felix.java.version>
     </properties>
     <dependencies>
         <dependency>
