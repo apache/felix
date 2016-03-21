@@ -105,7 +105,7 @@ public class Posix {
         this.processor = processor;
     }
 
-    protected void _main(CommandSession session, String[] argv) {
+    public void _main(CommandSession session, String[] argv) {
         if (argv == null || argv.length < 1) {
             throw new IllegalArgumentException();
         }
@@ -265,7 +265,8 @@ public class Posix {
                 System.out, System.err,
                 () -> session.get(".tmux"),
                 t -> session.put(".tmux", t),
-                c -> startShell(session, c), argv);
+                c -> startShell(session, c),
+                Arrays.copyOfRange(argv, 1, argv.length));
     }
 
     private void startShell(CommandSession session, Terminal terminal) {
@@ -300,10 +301,15 @@ public class Posix {
     }
 
     protected void nano(final CommandSession session, String[] argv) throws Exception {
-        Commands.nano(Shell.getTerminal(session), System.out, System.err, session.currentDir(), argv);
+        Commands.nano(
+                Shell.getTerminal(session),
+                System.out,
+                System.err,
+                session.currentDir(),
+                Arrays.copyOfRange(argv, 1, argv.length));
     }
 
-    protected void watch(final CommandSession session, String[] argv) throws IOException, InterruptedException {
+    protected void watch(final CommandSession session, String[] argv) throws Exception {
         final String[] usage = {
                 "watch - watches & refreshes the output of a command",
                 "Usage: watch [OPTIONS] COMMAND",
@@ -311,15 +317,12 @@ public class Posix {
                 "  -n --interval                Interval between executions of the command in seconds",
                 "  -a --append                  The output should be appended but not clear the console"
         };
-        final Options opt = Options.compile(usage).parse(argv);
-        if (opt.isSet("help")) {
-            opt.usage(System.err);
-            return;
-        }
+
+        Options opt = parseOptions(session, usage, argv);
+
         List<String> args = opt.args();
         if (args.isEmpty()) {
-            System.err.println("Argument expected");
-            return;
+            throw new IllegalArgumentException("Argument expected");
         }
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
         final Terminal terminal = Shell.getTerminal(session);
@@ -364,7 +367,12 @@ public class Posix {
     }
 
     protected void less(CommandSession session, String[] argv) throws IOException, InterruptedException {
-        Commands.less(Shell.getTerminal(session), System.out, System.err, session.currentDir(), argv);
+        Commands.less(
+                Shell.getTerminal(session),
+                System.out,
+                System.err,
+                session.currentDir(),
+                Arrays.copyOfRange(argv, 1, argv.length));
     }
 
     protected void sort(CommandSession session, String[] argv) throws Exception {
