@@ -200,6 +200,25 @@ public class TestTokenizer
     }
 
     @Test
+    public void testJoinSplit() throws Exception {
+        vars.clear();
+        vars.put("array", Arrays.asList("a", "b", "c"));
+        vars.put("string", "a\n\nb\nc");
+        vars.put("str", "such a bad bad trip");
+
+        assertEquals("a:b:c", expand("${(j.:.)array}"));
+        assertEquals("a\nb\nc", expand("${(pj.\\n.)array}"));
+        assertEquals("a\nb\nc", expand("${(F)array}"));
+
+        assertEquals(Arrays.asList("a", "b", "c"), expand("${(f)string}"));
+        assertEquals(Arrays.asList("a\n\n", "\nc"), expand("${(s:b:)string}"));
+
+        assertEquals("a:b:c", expand("${(Fj':')array}"));
+
+        assertEquals("a bad such trip", expand("${(j' ')${(s' 'uo)str}}"));
+    }
+
+    @Test
     public void testParamFlag() throws Exception {
         vars.clear();
         vars.put("foo", "bar");
