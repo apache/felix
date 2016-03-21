@@ -21,6 +21,10 @@ package org.apache.felix.service.command;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.file.Path;
+import java.util.List;
+
+import org.apache.felix.gogo.api.JobListener;
+import org.apache.felix.gogo.runtime.Job;
 
 public interface CommandSession
 {
@@ -98,4 +102,13 @@ public interface CommandSession
      */
 
     Object convert(Class<?> type, Object instance);
+
+    List<Job> jobs();
+
+    Job currentJob();
+
+    Job foregroundJob();
+
+    void setJobListener(JobListener listener);
+
 }
