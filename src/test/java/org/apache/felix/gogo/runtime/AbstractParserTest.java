@@ -16,27 +16,32 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.felix.gogo.runtime;
 
 import junit.framework.TestCase;
+import org.apache.felix.gogo.runtime.threadio.ThreadIOImpl;
 
-/**
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
- */
-abstract class BaseTestCase extends TestCase
-{
-    protected Context m_ctx;
+public abstract class AbstractParserTest extends TestCase {
+
+    private ThreadIOImpl threadIO;
 
     @Override
-    protected final void setUp() throws Exception
-    {
-        m_ctx = new Context(true);
+    protected void setUp() throws Exception {
+        super.setUp();
+        threadIO = new ThreadIOImpl();
+        threadIO.start();
     }
 
     @Override
-    protected final void tearDown() throws Exception
-    {
-        m_ctx.stop();
+    protected void tearDown() throws Exception {
+        threadIO.stop();
+        super.tearDown();
     }
+
+    public class Context extends org.apache.felix.gogo.runtime.Context {
+        public Context() {
+            super(AbstractParserTest.this.threadIO);
+        }
+    }
+
 }

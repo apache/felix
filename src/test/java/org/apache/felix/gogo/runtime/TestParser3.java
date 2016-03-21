@@ -22,25 +22,19 @@ package org.apache.felix.gogo.runtime;
  * Test features of the new parser/tokenizer, many of which are not supported
  * by the original parser.
  */
-public class TestParser3 extends BaseTestCase
+public class TestParser3 extends AbstractParserTest
 {
     public void testArithmetic() throws Exception
     {
-        m_ctx.addCommand("echo", this);
+        Context c = new Context();
+        c.addCommand("echo", this);
 
-        try
-        {
-            assertEquals("10d", m_ctx.execute("echo %(2*(3+2))d"));
-            assertEquals(3l, m_ctx.execute("%(1+2)"));
+        assertEquals("10d", c.execute("echo %(2*(3+2))d"));
+        assertEquals(3l, c.execute("%(1+2)"));
 
-            m_ctx.set("a", 2l);
-            assertEquals(3l, m_ctx.execute("%(a+=1)"));
-            assertEquals(3l, m_ctx.get("a"));
-        }
-        finally
-        {
-            m_ctx.stop();
-        }
+        c.set("a", 2l);
+        assertEquals(3l, c.execute("%(a+=1)"));
+        assertEquals(3l, c.get("a"));
     }
 
     public CharSequence echo(Object args[])

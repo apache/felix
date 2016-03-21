@@ -346,7 +346,7 @@ public final class Reflective
      * to allow the "best" conversion to be determined.
      * @return converted arg or NO_MATCH if no conversion possible.
      */
-    private static Object coerce(CommandSession session, Class<?> type, Object arg,
+    public static Object coerce(CommandSession session, Class<?> type, Object arg,
         int[] convert)
     {
         if (arg == null)
@@ -386,7 +386,7 @@ public final class Reflective
         // all following conversions cost 2 points
         convert[0] += 2;
 
-        Object converted = session.convert(type, arg);
+        Object converted = ((CommandSessionImpl) session).doConvert(type, arg);
         if (converted != null)
         {
             return converted;
@@ -397,6 +397,17 @@ public final class Reflective
         if (type.isAssignableFrom(String.class))
         {
             return string;
+        }
+
+        if (type.isEnum())
+        {
+            for (Object o : type.getEnumConstants())
+            {
+                if (o.toString().equalsIgnoreCase(string))
+                {
+                    return o;
+                }
+            }
         }
 
         if (type.isPrimitive())

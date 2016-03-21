@@ -74,7 +74,7 @@ public interface CommandSession
      * @param name  Name of the variable.
      * @param value Value of the variable
      */
-    void put(String name, Object value);
+    Object put(String name, Object value);
 
     /**
      * Convert an object to string form (CharSequence). The level is defined in

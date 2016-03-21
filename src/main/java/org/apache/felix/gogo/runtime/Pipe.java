@@ -24,8 +24,8 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
-import java.util.List;
 
+import org.apache.felix.gogo.runtime.Parser.Executable;
 import org.apache.felix.service.command.Converter;
 
 public class Pipe extends Thread
@@ -40,7 +40,7 @@ public class Pipe extends Thread
     Closure closure;
     Exception exception;
     Object result;
-    List<Token> statement;
+    Executable executable;
 
     public static Object[] mark()
     {
@@ -55,11 +55,11 @@ public class Pipe extends Thread
         tErr.set((PrintStream) mark[2]);
     }
 
-    public Pipe(Closure closure, List<Token> statement)
+    public Pipe(Closure closure, Executable executable)
     {
-        super("pipe-" + statement);
+        super("pipe-" + executable);
         this.closure = closure;
-        this.statement = statement;
+        this.executable = executable;
 
         in = tIn.get();
         out = tOut.get();
@@ -68,7 +68,7 @@ public class Pipe extends Thread
 
     public String toString()
     {
-        return "pipe<" + statement + "> out=" + out;
+        return "pipe<" + executable + "> out=" + out;
     }
 
     public void setIn(InputStream in)
@@ -105,7 +105,7 @@ public class Pipe extends Thread
 
         try
         {
-            result = closure.executeStatement(statement);
+            result = closure.execute(executable);
             if (result != null && pout != null)
             {
                 if (!Boolean.FALSE.equals(closure.session().get(".FormatPipe")))

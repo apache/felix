@@ -22,7 +22,7 @@ import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Descriptor;
 import org.apache.felix.service.command.Parameter;
 
-public class TestCoercion extends BaseTestCase
+public class TestCoercion extends AbstractParserTest
 {
     public boolean fBool(boolean t)
     {
@@ -57,31 +57,32 @@ public class TestCoercion extends BaseTestCase
 
     public void testSimpleTypes() throws Exception
     {
-        m_ctx.addCommand("fBool", this);
-        m_ctx.addCommand("fDouble", this);
-        m_ctx.addCommand("fInt", this);
-        m_ctx.addCommand("fLong", this);
-        m_ctx.addCommand("fString", this);
+        Context c = new Context();
+        c.addCommand("fBool", this);
+        c.addCommand("fDouble", this);
+        c.addCommand("fInt", this);
+        c.addCommand("fLong", this);
+        c.addCommand("fString", this);
 
-        assertEquals("fBool true", true, m_ctx.execute("fBool true"));
-        assertEquals("fBool 'false'", false, m_ctx.execute("fBool 'false'"));
-
-        assertEquals("fDouble 11", 11.0, m_ctx.execute("fDouble 11"));
-        assertEquals("fDouble '11'", 11.0, m_ctx.execute("fDouble '11'"));
-
-        assertEquals("fInt 22", 22, m_ctx.execute("fInt 22"));
-        assertEquals("fInt '23'", 23, m_ctx.execute("fInt '23'"));
-        assertEquals("fInt 1 2", "array", m_ctx.execute("fInt 1 2"));
-
-        assertEquals("fLong 33", 33L, m_ctx.execute("fLong 33"));
-        assertEquals("fLong '34'", 34L, m_ctx.execute("fLong '34'"));
-
-        assertEquals("fString wibble", "wibble", m_ctx.execute("fString wibble"));
-        assertEquals("fString 'wibble'", "wibble", m_ctx.execute("fString 'wibble'"));
+        assertEquals("fBool true", true, c.execute("fBool true"));
+        assertEquals("fBool 'false'", false, c.execute("fBool 'false'"));
+        
+        assertEquals("fDouble 11", 11.0, c.execute("fDouble 11"));
+        assertEquals("fDouble '11'", 11.0, c.execute("fDouble '11'"));
+        
+        assertEquals("fInt 22", 22, c.execute("fInt 22"));
+        assertEquals("fInt '23'", 23, c.execute("fInt '23'"));
+        assertEquals("fInt 1 2", "array", c.execute("fInt 1 2"));
+        
+        assertEquals("fLong 33", 33L, c.execute("fLong 33"));
+        assertEquals("fLong '34'", 34L, c.execute("fLong '34'"));
+        
+        assertEquals("fString wibble", "wibble", c.execute("fString wibble"));
+        assertEquals("fString 'wibble'", "wibble", c.execute("fString 'wibble'"));
 
         try
         {
-            Object r = m_ctx.execute("fString ");
+            Object r = c.execute("fString ");
             fail("too few args: expected IllegalArgumentException, got: " + r);
         }
         catch (IllegalArgumentException e)
@@ -90,7 +91,7 @@ public class TestCoercion extends BaseTestCase
 
         try
         {
-            Object r = m_ctx.execute("fString a b");
+            Object r = c.execute("fString a b");
             fail("too many args: expected IllegalArgumentException, got: " + r);
         }
         catch (IllegalArgumentException e)
@@ -99,7 +100,7 @@ public class TestCoercion extends BaseTestCase
 
         try
         {
-            Object r = m_ctx.execute("fLong string");
+            Object r = c.execute("fLong string");
             fail("wrong arg type: expected IllegalArgumentException, got: " + r);
         }
         catch (IllegalArgumentException e)
@@ -119,11 +120,12 @@ public class TestCoercion extends BaseTestCase
 
     public void testBestCoercion() throws Exception
     {
-        m_ctx.addCommand("bundles", this);
+        Context c = new Context();
+        c.addCommand("bundles", this);
 
-        assertEquals("bundles myloc", "string", m_ctx.execute("bundles myloc"));
-        assertEquals("bundles 1", "long", m_ctx.execute("bundles 1"));
-        assertEquals("bundles '1'", "string", m_ctx.execute("bundles '1'"));
+        assertEquals("bundles myloc", "string", c.execute("bundles myloc"));
+        assertEquals("bundles 1", "long", c.execute("bundles 1"));
+        assertEquals("bundles '1'", "string", c.execute("bundles '1'"));
     }
 
     @Descriptor("list all installed bundles")
@@ -145,23 +147,24 @@ public class TestCoercion extends BaseTestCase
 
     public void testParameter0() throws Exception
     {
-        m_ctx.addCommand("p0", this);
-        m_ctx.addCommand("p01", this);
+        Context c = new Context();
+        c.addCommand("p0", this);
+        c.addCommand("p01", this);
 
-        assertEquals("p0", "false:false", m_ctx.execute("p0"));
-        assertEquals("p0 -l", "true:false", m_ctx.execute("p0 -l"));
-        assertEquals("p0 --location", "true:false", m_ctx.execute("p0 --location"));
-        assertEquals("p0 -l -s", "true:true", m_ctx.execute("p0 -l -s"));
-        assertEquals("p0 -s -l", "true:true", m_ctx.execute("p0 -s -l"));
+        assertEquals("p0", "false:false", c.execute("p0"));
+        assertEquals("p0 -l", "true:false", c.execute("p0 -l"));
+        assertEquals("p0 --location", "true:false", c.execute("p0 --location"));
+        assertEquals("p0 -l -s", "true:true", c.execute("p0 -l -s"));
+        assertEquals("p0 -s -l", "true:true", c.execute("p0 -s -l"));
         try
         {
-            Object r = m_ctx.execute("p0 wibble");
+            Object r = c.execute("p0 wibble");
             fail("too many args: expected IllegalArgumentException, got: " + r);
         }
         catch (IllegalArgumentException e)
         {
         }
-        assertEquals("p01 -f", true, m_ctx.execute("p01 -f"));
+        assertEquals("p01 -f", true, c.execute("p01 -f"));
     }
 
     public String p1(
@@ -172,16 +175,17 @@ public class TestCoercion extends BaseTestCase
 
     public void testParameter1() throws Exception
     {
-        m_ctx.addCommand("p1", this);
+        Context c = new Context();
+        c.addCommand("p1", this);
 
-        assertEquals("no parameter", "absent", m_ctx.execute("p1"));
+        assertEquals("no parameter", "absent", c.execute("p1"));
 
         // FELIX-2894
-        assertEquals("correct parameter", "wibble", m_ctx.execute("p1 -p wibble"));
+        assertEquals("correct parameter", "wibble", c.execute("p1 -p wibble"));
 
         try
         {
-            Object r = m_ctx.execute("p1 -p");
+            Object r = c.execute("p1 -p");
             fail("missing parameter: expected IllegalArgumentException, got: " + r);
         }
         catch (IllegalArgumentException e)
@@ -190,11 +194,12 @@ public class TestCoercion extends BaseTestCase
 
         try
         {
-            Object r = m_ctx.execute("p1 -X");
+            Object r = c.execute("p1 -X");
             fail("wrong parameter: expected IllegalArgumentException, got: " + r);
         }
         catch (IllegalArgumentException e)
         {
         }
     }
+
 }

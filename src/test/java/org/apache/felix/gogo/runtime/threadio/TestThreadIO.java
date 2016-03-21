@@ -38,7 +38,6 @@ public class TestThreadIO extends TestCase
     {
         ThreadIOImpl tio = new ThreadIOImpl();
         tio.start();
-
         List<ByteArrayOutputStream> list = new ArrayList<ByteArrayOutputStream>();
         for (int i = 0; i < 10; i++)
         {
@@ -67,7 +66,6 @@ public class TestThreadIO extends TestCase
     {
         ThreadIOImpl tio = new ThreadIOImpl();
         tio.start();
-
         System.out.println("Hello World");
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ByteArrayOutputStream err = new ByteArrayOutputStream();

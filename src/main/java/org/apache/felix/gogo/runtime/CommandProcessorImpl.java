@@ -36,6 +36,7 @@ import org.apache.felix.gogo.api.CommandSessionListener;
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Converter;
+import org.apache.felix.service.command.Descriptor;
 import org.apache.felix.service.command.Function;
 import org.apache.felix.service.threadio.ThreadIO;
 
@@ -68,7 +69,7 @@ public class CommandProcessorImpl implements CommandProcessor
         }
     }
 
-    void removeSession(CommandSessionImpl session)
+    void closeSession(CommandSessionImpl session)
     {
         synchronized (sessions)
         {
@@ -179,13 +180,15 @@ public class CommandProcessorImpl implements CommandProcessor
         return new CommandProxy(cmd, cfunction.substring(1));
     }
 
-    public void addCommand(String scope, Object target)
+    @Descriptor("add commands")
+    public void addCommand(@Descriptor("scope") String scope, @Descriptor("target") Object target)
     {
         Class<?> tc = (target instanceof Class<?>) ? (Class<?>) target : target.getClass();
         addCommand(scope, target, tc);
     }
 
-    public void addCommand(String scope, Object target, Class<?> functions)
+    @Descriptor("add commands")
+    public void addCommand(@Descriptor("scope") String scope, @Descriptor("target") Object target, @Descriptor("functions") Class<?> functions)
     {
         addCommand(scope, target, functions, 0);
     }
@@ -283,7 +286,18 @@ public class CommandProcessorImpl implements CommandProcessor
         return functions;
     }
 
-    public Object convert(Class<?> desiredType, Object in)
+    public Object convert(CommandSession session, Class<?> desiredType, Object in)
+    {
+        int[] cost = new int[1];
+        Object ret = Reflective.coerce(session, desiredType, in, cost);
+        if (ret == Reflective.NO_MATCH) {
+            throw new IllegalArgumentException(String.format(
+                    "Cannot convert %s(%s) to %s", in, in != null ? in.getClass() : "null", desiredType));
+        }
+        return ret;
+    }
+
+    Object doConvert(Class<?> desiredType, Object in)
     {
         for (Converter c : converters)
         {
@@ -297,9 +311,11 @@ public class CommandProcessorImpl implements CommandProcessor
             }
             catch (Exception e)
             {
-                e.printStackTrace();
+                // Ignore
+                e.getCause();
             }
         }
+
         return null;
     }
 

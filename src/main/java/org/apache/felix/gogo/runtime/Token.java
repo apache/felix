@@ -18,63 +18,113 @@
  */
 package org.apache.felix.gogo.runtime;
 
-import org.apache.felix.gogo.runtime.Tokenizer.Type;
+public class Token implements CharSequence {
 
-public class Token implements CharSequence
-{
-    Type type; 
-    CharSequence value;
-    short line;
-    short column;
-    
-    public Token(Type type, CharSequence value, short line, short column)
+    protected final char[] ch;
+    protected final int start;
+    protected final int length;
+    protected final int line;
+    protected final int column;
+
+    public Token(CharSequence cs)
     {
-        this.type = type;
-        this.value = value;
-        this.line = line;
-        this.column = column;
+        if (cs instanceof Token)
+        {
+            Token ca = (Token) cs;
+            this.ch = ca.ch;
+            this.start = ca.start;
+            this.length = ca.length;
+            this.line = ca.line;
+            this.column = ca.column;
+        }
+        else
+        {
+            this.ch = cs.toString().toCharArray();
+            this.start = 0;
+            this.length = ch.length;
+            this.line = 0;
+            this.column = 0;
+        }
     }
 
-    @Override
-    public String toString()
+    public Token(char[] _ch, int _start, int _length, int _line, int _col)
     {
-        //return type + "<" + value + ">";
-        return null == value ? type.toString() : value.toString();
+        this.ch = _ch;
+        this.start = _start;
+        this.length = _length;
+        this.line = _line;
+        this.column = _col;
     }
-    
-    public char charAt(int index)
+
+    public int line()
     {
-        return  value.charAt(index);
+        return line;
+    }
+
+    public int column()
+    {
+        return column;
+    }
+
+    public int start()
+    {
+        return start;
     }
 
     public int length()
     {
-        return (null == value ? 0 : value.length());
+        return this.length;
     }
 
-    public CharSequence subSequence(int start, int end)
+    public char charAt(int index)
     {
-        return value.subSequence(start, end);
+        return this.ch[this.start + index];
     }
-    
-    public String source()
+
+    public Token subSequence(int start, int end)
     {
-        switch (type)
+        int line = this.line;
+        int col = this.column;
+        for (int i = this.start; i < this.start + start; i++)
         {
-            case WORD:
-                return value.toString();
-                
-            case CLOSURE:
-                return "{" + value + "}";
-                
-            case EXECUTION:
-                return "(" + value + ")";
-                
-            case ARRAY:
-                return "[" + value + "]";
-                
-            default:
-                return type.toString();
+            if (ch[i] == '\n')
+            {
+                line++;
+                col = 0;
+            }
+            else
+            {
+                col++;
+            }
         }
+        return new Token(this.ch, this.start + start, end - start, line, col);
     }
+
+    public String toString()
+    {
+        return new String(this.ch, this.start, this.length);
+    }
+
+    public static boolean eq(CharSequence cs1, CharSequence cs2)
+    {
+        if (cs1 == cs2)
+        {
+            return true;
+        }
+        int l1 = cs1.length();
+        int l2 = cs2.length();
+        if (l1 != l2)
+        {
+            return false;
+        }
+        for (int i = 0; i < l1; i++)
+        {
+            if (cs1.charAt(i) != cs2.charAt(i))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
 }
