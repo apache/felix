@@ -1030,13 +1030,17 @@ public class Expander extends BaseTokenizer
             // Map to List conversion
             boolean _flagk = flagk;
             boolean _flagv = flagv;
-            Function<Object, Object> mapToList = v -> v instanceof Map ? toList(asMap(v), _flagk, _flagv) : v;
+            Function<Object, Object> toCollection = v -> v instanceof Map
+                    ? toList(asMap(v), _flagk, _flagv)
+                    : v != null && v.getClass().isArray()
+                        ? Arrays.asList((Object[]) v)
+                        : v;
 
             //
             // String transformations
             //
             BiFunction<Function<String, String>, Object, Object> stringApplyer = (func, v) -> {
-                v = mapToList.apply(v);
+                v = toCollection.apply(v);
                 if (v instanceof Collection) {
                     return asCollection(v).stream()
                             .map(String::valueOf)
@@ -1139,7 +1143,7 @@ public class Expander extends BaseTokenizer
                                 r = "";
                             }
                             String m = op.charAt(0) == '#' ? "^" + p : op.charAt(0) == '%' ? p + "$" : p;
-                            val1 = mapToList.apply(val1);
+                            val1 = toCollection.apply(val1);
                             if (val1 instanceof Collection) {
                                 List<String> l = new ArrayList<>();
                                 for (Object o : ((Collection) val1)) {
@@ -1287,7 +1291,7 @@ public class Expander extends BaseTokenizer
             // Double quote joining
             boolean joined = false;
             if (inQuote && !computeLength && !flagExpand) {
-                val = mapToList.apply(val);
+                val = toCollection.apply(val);
                 if (val instanceof Collection) {
                     String j = flagj != null ? flagj : " ";
                     val = asCollection(val).stream()
@@ -1320,7 +1324,7 @@ public class Expander extends BaseTokenizer
 
             // Forced joining
             if (flagj != null || flags != null && !joined) {
-                val = mapToList.apply(val);
+                val = toCollection.apply(val);
                 if (val instanceof Collection) {
                     String j = flagj != null ? flagj : " ";
                     val = asCollection(val).stream()
@@ -1332,7 +1336,7 @@ public class Expander extends BaseTokenizer
             // Simple word splitting
             if (flags != null) {
                 String _flags = flags;
-                val = mapToList.apply(val);
+                val = toCollection.apply(val);
                 if (!(val instanceof Collection)) {
                     val = Collections.singletonList(val);
                 }
@@ -1370,7 +1374,7 @@ public class Expander extends BaseTokenizer
 
             // Uniqueness
             if (flagu) {
-                val = mapToList.apply(val);
+                val = toCollection.apply(val);
                 if (val instanceof Collection) {
                     val = new ArrayList<>(new HashSet<>(asCollection(val)));
                 }
@@ -1378,7 +1382,7 @@ public class Expander extends BaseTokenizer
 
             // Ordering
             if (flaga || flagi || flagn || flago || flagO) {
-                val = mapToList.apply(val);
+                val = toCollection.apply(val);
                 if (val instanceof Collection) {
                     List<Object> list;
                     if (flagn) {
@@ -1405,7 +1409,7 @@ public class Expander extends BaseTokenizer
 
             // Semantic joining
             if (semanticJoin) {
-                val = mapToList.apply(val);
+                val = toCollection.apply(val);
                 if (val instanceof Collection) {
                     val = asCollection(val).stream()
                             .map(String::valueOf)
@@ -1421,7 +1425,7 @@ public class Expander extends BaseTokenizer
             }
 
             if (asPattern && !inQuote && !flagPattern) {
-                val = mapToList.apply(val);
+                val = toCollection.apply(val);
                 Stream<Object> stream = val instanceof Collection ? asCollection(val).stream() : Stream.of(val);
                 List<String> patterns = stream.map(String::valueOf)
                         .map(s -> quote(s, 2))
@@ -1430,7 +1434,7 @@ public class Expander extends BaseTokenizer
             }
 
             if (inQuote) {
-                val = mapToList.apply(val);
+                val = toCollection.apply(val);
                 if (val instanceof Collection) {
                     List<Object> l = new ArrayList<>(asCollection(val));
                     if (flagExpand) {
