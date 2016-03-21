@@ -326,7 +326,7 @@ public class Activator extends AbstractExtender
         BundleContext context = bundle.getBundleContext();
         if (context == null)
         {
-            log(LogService.LOG_ERROR, m_bundle,
+            log(LogService.LOG_DEBUG, m_bundle,
                 "Cannot get BundleContext of bundle {0}/{1}",
                 new Object[] { bundle.getSymbolicName(), bundle.getBundleId() }, null);
             return;
