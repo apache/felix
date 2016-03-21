@@ -257,7 +257,7 @@ public class ShellFactoryImpl implements Factory<Command> {
                         destroy();
                     }
                 };
-                new Shell(context, processor, terminal).gosh(session, new String[]{"--login"});
+                new Shell(context, processor).gosh(session, new String[]{"--login"});
             } catch (Throwable t) {
                 t.printStackTrace();
             }

@@ -38,7 +38,7 @@ public class ParsedLineImpl implements ParsedLine {
         this.program = program;
         this.source = line.toString();
         this.cursor = cursor - line.start();
-        this.tokens = new ArrayList<String>();
+        this.tokens = new ArrayList<>();
         for (Token token : tokens) {
             this.tokens.add(token.toString());
         }
