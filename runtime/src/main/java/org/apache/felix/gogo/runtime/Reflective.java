@@ -63,6 +63,7 @@ public final class Reflective
         Method[] methods = target.getClass().getMethods();
         name = name.toLowerCase();
 
+        String org = name;
         String get = "get" + name;
         String is = "is" + name;
         String set = "set" + name;
@@ -105,7 +106,7 @@ public final class Reflective
                 // multiple commands
                 if (mname.equals(MAIN))
                 {
-                    xargs.add(0, name);
+                    xargs.add(0, org);
                 }
 
                 Object[] parms = new Object[types.length];
