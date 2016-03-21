@@ -1483,6 +1483,7 @@ public class Expander extends BaseTokenizer
             while (ch != EOT && ch != '}') {
                 if (ch == '\\') {
                     escape();
+                    getch();
                 }
                 else if (ch == '{' || ch == '(' || ch == '[') {
                     findClosing();
