@@ -101,6 +101,10 @@ public class Shell {
         this.profile = profile != null ? profile : "gosh_profile";
     }
 
+    public Context getContext() {
+        return context;
+    }
+
     public static Terminal getTerminal(CommandSession session) {
         return (Terminal) session.get(VAR_TERMINAL);
     }
@@ -316,96 +320,7 @@ public class Shell {
 
         if (args.isEmpty()) {
             if (interactive) {
-                AtomicBoolean reading = new AtomicBoolean();
-                newSession.setJobListener((job, previous, current) -> {
-                    if (previous == Status.Background || current == Status.Background
-                            || previous == Status.Suspended || current == Status.Suspended) {
-                        int w = terminal.getWidth();
-                        String status = current.name().toLowerCase();
-                        StringBuilder sb = new StringBuilder();
-                        for (int i = 0; i < w - 1; i++) {
-                            sb.append(' ');
-                        }
-                        sb.append('\r');
-                        sb.append("[").append(job.id()).append("]  ");
-                        sb.append(status);
-                        for (int i = status.length(); i < "background".length(); i++) {
-                            sb.append(' ');
-                        }
-                        sb.append("  ").append(job.command()).append("\n");
-                        terminal.writer().write(sb.toString());
-                        terminal.flush();
-                        if (reading.get()) {
-                            ((LineReaderImpl) reader).redrawLine();
-                            ((LineReaderImpl) reader).redisplay();
-                        }
-                    }
-                });
-                SignalHandler intHandler = terminal.handle(Signal.INT, s -> {
-                    Job current = newSession.foregroundJob();
-                    if (current != null) {
-                        current.interrupt();
-                    }
-                });
-                SignalHandler suspHandler = terminal.handle(Signal.TSTP, s -> {
-                    Job current = newSession.foregroundJob();
-                    if (current != null) {
-                        current.suspend();
-                    }
-                });
-                try {
-                    while (true) {
-                        try {
-                            reading.set(true);
-                            try {
-                                reader.readLine(Shell.getPrompt(session), Shell.getRPrompt(session), null, null);
-                            } finally {
-                                reading.set(false);
-                            }
-                            ParsedLine parsedLine = reader.getParsedLine();
-                            if (parsedLine == null) {
-                                throw new EndOfFileException();
-                            }
-                            try {
-                                result = session.execute(((ParsedLineImpl) parsedLine).program());
-                                session.put(Shell.VAR_RESULT, result); // set $_ to last result
-
-                                if (result != null && !Boolean.FALSE.equals(session.get(".Gogo.format"))) {
-                                    System.out.println(session.format(result, Converter.INSPECT));
-                                }
-                            } catch (Exception e) {
-                                session.put(Shell.VAR_EXCEPTION, e);
-                            }
-
-                            while (true) {
-                                Job job = session.foregroundJob();
-                                if (job != null) {
-                                    //noinspection SynchronizationOnLocalVariableOrMethodParameter
-                                    synchronized (job) {
-                                        if (job.status() == Status.Foreground) {
-                                            job.wait();
-                                        }
-                                    }
-                                } else {
-                                    break;
-                                }
-                            }
-
-                        } catch (UserInterruptException e) {
-                            // continue;
-                        } catch (EndOfFileException e) {
-                            try {
-                                reader.getHistory().flush();
-                            } catch (IOException e1) {
-                                e.addSuppressed(e1);
-                            }
-                            break;
-                        }
-                    }
-                } finally {
-                    terminal.handle(Signal.INT, intHandler);
-                    terminal.handle(Signal.TSTP, suspHandler);
-                }
+                result = runShell(session, newSession, terminal, reader);
             }
         } else {
             CharSequence program;
@@ -433,7 +348,7 @@ public class Shell {
                 program = readScript(script);
             }
 
-                result = newSession.execute(program);
+            result = newSession.execute(program);
         }
 
         if (login && interactive && !opt.isSet("noshutdown")) {
@@ -442,6 +357,110 @@ public class Shell {
         }
 
         return result;
+    }
+
+    private Object runShell(final CommandSession session, CommandSession newSession, Terminal terminal,
+                            LineReader reader) throws InterruptedException {
+        AtomicBoolean reading = new AtomicBoolean();
+        newSession.setJobListener((job, previous, current) -> {
+            if (previous == Status.Background || current == Status.Background
+                    || previous == Status.Suspended || current == Status.Suspended) {
+                int width = terminal.getWidth();
+                String status = current.name().toLowerCase();
+                terminal.writer().write(getStatusLine(job, width, status));
+                terminal.flush();
+                if (reading.get()) {
+                    ((LineReaderImpl) reader).redrawLine();
+                    ((LineReaderImpl) reader).redisplay();
+                }
+            }
+        });
+        SignalHandler intHandler = terminal.handle(Signal.INT, s -> {
+            Job current = newSession.foregroundJob();
+            if (current != null) {
+                current.interrupt();
+            }
+        });
+        SignalHandler suspHandler = terminal.handle(Signal.TSTP, s -> {
+            Job current = newSession.foregroundJob();
+            if (current != null) {
+                current.suspend();
+            }
+        });
+        Object result = null;
+        try {
+            while (true) {
+                try {
+                    reading.set(true);
+                    try {
+                        reader.readLine(Shell.getPrompt(session), Shell.getRPrompt(session), null, null);
+                    } finally {
+                        reading.set(false);
+                    }
+                    ParsedLine parsedLine = reader.getParsedLine();
+                    if (parsedLine == null) {
+                        throw new EndOfFileException();
+                    }
+                    try {
+                        result = session.execute(((ParsedLineImpl) parsedLine).program());
+                        session.put(Shell.VAR_RESULT, result); // set $_ to last result
+
+                        if (result != null && !Boolean.FALSE.equals(session.get(".Gogo.format"))) {
+                            System.out.println(session.format(result, Converter.INSPECT));
+                        }
+                    } catch (Exception e) {
+                        session.put(Shell.VAR_EXCEPTION, e);
+                    }
+
+                    //waitJobCompletion(session);
+
+                } catch (UserInterruptException e) {
+                    // continue;
+                } catch (EndOfFileException e) {
+                    try {
+                        reader.getHistory().flush();
+                    } catch (IOException e1) {
+                        e.addSuppressed(e1);
+                    }
+                    break;
+                }
+            }
+        } finally {
+            terminal.handle(Signal.INT, intHandler);
+            terminal.handle(Signal.TSTP, suspHandler);
+        }
+        return result;
+    }
+
+    private void waitJobCompletion(final CommandSession session) throws InterruptedException {
+        while (true) {
+            Job job = session.foregroundJob();
+            if (job != null) {
+                //noinspection SynchronizationOnLocalVariableOrMethodParameter
+                synchronized (job) {
+                    if (job.status() == Status.Foreground) {
+                        job.wait();
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+    }
+
+    private String getStatusLine(Job job, int width, String status) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < width - 1; i++) {
+            sb.append(' ');
+        }
+        sb.append('\r');
+        sb.append("[").append(job.id()).append("]  ");
+        sb.append(status);
+        for (int i = status.length(); i < "background".length(); i++) {
+            sb.append(' ');
+        }
+        sb.append("  ").append(job.command()).append("\n");
+        return sb.toString();
     }
 
     @Descriptor("start a new shell")
