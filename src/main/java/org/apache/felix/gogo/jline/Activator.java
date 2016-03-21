@@ -18,73 +18,69 @@
  */
 package org.apache.felix.gogo.jline;
 
+import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.gogo.jline.Shell.Context;
+import org.apache.felix.gogo.jline.SingleServiceTracker.SingleServiceListener;
+import org.apache.felix.gogo.runtime.Token;
+import org.apache.felix.gogo.runtime.Tokenizer;
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Converter;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
 
-public class Activator implements BundleActivator {
+public class Activator implements BundleActivator, SingleServiceListener {
+    private final Set<ServiceRegistration<?>> regs = new HashSet<>();
     private BundleContext context;
-    private ServiceTracker commandProcessorTracker;
-    private Set<ServiceRegistration> regs;
-
-    private ExecutorService executor;
+    private SingleServiceTracker<CommandProcessor> commandProcessorTracker;
+    private Thread thread;
 
     public Activator() {
-        regs = new HashSet<>();
     }
 
     public void start(BundleContext context) throws Exception {
         this.context = context;
-        this.commandProcessorTracker = createCommandProcessorTracker();
+        this.commandProcessorTracker = new SingleServiceTracker<>(context, CommandProcessor.class, this);
         this.commandProcessorTracker.open();
     }
 
     public void stop(BundleContext context) throws Exception {
-        Iterator<ServiceRegistration> iterator = regs.iterator();
+        Iterator<ServiceRegistration<?>> iterator = regs.iterator();
         while (iterator.hasNext()) {
             ServiceRegistration reg = iterator.next();
             reg.unregister();
             iterator.remove();
         }
-
-        stopShell();
-
         this.commandProcessorTracker.close();
     }
 
-    private ServiceTracker createCommandProcessorTracker() {
-        return new ServiceTracker(context, CommandProcessor.class.getName(), null) {
-            @Override
-            public Object addingService(ServiceReference reference) {
-                CommandProcessor processor = (CommandProcessor) super.addingService(reference);
-                startShell(context, processor);
-                return processor;
-            }
-
-            @Override
-            public void removedService(ServiceReference reference, Object service) {
-                stopShell();
-                super.removedService(reference, service);
-            }
-        };
+    @Override
+    public void serviceFound() {
+        startShell(context, commandProcessorTracker.getService());
     }
 
-    private void startShell(final BundleContext context, CommandProcessor processor) {
+    @Override
+    public void serviceLost() {
+        stopShell();
+    }
+
+    @Override
+    public void serviceReplaced() {
+        serviceLost();
+        serviceFound();
+    }
+
+    private void startShell(BundleContext context, CommandProcessor processor) {
         Dictionary<String, Object> dict = new Hashtable<>();
         dict.put(CommandProcessor.COMMAND_SCOPE, "gogo");
 
@@ -107,57 +103,58 @@ public class Activator implements BundleActivator {
         regs.add(context.registerService(Shell.class.getName(), shell, dict));
 
         // start shell on a separate thread...
-        executor = Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "Gogo shell"));
-        executor.submit(new StartShellJob(context, processor));
+        thread = new Thread(() -> doStartShell(processor, shell), "Gogo shell");
+        thread.start();
     }
 
     private void stopShell() {
-        if (executor != null && !(executor.isShutdown() || executor.isTerminated())) {
-            executor.shutdownNow();
-
+        if (thread != null && thread.isAlive()) {
+            thread.interrupt();
             try {
-                if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+                thread.join(5000);
+                if (thread.isAlive()) {
                     System.err.println("!!! FAILED TO STOP EXECUTOR !!!");
                 }
             } catch (InterruptedException e) {
                 // Restore administration...
                 Thread.currentThread().interrupt();
             }
-            executor = null;
+        }
+        while (!regs.isEmpty()) {
+            ServiceRegistration<?> reg = regs.iterator().next();
+            regs.remove(reg);
+            reg.unregister();
         }
     }
 
-    private static class StartShellJob implements Runnable {
-        private final BundleContext context;
-        private final CommandProcessor processor;
-
-        public StartShellJob(BundleContext context, CommandProcessor processor) {
-            this.context = context;
-            this.processor = processor;
-        }
-
-        public void run() {
-            CommandSession session = processor.createSession(System.in, System.out, System.err);
+    private void doStartShell(CommandProcessor processor, Shell shell) {
+        String errorMessage = "gogo: unable to create console";
+        try (Terminal terminal = TerminalBuilder.terminal();
+             CommandSession session = processor.createSession(terminal.input(), terminal.output(), terminal.output())) {
+            session.put(Shell.VAR_TERMINAL, terminal);
             try {
-                // wait for gosh command to be registered
-                for (int i = 0; (i < 100) && session.get("gogo:gosh") == null; ++i) {
-                    TimeUnit.MILLISECONDS.sleep(10);
+                List<String> args = new ArrayList<>();
+                args.add("--login");
+                String argstr = shell.getContext().getProperty("gosh.args");
+                if (argstr != null) {
+                    Tokenizer tokenizer = new Tokenizer(argstr);
+                    Token token;
+                    while ((token = tokenizer.next()) != null) {
+                        args.add(token.toString());
+                    }
                 }
-
-                String args = context.getProperty("gosh.args");
-                args = (args == null) ? "" : args;
-                session.execute("gosh --login " + args);
+                shell.gosh(session, args.toArray(new String[args.size()]));
             } catch (Exception e) {
                 Object loc = session.get(".location");
                 if (null == loc || !loc.toString().contains(":")) {
                     loc = "gogo";
                 }
-
-                System.err.println(loc + ": " + e.getClass().getSimpleName() + ": " + e.getMessage());
-                e.printStackTrace();
-            } finally {
-                session.close();
+                errorMessage = loc.toString();
+                throw e;
             }
+        } catch (Exception e) {
+            System.err.println(errorMessage + e.getClass().getSimpleName() + ": " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
