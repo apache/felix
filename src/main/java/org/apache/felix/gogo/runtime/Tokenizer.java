@@ -67,6 +67,24 @@ public class Tokenizer extends BaseTokenizer
                     word++;
                     return token(start);
                 case '{':
+                    if (start == index - 1 && Character.isWhitespace(peek()))
+                    {
+                        word = 0;
+                        return token(start);
+                    }
+                    else
+                    {
+                        if (ch == '{')
+                        {
+                            find('}', '{');
+                        }
+                        else
+                        {
+                            find(')', '(');
+                        }
+                        getch();
+                        break;
+                    }
                 case '(':
                     if (start == index - 1)
                     {

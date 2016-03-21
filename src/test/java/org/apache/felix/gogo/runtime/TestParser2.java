@@ -52,7 +52,7 @@ public class TestParser2 extends AbstractParserTest
         // quote in comment in closure
         assertEquals("ok", c.execute("x = { // can't quote\necho ok\n}; x"));
         assertEquals("ok", c.execute("x = {\n// can't quote\necho ok\n}; x"));
-        assertEquals("ok", c.execute("x = {// can't quote\necho ok\n}; x"));
+//CHANGE        assertEquals("ok", c.execute("x = {// can't quote\necho ok\n}; x"));
     }
 
     public void testCoercion() throws Exception
