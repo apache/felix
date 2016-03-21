@@ -455,6 +455,21 @@ public class TestParser extends AbstractParserTest
         assertEquals("'abc{}'", x.get(8).toString());
     }
 
+    @Test
+    public void testIsTty() throws Exception
+    {
+        Context c = new Context();
+        c.addCommand("istty", this);
+        c.addCommand("echo", this);
+        assertEquals(true, c.execute("istty 1"));
+        assertEquals(false, c.execute("$(istty 1)"));
+    }
+
+    public boolean istty(CommandSession session, int fd)
+    {
+        return session.isTty(fd);
+    }
+
     void each(CommandSession session, Collection<Object> list, Function closure)
         throws Exception
     {
