@@ -75,7 +75,6 @@ import org.apache.felix.gogo.api.Process;
 import org.apache.felix.gogo.jline.Shell.Context;
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
-import org.apache.sshd.common.util.OsUtils;
 import org.jline.builtins.Commands;
 import org.jline.builtins.Less;
 import org.jline.builtins.Nano;
@@ -89,6 +88,7 @@ import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.AttributedStyle;
 import org.jline.utils.InfoCmp.Capability;
+import org.jline.utils.OSUtils;
 
 /**
  * Posix-like utilities.
@@ -1924,7 +1924,7 @@ public class Posix {
             perms.add(PosixFilePermission.OTHERS_WRITE);
         }
 
-        if (f.canExecute() || (OsUtils.isWin32() && isWindowsExecutable(f.getName()))) {
+        if (f.canExecute() || (OSUtils.IS_WINDOWS && isWindowsExecutable(f.getName()))) {
             perms.add(PosixFilePermission.OWNER_EXECUTE);
             perms.add(PosixFilePermission.GROUP_EXECUTE);
             perms.add(PosixFilePermission.OTHERS_EXECUTE);
