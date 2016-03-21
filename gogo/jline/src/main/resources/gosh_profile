@@ -45,9 +45,9 @@ try {
 
   # set prompt
   prompt = 'g! '
-  \#rprompt = { (new java.text.SimpleDateFormat \'\u001B\[90m\'HH:mm:ss) format (new Date) }
+  \#rprompt = { (new java.text.SimpleDateFormat \'$'\u001B\\[90m'\'HH:mm:ss) format (new Date) }
   # could also be written
-  #  rprompt = { date +\u001B\\\[90m\%T }
+  #  rprompt = { date +$'\u001B\[90m%T' }
 
 
   __option_not_present = {
