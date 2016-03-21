@@ -35,6 +35,16 @@
     </properties>
     <repositories>
         <repository>
+            <id>temp-sshd</id>
+            <url>https://repository.apache.org/content/repositories/orgapachemina-1021/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
             <id>ossrh.sonatype.snapshots.deploy</id>
             <name>OSSRH snapshot repository</name>
             <url>https://oss.sonatype.org/content/groups/public/</url>
