@@ -35,10 +35,14 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @SuppressWarnings("fallthrough")
 public class Expander extends BaseTokenizer
@@ -49,70 +53,82 @@ public class Expander extends BaseTokenizer
      */
     public static Object expand(CharSequence word, Evaluate eval) throws Exception
     {
-        return expand(word, eval, false);
+        return expand(word, eval, false, true, false, true, false);
     }
 
     private static Object expand(CharSequence word, Evaluate eval, boolean inQuote) throws Exception
     {
-        return new Expander(word, eval, inQuote).expand();
+        return new Expander(word, eval, inQuote, true, false, false, false).expand();
+    }
+
+    private static Object expand(CharSequence word, Evaluate eval,
+                                 boolean inQuote,
+                                 boolean generateFileNames,
+                                 boolean semanticJoin,
+                                 boolean unquote,
+                                 boolean asPattern) throws Exception
+    {
+        return new Expander(word, eval, inQuote, generateFileNames, semanticJoin, unquote, asPattern).expand();
     }
 
     private final Evaluate evaluate;
     private boolean inQuote;
+    private boolean generateFileNames;
+    private boolean semanticJoin;
+    private boolean unquote;
+    private boolean asPattern;
 
-    public Expander(CharSequence text, Evaluate evaluate, boolean inQuote)
+    public Expander(CharSequence text, Evaluate evaluate,
+                    boolean inQuote,
+                    boolean generateFileNames,
+                    boolean semanticJoin,
+                    boolean unquote,
+                    boolean asPattern)
     {
         super(text);
         this.evaluate = evaluate;
         this.inQuote = inQuote;
+        this.generateFileNames = generateFileNames;
+        this.semanticJoin = semanticJoin;
+        this.unquote = unquote;
+        this.asPattern = asPattern;
     }
 
     public Object expand(CharSequence word) throws Exception
     {
-        return expand(word, evaluate, inQuote);
+        return expand(word, evaluate, inQuote, true, false, false, false);
     }
 
+    public Object expand(CharSequence word,
+                         boolean generateFileNames,
+                         boolean semanticJoin,
+                         boolean unquote) throws Exception
+    {
+        return expand(word, evaluate, inQuote, generateFileNames, semanticJoin, unquote, false);
+    }
+
+    public Object expandPattern(CharSequence word) throws Exception {
+        return expand(word, evaluate, inQuote, false, false, false, true);
+    }
 
     private Object expand() throws Exception
     {
         Object expanded = doExpand();
-        if (expanded instanceof List) {
-            List<Object> list = new ArrayList<>();
-            for (Object o : ((List) expanded)) {
-                if (o instanceof CharSequence) {
-                    list.addAll(generateFileNames((CharSequence) o));
-                } else {
-                    list.add(o);
-                }
-            }
-            List<Object> unquoted = new ArrayList<>();
-            for (Object o : list) {
-                if (o instanceof CharSequence) {
-                    unquoted.add(unquote((CharSequence) o));
-                } else {
-                    unquoted.add(o);
-                }
-            }
-            if (unquoted.size() == 1) {
-                return unquoted.get(0);
-            }
-            if (expanded instanceof ArgList) {
-                return new ArgList(unquoted);
-            } else {
-                return unquoted;
-            }
-        } else if (expanded instanceof CharSequence) {
-            List<? extends CharSequence> list = generateFileNames((CharSequence) expanded);
-            List<CharSequence> unquoted = new ArrayList<>();
-            for (CharSequence o : list) {
-                unquoted.add(unquote(o));
-            }
-            if (unquoted.size() == 1) {
-                return unquoted.get(0);
-            }
-            return new ArgList(unquoted);
+        Stream<Object> stream = expanded instanceof Collection
+                ? asCollection(expanded).stream()
+                : Stream.of(expanded);
+        List<Object> args = stream
+                .flatMap(uncheck(o -> o instanceof CharSequence ? expandBraces((CharSequence) o).stream() : Stream.of(o)))
+                .flatMap(uncheck(o -> generateFileNames && o instanceof CharSequence ? generateFileNames((CharSequence) o).stream() : Stream.of(o)))
+                .map(o -> unquote && o instanceof CharSequence ? unquote((CharSequence) o) : o)
+                .collect(Collectors.toList());
+        if (args.size() == 1) {
+            return args.get(0);
         }
-        return expanded;
+        if (expanded instanceof ArgList) {
+            return new ArgList(args);
+        }
+        return args;
     }
 
     private CharSequence unquote(CharSequence arg) {
@@ -179,6 +195,215 @@ public class Expander extends BaseTokenizer
             }
         }
         return buf.toString();
+    }
+
+    protected List<? extends CharSequence> expandBraces(CharSequence arg) throws Exception {
+        int braces = 0;
+        boolean escaped = false;
+        boolean doubleQuoted = false;
+        boolean singleQuoted = false;
+        List<CharSequence> parts = new ArrayList<>();
+        int start = 0;
+        for (int i = 0; i < arg.length(); i++) {
+            char c = arg.charAt(i);
+            if (doubleQuoted && escaped) {
+                escaped = false;
+            }
+            else if (escaped) {
+                escaped = false;
+            }
+            else if (singleQuoted) {
+                if (c == '\'') {
+                    singleQuoted = false;
+                }
+            }
+            else if (doubleQuoted) {
+                if (c == '\\') {
+                    escaped = true;
+                }
+                else if (c == '\"') {
+                    doubleQuoted = false;
+                }
+            }
+            else if (c == '\\') {
+                escaped = true;
+            }
+            else if (c == '\'') {
+                singleQuoted = true;
+            }
+            else if (c == '"') {
+                doubleQuoted = true;
+            }
+            else {
+                if (c == '{') {
+                    if (braces++ == 0) {
+                        if (i > start) {
+                            parts.add(arg.subSequence(start, i));
+                        }
+                        start = i;
+                    }
+                }
+                else if (c == '}') {
+                    if (--braces == 0) {
+                        parts.add(arg.subSequence(start, i + 1));
+                        start = i + 1;
+                    }
+                }
+            }
+        }
+        if (start < arg.length()) {
+            parts.add(arg.subSequence(start, arg.length()));
+        }
+        if (start == 0) {
+            return Collections.singletonList(arg);
+        }
+        List<CharSequence> generated = new ArrayList<>();
+        Pattern pattern = Pattern.compile(
+                "\\{(((?<intstart>\\-?[0-9]+)\\.\\.(?<intend>\\-?[0-9]+)(\\.\\.(?<intinc>\\-?0*[1-9][0-9]*))?)" +
+                "|((?<charstart>\\S)\\.\\.(?<charend>\\S)))\\}");
+        for (CharSequence part : parts) {
+            List<CharSequence> generators = new ArrayList<>();
+            Matcher matcher = pattern.matcher(part);
+            if (matcher.matches()) {
+                if (matcher.group("intstart") != null) {
+                    int intstart = Integer.parseInt(matcher.group("intstart"));
+                    int intend = Integer.parseInt(matcher.group("intend"));
+                    int intinc = matcher.group("intinc") != null ? Integer.parseInt(matcher.group("intinc")) : 1;
+                    if (intstart > intend) {
+                        if (intinc < 0) {
+                            int k = intstart;
+                            intstart = intend;
+                            intend = k;
+                        }
+                        intinc = -intinc;
+                    } else {
+                        if (intinc < 0) {
+                            int k = intstart;
+                            intstart = intend;
+                            intend = k;
+                        }
+                    }
+                    if (intinc > 0) {
+                        for (int k = intstart; k <= intend; k += intinc) {
+                            generators.add(Integer.toString(k));
+                        }
+                    } else {
+                        for (int k = intstart; k >= intend; k += intinc) {
+                            generators.add(Integer.toString(k));
+                        }
+                    }
+                }
+                else {
+                    char charstart = matcher.group("charstart").charAt(0);
+                    char charend = matcher.group("charend").charAt(0);
+                    if (charstart < charend) {
+                        for (char c = charstart; c <= charend; c++) {
+                            generators.add(Character.toString(c));
+                        }
+                    }
+                    else {
+                        for (char c = charstart; c >= charend; c--) {
+                            generators.add(Character.toString(c));
+                        }
+                    }
+                }
+            }
+            else if (part.charAt(0) == '{' && part.charAt(part.length() - 1) == '}') {
+                // Split on commas
+                braces = 0;
+                escaped = false;
+                doubleQuoted = false;
+                singleQuoted = false;
+                start = 1;
+                for (int i = 1; i < part.length() - 1; i++) {
+                    char c = part.charAt(i);
+                    if (doubleQuoted && escaped) {
+                        escaped = false;
+                    }
+                    else if (escaped) {
+                        escaped = false;
+                    }
+                    else if (singleQuoted) {
+                        if (c == '\'') {
+                            singleQuoted = false;
+                        }
+                    }
+                    else if (doubleQuoted) {
+                        if (c == '\\') {
+                            escaped = true;
+                        }
+                        else if (c == '\"') {
+                            doubleQuoted = false;
+                        }
+                    }
+                    else if (c == '\\') {
+                        escaped = true;
+                    }
+                    else if (c == '\'') {
+                        singleQuoted = true;
+                    }
+                    else if (c == '"') {
+                        doubleQuoted = true;
+                    }
+                    else {
+                        if (c == '}') {
+                            braces--;
+                        }
+                        else if (c == '{') {
+                            braces++;
+                        }
+                        else if (c == ',' && braces == 0) {
+                            generators.add(part.subSequence(start, i));
+                            start = i + 1;
+                        }
+                    }
+                }
+                if (start < part.length() - 1) {
+                    generators.add(part.subSequence(start, part.length() - 1));
+                }
+                generators = generators.stream()
+                        .map(uncheck(cs -> expand(cs, false, false, false)))
+                        .flatMap(o -> o instanceof Collection ? asCollection(o).stream() : Stream.of(o))
+                        .map(String::valueOf)
+                        .collect(Collectors.toList());
+
+                // If there's no splitting comma, expand with the braces
+                if (generators.size() < 2) {
+                    generators = Collections.singletonList(part.toString());
+                }
+            }
+            else {
+                generators.add(part.toString());
+            }
+            if (generated.isEmpty()) {
+                generated.addAll(generators);
+            } else {
+                List<CharSequence> prevGenerated = generated;
+                generated = generators.stream()
+                        .flatMap(s -> prevGenerated.stream().map(cs -> String.valueOf(cs) + s))
+                        .collect(Collectors.toList());
+            }
+        }
+        return generated;
+    }
+
+    public interface FunctionExc<T, R> {
+        R apply(T t) throws Exception;
+    }
+
+    public static <T, R> Function<T, R> uncheck(FunctionExc<T, R> func) {
+        return t -> {
+            try {
+                return func.apply(t);
+            } catch (Exception e) {
+                return sneakyThrow(e);
+            }
+        };
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <E extends Throwable, T> T sneakyThrow(Throwable t) throws E {
+        throw (E) t;
     }
 
     protected List<? extends CharSequence> generateFileNames(CharSequence arg) throws IOException {
@@ -328,18 +553,15 @@ public class Expander extends BaseTokenizer
             {
                 case '%':
                     Object exp = expandExp();
-
                     if (EOT == ch && buf.length() == 0)
                     {
                         return exp;
                     }
-
                     if (null != exp)
                     {
                         buf.append(exp);
                     }
-
-                    continue; // expandVar() has already read next char
+                    break;
 
                 case '$':
                     // Posix quote
@@ -362,7 +584,7 @@ public class Expander extends BaseTokenizer
                             buf.append(val);
                         }
                     }
-                    continue; // expandVar() has already read next char
+                    break;
 
                 case '\\':
                     buf.append(ch);
@@ -370,6 +592,7 @@ public class Expander extends BaseTokenizer
                         getch();
                         buf.append(ch);
                     }
+                    getch();
                     break;
 
                 case '"':
@@ -408,28 +631,25 @@ public class Expander extends BaseTokenizer
                         buf.append(expand.toString());
                         buf.append("\"");
                     }
-                    continue; // has already read next char
+                    break;
 
                 case '\'':
-                    if (!inQuote)
+                    skipQuote();
+                    value = text.subSequence(start - 1, index);
+                    getch();
+                    if (eot() && buf.length() == 0)
                     {
-                        skipQuote();
-                        value = text.subSequence(start - 1, index);
-
-                        if (eot() && buf.length() == 0)
-                        {
-                            return value;
-                        }
-
-                        buf.append(value);
-                        break;
+                        return value;
                     }
-                    // else fall through
+                    buf.append(value);
+                    break;
+
                 default:
                     buf.append(ch);
+                    getch();
+                    break;
             }
 
-            getch();
         }
 
         return buf.toString();
@@ -668,6 +888,8 @@ public class Expander extends BaseTokenizer
             // split / join
             String flags = null;
             String flagj = null;
+            // pattern
+            boolean flagPattern = false;
             // length
             boolean computeLength = false;
             // Parse flags
@@ -829,15 +1051,24 @@ public class Expander extends BaseTokenizer
                 val = getAndEvaluateName();
             }
             else {
-                if (ch == '#') {
-                    computeLength = true;
-                    getch();
-                }
-                if (ch == '=') {
-                    if (flags == null) {
-                        flags = "\\s";
+                while (true) {
+                    if (ch == '#') {
+                        computeLength = true;
+                        getch();
                     }
-                    getch();
+                    else if (ch == '=') {
+                        if (flags == null) {
+                            flags = "\\s";
+                        }
+                        getch();
+                    }
+                    else if (ch == '~') {
+                        flagPattern = true;
+                        getch();
+                    }
+                    else {
+                        break;
+                    }
                 }
 
                 Object val1 = getName('}');
@@ -889,9 +1120,9 @@ public class Expander extends BaseTokenizer
                             || Token.eq("%", op) || Token.eq("%%", op)
                             || Token.eq("/", op) || Token.eq("//", op)) {
                         val1 = val1 instanceof Token ? evaluate.get(expand((Token) val1).toString()) : val1;
-                        Object val2 = getValue();
+                        String val2 = getPattern(op.charAt(0) == '/' ? "/}" : "}");
                         if (val2 != null) {
-                            String p = toRegexPattern(val2.toString(), op.length() == 1);
+                            String p = toRegexPattern(unquoteGlob(val2), op.length() == 1);
                             String r;
                             if (op.charAt(0) == '/') {
                                 if (ch == '/') {
@@ -1044,10 +1275,23 @@ public class Expander extends BaseTokenizer
                 throw new SyntaxError(sLine, sCol, "bad substitution");
             }
 
+            // Parameter name replacement
             if (flagP) {
                 val = val != null ? evaluate.get(val.toString()) : null;
             }
 
+            // Double quote joining
+            boolean joined = false;
+            if (inQuote && !computeLength && !flagExpand) {
+                val = mapToList.apply(val);
+                if (val instanceof Collection) {
+                    String j = flagj != null ? flagj : " ";
+                    val = asCollection(val).stream()
+                            .map(String::valueOf)
+                            .collect(Collectors.joining(j));
+                    joined = true;
+                }
+            }
 
             // Character evaluation
             if (flagSharp) {
@@ -1070,17 +1314,18 @@ public class Expander extends BaseTokenizer
                 }
             }
 
-            // Joining
-            if (flagj != null) {
+            // Forced joining
+            if (flagj != null || flags != null && !joined) {
                 val = mapToList.apply(val);
                 if (val instanceof Collection) {
+                    String j = flagj != null ? flagj : " ";
                     val = asCollection(val).stream()
                             .map(String::valueOf)
-                            .collect(Collectors.joining(flagj));
+                            .collect(Collectors.joining(j));
                 }
             }
 
-            // Splitting
+            // Simple word splitting
             if (flags != null) {
                 String _flags = flags;
                 val = mapToList.apply(val);
@@ -1154,11 +1399,30 @@ public class Expander extends BaseTokenizer
                 }
             }
 
+            // Semantic joining
+            if (semanticJoin) {
+                val = mapToList.apply(val);
+                if (val instanceof Collection) {
+                    val = asCollection(val).stream()
+                            .map(String::valueOf)
+                            .collect(Collectors.joining(" "));
+                }
+            }
+
             // Empty argument removal
             if (val instanceof Collection) {
                 val = asCollection(val).stream()
                         .filter(o -> !(o instanceof CharSequence) || ((CharSequence) o).length() > 0)
                         .collect(Collectors.toList());
+            }
+
+            if (asPattern && !inQuote && !flagPattern) {
+                val = mapToList.apply(val);
+                Stream<Object> stream = val instanceof Collection ? asCollection(val).stream() : Stream.of(val);
+                List<String> patterns = stream.map(String::valueOf)
+                        .map(s -> quote(s, 2))
+                        .collect(Collectors.toList());
+                val = patterns.size() == 1 ? patterns.get(0) : patterns;
             }
 
             if (inQuote) {
@@ -1455,9 +1719,24 @@ public class Expander extends BaseTokenizer
     }
 
     private Object getName(char closing) throws Exception {
-        if (ch == '$') {
+        if (ch == '\"') {
+            if (peek() != '$') {
+                throw new IllegalArgumentException("bad substitution");
+            }
+            boolean oldInQuote = inQuote;
+            try {
+                inQuote = true;
+                getch();
+                Object val = getName(closing);
+                return val;
+            } finally {
+                inQuote = oldInQuote;
+            }
+        }
+        else if (ch == '$') {
             return expandVar();
-        } else {
+        }
+        else {
             int start = index - 1;
             while (ch != EOT && ch != closing && isName(ch)) {
                 getch();
@@ -1473,6 +1752,63 @@ public class Expander extends BaseTokenizer
             }
             return text.subSequence(start, index - 1);
         }
+    }
+
+    private String getPattern(String closing) throws Exception {
+        CharSequence sub = findUntil(text, index - 1, closing);
+        index += sub.length() - 1;
+        getch();
+        return expandPattern(sub).toString();
+    }
+
+    private CharSequence findUntil(CharSequence text, int start, String closing) throws Exception {
+        int braces = 0;
+        boolean escaped = false;
+        boolean doubleQuoted = false;
+        boolean singleQuoted = false;
+        for (int i = start; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (doubleQuoted && escaped) {
+                escaped = false;
+            }
+            else if (escaped) {
+                escaped = false;
+            }
+            else if (singleQuoted) {
+                if (c == '\'') {
+                    singleQuoted = false;
+                }
+            }
+            else if (doubleQuoted) {
+                if (c == '\\') {
+                    escaped = true;
+                }
+                else if (c == '\"') {
+                    doubleQuoted = false;
+                }
+            }
+            else if (c == '\\') {
+                escaped = true;
+            }
+            else if (c == '\'') {
+                singleQuoted = true;
+            }
+            else if (c == '"') {
+                doubleQuoted = true;
+            }
+            else {
+                if (braces == 0 && closing.indexOf(c) >= 0) {
+                    return text.subSequence(start, i);
+                }
+                else if (c == '{') {
+                    braces++;
+                }
+                else if (c == '}') {
+                    braces--;
+                }
+            }
+        }
+        return text.subSequence(start, text.length());
     }
 
     private Object getValue() throws Exception {
@@ -1525,6 +1861,69 @@ public class Expander extends BaseTokenizer
 
     private static char next(String str, int index) {
         return index < str.length() ? str.charAt(index) : EOL;
+    }
+
+    /**
+     * Convert a string containing escape sequences and quotes, representing a glob pattern
+     * to the corresponding regexp pattern
+     */
+    private static String unquoteGlob(String str) {
+        StringBuilder sb = new StringBuilder();
+        int index = 0;
+        boolean escaped = false;
+        boolean doubleQuoted = false;
+        boolean singleQuoted = false;
+        while (index < str.length()) {
+            char ch = str.charAt(index++);
+            if (escaped) {
+                if (isGlobMeta(ch)) {
+                    sb.append('\\');
+                }
+                sb.append(ch);
+                escaped = false;
+            }
+            else if (singleQuoted) {
+                if (ch == '\'') {
+                    singleQuoted = false;
+                } else {
+                    if (isGlobMeta(ch)) {
+                        sb.append('\\');
+                    }
+                    sb.append(ch);
+                }
+            }
+            else if (doubleQuoted) {
+                if (ch == '\\') {
+                    escaped = true;
+                }
+                else if (ch == '\"') {
+                    doubleQuoted = false;
+                }
+                else {
+                    if (isGlobMeta(ch)) {
+                        sb.append('\\');
+                    }
+                    sb.append(ch);
+                }
+            }
+            else {
+                switch (ch) {
+                    case '\\':
+                        escaped = true;
+                        break;
+                    case '\'':
+                        singleQuoted = true;
+                        break;
+                    case '"':
+                        doubleQuoted = true;
+                        break;
+                    default:
+                        sb.append(ch);
+                        break;
+                }
+            }
+        }
+        return sb.toString();
     }
 
     private static String toRegexPattern(String str, boolean shortest) {

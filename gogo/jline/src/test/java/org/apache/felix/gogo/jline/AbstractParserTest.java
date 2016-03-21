@@ -26,17 +26,18 @@ import java.io.PrintStream;
 
 import junit.framework.TestCase;
 import org.apache.felix.gogo.runtime.threadio.ThreadIOImpl;
+import org.junit.After;
+import org.junit.Before;
 
-public abstract class AbstractParserTest extends TestCase {
+public abstract class AbstractParserTest {
 
     private ThreadIOImpl threadIO;
     private InputStream sin;
     private PrintStream sout;
     private PrintStream serr;
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         sin = new NoCloseInputStream(System.in);
         sout = new NoClosePrintStream(System.out);
         serr = new NoClosePrintStream(System.err);
@@ -44,10 +45,9 @@ public abstract class AbstractParserTest extends TestCase {
         threadIO.start();
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         threadIO.stop();
-        super.tearDown();
     }
 
     public class Context extends org.apache.felix.gogo.jline.Context {

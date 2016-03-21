@@ -45,7 +45,6 @@ public class BaseTokenizer
     {
         final short sLine = line;
         final short sCol = column;
-        int start = ch;
         int level = 1;
 
         while (level != 0)
@@ -53,7 +52,7 @@ public class BaseTokenizer
             if (eot())
             {
                 throw new EOFError(sLine, sCol, "unexpected eof found in the middle of a compound for '"
-                        + deeper + target + "', begins at " + start, "compound", Character.toString(target));
+                        + deeper + target + "'", "compound", Character.toString(target));
                 // TODO: fill context correctly
             }
 
@@ -61,6 +60,7 @@ public class BaseTokenizer
             if (ch == '\\')
             {
                 escape();
+                continue;
             }
             if (ch == target)
             {
