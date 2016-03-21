@@ -28,8 +28,8 @@ import org.apache.sshd.common.NamedFactory;
 import org.apache.sshd.server.Command;
 import org.apache.sshd.server.ServerBuilder;
 import org.apache.sshd.server.SshServer;
-import org.apache.sshd.server.command.ScpCommandFactory;
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
+import org.apache.sshd.server.scp.ScpCommandFactory;
 import org.apache.sshd.server.subsystem.sftp.SftpSubsystemFactory;
 import org.jline.builtins.Options;
 
