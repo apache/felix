@@ -18,9 +18,19 @@
  */
 package org.apache.felix.gogo.runtime;
 
+import java.io.IOException;
+import java.nio.file.FileVisitOption;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.PathMatcher;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -62,6 +72,241 @@ public class Expander extends BaseTokenizer
 
     private Object expand() throws Exception
     {
+        Object expanded = doExpand();
+        if (expanded instanceof List) {
+            List<Object> list = new ArrayList<>();
+            for (Object o : ((List) expanded)) {
+                if (o instanceof CharSequence) {
+                    list.addAll(generateFileNames((CharSequence) o));
+                } else {
+                    list.add(o);
+                }
+            }
+            List<Object> unquoted = new ArrayList<>();
+            for (Object o : list) {
+                if (o instanceof CharSequence) {
+                    unquoted.add(unquote((CharSequence) o));
+                } else {
+                    unquoted.add(o);
+                }
+            }
+            if (unquoted.size() == 1) {
+                return unquoted.get(0);
+            }
+            if (expanded instanceof ArgList) {
+                return new ArgList(unquoted);
+            } else {
+                return unquoted;
+            }
+        } else if (expanded instanceof CharSequence) {
+            List<? extends CharSequence> list = generateFileNames((CharSequence) expanded);
+            List<CharSequence> unquoted = new ArrayList<>();
+            for (CharSequence o : list) {
+                unquoted.add(unquote(o));
+            }
+            if (unquoted.size() == 1) {
+                return unquoted.get(0);
+            }
+            return new ArgList(unquoted);
+        }
+        return expanded;
+    }
+
+    private CharSequence unquote(CharSequence arg) {
+        if (inQuote) {
+            return arg;
+        }
+        boolean hasEscape = false;
+        for (int i = 0; i < arg.length(); i++) {
+            int c = arg.charAt(i);
+            if (c == '\\' || c == '"' || c == '\'') {
+                hasEscape = true;
+                break;
+            }
+        }
+        if (!hasEscape) {
+            return arg;
+        }
+        boolean singleQuoted = false;
+        boolean doubleQuoted = false;
+        boolean escaped = false;
+        StringBuilder buf = new StringBuilder(arg.length());
+        for (int i = 0; i < arg.length(); i++) {
+            char c = arg.charAt(i);
+            if (doubleQuoted && escaped) {
+                if (c != '"' && c != '\\' && c != '$' && c != '%') {
+                    buf.append('\\');
+                }
+                buf.append(c);
+                escaped = false;
+            }
+            else if (escaped) {
+                buf.append(c);
+                escaped = false;
+            }
+            else if (singleQuoted) {
+                if (c == '\'') {
+                    singleQuoted = false;
+                } else {
+                    buf.append(c);
+                }
+            }
+            else if (doubleQuoted) {
+                if (c == '\\') {
+                    escaped = true;
+                }
+                else if (c == '\"') {
+                    doubleQuoted = false;
+                }
+                else {
+                    buf.append(c);
+                }
+            }
+            else if (c == '\\') {
+                escaped = true;
+            }
+            else if (c == '\'') {
+                singleQuoted = true;
+            }
+            else if (c == '"') {
+                doubleQuoted = true;
+            }
+            else {
+                buf.append(c);
+            }
+        }
+        return buf.toString();
+    }
+
+    protected List<? extends CharSequence> generateFileNames(CharSequence arg) throws IOException {
+        // Disable if currentDir is not set
+        Path currentDir = evaluate.currentDir();
+        if (currentDir == null) {
+            return Collections.singletonList(arg);
+        }
+        // Search for unquoted escapes
+        boolean hasUnescapedReserved = false;
+        boolean escaped = false;
+        boolean doubleQuoted = false;
+        boolean singleQuoted = false;
+        StringBuilder buf = new StringBuilder(arg.length());
+        String pfx = "";
+        for (int i = 0; i < arg.length(); i++) {
+            char c = arg.charAt(i);
+            if (doubleQuoted && escaped) {
+                if (c != '"' && c != '\\' && c != '$' && c != '%') {
+                    buf.append('\\');
+                }
+                buf.append(c);
+                escaped = false;
+            }
+            else if (escaped) {
+                buf.append(c);
+                escaped = false;
+            }
+            else if (singleQuoted) {
+                if (c == '\'') {
+                    singleQuoted = false;
+                } else {
+                    buf.append(c);
+                }
+            }
+            else if (doubleQuoted) {
+                if (c == '\\') {
+                    escaped = true;
+                }
+                else if (c == '\"') {
+                    doubleQuoted = false;
+                }
+                else {
+                    buf.append(c);
+                }
+            }
+            else if (c == '\\') {
+                escaped = true;
+            }
+            else if (c == '\'') {
+                singleQuoted = true;
+            }
+            else if (c == '"') {
+                doubleQuoted = true;
+            }
+            else {
+                if ("*(|<[?".indexOf(c) >= 0 && !hasUnescapedReserved) {
+                    hasUnescapedReserved = true;
+                    pfx = buf.toString();
+                }
+                buf.append(c);
+            }
+        }
+        if (!hasUnescapedReserved) {
+            return Collections.singletonList(arg);
+        }
+
+        String org = buf.toString();
+        List<String> expanded = new ArrayList<>();
+        Path dir;
+        String prefix;
+        if (pfx.indexOf('/') >= 0) {
+            pfx = pfx.substring(0, pfx.lastIndexOf('/'));
+            arg = org.substring(pfx.length() + 1);
+            dir = currentDir.resolve(pfx).normalize();
+            prefix = pfx + "/";
+        } else {
+            dir = currentDir;
+            prefix = "";
+        }
+        PathMatcher matcher = dir.getFileSystem().getPathMatcher("glob:" + arg);
+        Files.walkFileTree(dir,
+                EnumSet.of(FileVisitOption.FOLLOW_LINKS),
+                Integer.MAX_VALUE,
+                new FileVisitor<Path>() {
+                    @Override
+                    public FileVisitResult preVisitDirectory(Path file, BasicFileAttributes attrs) throws IOException {
+                        if (file.equals(dir)) {
+                            return FileVisitResult.CONTINUE;
+                        }
+                        if (Files.isHidden(file)) {
+                            return FileVisitResult.SKIP_SUBTREE;
+                        }
+                        Path r = dir.relativize(file);
+                        if (matcher.matches(r)) {
+                            expanded.add(prefix + r.toString());
+                        }
+                        return FileVisitResult.CONTINUE;
+                    }
+
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                        if (!Files.isHidden(file)) {
+                            Path r = dir.relativize(file);
+                            if (matcher.matches(r)) {
+                                expanded.add(prefix + r.toString());
+                            }
+                        }
+                        return FileVisitResult.CONTINUE;
+                    }
+
+                    @Override
+                    public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                        return FileVisitResult.CONTINUE;
+                    }
+
+                    @Override
+                    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
+        Collections.sort(expanded);
+        if (expanded.isEmpty()) {
+            throw new IOException("no matches found: " + org);
+        }
+        return expanded;
+    }
+
+
+    private Object doExpand() throws Exception
+    {
         final String special = "%$\\\"'";
         int i = text.length();
         while ((--i >= 0) && (special.indexOf(text.charAt(i)) == -1));
@@ -94,29 +339,34 @@ public class Expander extends BaseTokenizer
                     continue; // expandVar() has already read next char
 
                 case '$':
-                    Object val = expandVar();
-
-                    if (EOT == ch && buf.length() == 0)
-                    {
-                        return val;
+                    // Posix quote
+                    if (peek() == '\'') {
+                        getch();
+                        skipQuote();
+                        value = text.subSequence(start + 1, index - 1);
+                        getch();
+                        buf.append("\'");
+                        buf.append(ansiEscape(value));
+                        buf.append("\'");
                     }
-
-                    if (null != val)
-                    {
-                        buf.append(val);
+                    // Parameter expansion
+                    else {
+                        Object val = expandVar();
+                        if (EOT == ch && buf.length() == 0) {
+                            return val;
+                        }
+                        if (null != val) {
+                            buf.append(val);
+                        }
                     }
-
                     continue; // expandVar() has already read next char
 
                 case '\\':
-                    ch = (inQuote && ("u$\\\n\"".indexOf(peek()) == -1)) ? '\\'
-                            : escape();
-
-                    if (ch != '\0') // ignore line continuation
-                    {
+                    buf.append(ch);
+                    if (peek() != EOT) {
+                        getch();
                         buf.append(ch);
                     }
-
                     break;
 
                 case '"':
@@ -127,17 +377,20 @@ public class Expander extends BaseTokenizer
                     if (eot() && buf.length() == 0)
                     {
                         if (expand instanceof ArgList) {
-                            return new ArgList((ArgList) expand).stream().map(String::valueOf).collect(Collectors.toList());
+                            return new ArgList((ArgList) expand).stream()
+                                    .map(String::valueOf)
+                                    .map(s -> "\"" + s + "\"").collect(Collectors.toList());
                         } else if (expand instanceof Collection) {
-                            return ((Collection) expand).stream().map(String::valueOf).collect(Collectors.joining(" "));
+                            return ((Collection) expand).stream().map(String::valueOf).collect(Collectors.joining(" ", "\"", "\""));
                         } else if (expand != null) {
-                            return expand.toString();
+                            return "\"" + expand.toString() + "\"";
                         } else {
                             return "";
                         }
                     }
                     if (expand instanceof Collection) {
                         boolean first = true;
+                        buf.append("\"");
                         for (Object o : ((Collection) expand)) {
                             if (!first) {
                                 buf.append(" ");
@@ -145,9 +398,12 @@ public class Expander extends BaseTokenizer
                             first = false;
                             buf.append(o);
                         }
+                        buf.append("\"");
                     }
                     else if (expand != null) {
+                        buf.append("\"");
                         buf.append(expand.toString());
+                        buf.append("\"");
                     }
                     continue; // has already read next char
 
@@ -155,11 +411,11 @@ public class Expander extends BaseTokenizer
                     if (!inQuote)
                     {
                         skipQuote();
-                        value = text.subSequence(start, index - 1);
+                        value = text.subSequence(start - 1, index);
 
                         if (eot() && buf.length() == 0)
                         {
-                            return value.toString();
+                            return value;
                         }
 
                         buf.append(value);
@@ -174,6 +430,78 @@ public class Expander extends BaseTokenizer
         }
 
         return buf.toString();
+    }
+
+    private CharSequence ansiEscape(CharSequence arg) {
+        StringBuilder buf = new StringBuilder(arg.length());
+        for (int i = 0; i < arg.length(); i++) {
+            int c = arg.charAt(i);
+            int ch;
+            if (c == '\\') {
+                c = i < arg.length() - 1 ? arg.charAt(++i) : '\\';
+                switch (c) {
+                    case 'a':
+                        buf.append('\u0007');
+                        break;
+                    case 'n':
+                        buf.append('\n');
+                        break;
+                    case 't':
+                        buf.append('\t');
+                        break;
+                    case 'r':
+                        buf.append('\r');
+                        break;
+                    case '\\':
+                        buf.append('\\');
+                        break;
+                    case '0':
+                    case '1':
+                    case '2':
+                    case '3':
+                    case '4':
+                    case '5':
+                    case '6':
+                    case '7':
+                    case '8':
+                    case '9':
+                        ch = 0;
+                        for (int j = 0; j < 3; j++) {
+                            c = i < arg.length() - 1 ? arg.charAt(++i) : -1;
+                            if (c >= 0) {
+                                ch = ch * 8 + (c - '0');
+                            }
+                        }
+                        buf.append((char) ch);
+                        break;
+                    case 'u':
+                        ch = 0;
+                        for (int j = 0; j < 4; j++) {
+                            c = i < arg.length() - 1 ? arg.charAt(++i) : -1;
+                            if (c >= 0) {
+                                if (c >= 'A' && c <= 'F') {
+                                    ch = ch * 16 + (c - 'A' + 10);
+                                } else if (c >= 'a' && c <= 'f') {
+                                    ch = ch * 16 + (c - 'a' + 10);
+                                } else if (c >= '0' && c <= '9') {
+                                    ch = ch * 16 + (c - '0');
+                                } else {
+                                    i--;
+                                    break;
+                                }
+                            }
+                        }
+                        buf.append((char) ch);
+                        break;
+                    default:
+                        buf.append((char) c);
+                        break;
+                }
+            } else {
+                buf.append((char) c);
+            }
+        }
+        return buf;
     }
 
     private Object expandExp()
@@ -524,7 +852,7 @@ public class Expander extends BaseTokenizer
                             val = ((List) val).get(Integer.parseInt(left.toString()));
                         }
                     }
-                    else {
+                    else if (val != null) {
                         if (left.toString().equals("@")) {
                             val = val.toString();
                         } else {
