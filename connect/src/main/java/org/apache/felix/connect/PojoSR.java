@@ -82,7 +82,8 @@ public class PojoSR implements PojoServiceRegistry
     private final EventDispatcher m_dispatcher = new EventDispatcher(m_registry);
     private final Map<Long, Bundle> m_bundles = new HashMap<Long, Bundle>();
     private final Map<String, Object> bundleConfig;
-
+    private final boolean m_hasVFS;
+    
     public static BundleDescriptor createSystemBundle() {
         final Map<String, String> headers = new HashMap<String, String>();
         headers.put(Constants.BUNDLE_SYMBOLICNAME, "org.apache.felix.connect");
@@ -241,6 +242,15 @@ public class PojoSR implements PojoServiceRegistry
         b.getBundleContext().registerService(PackageAdmin.class.getName(), new PackageAdminImpl(), null);
         m_context = b.getBundleContext();
 
+        boolean hasVFS;
+        try
+        {
+            hasVFS = org.jboss.vfs.VFS.class != null;
+        } catch (Throwable t) {
+            hasVFS = false;
+        }
+        m_hasVFS = hasVFS;
+        
         Collection<BundleDescriptor> scan = (Collection<BundleDescriptor>) config.get(PojoServiceRegistryFactory.BUNDLE_DESCRIPTORS);
 
         if (scan != null)
@@ -317,7 +327,8 @@ public class PojoSR implements PojoServiceRegistry
         Revision r;
         URL url = new URL(desc.getUrl());
         URL u = new URL(desc.getUrl() + "META-INF/MANIFEST.MF");
-        if (u.toExternalForm().startsWith("file:"))
+        String extF = u.toExternalForm(); 
+        if (extF.startsWith("file:"))
         {
             File root = new File(URLDecoder.decode(url.getFile(), "UTF-8"));
             r = new DirRevision(root);
@@ -338,6 +349,10 @@ public class PojoSR implements PojoServiceRegistry
                         ((JarURLConnection) uc).getJarFileURL(),
                         prefix,
                         uc.getLastModified());
+            }
+            else if (m_hasVFS && extF.startsWith("vfs")) 
+            {
+                r = new VFSRevision(url, url.openConnection().getLastModified());
             }
             else
             {
