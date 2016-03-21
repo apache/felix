@@ -77,6 +77,8 @@ import org.jline.utils.AttributedStyle;
 public class Posix {
     static final String[] functions = {"cat", "echo", "grep", "sort", "sleep", "cd", "pwd", "ls"};
 
+    public static final String DEFAULT_LS_COLORS = "dr=1;91:ex=1;92:sl=1;96:ot=34;43";
+
     public void _main(CommandSession session, String[] argv) {
         if (argv == null || argv.length < 1) {
             throw new IllegalArgumentException();
@@ -227,7 +229,7 @@ public class Posix {
                 "  -h                       print sizes in human readable form"
         };
         Options opt = parseOptions(session, usage, argv);
-        Map<String, String> colors = getColorMap(session, "LS", "dr=34:ex=31:sl=35:ot=34;43");
+        Map<String, String> colors = getColorMap(session, "LS");
 
         class PathEntry implements Comparable<PathEntry> {
             final Path abs;
@@ -280,13 +282,7 @@ public class Posix {
                 String type;
                 String suffix;
                 String link = "";
-                if (is("isDirectory")) {
-                    type = "dr";
-                    suffix = "/";
-                } else if (is("isExecutable")) {
-                    type = "ex";
-                    suffix = "*";
-                } else if (is("isSymbolicLink")) {
+                if (is("isSymbolicLink")) {
                     type = "sl";
                     suffix = "@";
                     try {
@@ -295,9 +291,12 @@ public class Posix {
                     } catch (IOException e) {
                         // ignore
                     }
-                } else if (is("isRegularFile")) {
-                    type = "rg";
-                    suffix = "";
+                } else if (is("isDirectory")) {
+                    type = "dr";
+                    suffix = "/";
+                } else if (is("isExecutable")) {
+                    type = "ex";
+                    suffix = "*";
                 } else if (is("isOther")) {
                     type = "ot";
                     suffix = "";
@@ -511,7 +510,7 @@ public class Posix {
                 }
                 sb.append('\n');
             }
-            out.print(sb.toAnsi());
+            out.print(sb.toAnsi(terminal));
         }
     }
 
@@ -1085,11 +1084,15 @@ public class Posix {
         return params.toArray(new String[params.size()]);
     }
 
-    private Map<String, String> getColorMap(CommandSession session, String name, String def) {
+    public static Map<String, String> getColorMap(CommandSession session, String name) {
         Object obj = session.get(name + "_COLORS");
         String str = obj != null ? obj.toString() : null;
         if (str == null || !str.matches("[a-z]{2}=[0-9]+(;[0-9]+)*(:[a-z]{2}=[0-9]+(;[0-9]+)*)*")) {
-            str = def;
+            if ("LS".equals(name)) {
+                str = DEFAULT_LS_COLORS;
+            } else {
+                str = "";
+            }
         }
         return Arrays.stream(str.split(":"))
                 .collect(Collectors.toMap(s -> s.substring(0, s.indexOf('=')),

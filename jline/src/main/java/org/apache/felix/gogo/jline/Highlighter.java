@@ -216,10 +216,10 @@ public class Highlighter extends DefaultHighlighter {
                             sb.style(sb.style().foreground(AttributedStyle.CYAN));
                             break;
                         case Function:
-                            sb.style(sb.style().foreground(AttributedStyle.BLUE));
+                            sb.style(sb.style().foreground(AttributedStyle.BLUE + AttributedStyle.BRIGHT));
                             break;
                         case BadFunction:
-                            sb.style(sb.style().foreground(AttributedStyle.RED));
+                            sb.style(sb.style().foreground(AttributedStyle.RED + AttributedStyle.BRIGHT));
                             break;
                         case Repair:
                             sb.style(sb.style().foreground(AttributedStyle.BLACK + AttributedStyle.BRIGHT));
