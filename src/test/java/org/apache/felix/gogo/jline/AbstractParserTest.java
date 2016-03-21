@@ -24,7 +24,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
-import junit.framework.TestCase;
 import org.apache.felix.gogo.runtime.threadio.ThreadIOImpl;
 import org.junit.After;
 import org.junit.Before;
