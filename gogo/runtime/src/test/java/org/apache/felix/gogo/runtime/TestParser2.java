@@ -20,12 +20,19 @@ package org.apache.felix.gogo.runtime;
 
 import java.io.EOFException;
 
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 /*
  * Test features of the new parser/tokenizer, many of which are not supported
  * by the original parser.
  */
 public class TestParser2 extends AbstractParserTest
 {
+    @Test
     public void testComment() throws Exception
     {
         Context c = new Context();
@@ -55,6 +62,7 @@ public class TestParser2 extends AbstractParserTest
 //CHANGE        assertEquals("ok", c.execute("x = {// can't quote\necho ok\n}; x"));
     }
 
+    @Test
     public void testCoercion() throws Exception
     {
         Context c = new Context();
@@ -63,6 +71,7 @@ public class TestParser2 extends AbstractParserTest
         assertEquals("null x", c.execute("echo $expandsToNull x"));
     }
 
+    @Test
     public void testStringExecution() throws Exception
     {
         Context c = new Context();

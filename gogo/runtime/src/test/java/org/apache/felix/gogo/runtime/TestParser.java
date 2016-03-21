@@ -33,11 +33,17 @@ import org.apache.felix.gogo.runtime.Parser.Sequence;
 import org.apache.felix.gogo.runtime.Parser.Statement;
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Function;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 public class TestParser extends AbstractParserTest
 {
     int beentheredonethat = 0;
 
+    @Test
     public void testEvaluatation() throws Exception
     {
         Context c = new Context();
@@ -49,6 +55,7 @@ public class TestParser extends AbstractParserTest
         assertEquals("a", c.execute("((echo a)) | capture"));
     }
 
+    @Test
     public void testUnknownCommand() throws Exception
     {
         Context c = new Context();
@@ -63,6 +70,7 @@ public class TestParser extends AbstractParserTest
         }
     }
 
+    @Test
     public void testSpecialValues() throws Exception
     {
         Context c = new Context();
@@ -71,6 +79,7 @@ public class TestParser extends AbstractParserTest
         assertEquals(null, c.execute("null"));
     }
 
+    @Test
     public void testQuotes() throws Exception
     {
         Context c = new Context();
@@ -97,6 +106,7 @@ public class TestParser extends AbstractParserTest
         assertEquals("a  b ", c.execute("echo \"$d\""));
     }
 
+    @Test
     public void testScope() throws Exception
     {
         Context c = new Context();
@@ -105,6 +115,7 @@ public class TestParser extends AbstractParserTest
         assertEquals("file://poo", c.execute("test:echo file://poo"));
     }
 
+    @Test
     public void testPipe() throws Exception
     {
         Context c = new Context();
@@ -126,6 +137,7 @@ public class TestParser extends AbstractParserTest
         assertEquals("defghi", c.execute("(echoout abc; echoout def; echoout ghi)|grep 'def|ghi'|capture"));
     }
 
+    @Test
     public void testAssignment() throws Exception
     {
         Context c = new Context();
@@ -141,6 +153,7 @@ public class TestParser extends AbstractParserTest
         assertEquals("a", c.execute("a = a; echo ${$a}"));
     }
 
+    @Test
     public void testComment() throws Exception
     {
         Context c = new Context();
@@ -148,6 +161,7 @@ public class TestParser extends AbstractParserTest
         assertEquals("1", c.execute("echo 1 // hello"));
     }
 
+    @Test
     public void testClosure() throws Exception
     {
         Context c = new Context();
@@ -162,6 +176,7 @@ public class TestParser extends AbstractParserTest
         assertEquals("ca  b", c.execute("e = { echo c$args } ; e 'a  b'"));
     }
 
+    @Test
     public void testArray() throws Exception
     {
         Context c = new Context();
@@ -174,6 +189,7 @@ public class TestParser extends AbstractParserTest
         assertEquals(5, c.execute("[1 2 [3 4] 5 6] size"));
     }
 
+    @Test
     public void testParentheses()
     {
         Parser parser = new Parser("(a|b)|(d|f)");
@@ -185,6 +201,7 @@ public class TestParser extends AbstractParserTest
         assertEquals("d.*", ((Sequence)((Statement) ((Pipeline) p.tokens().get(0)).tokens().get(0)).tokens().get(1)).program().toString());
     }
 
+    @Test
     public void testEcho() throws Exception
     {
         Context c = new Context();
@@ -220,6 +237,7 @@ public class TestParser extends AbstractParserTest
         return sw.toString();
     }
 
+    @Test
     public void testVars() throws Exception
     {
         Context c = new Context();
@@ -230,6 +248,7 @@ public class TestParser extends AbstractParserTest
         assertEquals("a", c.execute("a = a; echo ${a}"));
     }
 
+    @Test
     public void testFunny() throws Exception
     {
         Context c = new Context();
@@ -265,6 +284,7 @@ public class TestParser extends AbstractParserTest
         System.out.println(echo(args));
     }
 
+    @Test
     public void testContext() throws Exception
     {
         Context c = new Context();
@@ -311,6 +331,7 @@ public class TestParser extends AbstractParserTest
         System.out.println("]");
     }
 
+    @Test
     public void testProgram()
     {
         Program x = new Parser("abc def|ghi jkl;mno pqr|stu vwx").program();
@@ -333,6 +354,7 @@ public class TestParser extends AbstractParserTest
         assertEquals("vwx", s11.tokens().get(1).toString());
     }
 
+    @Test
     public void testStatements()
     {
         Program x = new Parser("abc def|ghi jkl|mno pqr").program();
@@ -348,6 +370,7 @@ public class TestParser extends AbstractParserTest
         assertEquals("pqr", s02.tokens().get(1).toString());
     }
 
+    @Test
     public void testPipeRedir()
     {
         Program x = new Parser("abc def|&ghi").program();
@@ -360,6 +383,7 @@ public class TestParser extends AbstractParserTest
         assertEquals("ghi", s01.tokens().get(0).toString());
     }
 
+    @Test
     public void testPipeAndOr()
     {
         Program x = new Parser("abc|def&&ghi || jkl").program();
@@ -377,6 +401,7 @@ public class TestParser extends AbstractParserTest
         assertEquals("jkl", s2.tokens().get(0).toString());
     }
 
+    @Test
     public void testBackground() {
         Program x = new Parser("echo foo&echo bar").program();
         Statement s0 = (Statement) x.tokens().get(0);
@@ -388,6 +413,7 @@ public class TestParser extends AbstractParserTest
         assertEquals("bar", s1.tokens().get(1).toString());
     }
 
+    @Test
     public void testRedir() {
         Program x = new Parser("echo foo&>bar").program();
         Statement s0 = (Statement) x.tokens().get(0);
@@ -411,6 +437,7 @@ public class TestParser extends AbstractParserTest
         assertEquals("bar", s0.redirections().get(1).toString());
     }
 
+    @Test
     public void testSimpleValue()
     {
         Program p = new Parser(
