@@ -26,7 +26,7 @@ import java.util.List;
 import org.apache.felix.gogo.api.Job;
 import org.apache.felix.gogo.api.JobListener;
 
-public interface CommandSession
+public interface CommandSession extends AutoCloseable
 {
     Path currentDir();
 
