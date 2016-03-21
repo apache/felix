@@ -1091,7 +1091,6 @@ public class Expander extends BaseTokenizer
                 val = asCollection(val).stream()
                         .map(String::valueOf)
                         .flatMap(s -> Arrays.stream(s.split(_flags)))
-                        .filter(s -> !s.isEmpty())
                         .collect(Collectors.toList());
             }
 
@@ -1154,6 +1153,13 @@ public class Expander extends BaseTokenizer
                     }
                     val = list;
                 }
+            }
+
+            // Empty argument removal
+            if (val instanceof Collection) {
+                val = asCollection(val).stream()
+                        .filter(o -> !(o instanceof CharSequence) || ((CharSequence) o).length() > 0)
+                        .collect(Collectors.toList());
             }
 
             if (inQuote) {
