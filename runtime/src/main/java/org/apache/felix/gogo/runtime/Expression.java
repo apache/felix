@@ -36,6 +36,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.stream.Collectors;
 
 /**
  * Enhanced to provide assignment operators and variables from a map, comparison operators, string operations and more.
@@ -220,17 +221,17 @@ public class Expression {
     /**
      * All defined operators with name and implementation.
      */
-    private Map<String, Operator> operators = new HashMap<String, Expression.Operator>();
+    private Map<String, Operator> operators = new HashMap<>();
 
     /**
      * All defined functions with name and implementation.
      */
-    private Map<String, Function> functions = new HashMap<String, Expression.Function>();
+    private Map<String, Function> functions = new HashMap<>();
 
     /**
      * All defined variables with name and value.
      */
-    private Map<String, Object> constants = new HashMap<String, Object>();
+    private Map<String, Object> constants = new HashMap<>();
 
     /**
      * What character to use for decimal separators.
@@ -335,10 +336,9 @@ public class Expression {
         }
 
         public BigDecimal eval(Map<String, Object> variables, List<Object> parameters) {
-            List<BigDecimal> numericParameters = new ArrayList<BigDecimal>(parameters.size());
-            for (Object o : parameters) {
-                numericParameters.add(toBigDecimal(variables, o));
-            }
+            List<BigDecimal> numericParameters = parameters.stream()
+                    .map(o -> toBigDecimal(variables, o))
+                    .collect(Collectors.toList());
             return eval(numericParameters);
         }
 
@@ -1060,8 +1060,8 @@ public class Expression {
      *         member.
      */
     private List<Token> shuntingYard(String expression) {
-        List<Token> outputQueue = new ArrayList<Token>();
-        Stack<Token> stack = new Stack<Token>();
+        List<Token> outputQueue = new ArrayList<>();
+        Stack<Token> stack = new Stack<>();
 
         Tokenizer tokenizer = new Tokenizer(expression);
 
@@ -1145,7 +1145,7 @@ public class Expression {
      * @return The result of the expression.
      */
     public Object eval() {
-        return eval(new HashMap<String, Object>());
+        return eval(new HashMap<>());
     }
 
     /**
@@ -1155,7 +1155,7 @@ public class Expression {
      */
     public Object eval(Map<String, Object> variables) {
 
-        Stack<Object> stack = new Stack<Object>();
+        Stack<Object> stack = new Stack<>();
 
         for (Token token : getRPN()) {
             if (token instanceof Operator) {
@@ -1167,7 +1167,7 @@ public class Expression {
                 stack.push(((Constant) token).getValue());
             } else if (token instanceof Function) {
                 Function f = (Function) token;
-                List<Object> p = new ArrayList<Object>(f.getNumParams());
+                List<Object> p = new ArrayList<>(f.getNumParams());
                 for (int i = 0; i < f.numParams; i++) {
                     p.add(0, stack.pop());
                 }

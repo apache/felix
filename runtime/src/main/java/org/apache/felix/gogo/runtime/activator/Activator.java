@@ -78,8 +78,7 @@ public class Activator implements BundleActivator
     {
         threadio = new ThreadIOImpl();
         threadio.start();
-        threadioRegistration = context.registerService(ThreadIO.class.getName(),
-            threadio, null);
+        threadioRegistration = context.registerService(ThreadIO.class.getName(), threadio, null);
 
         processorRegistration = newProcessor(threadio, context);
         
@@ -108,14 +107,16 @@ public class Activator implements BundleActivator
         listenerTracker = new ServiceTracker(context, CommandSessionListener.class.getName(), null)
         {
             @Override
-            public Object addingService(ServiceReference reference) {
+            public Object addingService(ServiceReference reference)
+            {
                 CommandSessionListener listener = (CommandSessionListener) super.addingService(reference);
                 processor.addListener(listener);
                 return listener;
             }
 
             @Override
-            public void removedService(ServiceReference reference, Object service) {
+            public void removedService(ServiceReference reference, Object service)
+            {
                 processor.removeListener((CommandSessionListener) service);
                 super.removedService(reference, service);
             }
@@ -143,7 +144,7 @@ public class Activator implements BundleActivator
         return new ServiceTracker(context, filter, null)
         {
             private final ConcurrentMap<ServiceReference, Map<String, CommandProxy>> proxies
-                    = new ConcurrentHashMap<ServiceReference, Map<String, CommandProxy>>();
+                    = new ConcurrentHashMap<>();
 
             @Override
             public Object addingService(ServiceReference reference)
@@ -151,7 +152,7 @@ public class Activator implements BundleActivator
                 Object scope = reference.getProperty(CommandProcessor.COMMAND_SCOPE);
                 Object function = reference.getProperty(CommandProcessor.COMMAND_FUNCTION);
                 Object ranking = reference.getProperty(Constants.SERVICE_RANKING);
-                List<Object> commands = new ArrayList<Object>();
+                List<Object> commands = new ArrayList<>();
 
                 int rank = 0;
                 if (ranking != null)
@@ -167,7 +168,7 @@ public class Activator implements BundleActivator
                 }
                 if (scope != null && function != null)
                 {
-                    Map<String, CommandProxy> proxyMap = new HashMap<String, CommandProxy>();
+                    Map<String, CommandProxy> proxyMap = new HashMap<>();
                     if (function.getClass().isArray())
                     {
                         for (Object f : ((Object[]) function))

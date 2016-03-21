@@ -26,7 +26,8 @@ import org.apache.felix.gogo.api.Job.Status;
  * Such listeners must be registered in the OSGi registry and will be called
  * by the CommandProcessor when a command line is executed in a given session.
  */
-public interface JobListener {
+public interface JobListener
+{
 
     void jobChanged(Job job, Status previous, Status current);
 

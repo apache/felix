@@ -132,11 +132,13 @@ public class CommandSessionImpl implements CommandSession, Converter
         return variables;
     }
 
-    public Path currentDir() {
+    public Path currentDir()
+    {
         return currentDir;
     }
 
-    public void currentDir(Path path) {
+    public void currentDir(Path path)
+    {
         currentDir = path;
     }
 
@@ -492,20 +494,25 @@ public class CommandSessionImpl implements CommandSession, Converter
     }
 
     @Override
-    public List<Job> jobs() {
-        synchronized (jobs) {
+    public List<Job> jobs()
+    {
+        synchronized (jobs)
+        {
             return Collections.unmodifiableList(jobs);
         }
     }
 
-    public static JobImpl currentJob() {
+    public static JobImpl currentJob()
+    {
         return (JobImpl) Job.current();
     }
 
     @Override
-    public JobImpl foregroundJob() {
+    public JobImpl foregroundJob()
+    {
         List<JobImpl> jobs;
-        synchronized (this.jobs) {
+        synchronized (this.jobs)
+        {
             jobs = new ArrayList<>(this.jobs);
         }
         return jobs.stream()
@@ -515,38 +522,49 @@ public class CommandSessionImpl implements CommandSession, Converter
     }
 
     @Override
-    public void setJobListener(JobListener listener) {
-        synchronized (jobs) {
+    public void setJobListener(JobListener listener)
+    {
+        synchronized (jobs)
+        {
             jobListener = listener;
         }
     }
 
-    public JobImpl createJob(CharSequence command) {
-        synchronized (jobs) {
+    public JobImpl createJob(CharSequence command)
+    {
+        synchronized (jobs)
+        {
             int id = 1;
+
             synchronized (jobs) {
                 boolean found;
-                do {
+                do
+                {
                     found = false;
-                    for (Job job : jobs) {
-                        if (job.id() == id) {
+                    for (Job job : jobs)
+                    {
+                        if (job.id() == id)
+                        {
                             found = true;
                             id++;
                             break;
                         }
                     }
-                } while (found);
+                }
+                while (found);
             }
             JobImpl cur = currentJob();
             JobImpl job = new JobImpl(id, cur, command);
-            if (cur == null) {
+            if (cur == null)
+            {
                 jobs.add(job);
             }
             return job;
         }
     }
 
-    class JobImpl implements Job {
+    class JobImpl implements Job
+    {
         private final int id;
         private final JobImpl parent;
         private final CharSequence command;
@@ -555,129 +573,163 @@ public class CommandSessionImpl implements CommandSession, Converter
         private Future<?> future;
         private Result result;
 
-        public JobImpl(int id, JobImpl parent, CharSequence command) {
+        public JobImpl(int id, JobImpl parent, CharSequence command)
+        {
             this.id = id;
             this.parent = parent;
             this.command = command;
         }
 
-        void addPipe(Pipe pipe) {
+        void addPipe(Pipe pipe)
+        {
             pipes.add(pipe);
         }
 
         @Override
-        public int id() {
+        public int id()
+        {
             return id;
         }
 
-        public CharSequence command() {
+        public CharSequence command()
+        {
             return command;
         }
 
         @Override
-        public synchronized Status status() {
+        public synchronized Status status()
+        {
             return status;
         }
 
         @Override
-        public synchronized void suspend() {
-            if (status == Status.Done) {
+        public synchronized void suspend()
+        {
+            if (status == Status.Done)
+            {
                 throw new IllegalStateException("Job is finished");
             }
-            if (status != Status.Suspended) {
+            if (status != Status.Suspended)
+            {
                 setStatus(Status.Suspended);
             }
         }
 
         @Override
-        public synchronized void background() {
-            if (status == Status.Done) {
+        public synchronized void background()
+        {
+            if (status == Status.Done)
+            {
                 throw new IllegalStateException("Job is finished");
             }
-            if (status != Status.Background) {
+            if (status != Status.Background)
+            {
                 setStatus(Status.Background);
             }
         }
 
         @Override
-        public synchronized void foreground() {
-            if (status == Status.Done) {
+        public synchronized void foreground()
+        {
+            if (status == Status.Done)
+            {
                 throw new IllegalStateException("Job is finished");
             }
             JobImpl cr = CommandSessionImpl.currentJob();
             JobImpl fg = foregroundJob();
-            if (parent == null && fg != null && fg != this && fg != cr) {
+            if (parent == null && fg != null && fg != this && fg != cr)
+            {
                 throw new IllegalStateException("A job is already in foreground");
             }
-            if (status != Status.Foreground) {
+            if (status != Status.Foreground)
+            {
                 setStatus(Status.Foreground);
             }
         }
 
         @Override
-        public void interrupt() {
+        public void interrupt()
+        {
             Future future;
-            synchronized (this) {
+            synchronized (this)
+            {
                 future = this.future;
             }
-            if (future != null) {
+            if (future != null)
+            {
                 future.cancel(true);
             }
         }
 
-        protected synchronized void done() {
-            if (status == Status.Done) {
+        protected synchronized void done()
+        {
+            if (status == Status.Done)
+            {
                 throw new IllegalStateException("Job is finished");
             }
             setStatus(Status.Done);
         }
 
-        private void setStatus(Status newStatus) {
+        private void setStatus(Status newStatus)
+        {
             setStatus(newStatus, true);
         }
 
-        private void setStatus(Status newStatus, boolean callListeners) {
+        private void setStatus(Status newStatus, boolean callListeners)
+        {
             Status previous;
-            synchronized (this) {
+            synchronized (this)
+            {
                 previous = this.status;
                 status = newStatus;
             }
-            if (callListeners) {
+            if (callListeners)
+            {
                 JobListener listener;
-                synchronized (jobs) {
+                synchronized (jobs)
+                {
                     listener = jobListener;
-                    if (newStatus == Status.Done) {
+                    if (newStatus == Status.Done)
+                    {
                         jobs.remove(this);
                     }
                 }
-                if (listener != null) {
+                if (listener != null)
+                {
                     listener.jobChanged(this, previous, newStatus);
                 }
             }
-            synchronized (this) {
+            synchronized (this)
+            {
                 JobImpl.this.notifyAll();
             }
         }
 
         @Override
-        public synchronized Result result() {
+        public synchronized Result result()
+        {
             return result;
         }
 
         @Override
-        public Job parent() {
+        public Job parent()
+        {
             return parent;
         }
 
         @Override
-        public synchronized Result start(Status status) throws InterruptedException {
-            if (status == Status.Created || status == Status.Done) {
+        public synchronized Result start(Status status) throws InterruptedException
+        {
+            if (status == Status.Created || status == Status.Done)
+            {
                 throw new IllegalArgumentException("Illegal start status");
             }
-            if (this.status != Status.Created) {
+            if (this.status != Status.Created)
+            {
                 throw new IllegalStateException("Job already started");
             }
-            switch (status) {
+            switch (status)
+            {
                 case Suspended:
                     suspend();
                     break;
@@ -689,25 +741,30 @@ public class CommandSessionImpl implements CommandSession, Converter
                     break;
             }
             future = executor.submit(this::call);
-            while (this.status == Status.Foreground) {
+            while (this.status == Status.Foreground)
+            {
                 JobImpl.this.wait();
             }
             return result;
         }
 
-        public List<Process> processes() {
+        public List<Process> processes()
+        {
             return Collections.unmodifiableList(pipes);
         }
 
         @Override
-        public CommandSession session() {
+        public CommandSession session()
+        {
             return CommandSessionImpl.this;
         }
 
-        private Void call() throws Exception {
+        private Void call() throws Exception
+        {
             Thread thread = Thread.currentThread();
             String name = thread.getName();
-            try {
+            try
+            {
                 thread.setName("job controller " + id);
 
                 List<Callable<Result>> wrapped = pipes.stream().collect(Collectors.toList());
@@ -715,17 +772,23 @@ public class CommandSessionImpl implements CommandSession, Converter
 
                 // Get pipe exceptions
                 Exception pipeException = null;
-                for (int i = 0; i < results.size() - 1; i++) {
+                for (int i = 0; i < results.size() - 1; i++)
+                {
                     Future<Result> future = results.get(i);
                     Throwable e;
-                    try {
+                    try
+                    {
                         Result r = future.get();
                         e = r.exception;
-                    } catch (ExecutionException ee) {
+                    }
+                    catch (ExecutionException ee)
+                    {
                         e = ee.getCause();
                     }
-                    if (e != null) {
-                        if (pipeException == null) {
+                    if (e != null)
+                    {
+                        if (pipeException == null)
+                        {
                             pipeException = new Exception("Exception caught during pipe execution");
                         }
                         pipeException.addSuppressed(e);
@@ -734,7 +797,9 @@ public class CommandSessionImpl implements CommandSession, Converter
                 put(Closure.PIPE_EXCEPTION, pipeException);
 
                 result = results.get(results.size() - 1).get();
-            } finally {
+            }
+            finally
+            {
                 done();
                 thread.setName(name);
             }

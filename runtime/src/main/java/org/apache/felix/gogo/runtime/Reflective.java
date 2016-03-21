@@ -37,7 +37,7 @@ public final class Reflective
 {
     public final static Object NO_MATCH = new Object();
     public final static String MAIN = "_main";
-    public final static Set<String> KEYWORDS = new HashSet<String>(
+    public final static Set<String> KEYWORDS = new HashSet<>(
         Arrays.asList(new String[] { "abstract", "continue", "for", "new", "switch",
                 "assert", "default", "goto", "package", "synchronized", "boolean", "do",
                 "if", "private", "this", "break", "double", "implements", "protected",
@@ -50,10 +50,6 @@ public final class Reflective
     /**
      * invokes the named method on the given target using the supplied args,
      * which are converted if necessary.
-     * @param session
-     * @param target
-     * @param name
-     * @param args
      * @return the result of the invoked method
      * @throws Exception
      */
@@ -91,7 +87,7 @@ public final class Reflective
         Method bestMethod = null;
         Object[] bestArgs = null;
         int lowestMatch = Integer.MAX_VALUE;
-        ArrayList<Class<?>[]> possibleTypes = new ArrayList<Class<?>[]>();
+        ArrayList<Class<?>[]> possibleTypes = new ArrayList<>();
 
         for (Method m : methods)
         {
@@ -100,7 +96,7 @@ public final class Reflective
                 || mname.equals(is) || mname.equals(MAIN))
             {
                 Class<?>[] types = m.getParameterTypes();
-                ArrayList<Object> xargs = new ArrayList<Object>(args);
+                ArrayList<Object> xargs = new ArrayList<>(args);
 
                 // pass command name as argv[0] to main, so it can handle
                 // multiple commands
@@ -151,7 +147,7 @@ public final class Reflective
         }
         else
         {
-            ArrayList<String> list = new ArrayList<String>();
+            ArrayList<String> list = new ArrayList<>();
             for (Class<?>[] types : possibleTypes)
             {
                 StringBuilder buf = new StringBuilder();
@@ -187,15 +183,13 @@ public final class Reflective
      * transform name/value parameters into ordered argument list.
      * params: --param2, value2, --flag1, arg3
      * args: true, value2, arg3
-     * @param method
-     * @param params
      * @return new ordered list of args.
      */
     private static List<Object> transformParameters(Method method, List<Object> in)
     {
         Annotation[][] pas = method.getParameterAnnotations();
-        ArrayList<Object> out = new ArrayList<Object>();
-        ArrayList<Object> parms = new ArrayList<Object>(in);
+        ArrayList<Object> out = new ArrayList<>();
+        ArrayList<Object> parms = new ArrayList<>(in);
 
         for (Annotation as[] : pas)
         {
@@ -244,14 +238,8 @@ public final class Reflective
      * the arguments of the method call. First, an attempt is made to convert
      * each argument. If this fails, a check is made to see if varargs can be
      * applied. This happens when the last method argument is an array.
-     *
-     * @param session
-     * @param target
-     * @param m
-     * @param types
-     * @param out
-     * @param in
-     * @return -1 if arguments can't be coerced; 0 if no coercion was necessary; > 0 if coercion was needed.
+     * @return -1 if arguments can't be coerced; 0 if no coercion was necessary;
+     *          > 0 if coercion was needed.
      */
     private static int coerce(CommandSession session, Object target, Method m,
         Class<?> types[], Object out[], List<Object> in)
@@ -342,9 +330,6 @@ public final class Reflective
 
     /**
      * converts given argument to specified type and increments convert[0] if any conversion was needed.
-     * @param session
-     * @param type
-     * @param arg
      * @param convert convert[0] is incremented according to the conversion needed,
      * to allow the "best" conversion to be determined.
      * @return converted arg or NO_MATCH if no conversion possible.
@@ -441,7 +426,7 @@ public final class Reflective
             StringBuilder sb = new StringBuilder();
             sb.append("[");
             boolean first = true;
-            for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) arg).entrySet())
+            for (Map.Entry<?,?> entry : ((Map<?,?>) arg).entrySet())
             {
                 if (!first) {
                     sb.append(" ");

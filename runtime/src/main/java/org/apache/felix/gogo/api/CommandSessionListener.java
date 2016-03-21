@@ -26,7 +26,8 @@ import org.apache.felix.service.command.CommandSession;
  * Such listeners must be registered in the OSGi registry and will be called
  * by the CommandProcessor when a command line is executed in a given session.
  */
-public interface CommandSessionListener {
+public interface CommandSessionListener
+{
 
     void beforeExecute(CommandSession session, CharSequence command);
 
