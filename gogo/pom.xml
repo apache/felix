@@ -40,6 +40,7 @@
     <modules>
     	<module>gogo-parent</module>
         <module>runtime</module>
+        <module>jline</module>
         <module>shell</module>
         <module>command</module>
     </modules>
