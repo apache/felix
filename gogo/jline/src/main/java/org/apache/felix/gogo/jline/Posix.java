@@ -1015,6 +1015,8 @@ public class Posix {
                 "ls - list files",
                 "Usage: ls [OPTIONS] [PATTERNS...]",
                 "  -? --help                show help",
+                "  -1                       list one entry per line",
+                "  -C                       multi-column output",
                 "  -a                       list entries starting with .",
                 "  -F                       append file type indicators",
                 "  -m                       comma separated",
@@ -1105,7 +1107,7 @@ public class Posix {
                 }
                 String col = colors.get(type);
                 boolean addSuffix = opt.isSet("F");
-                if (col != null && !col.isEmpty()) {
+                if (col != null && !col.isEmpty() && session.isTty(1)) { // TODO: ability to force colors if piped
                     return "\033[" + col + "m" + path.toString() + "\033[m" + (addSuffix ? suffix : "") + link;
                 } else {
                     return path.toString() + (addSuffix ? suffix : "") + link;
@@ -1235,16 +1237,32 @@ public class Posix {
                 .collect(Collectors.toList());
         PrintStream out = System.out;
         Consumer<Stream<PathEntry>> display = s -> {
+            boolean optLine  = opt.isSet("1");
+            boolean optComma = opt.isSet("m");
+            boolean optLong  = opt.isSet("l");
+            boolean optCol   = opt.isSet("C");
+            if (!optLine && !optComma && !optLong && !optCol) {
+                if (session.isTty(1)) {
+                    optCol = true;
+                }
+                else {
+                    optLine = true;
+                }
+            }
+            // One entry per line
+            if (optLine) {
+                s.map(PathEntry::display).forEach(out::println);
+            }
             // Comma separated list
-            if (opt.isSet("m")) {
+            else if (optComma) {
                 out.println(s.map(PathEntry::display).collect(Collectors.joining(", ")));
             }
             // Long listing
-            else if (opt.isSet("l")) {
+            else if (optLong) {
                 s.map(PathEntry::longDisplay).forEach(out::println);
             }
             // Column listing
-            else {
+            else if (optCol) {
                 toColumn(session, out, s.map(PathEntry::display), opt.isSet("x"));
             }
         };
@@ -1276,7 +1294,7 @@ public class Posix {
 
     private void toColumn(CommandSession session, PrintStream out, Stream<String> ansi, boolean horizontal) {
         Terminal terminal = Shell.getTerminal(session);
-        int width = terminal.getWidth();
+        int width = session.isTty(1) ? terminal.getWidth() : 80;
         List<AttributedString> strings = ansi.map(AttributedString::fromAnsi).collect(Collectors.toList());
         if (!strings.isEmpty()) {
             int max = strings.stream().mapToInt(AttributedString::columnLength).max().getAsInt();
