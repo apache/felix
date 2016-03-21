@@ -18,11 +18,11 @@
  */
 package org.apache.felix.gogo.runtime.expr;
 
-import junit.framework.TestCase;
-import org.apache.felix.gogo.runtime.Expression;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import junit.framework.TestCase;
+import org.apache.felix.gogo.runtime.Expression;
 
 public class ExpressionTest extends TestCase {
 
