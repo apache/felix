@@ -18,42 +18,22 @@
  */
 package org.apache.felix.gogo.runtime;
 
-import org.apache.felix.gogo.runtime.threadio.ThreadIOImpl;
 import org.apache.felix.service.command.CommandSession;
+import org.apache.felix.service.threadio.ThreadIO;
 
 public class Context extends CommandProcessorImpl
 {
     public static final String EMPTY = "";
-
-    private static final ThreadIOImpl threadio;
+    
     private final CommandSession session;
 
-    static
-    {
-        threadio = new ThreadIOImpl();
-        threadio.start();
-    }
-
-    public Context(boolean foo)
+    public Context(ThreadIO threadio)
     {
         super(threadio);
         addCommand("osgi", this, "addCommand");
         addCommand("osgi", this, "removeCommand");
         addCommand("osgi", this, "eval");
-        session = (CommandSessionImpl) createSession(System.in, System.out, System.err);
-    }
-
-    @Override
-    public void stop()
-    {
-        try
-        {
-            super.stop();
-        }
-        finally
-        {
-            threadio.stop();
-        }
+        session = createSession(System.in, System.out, System.err);
     }
 
     public Object execute(CharSequence source) throws Exception
@@ -76,9 +56,9 @@ public class Context extends CommandProcessorImpl
         addCommand("test", target, function);
     }
 
-    public void set(String name, Object value)
+    public Object set(String name, Object value)
     {
-        session.put(name, value);
+        return session.put(name, value);
     }
 
     public Object get(String name)
