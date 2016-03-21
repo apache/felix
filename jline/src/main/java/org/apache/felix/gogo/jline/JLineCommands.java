@@ -22,6 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -78,7 +79,7 @@ public class JLineCommands {
 
     private void runShell(CommandSession session, Terminal terminal) {
         InputStream in = terminal.input();
-        PrintStream out = new PrintStream(terminal.output());
+        OutputStream out = terminal.output();
         CommandSession newSession = processor.createSession(in, out, out);
         newSession.put(Shell.VAR_TERMINAL, terminal);
         newSession.put(".tmux", session.get(".tmux"));
@@ -139,8 +140,8 @@ public class JLineCommands {
             final String cmd = String.join(" ", args);
             Runnable task = () -> {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                InputStream is = new ByteArrayInputStream(new byte[0]);
                 PrintStream os = new PrintStream(baos);
+                InputStream is = new ByteArrayInputStream(new byte[0]);
                 if (opt.isSet("append") || !terminal.puts(Capability.clear_screen)) {
                     terminal.writer().println();
                 }

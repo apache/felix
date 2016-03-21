@@ -19,7 +19,7 @@
 package org.apache.felix.service.command;
 
 import java.io.InputStream;
-import java.io.PrintStream;
+import java.io.OutputStream;
 
 /**
  * A command shell can create and maintain a number of command sessions.
@@ -59,5 +59,7 @@ public interface CommandProcessor
      * @param err The stream used for System.err
      * @return A new session.
      */
-    CommandSession createSession(InputStream in, PrintStream out, PrintStream err);
+    CommandSession createSession(InputStream in, OutputStream out, OutputStream err);
+
+    CommandSession createSession(CommandSession parent);
 }

@@ -19,22 +19,54 @@
 package org.apache.felix.gogo.jline;
 
 import java.io.BufferedReader;
-import java.io.File;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.nio.file.FileVisitOption;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.PathMatcher;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.function.Consumer;
+import java.util.function.IntBinaryOperator;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import org.apache.felix.gogo.runtime.Pipe;
 import org.apache.felix.service.command.CommandSession;
+import org.jline.builtins.Less.Source;
+import org.jline.builtins.Less.StdInSource;
+import org.jline.builtins.Less.URLSource;
 import org.jline.builtins.Options;
+import org.jline.reader.LineReader.Option;
+import org.jline.terminal.Terminal;
+import org.jline.utils.AttributedString;
+import org.jline.utils.AttributedStringBuilder;
+import org.jline.utils.AttributedStyle;
 
 /**
  * Posix-like utilities.
@@ -45,7 +77,57 @@ import org.jline.builtins.Options;
 public class Posix {
     static final String[] functions = {"cat", "echo", "grep", "sort", "sleep", "cd", "pwd", "ls"};
 
-    public static void sort(CommandSession session, String[] argv) throws IOException {
+    public void _main(CommandSession session, String[] argv) {
+        if (argv == null || argv.length < 1) {
+            throw new IllegalArgumentException();
+        }
+        try {
+            argv = expand(session, argv);
+            switch (argv[0]) {
+                case "cat":
+                    cat(session, argv);
+                    break;
+                case "echo":
+                    echo(session, argv);
+                    break;
+                case "grep":
+                    grep(session, argv);
+                    break;
+                case "sort":
+                    sort(session, argv);
+                    break;
+                case "sleep":
+                    sleep(session, argv);
+                    break;
+                case "cd":
+                    cd(session, argv);
+                    break;
+                case "pwd":
+                    pwd(session, argv);
+                    break;
+                case "ls":
+                    ls(session, argv);
+                    break;
+            }
+        } catch (IllegalArgumentException e) {
+            System.err.println(e.getMessage());
+            Pipe.error(2);
+        } catch (HelpException e) {
+            System.err.println(e.getMessage());
+            Pipe.error(0);
+        } catch (Exception e) {
+            System.err.println(argv[0] + ": " + e.getMessage());
+            Pipe.error(1);
+        }
+    }
+
+    protected static class HelpException extends Exception {
+        public HelpException(String message) {
+            super(message);
+        }
+    }
+
+    protected void sort(CommandSession session, String[] argv) throws Exception {
         final String[] usage = {
                 "sort -  writes sorted standard input to standard output.",
                 "Usage: sort [OPTIONS] [FILES]",
@@ -58,24 +140,16 @@ public class Posix {
                 "     --numeric-sort            compare according to string numerical value",
                 "  -k --key=KEY                 fields to use for sorting separated by whitespaces"};
 
-        Options opt = Options.compile(usage).parse(argv);
-
-        if (opt.isSet("help")) {
-            opt.usage(System.err);
-            return;
-        }
+        Options opt = parseOptions(session, usage, argv);
 
         List<String> args = opt.args();
 
-        List<String> lines = new ArrayList<String>();
+        List<String> lines = new ArrayList<>();
         if (!args.isEmpty()) {
             for (String filename : args) {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(
-                        session.currentDir().toUri().resolve(filename).toURL().openStream()));
-                try {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(
+                        session.currentDir().toUri().resolve(filename).toURL().openStream()))) {
                     read(reader, lines);
-                } finally {
-                    reader.close();
                 }
             }
         } else {
@@ -102,272 +176,362 @@ public class Posix {
         }
     }
 
-    protected static void read(BufferedReader r, List<String> lines) throws IOException {
-        for (String s = r.readLine(); s != null; s = r.readLine()) {
-            lines.add(s);
-        }
-    }
-
-    public static List<String> parseSubstring(String value) {
-        List<String> pieces = new ArrayList<String>();
-        StringBuilder ss = new StringBuilder();
-        // int kind = SIMPLE; // assume until proven otherwise
-        boolean wasStar = false; // indicates last piece was a star
-        boolean leftstar = false; // track if the initial piece is a star
-        boolean rightstar = false; // track if the final piece is a star
-
-        int idx = 0;
-
-        // We assume (sub)strings can contain leading and trailing blanks
-        boolean escaped = false;
-        loop:
-        for (; ; ) {
-            if (idx >= value.length()) {
-                if (wasStar) {
-                    // insert last piece as "" to handle trailing star
-                    rightstar = true;
-                } else {
-                    pieces.add(ss.toString());
-                    // accumulate the last piece
-                    // note that in the case of
-                    // (cn=); this might be
-                    // the string "" (!=null)
-                }
-                ss.setLength(0);
-                break loop;
-            }
-
-            // Read the next character and account for escapes.
-            char c = value.charAt(idx++);
-            if (!escaped && ((c == '(') || (c == ')'))) {
-                throw new IllegalArgumentException(
-                        "Illegal value: " + value);
-            } else if (!escaped && (c == '*')) {
-                if (wasStar) {
-                    // encountered two successive stars;
-                    // I assume this is illegal
-                    throw new IllegalArgumentException("Invalid filter string: " + value);
-                }
-                if (ss.length() > 0) {
-                    pieces.add(ss.toString()); // accumulate the pieces
-                    // between '*' occurrences
-                }
-                ss.setLength(0);
-                // if this is a leading star, then track it
-                if (pieces.size() == 0) {
-                    leftstar = true;
-                }
-                wasStar = true;
-            } else if (!escaped && (c == '\\')) {
-                escaped = true;
-            } else {
-                escaped = false;
-                wasStar = false;
-                ss.append(c);
-            }
-        }
-        if (leftstar || rightstar || pieces.size() > 1) {
-            // insert leading and/or trailing "" to anchor ends
-            if (rightstar) {
-                pieces.add("");
-            }
-            if (leftstar) {
-                pieces.add(0, "");
-            }
-        }
-        return pieces;
-    }
-
-    public static boolean compareSubstring(List<String> pieces, String s) {
-        // Walk the pieces to match the string
-        // There are implicit stars between each piece,
-        // and the first and last pieces might be "" to anchor the match.
-        // assert (pieces.length > 1)
-        // minimal case is <string>*<string>
-
-        boolean result = true;
-        int len = pieces.size();
-
-        int index = 0;
-
-        loop:
-        for (int i = 0; i < len; i++) {
-            String piece = pieces.get(i);
-
-            // If this is the first piece, then make sure the
-            // string starts with it.
-            if (i == 0) {
-                if (!s.startsWith(piece)) {
-                    result = false;
-                    break loop;
-                }
-            }
-
-            // If this is the last piece, then make sure the
-            // string ends with it.
-            if (i == len - 1) {
-                if (s.endsWith(piece)) {
-                    result = true;
-                } else {
-                    result = false;
-                }
-                break loop;
-            }
-
-            // If this is neither the first or last piece, then
-            // make sure the string contains it.
-            if ((i > 0) && (i < (len - 1))) {
-                index = s.indexOf(piece, index);
-                if (index < 0) {
-                    result = false;
-                    break loop;
-                }
-            }
-
-            // Move string index beyond the matching piece.
-            index += piece.length();
-        }
-
-        return result;
-    }
-
-    private static void cat(final BufferedReader reader, boolean displayLineNumbers) throws IOException {
-        String line;
-        int lineno = 1;
-        try {
-            while ((line = reader.readLine()) != null) {
-                if (displayLineNumbers) {
-                    System.out.print(String.format("%6d  ", lineno++));
-                }
-                System.out.println(line);
-            }
-        } finally {
-            reader.close();
-        }
-    }
-
-    public Path pwd(CommandSession session, String[] argv) throws IOException {
+    protected void pwd(CommandSession session, String[] argv) throws Exception {
         final String[] usage = {
                 "pwd - get current directory",
                 "Usage: pwd [OPTIONS]",
                 "  -? --help                show help"
         };
-        Options opt = Options.compile(usage).parse(argv);
-        if (opt.isSet("help")) {
-            opt.usage(System.err);
-            return null;
-        }
+        Options opt = parseOptions(session, usage, argv);
         if (!opt.args().isEmpty()) {
-            System.err.println("usage: pwd");
-            return null;
+            throw new IllegalArgumentException("usage: pwd");
         }
-        return session.currentDir();
+        System.out.println(session.currentDir());
     }
 
-    public void cd(CommandSession session, String[] argv) throws IOException {
+    protected void cd(CommandSession session, String[] argv) throws Exception {
         final String[] usage = {
                 "cd - get current directory",
                 "Usage: cd [OPTIONS] DIRECTORY",
                 "  -? --help                show help"
         };
-        Options opt = Options.compile(usage).parse(argv);
-        if (opt.isSet("help")) {
-            opt.usage(System.err);
-            return;
-        }
+        Options opt = parseOptions(session, usage, argv);
         if (opt.args().size() != 1) {
-            System.err.println("usage: cd DIRECTORY");
-            return;
+            throw new IllegalArgumentException("usage: cd DIRECTORY");
         }
         Path cwd = session.currentDir();
         cwd = cwd.resolve(opt.args().get(0)).toAbsolutePath();
         if (!Files.exists(cwd)) {
-            throw new IOException("Directory does not exist");
+            throw new IOException("no such file or directory: " + opt.args().get(0));
         } else if (!Files.isDirectory(cwd)) {
-            throw new IOException("Target is not a directory");
+            throw new IOException("not a directory: " + opt.args().get(0));
         }
         session.currentDir(cwd);
     }
 
-    public Collection<Path> ls(CommandSession session, String[] argv) throws IOException {
+    protected void ls(CommandSession session, String[] argv) throws Exception {
         final String[] usage = {
                 "ls - list files",
-                "Usage: ls [OPTIONS] PATTERNS...",
-                "  -? --help                show help"
+                "Usage: ls [OPTIONS] [PATTERNS...]",
+                "  -? --help                show help",
+                "  -a                       list entries starting with .",
+                "  -F                       append file type indicators",
+                "  -m                       comma separated",
+                "  -l                       long listing",
+                "  -S                       sort by size",
+                "  -f                       output is not sorted",
+                "  -r                       reverse sort order",
+                "  -t                       sort by modification time",
+                "  -x                       sort horizontally",
+                "  -L                       list referenced file for links",
+                "  -h                       print sizes in human readable form"
         };
-        Options opt = Options.compile(usage).parse(argv);
-        if (opt.isSet("help")) {
-            opt.usage(System.err);
-            return null;
-        }
-        if (opt.args().isEmpty()) {
-            opt.args().add("*");
-        }
-        List<Path> files = new ArrayList<>();
-        for (String pattern : opt.args()) {
-            pattern = ((pattern == null) || (pattern.length() == 0)) ? "." : pattern;
-            pattern = ((pattern.charAt(0) != File.separatorChar) && (pattern.charAt(0) != '.'))
-                    ? "./" + pattern : pattern;
-            int idx = pattern.lastIndexOf(File.separatorChar);
-            String parent = (idx < 0) ? "." : pattern.substring(0, idx + 1);
-            String target = (idx < 0) ? pattern : pattern.substring(idx + 1);
+        Options opt = parseOptions(session, usage, argv);
+        Map<String, String> colors = getColorMap(session, "LS", "dr=34:ex=31:sl=35:ot=34;43");
 
-            Path actualParent = session.currentDir().resolve(parent).normalize();
+        class PathEntry implements Comparable<PathEntry> {
+            final Path abs;
+            final Path path;
+            final Map<String, Object> attributes;
 
-            idx = target.indexOf(File.separatorChar, idx);
-            boolean isWildcarded = (target.indexOf('*', idx) >= 0);
-            if (isWildcarded) {
-                if (!Files.exists(actualParent)) {
-                    throw new IOException("File does not exist");
+            public PathEntry(Path abs, Path root) {
+                this.abs = abs;
+                this.path = abs.startsWith(root) ? root.relativize(abs) : abs;
+                this.attributes = readAttributes(abs);
+            }
+
+            @Override
+            public int compareTo(PathEntry o) {
+                int c = doCompare(o);
+                return opt.isSet("r") ? -c : c;
+            }
+
+            private int doCompare(PathEntry o) {
+                if (opt.isSet("f")) {
+                    return -1;
                 }
-                final List<String> pieces = parseSubstring(target);
-                Files.list(actualParent)
-                        .filter(p -> compareSubstring(pieces, p.getFileName().toString()))
-                        .map(actualParent::relativize)
-                        .forEach(files::add);
-            } else {
-                Path actualTarget = actualParent.resolve(target);
-                if (!Files.exists(actualTarget)) {
-                    throw new IOException("File does not exist");
+                if (opt.isSet("S")) {
+                    long s0 = attributes.get("size") != null ? ((Number) attributes.get("size")).longValue() : 0L;
+                    long s1 = o.attributes.get("size") != null ? ((Number) o.attributes.get("size")).longValue() : 0L;
+                    return s0 > s1 ? -1 : s0 < s1 ? 1 : path.toString().compareTo(o.path.toString());
                 }
-                if (Files.isDirectory(actualTarget)) {
-                    Files.list(actualTarget)
-                            .map(actualTarget::relativize)
-                            .forEach(files::add);
+                if (opt.isSet("t")) {
+                    long t0 = attributes.get("lastModifiedTime") != null ? ((FileTime) attributes.get("lastModifiedTime")).toMillis() : 0L;
+                    long t1 = o.attributes.get("lastModifiedTime") != null ? ((FileTime) o.attributes.get("lastModifiedTime")).toMillis() : 0L;
+                    return t0 > t1 ? -1 : t0 < t1 ? 1 : path.toString().compareTo(o.path.toString());
+                }
+                return path.toString().compareTo(o.path.toString());
+            }
+
+            boolean isNotDirectory() {
+                return is("isRegularFile") || is("isSymbolicLink") || is("isOther");
+            }
+
+            boolean isDirectory() {
+                return is("isDirectory");
+            }
+
+            private boolean is(String attr) {
+                Object d = attributes.get(attr);
+                return d instanceof Boolean && (Boolean) d;
+            }
+
+            String display() {
+                String type;
+                String suffix;
+                String link = "";
+                if (is("isDirectory")) {
+                    type = "dr";
+                    suffix = "/";
+                } else if (is("isExecutable")) {
+                    type = "ex";
+                    suffix = "*";
+                } else if (is("isSymbolicLink")) {
+                    type = "sl";
+                    suffix = "@";
+                    try {
+                        Path l = Files.readSymbolicLink(abs);
+                        link = " -> " + l.toString();
+                    } catch (IOException e) {
+                        // ignore
+                    }
+                } else if (is("isRegularFile")) {
+                    type = "rg";
+                    suffix = "";
+                } else if (is("isOther")) {
+                    type = "ot";
+                    suffix = "";
                 } else {
-                    files.add(actualTarget);
+                    type = "";
+                    suffix = "";
+                }
+                String col = colors.get(type);
+                boolean addSuffix = opt.isSet("F");
+                if (col != null && !col.isEmpty()) {
+                    return "\033[" + col + "m" + path.toString() + "\033[m" + (addSuffix ? suffix : "") + link;
+                } else {
+                    return path.toString() + (addSuffix ? suffix : "") + link;
                 }
             }
+
+            String longDisplay() {
+                String username;
+                if (attributes.containsKey("owner")) {
+                    username = Objects.toString(attributes.get("owner"), null);
+                } else {
+                    username = "owner";
+                }
+                if (username.length() > 8) {
+                    username = username.substring(0, 8);
+                } else {
+                    for (int i = username.length(); i < 8; i++) {
+                        username = username + " ";
+                    }
+                }
+                String group;
+                if (attributes.containsKey("group")) {
+                    group = Objects.toString(attributes.get("group"), null);
+                } else {
+                    group = "group";
+                }
+                if (group.length() > 8) {
+                    group = group.substring(0, 8);
+                } else {
+                    for (int i = group.length(); i < 8; i++) {
+                        group = group + " ";
+                    }
+                }
+                Number length = (Number) attributes.get("size");
+                if (length == null) {
+                    length = 0L;
+                }
+                String lengthString;
+                if (opt.isSet("h")) {
+                    double l = length.longValue();
+                    String unit = "B";
+                    if (l >= 1000) {
+                         l /= 1024;
+                        unit = "K";
+                        if (l >= 1000) {
+                            l /= 1024;
+                            unit = "M";
+                            if (l >= 1000) {
+                                l /= 1024;
+                                unit = "T";
+                            }
+                        }
+                    }
+                    if (l < 10 && length.longValue() > 1000) {
+                        lengthString = String.format("%.1f", l) + unit;
+                    } else {
+                        lengthString = String.format("%3.0f", l) + unit;
+                    }
+                } else {
+                    lengthString = String.format("%1$8s", length);
+                }
+                @SuppressWarnings("unchecked")
+                Set<PosixFilePermission> perms = (Set<PosixFilePermission>) attributes.get("permissions");
+                if (perms == null) {
+                    perms = EnumSet.noneOf(PosixFilePermission.class);
+                }
+                // TODO: all fields should be padded to align
+                return (is("isDirectory") ? "d" : (is("isSymbolicLink") ? "l" : (is("isOther") ? "o" : "-")))
+                        + PosixFilePermissions.toString(perms) + " "
+                        + String.format("%3s", (attributes.containsKey("nlink") ? attributes.get("nlink").toString() : "1"))
+                        + " " + username + " " + group + " " + lengthString + " "
+                        + toString((FileTime) attributes.get("lastModifiedTime"))
+                        + " " + display();
+            }
+
+            protected String toString(FileTime time) {
+                long millis = (time != null) ? time.toMillis() : -1L;
+                if (millis < 0L) {
+                    return "------------";
+                }
+                ZonedDateTime dt = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault());
+                // Less than six months
+                if (System.currentTimeMillis() - millis < 183L * 24L * 60L * 60L * 1000L) {
+                    return DateTimeFormatter.ofPattern("MMM ppd HH:mm").format(dt);
+                }
+                // Older than six months
+                else {
+                    return DateTimeFormatter.ofPattern("MMM ppd  yyyy").format(dt);
+                }
+            }
+
+            protected Map<String, Object> readAttributes(Path path) {
+                Map<String, Object>  attrs = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+                for (String view : path.getFileSystem().supportedFileAttributeViews()) {
+                    try {
+                        Map<String, Object> ta = Files.readAttributes(path, view + ":*",
+                                IoUtils.getLinkOptions(opt.isSet("L")));
+                        ta.entrySet().forEach(e -> attrs.putIfAbsent(e.getKey(), e.getValue()));
+                    } catch (IOException e) {
+                        // Ignore
+                    }
+                }
+                attrs.computeIfAbsent("isExecutable", s -> Files.isExecutable(path));
+                attrs.computeIfAbsent("permissions", s -> IoUtils.getPermissionsFromFile(path.toFile()));
+                return attrs;
+            }
         }
-        return files;
+
+        Path currentDir = session.currentDir();
+        // Listing
+        List<Path> expanded = new ArrayList<>();
+        if (opt.args().isEmpty()) {
+            expanded.add(currentDir);
+        } else {
+            opt.args().forEach(s -> expanded.add(currentDir.resolve(s)));
+        }
+        boolean listAll = opt.isSet("a");
+        Predicate<Path> filter = p -> listAll || !p.getFileName().toString().startsWith(".");
+        List<PathEntry> all = expanded.stream()
+                .filter(filter)
+                .map(p -> new PathEntry(p, currentDir))
+                .sorted()
+                .collect(Collectors.toList());
+        // Print files first
+        List<PathEntry> files = all.stream()
+                .filter(PathEntry::isNotDirectory)
+                .collect(Collectors.toList());
+        PrintStream out = System.out;
+        Consumer<Stream<PathEntry>> display = s -> {
+            // Comma separated list
+            if (opt.isSet("m")) {
+                out.println(s.map(PathEntry::display).collect(Collectors.joining(", ")));
+            }
+            // Long listing
+            else if (opt.isSet("l")) {
+                s.map(PathEntry::longDisplay).forEach(out::println);
+            }
+            // Column listing
+            else {
+                toColumn(session, out, s.map(PathEntry::display), opt.isSet("x"));
+            }
+        };
+        boolean space = false;
+        if (!files.isEmpty()) {
+            display.accept(files.stream());
+            space = true;
+        }
+        // Print directories
+        List<PathEntry> directories = all.stream()
+                .filter(PathEntry::isDirectory)
+                .collect(Collectors.toList());
+        for (PathEntry entry : directories) {
+            if (space) {
+                out.println();
+            }
+            space = true;
+            Path path = currentDir.resolve(entry.path);
+            if (expanded.size() > 1) {
+                out.println(currentDir.relativize(path).toString() + ":");
+            }
+            display.accept(Stream.concat(Arrays.asList(".", "..").stream().map(path::resolve), Files.list(path))
+                            .filter(filter)
+                            .map(p -> new PathEntry(p, path))
+                            .sorted()
+            );
+        }
     }
 
-    public void cat(CommandSession session, String[] argv) throws Exception {
+    private void toColumn(CommandSession session, PrintStream out, Stream<String> ansi, boolean horizontal) {
+        Terminal terminal = Shell.getTerminal(session);
+        int width = terminal.getWidth();
+        List<AttributedString> strings = ansi.map(AttributedString::fromAnsi).collect(Collectors.toList());
+        if (!strings.isEmpty()) {
+            int max = strings.stream().mapToInt(AttributedString::columnLength).max().getAsInt();
+            int c = Math.max(1, width / max);
+            while (c > 1 && c * max + (c - 1) >= width) {
+                c--;
+            }
+            int columns = c;
+            int lines = (strings.size() + columns - 1) / columns;
+            IntBinaryOperator index;
+            if (horizontal) {
+                index = (i, j) -> i * columns + j;
+            } else {
+                index = (i, j) -> j * lines + i;
+            }
+            AttributedStringBuilder sb = new AttributedStringBuilder();
+            for (int i = 0; i < lines; i++) {
+                for (int j = 0; j < columns; j++) {
+                    int idx = index.applyAsInt(i, j);
+                    if (idx < strings.size()) {
+                        AttributedString str = strings.get(idx);
+                        boolean hasRightItem = j < columns - 1 && index.applyAsInt(i, j + 1) < strings.size();
+                        sb.append(str);
+                        if (hasRightItem) {
+                            for (int k = 0; k <= max - str.length(); k++) {
+                                sb.append(' ');
+                            }
+                        }
+                    }
+                }
+                sb.append('\n');
+            }
+            out.print(sb.toAnsi());
+        }
+    }
+
+    protected void cat(CommandSession session, String[] argv) throws Exception {
         final String[] usage = {
                 "cat - concatenate and print FILES",
                 "Usage: cat [OPTIONS] [FILES]",
                 "  -? --help                show help",
                 "  -n                       number the output lines, starting at 1"
         };
-
-        Options opt = Options.compile(usage).parse(argv);
-
-        if (opt.isSet("help")) {
-            opt.usage(System.err);
-            return;
-        }
-
+        Options opt = parseOptions(session, usage, argv);
         List<String> args = opt.args();
         if (args.isEmpty()) {
             args = Collections.singletonList("-");
         }
-
         Path cwd = session.currentDir();
         for (String arg : args) {
             InputStream is;
             if ("-".equals(arg)) {
                 is = System.in;
-
             } else {
                 is = cwd.toUri().resolve(arg).toURL().openStream();
             }
@@ -375,21 +539,14 @@ public class Posix {
         }
     }
 
-    public void echo(Object[] argv) {
+    protected void echo(CommandSession session, Object[] argv) throws Exception {
         final String[] usage = {
                 "echo - echoes or prints ARGUMENT to standard output",
                 "Usage: echo [OPTIONS] [ARGUMENTS]",
                 "  -? --help                show help",
                 "  -n                       no trailing new line"
         };
-
-        Options opt = Options.compile(usage).parse(argv);
-
-        if (opt.isSet("help")) {
-            opt.usage(System.err);
-            return;
-        }
-
+        Options opt = parseOptions(session, usage, argv);
         List<String> args = opt.args();
         StringBuilder buf = new StringBuilder();
         if (args != null) {
@@ -406,112 +563,192 @@ public class Posix {
         }
     }
 
-    public boolean grep(CommandSession session, String[] argv) throws IOException {
+    protected void grep(CommandSession session, String[] argv) throws Exception {
         final String[] usage = {
                 "grep -  search for PATTERN in each FILE or standard input.",
                 "Usage: grep [OPTIONS] PATTERN [FILES]",
-                "  -? --help                show help",
-                "  -i --ignore-case         ignore case distinctions",
-                "  -n --line-number         prefix each line with line number within its input file",
-                "  -q --quiet, --silent     suppress all normal output",
-                "  -v --invert-match        select non-matching lines"};
-
-        Options opt = Options.compile(usage).parse(argv);
-
-        if (opt.isSet("help")) {
-            opt.usage(System.err);
-            return true;
-        }
-
+                "  -? --help                Show help",
+                "  -i --ignore-case         Ignore case distinctions",
+                "  -n --line-number         Prefix each line with line number within its input file",
+                "  -q --quiet, --silent     Suppress all normal output",
+                "  -v --invert-match        Select non-matching lines",
+                "  -w --word-regexp         Select only whole words",
+                "  -x --line-regexp         Select only whole lines",
+                "  -c --count               Only print a count of matching lines per file",
+                "     --color=WHEN          Use markers to distinguish the matching string, may be `always', `never' or `auto'",
+                "  -B --before-context=NUM  Print NUM lines of leading context before matching lines",
+                "  -A --after-context=NUM   Print NUM lines of trailing context after matching lines",
+                "  -C --context=NUM         Print NUM lines of output context"
+        };
+        Options opt = parseOptions(session, usage, argv);
         List<String> args = opt.args();
-
         if (args.isEmpty()) {
-            throw opt.usageError("no pattern supplied.");
+            throw new IllegalArgumentException("no pattern supplied");
         }
 
         String regex = args.remove(0);
+        String regexp = regex;
+        if (opt.isSet("word-regexp")) {
+            regexp = "\\b" + regexp + "\\b";
+        }
+        if (opt.isSet("line-regexp")) {
+            regexp = "^" + regexp + "$";
+        } else {
+            regexp = ".*" + regexp + ".*";
+        }
+        Pattern p;
+        Pattern p2;
         if (opt.isSet("ignore-case")) {
-            regex = "(?i)" + regex;
+            p = Pattern.compile(regexp, Pattern.CASE_INSENSITIVE);
+            p2 = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+        } else {
+            p = Pattern.compile(regexp);
+            p2 = Pattern.compile(regex);
         }
-
-        if (args.isEmpty()) {
-            args.add(null);
+        int after = opt.isSet("after-context") ? opt.getNumber("after-context") : -1;
+        int before = opt.isSet("before-context") ? opt.getNumber("before-context") : -1;
+        int context = opt.isSet("context") ? opt.getNumber("context") : 0;
+        if (after < 0) {
+            after = context;
         }
-
-        StringBuilder buf = new StringBuilder();
-
-        if (args.size() > 1) {
-            buf.append("%1$s:");
+        if (before < 0) {
+            before = context;
         }
+        List<String> lines = new ArrayList<String>();
+        boolean invertMatch = opt.isSet("invert-match");
+        boolean lineNumber = opt.isSet("line-number");
+        boolean count = opt.isSet("count");
+        String color = opt.isSet("color") ? opt.get("color") : "auto";
 
-        if (opt.isSet("line-number")) {
-            buf.append("%2$s:");
+        List<Source> sources = new ArrayList<>();
+        if (opt.args().isEmpty()) {
+            opt.args().add("-");
         }
-
-        buf.append("%3$s");
-        String format = buf.toString();
-
-        Pattern pattern = Pattern.compile(regex);
-        boolean status = true;
-        boolean match = false;
-
-        for (String arg : args) {
-            InputStream in = null;
-
-            try {
-                Path cwd = session.currentDir();
-                in = (arg == null) ? System.in : cwd.resolve(arg).toUri().toURL().openStream();
-
-                BufferedReader rdr = new BufferedReader(new InputStreamReader(in));
-                int line = 0;
-                String s;
-                while ((s = rdr.readLine()) != null) {
-                    line++;
-                    Matcher matcher = pattern.matcher(s);
-                    if (!(matcher.find() ^ !opt.isSet("invert-match"))) {
-                        match = true;
-                        if (opt.isSet("quiet"))
-                            break;
-
-                        System.out.println(String.format(format, arg, line, s));
-                    }
-                }
-
-                if (match && opt.isSet("quiet")) {
-                    break;
-                }
-            } catch (IOException e) {
-                System.err.println("grep: " + e.getMessage());
-                status = false;
-            } finally {
-                if (arg != null && in != null) {
-                    in.close();
-                }
+        for (String arg : opt.args()) {
+            if ("-".equals(arg)) {
+                sources.add(new StdInSource());
+            } else {
+                sources.add(new URLSource(session.currentDir().resolve(arg).toUri().toURL(), arg));
             }
         }
-
-        return match && status;
+        boolean match = false;
+        for (Source source : sources) {
+            boolean firstPrint = true;
+            int nb = 0;
+            int lineno = 1;
+            String line;
+            int lineMatch = 0;
+            try (BufferedReader r = new BufferedReader(new InputStreamReader(source.read()))) {
+                while ((line = r.readLine()) != null) {
+                    if (line.length() == 1 && line.charAt(0) == '\n') {
+                        break;
+                    }
+                    if (p.matcher(line).matches() ^ invertMatch) {
+                        AttributedStringBuilder sbl = new AttributedStringBuilder();
+                        sbl.style(AttributedStyle.DEFAULT.foreground(AttributedStyle.BLACK + AttributedStyle.BRIGHT));
+                        if (!count && sources.size() > 1) {
+                            sbl.append(source.getName());
+                            sbl.append(":");
+                        }
+                        if (!count && lineNumber) {
+                            sbl.append(String.format("%6d  ", lineno));
+                        }
+                        sbl.style(AttributedStyle.DEFAULT);
+                        Matcher matcher2 = p2.matcher(line);
+                        AttributedString aLine = AttributedString.fromAnsi(line);
+                        AttributedStyle style = AttributedStyle.DEFAULT;
+                        if (!invertMatch && !color.equalsIgnoreCase("never")) {
+                            style = style.bold().foreground(AttributedStyle.RED);
+                        }
+                        int cur = 0;
+                        while (matcher2.find()) {
+                            int index = matcher2.start(0);
+                            AttributedString prefix = aLine.subSequence(cur, index);
+                            sbl.append(prefix);
+                            cur = matcher2.end();
+                            sbl.append(aLine.subSequence(index, cur), style);
+                            nb++;
+                        }
+                        sbl.append(aLine.subSequence(cur, aLine.length()));
+                        lines.add(sbl.toAnsi(Shell.getTerminal(session)));
+                        lineMatch = lines.size();
+                    } else {
+                        if (lineMatch != 0 & lineMatch + after + before <= lines.size()) {
+                            if (!count) {
+                                if (!firstPrint && before + after > 0) {
+                                    System.out.println("--");
+                                } else {
+                                    firstPrint = false;
+                                }
+                                for (int i = 0; i < lineMatch + after; i++) {
+                                    System.out.println(lines.get(i));
+                                }
+                            }
+                            while (lines.size() > before) {
+                                lines.remove(0);
+                            }
+                            lineMatch = 0;
+                        }
+                        lines.add(line);
+                        while (lineMatch == 0 && lines.size() > before) {
+                            lines.remove(0);
+                        }
+                    }
+                    lineno++;
+                }
+                if (!count && lineMatch > 0) {
+                    if (!firstPrint && before + after > 0) {
+                        System.out.println("--");
+                    } else {
+                        firstPrint = false;
+                    }
+                    for (int i = 0; i < lineMatch + after && i < lines.size(); i++) {
+                        System.out.println(lines.get(i));
+                    }
+                }
+                if (count) {
+                    System.out.println(nb);
+                }
+                match |= nb > 0;
+            }
+        }
+        Pipe.error(match ? 0 : 1);
     }
 
-    public void sleep(String[] argv) throws InterruptedException {
+    protected void sleep(CommandSession session, String[] argv) throws Exception {
         final String[] usage = {
                 "sleep -  suspend execution for an interval of time",
                 "Usage: sleep seconds",
                 "  -? --help                    show help"};
 
-        Options opt = Options.compile(usage).parse(argv);
-
-        if (opt.isSet("help")) {
-            opt.usage(System.err);
-            return;
-        }
-
+        Options opt = parseOptions(session, usage, argv);
         List<String> args = opt.args();
         if (args.size() != 1) {
-            System.err.println("usage: sleep seconds");
+            throw new IllegalArgumentException("usage: sleep seconds");
         } else {
             int s = Integer.parseInt(args.get(0));
             Thread.sleep(s * 1000);
+        }
+    }
+
+    protected static void read(BufferedReader r, List<String> lines) throws IOException {
+        for (String s = r.readLine(); s != null; s = r.readLine()) {
+            lines.add(s);
+        }
+    }
+
+    private static void cat(final BufferedReader reader, boolean displayLineNumbers) throws IOException {
+        String line;
+        int lineno = 1;
+        try {
+            while ((line = reader.readLine()) != null) {
+                if (displayLineNumbers) {
+                    System.out.print(String.format("%6d  ", lineno++));
+                }
+                System.out.println(line);
+            }
+        } finally {
+            reader.close();
         }
     }
 
@@ -546,7 +783,7 @@ public class Posix {
             this.ignoreBlanks = ignoreBlanks;
             this.numeric = numeric;
             if (sortFields == null || sortFields.size() == 0) {
-                sortFields = new ArrayList<String>();
+                sortFields = new ArrayList<>();
                 sortFields.add("1");
             }
             sortKeys = new ArrayList<Key>();
@@ -643,7 +880,7 @@ public class Posix {
         }
 
         protected List<Integer> getFieldIndexes(String o) {
-            List<Integer> fields = new ArrayList<Integer>();
+            List<Integer> fields = new ArrayList<>();
             if (o.length() > 0) {
                 if (separator == '\0') {
                     int i = 0;
@@ -776,6 +1013,102 @@ public class Posix {
                 }
             }
         }
+    }
+
+    private String[] expand(CommandSession session, String[] argv) throws IOException {
+        String reserved = "(?<!\\\\)[*(|<\\[?]";
+        List<String> params = new ArrayList<>();
+        for (String arg : argv) {
+            if (arg.matches(".*" + reserved + ".*")) {
+                String org = arg;
+                List<String> expanded = new ArrayList<>();
+                Path currentDir = session.currentDir();
+                Path dir;
+                String pfx = arg.replaceFirst(reserved + ".*", "");
+                String prefix;
+                if (pfx.indexOf('/') >= 0) {
+                    pfx = pfx.substring(0, pfx.lastIndexOf('/'));
+                    arg = arg.substring(pfx.length() + 1);
+                    dir = currentDir.resolve(pfx).normalize();
+                    prefix = pfx + "/";
+                } else {
+                    dir = currentDir;
+                    prefix = "";
+                }
+                PathMatcher matcher = dir.getFileSystem().getPathMatcher("glob:" + arg);
+                Files.walkFileTree(dir,
+                        EnumSet.of(FileVisitOption.FOLLOW_LINKS),
+                        Integer.MAX_VALUE,
+                        new FileVisitor<Path>() {
+                    @Override
+                    public FileVisitResult preVisitDirectory(Path file, BasicFileAttributes attrs) throws IOException {
+                        if (file.equals(dir)) {
+                            return FileVisitResult.CONTINUE;
+                        }
+                        if (Files.isHidden(file)) {
+                            return FileVisitResult.SKIP_SUBTREE;
+                        }
+                        Path r = dir.relativize(file);
+                        if (matcher.matches(r)) {
+                            expanded.add(prefix + r.toString());
+                        }
+                        return FileVisitResult.CONTINUE;
+                    }
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                        if (!Files.isHidden(file)) {
+                            Path r = dir.relativize(file);
+                            if (matcher.matches(r)) {
+                                expanded.add(prefix + r.toString());
+                            }
+                        }
+                        return FileVisitResult.CONTINUE;
+                    }
+                    @Override
+                    public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                        return FileVisitResult.CONTINUE;
+                    }
+                    @Override
+                    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
+                Collections.sort(expanded);
+                if (expanded.isEmpty()) {
+                    throw new IOException("no matches found: " + org);
+                }
+                params.addAll(expanded);
+            } else {
+                params.add(arg);
+            }
+        }
+        return params.toArray(new String[params.size()]);
+    }
+
+    private Map<String, String> getColorMap(CommandSession session, String name, String def) {
+        Object obj = session.get(name + "_COLORS");
+        String str = obj != null ? obj.toString() : null;
+        if (str == null || !str.matches("[a-z]{2}=[0-9]+(;[0-9]+)*(:[a-z]{2}=[0-9]+(;[0-9]+)*)*")) {
+            str = def;
+        }
+        return Arrays.stream(str.split(":"))
+                .collect(Collectors.toMap(s -> s.substring(0, s.indexOf('=')),
+                                          s -> s.substring(s.indexOf('=') + 1)));
+    }
+
+    private Options parseOptions(CommandSession session, String[] usage, Object[] argv) throws Exception {
+        Options opt = Options.compile(usage, s -> get(session, s)).parse(argv, true);
+        if (opt.isSet("help")) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            opt.usage(new PrintStream(baos));
+            throw new HelpException(baos.toString());
+        }
+        return opt;
+    }
+
+    private String get(CommandSession session, String name) {
+        Object o = session.get(name);
+        return o != null ? o.toString() : null;
     }
 
 }

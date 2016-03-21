@@ -68,6 +68,7 @@ public class Shell {
     public static final String VAR_PROCESSOR = ".processor";
     public static final String VAR_TERMINAL = ".terminal";
     public static final String VAR_EXCEPTION = "exception";
+    public static final String VAR_RESULT = "_";
     public static final String VAR_LOCATION = ".location";
     public static final String VAR_PROMPT = "prompt";
     public static final String VAR_RPROMPT = "rprompt";
@@ -229,8 +230,7 @@ public class Shell {
             throw opt.usageError("option --command requires argument(s)");
         }
 
-        CommandSession newSession = (login ? session : processor.createSession(
-                session.getKeyboard(), session.getConsole(), System.err));
+        CommandSession newSession = (login ? session : processor.createSession(session));
 
         if (opt.isSet("xtrace")) {
             newSession.put("echo", true);
@@ -251,7 +251,7 @@ public class Shell {
         newSession.put("#TERM", (Function) (s, arguments) -> terminal.getType());
         newSession.put("#COLUMNS", (Function) (s, arguments) -> terminal.getWidth());
         newSession.put("#LINES", (Function) (s, arguments) -> terminal.getHeight());
-        newSession.put("#CWD", (Function) (s, arguments) -> s.currentDir().toString());
+        newSession.put("#PWD", (Function) (s, arguments) -> s.currentDir().toString());
 
         LineReader reader = null;
         if (args.isEmpty() && interactive) {
@@ -294,7 +294,7 @@ public class Shell {
                         }
                         try {
                             result = session.execute(((ParsedLineImpl) parsedLine).program());
-                            session.put("_", result); // set $_ to last result
+                            session.put(Shell.VAR_RESULT, result); // set $_ to last result
 
                             if (result != null && !Boolean.FALSE.equals(session.get(".Gogo.format"))) {
                                 System.out.println(session.format(result, Converter.INSPECT));

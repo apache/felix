@@ -31,6 +31,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import org.apache.felix.gogo.runtime.Parser.Array;
 import org.apache.felix.gogo.runtime.Parser.Executable;
@@ -39,6 +41,7 @@ import org.apache.felix.gogo.runtime.Parser.Pipeline;
 import org.apache.felix.gogo.runtime.Parser.Program;
 import org.apache.felix.gogo.runtime.Parser.Sequence;
 import org.apache.felix.gogo.runtime.Parser.Statement;
+import org.apache.felix.gogo.runtime.Pipe.Result;
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Function;
 
@@ -46,9 +49,10 @@ public class Closure implements Function, Evaluate
 {
 
     public static final String LOCATION = ".location";
+    public static final String PIPE_EXCEPTION = "pipe-exception";
     private static final String DEFAULT_LOCK = ".defaultLock";
 
-    private static final ThreadLocal<String> location = new ThreadLocal<String>();
+    private static final ThreadLocal<String> location = new ThreadLocal<>();
 
     private final CommandSessionImpl session;
     private final Closure parent;
@@ -178,51 +182,45 @@ public class Closure implements Function, Evaluate
             }
         }
 
-        Pipe last = null;
+        Result last = null;
         Operator operator = null;
         for (Iterator<Executable> iterator = program.tokens().iterator(); iterator.hasNext();)
         {
-            if (operator != null) {
-                if (Token.eq("&&", operator)) {
-                    if (!isSuccess(last)) {
-                        continue;
-                    }
-                }
-                else if (Token.eq("||", operator)) {
-                    if (isSuccess(last)) {
-                        continue;
-                    }
-                }
-            }
+            Operator prevOperator = operator;
             Executable executable = iterator.next();
             if (iterator.hasNext()) {
                 operator = (Operator) iterator.next();
             } else {
                 operator = null;
             }
-
-            if (operator != null && Token.eq("&", operator)) {
-                // TODO: need to start in background
+            if (prevOperator != null) {
+                if (Token.eq("&&", prevOperator)) {
+                    if (!last.isSuccess()) {
+                        continue;
+                    }
+                }
+                else if (Token.eq("||", prevOperator)) {
+                    if (last.isSuccess()) {
+                        continue;
+                    }
+                }
             }
 
-            Channel[] mark = Pipe.mark();
             Channel[] streams;
             boolean[] toclose = new boolean[10];
-            if (mark == null) {
-                streams = new Channel[10];
-                streams[0] = Channels.newChannel(session.in);
-                streams[1] = Channels.newChannel(session.out);
-                streams[2] = Channels.newChannel(session.err);
+            if (Pipe.getCurrentPipe() != null) {
+                streams = Pipe.getCurrentPipe().streams.clone();
             } else {
-                streams = mark.clone();
+                streams = new Channel[10];
+                System.arraycopy(session.channels, 0, streams, 0, 3);
             }
 
-            List<Pipe> pipes = new ArrayList<Pipe>();
+            List<Pipe> pipes = new ArrayList<>();
             if (executable instanceof Pipeline) {
                 Pipeline pipeline = (Pipeline) executable;
                 List<Executable> exec = pipeline.tokens();
                 for (int i = 0; i < exec.size(); i++) {
-                    Executable ex = exec.get(i);
+                    Statement ex = (Statement) exec.get(i);
                     Operator op = i < exec.size() - 1 ? (Operator) exec.get(++i) : null;
                     Channel[] nstreams;
                     boolean[] ntoclose;
@@ -253,55 +251,51 @@ public class Closure implements Function, Evaluate
                     pipes.add(new Pipe(this, ex, nstreams, ntoclose));
                 }
             } else {
-                pipes.add(new Pipe(this, executable, streams, toclose));
+                pipes.add(new Pipe(this, (Statement) executable, streams, toclose));
             }
 
-            // Don't start a thread if we have a single pipe
-            if (pipes.size() == 1)
-            {
-                pipes.get(0).run();
-            }
-            else {
-                // Start threads
+            // Start pipe in background
+            if (operator != null && Token.eq("&", operator)) {
+
                 for (Pipe pipe : pipes) {
-                    pipe.start();
+                    session().getExecutor().submit(pipe);
                 }
-                // Wait for them
-                try {
-                    for (Pipe pipe : pipes) {
-                        pipe.join();
-                    }
-                } catch (InterruptedException e) {
-                    for (Pipe pipe : pipes) {
-                        pipe.interrupt();
-                    }
-                    throw e;
-                }
-            }
 
-            for (int i = 0; i < pipes.size() - 1; i++)
-            {
-                Pipe pipe = pipes.get(i);
-                if (pipe.exception != null)
-                {
-                    // can't throw exception, as result is defined by last pipe
-                    session.put("pipe-exception", pipe.exception);
-                }
-            }
-            last = pipes.get(pipes.size() - 1);
+                last = new Result((Object) null);
 
-            boolean errReturn = true;
-            if (last.exit != 0 && errReturn)
-            {
-                throw last.exception;
+            }
+            // Start in foreground and wait for results
+            else {
+                List<Future<Result>> results = session().getExecutor().invokeAll(pipes);
+
+                // Get pipe exceptions
+                Exception pipeException = null;
+                for (int i = 0; i < results.size() - 1; i++) {
+                    Future<Result> future = results.get(i);
+                    Throwable e;
+                    try {
+                        Result r = future.get();
+                        e = r.exception;
+                    } catch (ExecutionException ee) {
+                        e = ee.getCause();
+                    }
+                    if (e != null) {
+                        if (pipeException == null) {
+                            pipeException = new Exception("Exception caught during pipe execution");
+                        }
+                        pipeException.addSuppressed(e);
+                    }
+                }
+                session.put(PIPE_EXCEPTION, pipeException);
+
+                last = results.get(results.size() - 1).get();
+                if (last.exception != null) {
+                    throw last.exception;
+                }
             }
         }
 
         return last == null ? null : last.result;
-    }
-
-    private boolean isSuccess(Pipe pipe) {
-        return pipe.exit == 0;
     }
 
     private Object eval(Object v)
@@ -368,7 +362,7 @@ public class Closure implements Function, Evaluate
         }
         else if (executable instanceof Sequence)
         {
-            return new Closure(session, this, ((Sequence) executable).program()).execute(new ArrayList<Object>());
+            return new Closure(session, this, ((Sequence) executable).program()).execute(new ArrayList<>());
         }
         else
         {
@@ -393,7 +387,7 @@ public class Closure implements Function, Evaluate
         {
             // set -x execution trace
             xtrace = "+" + statement;
-            session.err.println(xtrace);
+            session.perr.println(xtrace);
         }
 
         List<Token> tokens = statement.tokens();
@@ -402,7 +396,7 @@ public class Closure implements Function, Evaluate
             return null;
         }
 
-        List<Object> values = new ArrayList<Object>();
+        List<Object> values = new ArrayList<>();
         errTok = tokens.get(0);
 
         if ((tokens.size() > 3) && Token.eq("=", tokens.get(1)))
@@ -496,7 +490,7 @@ public class Closure implements Function, Evaluate
 
             if (!trace2.equals(trace1))
             {
-                session.err.println("+" + trace2);
+                session.perr.println("+" + trace2);
             }
         }
     }
@@ -567,7 +561,7 @@ public class Closure implements Function, Evaluate
         if (dot)
         {
             Object target = cmd;
-            ArrayList<Object> args = new ArrayList<Object>();
+            ArrayList<Object> args = new ArrayList<>();
             values.remove(0);
 
             for (Object arg : values)
@@ -621,7 +615,7 @@ public class Closure implements Function, Evaluate
 
         if (list != null)
         {
-            List<Object> olist = new ArrayList<Object>();
+            List<Object> olist = new ArrayList<>();
             for (Token t : list)
             {
                 Object oval = eval(t);
@@ -638,7 +632,7 @@ public class Closure implements Function, Evaluate
         }
         else
         {
-            Map<Object, Object> omap = new LinkedHashMap<Object, Object>();
+            Map<Object, Object> omap = new LinkedHashMap<>();
             for (Entry<Token, Token> e : map.entrySet())
             {
                 Token key = e.getKey();
