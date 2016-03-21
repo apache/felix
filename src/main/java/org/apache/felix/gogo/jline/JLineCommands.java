@@ -20,7 +20,6 @@ package org.apache.felix.gogo.jline;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -105,7 +104,7 @@ public class JLineCommands {
     }
 
     public void nano(final CommandSession session, String[] argv) throws Exception {
-        commands.nano(Shell.getTerminal(session), System.out, System.err, Shell.cwd(session), argv);
+        commands.nano(Shell.getTerminal(session), System.out, System.err, session.currentDir(), argv);
     }
 
     public void watch(final CommandSession session, String[] argv) throws IOException, InterruptedException {
@@ -169,7 +168,7 @@ public class JLineCommands {
     }
 
     public void less(CommandSession session, String[] argv) throws IOException, InterruptedException {
-        commands.less(Shell.getTerminal(session), System.out, System.err, Shell.cwd(session), argv);
+        commands.less(Shell.getTerminal(session), System.out, System.err, session.currentDir(), argv);
     }
 
     public void history(CommandSession session, String[] argv) throws IOException {
@@ -209,7 +208,7 @@ public class JLineCommands {
         ParsedLine line = Shell.getParsedLine(session);
         LineReader reader = Shell.getReader(session);
         List<Candidate> candidates = new ArrayList<>();
-        new FilesCompleter(new File(Shell.cwd(session))).complete(reader, line, candidates);
+        new FilesCompleter(session.currentDir()).complete(reader, line, candidates);
         return candidates;
     }
 
@@ -217,7 +216,7 @@ public class JLineCommands {
         ParsedLine line = Shell.getParsedLine(session);
         LineReader reader = Shell.getReader(session);
         List<Candidate> candidates = new ArrayList<>();
-        new DirectoriesCompleter(new File(Shell.cwd(session))).complete(reader, line, candidates);
+        new DirectoriesCompleter(session.currentDir()).complete(reader, line, candidates);
         return candidates;
     }
 

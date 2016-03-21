@@ -20,11 +20,11 @@ package org.apache.felix.gogo.jline;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -44,21 +44,6 @@ import org.jline.builtins.Options;
  */
 public class Posix {
     static final String[] functions = {"cat", "echo", "grep", "sort", "sleep", "cd", "pwd", "ls"};
-
-    static final String CWD = "_cwd";
-
-    public static File _pwd(CommandSession session) {
-        try {
-            File cwd = (File) session.get(CWD);
-            if (cwd == null) {
-                cwd = new File(".").getCanonicalFile();
-                session.put(CWD, cwd);
-            }
-            return cwd;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     public static void sort(CommandSession session, String[] argv) throws IOException {
         final String[] usage = {
@@ -86,7 +71,7 @@ public class Posix {
         if (!args.isEmpty()) {
             for (String filename : args) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(
-                        Shell.cwd(session).resolve(filename).toURL().openStream()));
+                        session.currentDir().toUri().resolve(filename).toURL().openStream()));
                 try {
                     read(reader, lines);
                 } finally {
@@ -261,13 +246,7 @@ public class Posix {
         }
     }
 
-    private static <T> void addAll(List<? super T> list, T[] array) {
-        if (array != null) {
-            Collections.addAll(list, array);
-        }
-    }
-
-    public File pwd(CommandSession session, String[] argv) throws IOException {
+    public Path pwd(CommandSession session, String[] argv) throws IOException {
         final String[] usage = {
                 "pwd - get current directory",
                 "Usage: pwd [OPTIONS]",
@@ -282,16 +261,10 @@ public class Posix {
             System.err.println("usage: pwd");
             return null;
         }
-        File cwd = (File) session.get(CWD);
-        if (cwd == null) {
-            cwd = new File(".").getCanonicalFile();
-            session.put(CWD, cwd);
-        }
-        return cwd;
+        return session.currentDir();
     }
 
-    public File cd(CommandSession session, String[] argv)
-            throws IOException {
+    public void cd(CommandSession session, String[] argv) throws IOException {
         final String[] usage = {
                 "cd - get current directory",
                 "Usage: cd [OPTIONS] DIRECTORY",
@@ -300,29 +273,23 @@ public class Posix {
         Options opt = Options.compile(usage).parse(argv);
         if (opt.isSet("help")) {
             opt.usage(System.err);
-            return null;
+            return;
         }
         if (opt.args().size() != 1) {
             System.err.println("usage: cd DIRECTORY");
-            return null;
+            return;
         }
-        File cwd = pwd(session, new String[0]);
-        String dir = opt.args().get(0);
-
-        URI curUri = cwd.toURI();
-        URI newUri = curUri.resolve(dir);
-
-        cwd = new File(newUri);
-        if (!cwd.exists()) {
+        Path cwd = session.currentDir();
+        cwd = cwd.resolve(opt.args().get(0)).toAbsolutePath();
+        if (!Files.exists(cwd)) {
             throw new IOException("Directory does not exist");
-        } else if (!cwd.isDirectory()) {
+        } else if (!Files.isDirectory(cwd)) {
             throw new IOException("Target is not a directory");
         }
-        session.put(CWD, cwd.getCanonicalFile());
-        return cwd;
+        session.currentDir(cwd);
     }
 
-    public Collection<File> ls(CommandSession session, String[] argv) throws IOException {
+    public Collection<Path> ls(CommandSession session, String[] argv) throws IOException {
         final String[] usage = {
                 "ls - list files",
                 "Usage: ls [OPTIONS] PATTERNS...",
@@ -336,8 +303,7 @@ public class Posix {
         if (opt.args().isEmpty()) {
             opt.args().add("*");
         }
-        opt.args().remove(0);
-        List<File> files = new ArrayList<File>();
+        List<Path> files = new ArrayList<>();
         for (String pattern : opt.args()) {
             pattern = ((pattern == null) || (pattern.length() == 0)) ? "." : pattern;
             pattern = ((pattern.charAt(0) != File.separatorChar) && (pattern.charAt(0) != '.'))
@@ -346,29 +312,28 @@ public class Posix {
             String parent = (idx < 0) ? "." : pattern.substring(0, idx + 1);
             String target = (idx < 0) ? pattern : pattern.substring(idx + 1);
 
-            File actualParent = ((parent.charAt(0) == File.separatorChar)
-                    ? new File(parent)
-                    : new File(pwd(session, new String[0]), parent)).getCanonicalFile();
+            Path actualParent = session.currentDir().resolve(parent).normalize();
 
             idx = target.indexOf(File.separatorChar, idx);
             boolean isWildcarded = (target.indexOf('*', idx) >= 0);
             if (isWildcarded) {
-                if (!actualParent.exists()) {
+                if (!Files.exists(actualParent)) {
                     throw new IOException("File does not exist");
                 }
                 final List<String> pieces = parseSubstring(target);
-                addAll(files, actualParent.listFiles(new FileFilter() {
-                    public boolean accept(File pathname) {
-                        return compareSubstring(pieces, pathname.getName());
-                    }
-                }));
+                Files.list(actualParent)
+                        .filter(p -> compareSubstring(pieces, p.getFileName().toString()))
+                        .map(actualParent::relativize)
+                        .forEach(files::add);
             } else {
-                File actualTarget = new File(actualParent, target).getCanonicalFile();
-                if (!actualTarget.exists()) {
+                Path actualTarget = actualParent.resolve(target);
+                if (!Files.exists(actualTarget)) {
                     throw new IOException("File does not exist");
                 }
-                if (actualTarget.isDirectory()) {
-                    addAll(files, actualTarget.listFiles());
+                if (Files.isDirectory(actualTarget)) {
+                    Files.list(actualTarget)
+                            .map(actualTarget::relativize)
+                            .forEach(files::add);
                 } else {
                     files.add(actualTarget);
                 }
@@ -397,14 +362,14 @@ public class Posix {
             args = Collections.singletonList("-");
         }
 
-        URI cwd = Shell.cwd(session);
+        Path cwd = session.currentDir();
         for (String arg : args) {
             InputStream is;
             if ("-".equals(arg)) {
                 is = System.in;
 
             } else {
-                is = cwd.resolve(arg).toURL().openStream();
+                is = cwd.toUri().resolve(arg).toURL().openStream();
             }
             cat(new BufferedReader(new InputStreamReader(is)), opt.isSet("n"));
         }
@@ -494,8 +459,8 @@ public class Posix {
             InputStream in = null;
 
             try {
-                URI cwd = Shell.cwd(session);
-                in = (arg == null) ? System.in : cwd.resolve(arg).toURL().openStream();
+                Path cwd = session.currentDir();
+                in = (arg == null) ? System.in : cwd.resolve(arg).toUri().toURL().openStream();
 
                 BufferedReader rdr = new BufferedReader(new InputStreamReader(in));
                 int line = 0;

@@ -20,8 +20,6 @@ package org.apache.felix.gogo.jline;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
@@ -29,6 +27,11 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.OpenOption;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -224,9 +227,16 @@ public class Builtin {
         BufferedWriter fw = null;
 
         if (args.size() == 1) {
-            String path = args.get(0);
-            File file = new File(Posix._pwd(session), path);
-            fw = new BufferedWriter(new FileWriter(file, opt.isSet("append")));
+            Path path = session.currentDir().resolve(args.get(0));
+            Set<OpenOption> options = new HashSet<>();
+            options.add(StandardOpenOption.WRITE);
+            options.add(StandardOpenOption.CREATE);
+            if (opt.isSet("append")) {
+                options.add(StandardOpenOption.APPEND);
+            } else {
+                options.add(StandardOpenOption.TRUNCATE_EXISTING);
+            }
+            fw = Files.newBufferedWriter(path, StandardCharsets.UTF_8, options.toArray(new OpenOption[options.size()]));
         }
 
         StringWriter sw = new StringWriter();

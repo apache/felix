@@ -188,10 +188,6 @@ public class Shell {
         return (Set<String>) session.get(".variables");
     }
 
-    static URI cwd(CommandSession session) {
-        return Posix._pwd(session).toURI(); // _cwd is set by felixcommands:cd
-    }
-
     private static <T extends Annotation> T findAnnotation(Annotation[] anns,
                                                            Class<T> clazz) {
         for (int i = 0; (anns != null) && (i < anns.length); i++) {
@@ -255,6 +251,7 @@ public class Shell {
         newSession.put("#TERM", (Function) (s, arguments) -> terminal.getType());
         newSession.put("#COLUMNS", (Function) (s, arguments) -> terminal.getWidth());
         newSession.put("#LINES", (Function) (s, arguments) -> terminal.getHeight());
+        newSession.put("#CWD", (Function) (s, arguments) -> s.currentDir().toString());
 
         LineReader reader = null;
         if (args.isEmpty() && interactive) {
@@ -338,7 +335,7 @@ public class Shell {
                 }
                 program = buf;
             } else {
-                URI script = cwd(session).resolve(args.remove(0));
+                URI script = session.currentDir().toUri().resolve(args.remove(0));
 
                 // set script arguments
                 newSession.put("0", script);
@@ -371,7 +368,7 @@ public class Shell {
     }
 
     public Object source(CommandSession session, String script) throws Exception {
-        URI uri = cwd(session).resolve(script);
+        URI uri = session.currentDir().toUri().resolve(script);
         session.put("0", uri);
         try {
             return session.execute(readScript(uri));
