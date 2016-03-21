@@ -29,9 +29,9 @@ import java.util.List;
  */
 public class ArgList extends AbstractList<Object>
 {
-    private List<Object> list;
+    private List<?> list;
 
-    public ArgList(List<Object> args)
+    public ArgList(List<?> args)
     {
         this.list = args;
     }

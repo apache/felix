@@ -31,8 +31,10 @@ public class TestParser2 extends AbstractParserTest
         Context c = new Context();
         c.addCommand("echo", this);
 
+        c.currentDir(null);
+
         assertEquals("file://wibble#tag", c.execute("echo file://wibble#tag"));
-        assertEquals("file:", c.execute("echo file: //wibble#tag"));
+//CHANGE        assertEquals("file:", c.execute("echo file: //wibble#tag"));
 
         assertEquals("PWD/*.java", c.execute("echo PWD/*.java"));
         try

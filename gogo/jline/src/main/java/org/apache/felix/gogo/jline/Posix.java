@@ -30,17 +30,12 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.Reader;
-import java.nio.file.FileVisitOption;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.PathMatcher;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -126,7 +121,6 @@ public class Posix {
             throw new IllegalArgumentException();
         }
         try {
-            argv = expand(session, argv);
             run(session, argv);
         } catch (IllegalArgumentException e) {
             System.err.println(e.getMessage());
@@ -159,81 +153,6 @@ public class Posix {
     protected String get(CommandSession session, String name) {
         Object o = session.get(name);
         return o != null ? o.toString() : null;
-    }
-
-    protected String[] expand(CommandSession session, String[] argv) throws IOException {
-        String rsv = "*(|<\\[?";
-        String reserved = "(?<!\\\\)[" + rsv + "]";
-        List<String> params = new ArrayList<>();
-        for (String arg : argv) {
-            if (arg.matches(".*" + reserved + ".*")) {
-                String org = arg;
-                List<String> expanded = new ArrayList<>();
-                Path currentDir = session.currentDir();
-                Path dir;
-                String pfx = arg.replaceFirst(reserved + ".*", "");
-                String prefix;
-                if (pfx.indexOf('/') >= 0) {
-                    pfx = pfx.substring(0, pfx.lastIndexOf('/'));
-                    arg = arg.substring(pfx.length() + 1);
-                    dir = currentDir.resolve(pfx).normalize();
-                    prefix = pfx + "/";
-                } else {
-                    dir = currentDir;
-                    prefix = "";
-                }
-                PathMatcher matcher = dir.getFileSystem().getPathMatcher("glob:" + arg);
-                Files.walkFileTree(dir,
-                        EnumSet.of(FileVisitOption.FOLLOW_LINKS),
-                        Integer.MAX_VALUE,
-                        new FileVisitor<Path>() {
-                            @Override
-                            public FileVisitResult preVisitDirectory(Path file, BasicFileAttributes attrs) throws IOException {
-                                if (file.equals(dir)) {
-                                    return FileVisitResult.CONTINUE;
-                                }
-                                if (Files.isHidden(file)) {
-                                    return FileVisitResult.SKIP_SUBTREE;
-                                }
-                                Path r = dir.relativize(file);
-                                if (matcher.matches(r)) {
-                                    expanded.add(prefix + r.toString());
-                                }
-                                return FileVisitResult.CONTINUE;
-                            }
-
-                            @Override
-                            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                                if (!Files.isHidden(file)) {
-                                    Path r = dir.relativize(file);
-                                    if (matcher.matches(r)) {
-                                        expanded.add(prefix + r.toString());
-                                    }
-                                }
-                                return FileVisitResult.CONTINUE;
-                            }
-
-                            @Override
-                            public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-                                return FileVisitResult.CONTINUE;
-                            }
-
-                            @Override
-                            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                                return FileVisitResult.CONTINUE;
-                            }
-                        });
-                Collections.sort(expanded);
-                if (expanded.isEmpty()) {
-                    throw new IOException("no matches found: " + org);
-                }
-                params.addAll(expanded);
-            } else {
-                arg = arg.replaceAll("(\\\\)([" + rsv + "])", "$2");
-                params.add(arg);
-            }
-        }
-        return params.toArray(new String[params.size()]);
     }
 
     protected Object run(CommandSession session, String[] argv) throws Exception {
@@ -1432,7 +1351,72 @@ public class Posix {
             for (String arg : args) {
                 if (buf.length() > 0)
                     buf.append(' ');
-                buf.append(arg);
+                for (int i = 0; i < arg.length(); i++) {
+                    int c = arg.charAt(i);
+                    int ch;
+                    if (c == '\\') {
+                        c = i < arg.length() - 1 ? arg.charAt(++i) : '\\';
+                        switch (c) {
+                            case 'a':
+                                buf.append('\u0007');
+                                break;
+                            case 'n':
+                                buf.append('\n');
+                                break;
+                            case 't':
+                                buf.append('\t');
+                                break;
+                            case 'r':
+                                buf.append('\r');
+                                break;
+                            case '\\':
+                                buf.append('\\');
+                                break;
+                            case '0':
+                            case '1':
+                            case '2':
+                            case '3':
+                            case '4':
+                            case '5':
+                            case '6':
+                            case '7':
+                            case '8':
+                            case '9':
+                                ch = 0;
+                                for (int j = 0; j < 3; j++) {
+                                    c = i < arg.length() - 1 ? arg.charAt(++i) : -1;
+                                    if (c >= 0) {
+                                        ch = ch * 8 + (c - '0');
+                                    }
+                                }
+                                buf.append((char) ch);
+                                break;
+                            case 'u':
+                                ch = 0;
+                                for (int j = 0; j < 4; j++) {
+                                    c = i < arg.length() - 1 ? arg.charAt(++i) : -1;
+                                    if (c >= 0) {
+                                        if (c >= 'A' && c <= 'Z') {
+                                            ch = ch * 16 + (c - 'A' + 10);
+                                        } else if (c >= 'a' && c <= 'z') {
+                                            ch = ch * 16 + (c - 'a' + 10);
+                                        } else if (c >= '0' && c <= '9') {
+                                            ch = ch * 16 + (c - '0');
+                                        } else {
+                                            break;
+                                        }
+                                    }
+                                }
+                                buf.append((char) ch);
+                                break;
+                            default:
+                                buf.append((char) c);
+                                break;
+                        }
+                    } else {
+                        buf.append((char) c);
+                    }
+                }
             }
         }
         if (opt.isSet("n")) {

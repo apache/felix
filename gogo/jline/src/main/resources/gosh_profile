@@ -24,7 +24,7 @@
 try {
 
   # ensure gogo commands are found first
-  SCOPE = gogo:*
+  SCOPE = 'gogo:*'
 
   # add methods on BundleContext object as commands
   addcommand context ${.context}
@@ -45,7 +45,9 @@ try {
 
   # set prompt
   prompt = 'g! '
-  \#rprompt = { (new java.text.SimpleDateFormat "HH:mm:ss") format (new Date) }
+  \#rprompt = { (new java.text.SimpleDateFormat \'\u001B\[90m\'HH:mm:ss) format (new Date) }
+  # could also be written
+  #  rprompt = { date +\u001B\\\[90m\%T }
 
 
   __option_not_present = {
