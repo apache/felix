@@ -16,11 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.gogo.runtime;
+package org.apache.felix.gogo.api;
 
-import org.apache.felix.gogo.runtime.Pipe.Result;
+import java.util.List;
+
+import org.apache.felix.service.command.CommandSession;
 
 public interface Job {
+
+    /**
+     * Get the job running in the current thead or null.
+     */
+    static Job current() {
+        Process p = Process.current();
+        Job j = p != null ? p.job() : null;
+        while (j != null && j.parent() != null) {
+            j = j.parent();
+        }
+        return j;
+    }
 
     enum Status {
         Created,
@@ -58,5 +72,11 @@ public interface Job {
      *
      */
     Result start(Status status) throws InterruptedException;
+
+    List<Process> processes();
+
+    CommandSession session();
+
+    Job parent();
 
 }

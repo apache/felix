@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.felix.gogo.api.Process;
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Function;
 import org.jline.builtins.Options;
@@ -37,16 +38,17 @@ public class Procedural {
         if (argv == null || argv.length < 1) {
             throw new IllegalArgumentException();
         }
+        Process process = Process.current();
         try {
-            run(session, argv);
+            run(session, process, argv);
         } catch (OptionException e) {
-            System.err.println(e.getMessage());
-            session.error(2);
+            process.err().println(e.getMessage());
+            process.error(2);
         } catch (HelpException e) {
-            System.err.println(e.getMessage());
-            session.error(0);
+            process.err().println(e.getMessage());
+            process.error(0);
         } catch (ThrownException e) {
-            session.error(1);
+            process.error(1);
             throw e.getCause();
         }
     }
@@ -94,33 +96,34 @@ public class Procedural {
         return o != null ? o.toString() : null;
     }
 
-    protected Object run(CommandSession session, Object[] argv) throws Throwable {
+    protected Object run(CommandSession session, Process process, Object[] argv) throws Throwable {
         switch (argv[0].toString()) {
             case "each":
-                return doEach(session, argv);
+                return doEach(session, process, argv);
             case "if":
-                return doIf(session, argv);
+                return doIf(session, process, argv);
             case "not":
-                return doNot(session, argv);
+                return doNot(session, process, argv);
             case "throw":
-                return doThrow(session, argv);
+                return doThrow(session, process, argv);
             case "try":
-                return doTry(session, argv);
+                return doTry(session, process, argv);
             case "until":
-                return doUntil(session, argv);
+                return doUntil(session, process, argv);
             case "while":
-                return doWhile(session, argv);
+                return doWhile(session, process, argv);
             case "break":
-                return doBreak(session, argv);
+                return doBreak(session, process, argv);
             case "continue":
-                return doContinue(session, argv);
+                return doContinue(session, process, argv);
             default:
                 throw new UnsupportedOperationException();
         }
     }
 
     protected List<Object> doEach(CommandSession session,
-                                Object[] argv) throws Exception {
+                                  Process process,
+                                  Object[] argv) throws Exception {
         String[] usage = {
                 "each -  loop over the elements",
                 "Usage: each [-r] elements { closure }",
@@ -135,10 +138,10 @@ public class Procedural {
         List<Function> functions = getFunctions(opt);
 
         if (elements == null || functions == null || functions.size() != 1) {
-            System.err.println("usage: each elements { closure }");
-            System.err.println("       elements: an array to iterate on");
-            System.err.println("       closure: a function or closure to call");
-            session.error(2);
+            process.err().println("usage: each elements { closure }");
+            process.err().println("       elements: an array to iterate on");
+            process.err().println("       closure: a function or closure to call");
+            process.error(2);
             return null;
         }
 
@@ -161,7 +164,7 @@ public class Procedural {
         return opt.isSet("result") ? results : null;
     }
 
-    protected Object doIf(CommandSession session, Object[] argv) throws Exception {
+    protected Object doIf(CommandSession session, Process process, Object[] argv) throws Exception {
         String[] usage = {
                 "if -  if / then / else construct",
                 "Usage: if {condition} {if-action} ... {else-action}",
@@ -170,8 +173,8 @@ public class Procedural {
         Options opt = parseOptions(session, usage, argv);
         List<Function> functions = getFunctions(opt);
         if (functions == null || functions.size() < 2) {
-            System.err.println("usage: if {condition} {if-action} ... {else-action}");
-            session.error(2);
+            process.err().println("usage: if {condition} {if-action} ... {else-action}");
+            process.error(2);
             return null;
         }
         for (int i = 0, length = functions.size(); i < length; ++i) {
@@ -182,7 +185,7 @@ public class Procedural {
         return null;
     }
 
-    protected Boolean doNot(CommandSession session, Object[] argv) throws Exception {
+    protected Boolean doNot(CommandSession session, Process process, Object[] argv) throws Exception {
         String[] usage = {
                 "not -  return the opposite condition",
                 "Usage: not { condition }",
@@ -191,15 +194,15 @@ public class Procedural {
         Options opt = parseOptions(session, usage, argv);
         List<Function> functions = getFunctions(opt);
         if (functions == null || functions.size() != 1) {
-            System.err.println("usage: not { condition }");
-            session.error(2);
+            process.err().println("usage: not { condition }");
+            process.error(2);
             return null;
         }
         return !isTrue(session, functions.get(0));
 
     }
 
-    protected Object doThrow(CommandSession session, Object[] argv) throws ThrownException, HelpException, OptionException {
+    protected Object doThrow(CommandSession session, Process process, Object[] argv) throws ThrownException, HelpException, OptionException {
         String[] usage = {
                 "throw -  throw an exception",
                 "Usage: throw [ message [ cause ] ]",
@@ -230,7 +233,7 @@ public class Procedural {
         }
     }
 
-    protected Object doTry(CommandSession session, Object[] argv) throws Exception {
+    protected Object doTry(CommandSession session, Process process, Object[] argv) throws Exception {
         String[] usage = {
                 "try -  try / catch / finally construct",
                 "Usage: try { try-action } [ { catch-action } [ { finally-action } ]  ]",
@@ -239,8 +242,8 @@ public class Procedural {
         Options opt = parseOptions(session, usage, argv);
         List<Function> functions = getFunctions(opt);
         if (functions == null || functions.size() < 1 || functions.size() > 3) {
-            System.err.println("usage: try { try-action } [ { catch-action } [ { finally-action } ] ]");
-            session.error(2);
+            process.err().println("usage: try { try-action } [ { catch-action } [ { finally-action } ] ]");
+            process.error(2);
             return null;
         }
         try {
@@ -260,7 +263,7 @@ public class Procedural {
         }
     }
 
-    protected Object doWhile(CommandSession session, Object[] argv) throws Exception {
+    protected Object doWhile(CommandSession session, Process process, Object[] argv) throws Exception {
         String[] usage = {
                 "while -  while loop",
                 "Usage: while { condition } { action }",
@@ -269,8 +272,8 @@ public class Procedural {
         Options opt = parseOptions(session, usage, argv);
         List<Function> functions = getFunctions(opt);
         if (functions == null || functions.size() != 2) {
-            System.err.println("usage: while { condition } { action }");
-            session.error(2);
+            process.err().println("usage: while { condition } { action }");
+            process.error(2);
             return null;
         }
         while (isTrue(session, functions.get(0))) {
@@ -285,7 +288,7 @@ public class Procedural {
         return null;
     }
 
-    protected Object doUntil(CommandSession session, Object[] argv) throws Exception {
+    protected Object doUntil(CommandSession session, Process process, Object[] argv) throws Exception {
         String[] usage = {
                 "until -  until loop",
                 "Usage: until { condition } { action }",
@@ -304,8 +307,8 @@ public class Procedural {
         }
         int length = opt.argObjects().size();
         if (length != 2 || functions == null) {
-            System.err.println("usage: until { condition } { action }");
-            session.error(2);
+            process.err().println("usage: until { condition } { action }");
+            process.error(2);
             return null;
         }
         while (!isTrue(session, functions.get(0))) {
@@ -320,7 +323,7 @@ public class Procedural {
         return null;
     }
 
-    protected Object doBreak(CommandSession session, Object[] argv) throws Exception {
+    protected Object doBreak(CommandSession session, Process process, Object[] argv) throws Exception {
         String[] usage = {
                 "break -  break from loop",
                 "Usage: break",
@@ -330,7 +333,7 @@ public class Procedural {
         throw new BreakException();
     }
 
-    protected Object doContinue(CommandSession session, Object[] argv) throws Exception {
+    protected Object doContinue(CommandSession session, Process process, Object[] argv) throws Exception {
         String[] usage = {
                 "continue -  continue loop",
                 "Usage: continue",

@@ -49,8 +49,9 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.felix.gogo.api.Job;
+import org.apache.felix.gogo.api.Process;
 import org.apache.felix.gogo.runtime.CommandSessionImpl;
-import org.apache.felix.gogo.runtime.Job;
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Converter;
 import org.apache.felix.service.command.Function;
@@ -95,8 +96,9 @@ public class Builtin {
     }
 
     public CharSequence format(CommandSession session, Object arg) {
+        Process process = Process.current();
         CharSequence result = session.format(arg, Converter.INSPECT);
-        System.out.println(result);
+        process.out().println(result);
         return result;
     }
 
@@ -182,10 +184,11 @@ public class Builtin {
                 "  +x                       unset xtrace option",
                 "If PREFIX given, then only show variable(s) starting with PREFIX"};
 
+        Process process = Process.current();
         Options opt = Options.compile(usage).parse(argv);
 
         if (opt.isSet("help")) {
-            opt.usage(System.err);
+            opt.usage(process.err());
             return;
         }
 
@@ -216,7 +219,7 @@ public class Builtin {
                 }
 
                 String trunc = value == null || value.length() < 55 ? "" : "...";
-                System.out.println(String.format("%-15.15s %-15s %.45s%s", type, key,
+                process.out().println(String.format("%-15.15s %-15s %.45s%s", type, key,
                         value, trunc));
             }
         }
@@ -235,10 +238,11 @@ public class Builtin {
                 "  -l --list                return List<String>",
                 "  -? --help                show help"};
 
+        Process process = Process.current();
         Options opt = Options.compile(usage).parse(argv);
 
         if (opt.isSet("help")) {
-            opt.usage(System.err);
+            opt.usage(process.err());
             return null;
         }
 
@@ -259,7 +263,7 @@ public class Builtin {
         }
 
         StringWriter sw = new StringWriter();
-        BufferedReader rdr = new BufferedReader(new InputStreamReader(System.in));
+        BufferedReader rdr = new BufferedReader(new InputStreamReader(process.in()));
 
         ArrayList<String> list = null;
 
@@ -305,11 +309,12 @@ public class Builtin {
                 "  -s --scope=NAME          list all commands in named scope",
                 "  -t --types               show full java type names"};
 
+        Process process = Process.current();
         Options opt = Options.compile(usage).parse(argv);
         List<String> args = opt.args();
 
         if (opt.isSet("help")) {
-            opt.usage(System.err);
+            opt.usage(process.err());
             return true;
         }
 
@@ -337,7 +342,7 @@ public class Builtin {
             }
 
             for (String sname : snames) {
-                System.out.println(sname);
+                process.out().println(sname);
             }
 
             return true;
@@ -357,7 +362,7 @@ public class Builtin {
             }
 
             for (Entry<String, Integer> entry : scopes.entrySet()) {
-                System.out.println(entry.getKey() + ":" + entry.getValue());
+                process.out().println(entry.getKey() + ":" + entry.getValue());
             }
 
             return true;
@@ -446,13 +451,13 @@ public class Builtin {
 
         if (buf.length() > 0) {
             if (!opt.isSet("quiet")) {
-                System.out.println(buf);
+                process.out().println(buf);
             }
             return true;
         }
 
         if (!opt.isSet("quiet")) {
-            System.err.println("type: " + name + " not found.");
+            process.err().println("type: " + name + " not found.");
         }
 
         return false;
@@ -464,21 +469,22 @@ public class Builtin {
                 "Usage: jobs [OPTIONS]",
                 "  -? --help                show help",
         };
+        Process process = Process.current();
         Options opt = Options.compile(usage).parse(argv);
         if (opt.isSet("help")) {
-            opt.usage(System.err);
+            opt.usage(process.err());
             return;
         }
         if (!opt.args().isEmpty()) {
-            System.err.println("usage: jobs");
-            session.error(2);
+            process.err().println("usage: jobs");
+            process.error(2);
             return;
         }
         List<Job> jobs = session.jobs();
-        Job current = session.currentJob();
+        Job current = Job.current();
         for (Job job : jobs) {
             if (job != current) {
-                System.out.println("[" + job.id() + "] " + job.status().toString().toLowerCase()
+                process.out().println("[" + job.id() + "] " + job.status().toString().toLowerCase()
                         + " " + job.command());
             }
         }
@@ -490,27 +496,28 @@ public class Builtin {
                 "Usage: fg [OPTIONS] [jobid]",
                 "  -? --help                show help",
         };
+        Process process = Process.current();
         Options opt = Options.compile(usage).parse(argv);
         if (opt.isSet("help")) {
-            opt.usage(System.err);
+            opt.usage(process.err());
             return;
         }
         if (opt.args().size() > 1) {
-            System.err.println("usage: fg [jobid]");
-            session.error(2);
+            process.err().println("usage: fg [jobid]");
+            process.error(2);
             return;
         }
         List<Job> jobs = session.jobs();
         Collections.reverse(jobs);
-        Job current = session.currentJob();
+        Job current = Job.current();
         if (argv.length == 0) {
             Job job = jobs.stream().filter(j -> j != current)
                     .findFirst().orElse(null);
             if (job != null) {
                 job.foreground();
             } else {
-                System.err.println("fg: no current job");
-                session.error(1);
+                process.err().println("fg: no current job");
+                process.error(1);
             }
         } else {
             Job job = jobs.stream().filter(j -> j != current && argv[0].equals(Integer.toString(j.id())))
@@ -518,8 +525,8 @@ public class Builtin {
             if (job != null) {
                 job.foreground();
             } else {
-                System.err.println("fg: job not found: " + argv[0]);
-                session.error(1);
+                process.err().println("fg: job not found: " + argv[0]);
+                process.error(1);
             }
         }
     }
@@ -530,27 +537,28 @@ public class Builtin {
                 "Usage: bg [OPTIONS] [jobid]",
                 "  -? --help                show help",
         };
+        Process process = Process.current();
         Options opt = Options.compile(usage).parse(argv);
         if (opt.isSet("help")) {
-            opt.usage(System.err);
+            opt.usage(process.err());
             return;
         }
         if (opt.args().size() > 1) {
-            System.err.println("usage: bg [jobid]");
-            session.error(2);
+            process.err().println("usage: bg [jobid]");
+            process.error(2);
             return;
         }
         List<Job> jobs = session.jobs();
         Collections.reverse(jobs);
-        Job current = session.currentJob();
+        Job current = Job.current();
         if (argv.length == 0) {
             Job job = jobs.stream().filter(j -> j != current)
                     .findFirst().orElse(null);
             if (job != null) {
                 job.background();
             } else {
-                System.err.println("bg: no current job");
-                session.error(1);
+                process.err().println("bg: no current job");
+                process.error(1);
             }
         } else {
             Job job = jobs.stream().filter(j -> j != current && argv[0].equals(Integer.toString(j.id())))
@@ -558,8 +566,8 @@ public class Builtin {
             if (job != null) {
                 job.background();
             } else {
-                System.err.println("bg: job not found: " + argv[0]);
-                session.error(1);
+                process.err().println("bg: job not found: " + argv[0]);
+                process.error(1);
             }
         }
     }
@@ -631,11 +639,13 @@ public class Builtin {
     }
 
     public void history(CommandSession session, String[] argv) throws IOException {
-        Commands.history(Shell.getReader(session), System.out, System.err, argv);
+        Process process = Process.current();
+        Commands.history(Shell.getReader(session), process.out(), process.err(), argv);
     }
 
     public void complete(CommandSession session, String[] argv) {
-        Commands.complete(Shell.getReader(session), System.out, System.err, Shell.getCompletions(session), argv);
+        Process process = Process.current();
+        Commands.complete(Shell.getReader(session), process.out(), process.err(), Shell.getCompletions(session), argv);
     }
 
     public void widget(final CommandSession session, String[] argv) throws Exception {
@@ -648,19 +658,23 @@ public class Builtin {
             }
             return true;
         };
-        Commands.widget(Shell.getReader(session), System.out, System.err, creator, argv);
+        Process process = Process.current();
+        Commands.widget(Shell.getReader(session), process.out(), process.err(), creator, argv);
     }
 
     public void keymap(CommandSession session, String[] argv) {
-        Commands.keymap(Shell.getReader(session), System.out, System.err, argv);
+        Process process = Process.current();
+        Commands.keymap(Shell.getReader(session), process.out(), process.err(), argv);
     }
 
     public void setopt(CommandSession session, String[] argv) {
-        Commands.setopt(Shell.getReader(session), System.out, System.err, argv);
+        Process process = Process.current();
+        Commands.setopt(Shell.getReader(session), process.out(), process.err(), argv);
     }
 
     public void unsetopt(CommandSession session, String[] argv) {
-        Commands.unsetopt(Shell.getReader(session), System.out, System.err, argv);
+        Process process = Process.current();
+        Commands.unsetopt(Shell.getReader(session), process.out(), process.err(), argv);
     }
 
     public List<Candidate> __files(CommandSession session) {

@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import org.apache.felix.gogo.api.Process;
 import org.apache.felix.gogo.runtime.Parser.Pipeline;
 import org.apache.felix.gogo.runtime.Parser.Program;
 import org.apache.felix.gogo.runtime.Parser.Sequence;
@@ -467,7 +468,7 @@ public class TestParser extends AbstractParserTest
 
     public boolean istty(CommandSession session, int fd)
     {
-        return session.isTty(fd);
+        return Process.current().isTty(fd);
     }
 
     void each(CommandSession session, Collection<Object> list, Function closure)

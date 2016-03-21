@@ -18,16 +18,36 @@
  */
 package org.apache.felix.gogo.api;
 
-import org.apache.felix.gogo.api.Job.Status;
+import java.io.InputStream;
+import java.io.PrintStream;
 
-/**
- * Listener for command executions.
- *
- * Such listeners must be registered in the OSGi registry and will be called
- * by the CommandProcessor when a command line is executed in a given session.
- */
-public interface JobListener {
+import org.apache.felix.gogo.runtime.Pipe;
 
-    void jobChanged(Job job, Status previous, Status current);
+public interface Process {
+
+    static Process current() {
+        return Pipe.getCurrentPipe();
+    }
+
+    InputStream in();
+
+    PrintStream out();
+
+    PrintStream err();
+
+    /**
+     * Get the job controlling this process
+     */
+    Job job();
+
+    /**
+     * Check if the given descriptor for the currently running pipe is the terminal or not.
+     */
+    boolean isTty(int fd);
+
+    /**
+     * Set the error code for the currently running pipe.
+     */
+    void error(int error);
 
 }
