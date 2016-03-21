@@ -62,6 +62,7 @@ import org.jline.reader.Candidate;
 import org.jline.reader.LineReader;
 import org.jline.reader.ParsedLine;
 import org.jline.reader.Widget;
+import org.jline.terminal.Terminal;
 
 import static org.apache.felix.gogo.jline.Shell.*;
 
@@ -619,7 +620,7 @@ public class Builtin {
         List<Candidate> candidates = new ArrayList<>();
         new FilesCompleter(session.currentDir()) {
             @Override
-            protected String getDisplay(Path p) {
+            protected String getDisplay(Terminal terminal, Path p) {
                 return getFileDisplay(session, p);
             }
         }.complete(reader, line, candidates);
@@ -632,7 +633,7 @@ public class Builtin {
         List<Candidate> candidates = new ArrayList<>();
         new DirectoriesCompleter(session.currentDir()) {
             @Override
-            protected String getDisplay(Path p) {
+            protected String getDisplay(Terminal terminal, Path p) {
                 return getFileDisplay(session, p);
             }
         }.complete(reader, line, candidates);
