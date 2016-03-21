@@ -334,7 +334,7 @@ public class Closure implements Function, Evaluate
                 return result;
             } else {
                 String s = baos.toString();
-                while (s.charAt(s.length() - 1) == '\n') {
+                while (!s.isEmpty() && s.charAt(s.length() - 1) == '\n') {
                     s = s.substring(0, s.length() - 1);
                 }
                 return s;
