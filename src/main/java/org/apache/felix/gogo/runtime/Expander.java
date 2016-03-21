@@ -76,6 +76,7 @@ public class Expander extends BaseTokenizer
     private boolean semanticJoin;
     private boolean unquote;
     private boolean asPattern;
+    private boolean rawVariable;
 
     public Expander(CharSequence text, Evaluate evaluate,
                     boolean inQuote,
@@ -113,6 +114,9 @@ public class Expander extends BaseTokenizer
     private Object expand() throws Exception
     {
         Object expanded = doExpand();
+        if (rawVariable) {
+            return expanded;
+        }
         Stream<Object> stream = expanded instanceof Collection
                 ? asCollection(expanded).stream()
                 : Stream.of(expanded);
@@ -849,6 +853,7 @@ public class Expander extends BaseTokenizer
                 {
                     String name = text.subSequence(start, index - 1).toString();
                     val = evaluate.get(name);
+                    rawVariable = true;
                 }
             }
         }

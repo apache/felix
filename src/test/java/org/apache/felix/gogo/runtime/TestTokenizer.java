@@ -38,7 +38,9 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -178,6 +180,16 @@ public class TestTokenizer
         assertEquals("\n", t.next().toString());
         assertEquals("}", t.next().toString());
         assertNull(t.next());
+    }
+
+    @Test
+    public void testRawVariable() throws Exception
+    {
+        vars.put("a1", Arrays.asList("a", 1));
+
+        assertSame(vars.get("a1"), expand("$a1"));
+        assertNotSame(vars.get("a1"), expand("${a1}"));
+        assertEquals(vars.get("a1"), expand("${a1}"));
     }
 
     @Test
