@@ -30,6 +30,7 @@ import java.nio.file.Paths;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /*
  * Test features of the new parser/tokenizer, many of which are not supported
@@ -97,6 +98,41 @@ public class TestParser4 extends AbstractParserTest
         c.execute("echo a>fooa");
         c.execute("echo b>foob");
         assertEquals("foo\na\nb\n", c.execute("echo foo | cat <fooa | cat<foob | tac"));
+    }
+
+    @Test
+    public void testRedirectWithVar() throws Exception
+    {
+        Context c = new Context();
+        c.addCommand("echo", this);
+        c.addCommand("tac", this);
+        c.addCommand("cat", this);
+
+        Path path = Paths.get("target/tmp");
+        Files.createDirectories(path);
+        c.currentDir(path);
+
+        c.execute("a=foo");
+        c.execute("echo bar > $a");
+        assertEquals("bar\n", c.execute("cat <$a | tac"));
+
+        // Empty var
+        try {
+            c.execute("echo bar > $b");
+            fail("Expected IOException");
+        } catch (IOException e) {
+        }
+
+        try {
+            c.execute("cat < $b");
+            fail("Expected IOException");
+        } catch (IOException e) {
+        }
+
+        // Array var
+        c.execute("c = [ ar1 ar2 ]");
+        c.execute("echo bar > $c");
+        assertEquals("bar\nbar\n", c.execute("cat <$c | tac"));
     }
 
     public void echo(String msg)

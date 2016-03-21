@@ -18,10 +18,13 @@
  */
 package org.apache.felix.gogo.runtime;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.PrintStream;
+import java.net.URI;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
 import java.nio.channels.Channel;
@@ -31,8 +34,11 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -255,22 +261,25 @@ public class Pipe implements Callable<Result>, Process
                         fd = 1;
                     }
                     boolean append = m.group(3) != null;
-                    Token file = tokens.get(++i);
-                    Path outPath = closure.session().currentDir().resolve(file.toString());
                     Set<StandardOpenOption> options = new HashSet<>();
                     options.add(StandardOpenOption.WRITE);
                     options.add(StandardOpenOption.CREATE);
-                    if (append) {
-                        options.add(StandardOpenOption.APPEND);
-                    } else {
-                        options.add(StandardOpenOption.TRUNCATE_EXISTING);
-                    }
-                    Channel ch = Files.newByteChannel(outPath, options);
-                    if (fd >= 0) {
-                        setStream(ch, fd, WRITE);
-                    } else {
-                        setStream(ch, 1, WRITE);
-                        setStream(ch, 2, WRITE);
+                    options.add(append ? StandardOpenOption.APPEND : StandardOpenOption.TRUNCATE_EXISTING);
+                    Token tok = tokens.get(++i);
+                    Object val = Expander.expand(tok, closure);
+                    for (Path p : toPaths(val))
+                    {
+                        p = closure.session().currentDir().resolve(p);
+                        Channel ch = Files.newByteChannel(p, options);
+                        if (fd >= 0)
+                        {
+                            setStream(ch, fd, WRITE);
+                        }
+                        else
+                        {
+                            setStream(ch, 1, WRITE);
+                            setStream(ch, 2, WRITE);
+                        }
                     }
                 }
                 else if ((m = Pattern.compile("([0-9])?>&([0-9])").matcher(t)).matches()) {
@@ -301,16 +310,20 @@ public class Pipe implements Callable<Result>, Process
                         fd = Integer.parseInt(m.group(1));
                     }
                     boolean output = m.group(2) != null;
-                    Token file = tokens.get(++i);
-                    Path inPath = closure.session().currentDir().resolve(file.toString());
                     Set<StandardOpenOption> options = new HashSet<>();
                     options.add(StandardOpenOption.READ);
                     if (output) {
                         options.add(StandardOpenOption.WRITE);
                         options.add(StandardOpenOption.CREATE);
                     }
-                    Channel ch = Files.newByteChannel(inPath, options);
-                    setStream(ch, fd, READ + (output ? WRITE : 0));
+                    Token tok = tokens.get(++i);
+                    Object val = Expander.expand(tok, closure);
+                    for (Path p : toPaths(val))
+                    {
+                        p = closure.session().currentDir().resolve(p);
+                        Channel ch = Files.newByteChannel(p, options);
+                        setStream(ch, fd, READ + (output ? WRITE : 0));
+                    }
                 }
             }
 
@@ -394,6 +407,60 @@ public class Pipe implements Callable<Result>, Process
                 e.printStackTrace();
             }
         }
+    }
+
+    private List<Path> toPaths(Object val) throws IOException
+    {
+        List<Path> paths = new ArrayList<>();
+        if (val instanceof Collection)
+        {
+            for (Object o : (Collection) val)
+            {
+                Path p = toPath(o);
+                if (p != null)
+                {
+                    paths.add(p);
+                }
+            }
+        }
+        else if (val != null)
+        {
+            Path p = toPath(val);
+            if (p != null)
+            {
+                paths.add(p);
+            }
+        }
+        if (paths.isEmpty())
+        {
+            throw new IOException("no such file or directory");
+        }
+        return paths;
+    }
+
+    private Path toPath(Object o)
+    {
+        if (o instanceof Path)
+        {
+            return (Path) o;
+        }
+        else if (o instanceof File)
+        {
+            return ((File) o).toPath();
+        }
+        else if (o instanceof URI)
+        {
+            return Paths.get((URI) o);
+        }
+        else if (o != null)
+        {
+            String s = String.valueOf(o);
+            if (!s.isEmpty())
+            {
+                return Paths.get(String.valueOf(o));
+            }
+        }
+        return null;
     }
 
     private Channel wrap(Channel channel) {
