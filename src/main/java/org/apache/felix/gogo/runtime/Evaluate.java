@@ -18,6 +18,8 @@
  */
 package org.apache.felix.gogo.runtime;
 
+import java.nio.file.Path;
+
 public interface Evaluate
 {
     Object eval(Token t) throws Exception;
@@ -27,4 +29,6 @@ public interface Evaluate
     Object put(String key, Object value);
 
     Object expr(Token t);
+
+    Path currentDir();
 }

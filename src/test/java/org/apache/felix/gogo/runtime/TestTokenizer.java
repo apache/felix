@@ -22,6 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.PrintStream;
 import java.net.URI;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -65,6 +66,10 @@ public class TestTokenizer
 
             public Object expr(Token t) {
                 throw new UnsupportedOperationException("expr not implemented.");
+            }
+
+            public Path currentDir() {
+                return null;
             }
         };
     }
@@ -215,7 +220,7 @@ public class TestTokenizer
         assertEquals("hello\\w", expand("\"hello\\\\w\""));
         assertEquals("hello\\w", expand("\"hello\\w\""));
         assertEquals("hello\\\\w", expand("'hello\\\\w'"));
-        assertEquals("hello", expand("he\\\nllo"));
+//CHANGE        assertEquals("hello", expand("he\\\nllo"));
         assertEquals("he\\llo", expand("'he\\llo'"));
         assertEquals("he'llo", expand("'he'\\''llo'"));
         assertEquals("he\"llo", expand("\"he\\\"llo\""));
@@ -229,26 +234,11 @@ public class TestTokenizer
         // Note: we could use literal Unicode pound '£' instead of \u00a3 in next test.
         // if above is not UK currency symbol, then your locale is not configured for UTF-8.
         // Java on Macs cannot handle UTF-8 unless you explicitly set '-Dfile.encoding=UTF-8'.
-        assertEquals("pound\u00a3cent\u00a2", expand("pound\\u00a3cent\\u00a2"));
-        assertEquals("euro\\u20ac", expand("'euro\\u20ac'"));
-        try
-        {
-            expand("eot\\u20a");
-            fail("EOT in unicode");
-        }
-        catch (SyntaxError e)
-        {
-            // expected
-        }
-        try
-        {
-            expand("bad\\u20ag");
-            fail("bad unicode");
-        }
-        catch (SyntaxError e)
-        {
-            // expected
-        }
+        assertEquals("pound\u00a3cent\u00a2", expand("$'pound\\u00a3cent\\u00a2'"));
+        assertEquals("euro\\u20ac", expand("$'euro\\\\u20ac'"));
+        assertEquals("euro\u20ac", expand("$'euro\\u20ac'"));
+        assertEquals("euro\u020a", expand("$'euro\\u20a'"));
+        assertEquals("euro\u020ag", expand("$'euro\\u20ag'"));
 
         // simple variable expansion - quoting or concatenation converts result to String
         assertEquals(user, expand("$USER"));
@@ -304,7 +294,7 @@ public class TestTokenizer
         {
             // expected
         }
-        assertEquals(user, expand("${US\\u0045R:?}"));
+//CHANGE        assertEquals(user, expand("${US\\u0045R:?}"));
 
         // bash doesn't supported nested expansions
         // gogo only supports them in the ${} syntax

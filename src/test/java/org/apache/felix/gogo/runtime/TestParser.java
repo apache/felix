@@ -114,6 +114,9 @@ public class TestParser extends AbstractParserTest
         c.addCommand("echoout", this);
         c.execute("myecho = { echoout $args }");
 
+        // Disable file name generation to avoid escaping 'd.*'
+        c.currentDir(null);
+
         assertEquals("def", c.execute("echo def|grep d.*|capture"));
         assertEquals("def", c.execute("echoout def|grep d.*|capture"));
         assertEquals("def", c.execute("myecho def|grep d.*|capture"));
