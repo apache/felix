@@ -18,26 +18,24 @@
  */
 package org.apache.felix.gogo.runtime;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.PrintStream;
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.felix.gogo.runtime.threadio.ThreadIOImpl;
+import org.junit.Test;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
-
-import junit.framework.TestCase;
-
-import org.apache.felix.gogo.runtime.threadio.ThreadIOImpl;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 
 public class TestTokenizer
 {
@@ -304,6 +302,16 @@ public class TestTokenizer
     {
         String script = "addcommand system (((${.context} bundles) 0) loadclass java.lang.System)";
 
+        PrintStream sout = new PrintStream(System.out) {
+            @Override
+            public void close() {
+            }
+        };
+        PrintStream serr = new PrintStream(System.err) {
+            @Override
+            public void close() {
+            }
+        };
         ThreadIOImpl tio = new ThreadIOImpl();
         tio.start();
 
@@ -315,7 +323,7 @@ public class TestTokenizer
             processor.addCommand("gogo", processor, "addcommand");
             processor.addConstant(".context", bc);
 
-            CommandSessionImpl session = new CommandSessionImpl(processor, new ByteArrayInputStream(script.getBytes()), System.out, System.err);
+            CommandSessionImpl session = new CommandSessionImpl(processor, new ByteArrayInputStream(script.getBytes()), sout, serr);
 
             Closure c = new Closure(session, null, script);
             assertNull(c.execute(session, null));

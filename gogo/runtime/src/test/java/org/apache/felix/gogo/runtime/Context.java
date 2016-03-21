@@ -18,6 +18,10 @@
  */
 package org.apache.felix.gogo.runtime;
 
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.nio.file.Path;
+
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.threadio.ThreadIO;
 
@@ -27,13 +31,13 @@ public class Context extends CommandProcessorImpl
     
     private final CommandSession session;
 
-    public Context(ThreadIO threadio)
+    public Context(ThreadIO threadio, InputStream in, PrintStream out, PrintStream err)
     {
         super(threadio);
         addCommand("osgi", this, "addCommand");
         addCommand("osgi", this, "removeCommand");
         addCommand("osgi", this, "eval");
-        session = createSession(System.in, System.out, System.err);
+        session = createSession(in, out, err);
     }
 
     public Object execute(CharSequence source) throws Exception
@@ -66,4 +70,11 @@ public class Context extends CommandProcessorImpl
         return session.get(name);
     }
 
+    public void currentDir(Path path) {
+        session.currentDir(path);
+    }
+
+    public Path currentDir() {
+        return session.currentDir();
+    }
 }

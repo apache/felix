@@ -20,125 +20,307 @@ package org.apache.felix.gogo.runtime;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.io.PrintStream;
-import java.lang.reflect.Method;
+import java.nio.ByteBuffer;
+import java.nio.channels.Channel;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.felix.gogo.runtime.Parser.Executable;
+import org.apache.felix.gogo.runtime.Parser.Statement;
 import org.apache.felix.service.command.Converter;
 
 public class Pipe extends Thread
 {
-    static final ThreadLocal<InputStream> tIn = new ThreadLocal<InputStream>();
-    static final ThreadLocal<PrintStream> tOut = new ThreadLocal<PrintStream>();
-    static final ThreadLocal<PrintStream> tErr = new ThreadLocal<PrintStream>();
-    InputStream in;
-    PrintStream out;
-    PrintStream err;
-    PipedOutputStream pout;
-    Closure closure;
-    Exception exception;
+    static final ThreadLocal<Channel[]> tStreams = new ThreadLocal<Channel[]>();
+
+    public static Channel[] mark() {
+        return tStreams.get();
+    }
+
+    public static void reset(Channel[] streams) {
+        tStreams.set(streams);
+    }
+
+    final Closure closure;
+    final Executable executable;
+    final Channel[] streams;
+    final boolean[] toclose;
     Object result;
-    Executable executable;
+    Exception exception;
+    int exit = 0;
 
-    public static Object[] mark()
-    {
-        Object[] mark = { tIn.get(), tOut.get(), tErr.get() };
-        return mark;
-    }
-
-    public static void reset(Object[] mark)
-    {
-        tIn.set((InputStream) mark[0]);
-        tOut.set((PrintStream) mark[1]);
-        tErr.set((PrintStream) mark[2]);
-    }
-
-    public Pipe(Closure closure, Executable executable)
+    public Pipe(Closure closure, Executable executable, Channel[] streams, boolean[] toclose)
     {
         super("pipe-" + executable);
         this.closure = closure;
         this.executable = executable;
-
-        in = tIn.get();
-        out = tOut.get();
-        err = tErr.get();
+        this.streams = streams;
+        this.toclose = toclose;
     }
 
     public String toString()
     {
-        return "pipe<" + executable + "> out=" + out;
+        return "pipe<" + executable + "> out=" + streams[1];
     }
 
-    public void setIn(InputStream in)
-    {
-        this.in = in;
+    private static final int READ = 1;
+    private static final int WRITE = 2;
+
+    private void setStream(Channel ch, int fd, int readWrite) throws IOException {
+        if ((readWrite & READ) != 0 && !(ch instanceof ReadableByteChannel)) {
+            throw new IllegalArgumentException("Channel is not readable");
+        }
+        if ((readWrite & WRITE) != 0 && !(ch instanceof WritableByteChannel)) {
+            throw new IllegalArgumentException("Channel is not writable");
+        }
+        if (fd == 0 && !(ch instanceof ReadableByteChannel)) {
+            throw new IllegalArgumentException("Stdin is not readable");
+        }
+        if (fd == 1 && !(ch instanceof WritableByteChannel)) {
+            throw new IllegalArgumentException("Stdout is not writable");
+        }
+        if (fd == 2 && !(ch instanceof WritableByteChannel)) {
+            throw new IllegalArgumentException("Stderr is not writable");
+        }
+        // TODO: externalize
+        boolean multios = true;
+        if (multios) {
+            if (streams[fd] != null && (readWrite & READ) != 0 && (readWrite & WRITE) != 0) {
+                throw new IllegalArgumentException("Can not do multios with read/write streams");
+            }
+            if ((readWrite & READ) != 0) {
+                MultiReadableByteChannel mrbc;
+                if (streams[fd] instanceof MultiReadableByteChannel) {
+                    mrbc = (MultiReadableByteChannel) streams[fd];
+                } else {
+                    mrbc = new MultiReadableByteChannel();
+                    mrbc.addChannel((ReadableByteChannel) streams[fd], toclose[fd]);
+                    streams[fd] = mrbc;
+                    toclose[fd] = true;
+                }
+                mrbc.addChannel((ReadableByteChannel) ch, true);
+            } else if ((readWrite & WRITE) != 0) {
+                MultiWritableByteChannel mrbc;
+                if (streams[fd] instanceof MultiWritableByteChannel) {
+                    mrbc = (MultiWritableByteChannel) streams[fd];
+                } else {
+                    mrbc = new MultiWritableByteChannel();
+                    mrbc.addChannel((WritableByteChannel) streams[fd], toclose[fd]);
+                    streams[fd] = mrbc;
+                    toclose[fd] = true;
+                }
+                mrbc.addChannel((WritableByteChannel) ch, true);
+            } else {
+                throw new IllegalStateException();
+            }
+        }
+        else {
+            if (streams[fd] != null && toclose[fd]) {
+                streams[fd].close();
+            }
+            streams[fd] = ch;
+            toclose[fd] = true;
+        }
     }
 
-    public void setOut(PrintStream out)
-    {
-        this.out = out;
+    private static class MultiChannel<T extends Channel> implements Channel {
+        protected final List<T> channels = new ArrayList<T>();
+        protected final List<T> toClose = new ArrayList<T>();
+        protected final AtomicBoolean opened = new AtomicBoolean(true);
+        public void addChannel(T channel, boolean toclose) {
+            channels.add(channel);
+            if (toclose) {
+                toClose.add(channel);
+            }
+        }
+
+        public boolean isOpen() {
+            return opened.get();
+        }
+
+        public void close() throws IOException {
+            if (opened.compareAndSet(true, false)) {
+                for (T channel : toClose) {
+                    channel.close();
+                }
+            }
+        }
     }
 
-    public void setErr(PrintStream err)
-    {
-        this.err = err;
+    private static class MultiReadableByteChannel extends MultiChannel<ReadableByteChannel> implements ReadableByteChannel {
+        int index = 0;
+        public int read(ByteBuffer dst) throws IOException {
+            int nbRead = -1;
+            while (nbRead < 0 && index < channels.size()) {
+                nbRead = channels.get(index).read(dst);
+                if (nbRead < 0) {
+                    index++;
+                } else {
+                    break;
+                }
+            }
+            return nbRead;
+        }
     }
 
-    public Pipe connect(Pipe next) throws IOException
-    {
-        next.setOut(out);
-        next.setErr(err);
-        pout = new PipedOutputStream();
-        next.setIn(new PipedInputStream(pout));
-        out = new PrintStream(pout);
-        return next;
+    private static class MultiWritableByteChannel extends MultiChannel<WritableByteChannel> implements WritableByteChannel {
+        public int write(ByteBuffer src) throws IOException {
+            int pos = src.position();
+            for (WritableByteChannel ch : channels) {
+                src.position(pos);
+                while (src.hasRemaining()) {
+                    ch.write(src);
+                }
+            }
+            return src.position() - pos;
+        }
     }
 
     public void run()
     {
-        tIn.set(in);
-        tOut.set(out);
-        tErr.set(err);
-        closure.session().threadIO().setStreams(in, out, err);
+        InputStream in = null;
+        PrintStream out = null;
+        PrintStream err = null;
+        WritableByteChannel errChannel = (WritableByteChannel) streams[2];
 
+        Channel[] prevStreams = tStreams.get();
         try
         {
-            result = closure.execute(executable);
-            if (result != null && pout != null)
-            {
-                if (!Boolean.FALSE.equals(closure.session().get(".FormatPipe")))
-                {
-                    out.println(closure.session().format(result, Converter.INSPECT));
+            if (executable instanceof Statement) {
+                Statement statement = (Statement) executable;
+                List<Token> tokens = statement.redirections();
+                for (int i = 0; i < tokens.size(); i++) {
+                    Token t = tokens.get(i);
+                    Matcher m;
+                    if ((m = Pattern.compile("(?:([0-9])?|(&)?)>(>)?").matcher(t)).matches()) {
+                        int fd;
+                        if (m.group(1) != null) {
+                            fd = Integer.parseInt(m.group(1));
+                        }
+                        else if (m.group(2) != null) {
+                            fd = -1; // both 1 and 2
+                        } else {
+                            fd = 1;
+                        }
+                        boolean append = m.group(3) != null;
+                        Token file = tokens.get(++i);
+                        Path outPath = closure.session().currentDir().resolve(file.toString());
+                        Set<StandardOpenOption> options = new HashSet<StandardOpenOption>();
+                        options.add(StandardOpenOption.WRITE);
+                        options.add(StandardOpenOption.CREATE);
+                        if (append) {
+                            options.add(StandardOpenOption.APPEND);
+                        } else {
+                            options.add(StandardOpenOption.TRUNCATE_EXISTING);
+                        }
+                        Channel ch = Files.newByteChannel(outPath, options);
+                        if (fd >= 0) {
+                            setStream(ch, fd, WRITE);
+                        } else {
+                            setStream(ch, 1, WRITE);
+                            setStream(ch, 2, WRITE);
+                        }
+                    }
+                    else if ((m = Pattern.compile("([0-9])?>&([0-9])").matcher(t)).matches()) {
+                        int fd0 = 1;
+                        if (m.group(1) != null) {
+                            fd0 = Integer.parseInt(m.group(1));
+                        }
+                        int fd1 = Integer.parseInt(m.group(2));
+                        if (streams[fd0] != null && toclose[fd0]) {
+                            streams[fd0].close();
+                        }
+                        streams[fd0] = streams[fd1];
+                        // TODO: this is wrong, we should keep a counter somehow so that the
+                        // stream is closed when both are closed
+                        toclose[fd0] = false;
+                    }
+                    else if ((m = Pattern.compile("([0-9])?<(>)?").matcher(t)).matches()) {
+                        int fd = 0;
+                        if (m.group(1) != null) {
+                            fd = Integer.parseInt(m.group(1));
+                        }
+                        boolean output = m.group(2) != null;
+                        Token file = tokens.get(++i);
+                        Path inPath = closure.session().currentDir().resolve(file.toString());
+                        Set<StandardOpenOption> options = new HashSet<StandardOpenOption>();
+                        options.add(StandardOpenOption.READ);
+                        if (output) {
+                            options.add(StandardOpenOption.WRITE);
+                            options.add(StandardOpenOption.CREATE);
+                        }
+                        Channel ch = Files.newByteChannel(inPath, options);
+                        setStream(ch, fd, READ + (output ? WRITE : 0));
+                    }
                 }
+            } else {
+                new UnsupportedOperationException("what to do ?").printStackTrace();
+            }
+
+            tStreams.set(streams);
+
+            // TODO: not sure this is the correct way
+            boolean endOfPipe = !toclose[1];
+
+            in = Channels.newInputStream((ReadableByteChannel) streams[0]);
+            out = new PrintStream(Channels.newOutputStream((WritableByteChannel) streams[1]), true);
+            err = new PrintStream(Channels.newOutputStream((WritableByteChannel) streams[2]), true);
+            errChannel = (WritableByteChannel) streams[2];
+
+            closure.session().threadIO().setStreams(in, out, err);
+
+            result = closure.execute(executable);
+            // We don't print the result if toclose[1] == false, which means we're at the end of the pipe
+            if (result != null && !endOfPipe && !Boolean.FALSE.equals(closure.session().get(".FormatPipe"))) {
+                out.println(closure.session().format(result, Converter.INSPECT));
             }
         }
         catch (Exception e)
         {
             exception = e;
+            if (exit == 0) {
+                exit = 1; // failure
+            }
+            // TODO: use shell name instead of 'gogo'
+            // TODO: use color if not redirected
+            // TODO: use conversion ?
+            String msg = "gogo: " + e.getClass().getSimpleName() + ": " + e.getMessage() + "\n";
+            try {
+                errChannel.write(ByteBuffer.wrap(msg.getBytes()));
+            } catch (IOException ioe) {
+                e.addSuppressed(ioe);
+            }
         }
         finally
         {
-            out.flush();
+            if (out != null) {
+                out.flush();
+            }
+            if (err != null) {
+                err.flush();
+            }
             closure.session().threadIO().close();
+
+            tStreams.set(prevStreams);
 
             try
             {
-                if (pout != null)
-                {
-                    pout.close();
-                }
-
-                if (in instanceof PipedInputStream)
-                {
-                    in.close();
-
-                    // avoid writer waiting when reader has given up (FELIX-2380)
-                    Method m = in.getClass().getDeclaredMethod("receivedLast",
-                        (Class<?>[]) null);
-                    m.setAccessible(true);
-                    m.invoke(in, (Object[]) null);
+                for (int i = 0; i < 10; i++) {
+                    if (toclose[i] && streams[i] != null) {
+                        streams[i].close();
+                    }
                 }
             }
             catch (Exception e)

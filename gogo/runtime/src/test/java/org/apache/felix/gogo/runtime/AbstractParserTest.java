@@ -18,16 +18,28 @@
  */
 package org.apache.felix.gogo.runtime;
 
+import java.io.FilterInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+
 import junit.framework.TestCase;
 import org.apache.felix.gogo.runtime.threadio.ThreadIOImpl;
 
 public abstract class AbstractParserTest extends TestCase {
 
     private ThreadIOImpl threadIO;
+    private InputStream sin;
+    private PrintStream sout;
+    private PrintStream serr;
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+        sin = new NoCloseInputStream(System.in);
+        sout = new NoClosePrintStream(System.out);
+        serr = new NoClosePrintStream(System.err);
         threadIO = new ThreadIOImpl();
         threadIO.start();
     }
@@ -40,7 +52,25 @@ public abstract class AbstractParserTest extends TestCase {
 
     public class Context extends org.apache.felix.gogo.runtime.Context {
         public Context() {
-            super(AbstractParserTest.this.threadIO);
+            super(AbstractParserTest.this.threadIO, sin, sout, serr);
+        }
+    }
+
+    private static class NoCloseInputStream extends FilterInputStream {
+        public NoCloseInputStream(InputStream in) {
+            super(in);
+        }
+        @Override
+        public void close() throws IOException {
+        }
+    }
+
+    private static class NoClosePrintStream extends PrintStream {
+        public NoClosePrintStream(OutputStream out) {
+            super(out);
+        }
+        @Override
+        public void close() {
         }
     }
 
