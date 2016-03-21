@@ -20,7 +20,6 @@ package org.apache.felix.gogo.api;
 
 import org.apache.felix.gogo.runtime.Job;
 import org.apache.felix.gogo.runtime.Job.Status;
-import org.apache.felix.service.command.CommandSession;
 
 /**
  * Listener for command executions.

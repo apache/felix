@@ -19,11 +19,11 @@
 // DWB20: ThreadIO should check and reset IO if something (e.g. jetty) overrides
 package org.apache.felix.gogo.runtime.threadio;
 
-import org.apache.felix.service.threadio.ThreadIO;
-
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.logging.Logger;
+
+import org.apache.felix.service.threadio.ThreadIO;
 
 public class ThreadIOImpl implements ThreadIO
 {

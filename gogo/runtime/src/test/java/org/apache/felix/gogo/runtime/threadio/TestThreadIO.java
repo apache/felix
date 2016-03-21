@@ -18,12 +18,12 @@
  */
 package org.apache.felix.gogo.runtime.threadio;
 
-import junit.framework.TestCase;
-
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
+
+import junit.framework.TestCase;
 
 public class TestThreadIO extends TestCase
 {

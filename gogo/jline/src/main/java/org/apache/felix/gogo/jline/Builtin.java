@@ -64,7 +64,7 @@ import org.jline.reader.ParsedLine;
 import org.jline.reader.Widget;
 import org.jline.terminal.Terminal;
 
-import static org.apache.felix.gogo.jline.Shell.*;
+import static org.apache.felix.gogo.jline.Shell.getCommands;
 
 /**
  * gosh built-in commands.

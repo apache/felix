@@ -22,8 +22,8 @@ import java.util.List;
 
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Function;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 
 public class CommandProxy implements Function
 {
