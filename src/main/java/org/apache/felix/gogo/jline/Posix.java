@@ -44,6 +44,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -52,6 +53,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
@@ -103,7 +105,8 @@ public class Posix {
     static final String[] functions = {
             "cat", "echo", "grep", "sort", "sleep", "cd", "pwd", "ls",
             "less", "watch", "nano", "tmux",
-            "head", "tail", "clear", "wc"
+            "head", "tail", "clear", "wc",
+            "date"
     };
 
     public static final String DEFAULT_LS_COLORS = "dr=1;91:ex=1;92:sl=1;96:ot=34;43";
@@ -159,7 +162,8 @@ public class Posix {
     }
 
     protected String[] expand(CommandSession session, String[] argv) throws IOException {
-        String reserved = "(?<!\\\\)[*(|<\\[?]";
+        String rsv = "*(|<\\[?";
+        String reserved = "(?<!\\\\)[" + rsv + "]";
         List<String> params = new ArrayList<>();
         for (String arg : argv) {
             if (arg.matches(".*" + reserved + ".*")) {
@@ -225,6 +229,7 @@ public class Posix {
                 }
                 params.addAll(expanded);
             } else {
+                arg = arg.replaceAll("(\\\\)([" + rsv + "])", "$2");
                 params.add(arg);
             }
         }
@@ -281,8 +286,151 @@ public class Posix {
             case "wc":
                 wc(session, argv);
                 break;
+            case "date":
+                date(session, argv);
+                break;
         }
         return null;
+    }
+
+    protected void date(CommandSession session, String[] argv) throws Exception {
+        String[] usage = {
+                "date -  display date",
+                "Usage: date [-u] [-r seconds] [-v[+|-]val[mwdHMS] ...] [-f input_fmt new_date] [+output_fmt]",
+                "  -? --help                    Show help",
+                "  -u                           Use UTC",
+                "  -r                           Print the date represented by 'seconds' since January 1, 1970",
+                "  -v                           Adjust date",
+                "  -f                           Use 'input_fmt' to parse 'new_date'"
+        };
+        boolean utc = false; // TODO: handle UTC
+        Date input = new Date();
+        String output = null;
+        List<String> adjs = new ArrayList<>();
+        for (int i = 1; i < argv.length; i++) {
+            if ("-?".equals(argv[i]) || "--help".equals(argv[i])) {
+                throw new HelpException(String.join("\n", usage));
+            }
+            else if ("-u".equals(argv[i])) {
+                utc = true;
+            }
+            else if ("-r".equals(argv[i])) {
+                if (i + 1 < argv.length) {
+                    input = new Date(Long.parseLong(argv[++i]) * 1000L);
+                } else {
+                    throw new IllegalArgumentException("usage: date [-u] [-r seconds] [-v[+|-]val[mwdHMS] ...] [-f input_fmt new_date] [+output_fmt]");
+                }
+            }
+            else if ("-f".equals(argv[i])) {
+                if (i + 2 < argv.length) {
+                    String fmt = argv[++i];
+                    String inp = argv[++i];
+                    String jfmt = toJavaDateFormat(fmt);
+                    input = new SimpleDateFormat(jfmt).parse(inp);
+                } else {
+                    throw new IllegalArgumentException("usage: date [-u] [-r seconds] [-v[+|-]val[mwdHMS] ...] [-f input_fmt new_date] [+output_fmt]");
+                }
+            }
+            else if (argv[i].startsWith("-v")) {
+                adjs.add(argv[i].substring(2));
+            }
+            else if (argv[i].startsWith("+")) {
+                if (output == null) {
+                    output = argv[i].substring(1);
+                } else {
+                    throw new IllegalArgumentException("usage: date [-u] [-r seconds] [-v[+|-]val[mwdHMS] ...] [-f input_fmt new_date] [+output_fmt]");
+                }
+            }
+            else {
+                throw new IllegalArgumentException("usage: date [-u] [-r seconds] [-v[+|-]val[mwdHMS] ...] [-f input_fmt new_date] [+output_fmt]");
+            }
+        }
+        if (output == null) {
+            output = "%c";
+        }
+        // Perform adjustments
+        for (String adj : adjs) {
+            // TODO:
+        }
+        // Print output
+        System.out.println(new SimpleDateFormat(toJavaDateFormat(output)).format(input));
+    }
+
+    private String toJavaDateFormat(String format) {
+        // transform Unix format to Java SimpleDateFormat (if required)
+        StringBuilder sb = new StringBuilder();
+        boolean quote = false;
+        for (int i = 0; i < format.length(); i++) {
+            char c = format.charAt(i);
+            if (c == '%') {
+                if (i + 1 < format.length()) {
+                    if (quote) {
+                        sb.append('\'');
+                        quote = false;
+                    }
+                    c = format.charAt(++i);
+                    switch (c) {
+                        case '+':
+                        case 'A': sb.append("MMM EEE d HH:mm:ss yyyy"); break;
+                        case 'a': sb.append("EEE"); break;
+                        case 'B': sb.append("MMMMMMM"); break;
+                        case 'b': sb.append("MMM"); break;
+                        case 'C': sb.append("yy"); break;
+                        case 'c': sb.append("MMM EEE d HH:mm:ss yyyy"); break;
+                        case 'D': sb.append("MM/dd/yy"); break;
+                        case 'd': sb.append("dd"); break;
+                        case 'e': sb.append("dd"); break;
+                        case 'F': sb.append("yyyy-MM-dd"); break;
+                        case 'G': sb.append("YYYY"); break;
+                        case 'g': sb.append("YY"); break;
+                        case 'H': sb.append("HH"); break;
+                        case 'h': sb.append("MMM"); break;
+                        case 'I': sb.append("hh"); break;
+                        case 'j': sb.append("DDD"); break;
+                        case 'k': sb.append("HH"); break;
+                        case 'l': sb.append("hh"); break;
+                        case 'M': sb.append("mm"); break;
+                        case 'm': sb.append("MM"); break;
+                        case 'N': sb.append("S"); break;
+                        case 'n': sb.append("\n"); break;
+                        case 'P': sb.append("aa"); break;
+                        case 'p': sb.append("aa"); break;
+                        case 'r': sb.append("hh:mm:ss aa"); break;
+                        case 'R': sb.append("HH:mm"); break;
+                        case 'S': sb.append("ss"); break;
+                        case 's': sb.append("S"); break;
+                        case 'T': sb.append("HH:mm:ss"); break;
+                        case 't': sb.append("\t"); break;
+                        case 'U': sb.append("w"); break;
+                        case 'u': sb.append("u"); break;
+                        case 'V': sb.append("W"); break;
+                        case 'v': sb.append("dd-MMM-yyyy"); break;
+                        case 'W': sb.append("w"); break;
+                        case 'w': sb.append("u"); break;
+                        case 'X': sb.append("HH:mm:ss"); break;
+                        case 'x': sb.append("MM/dd/yy"); break;
+                        case 'Y': sb.append("yyyy"); break;
+                        case 'y': sb.append("yy"); break;
+                        case 'Z': sb.append("z"); break;
+                        case 'z': sb.append("X"); break;
+                        case '%': sb.append("%"); break;
+                    }
+                } else {
+                    if (!quote) {
+                        sb.append('\'');
+                    }
+                    sb.append(c);
+                    sb.append('\'');
+                }
+            } else {
+                if ((c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z') && !quote) {
+                    sb.append('\'');
+                    quote = true;
+                }
+                sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 
     protected void wc(CommandSession session, String[] argv) throws Exception {
