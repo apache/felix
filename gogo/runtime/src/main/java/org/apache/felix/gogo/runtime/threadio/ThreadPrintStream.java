@@ -44,8 +44,6 @@ public class ThreadPrintStream extends PrintStream
 
     /**
      * Access to the root stream through reflection
-     * 
-     * @return
      */
     public PrintStream getRoot()
     {

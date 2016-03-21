@@ -20,7 +20,6 @@ package org.apache.felix.gogo.runtime;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -174,9 +173,9 @@ public class Parser
     }
 
     protected final Tokenizer tz;
-    protected final LinkedList<String> stack = new LinkedList<String>();
-    protected final List<Token> tokens = new ArrayList<Token>();
-    protected final List<Statement> statements = new ArrayList<Statement>();
+    protected final LinkedList<String> stack = new LinkedList<>();
+    protected final List<Token> tokens = new ArrayList<>();
+    protected final List<Statement> statements = new ArrayList<>();
 
     public Parser(CharSequence line)
     {
@@ -188,19 +187,13 @@ public class Parser
     }
 
     public List<Statement> statements() {
-        Collections.sort(statements, new Comparator<Statement>() {
-            public int compare(Statement o1, Statement o2) {
-                int x = o1.start();
-                int y = o2.start();
-                return (x < y) ? -1 : ((x == y) ? 0 : 1);
-            }
-        });
+        Collections.sort(statements, (o1, o2) -> Integer.compare(o1.start, o2.start));
         return Collections.unmodifiableList(statements);
     }
 
     public Program program()
     {
-        List<Executable> tokens = new ArrayList<Executable>();
+        List<Executable> tokens = new ArrayList<>();
         List<Executable> pipes = null;
         int start = tz.index - 1;
         while (true)
@@ -313,13 +306,13 @@ public class Parser
         return new Closure(whole(start, end), program);
     }
 
-    private final Pattern redirNoArg = Pattern.compile("[0-9]?>&[0-9-]|[0-9-]?<&[0-9-]");
-    private final Pattern redirArg = Pattern.compile("[0-9&]?>|[0-9]?>>|[0-9]?<|[0-9]?<>");
+    private static final Pattern redirNoArg = Pattern.compile("[0-9]?>&[0-9-]|[0-9-]?<&[0-9-]");
+    private static final Pattern redirArg = Pattern.compile("[0-9&]?>|[0-9]?>>|[0-9]?<|[0-9]?<>");
 
     public Statement statement()
     {
-        List<Token> tokens = new ArrayList<Token>();
-        List<Token> redirs = new ArrayList<Token>();
+        List<Token> tokens = new ArrayList<>();
+        List<Token> redirs = new ArrayList<>();
         boolean needRedirArg = false;
         int start = tz.index;
         while (true)
@@ -386,8 +379,8 @@ public class Parser
     {
         Token start = start("[", "array");
         Boolean isMap = null;
-        List<Token> list = new ArrayList<Token>();
-        Map<Token, Token> map = new LinkedHashMap<Token, Token>();
+        List<Token> list = new ArrayList<>();
+        Map<Token, Token> map = new LinkedHashMap<>();
         while (true)
         {
             Token key = next();
@@ -495,7 +488,7 @@ public class Parser
         StringBuilder sb = new StringBuilder();
         LinkedList<String> stack = this.stack;
         if (additional != null) {
-            stack = new LinkedList<String>(stack);
+            stack = new LinkedList<>(stack);
             stack.addLast(additional);
         }
         String last = null;
@@ -572,25 +565,4 @@ public class Parser
         return tz.text.subSequence(b.start - tz.text.start, e.start + e.length() - tz.text.start);
     }
 
-    protected boolean isPiped(Token t) {
-        return Token.eq("|", t) || Token.eq("|&", t);
-    }
-
-    /*
-    protected boolean isRedirection(Token t) {
-        return Token.eq("<", t)
-                || Token.eq("<>", t)
-                || Token.eq(">", t)
-                || Token.eq(">|", t)
-                || Token.eq(">!", t)
-                || Token.eq(">>", t)
-                || Token.eq(">>|", t)
-                || Token.eq(">>!", t)
-                || Token.eq("<<", t)
-                || Token.eq("<<-", t)
-                || Token.eq("<&", t.subSequence(0, 2)) &&
-                || Token.eq("<&1", t)
-
-    }
-    */
 }

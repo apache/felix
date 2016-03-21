@@ -23,9 +23,11 @@ import java.io.PrintStream;
 
 import org.apache.felix.gogo.runtime.Pipe;
 
-public interface Process {
+public interface Process
+{
 
-    static Process current() {
+    static Process current()
+    {
         return Pipe.getCurrentPipe();
     }
 

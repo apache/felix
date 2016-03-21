@@ -37,9 +37,11 @@ public class EventAdminListener implements CommandSessionListener
         tracker.open();
     }
 
-    public void beforeExecute(CommandSession session, CharSequence command) {
+    public void beforeExecute(CommandSession session, CharSequence command)
+    {
         EventAdmin admin = (EventAdmin) tracker.getService();
-        if (admin != null) {
+        if (admin != null)
+        {
             Properties props = new Properties();
             props.setProperty("command", command.toString());
             Event event = new Event("org/apache/felix/service/command/EXECUTING", props);
@@ -47,10 +49,12 @@ public class EventAdminListener implements CommandSessionListener
         }
     }
 
-    public void afterExecute(CommandSession session, CharSequence command, Exception exception) {
+    public void afterExecute(CommandSession session, CharSequence command, Exception exception)
+    {
     }
 
-    public void afterExecute(CommandSession session, CharSequence command, Object result) {
+    public void afterExecute(CommandSession session, CharSequence command, Object result)
+    {
     }
 
 }
