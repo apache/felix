@@ -33,6 +33,29 @@
         <animal.sniffer.skip>true</animal.sniffer.skip>
         <felix.java.version>8</felix.java.version>
     </properties>
+    <repositories>
+        <repository>
+            <id>ossrh.sonatype.snapshots.deploy</id>
+            <name>OSSRH snapshot repository</name>
+            <url>https://oss.sonatype.org/content/groups/public/</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>fusesource.snapshots</id>
+            <url>https://repository.jboss.org/nexus/content/repositories/fs-snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
