@@ -18,18 +18,29 @@
  */
 package org.apache.felix.gogo.jline;
 
+import java.util.Arrays;
+
 import org.junit.Test;
 
 public class ShellTest extends AbstractParserTest {
 
 
     @Test
-    public void test() throws Exception {
+    public void testAssignmentWithEcho() throws Exception {
         Context context = new Context();
         context.execute("a = \"foo\"");
         assertEquals("foo", context.get("a"));
         context.execute("a = $(echo bar)");
         assertEquals("bar", context.get("a"));
+    }
+
+    @Test
+    public void testJobIds() throws Exception {
+        Context context = new Context();
+        // TODO: not than in zsh, the same thing is achieved using
+        // TODO:     ${${${(@f)"$(jobs)"}%]*}#*\[}
+        Object result = context.execute("sleep 1 & sleep 1 & ${${${(f)$(jobs)}%']*'}#'*\\['}");
+        assertEquals(Arrays.asList("1", "2"), result);
     }
 
 }
