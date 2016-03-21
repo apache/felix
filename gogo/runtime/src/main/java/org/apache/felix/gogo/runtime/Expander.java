@@ -939,7 +939,7 @@ public class Expander extends BaseTokenizer
             if (flagC || flagL || flagU) {
                 Function<String, String> cnv;
                 if (flagC)
-                    cnv = s -> s.isEmpty() ? s : s.substring(0, 1).toUpperCase() + s.substring(1);
+                    cnv = s -> s.isEmpty() ? s : s.substring(0, 1).toUpperCase() + s.substring(1).toLowerCase();
                 else if (flagL)
                     cnv = String::toLowerCase;
                 else
