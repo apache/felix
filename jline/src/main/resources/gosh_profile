@@ -38,7 +38,7 @@ try {
   ## disable console auto-formatting of each result
   #  you will then need to explicitly use the 'format' command
   #  to print the result of commands that don't write to stdout.
-  #.Gogo.format = false
+  .Gogo.format = false
 
   ## disable printing the formatted result of a command into pipelines
   #.Format.Pipe = false
@@ -47,16 +47,16 @@ try {
   prompt = 'g! '
   \#rprompt = { (new java.text.SimpleDateFormat \'$'\u001B\\[90m'\'HH:mm:ss) format (new Date) }
   # could also be written
-  #  rprompt = { date +$'\u001B\[90m%T' }
+  #  \#rprompt = { ${(qq)$(date +$'\u001B\[90m%T')} }
 
 
   __option_not_present = {
       res = true
-      opts = ([ $args ] get 0)
+      opts = $argv
       each $opts {
           arg = $it
           each ($.commandLine words) {
-              if { ($it toString) contentEquals ($arg toString) } {
+              if { ($it toString) equals ($arg toString) } {
                   res = false
               }
           }
@@ -68,23 +68,19 @@ try {
       (($.reader class) classLoader) loadClass $1
   }
 
-  __as_list = {
-      (__load_class java.util.Arrays) asList $1
-  }
-
   __set_unset_arguments = {
       is_setopt = (($.commandLine words) get 0) equals "setopt"
-      enums = ((__load_class 'org.jline.ConsoleReader$Option') enumConstants)
+      enums = ((__load_class 'org.jline.reader.LineReader$Option') enumConstants)
       candidates = new ArrayList
-      each (__as_list $enums) {
-          name = ((($it name) toLowerCase) replace '_' '-')
+      each $enums {
+          name = ${(GL)it/_/-}
           is_set = ($.reader isSet $it)
           neg = %(( if(is_setopt, is_set, not(is_set)) ))
           if { $neg } {
               name = "no-${name}"
           }
           if { not  { (($.commandLine words) subList 1 ($.commandLine wordIndex)) contains $name } } {
-              $candidates add (new org.jline.Candidate $name $name (if { $neg } { "unset" } { "set" }) null null null true)
+              $candidates add (new org.jline.reader.Candidate $name $name (if { $neg } { "unset" } { "set" }) null null null true)
           }
       }
       $candidates
@@ -248,6 +244,39 @@ try {
 
   complete -c gogo:jobs -e
   complete -c gogo:jobs -d "List jobs"
+
+  complete -c gogo:clear -e
+  complete -c gogo:clear -d "Clear screen"
+
+  complete -c gogo:head -e
+  complete -c gogo:head -d "Displays first lines of file"
+  complete -c gogo:head -s n -l lines --description "Print line counts"
+  complete -c gogo:head -s c -l bytes --description "Print byte counts"
+  complete -c gogo:head -a '__files'
+
+  complete -c gogo:tail -e
+  complete -c gogo:tail -d "Displays last lines of file"
+  complete -c gogo:tail -s q -l quiet --description "Suppress headers when printing multiple sources"
+  complete -c gogo:tail -s f -l follow --description "Do not stop at end of file"
+  complete -c gogo:tail -s F -l FOLLOW --description "Follow and check for file renaming or rotation"
+  complete -c gogo:tail -s n -l lines --description "Number of lines to print"
+  complete -c gogo:tail -s c -l bytes --description "Number of bytes to print"
+  complete -c gogo:tail -a '__files'
+
+  complete -c gogo:date -e
+  complete -c gogo:date -d "Display date and time"
+  complete -c gogo:date -s u --description "Use UTC"
+  complete -c gogo:date -s r --description "Print the date represented by 'seconds' since January 1, 1970"
+  complete -c gogo:date -s v --description "Adjust date"
+  complete -c gogo:date -s f --description "Use 'input_fmt' to parse 'new_date'"
+
+  complete -c gogo:wc -e
+  complete -c gogo:wc -d "Word, line, character, and byte count"
+  complete -c gogo:wc -s n -l lines --description "Print line count"
+  complete -c gogo:wc -s c -l bytes --description "Print byte count"
+  complete -c gogo:wc -s m -l chars --description "Print character count"
+  complete -c gogo:wc -s w -l words --description "Print word count"
+  complete -c gogo:wc -a '__files'
 
   # print welcome message
   cat ($0 resolve motd)
