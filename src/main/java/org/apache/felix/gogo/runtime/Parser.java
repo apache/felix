@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 
 public class Parser
@@ -38,19 +39,32 @@ public class Parser
         }
     }
 
+    public static class Operator extends Executable
+    {
+        public Operator(Token cs) {
+            super(cs);
+        }
+    }
+
     public static class Statement extends Executable
     {
         private final List<Token> tokens;
+        private final List<Token> redirections;
 
-        public Statement(Token cs, List<Token> tokens)
+        public Statement(Token cs, List<Token> tokens, List<Token> redirections)
         {
             super(cs);
             this.tokens = tokens;
+            this.redirections = redirections;
         }
 
         public List<Token> tokens()
         {
             return tokens;
+        }
+
+        public List<Token> redirections() {
+            return redirections;
         }
     }
 
@@ -222,7 +236,7 @@ public class Parser
                 ex = statement();
             }
             t = next();
-            if (t == null || Token.eq(";", t) || Token.eq("\n", t))
+            if (t == null || Token.eq(";", t) || Token.eq("\n", t) || Token.eq("&", t) || Token.eq("&&", t) || Token.eq("||", t))
             {
                 if (pipes != null)
                 {
@@ -238,14 +252,18 @@ public class Parser
                 {
                     return new Program(whole(tokens, start), tokens);
                 }
+                else {
+                    tokens.add(new Operator(t));
+                }
             }
-            else if (Token.eq("|", t))
+            else if (Token.eq("|", t) || Token.eq("|&", t))
             {
                 if (pipes == null)
                 {
                     pipes = new ArrayList<Executable>();
                 }
                 pipes.add(ex);
+                pipes.add(new Operator(t));
             }
             else
             {
@@ -295,21 +313,33 @@ public class Parser
         return new Closure(whole(start, end), program);
     }
 
+    private final Pattern redirNoArg = Pattern.compile("[0-9]?>&[0-9-]|[0-9-]?<&[0-9-]");
+    private final Pattern redirArg = Pattern.compile("[0-9&]?>|[0-9]?>>|[0-9]?<|[0-9]?<>");
+
     public Statement statement()
     {
         List<Token> tokens = new ArrayList<Token>();
+        List<Token> redirs = new ArrayList<Token>();
+        boolean needRedirArg = false;
         int start = tz.index;
         while (true)
         {
             Token t = next();
             if (t == null
-                    || Token.eq("|", t)
                     || Token.eq("\n", t)
                     || Token.eq(";", t)
+                    || Token.eq("&", t)
+                    || Token.eq("&&", t)
+                    || Token.eq("||", t)
+                    || Token.eq("|", t)
+                    || Token.eq("|&", t)
                     || Token.eq("}", t)
                     || Token.eq(")", t)
                     || Token.eq("]", t))
             {
+                if (needRedirArg) {
+                    throw new EOFError(tz.line, tz.column, "Expected file name for redirection", "redir", "foo");
+                }
                 push(t);
                 break;
             }
@@ -328,12 +358,26 @@ public class Parser
                 push(t);
                 tokens.add(sequence());
             }
+            else if (needRedirArg)
+            {
+                redirs.add(t);
+                needRedirArg = false;
+            }
+            else if (redirNoArg.matcher(t).matches())
+            {
+                redirs.add(t);
+            }
+            else if (redirArg.matcher(t).matches())
+            {
+                redirs.add(t);
+                needRedirArg = true;
+            }
             else
             {
                 tokens.add(t);
             }
         }
-        Statement statement = new Statement(whole(tokens, start), tokens);
+        Statement statement = new Statement(whole(tokens, start), tokens, redirs);
         statements.add(statement);
         return statement;
     }
@@ -360,8 +404,8 @@ public class Parser
             {
                 continue;
             }
-            if (Token.eq("{", key) || Token.eq(";", key)
-                    || Token.eq("|", key) || Token.eq(")", key) || Token.eq("}", key) || Token.eq("=", key))
+            if (Token.eq("{", key) || Token.eq(";", key) || Token.eq("&", key) || Token.eq("&&", key) || Token.eq("||", key)
+                    || Token.eq("|", key) || Token.eq("|&", key) || Token.eq(")", key) || Token.eq("}", key) || Token.eq("=", key))
             {
                 throw new SyntaxError(key.line(), key.column(), "unexpected token '" + key + "' while looking for array key");
             }
@@ -393,7 +437,7 @@ public class Parser
                 {
                     throw new EOFError(tz.line, tz.column, "unexpected EOF while looking for array value", getMissing(), "0");
                 }
-                else if (Token.eq(";", val) || Token.eq("|", val)
+                else if (Token.eq(";", val) || Token.eq("&", val) || Token.eq("&&", val) || Token.eq("||", val) || Token.eq("|", val) || Token.eq("|&", val)
                         || Token.eq(")", key) || Token.eq("}", key) || Token.eq("=", key))
                 {
                     throw new SyntaxError(key.line(), key.column(), "unexpected token '" + key + "' while looking for array value");
@@ -528,4 +572,25 @@ public class Parser
         return tz.text.subSequence(b.start, e.start + e.length());
     }
 
+    protected boolean isPiped(Token t) {
+        return Token.eq("|", t) || Token.eq("|&", t);
+    }
+
+    /*
+    protected boolean isRedirection(Token t) {
+        return Token.eq("<", t)
+                || Token.eq("<>", t)
+                || Token.eq(">", t)
+                || Token.eq(">|", t)
+                || Token.eq(">!", t)
+                || Token.eq(">>", t)
+                || Token.eq(">>|", t)
+                || Token.eq(">>!", t)
+                || Token.eq("<<", t)
+                || Token.eq("<<-", t)
+                || Token.eq("<&", t.subSequence(0, 2)) &&
+                || Token.eq("<&1", t)
+
+    }
+    */
 }

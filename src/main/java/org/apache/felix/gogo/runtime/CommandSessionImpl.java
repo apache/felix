@@ -25,6 +25,8 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -58,12 +60,15 @@ public class CommandSessionImpl implements CommandSession, Converter
     protected final ConcurrentMap<String, Object> variables = new ConcurrentHashMap<String, Object>();
     private volatile boolean closed;
 
+    private Path currentDir;
+
     protected CommandSessionImpl(CommandProcessorImpl shell, InputStream in, PrintStream out, PrintStream err)
     {
         this.processor = shell;
         this.in = in;
         this.out = out;
         this.err = err;
+        this.currentDir = Paths.get(System.getProperty("user.dir")).toAbsolutePath().normalize();
     }
 
     ThreadIO threadIO()
@@ -79,6 +84,14 @@ public class CommandSessionImpl implements CommandSession, Converter
     public ConcurrentMap<String, Object> getVariables()
     {
         return variables;
+    }
+
+    public Path currentDir() {
+        return currentDir;
+    }
+
+    public void currentDir(Path path) {
+        currentDir = path;
     }
 
     public void close()
@@ -352,6 +365,10 @@ public class CommandSessionImpl implements CommandSession, Converter
                     return sb;
                 }
             }
+        }
+        if (target instanceof Path)
+        {
+            return target.toString();
         }
         if (level == Converter.INSPECT)
         {

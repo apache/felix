@@ -20,9 +20,14 @@ package org.apache.felix.service.command;
 
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.nio.file.Path;
 
 public interface CommandSession
 {
+    Path currentDir();
+
+    void currentDir(Path path);
+
     /**
      * Execute a program in this session.
      *
