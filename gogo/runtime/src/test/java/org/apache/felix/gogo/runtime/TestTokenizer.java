@@ -183,6 +183,14 @@ public class TestTokenizer
     }
 
     @Test
+    public void testJavaArray() throws Exception
+    {
+        vars.put("a", new Object[] { "b", "c"});
+
+        assertEquals(Arrays.asList("B", "C"), expand("${(U)a}"));
+    }
+
+    @Test
     public void testRawVariable() throws Exception
     {
         vars.put("a1", Arrays.asList("a", 1));
