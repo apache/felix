@@ -239,13 +239,10 @@ public class ShellFactoryImpl implements Factory<Command> {
                 for (Map.Entry<String, String> e : env.getEnv().entrySet()) {
                     session.put(e.getKey(), e.getValue());
                 }
-                env.addSignalListener(new SignalListener() {
-                    @Override
-                    public void signal(Signal signal) {
-                        terminal.setSize(new Size(Integer.parseInt(env.getEnv().get("COLUMNS")),
-                                Integer.parseInt(env.getEnv().get("LINES"))));
-                        terminal.raise(Terminal.Signal.WINCH);
-                    }
+                env.addSignalListener(signals -> {
+                    terminal.setSize(new Size(Integer.parseInt(env.getEnv().get("COLUMNS")),
+                                                Integer.parseInt(env.getEnv().get("LINES"))));
+                    terminal.raise(Terminal.Signal.WINCH);
                 }, Signal.WINCH);
                 Context context = new Context() {
                     @Override
