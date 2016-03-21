@@ -23,7 +23,6 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.nio.channels.Channel;
 import java.nio.channels.Channels;
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -392,9 +391,9 @@ public class Closure implements Function, Evaluate
 //                return v;
 //            }
 
-            if (parms == v && parms != null)
+            if (v instanceof ArgList)
             {
-                values.addAll(parms); // explode $args array
+                values.addAll((ArgList) v); // explode $args array
             }
             else
             {
@@ -670,53 +669,6 @@ public class Closure implements Function, Evaluate
     {
         return source.toString().trim().replaceAll("\n+", "\n").replaceAll(
             "([^\\\\{}(\\[])[\\s\n]*\n", "$1;").replaceAll("[ \\\\\t\n]+", " ");
-    }
-
-    /**
-     * List that overrides toString() for implicit $args expansion.
-     * Also checks for index out of bounds, so that $1 evaluates to null
-     * rather than throwing IndexOutOfBoundsException.
-     * e.g. x = { a$args }; x 1 2 => a1 2 and not a[1, 2]
-     */
-    class ArgList extends AbstractList<Object>
-    {
-        private List<Object> list;
-
-        public ArgList(List<Object> args)
-        {
-            this.list = args;
-        }
-
-        @Override
-        public String toString()
-        {
-            StringBuilder buf = new StringBuilder();
-            for (Object o : list)
-            {
-                if (buf.length() > 0)
-                    buf.append(' ');
-                buf.append(o);
-            }
-            return buf.toString();
-        }
-
-        @Override
-        public Object get(int index)
-        {
-            return index < list.size() ? list.get(index) : null;
-        }
-
-        @Override
-        public Object remove(int index)
-        {
-            return list.remove(index);
-        }
-
-        @Override
-        public int size()
-        {
-            return list.size();
-        }
     }
 
 }

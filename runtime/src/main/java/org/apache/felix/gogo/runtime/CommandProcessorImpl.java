@@ -134,7 +134,7 @@ public class CommandProcessorImpl implements CommandProcessor
         return Collections.unmodifiableSet(commands.keySet());
     }
 
-    Function getCommand(String name, final Object path)
+    protected Function getCommand(String name, final Object path)
     {
         int colon = name.indexOf(':');
 

@@ -288,7 +288,19 @@ public class Pipe implements Callable<Result>
 
             Pipe previous = setCurrentPipe(this);
             try {
-                Object result = closure.execute(statement);
+                Object result;
+                // Very special case for empty statements with redirection
+                if (statement.tokens().isEmpty() && toclose[0]) {
+                    ByteBuffer bb = ByteBuffer.allocate(1024);
+                    while (((ReadableByteChannel) streams[0]).read(bb) >= 0 || bb.position() != 0) {
+                        bb.flip();
+                        ((WritableByteChannel) streams[1]).write(bb);
+                        bb.compact();
+                    }
+                    result = null;
+                } else {
+                    result = closure.execute(statement);
+                }
                 // If an error has been set
                 if (error != 0) {
                     return new Result(error);

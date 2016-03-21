@@ -24,8 +24,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.felix.service.command.CommandSession;
@@ -392,7 +394,7 @@ public final class Reflective
             return converted;
         }
 
-        String string = arg.toString();
+        String string = toString(arg);
 
         if (type.isAssignableFrom(String.class))
         {
@@ -429,6 +431,70 @@ public final class Reflective
         }
 
         return NO_MATCH;
+    }
+
+    private static String toString(Object arg)
+    {
+        if (arg instanceof Map)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.append("[");
+            boolean first = true;
+            for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) arg).entrySet())
+            {
+                if (!first) {
+                    sb.append(" ");
+                }
+                first = false;
+                writeValue(sb, entry.getKey());
+                sb.append("=");
+                writeValue(sb, entry.getValue());
+            }
+            sb.append("]");
+            return sb.toString();
+        }
+        else if (arg instanceof Collection)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.append("[");
+            boolean first = true;
+            for (Object o : ((Collection) arg))
+            {
+                if (!first) {
+                    sb.append(" ");
+                }
+                first = false;
+                writeValue(sb, o);
+            }
+            sb.append("]");
+            return sb.toString();
+        }
+        else
+        {
+            return arg.toString();
+        }
+    }
+
+    private static void writeValue(StringBuilder sb, Object o) {
+        if (o == null || o instanceof Boolean || o instanceof Number)
+        {
+            sb.append(o);
+        }
+        else
+        {
+            String s = o.toString();
+            sb.append("\"");
+            for (int i = 0; i < s.length(); i++)
+            {
+                char c = s.charAt(i);
+                if (c == '\"' || c == '=')
+                {
+                    sb.append("\\");
+                }
+                sb.append(c);
+            }
+            sb.append("\"");
+        }
     }
 
     private static Class<?> primitiveToObject(Class<?> type)
