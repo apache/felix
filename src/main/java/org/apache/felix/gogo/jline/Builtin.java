@@ -459,7 +459,8 @@ public class Builtin {
     }
 
     public void jobs(CommandSession session, String[] argv) {
-        final String[] usage = {"jobs - list jobs",
+        final String[] usage = {
+                "jobs - list jobs",
                 "Usage: jobs [OPTIONS]",
                 "  -? --help                show help",
         };
@@ -484,7 +485,8 @@ public class Builtin {
     }
 
     public void fg(CommandSession session, String[] argv) {
-        final String[] usage = {"fg - put job in foreground",
+        final String[] usage = {
+                "fg - put job in foreground",
                 "Usage: fg [OPTIONS] [jobid]",
                 "  -? --help                show help",
         };
@@ -523,7 +525,8 @@ public class Builtin {
     }
 
     public void bg(CommandSession session, String[] argv) {
-        final String[] usage = {"bg - put job in background",
+        final String[] usage = {
+                "bg - put job in background",
                 "Usage: bg [OPTIONS] [jobid]",
                 "  -? --help                show help",
         };
