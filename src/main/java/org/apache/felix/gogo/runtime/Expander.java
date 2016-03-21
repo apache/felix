@@ -30,11 +30,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("fallthrough")
@@ -634,18 +636,44 @@ public class Expander extends BaseTokenizer
         {
             getch();
 
+            // sort flags
+            boolean flago = false;
+            boolean flagO = false;
+            boolean flaga = false;
+            boolean flagi = false;
+            boolean flagn = false;
+            // map flags
             boolean flagk = false;
             boolean flagv = false;
+            // param flags
             boolean flagP = false;
+            // case transformation flags
             boolean flagC = false;
             boolean flagL = false;
             boolean flagU = false;
+            // pattern flags
             boolean flagG = false;
+            // expand flag
             boolean flagExpand = false;
             if (ch == '(') {
                 getch();
                 while (ch != EOT && ch != ')') {
                     switch (ch) {
+                        case 'o':
+                            flago = true;
+                            break;
+                        case 'O':
+                            flagO = true;
+                            break;
+                        case 'a':
+                            flaga = true;
+                            break;
+                        case 'i':
+                            flagi = true;
+                            break;
+                        case 'n':
+                            flagn = true;
+                            break;
                         case 'P':
                             flagP = true;
                             break;
@@ -928,6 +956,88 @@ public class Expander extends BaseTokenizer
                 } else if (val != null) {
                     val = cnv.apply(val.toString());
                 }
+            }
+
+            if (val instanceof Collection && (flaga || flagi || flagn || flago || flagO)) {
+                List<Object> list;
+                if (flagn) {
+                    boolean insensitive = flagi;
+                    Comparator<String> comparator = (s1, s2) -> {
+                        int i1s = 0, i2s = 0;
+                        while (i1s < s1.length() && i2s < s2.length()) {
+                            char c1 = s1.charAt(i1s);
+                            char c2 = s2.charAt(i2s);
+                            if (insensitive) {
+                                c1 = Character.toLowerCase(c1);
+                                c2 = Character.toLowerCase(c2);
+                            }
+                            if (c1 != c2) {
+                                if (c1 >= '0' && c1 <= '9' && c2 >= '0' && c2 <= '9') {
+                                    break;
+                                } else {
+                                    return c1 < c2 ? -1 : 1;
+                                }
+                            }
+                            i1s++;
+                            i2s++;
+                        }
+                        while (i1s > 0) {
+                            char c1 = s1.charAt(i1s-1);
+                            if (c1 < '0' || c1 > '9') {
+                                break;
+                            }
+                            i1s--;
+                        }
+                        while (i2s > 0) {
+                            char c2 = s2.charAt(i2s-1);
+                            if (c2 < '0' || c2 > '9') {
+                                break;
+                            }
+                            i2s--;
+                        }
+                        int i1e = i1s;
+                        int i2e = i2s;
+                        while (i1e < s1.length() - 1) {
+                            char c1 = s1.charAt(i1e+1);
+                            if (c1 < '0' || c1 > '9') {
+                                break;
+                            }
+                            i1e++;
+                        }
+                        while (i2e < s2.length() - 1) {
+                            char c2 = s2.charAt(i2e+1);
+                            if (c2 < '0' || c2 > '9') {
+                                break;
+                            }
+                            i2e++;
+                        }
+                        int i1 = Integer.parseInt(s1.substring(i1s, i1e + 1));
+                        int i2 = Integer.parseInt(s2.substring(i2s, i2e + 1));
+                        if (i1 < i2) {
+                            return -1;
+                        } else if (i1 > i2) {
+                            return 1;
+                        } else {
+                            return i1e > i2e ? -1 : 1;
+                        }
+                    };
+                    list = ((Collection<Object>) val).stream()
+                            .map(String::valueOf)
+                            .sorted(comparator)
+                            .collect(Collectors.toList());
+                } else if (flaga) {
+                    list = new ArrayList<>((Collection<Object>) val);
+                } else {
+                    Comparator<String> comparator = flagi ? String.CASE_INSENSITIVE_ORDER : Comparator.naturalOrder();
+                    list = ((Collection<Object>) val).stream()
+                            .map(String::valueOf)
+                            .sorted(comparator)
+                            .collect(Collectors.toList());
+                }
+                if (flagO) {
+                    Collections.reverse(list);
+                }
+                val = list;
             }
 
             if (inQuote) {

@@ -195,6 +195,25 @@ public class TestTokenizer
     }
 
     @Test
+    public void testSorting() throws Exception {
+        vars.clear();
+        vars.put("array", Arrays.asList("foo1", "foo02", "foo2", "fOo3", "Foo20", "foo23"));
+
+        assertEquals(Arrays.asList("Foo20", "fOo3", "foo02", "foo1", "foo2", "foo23"), expand("${(o)array}"));
+        assertEquals(Arrays.asList("foo23", "foo2", "foo1", "foo02", "fOo3", "Foo20"), expand("${(O)array}"));
+        assertEquals(Arrays.asList("foo02", "foo1", "foo2", "Foo20", "foo23", "fOo3"), expand("${(oi)array}"));
+        assertEquals(Arrays.asList("fOo3", "foo23", "Foo20", "foo2", "foo1", "foo02"), expand("${(Oi)array}"));
+        assertEquals(Arrays.asList("foo1", "foo02", "foo2", "fOo3", "Foo20", "foo23"), expand("${(oa)array}"));
+        assertEquals(Arrays.asList("foo23", "Foo20", "fOo3", "foo2", "foo02", "foo1"), expand("${(Oa)array}"));
+        assertEquals(Arrays.asList("foo1", "foo02", "foo2", "fOo3", "Foo20", "foo23"), expand("${(oia)array}"));
+        assertEquals(Arrays.asList("foo23", "Foo20", "fOo3", "foo2", "foo02", "foo1"), expand("${(Oia)array}"));
+        assertEquals(Arrays.asList("Foo20", "fOo3", "foo1", "foo02", "foo2", "foo23"), expand("${(on)array}"));
+        assertEquals(Arrays.asList("foo23", "foo2", "foo02", "foo1", "fOo3", "Foo20"), expand("${(On)array}"));
+        assertEquals(Arrays.asList("foo1", "foo02", "foo2", "fOo3", "Foo20", "foo23"), expand("${(oin)array}"));
+        assertEquals(Arrays.asList("foo23", "Foo20", "fOo3", "foo2", "foo02", "foo1"), expand("${(Oin)array}"));
+    }
+
+    @Test
     public void testPatterns() throws Exception {
         vars.clear();
         vars.put("foo", "twinkle twinkle little star");
