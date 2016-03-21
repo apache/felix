@@ -901,7 +901,6 @@ public class Expander extends BaseTokenizer
                                     r = "";
                                 }
                             } else {
-                                p = toRegexPattern(val2.toString(), op.length() == 1);
                                 r = "";
                             }
                             String m = op.charAt(0) == '#' ? "^" + p : op.charAt(0) == '%' ? p + "$" : p;
