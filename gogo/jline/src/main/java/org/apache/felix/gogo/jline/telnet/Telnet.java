@@ -178,7 +178,7 @@ public class Telnet {
                                 close();
                             }
                         };
-                        new Shell(context, processor, terminal).gosh(session, new String[]{"--login"});
+                        new Shell(context, processor).gosh(session, new String[]{"--login"});
                     }
 
                     @Override

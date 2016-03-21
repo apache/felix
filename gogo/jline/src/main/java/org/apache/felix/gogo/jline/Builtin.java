@@ -20,8 +20,11 @@ package org.apache.felix.gogo.jline;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.io.StringWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -43,21 +46,39 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.apache.felix.gogo.runtime.CommandSessionImpl;
 import org.apache.felix.gogo.runtime.Job;
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Converter;
+import org.apache.felix.service.command.Function;
+import org.jline.builtins.Commands;
+import org.jline.builtins.Completers.DirectoriesCompleter;
+import org.jline.builtins.Completers.FilesCompleter;
 import org.jline.builtins.Options;
+import org.jline.reader.Candidate;
+import org.jline.reader.LineReader;
+import org.jline.reader.ParsedLine;
+import org.jline.reader.Widget;
+
+import static org.apache.felix.gogo.jline.Shell.*;
 
 /**
  * gosh built-in commands.
  */
 public class Builtin {
 
-    static final String[] functions = {"format", "getopt", "new", "set", "tac", "type", "jobs", "fg", "bg"};
+    static final String[] functions = {
+            "format", "getopt", "new", "set", "tac", "type",
+            "jobs", "fg", "bg",
+            "keymap", "setopt", "unsetopt", "complete", "history", "widget",
+            "__files", "__directories", "__usage_completion"
+    };
 
-    private static final String[] packages = {"java.lang", "java.io", "java.net",
-            "java.util"};
+    private static final String[] packages = {"java.lang", "java.io", "java.net", "java.util"};
+
     private final static Set<String> KEYWORDS = new HashSet<String>(
             Arrays.asList(new String[]{"abstract", "continue", "for", "new", "switch",
                     "assert", "default", "goto", "package", "synchronized", "boolean", "do",
@@ -67,11 +88,6 @@ public class Builtin {
                     "try", "char", "final", "interface", "static", "void", "class",
                     "finally", "long", "strictfp", "volatile", "const", "float", "native",
                     "super", "while"}));
-
-    @SuppressWarnings("unchecked")
-    static Set<String> getCommands(CommandSession session) {
-        return (Set<String>) session.get(".commands");
-    }
 
     public CharSequence format(CommandSession session) {
         return format(session, session.get("_"));    // last result
@@ -562,6 +578,135 @@ public class Builtin {
         }
 
         return list;
+    }
+
+    public void history(CommandSession session, String[] argv) throws IOException {
+        Commands.history(Shell.getReader(session), System.out, System.err, argv);
+    }
+
+    public void complete(CommandSession session, String[] argv) {
+        Commands.complete(Shell.getReader(session), System.out, System.err, Shell.getCompletions(session), argv);
+    }
+
+    public void widget(final CommandSession session, String[] argv) throws Exception {
+        java.util.function.Function<String, Widget> creator = func -> () -> {
+            try {
+                session.execute(func);
+            } catch (Exception e) {
+                // TODO: log exception ?
+                return false;
+            }
+            return true;
+        };
+        Commands.widget(Shell.getReader(session), System.out, System.err, creator, argv);
+    }
+
+    public void keymap(CommandSession session, String[] argv) {
+        Commands.keymap(Shell.getReader(session), System.out, System.err, argv);
+    }
+
+    public void setopt(CommandSession session, String[] argv) {
+        Commands.setopt(Shell.getReader(session), System.out, System.err, argv);
+    }
+
+    public void unsetopt(CommandSession session, String[] argv) {
+        Commands.unsetopt(Shell.getReader(session), System.out, System.err, argv);
+    }
+
+    public List<Candidate> __files(CommandSession session) {
+        ParsedLine line = Shell.getParsedLine(session);
+        LineReader reader = Shell.getReader(session);
+        List<Candidate> candidates = new ArrayList<>();
+        new FilesCompleter(session.currentDir()) {
+            @Override
+            protected String getDisplay(Path p) {
+                return getFileDisplay(session, p);
+            }
+        }.complete(reader, line, candidates);
+        return candidates;
+    }
+
+    public List<Candidate> __directories(CommandSession session) {
+        ParsedLine line = Shell.getParsedLine(session);
+        LineReader reader = Shell.getReader(session);
+        List<Candidate> candidates = new ArrayList<>();
+        new DirectoriesCompleter(session.currentDir()) {
+            @Override
+            protected String getDisplay(Path p) {
+                return getFileDisplay(session, p);
+            }
+        }.complete(reader, line, candidates);
+        return candidates;
+    }
+
+    private String getFileDisplay(CommandSession session, Path path) {
+        String type;
+        String suffix;
+        if (Files.isSymbolicLink(path)) {
+            type = "sl";
+            suffix = "@";
+        } else if (Files.isDirectory(path)) {
+            type = "dr";
+            suffix = "/";
+        } else if (Files.isExecutable(path)) {
+            type = "ex";
+            suffix = "*";
+        } else if (!Files.isRegularFile(path)) {
+            type = "ot";
+            suffix = "";
+        } else {
+            type = "";
+            suffix = "";
+        }
+        String col = Posix.getColorMap(session, "LS").get(type);
+        if (col != null && !col.isEmpty()) {
+            return "\033[" + col + "m" + path.getFileName().toString() + "\033[m" + suffix;
+        } else {
+            return path.getFileName().toString() + suffix;
+        }
+
+    }
+
+    public void __usage_completion(CommandSession session, String command) throws Exception {
+        Object func = session.get(command.contains(":") ? command : "*:" + command);
+        if (func instanceof Function) {
+            ByteArrayInputStream bais = new ByteArrayInputStream(new byte[0]);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ByteArrayOutputStream baes = new ByteArrayOutputStream();
+            CommandSession ts = ((CommandSessionImpl) session).processor().createSession(bais, new PrintStream(baos), new PrintStream(baes));
+            ts.execute(command + " --help");
+
+            String regex = "(?x)\\s*" + "(?:-([^-]))?" +  // 1: short-opt-1
+                    "(?:,?\\s*-(\\w))?" +                 // 2: short-opt-2
+                    "(?:,?\\s*--(\\w[\\w-]*)(=\\w+)?)?" + // 3: long-opt-1 and 4:arg-1
+                    "(?:,?\\s*--(\\w[\\w-]*))?" +         // 5: long-opt-2
+                    ".*?(?:\\(default=(.*)\\))?\\s*" +    // 6: default
+                    "(.*)";                               // 7: description
+            Pattern pattern = Pattern.compile(regex);
+            for (String l : baes.toString().split("\n")) {
+                Matcher matcher = pattern.matcher(l);
+                if (matcher.matches()) {
+                    List<String> args = new ArrayList<>();
+                    if (matcher.group(1) != null) {
+                        args.add("--short-option");
+                        args.add(matcher.group(1));
+                    }
+                    if (matcher.group(3) != null) {
+                        args.add("--long-option");
+                        args.add(matcher.group(1));
+                    }
+                    if (matcher.group(4) != null) {
+                        args.add("--argument");
+                        args.add("");
+                    }
+                    if (matcher.group(7) != null) {
+                        args.add("--description");
+                        args.add(matcher.group(7));
+                    }
+                    complete(session, args.toArray(new String[args.size()]));
+                }
+            }
+        }
     }
 
 }

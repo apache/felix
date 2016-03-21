@@ -103,7 +103,6 @@ public class Highlighter extends DefaultHighlighter {
                     break;
                 }
                 if (token.start() > cur) {
-//                    ansi.a(buffer.substring(cur, token.start()));
                     cur = token.start();
                 }
                 // Find corresponding statement
@@ -153,37 +152,6 @@ public class Highlighter extends DefaultHighlighter {
                     }
                 }
                 Arrays.fill(types, token.start(), Math.min(token.start() + token.length(), types.length), type);
-                /*
-                String valid;
-                if (token.start() + token.length() <= buffer.length()) {
-                    valid = token.toString();
-                } else {
-                    valid = token.subSequence(0, buffer.length() - token.start()).toString();
-                }
-                switch (type) {
-                    case Reserved:
-                        ansi.fg(Color.MAGENTA).a(valid).fg(Color.DEFAULT);
-                        break;
-                    case String:
-                    case Number:
-                    case Constant:
-                        ansi.fg(Color.GREEN).a(valid).fg(Color.DEFAULT);
-                        break;
-                    case Variable:
-                    case VariableName:
-                        ansi.fg(Color.CYAN).a(valid).fg(Color.DEFAULT);
-                        break;
-                    case Function:
-                        ansi.fg(Color.BLUE).a(valid).fg(Color.DEFAULT);
-                        break;
-                    case BadFunction:
-                        ansi.fg(Color.RED).a(valid).fg(Color.DEFAULT);
-                        break;
-                    default:
-                        ansi.a(valid);
-                        break;
-                }
-                */
                 cur = Math.min(token.start() + token.length(), buffer.length());
             }
 

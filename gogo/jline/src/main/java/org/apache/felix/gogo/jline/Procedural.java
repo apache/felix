@@ -26,13 +26,13 @@ import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Function;
 
 public class Procedural {
-    static final String[] functions = {"each", "if", "not", "throw", "try", "until",
-            "while"};
+
+    static final String[] functions = {"each", "if", "not", "throw", "try", "until", "while"};
 
     public List<Object> each(CommandSession session, Collection<Object> list,
                              Function closure) throws Exception {
-        List<Object> args = new ArrayList<Object>();
-        List<Object> results = new ArrayList<Object>();
+        List<Object> args = new ArrayList<>();
+        List<Object> results = new ArrayList<>();
         args.add(null);
 
         for (Object x : list) {
@@ -61,11 +61,8 @@ public class Procedural {
     }
 
     public boolean not(CommandSession session, Function condition) throws Exception {
-        if (null == condition) {
-            return true;
-        }
+        return condition == null || !isTrue(condition.execute(session, null));
 
-        return !isTrue(condition.execute(session, null));
     }
 
     // Reflective.coerce() prefers to construct a new Throwable(String)
@@ -126,7 +123,7 @@ public class Procedural {
             return false;
 
         if (result instanceof Boolean)
-            return ((Boolean) result).booleanValue();
+            return (Boolean) result;
 
         if (result instanceof Number) {
             if (0 == ((Number) result).intValue())

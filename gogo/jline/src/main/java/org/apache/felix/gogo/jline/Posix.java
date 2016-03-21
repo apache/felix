@@ -19,15 +19,19 @@
 package org.apache.felix.gogo.jline;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -48,6 +52,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.IntBinaryOperator;
 import java.util.function.Predicate;
@@ -56,17 +63,22 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.felix.gogo.jline.Shell.Context;
 import org.apache.felix.gogo.runtime.Pipe;
+import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
+import org.apache.sshd.common.util.OsUtils;
+import org.jline.builtins.Commands;
 import org.jline.builtins.Less.Source;
 import org.jline.builtins.Less.StdInSource;
 import org.jline.builtins.Less.URLSource;
 import org.jline.builtins.Options;
-import org.jline.reader.LineReader.Option;
+import org.jline.terminal.Attributes;
 import org.jline.terminal.Terminal;
 import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.AttributedStyle;
+import org.jline.utils.InfoCmp.Capability;
 
 /**
  * Posix-like utilities.
@@ -75,42 +87,31 @@ import org.jline.utils.AttributedStyle;
  * http://www.opengroup.org/onlinepubs/009695399/utilities/contents.html</a>
  */
 public class Posix {
-    static final String[] functions = {"cat", "echo", "grep", "sort", "sleep", "cd", "pwd", "ls"};
+
+    static final String[] functions = {
+            "cat", "echo", "grep", "sort", "sleep", "cd", "pwd", "ls",
+            "less", "watch", "nano", "tmux",
+    };
 
     public static final String DEFAULT_LS_COLORS = "dr=1;91:ex=1;92:sl=1;96:ot=34;43";
 
-    public void _main(CommandSession session, String[] argv) {
+    private static final LinkOption[] NO_FOLLOW_OPTIONS = new LinkOption[]{LinkOption.NOFOLLOW_LINKS};
+    private static final List<String> WINDOWS_EXECUTABLE_EXTENSIONS = Collections.unmodifiableList(Arrays.asList(".bat", ".exe", ".cmd"));
+    private static final LinkOption[] EMPTY_LINK_OPTIONS = new LinkOption[0];
+
+    private final CommandProcessor processor;
+
+    public Posix(CommandProcessor processor) {
+        this.processor = processor;
+    }
+
+    protected void _main(CommandSession session, String[] argv) {
         if (argv == null || argv.length < 1) {
             throw new IllegalArgumentException();
         }
         try {
             argv = expand(session, argv);
-            switch (argv[0]) {
-                case "cat":
-                    cat(session, argv);
-                    break;
-                case "echo":
-                    echo(session, argv);
-                    break;
-                case "grep":
-                    grep(session, argv);
-                    break;
-                case "sort":
-                    sort(session, argv);
-                    break;
-                case "sleep":
-                    sleep(session, argv);
-                    break;
-                case "cd":
-                    cd(session, argv);
-                    break;
-                case "pwd":
-                    pwd(session, argv);
-                    break;
-                case "ls":
-                    ls(session, argv);
-                    break;
-            }
+            run(session, argv);
         } catch (IllegalArgumentException e) {
             System.err.println(e.getMessage());
             Pipe.error(2);
@@ -127,6 +128,243 @@ public class Posix {
         public HelpException(String message) {
             super(message);
         }
+    }
+
+    protected Options parseOptions(CommandSession session, String[] usage, Object[] argv) throws Exception {
+        Options opt = Options.compile(usage, s -> get(session, s)).parse(argv, true);
+        if (opt.isSet("help")) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            opt.usage(new PrintStream(baos));
+            throw new HelpException(baos.toString());
+        }
+        return opt;
+    }
+
+    protected String get(CommandSession session, String name) {
+        Object o = session.get(name);
+        return o != null ? o.toString() : null;
+    }
+
+    protected String[] expand(CommandSession session, String[] argv) throws IOException {
+        String reserved = "(?<!\\\\)[*(|<\\[?]";
+        List<String> params = new ArrayList<>();
+        for (String arg : argv) {
+            if (arg.matches(".*" + reserved + ".*")) {
+                String org = arg;
+                List<String> expanded = new ArrayList<>();
+                Path currentDir = session.currentDir();
+                Path dir;
+                String pfx = arg.replaceFirst(reserved + ".*", "");
+                String prefix;
+                if (pfx.indexOf('/') >= 0) {
+                    pfx = pfx.substring(0, pfx.lastIndexOf('/'));
+                    arg = arg.substring(pfx.length() + 1);
+                    dir = currentDir.resolve(pfx).normalize();
+                    prefix = pfx + "/";
+                } else {
+                    dir = currentDir;
+                    prefix = "";
+                }
+                PathMatcher matcher = dir.getFileSystem().getPathMatcher("glob:" + arg);
+                Files.walkFileTree(dir,
+                        EnumSet.of(FileVisitOption.FOLLOW_LINKS),
+                        Integer.MAX_VALUE,
+                        new FileVisitor<Path>() {
+                            @Override
+                            public FileVisitResult preVisitDirectory(Path file, BasicFileAttributes attrs) throws IOException {
+                                if (file.equals(dir)) {
+                                    return FileVisitResult.CONTINUE;
+                                }
+                                if (Files.isHidden(file)) {
+                                    return FileVisitResult.SKIP_SUBTREE;
+                                }
+                                Path r = dir.relativize(file);
+                                if (matcher.matches(r)) {
+                                    expanded.add(prefix + r.toString());
+                                }
+                                return FileVisitResult.CONTINUE;
+                            }
+
+                            @Override
+                            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                                if (!Files.isHidden(file)) {
+                                    Path r = dir.relativize(file);
+                                    if (matcher.matches(r)) {
+                                        expanded.add(prefix + r.toString());
+                                    }
+                                }
+                                return FileVisitResult.CONTINUE;
+                            }
+
+                            @Override
+                            public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                                return FileVisitResult.CONTINUE;
+                            }
+
+                            @Override
+                            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                                return FileVisitResult.CONTINUE;
+                            }
+                        });
+                Collections.sort(expanded);
+                if (expanded.isEmpty()) {
+                    throw new IOException("no matches found: " + org);
+                }
+                params.addAll(expanded);
+            } else {
+                params.add(arg);
+            }
+        }
+        return params.toArray(new String[params.size()]);
+    }
+
+    protected Object run(CommandSession session, String[] argv) throws Exception {
+        switch (argv[0]) {
+            case "cat":
+                cat(session, argv);
+                break;
+            case "echo":
+                echo(session, argv);
+                break;
+            case "grep":
+                grep(session, argv);
+                break;
+            case "sort":
+                sort(session, argv);
+                break;
+            case "sleep":
+                sleep(session, argv);
+                break;
+            case "cd":
+                cd(session, argv);
+                break;
+            case "pwd":
+                pwd(session, argv);
+                break;
+            case "ls":
+                ls(session, argv);
+                break;
+            case "less":
+                less(session, argv);
+                break;
+            case "watch":
+                watch(session, argv);
+                break;
+            case "nano":
+                nano(session, argv);
+                break;
+            case "tmux":
+                tmux(session, argv);
+                break;
+        }
+        return null;
+    }
+
+    protected void tmux(final CommandSession session, String[] argv) throws Exception {
+        Commands.tmux(Shell.getTerminal(session),
+                System.out, System.err,
+                () -> session.get(".tmux"),
+                t -> session.put(".tmux", t),
+                c -> startShell(session, c), argv);
+    }
+
+    private void startShell(CommandSession session, Terminal terminal) {
+        new Thread(() -> runShell(session, terminal), terminal.getName() + " shell").start();
+    }
+
+    private void runShell(CommandSession session, Terminal terminal) {
+        InputStream in = terminal.input();
+        OutputStream out = terminal.output();
+        CommandSession newSession = processor.createSession(in, out, out);
+        newSession.put(Shell.VAR_TERMINAL, terminal);
+        newSession.put(".tmux", session.get(".tmux"));
+        Context context = new Context() {
+            public String getProperty(String name) {
+                return System.getProperty(name);
+            }
+            public void exit() throws Exception {
+                terminal.close();
+            }
+        };
+        try {
+            new Shell(context, processor).gosh(newSession, new String[]{"--login"});
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                terminal.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    protected void nano(final CommandSession session, String[] argv) throws Exception {
+        Commands.nano(Shell.getTerminal(session), System.out, System.err, session.currentDir(), argv);
+    }
+
+    protected void watch(final CommandSession session, String[] argv) throws IOException, InterruptedException {
+        final String[] usage = {
+                "watch - watches & refreshes the output of a command",
+                "Usage: watch [OPTIONS] COMMAND",
+                "  -? --help                    Show help",
+                "  -n --interval                Interval between executions of the command in seconds",
+                "  -a --append                  The output should be appended but not clear the console"
+        };
+        final Options opt = Options.compile(usage).parse(argv);
+        if (opt.isSet("help")) {
+            opt.usage(System.err);
+            return;
+        }
+        List<String> args = opt.args();
+        if (args.isEmpty()) {
+            System.err.println("Argument expected");
+            return;
+        }
+        ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+        final Terminal terminal = Shell.getTerminal(session);
+        final CommandProcessor processor = Shell.getProcessor(session);
+        try {
+            int interval = 1;
+            if (opt.isSet("interval")) {
+                interval = opt.getNumber("interval");
+                if (interval < 1) {
+                    interval = 1;
+                }
+            }
+            final String cmd = String.join(" ", args);
+            Runnable task = () -> {
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                PrintStream os = new PrintStream(baos);
+                InputStream is = new ByteArrayInputStream(new byte[0]);
+                if (opt.isSet("append") || !terminal.puts(Capability.clear_screen)) {
+                    terminal.writer().println();
+                }
+                try {
+                    CommandSession ns = processor.createSession(is, os, os);
+                    Set<String> vars = Shell.getCommands(session);
+                    for (String n : vars) {
+                        ns.put(n, session.get(n));
+                    }
+                    ns.execute(cmd);
+                } catch (Throwable t) {
+                    t.printStackTrace(os);
+                }
+                os.flush();
+                terminal.writer().print(baos.toString());
+                terminal.writer().flush();
+            };
+            executorService.scheduleAtFixedRate(task, 0, interval, TimeUnit.SECONDS);
+            Attributes attr = terminal.enterRawMode();
+            terminal.reader().read();
+            terminal.setAttributes(attr);
+        } finally {
+            executorService.shutdownNow();
+        }
+    }
+
+    protected void less(CommandSession session, String[] argv) throws IOException, InterruptedException {
+        Commands.less(Shell.getTerminal(session), System.out, System.err, session.currentDir(), argv);
     }
 
     protected void sort(CommandSession session, String[] argv) throws Exception {
@@ -403,14 +641,14 @@ public class Posix {
                 for (String view : path.getFileSystem().supportedFileAttributeViews()) {
                     try {
                         Map<String, Object> ta = Files.readAttributes(path, view + ":*",
-                                IoUtils.getLinkOptions(opt.isSet("L")));
+                                getLinkOptions(opt.isSet("L")));
                         ta.entrySet().forEach(e -> attrs.putIfAbsent(e.getKey(), e.getValue()));
                     } catch (IOException e) {
                         // Ignore
                     }
                 }
                 attrs.computeIfAbsent("isExecutable", s -> Files.isExecutable(path));
-                attrs.computeIfAbsent("permissions", s -> IoUtils.getPermissionsFromFile(path.toFile()));
+                attrs.computeIfAbsent("permissions", s -> getPermissionsFromFile(path.toFile()));
                 return attrs;
             }
         }
@@ -613,7 +851,7 @@ public class Posix {
         if (before < 0) {
             before = context;
         }
-        List<String> lines = new ArrayList<String>();
+        List<String> lines = new ArrayList<>();
         boolean invertMatch = opt.isSet("invert-match");
         boolean lineNumber = opt.isSet("line-number");
         boolean count = opt.isSet("count");
@@ -785,10 +1023,7 @@ public class Posix {
                 sortFields = new ArrayList<>();
                 sortFields.add("1");
             }
-            sortKeys = new ArrayList<Key>();
-            for (String f : sortFields) {
-                sortKeys.add(new Key(f));
-            }
+            sortKeys = sortFields.stream().map(Key::new).collect(Collectors.toList());
         }
 
         public int compare(String o1, String o2) {
@@ -823,8 +1058,7 @@ public class Posix {
         }
 
         protected int compareRegion(String s1, int start1, int end1, String s2, int start2, int end2, boolean caseInsensitive) {
-            int n1 = end1, n2 = end2;
-            for (int i1 = start1, i2 = start2; i1 < end1 && i2 < n2; i1++, i2++) {
+            for (int i1 = start1, i2 = start2; i1 < end1 && i2 < end2; i1++, i2++) {
                 char c1 = s1.charAt(i1);
                 char c2 = s2.charAt(i2);
                 if (c1 != c2) {
@@ -843,7 +1077,7 @@ public class Posix {
                     }
                 }
             }
-            return n1 - n2;
+            return end1 - end2;
         }
 
         protected int[] getSortKey(String str, List<Integer> fields, Key key) {
@@ -882,7 +1116,6 @@ public class Posix {
             List<Integer> fields = new ArrayList<>();
             if (o.length() > 0) {
                 if (separator == '\0') {
-                    int i = 0;
                     fields.add(0);
                     for (int idx = 1; idx < o.length(); idx++) {
                         if (Character.isWhitespace(o.charAt(idx)) && !Character.isWhitespace(o.charAt(idx - 1))) {
@@ -1014,74 +1247,57 @@ public class Posix {
         }
     }
 
-    private String[] expand(CommandSession session, String[] argv) throws IOException {
-        String reserved = "(?<!\\\\)[*(|<\\[?]";
-        List<String> params = new ArrayList<>();
-        for (String arg : argv) {
-            if (arg.matches(".*" + reserved + ".*")) {
-                String org = arg;
-                List<String> expanded = new ArrayList<>();
-                Path currentDir = session.currentDir();
-                Path dir;
-                String pfx = arg.replaceFirst(reserved + ".*", "");
-                String prefix;
-                if (pfx.indexOf('/') >= 0) {
-                    pfx = pfx.substring(0, pfx.lastIndexOf('/'));
-                    arg = arg.substring(pfx.length() + 1);
-                    dir = currentDir.resolve(pfx).normalize();
-                    prefix = pfx + "/";
-                } else {
-                    dir = currentDir;
-                    prefix = "";
-                }
-                PathMatcher matcher = dir.getFileSystem().getPathMatcher("glob:" + arg);
-                Files.walkFileTree(dir,
-                        EnumSet.of(FileVisitOption.FOLLOW_LINKS),
-                        Integer.MAX_VALUE,
-                        new FileVisitor<Path>() {
-                    @Override
-                    public FileVisitResult preVisitDirectory(Path file, BasicFileAttributes attrs) throws IOException {
-                        if (file.equals(dir)) {
-                            return FileVisitResult.CONTINUE;
-                        }
-                        if (Files.isHidden(file)) {
-                            return FileVisitResult.SKIP_SUBTREE;
-                        }
-                        Path r = dir.relativize(file);
-                        if (matcher.matches(r)) {
-                            expanded.add(prefix + r.toString());
-                        }
-                        return FileVisitResult.CONTINUE;
-                    }
-                    @Override
-                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                        if (!Files.isHidden(file)) {
-                            Path r = dir.relativize(file);
-                            if (matcher.matches(r)) {
-                                expanded.add(prefix + r.toString());
-                            }
-                        }
-                        return FileVisitResult.CONTINUE;
-                    }
-                    @Override
-                    public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-                        return FileVisitResult.CONTINUE;
-                    }
-                    @Override
-                    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                        return FileVisitResult.CONTINUE;
-                    }
-                });
-                Collections.sort(expanded);
-                if (expanded.isEmpty()) {
-                    throw new IOException("no matches found: " + org);
-                }
-                params.addAll(expanded);
-            } else {
-                params.add(arg);
+    private static LinkOption[] getLinkOptions(boolean followLinks) {
+        if (followLinks) {
+            return EMPTY_LINK_OPTIONS;
+        } else {    // return a clone that modifications to the array will not affect others
+            return NO_FOLLOW_OPTIONS.clone();
+        }
+    }
+
+    /**
+     * @param fileName The file name to be evaluated - ignored if {@code null}/empty
+     * @return {@code true} if the file ends in one of the {@link #WINDOWS_EXECUTABLE_EXTENSIONS}
+     */
+    private static boolean isWindowsExecutable(String fileName) {
+        if ((fileName == null) || (fileName.length() <= 0)) {
+            return false;
+        }
+        for (String suffix : WINDOWS_EXECUTABLE_EXTENSIONS) {
+            if (fileName.endsWith(suffix)) {
+                return true;
             }
         }
-        return params.toArray(new String[params.size()]);
+        return false;
+    }
+
+    /**
+     * @param f The {@link File} to be checked
+     * @return A {@link Set} of {@link PosixFilePermission}s based on whether
+     * the file is readable/writable/executable. If so, then <U>all</U> the
+     * relevant permissions are set (i.e., owner, group and others)
+     */
+    private static Set<PosixFilePermission> getPermissionsFromFile(File f) {
+        Set<PosixFilePermission> perms = EnumSet.noneOf(PosixFilePermission.class);
+        if (f.canRead()) {
+            perms.add(PosixFilePermission.OWNER_READ);
+            perms.add(PosixFilePermission.GROUP_READ);
+            perms.add(PosixFilePermission.OTHERS_READ);
+        }
+
+        if (f.canWrite()) {
+            perms.add(PosixFilePermission.OWNER_WRITE);
+            perms.add(PosixFilePermission.GROUP_WRITE);
+            perms.add(PosixFilePermission.OTHERS_WRITE);
+        }
+
+        if (f.canExecute() || (OsUtils.isWin32() && isWindowsExecutable(f.getName()))) {
+            perms.add(PosixFilePermission.OWNER_EXECUTE);
+            perms.add(PosixFilePermission.GROUP_EXECUTE);
+            perms.add(PosixFilePermission.OTHERS_EXECUTE);
+        }
+
+        return perms;
     }
 
     public static Map<String, String> getColorMap(CommandSession session, String name) {
@@ -1097,21 +1313,6 @@ public class Posix {
         return Arrays.stream(str.split(":"))
                 .collect(Collectors.toMap(s -> s.substring(0, s.indexOf('=')),
                                           s -> s.substring(s.indexOf('=') + 1)));
-    }
-
-    private Options parseOptions(CommandSession session, String[] usage, Object[] argv) throws Exception {
-        Options opt = Options.compile(usage, s -> get(session, s)).parse(argv, true);
-        if (opt.isSet("help")) {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            opt.usage(new PrintStream(baos));
-            throw new HelpException(baos.toString());
-        }
-        return opt;
-    }
-
-    private String get(CommandSession session, String name) {
-        Object o = session.get(name);
-        return o != null ? o.toString() : null;
     }
 
 }

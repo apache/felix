@@ -49,15 +49,14 @@ public class Main {
             try {
                 CommandProcessorImpl processor = new CommandProcessorImpl(tio);
                 Context context = new MyContext();
-                Shell shell = new Shell(context, processor, terminal);
+                Shell shell = new Shell(context, processor);
                 processor.addCommand("gogo", processor, "addCommand");
                 processor.addCommand("gogo", processor, "removeCommand");
                 processor.addCommand("gogo", processor, "eval");
                 register(processor, new Builtin(), Builtin.functions);
                 register(processor, new Procedural(), Procedural.functions);
-                register(processor, new Posix(), Posix.functions);
+                register(processor, new Posix(processor), Posix.functions);
                 register(processor, shell, Shell.functions);
-                register(processor, new JLineCommands(processor), JLineCommands.functions);
                 try {
                     register(processor, new Telnet(processor), Telnet.functions);
                 } catch (Throwable t) {
