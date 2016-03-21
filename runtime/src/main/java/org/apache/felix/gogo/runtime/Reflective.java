@@ -277,7 +277,7 @@ public final class Reflective
             out[i] = null;
 
             // Try to convert one argument
-            if (in.size() == 0)
+            if (in.size() == 0 || i == types.length - 1 && types[i].isArray() && in.size() > 1)
             {
                 out[i] = NO_MATCH;
             }
