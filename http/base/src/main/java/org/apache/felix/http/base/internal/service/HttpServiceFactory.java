@@ -111,9 +111,8 @@ public final class HttpServiceFactory
         this.sharedHttpService = new SharedHttpServiceImpl(handlerRegistry);
 
         final String[] ifaces = new String[] { HttpService.class.getName(), ExtHttpService.class.getName() };
-        this.httpServiceReg = bundleContext.registerService(ifaces, this, this.httpServiceProps);
-
         this.active = true;
+        this.httpServiceReg = bundleContext.registerService(ifaces, this, this.httpServiceProps);
     }
 
     public void stop()
