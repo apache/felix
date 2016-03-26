@@ -14,26 +14,41 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
--runfw: org.apache.felix.framework;version='[5.2.0,5.2.0]'
--runee: JavaSE-1.8
--runsystemcapabilities: ${native_capability}
 
--resolve.effective: active;skip:="osgi.service"
+##
+# metatype service
+metatype=org.apache.felix.metatype;version=1.0.4
 
--runbundles: \
-	${metatype},\
-	${log},\
-	${gogo},\
-	${configadmin},\
-	${eventadmin},\
-	${webconsole},\
-	${bndlib},\
-	org.apache.felix.dependencymanager.lambda.samples.dictionary;version=latest,\
-	org.apache.felix.dependencymanager;version=latest,\
-	org.apache.felix.dependencymanager.shell;version=latest,\
-	org.apache.felix.dependencymanager.lambda;version=latest
-	
--runproperties:  \
-	org.apache.felix.dependencymanager.loglevel=2,\
-	org.apache.felix.log.maxSize=100000,\
-	org.apache.felix.log.storeDebug=true
+##
+# log service
+log=org.apache.felix.log;version=1.0.1
+
+##
+# Gogo bundles
+gogo=\
+	org.apache.felix.gogo.command;version=0.14.0,\
+	org.apache.felix.gogo.runtime;version=0.12.0,\
+	org.apache.felix.gogo.shell;version=0.10.0
+ 
+##
+# Configuration Admin
+configadmin=org.apache.felix.configadmin;version=1.8.8
+
+##
+# Event Admin
+eventadmin=org.apache.felix.eventadmin;version=1.4.4
+
+##
+# Web Console
+webconsole=\
+	org.apache.felix.http.api;version=2.3.0,\
+	org.apache.felix.http.servlet-api;version=1.0.0,\
+	org.apache.felix.http.jetty;version="[2.3.0,2.3.0]",\
+	org.apache.felix.webconsole;version=4.2.2
+		
+##
+# bndlib 
+bndlib=biz.aQute.bndlib;version=3.0.0
+
+
+

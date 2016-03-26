@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
--nobundles
+-nobundles:
 -dependson \
 	org.apache.felix.dependencymanager,\
 	org.apache.felix.dependencymanager.shell,\

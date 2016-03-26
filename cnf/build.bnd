@@ -67,7 +67,7 @@ javac.target:          1.8
 
 
 ## To enable baselining, uncomment the following lines:
-#-baseline: *
+-baseline: *
 
 ## If you use git, you might want to uncomment the following lines:
 # Git-Descriptor:       ${system-allow-fail;git describe --dirty --always}
