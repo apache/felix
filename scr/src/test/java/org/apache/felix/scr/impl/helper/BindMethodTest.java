@@ -452,7 +452,7 @@ public class BindMethodTest extends TestCase
         BindMethod bm = new BindMethod( methodName, component.getClass(),
                 FakeService.class.getName(), dsVersion, false );
         RefPair refPair = new SingleRefPair( m_serviceReference );
-        ComponentContextImpl<T1> cc = new ComponentContextImpl(icm, new MockBundle());
+        ComponentContextImpl<T1> cc = new ComponentContextImpl(icm, new MockBundle(), null);
         assertTrue( bm.getServiceObject( cc, refPair, m_context, icm ) );
         BindParameters bp = new BindParameters(cc, refPair);
         bm.invoke( component, bp, null, icm );

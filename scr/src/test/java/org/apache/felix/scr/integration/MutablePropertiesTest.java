@@ -223,7 +223,7 @@ public class MutablePropertiesTest extends ComponentTestBase
 
         enableAndCheck(cd);
 
-        assertMsc(msc, false, true, null);
+        assertMsc(msc, true, true, null);
     }
 
     private void assertMsc(MutatingServiceConsumer msc, Boolean set, Boolean updated, Boolean unset)
