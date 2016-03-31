@@ -30,6 +30,7 @@ import org.apache.felix.scr.impl.helper.ReadOnlyDictionary;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentInstance;
 import org.osgi.service.log.LogService;
 
@@ -47,6 +48,8 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     private final ComponentInstance m_componentInstance = new ComponentInstanceImpl<S>(this);
 
     private final Bundle m_usingBundle;
+    
+    private final ServiceRegistration<S> m_serviceRegistration;
 
     private volatile S m_implementationObject;
 
@@ -56,10 +59,11 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
 
     private final ComponentServiceObjectsHelper serviceObjectsHelper;
 
-    public ComponentContextImpl( final SingleComponentManager<S> componentManager, final Bundle usingBundle )
+    public ComponentContextImpl( final SingleComponentManager<S> componentManager, final Bundle usingBundle, ServiceRegistration<S> serviceRegistration )
     {
         m_componentManager = componentManager;
         m_usingBundle = usingBundle;
+        m_serviceRegistration = serviceRegistration;
         edgeInfos = new EdgeInfo[componentManager.getComponentMetadata().getDependencies().size()];
         for (int i = 0; i< edgeInfos.length; i++)
         {
@@ -97,6 +101,11 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     {
         int index = dm.getIndex();
         return edgeInfos[index];
+    }
+
+    ServiceRegistration<S> getServiceRegistration()
+    {
+        return m_serviceRegistration;
     }
 
    protected SingleComponentManager<S> getComponentManager()
@@ -196,7 +205,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
 
     public ServiceReference<S> getServiceReference()
     {
-        return m_componentManager.getServiceReference();
+        return m_serviceRegistration == null? null: m_serviceRegistration.getReference();
     }
 
 
@@ -263,4 +272,5 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         }
 
     }
+
 }

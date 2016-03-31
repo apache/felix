@@ -33,6 +33,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 public class SingleComponentManagerTest
 {
@@ -48,7 +49,7 @@ public class SingleComponentManagerTest
 
         SingleComponentManager<Object> scm = new SingleComponentManager<Object>(cc, new ComponentMethods()) {
             @Override
-            boolean getServiceInternal()
+            boolean getServiceInternal(ServiceRegistration<Object> serviceRegistration)
             {
                 return true;
             }
@@ -58,7 +59,7 @@ public class SingleComponentManagerTest
         Bundle b = Mockito.mock(Bundle.class);
         Mockito.when(b.getBundleContext()).thenReturn(bc);
 
-        ComponentContextImpl<Object> cci = new ComponentContextImpl<Object>(scm, b);
+        ComponentContextImpl<Object> cci = new ComponentContextImpl<Object>(scm, b, null);
         Object implObj = new Object();
         cci.setImplementationObject(implObj);
         cci.setImplementationAccessible(true);
@@ -89,7 +90,7 @@ public class SingleComponentManagerTest
 
         SingleComponentManager<?> scm = new SingleComponentManager<Object>(cc, new ComponentMethods()) {
             @Override
-            boolean getServiceInternal()
+            boolean getServiceInternal(ServiceRegistration<Object> serviceRegistration)
             {
                 return true;
             }

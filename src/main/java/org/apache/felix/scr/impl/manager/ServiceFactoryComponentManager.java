@@ -46,7 +46,7 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
     @Override
     public void setServiceProperties(Dictionary<String, ?> serviceProperties)
     {
-        throw new IllegalStateException( "Bundle scoped service properties are immutable" );
+        throw new IllegalStateException( "Bundle or instance scoped service properties are immutable" );
     }
 
 
@@ -92,13 +92,13 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
     /* (non-Javadoc)
      * @see org.osgi.framework.ServiceFactory#getService(org.osgi.framework.Bundle, org.osgi.framework.ServiceRegistration)
      */
-    public S getService( Bundle bundle, ServiceRegistration<S> registration )
+    public S getService( Bundle bundle, ServiceRegistration<S> serviceRegistration )
     {
         log( LogService.LOG_DEBUG, "ServiceFactory.getService()", null );
 
         // When the getServiceMethod is called, the implementation object must be created
 
-        ComponentContextImpl<S> componentContext = new ComponentContextImpl<S>(this, bundle);
+        ComponentContextImpl<S> componentContext = new ComponentContextImpl<S>(this, bundle, serviceRegistration);
         if (collectDependencies(componentContext) )
         {
             log( LogService.LOG_DEBUG,

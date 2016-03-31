@@ -37,6 +37,7 @@ import org.apache.felix.scr.impl.helper.ModifiedMethod;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentInstance;
@@ -517,6 +518,22 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         return super.getServiceProperties();
     }
 
+    final ServiceRegistration<S> getServiceRegistration()
+    {
+        return m_componentContext == null? null: m_componentContext.getServiceRegistration();
+    }
+
+
+    final ServiceReference<S> getServiceReference()
+    {
+        ServiceRegistration<S> reg = getServiceRegistration();
+        if (reg != null)
+        {
+            return reg.getReference();
+        }
+        return null;
+    }
+
     private void updateServiceRegistration()
     {
         ServiceRegistration<S> sr = getServiceRegistration();
@@ -788,7 +805,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         }
         boolean decrement = true;
         try {
-            boolean success = getServiceInternal();
+            boolean success = getServiceInternal(serviceRegistration);
             ComponentContextImpl<S> componentContext = m_componentContext;
             if ( success && componentContext != null)
             {
@@ -811,7 +828,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
 
     @Override
-    boolean getServiceInternal()
+    boolean getServiceInternal(ServiceRegistration<S> serviceRegistration)
     {
         if (m_circularReferences.get() != null)
         {
@@ -825,7 +842,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             boolean success = true;
             if ( m_componentContext == null )
             {
-                ComponentContextImpl<S> componentContext = new ComponentContextImpl<S>(this, this.getBundle());
+                ComponentContextImpl<S> componentContext = new ComponentContextImpl<S>(this, this.getBundle(), serviceRegistration);
                 if ( collectDependencies(componentContext))
                 {
                         log(

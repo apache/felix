@@ -721,7 +721,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
             if ( ( isImmediate() || getComponentMetadata().isFactory() ) )
             {
-                getServiceInternal();
+                getServiceInternal(registrationManager.getServiceRegistration());
             }
         }
         finally
@@ -808,21 +808,11 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         unregisterComponentId();
     }
 
-    final ServiceReference<S> getServiceReference()
-    {
-        ServiceRegistration<S> reg = getServiceRegistration();
-        if (reg != null)
-        {
-            return reg.getReference();
-        }
-        return null;
-    }
-
     //---------- Component handling methods ----------------------------------
 
     protected abstract void deleteComponent( int reason );
 
-    boolean getServiceInternal()
+    boolean getServiceInternal(ServiceRegistration<S> serviceRegistration)
     {
         return false;
     }
@@ -1020,12 +1010,6 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     {
         BundleComponentActivator activator = getActivator();
         return activator != null && activator.isActive();
-    }
-
-
-    final ServiceRegistration<S> getServiceRegistration()
-    {
-        return registrationManager.getServiceRegistration();
     }
 
 
