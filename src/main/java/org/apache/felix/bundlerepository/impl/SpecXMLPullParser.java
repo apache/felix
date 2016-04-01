@@ -102,7 +102,9 @@ public class SpecXMLPullParser
                 else if (REQUIREMENT.equals(element))
                 {
                     Requirement requirement = parseRequirement(reader);
-                    resource.addRequire(requirement);
+                    if (requirement != null) {
+                    	resource.addRequire(requirement);
+                    }
                 }
                 else
                 {
@@ -328,6 +330,11 @@ public class SpecXMLPullParser
         parseAttributesDirectives(reader, attributes, directives, REQUIREMENT);
         requirement.setAttributes(attributes);
 
+        String effective = directives.get("effective");
+        if (effective != null && !effective.equals("resolve")) {
+        	return null;
+        }
+        
         String filter = directives.remove(Namespace.REQUIREMENT_FILTER_DIRECTIVE);
         for (String ns : NamespaceTranslator.getTranslatedOSGiNamespaces())
         {
