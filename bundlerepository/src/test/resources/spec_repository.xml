@@ -65,6 +65,45 @@
             <directive name="effective" value="active"/>
         </requirement>
     </resource>
+    <resource>
+        <capability namespace='osgi.identity'>
+            <attribute name='osgi.identity' value='org.apache.felix.bundlerepository.test_file_6'/>
+            <attribute name='type' value='osgi.bundle'/>
+            <attribute name='version' type='Version' value='2.2.3.something'/>
+            <attribute name='license' value='http://www.opensource.org/licenses/mytestlicense2' />
+        </capability>
+        <capability namespace='osgi.content'>
+            <attribute name='osgi.content' value='a1c64578808c38a63cd6563e9936f025638aeaf9de70f36765367db81c0afc38'/>
+            <attribute name='url' value='repo_files/test_file_6.jar'/>
+            <attribute name='size' type='Long' value='3'/>
+            <attribute name='mime' value='application/vnd.osgi.bundle'/>
+        </capability>
+        <capability namespace='osgi.wiring.bundle'>
+            <attribute name='osgi.wiring.bundle' value='org.apache.felix.bundlerepository.test_file_6'/>
+            <attribute name='bundle-version' type='Version' value='2.2.3.something'/>
+        </capability>
+        <requirement namespace="osgi.wiring.bundle">
+            <directive name="filter" value="(&amp;(osgi.wiring.bundle=org.apache.felix.bundlerepository.test_file_7)(version&gt;=3.3.0)(!(version&gt;=4.0.0)))"/>
+        </requirement>
+    </resource>
+    <resource>
+        <capability namespace='osgi.identity'>
+            <attribute name='osgi.identity' value='org.apache.felix.bundlerepository.test_file_7'/>
+            <attribute name='type' value='osgi.bundle'/>
+            <attribute name='version' type='Version' value='3.3.4.something'/>
+            <attribute name='license' value='http://www.opensource.org/licenses/mytestlicense2' />
+        </capability>
+        <capability namespace='osgi.content'>
+            <attribute name='osgi.content' value='a1c64578808c38a63cd6563e9936f025638aeaf9de70f36765367db81c0afc38'/>
+            <attribute name='url' value='repo_files/test_file_7.jar'/>
+            <attribute name='size' type='Long' value='3'/>
+            <attribute name='mime' value='application/vnd.osgi.bundle'/>
+        </capability>
+        <capability namespace='osgi.wiring.bundle'>
+            <attribute name='osgi.wiring.bundle' value='org.apache.felix.bundlerepository.test_file_7'/>
+            <attribute name='bundle-version' type='Version' value='3.3.4.something'/>
+        </capability>
+    </resource>
   <resource>
     <capability namespace='osgi.identity'>
       <attribute name='osgi.identity' value='org.apache.sshd.core'/>

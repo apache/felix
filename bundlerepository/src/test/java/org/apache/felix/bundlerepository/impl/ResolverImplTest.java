@@ -117,6 +117,23 @@ public class ResolverImplTest extends TestCase
         assertTrue("Resolver could not resolve", resolver.resolve());
     }
 
+    public void testSpecBundleNamespace() throws Exception
+    {
+        URL url = getClass().getResource("/spec_repository.xml");
+        RepositoryAdminImpl repoAdmin = createRepositoryAdmin();
+        RepositoryImpl repo = (RepositoryImpl) repoAdmin.addRepository(url);
+
+        Resolver resolver = repoAdmin.resolver();
+
+        Resource[] discoverResources = repoAdmin.discoverResources("(symbolicname=org.apache.felix.bundlerepository.test_file_6*)");
+        assertNotNull(discoverResources);
+        assertEquals(1, discoverResources.length);
+
+        resolver.add(discoverResources[0]);
+        assertTrue(resolver.resolve());
+        
+    }
+
     public void testMatchingReq() throws Exception
     {
         RepositoryAdminImpl repoAdmin = createRepositoryAdmin();
