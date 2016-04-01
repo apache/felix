@@ -26,15 +26,16 @@ import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.apache.felix.bundlerepository.Capability;
 import org.apache.felix.bundlerepository.DataModelHelper;
-import org.apache.felix.bundlerepository.Requirement;
 import org.apache.felix.bundlerepository.Repository;
+import org.apache.felix.bundlerepository.RepositoryAdmin;
+import org.apache.felix.bundlerepository.Requirement;
 import org.apache.felix.bundlerepository.Resolver;
 import org.apache.felix.bundlerepository.Resource;
 import org.apache.felix.utils.collections.MapToDictionary;
@@ -42,8 +43,6 @@ import org.apache.felix.utils.log.Logger;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
-import org.apache.felix.bundlerepository.Repository;
-import org.apache.felix.bundlerepository.RepositoryAdmin;
 
 public class RepositoryAdminImpl implements RepositoryAdmin
 {
@@ -52,7 +51,7 @@ public class RepositoryAdminImpl implements RepositoryAdmin
     private final SystemRepositoryImpl m_system;
     private final LocalRepositoryImpl m_local;
     private final DataModelHelper m_helper = new DataModelHelperImpl();
-    private Map m_repoMap = new HashMap();
+    private Map m_repoMap = new LinkedHashMap();
     private boolean m_initialized = false;
 
     // Reusable comparator for sorting resources by name.
