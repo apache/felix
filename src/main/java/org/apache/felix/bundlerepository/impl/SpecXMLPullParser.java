@@ -28,6 +28,7 @@ import org.apache.felix.bundlerepository.Capability;
 import org.apache.felix.bundlerepository.Requirement;
 import org.apache.felix.bundlerepository.Resource;
 import org.osgi.framework.Version;
+import org.osgi.framework.namespace.BundleNamespace;
 import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.resource.Namespace;
 import org.osgi.service.repository.ContentNamespace;
@@ -152,6 +153,16 @@ public class SpecXMLPullParser
 
         for (Map.Entry<String, Object> entry : attributes.entrySet())
         {
+            if (BundleNamespace.BUNDLE_NAMESPACE.equals(namespace) && BundleNamespace.BUNDLE_NAMESPACE.equals(entry.getKey()))
+            {
+                capability.addProperty(new FelixPropertyAdapter(Resource.SYMBOLIC_NAME, entry.getValue()));
+                continue;
+            }
+            if (BundleNamespace.BUNDLE_NAMESPACE.equals(namespace) && BundleNamespace.CAPABILITY_BUNDLE_VERSION_ATTRIBUTE.equals(entry.getKey()))
+            {
+               capability.addProperty(new FelixPropertyAdapter(Resource.VERSION, entry.getValue()));
+               continue;
+            }
             capability.addProperty(new FelixPropertyAdapter(NamespaceTranslator.getFelixNamespace(entry.getKey()), entry.getValue()));
         }
         for (Map.Entry<String, String> entry : directives.entrySet())
@@ -338,8 +349,14 @@ public class SpecXMLPullParser
         String filter = directives.remove(Namespace.REQUIREMENT_FILTER_DIRECTIVE);
         for (String ns : NamespaceTranslator.getTranslatedOSGiNamespaces())
         {
-            filter = filter.replaceAll("[(][ ]*" + ns + "[ ]*=",
-                    "(" + NamespaceTranslator.getFelixNamespace(ns) + "=");
+        	if (BundleNamespace.BUNDLE_NAMESPACE.equals(namespace) && BundleNamespace.BUNDLE_NAMESPACE.equals(ns)) 
+        	{
+        		filter = filter.replaceAll("[(][ ]*" + ns + "[ ]*=",
+                    "(" + Resource.SYMBOLIC_NAME + "=");
+        	}
+        	else
+            	filter = filter.replaceAll("[(][ ]*" + ns + "[ ]*=",
+                        "(" + NamespaceTranslator.getFelixNamespace(ns) + "=");
         }
         requirement.setFilter(filter);
         requirement.setMultiple(Namespace.CARDINALITY_MULTIPLE.equals(
