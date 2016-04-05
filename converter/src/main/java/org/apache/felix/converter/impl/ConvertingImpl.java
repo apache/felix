@@ -78,4 +78,9 @@ public class ConvertingImpl implements Converting {
         }
         return null;
     }
+
+    @Override
+    public String toString() {
+        return to(String.class);
+    }
 }
