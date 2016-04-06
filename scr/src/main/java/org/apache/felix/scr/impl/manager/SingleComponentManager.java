@@ -509,6 +509,15 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     }
 
     @Override
+    void preDeregister()
+    {
+        if (m_componentContext != null)
+        {
+            m_componentContext.unsetServiceRegistration();
+        }        
+    }
+
+    @Override
     public Dictionary<String, Object> getServiceProperties()
     {
         if ( m_serviceProperties != null )

@@ -282,6 +282,12 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         //do nothing
     }
 
+    @Override
+    void preDeregister()
+    {
+        //do nothing
+    }
+
     public Dictionary<String, Object> getServiceProperties()
     {
         Dictionary<String, Object> props = new Hashtable<String, Object>();

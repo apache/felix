@@ -49,7 +49,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
 
     private final Bundle m_usingBundle;
     
-    private final ServiceRegistration<S> m_serviceRegistration;
+    private volatile ServiceRegistration<S> m_serviceRegistration;
 
     private volatile S m_implementationObject;
 
@@ -70,6 +70,10 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
             edgeInfos[i] = new EdgeInfo();
         }
         this.serviceObjectsHelper = new ComponentServiceObjectsHelper(usingBundle.getBundleContext());
+    }
+    
+    public void unsetServiceRegistration() {
+        m_serviceRegistration = null;
     }
 
     public void cleanup()
