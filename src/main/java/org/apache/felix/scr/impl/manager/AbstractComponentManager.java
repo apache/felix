@@ -876,6 +876,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         @Override
         void unregister(ServiceRegistration<S> serviceRegistration)
         {
+            AbstractComponentManager.this.preDeregister();
             serviceRegistration.unregister();
         }
 
@@ -1372,6 +1373,8 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     }
 
     abstract void postRegister();
+
+    abstract void preDeregister();
 
     boolean isInternalEnabled()
     {
