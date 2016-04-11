@@ -88,12 +88,12 @@ public class JsonDecodingImpl<T> implements Decoding<T> {
                     parsed = true;
                 else if ("false".equals(val))
                     parsed = false;
-                else if (val.startsWith("\""))
-                    parsed = val;
+                else if (val.startsWith("\"") && val.endsWith("\""))
+                    parsed = val.substring(1, val.length() - 1);
                 else if (val.contains("."))
                     parsed = Double.valueOf(val);
                 else
-                    parsed = Integer.valueOf(val);
+                    parsed = Long.valueOf(val);
             }
             m.put(key, parsed);
         } while (commaIdx > 0);
