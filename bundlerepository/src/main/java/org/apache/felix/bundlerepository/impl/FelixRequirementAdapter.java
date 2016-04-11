@@ -121,4 +121,9 @@ public class FelixRequirementAdapter implements Requirement
         result = 31 * result + (getResource() == null ? 0 : getResource().hashCode());
         return result;
     }
+
+    public String toString()
+    {
+        return resource + ":" + requirement;
+    }
 }

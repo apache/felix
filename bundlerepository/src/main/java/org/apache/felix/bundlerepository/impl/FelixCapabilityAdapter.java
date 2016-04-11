@@ -126,4 +126,9 @@ public class FelixCapabilityAdapter implements Capability
         result = 31 * result + getResource().hashCode();
         return result;
     }
+
+    public String toString()
+    {
+        return resource + ":" + capability;
+    }
 }
