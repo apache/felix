@@ -19,13 +19,30 @@ package org.apache.felix.converter.impl;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+import org.osgi.service.converter.Adapter;
+import org.osgi.service.converter.Converter;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class JsonCodecTest {
+    private Converter converter;
+
+    @Before
+    public void setUp() {
+        converter = new ConverterImpl();
+    }
+
+    @After
+    public void tearDown() {
+        converter = null;
+    }
+
     @Test
     public void testJSONCodec() throws Exception {
         Map<Object, Object> m1 = new HashMap<>();
@@ -52,5 +69,42 @@ public class JsonCodecTest {
         assertEquals(m.get(1), m2.get("1"));
         assertEquals(m.get("ab"), m2.get("ab"));
         assertEquals(m.get(true), m2.get("true"));
+    }
+
+    @Test
+    public void testCodecWithAdapter() throws JSONException {
+        Map<String, Foo> m1 = new HashMap<>();
+        m1.put("f", new Foo("fofofo"));
+        Map<String, Object> m = new HashMap<>();
+        m.put("submap", m1);
+
+        Adapter ca = converter.getAdapter();
+        ca.rule(Foo.class, String.class, Foo::tsFun, v -> Foo.fsFun(v));
+
+        JsonCodecImpl jsonCodec = new JsonCodecImpl();
+        String json = jsonCodec.with(ca).encode(m).toString();
+
+        JSONObject jo = new JSONObject(json);
+        assertEquals(1, jo.length());
+        JSONObject jo1 = jo.getJSONObject("submap");
+        assertEquals("<fofofo>", jo1.getString("f"));
+
+        // TODO convert back into a Map<String, Foo> via TypeReference
+    }
+
+    static class Foo {
+        private final String val;
+
+        public Foo(String s) {
+            val = s;
+        }
+
+        public String tsFun() {
+            return "<" + val + ">";
+        }
+
+        public static Foo fsFun(String s) {
+            return new Foo(s.substring(1, s.length() - 1));
+        }
     }
 }

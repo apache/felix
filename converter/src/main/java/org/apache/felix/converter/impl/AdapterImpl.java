@@ -69,6 +69,16 @@ public class AdapterImpl implements Adapter {
 
     @Override
     public <F, T> Adapter rule(Function<F, T> toFun, Function<T, F> fromFun) {
+//        Type[] t = toFun.getClass().getGenericInterfaces();
+//
+//        TypeVariable<?>[] tp = toFun.getClass().getTypeParameters();
+//        System.out.println("*** " + Arrays.toString(tp));
+//
+//        TypeReference<Map<String, Adapter>> tr = new TypeReference<Map<String,Adapter>>(){};
+//        System.out.println("### " + tr);
+//        Type type = tr.getType();
+//        System.out.println("### " + type);
+
         // TODO Auto-generated method stub
         return this;
     }
