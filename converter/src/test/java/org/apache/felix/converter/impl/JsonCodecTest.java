@@ -63,6 +63,7 @@ public class JsonCodecTest {
         assertEquals(true, jo2.getBoolean("x"));
         assertTrue(jo2.isNull("y"));
 
+        @SuppressWarnings("rawtypes")
         Map m2 = jsonCodec.decode(Map.class).from(json);
         // m2 is not exactly equal to m, as the keys are all strings now, this is unavoidable with JSON
         assertEquals(m.size(), m2.size());

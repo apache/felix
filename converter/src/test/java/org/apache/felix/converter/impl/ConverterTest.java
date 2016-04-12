@@ -16,6 +16,8 @@
  */
 package org.apache.felix.converter.impl;
 
+import java.math.BigInteger;
+import java.util.Collections;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -27,6 +29,7 @@ import org.osgi.service.converter.Converter;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
 public class ConverterTest {
     private Converter converter;
@@ -43,6 +46,20 @@ public class ConverterTest {
 
     @Test
     public void testSimpleConversions() {
+        assertEquals("abc", converter.convert("abc").to(String.class));
+        assertEquals("true", converter.convert(Boolean.TRUE).to(String.class));
+        assertEquals("c", converter.convert('c').to(String.class));
+        assertEquals("123", converter.convert(123).to(String.class));
+        assertEquals("" + Long.MAX_VALUE, converter.convert(Long.MAX_VALUE).to(String.class));
+        assertEquals("12.3", converter.convert(12.3f).to(String.class));
+        assertEquals("12.345", converter.convert(12.345d).to(String.class));
+        assertEquals(null, converter.convert(null).to(String.class));
+        assertEquals(null, converter.convert(Collections.emptyList()).to(String.class));
+
+        String bistr = "999999999999999999999"; // more than Long.MAX_VALUE
+        assertEquals(bistr, converter.convert(new BigInteger(bistr)).to(String.class));
+
+
         assertEquals(Integer.valueOf(123), converter.convert("123").to(Integer.class));
         //assertEquals(Integer.valueOf(123), c.convert("123").to(int.class));
         assertEquals(Long.valueOf(123), converter.convert("123").to(Long.class));
@@ -50,7 +67,20 @@ public class ConverterTest {
         assertEquals(Byte.valueOf((byte) 123), converter.convert("123").to(Byte.class));
         assertEquals(Float.valueOf("12.3"), converter.convert("12.3").to(Float.class));
         assertEquals(Double.valueOf("12.3"), converter.convert("12.3").to(Double.class));
-        assertEquals("123", converter.convert(123).to(String.class));
+    }
+
+    @Test
+    public void testIdentialTarget() {
+        Object o = new Object();
+        assertSame(o, converter.convert(o).to(Object.class));
+
+        Thread t = new Thread(); // No converter available
+        assertSame(t, converter.convert(t).to(Thread.class));
+        assertSame(t, converter.convert(t).to(Runnable.class));
+        assertSame(t, converter.convert(t).to(Object.class));
+
+        Thread st = new Thread() {}; // Subclass of Thread
+        assertSame(st, converter.convert(st).to(Thread.class));
     }
 
     @Test

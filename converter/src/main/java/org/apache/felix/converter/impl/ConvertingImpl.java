@@ -18,6 +18,7 @@ package org.apache.felix.converter.impl;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.Collection;
 
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.Converting;
@@ -35,9 +36,20 @@ public class ConvertingImpl implements Converting {
     @SuppressWarnings("unchecked")
     @Override
     public <T> T to(Class<T> cls) {
+        if (object == null)
+            return null;
+        if (cls.isAssignableFrom(object.getClass()))
+            return (T) object;
+
         if (String.class.equals(cls)) {
-            if (object instanceof Object[])
+            if (object instanceof Object[]) {
                 return (T) ((Object[])object)[0];
+            } else if (object instanceof Collection) {
+                Collection<?> c = (Collection<?>) object;
+                if (c.size() == 0) {
+                    return null;
+                }
+            }
             return (T) object.toString();
         } else if (String[].class.equals(cls)) {
             String[] res = new String[1];
