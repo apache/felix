@@ -210,6 +210,20 @@ public class SslFilterResponseTest
         assertEquals(expectedUrl, sresp.getHeader(SslFilterConstants.HDR_LOCATION));
     }
 
+    @Test
+    public void testPathEncoding() throws Exception
+    {
+        TestHttpServletResponse response = createServletResponse();
+        HttpServletRequest req = createServletRequest(BACKEND_SERVER, PATH);
+
+        SslFilterResponse sresp = new SslFilterResponse(response, req);
+
+        final String setUrl = "http://" + BACKEND_SERVER + "/apps/test/content/%E4%B8%83%E6%9C%88%E5%8F%B7.redirect";
+        sresp.setHeader(SslFilterConstants.HDR_LOCATION, setUrl);
+
+        assertEquals("https://" + BACKEND_SERVER + "/apps/test/content/%E4%B8%83%E6%9C%88%E5%8F%B7.redirect", sresp.getHeader(SslFilterConstants.HDR_LOCATION));
+    }
+
     private HttpServletRequest createServletRequest(String serverName, String requestURL)
     {
         return createServletRequest(serverName, DEFAULT_HTTP_PORT, HTTPS, DEFAULT_HTTPS_PORT, requestURL);

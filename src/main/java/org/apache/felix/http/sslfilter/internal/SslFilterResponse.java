@@ -193,9 +193,9 @@ class SslFilterResponse extends HttpServletResponseWrapper
                 sb.append(':');
                 sb.append(this.clientPort);
             }
-            if ( uri.getPath() != null )
+            if ( uri.getRawPath() != null )
             {
-                sb.append(uri.getPath());
+                sb.append(uri.getRawPath());
             }
             if ( uri.getRawQuery() != null )
             {
