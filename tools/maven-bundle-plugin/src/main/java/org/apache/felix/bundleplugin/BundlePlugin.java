@@ -1838,7 +1838,8 @@ public class BundlePlugin extends AbstractMojo
 
         // Add default plugins
         header( properties, Analyzer.PLUGIN, BlueprintPlugin.class.getName() + ","
-                                           + SpringXMLType.class.getName() );
+                                           + SpringXMLType.class.getName() + ","
+                                           + JpaPlugin.class.getName() );
 
         return properties;
     }
