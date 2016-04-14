@@ -29,7 +29,9 @@ import org.osgi.service.converter.Converter;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 public class ConverterTest {
     private Converter converter;
@@ -46,6 +48,7 @@ public class ConverterTest {
 
     @Test
     public void testSimpleConversions() {
+        // Conversions to String
         assertEquals("abc", converter.convert("abc").to(String.class));
         assertEquals("true", converter.convert(Boolean.TRUE).to(String.class));
         assertEquals("c", converter.convert('c').to(String.class));
@@ -59,9 +62,22 @@ public class ConverterTest {
         String bistr = "999999999999999999999"; // more than Long.MAX_VALUE
         assertEquals(bistr, converter.convert(new BigInteger(bistr)).to(String.class));
 
+        // Conversions to boolean
+        assertTrue(converter.convert("true").to(boolean.class));
+        assertTrue(converter.convert("TRUE").to(boolean.class));
+        assertTrue(converter.convert('x').to(boolean.class));
+        assertTrue(converter.convert(Long.MIN_VALUE).to(boolean.class));
+        assertFalse(converter.convert("false").to(boolean.class));
+        assertFalse(converter.convert("bleh").to(boolean.class));
+        assertFalse(converter.convert((char) 0).to(boolean.class));
+        assertFalse(converter.convert(null).to(boolean.class));
+        assertFalse(converter.convert(Collections.emptyList()).to(boolean.class));
+
+        // Converstions to integer
+        assertEquals(Integer.valueOf(123), converter.convert("123").to(int.class));
+        assertEquals(1, (int) converter.convert(true).to(int.class));
 
         assertEquals(Integer.valueOf(123), converter.convert("123").to(Integer.class));
-        //assertEquals(Integer.valueOf(123), c.convert("123").to(int.class));
         assertEquals(Long.valueOf(123), converter.convert("123").to(Long.class));
 //        assertEquals(Character.valueOf(123), c.convert("123").to(Character.class));
         assertEquals(Byte.valueOf((byte) 123), converter.convert("123").to(Byte.class));
