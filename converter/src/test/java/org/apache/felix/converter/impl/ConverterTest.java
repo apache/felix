@@ -92,6 +92,17 @@ public class ConverterTest {
         assertEquals(Double.valueOf("12.3"), converter.convert("12.3").to(Double.class));
     }
 
+    enum TestEnum { FOO, BAR, BLAH, FALSE, X};
+    @Test
+    public void testEnums() {
+        assertEquals(TestEnum.BLAH, converter.convert("BLAH").to(TestEnum.class));
+        assertEquals(TestEnum.X, converter.convert('X').to(TestEnum.class));
+        assertEquals(TestEnum.FALSE, converter.convert(false).to(TestEnum.class));
+        assertEquals(TestEnum.BAR, converter.convert(1).to(TestEnum.class));
+        assertNull(converter.convert(null).to(TestEnum.class));
+        assertNull(converter.convert(Collections.emptySet()).to(TestEnum.class));
+    }
+
     @Test
     public void testIdentialTarget() {
         Object o = new Object();

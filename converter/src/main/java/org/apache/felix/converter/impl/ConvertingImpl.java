@@ -102,6 +102,8 @@ public class ConvertingImpl implements Converting {
             return false;
         } else if (cls.equals(Class.class)) {
             return null;
+        } else if (Enum.class.isAssignableFrom(cls)) {
+            return null;
         } else {
             return 0;
         }
@@ -154,6 +156,24 @@ public class ConvertingImpl implements Converting {
                     throw new RuntimeException(e);
                 }
             }
+        } else if (Enum.class.isAssignableFrom(targetCls)) {
+            if (object instanceof Boolean) {
+                try {
+                    Method m = targetCls.getMethod("valueOf", String.class);
+                    return m.invoke(null, object.toString().toUpperCase());
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            } else if (object instanceof Number) {
+                try {
+                    Method m = targetCls.getMethod("values");
+                    Object[] values = (Object[]) m.invoke(null);
+                    return values[((Number) object).intValue()];
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
         }
         return null;
     }
@@ -163,7 +183,7 @@ public class ConvertingImpl implements Converting {
         try {
             Method m = cls.getDeclaredMethod("valueOf", String.class);
             if (m != null) {
-                return (T) m.invoke(null, object);
+                return (T) m.invoke(null, object.toString());
             }
         } catch (Exception e) {
             return null;
