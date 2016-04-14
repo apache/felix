@@ -16,6 +16,7 @@
  */
 package org.apache.felix.converter.impl;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.stream.Collectors;
@@ -30,6 +31,7 @@ import org.osgi.service.converter.Converter;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
@@ -76,6 +78,11 @@ public class ConverterTest {
         // Converstions to integer
         assertEquals(Integer.valueOf(123), converter.convert("123").to(int.class));
         assertEquals(1, (int) converter.convert(true).to(int.class));
+
+        // Conversions to Class
+        assertEquals(BigDecimal.class, converter.convert("java.math.BigDecimal").to(Class.class));
+        assertNull(converter.convert(null).to(Class.class));
+        assertNull(converter.convert(Collections.emptyList()).to(Class.class));
 
         assertEquals(Integer.valueOf(123), converter.convert("123").to(Integer.class));
         assertEquals(Long.valueOf(123), converter.convert("123").to(Long.class));

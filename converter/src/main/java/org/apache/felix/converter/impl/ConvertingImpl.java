@@ -43,11 +43,11 @@ public class ConvertingImpl implements Converting {
         boxedClasses = Collections.unmodifiableMap(m);
     }
 
-//    private Converter converter;
+    private Converter converter;
     private final Object object;
 
     ConvertingImpl(Converter c, Object obj) {
-//        converter = c;
+        converter = c;
         object = obj;
     }
 
@@ -98,10 +98,13 @@ public class ConvertingImpl implements Converting {
             // This is not a primitive, just return null
             return null;
         }
-        if (cls.equals(boolean.class))
+        if (cls.equals(boolean.class)) {
             return false;
-        else
+        } else if (cls.equals(Class.class)) {
+            return null;
+        } else {
             return 0;
+        }
     }
 
     private Class<?> primitiveToBoxed(Class<?> cls) {
@@ -140,6 +143,16 @@ public class ConvertingImpl implements Converting {
         } else if (Integer.class.equals(targetCls)) {
             if (object instanceof Boolean) {
                 return ((Boolean) object).booleanValue() ? Integer.valueOf(1) : Integer.valueOf(0);
+            }
+        } else if (Class.class.equals(targetCls)) {
+            if (object instanceof Collection && ((Collection<?>) object).size() == 0) {
+                return null;
+            } else {
+                try {
+                    return getClass().getClassLoader().loadClass(converter.convert(object).toString());
+                } catch (ClassNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
         return null;
