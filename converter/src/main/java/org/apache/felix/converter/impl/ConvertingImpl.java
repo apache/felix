@@ -19,6 +19,7 @@ package org.apache.felix.converter.impl;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -70,24 +71,44 @@ public class ConvertingImpl implements Converting {
     @SuppressWarnings("unchecked")
     @Override
     public <T> T to(Class<T> cls) {
+        Type type = cls;
+        return (T) to(type);
+    }
+
+    @Override
+    public Object to(Type type) {
+        Class<?> cls = null;
+        Type[] typeArguments = null;
+        if (type instanceof Class) {
+            cls = (Class<?>) type;
+        } else if (type instanceof ParameterizedType) {
+            ParameterizedType pt = (ParameterizedType) type;
+            Type rt = pt.getRawType();
+            typeArguments = pt.getActualTypeArguments();
+            if (rt instanceof Class)
+                cls = (Class<?>) rt;
+        }
+        if (cls == null)
+            return null;
+
         Class<?> targetCls = cls;
 
         if (object == null)
-            return (T) handleNull(cls);
+            return handleNull(cls);
 
         targetCls = primitiveToBoxed(targetCls);
 
         if (targetCls.isAssignableFrom(object.getClass()))
-            return (T) object;
+            return object;
 
-        T res = (T) trySpecialCases(targetCls);
+        Object res = trySpecialCases(targetCls);
         if (res != null)
             return res;
 
         if (targetCls.isArray()) {
             return convertToArray(targetCls);
         } else if (Collection.class.isAssignableFrom(targetCls)) {
-            return convertToCollection(targetCls);
+            return convertToCollection(targetCls, typeArguments);
         }
         // TODO maps
 
@@ -106,7 +127,7 @@ public class ConvertingImpl implements Converting {
                 return converter.convert(arr[0]).to(cls);
         }
 
-        T res2 = (T) tryStandardMethods(targetCls);
+        Object res2 = tryStandardMethods(targetCls);
         if (res2 != null) {
             return res2;
         } else {
@@ -132,8 +153,12 @@ public class ConvertingImpl implements Converting {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private <T> T convertToCollection(Class<?> targetCls) {
+    private <T> T convertToCollection(Class<?> targetCls, Type[] typeArguments) {
         Collection<?> collectionView = collectionView(object);
+        Class<?> targetElementType = null;
+        if (typeArguments != null && typeArguments.length > 0 && typeArguments[0] instanceof Class) {
+            targetElementType = (Class<?>) typeArguments[0];
+        }
 
         Class<?> ctrCls = interfaceImplementations.get(targetCls);
         if (ctrCls != null)
@@ -144,6 +169,9 @@ public class ConvertingImpl implements Converting {
             return null;
 
         for (Object o : collectionView) {
+            if (targetElementType != null)
+                o = converter.convert(o).to(targetElementType);
+
             instance.add(o);
         }
 
@@ -195,16 +223,10 @@ public class ConvertingImpl implements Converting {
             return cls;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T> T to(TypeReference<T> ref) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Object to(Type type) {
-        // TODO Auto-generated method stub
-        return null;
+        return (T) to(ref.getType());
     }
 
     private Object trySpecialCases(Class<?> targetCls) {

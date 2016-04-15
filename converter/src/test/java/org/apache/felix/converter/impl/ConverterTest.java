@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -33,6 +34,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.osgi.service.converter.Adapter;
 import org.osgi.service.converter.Converter;
+import org.osgi.service.converter.TypeReference;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -179,6 +181,30 @@ public class ConverterTest {
         for (Object o : s) {
             Object expected = l.remove(0);
             assertEquals(expected, o);
+        }
+    }
+
+    @Test
+    public void testFromGenericSetToLinkedList() {
+        Set<Integer> s = new LinkedHashSet<>();
+        s.add(123);
+        s.add(456);
+
+        LinkedList<String> ll = converter.convert(s).to(new TypeReference<LinkedList<String>>() {});
+        assertEquals(Arrays.asList("123", "456"), ll);
+    }
+
+    @Test
+    public void testFromArrayToGenericOrderPreservingSet() {
+        String[] sa = {"567", "-765", "0", "-900"};
+
+        // Returned set should be order preserving
+        Set<Long> s = converter.convert(sa).to(new TypeReference<Set<Long>>() {});
+
+        List<String> sl = new ArrayList<>(Arrays.asList(sa));
+        for (long l : s) {
+            long expected = Long.parseLong(sl.remove(0));
+            assertEquals(expected, l);
         }
     }
 
