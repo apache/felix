@@ -22,6 +22,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -29,7 +30,6 @@ import java.util.stream.Stream;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.service.converter.Adapter;
 import org.osgi.service.converter.Converter;
@@ -169,12 +169,35 @@ public class ConverterTest {
         assertEquals(Float.valueOf(3.1412f), Float.valueOf(converter.convert(arr).to(float.class)));
     }
 
-    @Test @Ignore
+    @Test
     public void testFromListToSet() {
         List<Object> l = new ArrayList<>(Arrays.asList("A", 'B', 333));
 
         Set<?> s = converter.convert(l).to(Set.class);
         assertEquals(3, s.size());
+
+        for (Object o : s) {
+            Object expected = l.remove(0);
+            assertEquals(expected, o);
+        }
+    }
+
+    @Test
+    public void testFromSetToArray() {
+        Set<Integer> s = new LinkedHashSet<>();
+        s.add(Integer.MIN_VALUE);
+
+        long[] la = converter.convert(s).to(long[].class);
+        assertEquals(1, la.length);
+        assertEquals(Integer.MIN_VALUE, la[0]);
+    }
+
+    @Test
+    public void testStringArrayToIntegerArray() {
+        String[] sa = {"999", "111", "-909"};
+        Integer[] ia = converter.convert(sa).to(Integer[].class);
+        assertEquals(3, ia.length);
+        assertArrayEquals(new Integer[] {999, 111, -909}, ia);
     }
 
     @Test

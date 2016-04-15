@@ -16,13 +16,20 @@
  */
 package org.apache.felix.converter.impl;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.Converting;
@@ -42,6 +49,14 @@ public class ConvertingImpl implements Converting {
         m.put(void.class, Void.class);
         m.put(short.class, Short.class);
         boxedClasses = Collections.unmodifiableMap(m);
+    }
+    private static final Map<Class<?>, Class<?>> interfaceImplementations;
+    static {
+        Map<Class<?>, Class<?>> m = new HashMap<>();
+        m.put(Collection.class, ArrayList.class);
+        m.put(List.class, ArrayList.class);
+        m.put(Set.class, LinkedHashSet.class); // preserves insertion order
+        interfaceImplementations = Collections.unmodifiableMap(m);
     }
 
     private Converter converter;
@@ -101,14 +116,62 @@ public class ConvertingImpl implements Converting {
 
     @SuppressWarnings("unchecked")
     private <T> T convertToArray(Class<?> targetClass) {
-        String[] sa = new String[1];
-        sa[0] = object.toString();
-        return (T) sa;
+        Collection<?> collectionView = collectionView(object);
+        Iterator<?> itertor = collectionView.iterator();
+        try {
+            Object array = Array.newInstance(targetClass.getComponentType(), collectionView.size());
+            for (int i=0; i<collectionView.size() && itertor.hasNext(); i++) {
+                Object next = itertor.next();
+                Object converted = converter.convert(next).to(targetClass.getComponentType());
+                Array.set(array, i, converted);
+            }
+            return (T) array;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private <T> T convertToCollection(Class<?> targetCls) {
-        // TODO Auto-generated method stub
+        Collection<?> collectionView = collectionView(object);
+
+        Class<?> ctrCls = interfaceImplementations.get(targetCls);
+        if (ctrCls != null)
+            targetCls = ctrCls;
+
+        Collection instance = createCollection(targetCls, collectionView);
+        if (instance == null)
+            return null;
+
+        for (Object o : collectionView) {
+            instance.add(o);
+        }
+
+        return (T) instance;
+    }
+
+    private static Collection<?> createCollection(Class<?> targetCls, Collection<?> collectionView) {
+        try {
+            Constructor<?> ctor = targetCls.getConstructor(int.class);
+            return (Collection<?>) ctor.newInstance(collectionView.size());
+        } catch (Exception e1) {
+            try {
+                Constructor<?> ctor2 = targetCls.getConstructor();
+                return (Collection<?>) ctor2.newInstance();
+            } catch (Exception e2) {
+                e2.printStackTrace();
+            }
+        }
         return null;
+    }
+
+    private static Collection<?> collectionView(Object obj) {
+        if (obj instanceof Collection)
+            return (Collection<?>) obj;
+        else if (obj instanceof Object[])
+            return Arrays.asList((Object[]) obj);
+        else
+            return Collections.singleton(obj);
     }
 
     private Object handleNull(Class<?> cls) {
