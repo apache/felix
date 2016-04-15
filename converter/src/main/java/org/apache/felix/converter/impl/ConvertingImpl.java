@@ -25,12 +25,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.Converting;
@@ -57,6 +60,7 @@ public class ConvertingImpl implements Converting {
         m.put(Collection.class, ArrayList.class);
         m.put(List.class, ArrayList.class);
         m.put(Set.class, LinkedHashSet.class); // preserves insertion order
+        m.put(Map.class, LinkedHashMap.class); // preserves insertion order
         interfaceImplementations = Collections.unmodifiableMap(m);
     }
 
@@ -98,8 +102,12 @@ public class ConvertingImpl implements Converting {
 
         targetCls = primitiveToBoxed(targetCls);
 
-        if (targetCls.isAssignableFrom(object.getClass()))
-            return object;
+        if (!Map.class.isAssignableFrom(targetCls) &&
+                !Collections.class.isAssignableFrom(targetCls)) {
+            // For maps and collections we always want copies returned
+            if (targetCls.isAssignableFrom(object.getClass()))
+                return object;
+        }
 
         Object res = trySpecialCases(targetCls);
         if (res != null)
@@ -109,8 +117,9 @@ public class ConvertingImpl implements Converting {
             return convertToArray(targetCls);
         } else if (Collection.class.isAssignableFrom(targetCls)) {
             return convertToCollection(targetCls, typeArguments);
+        } else if (isMapType(targetCls)) {
+            return convertToMapType(targetCls, typeArguments);
         }
-        // TODO maps
 
         // At this point we know that the target is a 'singular' type: not a map, collection or array
         if (object instanceof Collection) {
@@ -135,6 +144,59 @@ public class ConvertingImpl implements Converting {
         }
     }
 
+    private Object convertToMapType(Class<?> targetCls, Type[] typeArguments) {
+        if (Map.class.isAssignableFrom(targetCls))
+            return convertToMap(targetCls, typeArguments);
+        return null;
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private Map convertToMap(Class<?> targetCls, Type[] typeArguments) {
+        Map m = mapView(object);
+        if (m == null)
+            return null;
+        Class<?> targetKeyType = null, targetValueType = null;
+        if (typeArguments != null && typeArguments.length > 1 &&
+                typeArguments[0] instanceof Class && typeArguments[1] instanceof Class) {
+            targetKeyType = (Class<?>) typeArguments[0];
+            targetValueType = (Class<?>) typeArguments[1];
+        }
+
+        Class<?> ctrCls = interfaceImplementations.get(targetCls);
+        if (ctrCls == null)
+            ctrCls = targetCls;
+
+        Map instance = (Map) createMapOrCollection(ctrCls, m.size());
+        if (instance == null)
+            return null;
+
+        for (Map.Entry entry : (Set<Entry>) m.entrySet()) {
+            Object key = entry.getKey();
+            if (targetKeyType != null)
+                key = converter.convert(key).to(targetKeyType);
+            Object value = entry.getValue();
+            if (targetValueType != null)
+                value = converter.convert(value).to(targetValueType);
+            instance.put(key, value);
+        }
+
+        return instance;
+    }
+
+    private static Map<?,?> mapView(Object obj) {
+        if (obj instanceof Map)
+            return (Map<?,?>) obj;
+        return null;
+    }
+
+    private boolean isMapType(Class<?> targetCls) {
+        // All interface types that are not Collections are treated as maps
+        if (targetCls.isInterface())
+            return true;
+        else
+            return Dictionary.class.isAssignableFrom(targetCls);
+    }
+
     @SuppressWarnings("unchecked")
     private <T> T convertToArray(Class<?> targetClass) {
         Collection<?> collectionView = collectionView(object);
@@ -154,7 +216,7 @@ public class ConvertingImpl implements Converting {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private <T> T convertToCollection(Class<?> targetCls, Type[] typeArguments) {
-        Collection<?> collectionView = collectionView(object);
+        Collection<?> cv = collectionView(object);
         Class<?> targetElementType = null;
         if (typeArguments != null && typeArguments.length > 0 && typeArguments[0] instanceof Class) {
             targetElementType = (Class<?>) typeArguments[0];
@@ -164,11 +226,11 @@ public class ConvertingImpl implements Converting {
         if (ctrCls != null)
             targetCls = ctrCls;
 
-        Collection instance = createCollection(targetCls, collectionView);
+        Collection instance = (Collection) createMapOrCollection(targetCls, cv.size());
         if (instance == null)
             return null;
 
-        for (Object o : collectionView) {
+        for (Object o : cv) {
             if (targetElementType != null)
                 o = converter.convert(o).to(targetElementType);
 
@@ -178,14 +240,14 @@ public class ConvertingImpl implements Converting {
         return (T) instance;
     }
 
-    private static Collection<?> createCollection(Class<?> targetCls, Collection<?> collectionView) {
+    private static Object createMapOrCollection(Class<?> targetCls, int initialSize) {
         try {
             Constructor<?> ctor = targetCls.getConstructor(int.class);
-            return (Collection<?>) ctor.newInstance(collectionView.size());
+            return ctor.newInstance(initialSize);
         } catch (Exception e1) {
             try {
                 Constructor<?> ctor2 = targetCls.getConstructor();
-                return (Collection<?>) ctor2.newInstance();
+                return ctor2.newInstance();
             } catch (Exception e2) {
                 e2.printStackTrace();
             }
