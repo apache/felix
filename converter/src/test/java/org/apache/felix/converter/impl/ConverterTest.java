@@ -19,12 +19,17 @@ package org.apache.felix.converter.impl;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.service.converter.Adapter;
 import org.osgi.service.converter.Converter;
@@ -148,6 +153,28 @@ public class ConverterTest {
         assertEquals("127.0.0.1", url.getHost());
         assertEquals(1234, url.getPort());
         assertEquals("/blah", url.getPath());
+
+        assertNull(converter.convert(null).to(URL.class));
+        assertNull(converter.convert(Collections.emptyList()).to(URL.class));
+    }
+
+    @Test
+    public void testFromMultiToSingle() {
+        assertEquals("abc", converter.convert(Collections.singleton("abc")).to(String.class));
+        assertEquals("abc", converter.convert(Arrays.asList("abc", "def", "ghi")).to(String.class));
+        assertEquals(42, (int) converter.convert(Arrays.asList("42", "17")).to(Integer.class));
+        MyClass2 mc = converter.convert(new String[] {"xxx", "yyy", "zzz"}).to(MyClass2.class);
+        assertEquals("xxx", mc.toString());
+        MyClass2[] arr = new MyClass2[] {new MyClass2("3.1412"), new MyClass2("6.2824")};
+        assertEquals(Float.valueOf(3.1412f), Float.valueOf(converter.convert(arr).to(float.class)));
+    }
+
+    @Test @Ignore
+    public void testFromListToSet() {
+        List<Object> l = new ArrayList<>(Arrays.asList("A", 'B', 333));
+
+        Set<?> s = converter.convert(l).to(Set.class);
+        assertEquals(3, s.size());
     }
 
     @Test
@@ -172,4 +199,15 @@ public class ConverterTest {
         assertArrayEquals(sa, adapter.convert("A,B").to(String[].class));
     }
 
+    static class MyClass2 {
+        private final String value;
+        public MyClass2(String v) {
+            value = v;
+        }
+
+        @Override
+        public String toString() {
+            return value;
+        }
+    }
 }

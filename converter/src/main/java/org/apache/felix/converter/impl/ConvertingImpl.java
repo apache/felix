@@ -69,28 +69,46 @@ public class ConvertingImpl implements Converting {
         if (res != null)
             return res;
 
-        if (String.class.equals(targetCls)) {
-            if (object instanceof Object[]) {
-                return (T) ((Object[])object)[0];
-            } else if (object instanceof Collection) {
-                Collection<?> c = (Collection<?>) object;
-                if (c.size() == 0) {
-                    return null;
-                }
-            }
-            return (T) object.toString();
-        } else if (String[].class.equals(targetCls)) {
-            String[] sa = new String[1];
-            sa[0] = object.toString();
-            return (T) sa;
+        if (targetCls.isArray()) {
+            return convertToArray(targetCls);
+        } else if (Collection.class.isAssignableFrom(targetCls)) {
+            return convertToCollection(targetCls);
+        }
+        // TODO maps
+
+        // At this point we know that the target is a 'singular' type: not a map, collection or array
+        if (object instanceof Collection) {
+            Collection<?> coll = (Collection<?>) object;
+            if (coll.size() == 0)
+                return null;
+            else
+                return converter.convert(coll.iterator().next()).to(cls);
+        } else if (object instanceof Object[]) {
+            Object[] arr = (Object[]) object;
+            if (arr.length == 0)
+                return null;
+            else
+                return converter.convert(arr[0]).to(cls);
         }
 
-        res = (T) tryStandardMethods(targetCls);
-        if (res != null) {
-            return res;
+        T res2 = (T) tryStandardMethods(targetCls);
+        if (res2 != null) {
+            return res2;
         } else {
             return null;
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T convertToArray(Class<?> targetClass) {
+        String[] sa = new String[1];
+        sa[0] = object.toString();
+        return (T) sa;
+    }
+
+    private <T> T convertToCollection(Class<?> targetCls) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     private Object handleNull(Class<?> cls) {
@@ -101,10 +119,6 @@ public class ConvertingImpl implements Converting {
         }
         if (cls.equals(boolean.class)) {
             return false;
-        } else if (cls.equals(Class.class)) {
-            return null;
-        } else if (Enum.class.isAssignableFrom(cls)) {
-            return null;
         } else {
             return 0;
         }
