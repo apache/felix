@@ -18,6 +18,7 @@ package org.apache.felix.converter.impl;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URL;
 import java.util.Collections;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -115,6 +116,38 @@ public class ConverterTest {
 
         Thread st = new Thread() {}; // Subclass of Thread
         assertSame(st, converter.convert(st).to(Thread.class));
+    }
+
+    @Test
+    public void testFromUnknownDataTypeViaString() {
+        class MyClass {
+            @Override
+            public String toString() {
+                return "1234";
+            }
+        };
+        MyClass o = new MyClass();
+
+        assertEquals(1234, (int) converter.convert(o).to(int.class));
+        assertEquals("1234", converter.convert(o).to(String.class));
+    }
+
+    @Test
+    public void testToUnknownViaStringCtor() {
+        class MyClass {
+            @Override
+            public String toString() {
+                return "http://127.0.0.1:1234/blah";
+            }
+        };
+        MyClass o = new MyClass();
+
+        URL url = converter.convert(o).to(URL.class);
+        assertEquals("http://127.0.0.1:1234/blah", url.toString());
+        assertEquals("http", url.getProtocol());
+        assertEquals("127.0.0.1", url.getHost());
+        assertEquals(1234, url.getPort());
+        assertEquals("/blah", url.getPath());
     }
 
     @Test

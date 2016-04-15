@@ -16,6 +16,7 @@
  */
 package org.apache.felix.converter.impl;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Collection;
@@ -186,7 +187,11 @@ public class ConvertingImpl implements Converting {
                 return (T) m.invoke(null, object.toString());
             }
         } catch (Exception e) {
-            return null;
+            try {
+                Constructor<T> ctr = cls.getConstructor(String.class);
+                return ctr.newInstance(object.toString());
+            } catch (Exception e2) {
+            }
         }
         return null;
     }
