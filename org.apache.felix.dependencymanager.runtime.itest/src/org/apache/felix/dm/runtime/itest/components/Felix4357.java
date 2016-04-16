@@ -18,7 +18,8 @@
  */
 package org.apache.felix.dm.runtime.itest.components;
 
-import org.junit.Assert;
+import static org.apache.felix.dm.runtime.itest.components.Utils.assertArrayEquals;
+import static org.apache.felix.dm.runtime.itest.components.Utils.assertEquals;
 
 import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.Property;
@@ -73,57 +74,35 @@ public class Felix4357 {
     @Registered
     void registered(ServiceRegistration sr) {
         ServiceReference ref = sr.getReference();
-        assertEquals(ref, "v1", "s", 1);
-        assertArrayEquals(ref, "v2", new String[] {"s1", "s2"}, 2);        
-        assertArrayEquals(ref, "v3", new String[] {"s1", "s2"}, 3);                        
-        assertEquals(ref, "v4", new Long(1), 4);
-        assertEquals(ref, "v5", new Long(1), 5);
-        assertArrayEquals(ref, "v6", new Long[] { 1L, 2L } , 6);
-        assertEquals(ref, "v7", new Double(1), 7);
-        assertEquals(ref, "v8", new Double(1), 8);
-        assertArrayEquals(ref, "v9", new Double[] { 1.0, 2.0 } , 9);
-        assertEquals(ref, "v10", new Float(1), 10);
-        assertEquals(ref, "v11", new Float(1), 11);
-        assertArrayEquals(ref, "v12", new Float[] { 1.f, 2.f } , 12);
-        assertEquals(ref, "v13", new Integer(1), 13);
-        assertEquals(ref, "v14", new Integer(1), 14);
-        assertArrayEquals(ref, "v15", new Integer[] { 1, 2 } , 15);
-        assertEquals(ref, "v16", Byte.valueOf("65"), 16);
-        assertEquals(ref, "v17", Byte.valueOf("65"), 17);
-        assertArrayEquals(ref, "v18", new Byte[] { Byte.valueOf("65"), Byte.valueOf("66") } , 18);
-        assertEquals(ref, "v19", Character.valueOf('A'), 19);
-        assertEquals(ref, "v20", Character.valueOf('A'), 20);
-        assertArrayEquals(ref, "v21", new Character[] { 'A', 'B' } , 21);
-        assertEquals(ref, "v22", Boolean.valueOf(true), 22);
-        assertEquals(ref, "v23", Boolean.valueOf(true), 23);
-        assertArrayEquals(ref, "v24", new Boolean[] { true, false } , 24);
-        assertEquals(ref, "v25", Short.valueOf((short) 1), 25);
-        assertEquals(ref, "v26", Short.valueOf((short) 1), 26);
-        assertArrayEquals(ref, "v27", new Short[] { 1, 2 } , 27);
-        assertEquals(ref, "v28", Character.valueOf('A'), 28);
-        assertEquals(ref, "v29", Character.valueOf('A'), 29);
-        assertArrayEquals(ref, "v30", new Character[] { 'A', 'B' } , 30);
-    }
-    
-    void assertEquals(ServiceReference ref, String property, Object expected, int step) {
-        Object value = ref.getProperty(property);
-        Assert.assertNotNull(value);
-        Assert.assertEquals(value.getClass(), expected.getClass());
-        Assert.assertEquals(value, expected);        
-        m_ensure.step(step);
-    }
-    
-    void assertArrayEquals(ServiceReference ref, String property, Object[] expected, int step) {
-        Object values = ref.getProperty(property);
-        Assert.assertNotNull(values);
-        Assert.assertTrue(values.getClass().isArray());
-        Assert.assertEquals(values.getClass(), expected.getClass());
-        Object[] array = (Object[]) values;
-        Assert.assertEquals(array.length, expected.length);
-        for (int i = 0; i < array.length; i ++) {
-            Assert.assertEquals(array[i].getClass(), expected[i].getClass());
-            Assert.assertEquals(array[i], expected[i]);
-        }
-        m_ensure.step(step);
-    }
+        assertEquals(m_ensure, ref, "v1", "s", 1);
+        assertArrayEquals(m_ensure, ref, "v2", new String[] {"s1", "s2"}, 2);        
+        assertArrayEquals(m_ensure, ref, "v3", new String[] {"s1", "s2"}, 3);                        
+        assertEquals(m_ensure, ref, "v4", new Long(1), 4);
+        assertEquals(m_ensure, ref, "v5", new Long(1), 5);
+        assertArrayEquals(m_ensure, ref, "v6", new Long[] { 1L, 2L } , 6);
+        assertEquals(m_ensure, ref, "v7", new Double(1), 7);
+        assertEquals(m_ensure, ref, "v8", new Double(1), 8);
+        assertArrayEquals(m_ensure, ref, "v9", new Double[] { 1.0, 2.0 } , 9);
+        assertEquals(m_ensure, ref, "v10", new Float(1), 10);
+        assertEquals(m_ensure, ref, "v11", new Float(1), 11);
+        assertArrayEquals(m_ensure, ref, "v12", new Float[] { 1.f, 2.f } , 12);
+        assertEquals(m_ensure, ref, "v13", new Integer(1), 13);
+        assertEquals(m_ensure, ref, "v14", new Integer(1), 14);
+        assertArrayEquals(m_ensure, ref, "v15", new Integer[] { 1, 2 } , 15);
+        assertEquals(m_ensure, ref, "v16", Byte.valueOf("65"), 16);
+        assertEquals(m_ensure, ref, "v17", Byte.valueOf("65"), 17);
+        assertArrayEquals(m_ensure, ref, "v18", new Byte[] { Byte.valueOf("65"), Byte.valueOf("66") } , 18);
+        assertEquals(m_ensure, ref, "v19", Character.valueOf('A'), 19);
+        assertEquals(m_ensure, ref, "v20", Character.valueOf('A'), 20);
+        assertArrayEquals(m_ensure, ref, "v21", new Character[] { 'A', 'B' } , 21);
+        assertEquals(m_ensure, ref, "v22", Boolean.valueOf(true), 22);
+        assertEquals(m_ensure, ref, "v23", Boolean.valueOf(true), 23);
+        assertArrayEquals(m_ensure, ref, "v24", new Boolean[] { true, false } , 24);
+        assertEquals(m_ensure, ref, "v25", Short.valueOf((short) 1), 25);
+        assertEquals(m_ensure, ref, "v26", Short.valueOf((short) 1), 26);
+        assertArrayEquals(m_ensure, ref, "v27", new Short[] { 1, 2 } , 27);
+        assertEquals(m_ensure, ref, "v28", Character.valueOf('A'), 28);
+        assertEquals(m_ensure, ref, "v29", Character.valueOf('A'), 29);
+        assertArrayEquals(m_ensure, ref, "v30", new Character[] { 'A', 'B' } , 30);
+    }    
 }

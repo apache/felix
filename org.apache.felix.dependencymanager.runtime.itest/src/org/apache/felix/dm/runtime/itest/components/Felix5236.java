@@ -16,27 +16,32 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.dm.runtime.itest.tests;
+package org.apache.felix.dm.runtime.itest.components;
 
+import org.apache.felix.dm.annotation.api.Component;
+import org.apache.felix.dm.annotation.api.Property;
+import org.apache.felix.dm.annotation.api.Registered;
+import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.itest.util.Ensure;
-import org.apache.felix.dm.itest.util.TestBase;
-import org.apache.felix.dm.runtime.itest.components.Felix4357;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
 /**
- * Test for FELIX-4357 issue: It validates the types of some service component properties
- * defined with @Property annotation.
+ * Checks support of primitive types for @Property annotation.
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class Felix4357Test extends TestBase {
+@Component(provides=Felix5236.class)
+@Property(name="v1", value="s")
+public class Felix5236 {
+    public final static String ENSURE = "Felix5236";
     
-    public void testSingleProperty() {
-        Ensure e = new Ensure();
-        ServiceRegistration sr = register(e, Felix4357.ENSURE);
-        // wait for S to be started
-        e.waitForStep(30, 10000);
-        // remove our sequencer: this will stop S
-        sr.unregister();
+    @ServiceDependency(filter = "(name=" + ENSURE + ")")
+    volatile Ensure m_ensure;
+    
+    @Registered
+    void registered(ServiceRegistration sr) {
+        ServiceReference ref = sr.getReference();
+        Utils.assertEquals(m_ensure, ref, "v1", "s", 1);
     }
 }
