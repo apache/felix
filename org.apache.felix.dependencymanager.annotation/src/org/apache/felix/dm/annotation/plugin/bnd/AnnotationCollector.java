@@ -38,6 +38,7 @@ import org.apache.felix.dm.annotation.api.FactoryConfigurationAdapterService;
 import org.apache.felix.dm.annotation.api.Init;
 import org.apache.felix.dm.annotation.api.Inject;
 import org.apache.felix.dm.annotation.api.LifecycleController;
+import org.apache.felix.dm.annotation.api.Property;
 import org.apache.felix.dm.annotation.api.Registered;
 import org.apache.felix.dm.annotation.api.RepeatableProperty;
 import org.apache.felix.dm.annotation.api.ResourceAdapterService;
@@ -74,6 +75,7 @@ public class AnnotationCollector extends ClassDataCollector
     private final static String A_LIFCLE_CTRL = LifecycleController.class.getName();
 
     private final static String A_COMPONENT = Component.class.getName();
+    private final static String A_PROPERTY = Property.class.getName();
     private final static String A_REPEATABLE_PROPERTY = RepeatableProperty.class.getName();
     private final static String A_SERVICE_DEP = ServiceDependency.class.getName();
     private final static String A_CONFIGURATION_DEPENDENCY = ConfigurationDependency.class.getName();
@@ -112,7 +114,23 @@ public class AnnotationCollector extends ClassDataCollector
     private String m_componentField;
     private String m_registeredMethod;
     private String m_unregisteredMethod;
-    private Annotation m_repeatableProperty;
+    
+    /**
+     * When more than one @Property annotation are declared on a component type (outside of the @Component annotation), then a @Repeatable 
+     * annotation is used as the container for the @Property annotations. When such annotation is found, it is stored in this attribute, which 
+     * will be parsed in our finish() method.
+     */
+    private Annotation m_repeatableProperty; 
+    
+    /**
+     * If a Single @Property is declared on the component type (outside of the @Component annotation), then there is no @Repeatable annotation.
+     * When such single @Property annotation is found, it is stored in this attribute, which will be parsed in our finish() method.
+     */
+    private Annotation m_singleProperty; 
+    
+    /**
+     * List of all possible DM components.
+     */
     private final List<EntryType> m_componentTypes = Arrays.asList(EntryType.Component, EntryType.AspectService, EntryType.AdapterService,
         EntryType.BundleAdapterService, EntryType.ResourceAdapterService, EntryType.FactoryConfigurationAdapterService);
 
@@ -269,6 +287,10 @@ public class AnnotationCollector extends ClassDataCollector
         {
             parseRepeatableProperties(annotation);
         } 
+        else if (annotation.getName().getFQN().equals(A_PROPERTY))
+        {
+        	m_singleProperty = annotation;
+        } 
     }
 
     /**
@@ -290,7 +312,7 @@ public class AnnotationCollector extends ClassDataCollector
             .findFirst()
             .orElseThrow(() -> new IllegalStateException(": the class " + m_className + " must be annotated with either one of the following types: " + m_componentTypes));                   
         
-        // Add any repeated @Property annotation to the component (or to the aspect, or adapter).
+        // Add any repeated @Property annotations to the component (or to the aspect, or adapter).
                 
         if (m_repeatableProperty != null)
         {
@@ -300,6 +322,12 @@ public class AnnotationCollector extends ClassDataCollector
                 // property is actually a @Property annotation.
                 parseProperty((Annotation) property, componentWriter);
             }
+        }
+        
+        // Handle a single Property declared on the component type (in this case, there is no @Repeatable annotation).
+        
+        if (m_singleProperty != null) {
+            parseProperty(m_singleProperty, componentWriter);
         }
         
         StringBuilder sb = new StringBuilder();
