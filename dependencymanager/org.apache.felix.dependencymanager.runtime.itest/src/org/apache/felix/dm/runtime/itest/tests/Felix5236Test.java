@@ -20,7 +20,7 @@ package org.apache.felix.dm.runtime.itest.tests;
 
 import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
-import org.apache.felix.dm.runtime.itest.components.Felix4357;
+import org.apache.felix.dm.runtime.itest.components.Felix5236;
 import org.osgi.framework.ServiceRegistration;
 
 /**
@@ -29,14 +29,12 @@ import org.osgi.framework.ServiceRegistration;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class Felix4357Test extends TestBase {
+public class Felix5236Test extends TestBase {
     
-    public void testSingleProperty() {
+    public void testPropertiesWithTypes() {
         Ensure e = new Ensure();
-        ServiceRegistration sr = register(e, Felix4357.ENSURE);
-        // wait for S to be started
-        e.waitForStep(30, 10000);
-        // remove our sequencer: this will stop S
+        ServiceRegistration sr = register(e, Felix5236.ENSURE);
+        e.waitForStep(1, 10000);
         sr.unregister();
     }
 }

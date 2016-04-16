@@ -18,6 +18,10 @@
  */
 package org.apache.felix.dm.runtime.itest.components;
 
+import org.apache.felix.dm.itest.util.Ensure;
+import org.junit.Assert;
+import org.osgi.framework.ServiceReference;
+
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
@@ -37,5 +41,27 @@ public class Utils {
             }
         };
         t.start();
+    }
+        
+    public static void assertEquals(Ensure e, ServiceReference ref, String property, Object expected, int step) {
+        Object value = ref.getProperty(property);
+        Assert.assertNotNull(value);
+        Assert.assertEquals(value.getClass(), expected.getClass());
+        Assert.assertEquals(value, expected);        
+        e.step(step);
+    }
+    
+    public static void assertArrayEquals(Ensure e, ServiceReference ref, String property, Object[] expected, int step) {
+        Object values = ref.getProperty(property);
+        Assert.assertNotNull(values);
+        Assert.assertTrue(values.getClass().isArray());
+        Assert.assertEquals(values.getClass(), expected.getClass());
+        Object[] array = (Object[]) values;
+        Assert.assertEquals(array.length, expected.length);
+        for (int i = 0; i < array.length; i ++) {
+            Assert.assertEquals(array[i].getClass(), expected[i].getClass());
+            Assert.assertEquals(array[i], expected[i]);
+        }
+        e.step(step);
     }
 }
