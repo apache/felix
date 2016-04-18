@@ -31,7 +31,11 @@ public interface Converting {
 	 * @param cls The class to convert to.
 	 * @return The converted object.
 	 */
-    <T> T to(Class<T> cls);
+    @SuppressWarnings("unchecked")
+    default <T> T to(Class<T> cls) {
+        Type type = cls;
+        return (T) to(type);
+    }
 
 	/**
 	 * Specify the target object type as a {@link TypeReference}. If the target
@@ -48,7 +52,10 @@ public interface Converting {
 	 * @param ref A type reference to the object being converted to.
 	 * @return The converted object.
 	 */
-	<T> T to(TypeReference<T> ref);
+	@SuppressWarnings("unchecked")
+    default <T> T to(TypeReference<T> ref) {
+        return (T) to(ref.getType());
+	}
 
 	/**
 	 * Specify the target object type as a Java Refelection Type object.

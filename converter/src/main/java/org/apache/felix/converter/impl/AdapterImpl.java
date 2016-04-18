@@ -17,6 +17,8 @@
 package org.apache.felix.converter.impl;
 
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,7 +32,7 @@ import org.osgi.service.converter.TypeReference;
 
 public class AdapterImpl implements Adapter {
     private final Converter delegate;
-    private final Map<ClassPair, Function<Object, Object>> classRules =
+    private final Map<TypePair, Function<Object, Object>> classRules =
             new ConcurrentHashMap<>();
 
     public AdapterImpl(Converter converter) {
@@ -55,8 +57,8 @@ public class AdapterImpl implements Adapter {
         if (fromCls.equals(toCls))
             throw new IllegalArgumentException();
 
-        classRules.put(new ClassPair(fromCls, toCls), (Function<Object, Object>) toFun);
-        classRules.put(new ClassPair(toCls, fromCls), (Function<Object, Object>) fromFun);
+        classRules.put(new TypePair(fromCls, toCls), (Function<Object, Object>) toFun);
+        classRules.put(new TypePair(toCls, fromCls), (Function<Object, Object>) fromFun);
         return this;
     }
 
@@ -69,15 +71,15 @@ public class AdapterImpl implements Adapter {
 
     @Override
     public <F, T> Adapter rule(Function<F, T> toFun, Function<T, F> fromFun) {
-//        Type[] t = toFun.getClass().getGenericInterfaces();
-//
-//        TypeVariable<?>[] tp = toFun.getClass().getTypeParameters();
-//        System.out.println("*** " + Arrays.toString(tp));
-//
-//        TypeReference<Map<String, Adapter>> tr = new TypeReference<Map<String,Adapter>>(){};
-//        System.out.println("### " + tr);
-//        Type type = tr.getType();
-//        System.out.println("### " + type);
+        Type[] t = toFun.getClass().getGenericInterfaces();
+
+        TypeVariable<?>[] tp = toFun.getClass().getTypeParameters();
+        System.out.println("*** " + Arrays.toString(tp));
+
+        TypeReference<Map<String, Adapter>> tr = new TypeReference<Map<String,Adapter>>(){};
+        System.out.println("### " + tr);
+        Type type = tr.getType();
+        System.out.println("### " + type);
 
         // TODO Auto-generated method stub
         return this;
@@ -92,34 +94,28 @@ public class AdapterImpl implements Adapter {
             del = c;
         }
 
-        @SuppressWarnings("unchecked")
-        @Override
-        public <T> T to(Class<T> cls) {
-            Function<Object, Object> f = classRules.get(new ClassPair(object.getClass(), cls));
-            if (f != null)
-                return (T) f.apply(object);
-
-            return del.to(cls);
-        }
-
-        @Override
-        public <T> T to(TypeReference<T> ref) {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
         @Override
         public Object to(Type type) {
-            // TODO Auto-generated method stub
-            return null;
+            if (object != null) {
+                Function<Object, Object> f = classRules.get(new TypePair(object.getClass(), type));
+                if (f != null)
+                    return f.apply(object);
+            }
+
+            return del.to(type);
+        }
+
+        @Override
+        public String toString() {
+            return to(String.class);
         }
     }
 
-    static class ClassPair {
-        private final Class<?> from;
-        private final Class<?> to;
+    static class TypePair {
+        private final Type from;
+        private final Type to;
 
-        ClassPair(Class<?> from, Class<?> to) {
+        TypePair(Type from, Type to) {
             this.from = from;
             this.to = to;
         }
@@ -133,10 +129,10 @@ public class AdapterImpl implements Adapter {
         public boolean equals(Object obj) {
             if (obj == this)
                 return true;
-            if (!(obj instanceof ClassPair))
+            if (!(obj instanceof TypePair))
                 return false;
 
-            ClassPair o = (ClassPair) obj;
+            TypePair o = (TypePair) obj;
             return Objects.equals(from, o.from) &&
                     Objects.equals(to, o.to);
         }

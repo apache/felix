@@ -18,8 +18,10 @@ package org.apache.felix.converter.impl;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,17 +29,18 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.Converting;
-import org.osgi.service.converter.TypeReference;
 
 public class ConvertingImpl implements Converting {
     private static final Map<Class<?>, Class<?>> boxedClasses;
@@ -70,13 +73,6 @@ public class ConvertingImpl implements Converting {
     ConvertingImpl(Converter c, Object obj) {
         converter = c;
         object = obj;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public <T> T to(Class<T> cls) {
-        Type type = cls;
-        return (T) to(type);
     }
 
     @Override
@@ -123,17 +119,9 @@ public class ConvertingImpl implements Converting {
 
         // At this point we know that the target is a 'singular' type: not a map, collection or array
         if (object instanceof Collection) {
-            Collection<?> coll = (Collection<?>) object;
-            if (coll.size() == 0)
-                return null;
-            else
-                return converter.convert(coll.iterator().next()).to(cls);
+            return convertCollectionToSingleValue(cls);
         } else if (object instanceof Object[]) {
-            Object[] arr = (Object[]) object;
-            if (arr.length == 0)
-                return null;
-            else
-                return converter.convert(arr[0]).to(cls);
+            return convertArrayToSingleValue(cls);
         }
 
         Object res2 = tryStandardMethods(targetCls);
@@ -144,10 +132,47 @@ public class ConvertingImpl implements Converting {
         }
     }
 
+    private Object convertArrayToSingleValue(Class<?> cls) {
+        Object[] arr = (Object[]) object;
+        if (arr.length == 0)
+            return null;
+        else
+            return converter.convert(arr[0]).to(cls);
+    }
+
+    private Object convertCollectionToSingleValue(Class<?> cls) {
+        Collection<?> coll = (Collection<?>) object;
+        if (coll.size() == 0)
+            return null;
+        else
+            return converter.convert(coll.iterator().next()).to(cls);
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private Object convertToMapType(Class<?> targetCls, Type[] typeArguments) {
         if (Map.class.isAssignableFrom(targetCls))
             return convertToMap(targetCls, typeArguments);
-        return null;
+        else if (Dictionary.class.isAssignableFrom(targetCls))
+            return new Hashtable(convertToMap(Map.class, typeArguments));
+        return createProxy(targetCls);
+    }
+
+    @SuppressWarnings("rawtypes")
+    private Object createProxy(Class<?> targetCls) {
+        Map m = mapView(object);
+        return Proxy.newProxyInstance(targetCls.getClassLoader(), new Class[] {targetCls},
+            new InvocationHandler() {
+                @Override
+                public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                    String propName = getAccessorPropertyName(method);
+                    if (propName == null)
+                        return null;
+
+                    Class<?> targetType = method.getReturnType();
+
+                    return converter.convert(m.get(propName)).to(targetType);
+                }
+            });
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -186,7 +211,70 @@ public class ConvertingImpl implements Converting {
     private static Map<?,?> mapView(Object obj) {
         if (obj instanceof Map)
             return (Map<?,?>) obj;
-        return null;
+        else if (obj instanceof Dictionary)
+            return null; // TODO
+        else
+            return createMapFromBeanAccessors(obj);
+    }
+
+    @SuppressWarnings("rawtypes")
+    private static Map createMapFromBeanAccessors(Object obj) {
+        Set<String> invokedMethods = new HashSet<>();
+
+        Map result = new HashMap();
+        for (Method md : obj.getClass().getDeclaredMethods()) {
+            handleMethod(obj, md, invokedMethods, result);
+        }
+        for (Method md : obj.getClass().getMethods()) {
+            handleMethod(obj, md, invokedMethods, result);
+        }
+
+        return result;
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private static void handleMethod(Object obj, Method md, Set<String> invokedMethods, Map res) {
+        String mn = md.getName();
+        if (invokedMethods.contains(mn))
+            return; // method with this name already invoked
+
+        String propName = getAccessorPropertyName(md);
+
+        try {
+            res.put(propName.toString(), md.invoke(obj));
+            invokedMethods.add(mn);
+        } catch (Exception e) {
+        }
+    }
+
+    private static String getAccessorPropertyName(Method md) {
+        if (md.getReturnType().equals(Void.class))
+            return null; // not an accessor
+
+        if (md.getParameterTypes().length > 0)
+            return null; // not an accessor
+
+        if (Object.class.equals(md.getDeclaringClass()))
+            return null; // do not use any methods on the Object class as a accessor
+
+        String mn = md.getName();
+        int prefix;
+        if (mn.startsWith("get"))
+            prefix = 3;
+        else if (mn.startsWith("is"))
+            prefix = 2;
+        else
+            return null; // not an accessor prefix
+
+        if (mn.length() <= prefix)
+            return null; // just 'get' or 'is': not an accessor
+        String propStr = mn.substring(prefix);
+        StringBuilder propName = new StringBuilder(propStr.length());
+        propName.append(Character.toLowerCase(propStr.charAt(0)));
+        if (propStr.length() > 1)
+            propName.append(propStr.substring(1));
+
+        return propName.toString();
     }
 
     private boolean isMapType(Class<?> targetCls) {
@@ -285,13 +373,9 @@ public class ConvertingImpl implements Converting {
             return cls;
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public <T> T to(TypeReference<T> ref) {
-        return (T) to(ref.getType());
-    }
-
     private Object trySpecialCases(Class<?> targetCls) {
+        // TODO some of these can probably be implemented as an adapter
+
         if (Boolean.class.equals(targetCls)) {
             if (object instanceof Character) {
                 return ((Character) object).charValue() != (char) 0;

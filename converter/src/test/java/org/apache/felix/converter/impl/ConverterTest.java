@@ -33,7 +33,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.service.converter.Adapter;
-import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.TypeReference;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -44,11 +43,11 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 public class ConverterTest {
-    private Converter converter;
+    private ConverterService converter;
 
     @Before
     public void setUp() {
-        converter = new ConverterImpl();
+        converter = new ConverterService();
     }
 
     @After
@@ -77,6 +76,7 @@ public class ConverterTest {
         assertTrue(converter.convert("TRUE").to(boolean.class));
         assertTrue(converter.convert('x').to(boolean.class));
         assertTrue(converter.convert(Long.MIN_VALUE).to(boolean.class));
+        assertTrue(converter.convert(72).to(boolean.class));
         assertFalse(converter.convert("false").to(boolean.class));
         assertFalse(converter.convert("bleh").to(boolean.class));
         assertFalse(converter.convert((char) 0).to(boolean.class));
@@ -86,6 +86,7 @@ public class ConverterTest {
         // Converstions to integer
         assertEquals(Integer.valueOf(123), converter.convert("123").to(int.class));
         assertEquals(1, (int) converter.convert(true).to(int.class));
+        assertEquals(0, (int) converter.convert(false).to(int.class));
 
         // Conversions to Class
         assertEquals(BigDecimal.class, converter.convert("java.math.BigDecimal").to(Class.class));
