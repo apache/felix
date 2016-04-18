@@ -718,7 +718,7 @@ public class DataModelHelperImpl implements DataModelHelper
 
     private static CapabilityImpl createCapability(String name, Clause clause)
     {
-        CapabilityImpl capability = new CapabilityImpl(name);
+        CapabilityImpl capability = new CapabilityImpl(NamespaceTranslator.getFelixNamespace(name));
         capability.addProperty(name, clause.getName());
         capability.addProperty(Resource.VERSION, Property.VERSION, getVersion(clause));
         Attribute[] attributes = clause.getAttributes();

@@ -87,20 +87,26 @@ public class DataModelHelperTest extends TestCase
                 " org.osgi.service.component\";version:Version=\"1.3\",osgi.service;objectCl\n" +
                 " ass:List<String>=\"org.osgi.service.component.runtime.ServiceComponentRu\n" +
                 " ntime\";uses:=\"org.osgi.service.component.runtime\"");
+        attr.putValue("Export-Package", "test.package;version=\"1.0.0\"");
 
         Resource resource = dmh.createResource(attr);
 
-        assertEquals(3, resource.getCapabilities().length);
+        assertEquals(4, resource.getCapabilities().length);
 
         Capability bundleCap = null;
         Capability osgiExtenderCap = null;
         Capability osgiServiceCap = null;
+        Capability osgiPackageCap = null;
 
         for (Capability capability : resource.getCapabilities()) {
             if (capability.getName().equals("bundle")) {
                 bundleCap = capability;
             } else if (capability.getName().equals("osgi.extender")) {
                 osgiExtenderCap = capability;
+            } else if (capability.getName().equals("service")) {
+                osgiServiceCap = capability;
+            } else if (capability.getName().equals("package")) {
+                osgiPackageCap = capability;
             } else {
                 osgiServiceCap = capability;
             }
@@ -109,10 +115,15 @@ public class DataModelHelperTest extends TestCase
         assertNotNull(bundleCap);
         assertNotNull(osgiExtenderCap);
         assertNotNull(osgiServiceCap);
+        assertNotNull(osgiPackageCap);
 
         assertEquals("osgi.extender", osgiExtenderCap.getName());
         assertEquals("osgi.component", osgiExtenderCap.getPropertiesAsMap().get("osgi.extender"));
         assertEquals("1.3.0", osgiExtenderCap.getPropertiesAsMap().get(Constants.VERSION_ATTRIBUTE).toString());
+
+        assertEquals("service", osgiServiceCap.getName());
+
+        assertEquals("package", osgiPackageCap.getName());
     }
 
     public void testGzipResource() throws Exception {

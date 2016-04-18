@@ -40,6 +40,11 @@
       <attribute name='bundle-symbolic-name' value='org.apache.felix.bundlerepository.test_file_3'/>
       <attribute name='bundle-version' type='Version' value='1.2.3.something'/>
     </capability>
+      <capability namespace="osgi.service">
+          <attribute name="objectClass" type="List&lt;String&gt;" value="org.some.interface"/>
+          <attribute name="someProperty" value="someValue"/>
+          <attribute name="service.ranking" type="Long" value="10"/>
+      </capability>
     <requirement namespace='osgi.wiring.package'>
       <directive name='filter' value='(osgi.wiring.package=com.foo)'/>
     </requirement>
@@ -62,6 +67,14 @@
         </capability>
         <requirement namespace="osgi.extender">
             <directive name="filter" value="(&amp;(osgi.extender=osgi.component)(version&gt;=1.0.0)(!(version&gt;=2.0.0)))"/>
+            <directive name="effective" value="active"/>
+        </requirement>
+        <requirement namespace="osgi.service">
+            <directive name="filter" value="(objectClass=org.some.interface)"/>
+            <directive name="effective" value="active"/>
+        </requirement>
+        <requirement namespace="osgi.service">
+            <directive name="filter" value="(objectClass=org.some.other.interface)"/>
             <directive name="effective" value="active"/>
         </requirement>
     </resource>
