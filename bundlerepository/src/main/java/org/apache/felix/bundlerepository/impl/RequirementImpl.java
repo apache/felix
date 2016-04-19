@@ -18,12 +18,12 @@
  */
 package org.apache.felix.bundlerepository.impl;
 
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import org.apache.felix.bundlerepository.Capability;
 import org.apache.felix.bundlerepository.Requirement;
+import org.apache.felix.utils.collections.MapToDictionary;
 import org.apache.felix.utils.filter.FilterImpl;
 import org.osgi.framework.InvalidSyntaxException;
 
@@ -106,8 +106,11 @@ public class RequirementImpl implements Requirement
 
     public boolean isSatisfied(Capability capability)
     {
-        return m_name.equals(capability.getName()) && m_filter.matchCase(capability.getPropertiesAsMap())
-                && (m_filter.toString().indexOf("(mandatory:<*") >= 0 || capability.getPropertiesAsMap().get("mandatory:") == null);
+        Dictionary propertyDict = new MapToDictionary(capability.getPropertiesAsMap());
+
+        return m_name.equals(capability.getName()) &&
+                m_filter.match(propertyDict) &&
+                (m_filter.toString().contains("(mandatory:<*") || propertyDict.get("mandatory:") == null);
     }
 
     public boolean isExtend()
