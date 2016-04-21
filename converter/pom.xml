@@ -65,13 +65,10 @@
                 </executions>
                 <configuration>
                     <instructions>
-                        <Private-Package>
-                            org.apache.felix.converter.*
-                        </Private-Package>
+                        <Bundle-Activator>org.apache.felix.converter.impl.Activator</Bundle-Activator>
+                        <Private-Package>org.apache.felix.converter.*</Private-Package>
                         <Export-Package>org.osgi.service.converter</Export-Package>
-                        <Import-Package>
-                            *
-                        </Import-Package>
+                        <Import-Package>*</Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
@@ -85,6 +82,12 @@
             <version>6.0.1</version>
         </dependency>
         
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.core</artifactId>
+            <version>6.0.0</version>
+        </dependency>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
