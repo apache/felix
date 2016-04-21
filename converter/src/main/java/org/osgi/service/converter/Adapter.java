@@ -15,19 +15,20 @@
  */
 package org.osgi.service.converter;
 
+import java.lang.reflect.Type;
 import java.util.function.Function;
 
 /**
  * An {@link Adapter} is used to modify the behaviour of the Converter service,
  * which can be useful when some of the conversions should be done different to
  * the Converter Specification.
- * 
+ *
  * @author $Id:$
  */
 public interface Adapter extends Converter {
 	/**
 	 * Specify a conversion rule by providing a rule object.
-	 * 
+	 *
 	 * @param rule The conversion rule.
 	 * @return The current adapter, can be used to chain invocations.
 	 */
@@ -37,13 +38,13 @@ public interface Adapter extends Converter {
 	 * Specify a rule for the conversion to and from two classes. The rule
 	 * specifies the conversion in both directions. This overload makes it easy
 	 * to provide the conversions as lambdas, for example:
-	 * 
+	 *
 	 * <pre>
 	 *  adapter.rule(String[].class, String.class,
 	 *      v -> Stream.of(v).collect(Collectors.joining(",")),
 	 *      v -> v.split(","));
 	 * </pre>
-	 * 
+	 *
 	 * @param <F> the type to convert from.
 	 * @param <T> the type to convert to.
 	 * @param fromCls the class to convert from.
@@ -55,19 +56,9 @@ public interface Adapter extends Converter {
     <F, T> Adapter rule(Class<F> fromCls, Class<T> toCls,
             Function<F, T> toFun, Function<T, F> fromFun);
 
-	/**
-	 * Specify a rule for the conversion to and from two classes. The rule
-	 * specifies the conversion in both directions. This overload makes it easy
-	 * to provide the conversions as method references.
-	 *
-	 * @param <F> the type to convert from.
-	 * @param <T> the type to convert to.
-	 * @param toFun the function to perform the conversion.
-	 * @param fromFun the function to perform the reverse conversion.
-	 * @return The current adapter, can be used to chain invocations.
-	 */
-    <F, T> Adapter rule(Function<F, T> toFun, Function<T, F> fromFun);
+    <F, T> Adapter rule(TypeReference<F> fromRef, TypeReference<T> toRef,
+            Function<F, T> toFun, Function<T, F> fromFun);
 
-//    <F, T> Adapter rule(Function<TypeReference<F>, TypeReference<T>> toFun,
-//            Function<TypeReference<T>,TypeReference<F>> fromFun);
+    <F, T> Adapter rule(Type fromType, Type toType,
+            Function<F, T> toFun, Function<T, F> fromFun);
 }

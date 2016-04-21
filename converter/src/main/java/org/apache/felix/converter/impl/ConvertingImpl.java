@@ -41,6 +41,7 @@ import java.util.Set;
 
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.Converting;
+import org.osgi.service.converter.TypeReference;
 
 public class ConvertingImpl implements Converting {
     private static final Map<Class<?>, Class<?>> boxedClasses;
@@ -73,6 +74,26 @@ public class ConvertingImpl implements Converting {
     ConvertingImpl(Converter c, Object obj) {
         converter = c;
         object = obj;
+    }
+
+    @Override
+    public Converting defaultValue(Object defVal) {
+        // TODO Auto-generated method stub
+        return this;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> T to(Class<T> cls)  {
+        Type type = cls;
+        return (T) to(type);
+    }
+
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> T to(TypeReference<T> ref)  {
+        return (T) to(ref.getType());
     }
 
     @Override
@@ -132,6 +153,11 @@ public class ConvertingImpl implements Converting {
         }
     }
 
+    @Override
+    public String toString() {
+        return to(String.class);
+    }
+
     private Object convertArrayToSingleValue(Class<?> cls) {
         Object[] arr = (Object[]) object;
         if (arr.length == 0)
@@ -146,143 +172,6 @@ public class ConvertingImpl implements Converting {
             return null;
         else
             return converter.convert(coll.iterator().next()).to(cls);
-    }
-
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    private Object convertToMapType(Class<?> targetCls, Type[] typeArguments) {
-        if (Map.class.isAssignableFrom(targetCls))
-            return convertToMap(targetCls, typeArguments);
-        else if (Dictionary.class.isAssignableFrom(targetCls))
-            return new Hashtable(convertToMap(Map.class, typeArguments));
-        return createProxy(targetCls);
-    }
-
-    @SuppressWarnings("rawtypes")
-    private Object createProxy(Class<?> targetCls) {
-        Map m = mapView(object);
-        return Proxy.newProxyInstance(targetCls.getClassLoader(), new Class[] {targetCls},
-            new InvocationHandler() {
-                @Override
-                public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                    String propName = getAccessorPropertyName(method);
-                    if (propName == null)
-                        return null;
-
-                    Class<?> targetType = method.getReturnType();
-
-                    return converter.convert(m.get(propName)).to(targetType);
-                }
-            });
-    }
-
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    private Map convertToMap(Class<?> targetCls, Type[] typeArguments) {
-        Map m = mapView(object);
-        if (m == null)
-            return null;
-        Class<?> targetKeyType = null, targetValueType = null;
-        if (typeArguments != null && typeArguments.length > 1 &&
-                typeArguments[0] instanceof Class && typeArguments[1] instanceof Class) {
-            targetKeyType = (Class<?>) typeArguments[0];
-            targetValueType = (Class<?>) typeArguments[1];
-        }
-
-        Class<?> ctrCls = interfaceImplementations.get(targetCls);
-        if (ctrCls == null)
-            ctrCls = targetCls;
-
-        Map instance = (Map) createMapOrCollection(ctrCls, m.size());
-        if (instance == null)
-            return null;
-
-        for (Map.Entry entry : (Set<Entry>) m.entrySet()) {
-            Object key = entry.getKey();
-            if (targetKeyType != null)
-                key = converter.convert(key).to(targetKeyType);
-            Object value = entry.getValue();
-            if (targetValueType != null)
-                value = converter.convert(value).to(targetValueType);
-            instance.put(key, value);
-        }
-
-        return instance;
-    }
-
-    private static Map<?,?> mapView(Object obj) {
-        if (obj instanceof Map)
-            return (Map<?,?>) obj;
-        else if (obj instanceof Dictionary)
-            return null; // TODO
-        else
-            return createMapFromBeanAccessors(obj);
-    }
-
-    @SuppressWarnings("rawtypes")
-    private static Map createMapFromBeanAccessors(Object obj) {
-        Set<String> invokedMethods = new HashSet<>();
-
-        Map result = new HashMap();
-        for (Method md : obj.getClass().getDeclaredMethods()) {
-            handleMethod(obj, md, invokedMethods, result);
-        }
-        for (Method md : obj.getClass().getMethods()) {
-            handleMethod(obj, md, invokedMethods, result);
-        }
-
-        return result;
-    }
-
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    private static void handleMethod(Object obj, Method md, Set<String> invokedMethods, Map res) {
-        String mn = md.getName();
-        if (invokedMethods.contains(mn))
-            return; // method with this name already invoked
-
-        String propName = getAccessorPropertyName(md);
-
-        try {
-            res.put(propName.toString(), md.invoke(obj));
-            invokedMethods.add(mn);
-        } catch (Exception e) {
-        }
-    }
-
-    private static String getAccessorPropertyName(Method md) {
-        if (md.getReturnType().equals(Void.class))
-            return null; // not an accessor
-
-        if (md.getParameterTypes().length > 0)
-            return null; // not an accessor
-
-        if (Object.class.equals(md.getDeclaringClass()))
-            return null; // do not use any methods on the Object class as a accessor
-
-        String mn = md.getName();
-        int prefix;
-        if (mn.startsWith("get"))
-            prefix = 3;
-        else if (mn.startsWith("is"))
-            prefix = 2;
-        else
-            return null; // not an accessor prefix
-
-        if (mn.length() <= prefix)
-            return null; // just 'get' or 'is': not an accessor
-        String propStr = mn.substring(prefix);
-        StringBuilder propName = new StringBuilder(propStr.length());
-        propName.append(Character.toLowerCase(propStr.charAt(0)));
-        if (propStr.length() > 1)
-            propName.append(propStr.substring(1));
-
-        return propName.toString();
-    }
-
-    private boolean isMapType(Class<?> targetCls) {
-        // All interface types that are not Collections are treated as maps
-        if (targetCls.isInterface())
-            return true;
-        else
-            return Dictionary.class.isAssignableFrom(targetCls);
     }
 
     @SuppressWarnings("unchecked")
@@ -328,28 +217,64 @@ public class ConvertingImpl implements Converting {
         return (T) instance;
     }
 
-    private static Object createMapOrCollection(Class<?> targetCls, int initialSize) {
-        try {
-            Constructor<?> ctor = targetCls.getConstructor(int.class);
-            return ctor.newInstance(initialSize);
-        } catch (Exception e1) {
-            try {
-                Constructor<?> ctor2 = targetCls.getConstructor();
-                return ctor2.newInstance();
-            } catch (Exception e2) {
-                e2.printStackTrace();
-            }
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private Map convertToMap(Class<?> targetCls, Type[] typeArguments) {
+        Map m = mapView(object);
+        if (m == null)
+            return null;
+        Class<?> targetKeyType = null, targetValueType = null;
+        if (typeArguments != null && typeArguments.length > 1 &&
+                typeArguments[0] instanceof Class && typeArguments[1] instanceof Class) {
+            targetKeyType = (Class<?>) typeArguments[0];
+            targetValueType = (Class<?>) typeArguments[1];
         }
-        return null;
+
+        Class<?> ctrCls = interfaceImplementations.get(targetCls);
+        if (ctrCls == null)
+            ctrCls = targetCls;
+
+        Map instance = (Map) createMapOrCollection(ctrCls, m.size());
+        if (instance == null)
+            return null;
+
+        for (Map.Entry entry : (Set<Entry>) m.entrySet()) {
+            Object key = entry.getKey();
+            if (targetKeyType != null)
+                key = converter.convert(key).to(targetKeyType);
+            Object value = entry.getValue();
+            if (targetValueType != null)
+                value = converter.convert(value).to(targetValueType);
+            instance.put(key, value);
+        }
+
+        return instance;
     }
 
-    private static Collection<?> collectionView(Object obj) {
-        if (obj instanceof Collection)
-            return (Collection<?>) obj;
-        else if (obj instanceof Object[])
-            return Arrays.asList((Object[]) obj);
-        else
-            return Collections.singleton(obj);
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private Object convertToMapType(Class<?> targetCls, Type[] typeArguments) {
+        if (Map.class.isAssignableFrom(targetCls))
+            return convertToMap(targetCls, typeArguments);
+        else if (Dictionary.class.isAssignableFrom(targetCls))
+            return new Hashtable(convertToMap(Map.class, typeArguments));
+        return createProxy(targetCls);
+    }
+
+    @SuppressWarnings("rawtypes")
+    private Object createProxy(Class<?> targetCls) {
+        Map m = mapView(object);
+        return Proxy.newProxyInstance(targetCls.getClassLoader(), new Class[] {targetCls},
+            new InvocationHandler() {
+                @Override
+                public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                    String propName = getAccessorPropertyName(method);
+                    if (propName == null)
+                        return null;
+
+                    Class<?> targetType = method.getReturnType();
+
+                    return converter.convert(m.get(propName)).to(targetType);
+                }
+            });
     }
 
     private Object handleNull(Class<?> cls) {
@@ -363,6 +288,14 @@ public class ConvertingImpl implements Converting {
         } else {
             return 0;
         }
+    }
+
+    private boolean isMapType(Class<?> targetCls) {
+        // All interface types that are not Collections are treated as maps
+        if (targetCls.isInterface())
+            return true;
+        else
+            return Dictionary.class.isAssignableFrom(targetCls);
     }
 
     private Class<?> primitiveToBoxed(Class<?> cls) {
@@ -441,8 +374,96 @@ public class ConvertingImpl implements Converting {
         return null;
     }
 
-    @Override
-    public String toString() {
-        return to(String.class);
+    private static Collection<?> collectionView(Object obj) {
+        if (obj instanceof Collection)
+            return (Collection<?>) obj;
+        else if (obj instanceof Object[])
+            return Arrays.asList((Object[]) obj);
+        else
+            return Collections.singleton(obj);
+    }
+
+    @SuppressWarnings("rawtypes")
+    private static Map createMapFromBeanAccessors(Object obj) {
+        Set<String> invokedMethods = new HashSet<>();
+
+        Map result = new HashMap();
+        for (Method md : obj.getClass().getDeclaredMethods()) {
+            handleMethod(obj, md, invokedMethods, result);
+        }
+        for (Method md : obj.getClass().getMethods()) {
+            handleMethod(obj, md, invokedMethods, result);
+        }
+
+        return result;
+    }
+
+    private static Object createMapOrCollection(Class<?> targetCls, int initialSize) {
+        try {
+            Constructor<?> ctor = targetCls.getConstructor(int.class);
+            return ctor.newInstance(initialSize);
+        } catch (Exception e1) {
+            try {
+                Constructor<?> ctor2 = targetCls.getConstructor();
+                return ctor2.newInstance();
+            } catch (Exception e2) {
+                e2.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+    private static String getAccessorPropertyName(Method md) {
+        if (md.getReturnType().equals(Void.class))
+            return null; // not an accessor
+
+        if (md.getParameterTypes().length > 0)
+            return null; // not an accessor
+
+        if (Object.class.equals(md.getDeclaringClass()))
+            return null; // do not use any methods on the Object class as a accessor
+
+        String mn = md.getName();
+        int prefix;
+        if (mn.startsWith("get"))
+            prefix = 3;
+        else if (mn.startsWith("is"))
+            prefix = 2;
+        else
+            return null; // not an accessor prefix
+
+        if (mn.length() <= prefix)
+            return null; // just 'get' or 'is': not an accessor
+        String propStr = mn.substring(prefix);
+        StringBuilder propName = new StringBuilder(propStr.length());
+        propName.append(Character.toLowerCase(propStr.charAt(0)));
+        if (propStr.length() > 1)
+            propName.append(propStr.substring(1));
+
+        return propName.toString();
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private static void handleMethod(Object obj, Method md, Set<String> invokedMethods, Map res) {
+        String mn = md.getName();
+        if (invokedMethods.contains(mn))
+            return; // method with this name already invoked
+
+        String propName = getAccessorPropertyName(md);
+
+        try {
+            res.put(propName.toString(), md.invoke(obj));
+            invokedMethods.add(mn);
+        } catch (Exception e) {
+        }
+    }
+
+    private static Map<?,?> mapView(Object obj) {
+        if (obj instanceof Map)
+            return (Map<?,?>) obj;
+        else if (obj instanceof Dictionary)
+            return null; // TODO
+        else
+            return createMapFromBeanAccessors(obj);
     }
 }

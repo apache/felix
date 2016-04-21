@@ -77,8 +77,12 @@ public class JsonCodecImpl implements Codec {
         }
 
         @Override
-        public void to(OutputStream os) throws IOException {
-            os.write(toString().getBytes(StandardCharsets.UTF_8));
+        public void to(OutputStream os) {
+            try {
+                os.write(toString().getBytes(StandardCharsets.UTF_8));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         @Override
@@ -97,7 +101,7 @@ public class JsonCodecImpl implements Codec {
         }
 
         @Override
-        public void to(OutputStream out, Charset charset) throws IOException {
+        public void to(OutputStream out, Charset charset) {
             // TODO Auto-generated method stub
 
         }

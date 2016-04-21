@@ -25,17 +25,21 @@ import java.lang.reflect.Type;
  * @author $Id:$
  */
 public interface Converting {
-	/**
+    /**
+     * The default value to use when the object cannot be converted or in case of conversion
+     * from a {@code null} value.
+     * @param defVal The default value.
+     * @return The current {@code Converting} object so that additional calls can be chained.
+     */
+    Converting defaultValue(Object defVal);
+
+    /**
 	 * Specify the target object type for the conversion as a class object.
 	 *
 	 * @param cls The class to convert to.
 	 * @return The converted object.
 	 */
-    @SuppressWarnings("unchecked")
-    default <T> T to(Class<T> cls) {
-        Type type = cls;
-        return (T) to(type);
-    }
+    <T> T to(Class<T> cls);
 
 	/**
 	 * Specify the target object type as a {@link TypeReference}. If the target
@@ -52,13 +56,10 @@ public interface Converting {
 	 * @param ref A type reference to the object being converted to.
 	 * @return The converted object.
 	 */
-	@SuppressWarnings("unchecked")
-    default <T> T to(TypeReference<T> ref) {
-        return (T) to(ref.getType());
-	}
+     <T> T to(TypeReference<T> ref);
 
 	/**
-	 * Specify the target object type as a Java Refelection Type object.
+	 * Specify the target object type as a Java Reflection Type object.
 	 *
 	 * @param type A Type object to represent the target type to be converted
 	 *        to.
@@ -67,7 +68,7 @@ public interface Converting {
 	Object to(Type type);
 
 	/**
-	 * Same as to(String.class)
+	 * Same as {@code to(String.class)}.
 	 * @return The converted object.
 	 */
     @Override

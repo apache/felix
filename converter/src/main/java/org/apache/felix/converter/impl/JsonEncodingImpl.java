@@ -43,8 +43,12 @@ public class JsonEncodingImpl implements Encoding {
     }
 
     @Override
-    public void to(OutputStream os) throws IOException {
-        os.write(encode(object).getBytes(StandardCharsets.UTF_8));
+    public void to(OutputStream os) {
+        try {
+            os.write(encode(object).getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

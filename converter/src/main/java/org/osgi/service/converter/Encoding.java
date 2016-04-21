@@ -15,7 +15,6 @@
  */
 package org.osgi.service.converter;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 
@@ -36,11 +35,11 @@ public interface Encoding {
 
 	/**
 	 * Use an output stream as the target of the encoding operation. UTF-8 will
-	 * be used.
+	 * be used, if applicable.
 	 *
 	 * @param out The output stream to use.
 	 */
-	void to(OutputStream out) throws IOException;
+	void to(OutputStream out);
 
 	/**
 	 * Use an output stream as the target of the encoding operation.
@@ -48,7 +47,7 @@ public interface Encoding {
 	 * @param out The output stream to use.
 	 * @param charset The character set to use.
 	 */
-	void to(OutputStream out, Charset charset) throws IOException;
+	void to(OutputStream out, Charset charset);
 
 	/**
 	 * Encode the object and append the result to an appendable.

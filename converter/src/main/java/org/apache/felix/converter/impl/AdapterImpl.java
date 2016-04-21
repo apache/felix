@@ -17,8 +17,6 @@
 package org.apache.felix.converter.impl;
 
 import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -62,27 +60,22 @@ public class AdapterImpl implements Adapter {
         return this;
     }
 
-
     @Override
-    public <F, T> Adapter rule(Rule<F, T> rule) {
+    public <F, T> Adapter rule(TypeReference<F> fromRef, TypeReference<T> toRef, Function<F, T> toFun, Function<T, F> fromFun) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public <F, T> Adapter rule(Function<F, T> toFun, Function<T, F> fromFun) {
-        Type[] t = toFun.getClass().getGenericInterfaces();
-
-        TypeVariable<?>[] tp = toFun.getClass().getTypeParameters();
-        System.out.println("*** " + Arrays.toString(tp));
-
-        TypeReference<Map<String, Adapter>> tr = new TypeReference<Map<String,Adapter>>(){};
-        System.out.println("### " + tr);
-        Type type = tr.getType();
-        System.out.println("### " + type);
-
+    public <F, T> Adapter rule(Type fromType, Type toType, Function<F, T> toFun, Function<T, F> fromFun) {
         // TODO Auto-generated method stub
-        return this;
+        return null;
+    }
+
+    @Override
+    public <F, T> Adapter rule(Rule<F, T> rule) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     private class ConvertingWrapper implements Converting {
@@ -92,6 +85,25 @@ public class AdapterImpl implements Adapter {
         ConvertingWrapper(Object obj, Converting c) {
             object = obj;
             del = c;
+        }
+
+        @Override
+        public Converting defaultValue(Object defVal) {
+            // TODO Auto-generated method stub
+            return this;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public <T> T to(Class<T> cls)  {
+            Type type = cls;
+            return (T) to(type);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public <T> T to(TypeReference<T> ref)  {
+            return (T) to(ref.getType());
         }
 
         @Override
