@@ -18,7 +18,9 @@
  */
 package org.apache.felix.dm.impl;
 
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -88,7 +90,7 @@ import java.util.TreeSet;
  */
 public final class Configurable {
 
-    static class ConfigHandler implements InvocationHandler {
+	static class ConfigHandler implements InvocationHandler {
         private final ClassLoader m_cl;
         private final Map<?, ?> m_config;
 
@@ -103,7 +105,7 @@ public final class Configurable {
 
             Object result = convert(method.getGenericReturnType(), name, m_config.get(name), false /* useImplicitDefault */);
             if (result == null) {
-                Object defaultValue = getDefaultValue(method, name);
+                Object defaultValue = getDefaultValue(proxy, args, method, name);
                 if (defaultValue != null) {
                     return defaultValue;
                 }
@@ -302,8 +304,26 @@ public final class Configurable {
             return array;
         }
 
-        private Object getDefaultValue(Method method, String key) throws Exception {
-            return convert(method.getGenericReturnType(), key, null, true /* useImplicitDefault */);
+        private Object getDefaultValue(Object proxy, Object[] args, Method method, String key) throws Throwable {
+        	Object def = null;
+        	// Handle cases where the method is part of an annotation or is a java8 default method.
+        	Class<?> methodClass = method.getDeclaringClass();
+        	if (methodClass.isAnnotation()) {
+        		// the config type is an annotation: simply invoke the default value
+        		def = method.getDefaultValue();
+        	} else if (method.isDefault()) {
+        		// The config type is a java8 interface with a default method, invoke it.
+        		// But it's challenging to invoke a default method from a dynamic proxy ... we have to use the MethodHandles.
+        		// see https://zeroturnaround.com/rebellabs/recognize-and-conquer-java-proxies-default-methods-and-method-handles
+        		
+                Constructor<MethodHandles.Lookup> constructor = MethodHandles.Lookup.class.getDeclaredConstructor(Class.class, int.class);
+                constructor.setAccessible(true);
+                def = constructor.newInstance(methodClass, MethodHandles.Lookup.PRIVATE)
+                		.unreflectSpecial(method, methodClass)
+                		.bindTo(proxy)
+                		.invokeWithArguments(args);
+        	}
+            return convert(method.getGenericReturnType(), key, def, true /* useImplicitDefault */);
         }
 
         private Class<?> getRawClass(Type type) {
