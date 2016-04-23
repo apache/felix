@@ -54,12 +54,11 @@ public class ConfigurationDependencyTest extends TestBase {
         Component s2 = m.createComponent().setImplementation(new ConfigurationCreator(e, PID)).add(m.createServiceDependency().setService(ConfigurationAdmin.class).setRequired(true));
         m.add(s1);
         m.add(s2);
-        e.waitForStep(3, 5000); // component called in updated(), then in init()
+        e.waitForStep(1, 5000); // s2 called in init
+        e.waitForStep(3, 5000); // s1 called in updated(), then in init()
+        m.remove(s2);           // remove conf
+        e.waitForStep(6, 5000); // s2 destroyed, s1 called in updated(null), s1 called in destroy()
         m.remove(s1);
-        m.remove(s2);
-        // ensure we executed all steps inside the component instance
-        e.waitForStep(3, 5000); // conf creator is called in destroy and is about to delete the conf
-        e.waitForStep(4, 5000); // type safe conf consumer is destroyed
     }
     
     public void testComponentWithRequiredConfigurationAndServicePropertyPropagation() {
@@ -376,12 +375,16 @@ public class ConfigurationDependencyTest extends TestBase {
 
         // configuration updates is always the first invoked callback (before init).
         public void updated(Component component, MyConfig cfg) throws ConfigurationException {
-            Assert.assertNotNull(component);
-            Assert.assertNotNull(cfg);
-            m_ensure.step(2);
-            if (!"testvalue".equals(cfg.getTestkey())) {
-                Assert.fail("Could not find the configured property.");
-            }
+        	if (cfg != null) {
+        		Assert.assertNotNull(component);
+        		Assert.assertNotNull(cfg);
+        		m_ensure.step(2);
+        		if (!"testvalue".equals(cfg.getTestkey())) {
+        			Assert.fail("Could not find the configured property.");
+        		}
+        	} else {
+        		m_ensure.step();
+        	}
         }
 
         // called after configuration has been injected.
@@ -390,7 +393,7 @@ public class ConfigurationDependencyTest extends TestBase {
         }
         
         public void destroy() {
-            m_ensure.step(4); 
+            m_ensure.step(); 
         }        
     }
 }
