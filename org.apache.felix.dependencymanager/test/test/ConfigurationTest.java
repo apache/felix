@@ -38,6 +38,7 @@ public class ConfigurationTest extends TestBase {
 
         // Create our configuration dependency
         final ConfigurationDependencyImpl conf = new ConfigurationDependencyImpl();
+        conf.setPid("some.pid");
 
         // Create another required dependency
         final SimpleServiceDependency requiredDependency = new SimpleServiceDependency();
@@ -120,7 +121,8 @@ public class ConfigurationTest extends TestBase {
             conf.updated(props);
         }
         catch (ConfigurationException err) {
-            warn("got expected configuration error");
+            warn("got unexpected configuration error");
+            e.throwable(err);
         }
         
         // This time, our component should be started properly.
