@@ -62,7 +62,7 @@ public final class Activator
         // create and register filters
         final TestFilter filter1 = new TestFilter("filter1");
         final Dictionary<String, Object> filter1Props = new Hashtable<String, Object>();
-        filter1Props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, "/");
+        filter1Props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, "/*");
         filter1Props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
                 "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=filtersample)");
         context.registerService(Filter.class, filter1, filter1Props);
