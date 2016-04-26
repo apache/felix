@@ -38,10 +38,20 @@ public class ConfigurationEventImpl extends Event {
     public String getPid() {
         return m_pid;
     }
-        
+     
     @Override
     public int compareTo(Event other) {
         return m_pid.compareTo(((ConfigurationEventImpl) other).m_pid);
+    }
+
+    @Override
+    public int hashCode() {
+        return m_pid.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+    	return m_pid.equals(((ConfigurationEventImpl) obj).m_pid);
     }
 
     @SuppressWarnings("unchecked")
