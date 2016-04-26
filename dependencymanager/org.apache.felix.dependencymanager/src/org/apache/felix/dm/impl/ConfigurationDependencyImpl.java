@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 import org.apache.felix.dm.Component;
@@ -51,7 +50,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 	private ServiceRegistration m_registration;
 	private volatile Class<?> m_configType;
     private volatile MetaTypeProviderImpl m_metaType;
-	private final AtomicBoolean m_updateInvokedCache = new AtomicBoolean();
+	private boolean m_mayInvokeUpdateCallback;
 	private final Logger m_logger;
 	private final BundleContext m_context;
 	private volatile boolean m_needsInstance = true;
@@ -76,7 +75,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
         m_needsInstance = prototype.needsInstance();
         m_configType = prototype.m_configType;
 	}
-	
+		
     @Override
     public Class<?> getAutoConfigType() {
         return null; // we don't support auto config mode.
@@ -244,35 +243,43 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 		return m_settings;
 	}
 	    
+    @SuppressWarnings("rawtypes")
+	@Override
+    public void updated(Dictionary settings) throws ConfigurationException {
+    	// Handle the update in the component executor thread. Any exception thrown during the component updated callback will be 
+    	// synchronously awaited and re-thrown to the CM thread.
+    	// We schedule the update in the component executor in order to avoid race conditions,
+    	// like when the component is stopping while we receive a configuration update, or if the component restarts
+    	// while the configuration is being updated, or if the getProperties method is invoked while we are losing the configuration ...
+    	// there are many racy situations, and the safe way to handle them is to schedule the updated callback in the component executor.    	
+    	InvocationUtil.invokeUpdated(m_component.getExecutor(), () -> doUpdated(settings));
+    }
+    
     @SuppressWarnings({"unchecked", "rawtypes"})
-    @Override
-    public void updated(final Dictionary settings) throws ConfigurationException {
-    	m_updateInvokedCache.set(false);
-        Dictionary<String, Object> oldSettings = null;
-        synchronized (this) {
-            oldSettings = m_settings;
-        }
+    private void doUpdated(Dictionary settings) throws Exception {
+    	// Reset the flag that tells if the callback can be invoked.
+    	m_mayInvokeUpdateCallback = true;
+        Dictionary<String, Object> oldSettings = m_settings;
+        
+        // FELIX-5192: we have to handle the following race condition: one thread stops a component (removes it from a DM object);
+        // another thread removes the configuration (from ConfigurationAdmin). in this case we may be called in our
+        // ManagedService.updated(null), but our component instance has been destroyed and does not exist anymore.
+        // In this case: do nothing.   
+        if (! super.isStarted()) {
+            return;
+        }        
 
         if (oldSettings == null && settings == null) {
-            // CM has started but our configuration is not still present in the CM database: ignore
+            // CM has started but our configuration is not still present in the CM database.
             return;
         }
 
         // If this is initial settings, or a configuration update, we handle it synchronously.
         // We'll conclude that the dependency is available only if invoking updated did not cause
-        // any ConfigurationException.
-        // However, we still want to schedule the event in the component executor, to make sure that the
-        // callback is invoked safely. So, we use a Callable and a FutureTask that allows to handle the 
-        // configuration update through the component executor. We still wait for the result because
-        // in case of any configuration error, we have to return it from the current thread.
-        // Notice that scheduling the handling of the configuration update in the component queue also
-        // allows to safely check if the component is still active (it could be being stopped concurrently:
-        // see the invokeUpdated method which tests if our dependency is still alive (by calling super.istarted()
-        // method).
+        // any ConfigurationException.  
+        invokeUpdated(settings);
         
-        InvocationUtil.invokeUpdated(m_component.getExecutor(), () -> invokeUpdated(settings));
-        
-        // At this point, we have accepted the configuration.
+        // At this point, we have accepted the configuration.        
         m_settings = settings;
 
         if ((oldSettings == null) && (settings != null)) {
@@ -296,18 +303,20 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
         switch (type) {
         case ADDED:
             try {
-                invokeUpdated(m_settings);
+            	// Won't invoke if we already invoked from the doUpdate method.
+            	// The case when we really invoke may happen when the component is stopped , then restarted.
+            	// At this point, we have to re-invoke the component updated callback.
+                invokeUpdated(((ConfigurationEventImpl) event[0]).getProperties());
             } catch (Throwable err) {
                 logConfigurationException(err);
             }
             break;
         case CHANGED:
-            // We already did that synchronously, from our updated method
+            // We already did that synchronously, from our doUpdated method
             break;
         case REMOVED:
-            // The state machine is stopping us. We have to invoke updated(null).
-            // Reset for the next time the state machine calls invokeCallback(ADDED)
-            m_updateInvokedCache.set(false);
+            // The state machine is stopping us. Reset for the next time the state machine calls invokeCallback(ADDED)
+            m_mayInvokeUpdateCallback = true;
             break;
         default:
             break;
@@ -348,15 +357,8 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 
     // Called from the configuration component internal queue. 
     private void invokeUpdated(Dictionary<?, ?> settings) throws Exception {
-        if (m_updateInvokedCache.compareAndSet(false, true)) {
-            
-            // FELIX-5192: we have to handle the following race condition: one thread stops a component (removes it from a DM object);
-            // another thread removes the configuration (from ConfigurationAdmin). in this case we may be called in our
-            // ManagedService.updated(null), but our component instance has been destroyed and does not exist anymore.
-            // In this case: do nothing.            
-            if (! super.isStarted()) {
-                return;
-            }
+        if (m_mayInvokeUpdateCallback) {
+        	m_mayInvokeUpdateCallback = false;
             
             // FELIX-5155: if component impl is an internal DM adapter, we must not invoke the callback on it
             // because in case there is an external callback instance specified for the configuration callback,
