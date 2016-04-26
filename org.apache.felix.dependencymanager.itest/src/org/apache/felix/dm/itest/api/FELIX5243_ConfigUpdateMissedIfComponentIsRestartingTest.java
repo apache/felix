@@ -34,6 +34,14 @@ import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 
 /**
+ * This test reproduces the following race condition:
+ * 
+ * A "Pojo" component depends on a required "MyDependency" service.
+ * The Pojo also has a configuration dependency.
+ * 
+ * Now, concurrently, the MyDependency is restarted and the configuration is updated.
+ * This means that the Pojo is restarted and should also get notified for the configuration update.
+ * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class FELIX5243_ConfigUpdateMissedIfComponentIsRestartingTest extends TestBase {
