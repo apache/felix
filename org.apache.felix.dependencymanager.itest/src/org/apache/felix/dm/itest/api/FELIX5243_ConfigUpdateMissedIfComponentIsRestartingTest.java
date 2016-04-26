@@ -51,7 +51,7 @@ public class FELIX5243_ConfigUpdateMissedIfComponentIsRestartingTest extends Tes
 		DependencyManager m = getDM();
 		Ensure e = new Ensure();
 
-		RaceTestController controller = new RaceTestController();
+		UpdateController controller = new UpdateController();
 		Pojo pojo = new Pojo(controller);
 		Configurator configurator = new Configurator(e, "my.pid");
 		ThreadPoolExecutor tpool = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
@@ -105,7 +105,7 @@ public class FELIX5243_ConfigUpdateMissedIfComponentIsRestartingTest extends Tes
 		int getProperty();
 	}
 
-	static class RaceTestController {
+	static class UpdateController {
 		volatile CountDownLatch m_latch;
 		volatile int m_expected;
 		
@@ -134,10 +134,10 @@ public class FELIX5243_ConfigUpdateMissedIfComponentIsRestartingTest extends Tes
 	}
 
 	static class Pojo {
-		final RaceTestController m_controller;
+		final UpdateController m_controller;
 		volatile MyDependency m_dependency;
 
-		Pojo(RaceTestController controller) {
+		Pojo(UpdateController controller) {
 			m_controller = controller;
 		}
 
