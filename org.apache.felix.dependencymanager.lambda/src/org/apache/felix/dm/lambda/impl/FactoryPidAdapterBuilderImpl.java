@@ -214,7 +214,7 @@ public class FactoryPidAdapterBuilderImpl implements AdapterBase<FactoryPidAdapt
         m_hasMethodRefs = true;
         m_refs.add((instance, component, props) -> {
             Object componentImpl = Stream.of(component.getInstances())
-                .filter(impl -> Helpers.getClass(impl).equals(type))
+                .filter(impl -> type.isAssignableFrom(Helpers.getClass(impl)))
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("The method reference " + ref + " does not match any available component impl classes."));
             ref.accept((T) componentImpl, component, props);

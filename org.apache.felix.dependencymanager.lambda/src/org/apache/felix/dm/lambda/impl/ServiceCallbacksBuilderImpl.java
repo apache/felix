@@ -471,7 +471,7 @@ public class ServiceCallbacksBuilderImpl<S, B extends ServiceCallbacksBuilder<S,
        List<MethodRef<Object, S>> list = m_refs.computeIfAbsent(cbType, l -> new ArrayList<>());
        list.add((instance, component, sref, service) -> {           
            Object componentImpl = Stream.of(component.getInstances())
-               .filter(impl -> Helpers.getClass(impl).equals(type))
+               .filter(impl -> type.isAssignableFrom(Helpers.getClass(impl)))
                .findFirst()
                .orElseThrow(() -> new IllegalStateException("The method reference " + ref + " does not match any available component impl classes."));           
            ref.accept((I) componentImpl, component, sref, service);           
@@ -494,7 +494,7 @@ public class ServiceCallbacksBuilderImpl<S, B extends ServiceCallbacksBuilder<S,
        if (! m_autoConfigInvoked) m_autoConfig = false;
        m_swapRefs.add((instance, component, oref, oservice, nref, nservice) -> {
            Object componentImpl = Stream.of(component.getInstances())
-               .filter(impl -> Helpers.getClass(impl).equals(type))
+               .filter(impl -> type.isAssignableFrom(Helpers.getClass(impl)))
                .findFirst()
                .orElseThrow(() -> new IllegalStateException("The method reference " + ref + " does not match any available component impl classes."));
            ref.accept((I) componentImpl, component, oref, oservice, nref, nservice);
