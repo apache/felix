@@ -260,7 +260,7 @@ public class BundleAdapterBuilderImpl implements AdapterBase<BundleAdapterBuilde
         List<MethodRef<Object>> list = m_refs.computeIfAbsent(cbType, l -> new ArrayList<>());
         list.add((instance, component, bundle) -> {
             Object componentImpl = Stream.of(component.getInstances())
-                .filter(impl -> Helpers.getClass(impl).equals(type))
+                .filter(impl -> type.isAssignableFrom(Helpers.getClass(impl)))
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("The method reference " + ref + " does not match any available component impl classes."));           
             ref.accept((U) componentImpl, component, bundle);
