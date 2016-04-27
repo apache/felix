@@ -93,6 +93,7 @@ public class SpellCheckServiceImpl implements SpellCheckService
                 if ( dictionary.checkWord( word ) )
                 {
                     correct = true;
+                    break;
                 }
             }
 
@@ -105,7 +106,7 @@ public class SpellCheckServiceImpl implements SpellCheckService
         }
 
         // Return null if no words are incorrect.
-        if ( errorList.size() == 0 )
+        if ( errorList.isEmpty() )
         {
             return null;
         }
