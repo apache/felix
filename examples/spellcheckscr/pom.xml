@@ -17,14 +17,10 @@
  under the License.
 -->
 <project>
-  <properties>
-    <description>A bundle that registers a spell checking service based on Service Component Runtime.</description>
-  </properties>  
-
   <parent>
     <groupId>org.apache.felix</groupId>
-    <artifactId>felix</artifactId>
-    <version>1.0.4</version>
+    <artifactId>felix-parent</artifactId>
+    <version>4</version>
     <relativePath>../../pom/pom.xml</relativePath>
   </parent>
 
@@ -33,23 +29,29 @@
   <name>Apache Felix Example Spell Check w/ SCR</name>
   <artifactId>org.apache.felix.examples.spellcheckscr</artifactId>
   <version>0.9.0-SNAPSHOT</version>
-  <description>${description}</description>
+  <description>A bundle that registers a spell checking service based on Service Component Runtime.</description>
 
   <dependencies>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
-      <version>1.0.0</version>
+      <version>6.0.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.service.component.annotations</artifactId>
+      <version>1.3.0</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.examples.dictionaryservice</artifactId>
       <version>0.9.0-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.examples.spellcheckservice</artifactId>
       <version>0.9.0-SNAPSHOT</version>
       <scope>provided</scope>
@@ -61,16 +63,11 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
-        <version>1.4.0</version>
+        <version>3.0.1</version>
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Private-Package>${pom.artifactId}.*</Private-Package>
-            <Import-Package>*</Import-Package>
-            <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
-            <Bundle-Description>${description}</Bundle-Description>
             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
-            <Service-Component>OSGI-INF/component.xml</Service-Component>
           </instructions>
         </configuration>
       </plugin>
