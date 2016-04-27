@@ -556,10 +556,10 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         // (Aspect or Adapter are not interested in user dependency callbacks)        
         if (logIfNotFound && ! callbackFound && ! (getInstance() instanceof AbstractDecorator)) {
             if (m_logger == null) {
-                System.out.println("\"" + methodName + "\" callback not found on componnent instances "
+                System.out.println("\"" + methodName + "\" callback not found on component instances "
                     + Arrays.toString(getInstances()));
             } else {
-                m_logger.log(LogService.LOG_ERROR, "\"" + methodName + "\" callback not found on componnent instances "
+                m_logger.log(LogService.LOG_ERROR, "\"" + methodName + "\" callback not found on component instances "
                     + Arrays.toString(getInstances()));
             }
 
