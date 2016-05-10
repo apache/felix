@@ -529,7 +529,6 @@ public class ResolverImpl implements Resolver
                     checkConsistency(
                             session,
                             allCandidates,
-                            session.isDynamic(),
                             currentFaultyResources
                     )
             );
@@ -556,7 +555,7 @@ public class ResolverImpl implements Resolver
 
     private ResolutionError checkConsistency(
         ResolveSession session,
-        Candidates allCandidates, boolean isDynamic,
+        Candidates allCandidates,
         Map<Resource, ResolutionError> currentFaultyResources)
     {
         ResolutionError rethrow = allCandidates.checkSubstitutes();
@@ -576,7 +575,7 @@ public class ResolverImpl implements Resolver
         {
             rethrow = checkPackageSpaceConsistency(
                     session, entry.getValue(),
-                    allCandidates, isDynamic, resourcePkgMap, resultCache);
+                    allCandidates, session.isDynamic(), resourcePkgMap, resultCache);
             if (rethrow != null)
             {
                 Resource faultyResource = entry.getKey();
