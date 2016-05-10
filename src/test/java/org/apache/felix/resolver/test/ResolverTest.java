@@ -524,9 +524,21 @@ public class ResolverTest
 
         List<Capability> caps = new ArrayList<Capability>();
         caps.add(f1_pkgCap);
+        try {
+            resolver.resolve(rci, b1, b_pkgReq1, caps);
+            fail("Should fail to dynamic requirement to fragment when host is resolved already.");
+        } catch (ResolutionException e) {
+            // expected
+            assertTrue(e.getUnresolvedRequirements().contains(b_pkgReq1));
+        }
+
+        // now remove host wiring
+        wirings.remove(a1);
+        caps.clear();
+        caps.add(f1_pkgCap);
         Map<Resource, List<Wire>> wireMap = resolver.resolve(rci, b1, b_pkgReq1, caps);
 
-        assertEquals(1, wireMap.size());
+        assertEquals(3, wireMap.size());
         List<Wire> wiresB = wireMap.get(b1);
         assertNotNull(wiresB);
         assertEquals(1, wiresB.size());
@@ -578,6 +590,41 @@ public class ResolverTest
         Map<Resource, List<Wire>> wireMap = resolver.resolve(rci, b1, b_pkgReq1, caps);
 
         assertEquals(0, wireMap.size());
+    }
+
+    @Test
+    public void testScenario13() throws Exception
+    {
+        ResolverImpl resolver = new ResolverImpl(new Logger(Logger.LOG_DEBUG), 1);
+
+        Map<Resource, Wiring> wirings = new HashMap<Resource, Wiring>();
+        Map<Requirement, List<Capability>> candMap = new HashMap<Requirement, List<Capability>>();
+
+        ResourceImpl a1 = new ResourceImpl("A");
+        Capability a1_hostCap = addCap(a1, HostNamespace.HOST_NAMESPACE, "A");
+
+        ResourceImpl f1 = new ResourceImpl("F1", IdentityNamespace.TYPE_FRAGMENT);
+        Requirement f1_hostReq = addReq(f1, HostNamespace.HOST_NAMESPACE, "A");
+        Capability f1_pkgCap = addCap(f1, PackageNamespace.PACKAGE_NAMESPACE, "org.foo.a");
+
+        ResourceImpl b1 = new ResourceImpl("B");
+        Requirement b_pkgReq1 = addReq(b1, PackageNamespace.PACKAGE_NAMESPACE, "org.foo.a");
+
+        candMap.put(b_pkgReq1, Collections.singletonList(f1_pkgCap));
+        candMap.put(f1_hostReq, Collections.singletonList(a1_hostCap));
+
+
+        ResolveContextImpl rci = new ResolveContextImpl(wirings, candMap, Collections.<Resource> singletonList(b1), Collections.<Resource> emptyList());
+
+        Map<Resource, List<Wire>> wireMap = resolver.resolve(rci);
+
+        assertEquals(3, wireMap.size());
+        List<Wire> wiresB = wireMap.get(b1);
+        assertNotNull(wiresB);
+        assertEquals(1, wiresB.size());
+        // should be wired to A through the fragment capability
+        assertEquals(a1, wiresB.get(0).getProvider());
+        assertEquals(f1_pkgCap, wiresB.get(0).getCapability());
     }
 
     @Test
