@@ -289,7 +289,7 @@ public class BundlePlugin extends AbstractMojo
      * The Maven project.
      */
     @Parameter( defaultValue = "${project}", readonly = true, required = true )
-    private MavenProject project;
+    protected MavenProject project;
 
     /**
      * The BND instructions for the bundle.
@@ -523,7 +523,7 @@ public class BundlePlugin extends AbstractMojo
 
                 try
                 {
-                    ManifestPlugin.writeManifest( builder, outputFile, niceManifest, exportScr, scrLocation, buildContext );
+                    ManifestPlugin.writeManifest( builder, outputFile, niceManifest, exportScr, scrLocation, buildContext, getLog() );
                 }
                 catch ( IOException e )
                 {
