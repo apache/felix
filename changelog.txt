@@ -1,3 +1,9 @@
+Changes from 1.14.0 to 1.13.0 
+-----------------------------
+** Bug
+    * [FELIX-5118] - Exception when running on jdk9-ea
+
+
 Changes from 1.13.0 to 1.12.0 
 -----------------------------
 ** Improvement

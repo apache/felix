@@ -23,11 +23,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import javax.imageio.spi.ServiceRegistry;
+import java.util.ServiceLoader;
 
 import org.apache.felix.scrplugin.Log;
 import org.apache.felix.scrplugin.SCRDescriptorException;
@@ -58,9 +56,7 @@ public class AnnotationProcessorManager implements AnnotationProcessor {
         // search for providers
         final Map<String, AnnotationProcessor> processorMap = new HashMap<String, AnnotationProcessor>();
 
-        final Iterator<AnnotationProcessor> serviceIter = ServiceRegistry.lookupProviders(AnnotationProcessor.class, classLoader);
-        while ( serviceIter.hasNext() ) {
-            final AnnotationProcessor processor = serviceIter.next();
+        for(final AnnotationProcessor processor : ServiceLoader.load(AnnotationProcessor.class, classLoader)) {
             // check if this processor is already loaded
             final String key = processor.getClass().getName();
             if ( !processorMap.containsKey(key) ) {
