@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>3</version>
+        <version>4</version>
         <relativePath>../../pom/pom.xml</relativePath>
     </parent>
     
@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/scrplugin/annotations</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/scrplugin/annotations</developerConnection>
-        <url>http://svn.apache.org/repos/asf/felix/scrplugin/annotations</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/tools/org.apache.felix.scr.annotations</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/tools/org.apache.felix.scr.annotations</developerConnection>
+        <url>http://svn.apache.org/repos/asf/felix/tools/org.apache.felix.scr.annotations</url>
     </scm>
 
     <properties>
