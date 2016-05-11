@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>3</version>
+        <version>4</version>
         <relativePath>../../pom/pom.xml</relativePath>
     </parent>
 
@@ -39,9 +39,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/scrplugin/scrtask</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/scrplugin/scrtask</developerConnection>
-        <url>http://svn.apache.org/repos/asf/felix/scrplugin/scrtask</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/tools/org.apache.felix.scr.ant</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/tools/org.apache.felix.scr.ant</developerConnection>
+        <url>http://svn.apache.org/repos/asf/felix/tools/org.apache.felix.scr.ant</url>
     </scm>
 
     <properties>
@@ -76,7 +76,7 @@
         <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm-all</artifactId>
-            <version>5.0.2</version>
+            <version>5.1</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
