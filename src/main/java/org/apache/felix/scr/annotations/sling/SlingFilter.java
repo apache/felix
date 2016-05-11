@@ -31,6 +31,7 @@ import java.lang.annotation.Target;
  * order and the scope.
  * By default it also generates a component and a service tag,
  * but this generation can be omitted.
+ * @see <a href="https://sling.apache.org/documentation/the-sling-engine/filters.html">Sling Servlet Filter Support</a>
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)
@@ -42,12 +43,14 @@ public @interface SlingFilter {
      * This value is used to sort the filters. Filters with a higher order
      * are executed before a filter with a lower order. If two filters
      * have the same order, the one with the lower service id is executed
-     * first.
+     * first. At build time this element will be translated into a 
+     * {@code service.ranking} property with the given value.
+     * <br><br>
      * Please note that the ordering is actually depending on the used
      * Apache Sling Engine bundle version. Version older than 2.3.4 of that
      * bundle are sorting the filters in the wrong reverse order. Make
      * sure to run a newer version of the Sling engine to get the
-     * correct ordering.
+     * correct ordering (see also <a href="https://issues.apache.org/jira/browse/SLING-2920">SLING-2920</a>).
      */
     int order();
 
