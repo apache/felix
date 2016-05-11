@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>3</version>
+        <version>4</version>
         <relativePath>../../pom/pom.xml</relativePath>
     </parent>
 
@@ -41,9 +41,9 @@
 	</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/scrplugin/bnd-scr-plugin</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/scrplugin/bnd-scr-plugin</developerConnection>
-        <url>http://svn.apache.org/repos/asf/felix/scrplugin/bnd-scr-plugin</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/tools/org.apache.felix.scr.bnd</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/tools/org.apache.felix.scr.bnd</developerConnection>
+        <url>http://svn.apache.org/repos/asf/felix/tools/org.apache.felix.scr.bnd</url>
     </scm>
 
     <properties>
