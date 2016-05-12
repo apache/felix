@@ -22,7 +22,6 @@ import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
-
 import java.util.LinkedList;
 
 import org.osgi.service.log.LogService;
@@ -126,7 +125,6 @@ public class UpdateThread implements Runnable
             try {
                 AccessController.doPrivileged(
                     new PrivilegedExceptionAction<Void>() {
-                        @Override
                         public Void run() throws Exception {
                             task.run();
                             return null;
