@@ -29,7 +29,9 @@ import org.junit.Test;
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.TypeReference;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
@@ -71,6 +73,49 @@ public class ConverterMapTest {
     }
 
     @Test
+    public void testJavaBeanToMap() {
+        MyBean mb = new MyBean();
+        mb.setMe("You");
+        mb.setF(true);
+        mb.setNumbers(new int[] {3,2,1});
+
+        @SuppressWarnings("rawtypes")
+        Map m = converter.convert(mb).to(Map.class);
+        assertEquals(4, m.size());
+        assertEquals("You", m.get("me"));
+        assertTrue((boolean) m.get("f"));
+        assertFalse((boolean) m.get("enabled"));
+        assertArrayEquals(new int [] {3,2,1}, (int[]) m.get("numbers"));
+    }
+
+    @Test
+    public void testMapToJavaBean() {
+        Map<String, String> m = new HashMap<>();
+
+        m.put("me", "Joe");
+        m.put("enabled", "true");
+        m.put("numbers", "42");
+        m.put("s", "will disappear");
+        MyBean mb = converter.convert(m).to(MyBean.class);
+        assertEquals("Joe", mb.getMe());
+        assertTrue(mb.isEnabled());
+        assertNull(mb.getF());
+        assertArrayEquals(new int[] {42}, mb.getNumbers());
+    }
+
+    public void testMapToJavaBean2() {
+        Map<String, String> m = new HashMap<>();
+
+        m.put("blah", "blahblah");
+        m.put("f", "true");
+        MyBean mb = converter.convert(m).to(MyBean.class);
+        assertNull(mb.getMe());
+        assertTrue(mb.getF());
+        assertFalse(mb.isEnabled());
+        assertNull(mb.getNumbers());
+    }
+
+    @Test
     public void testInterfaceToMap() {
         Object obj = new Object();
         TestInterface impl = new TestInterface() {
@@ -80,7 +125,7 @@ public class ConverterMapTest {
             }
 
             @Override
-            public int getbar() {
+            public int getBar() {
                 return 76543;
             }
 
@@ -130,7 +175,7 @@ public class ConverterMapTest {
 
         TestInterface ti = converter.convert(m).to(TestInterface.class);
         assertEquals("12345", ti.getFoo());
-        assertEquals(999, ti.getbar());
+        assertEquals(999, ti.getBar());
     }
 
     @SuppressWarnings("rawtypes")
@@ -140,7 +185,7 @@ public class ConverterMapTest {
 
         TestInterface ti = converter.convert(m).to(TestInterface.class);
         assertNull(ti.getFoo());
-        assertEquals(0, ti.getbar());
+        assertEquals(0, ti.getBar());
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -156,6 +201,6 @@ public class ConverterMapTest {
 
     interface TestInterface {
         String getFoo();
-        int getbar();
+        int getBar();
     }
 }

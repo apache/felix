@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.osgi.service.converter.ConversionException;
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.Converting;
 import org.osgi.service.converter.TypeReference;
@@ -112,12 +113,10 @@ public class ConvertingImpl implements Converting {
         if (cls == null)
             return null;
 
-        Class<?> targetCls = cls;
-
         if (object == null)
             return handleNull(cls);
 
-        targetCls = primitiveToBoxed(targetCls);
+        Class<?> targetCls = primitiveToBoxed(cls);
 
         if (!Map.class.isAssignableFrom(targetCls) &&
                 !Collections.class.isAssignableFrom(targetCls)) {
@@ -256,7 +255,30 @@ public class ConvertingImpl implements Converting {
             return convertToMap(targetCls, typeArguments);
         else if (Dictionary.class.isAssignableFrom(targetCls))
             return new Hashtable(convertToMap(Map.class, typeArguments));
-        return createProxy(targetCls);
+        else if (targetCls.isInterface())
+            return createProxy(targetCls);
+        return createJavaBean(targetCls);
+    }
+
+    private Object createJavaBean(Class<?> targetCls) {
+        @SuppressWarnings("rawtypes")
+        Map m = mapView(object);
+        try {
+            Object res = targetCls.getConstructor().newInstance();
+            for (Method setter : getSetters(targetCls)) {
+                String setterName = setter.getName();
+                StringBuilder propName = new StringBuilder(Character.valueOf(Character.toLowerCase(setterName.charAt(3))).toString());
+                if (setterName.length() > 4)
+                    propName.append(setterName.substring(4));
+
+                Class<?> setterType = setter.getParameterTypes()[0];
+                setter.invoke(res, converter.convert(m.get(propName.toString())).to(setterType));
+            }
+            return res;
+        } catch (Exception e) {
+            throw new ConversionException("Cannot convert to class: " + targetCls.getName() +
+                    ". Not a JavaBean with a Zero-arg Constructor.", e);
+        }
     }
 
     @SuppressWarnings("rawtypes")
@@ -293,6 +315,8 @@ public class ConvertingImpl implements Converting {
     private boolean isMapType(Class<?> targetCls) {
         // All interface types that are not Collections are treated as maps
         if (targetCls.isInterface())
+            return true;
+        else if (isWriteableJavaBean(targetCls))
             return true;
         else
             return Dictionary.class.isAssignableFrom(targetCls);
@@ -436,7 +460,10 @@ public class ConvertingImpl implements Converting {
             return null; // just 'get' or 'is': not an accessor
         String propStr = mn.substring(prefix);
         StringBuilder propName = new StringBuilder(propStr.length());
-        propName.append(Character.toLowerCase(propStr.charAt(0)));
+        char firstChar = propStr.charAt(0);
+        if (!Character.isUpperCase(firstChar))
+            return null; // no acccessor as no camel casing
+        propName.append(Character.toLowerCase(firstChar));
         if (propStr.length() > 1)
             propName.append(propStr.substring(1));
 
@@ -450,6 +477,8 @@ public class ConvertingImpl implements Converting {
             return; // method with this name already invoked
 
         String propName = getAccessorPropertyName(md);
+        if (propName == null)
+            return;
 
         try {
             res.put(propName.toString(), md.invoke(obj));
@@ -466,4 +495,38 @@ public class ConvertingImpl implements Converting {
         else
             return createMapFromBeanAccessors(obj);
     }
+
+    private boolean isWriteableJavaBean(Class<?> cls) {
+        boolean hasNoArgCtor = false;
+        for (Constructor<?> ctor : cls.getConstructors()) {
+            if (ctor.getParameterTypes().length == 0)
+                hasNoArgCtor = true;
+        }
+        if (!hasNoArgCtor)
+            return false; // A JavaBean must have a public no-arg constructor
+
+        return getSetters(cls).size() > 0;
+    }
+
+    private Set<Method> getSetters(Class<?> cls) {
+        Set<Method> setters = new HashSet<>();
+        while (!Object.class.equals(cls)) {
+            Set<Method> methods = new HashSet<>();
+            methods.addAll(Arrays.asList(cls.getDeclaredMethods()));
+            methods.addAll(Arrays.asList(cls.getMethods()));
+            for (Method md : methods) {
+                if (md.getParameterTypes().length != 1)
+                    continue; // Only setters with a single argument
+                String name = md.getName();
+                if (name.length() < 4)
+                    continue;
+                if (name.startsWith("set") &&
+                        Character.isUpperCase(name.charAt(3)))
+                    setters.add(md);
+            }
+            cls = cls.getSuperclass();
+        }
+        return setters;
+    }
+
 }
