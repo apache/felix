@@ -29,8 +29,6 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
 
-import junit.framework.TestCase;
-
 import org.apache.felix.cm.MockBundleContext;
 import org.apache.felix.cm.MockLogService;
 import org.apache.felix.cm.MockPersistenceManager;
@@ -44,6 +42,8 @@ import org.osgi.service.cm.SynchronousConfigurationListener;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 
+import junit.framework.TestCase;
+
 
 public class ConfigurationManagerTest extends TestCase
 {
@@ -53,6 +53,7 @@ public class ConfigurationManagerTest extends TestCase
     private ByteArrayOutputStream output;
 
 
+    @Override
     protected void setUp() throws Exception
     {
         super.setUp();
@@ -64,6 +65,7 @@ public class ConfigurationManagerTest extends TestCase
     }
 
 
+    @Override
     protected void tearDown() throws Exception
     {
         System.setErr( replacedStdErr );
@@ -212,7 +214,6 @@ public class ConfigurationManagerTest extends TestCase
 
         SynchronousConfigurationListener syncListener1 = new SynchronousConfigurationListener()
         {
-            @Override
             public void configurationEvent(ConfigurationEvent event)
             {
                 result.add("L1");
@@ -220,7 +221,6 @@ public class ConfigurationManagerTest extends TestCase
         };
         SynchronousConfigurationListener syncListener2 = new SynchronousConfigurationListener()
         {
-            @Override
             public void configurationEvent(ConfigurationEvent event)
             {
                 result.add("L2");
@@ -228,7 +228,6 @@ public class ConfigurationManagerTest extends TestCase
         };
         SynchronousConfigurationListener syncListener3 = new SynchronousConfigurationListener()
         {
-            @Override
             public void configurationEvent(ConfigurationEvent event)
             {
                 result.add("L3");
@@ -361,6 +360,7 @@ public class ConfigurationManagerTest extends TestCase
             field.setAccessible( true );
             field.set( configMgr, new ServiceTracker( new MockBundleContext(), "", null )
             {
+                @Override
                 public Object getService()
                 {
                     return logService;
