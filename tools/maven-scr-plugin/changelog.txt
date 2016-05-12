@@ -1,6 +1,7 @@
 Changes from 1.22.0 to 1.21.0
 -----------------------------
 ** Bug
+    * [FELIX-4999] - Project resources are messed up when outputDirectory configuration present on windows
     * [FELIX-5118] - Exception when running on jdk9-ea
 
 
