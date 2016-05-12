@@ -96,12 +96,13 @@ public class BundleComponentActivator implements Logger, ExtendedServiceListener
 
     private final Map<String, ListenerInfo> listenerMap = new HashMap<String, ListenerInfo>();
 
-    private static class ListenerInfo implements ServiceListener
+    private class ListenerInfo implements ServiceListener
     {
         private Map<Filter, List<ExtendedServiceListener<ExtendedServiceEvent>>> filterMap = new HashMap<Filter, List<ExtendedServiceListener<ExtendedServiceEvent>>>();
 
         public void serviceChanged(ServiceEvent event)
         {
+            log(LogService.LOG_DEBUG, "Service event: {0}", new Object[] {event}, null, null, null);
             ServiceReference<?> ref = event.getServiceReference();
             ExtendedServiceEvent extEvent = null;
             ExtendedServiceEvent endMatchEvent = null;
@@ -121,6 +122,7 @@ public class BundleComponentActivator implements Logger, ExtendedServiceListener
                     }
                     for (ExtendedServiceListener<ExtendedServiceEvent> forwardTo : entry.getValue())
                     {
+                        log(LogService.LOG_DEBUG, "Service event {0} filter {1} forwarding to: {2}", new Object[] {extEvent, filter, forwardTo}, null, null, null);
                         forwardTo.serviceChanged(extEvent);
                     }
                 }
@@ -133,16 +135,23 @@ public class BundleComponentActivator implements Logger, ExtendedServiceListener
                     }
                     for (ExtendedServiceListener<ExtendedServiceEvent> forwardTo : entry.getValue())
                     {
+                        log(LogService.LOG_DEBUG, "Service endmatch event {0} filter {1} forwarding to: {2}", new Object[] {endMatchEvent, filter, forwardTo}, null, null, null);
                         forwardTo.serviceChanged(endMatchEvent);
                     }
+                }
+                else 
+                {
+                    log(LogService.LOG_DEBUG, "Service event {0} filter {1} no match", new Object[] {endMatchEvent, filter}, null, null, null);
                 }
             }
             if (extEvent != null)
             {
+                log(LogService.LOG_DEBUG, "Service event {0} activating managers", new Object[] {extEvent}, null, null, null);
                 extEvent.activateManagers();
             }
             if (endMatchEvent != null)
             {
+                log(LogService.LOG_DEBUG, "Service endmatch event {0} activating managers", new Object[] {endMatchEvent}, null, null, null);
                 endMatchEvent.activateManagers();
             }
         }
