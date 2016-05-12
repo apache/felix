@@ -21,6 +21,7 @@ package org.apache.felix.scr.impl.helper;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -519,5 +520,74 @@ public class AnnotationTest extends TestCase
         checkBI1(c.b1array()[2]);
         
     }
+    
+    class Odd
+    {
+        private final String content;
+        
+        public Odd(String content)
+        {
+            this.content = content;
+        }
+        
+        public String getContent() 
+        {
+            return content;
+        }
+    }
+    
+    class Odder extends Odd
+    {
 
+        public Odder(String content)
+        {
+            super(content);
+        }
+        
+    }
+    
+    interface OddTest 
+    {
+        Odd odd1();
+        
+        Odd odd2();
+        
+        Odd odd3();
+        
+        Odd odder1();
+        
+        Odd odder2();
+        
+        Odd odder3();
+    }
+
+    public void testOddClasses() throws Exception
+    {
+        Map<String, Object> values = new HashMap<String, Object>();
+        values.put("odd1", new Odd("one"));
+        values.put("odd2", Collections.singletonList(new Odd("two")));
+        values.put("odd3", new Odd[] {new Odd("three"), new Odd("four")});
+        values.put("odder1", new Odder("one"));
+        values.put("odder2", Collections.singletonList(new Odder("two")));
+        values.put("odder3", new Odder[] {new Odder("three"), new Odder("four")});
+        
+        Object o = Annotations.toObject(OddTest.class, values, mockBundle(), true);
+        assertTrue("expected an OddTest", o instanceof OddTest);
+        OddTest ot = (OddTest)o;
+        assertOdd("one", ot.odd1());
+        assertOdd("two", ot.odd2());
+        assertOdd("three", ot.odd3());
+        assertOdder("one", ot.odder1());
+        assertOdder("two", ot.odder2());
+        assertOdder("three", ot.odder3());
+    }
+    
+    private void assertOdd(String expectedContent, Object actual) {
+        assertTrue("expected an Odd", actual instanceof Odd);
+        assertEquals("Expected Odd contents", expectedContent, ((Odd)actual).getContent());      
+    }
+    private void assertOdder(String expectedContent, Object actual) {
+        assertTrue("expected an Odder", actual instanceof Odder);
+        assertEquals("Expected Odd contents", expectedContent, ((Odder)actual).getContent());      
+    }
 }

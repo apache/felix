@@ -46,6 +46,9 @@ public class Coercions
     
     public static Object coerce(Class<?> type, Object raw, Bundle bundle )
     {
+        if (raw != null && raw.getClass() == type) {
+            return raw;
+        }
         if (type == Byte.class || type == byte.class)
         {
             return coerceToByte(raw);
@@ -90,6 +93,14 @@ public class Coercions
         if (type == String.class)
         {
             return coerceToString(raw);
+        }
+        if (raw != null) 
+        {
+            raw = multipleToSingle(raw, null);
+            if (raw != null && type.isAssignableFrom(raw.getClass())) 
+            {
+                return raw;
+            }
         }
         throw new ComponentException ("unexpected output type " + type);
     }
