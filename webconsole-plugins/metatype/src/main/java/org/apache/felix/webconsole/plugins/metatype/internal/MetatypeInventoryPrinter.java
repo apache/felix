@@ -20,6 +20,7 @@ package org.apache.felix.webconsole.plugins.metatype.internal;
 
 import java.io.PrintWriter;
 import java.util.Hashtable;
+
 import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.InventoryPrinter;
 import org.json.JSONException;
@@ -135,10 +136,12 @@ class MetatypeInventoryPrinter implements InventoryPrinter
         AttributeDefinition[] ads = ocd.getAttributeDefinitions(ObjectClassDefinition.ALL);
         if (ads != null)
         {
+            pw.group("attributes");
             for (AttributeDefinition ad : ads)
             {
                 ad(pw, ad);
             }
+            pw.endGroup();
         }
 
         pw.endGroup();
@@ -351,6 +354,7 @@ class MetatypeInventoryPrinter implements InventoryPrinter
             }
             catch (JSONException ignore)
             {
+                throw new RuntimeException(ignore);
             }
         }
 
@@ -362,6 +366,7 @@ class MetatypeInventoryPrinter implements InventoryPrinter
             }
             catch (JSONException ignore)
             {
+                throw new RuntimeException(ignore);
             }
         }
 
@@ -373,6 +378,7 @@ class MetatypeInventoryPrinter implements InventoryPrinter
             }
             catch (JSONException ignore)
             {
+                throw new RuntimeException(ignore);
             }
         }
 
@@ -384,6 +390,7 @@ class MetatypeInventoryPrinter implements InventoryPrinter
             }
             catch (JSONException ignore)
             {
+                throw new RuntimeException(ignore);
             }
         }
 
@@ -395,6 +402,7 @@ class MetatypeInventoryPrinter implements InventoryPrinter
             }
             catch (JSONException ignore)
             {
+                throw new RuntimeException(ignore);
             }
         }
 
@@ -406,6 +414,7 @@ class MetatypeInventoryPrinter implements InventoryPrinter
             }
             catch (JSONException ignore)
             {
+                throw new RuntimeException(ignore);
             }
         }
 
@@ -417,6 +426,7 @@ class MetatypeInventoryPrinter implements InventoryPrinter
             }
             catch (JSONException ignore)
             {
+                throw new RuntimeException(ignore);
             }
         }
 
@@ -428,6 +438,7 @@ class MetatypeInventoryPrinter implements InventoryPrinter
             }
             catch (JSONException ignore)
             {
+                throw new RuntimeException(ignore);
             }
         }
     }
