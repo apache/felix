@@ -37,18 +37,18 @@ public class SCRCommandlTest extends TestCase
     public void testPropertyInfo()
     {
         ScrCommand scr = new ScrCommand(null, null, null);
-         check(scr, String.format("  Properties:%n    key = [1, 2]%n"), new int[] {1, 2});
-         check(scr, String.format("  Properties:%n    key = [1, 2]%n"), new String[] {"1", "2"});
-         check(scr, String.format("  Properties:%n    key = [true, false]%n"), new Boolean[] {true, false});
-         check(scr, String.format("  Properties:%n    key = foo%n"), "foo");
-         check(scr, String.format("  Properties:%n    key = true%n"), true);
+         check(scr, String.format("x Properties:%n    key = [1, 2]%n"), new int[] {1, 2});
+         check(scr, String.format("x Properties:%n    key = [1, 2]%n"), new String[] {"1", "2"});
+         check(scr, String.format("x Properties:%n    key = [true, false]%n"), new Boolean[] {true, false});
+         check(scr, String.format("x Properties:%n    key = foo%n"), "foo");
+         check(scr, String.format("x Properties:%n    key = true%n"), true);
     }
 
     private PrintWriter check(ScrCommand scr, String expected, Object o)
     {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
-        scr.propertyInfo(Collections.<String, Object>singletonMap("key", o), pw, "");
+        scr.propertyInfo(Collections.<String, Object>singletonMap("key", o), pw, "", "x");
         assertEquals(expected, sw.toString());
         return pw;
     }

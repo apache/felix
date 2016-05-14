@@ -351,12 +351,12 @@ public class ScrCommand implements ScrInfo
             }
 
             String[] services = component.serviceInterfaces;
-            if ( services != null )
+            if ( services != null && services.length > 0 )
             {
                 out.println( "  Services: " );
                 for ( String service: services )
                 {
-                    out.print( "          " );
+                    out.print( "    " );
                     out.println( service );
                 }
                 out.print( "  Service Scope: " );
@@ -390,7 +390,7 @@ public class ScrCommand implements ScrInfo
             }
 
             Map<String, Object> props = component.properties;
-            propertyInfo(props, out, "");
+            propertyInfo(props, out, "  ", "Component Description");
             if ( result.configuration != null )
             {
                 info(result.configuration, out);
@@ -416,12 +416,13 @@ public class ScrCommand implements ScrInfo
         out.flush();
     }
 
-    void propertyInfo(Map<String, Object> props, PrintWriter out, String prefix)
+    void propertyInfo(Map<String, Object> props, PrintWriter out, String prefix, String label)
     {
         if ( props != null )
         {
             out.print( prefix );
-            out.println( "  Properties:" );
+            out.print( label );
+            out.println( " Properties:" );
             TreeMap<String, Object> keys = new TreeMap<String, Object>( props );
             for ( Entry<String, Object> entry: keys.entrySet() )
             {
@@ -474,7 +475,7 @@ public class ScrCommand implements ScrInfo
                 {
                     out.print( "        " );
                     out.println( sr.id );
-                    propertyInfo(sr.properties, out, "        ");
+                    propertyInfo(sr.properties, out, "      ", "Reference" );
                 }
             }
             else
@@ -505,7 +506,7 @@ public class ScrCommand implements ScrInfo
             }
 
         }
-        propertyInfo( cc.properties, out, "    ");
+        propertyInfo( cc.properties, out, "    ", "Component Configuration" );
     }
 
     void change(final String componentIdentifier, final PrintWriter out, final boolean enable)
