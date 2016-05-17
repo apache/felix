@@ -80,10 +80,17 @@ public class LoadBalancerCustomizerFactoryTracker extends ServiceTracker<LoadBal
 
         final ServiceReference<LoadBalancerCustomizerFactory> highestReference;
         synchronized (set)
-        {
-            set.remove(reference);
-            highestReference = set.last();
-        }
+		{
+			set.remove(reference);
+			if (set.isEmpty())
+			{
+				highestReference = null;
+			}
+			else
+			{
+				highestReference = set.last();
+			}
+		}
 
         boolean updated = false;
         if (highestReference != null)
