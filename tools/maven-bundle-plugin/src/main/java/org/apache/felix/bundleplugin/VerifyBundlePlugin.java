@@ -43,6 +43,11 @@ import org.apache.maven.project.MavenProject;
 
 /**
  * Verifies OSGi bundle metadata contains valid entries.
+ *
+ * Supported checks in the current version:
+ * <ul>
+ * <li>All packages declared in the <a href="http://bnd.bndtools.org/heads/export_package.html">Export-Package<a/> header are really included in the bundle.</li>
+ * </ul>
  */
 @Mojo(
     name = "verify",
@@ -93,6 +98,8 @@ public final class VerifyBundlePlugin
             {
                 formatter.format( " * %s%n", packageNotFound );
             }
+            formatter.format( "Please review the <Export-Package> instruction in the `configuration/instructions` element of the `maven-bundle-plugin`%n" );
+            formatter.format( "For more details, see http://bnd.bndtools.org/heads/export_package.html" );
             String message = formatter.toString();
             formatter.close();
 
