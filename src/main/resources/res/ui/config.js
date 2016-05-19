@@ -49,7 +49,7 @@ function displayConfigForm(obj) {
     var trEl = tr( );
     parent.appendChild( trEl );
     
-    var tdEl = td( null, { colSpan: "2" } );
+    var tdEl = td( "noPaddingLeft", { colSpan: "2" } );
     trEl.appendChild( tdEl );
     
     var formEl = createElement( "form", null, {
@@ -114,7 +114,7 @@ function displayConfigForm(obj) {
     if (obj.description)
     {
         trEl = tr( );
-        tdEl = td( null, { colSpan: "3" } );
+        tdEl = td( "configDescription", { colSpan: "3" } );
         addText( tdEl, obj.description );
         trEl.appendChild( tdEl );
         bodyEl.appendChild( trEl );
@@ -140,14 +140,14 @@ function displayConfigForm(obj) {
 		.dialog('option', 'title', obj.title)
 		.dialog('open'));
 
-	// autosize
-	$('textarea').trigger('autosize.resize');
+	// Resize all the textareas based on their content
+    autosize.update($('textarea'));
 }
 
 /* Element */ function addDefaultValue( /* Element */ element ) {
 	if (element) {
 		element.appendChild( 
-			createElement('span', 'default_value ui-state-highlight1 ui-icon ui-icon-alert', {
+			createElement('span', 'default_value ui-state-highlight1 ui-icon ui-icon-alert iconMarginTop', {
 				title : i18n.dflt_value
 			})
 		);
@@ -179,11 +179,11 @@ function printForm( /* Element */ parent, /* Object */ properties ) {
 		// create the raw
         var trEl = tr( null, null, [
 				td( null, null, [ optElement ] ),
-                td( null, null, [ text( attr.name ) ] )
+                td( "minWidthCell", null, [ text( attr.name ) ] )
             ]);
         parent.appendChild( trEl );
 
-        var tdEl = td( null, { style: { width: "99%" } } );
+        var tdEl = td( "paddedCell", { style: { width: "99%" } } );
         trEl.appendChild( tdEl );
   
         if (attr.value != undefined)
@@ -218,7 +218,9 @@ function printForm( /* Element */ parent, /* Object */ properties ) {
 
         if (attr.description)
         {
-            addText( tdEl, attr.description );
+            var textWrapper = createElement("div", "topPaddedText");
+            addText(textWrapper, attr.description );
+            tdEl.appendChild(textWrapper);
         }
         
         if (propList) {
@@ -249,10 +251,10 @@ function printConfigurationInfo( /* Element */ parent, obj )
     );
     
     parent.appendChild( tr( null, null, [
-            td( null, null, [
+            td( "paddedCell", null, [
                 text( i18n.pid )
             ]),
-            td( null, null, [
+            td( "paddedCell", null, [
                 text( obj.pid )
             ])
         ])
@@ -261,10 +263,10 @@ function printConfigurationInfo( /* Element */ parent, obj )
     if (obj.factoryPid)
     {
         parent.appendChild( tr( null, null, [
-                td( null, null, [
+                td( "paddedCell", null, [
                     text( i18n.fpid )
                 ]),
-                td( null, null, [
+                td( "paddedCell", null, [
                     text( obj.factoryPid )
                 ])
             ])
@@ -280,10 +282,10 @@ function printConfigurationInfo( /* Element */ parent, obj )
     }
     
     parent.appendChild( tr( null, null, [
-            td( null, null, [
+            td( "paddedCell", null, [
                 text( i18n.binding )
             ]),
-            td( null, null, [
+            td( "paddedCell", null, [
                 createElement( "input", null, {
                     type: "text",
                     name: "$location",
@@ -316,10 +318,10 @@ function printConfigurationInfo( /* Element */ parent, obj )
 	});
 	if ( obj.bundleLocation && obj.bundleLocation != "" ) {
 	    parent.appendChild( tr( null, null, [
-	                                         td( null, null, [
+	                                         td( "paddedCell", null, [
 	                                             text( "" )
 	                                         ]),
-	                                         td( null, null, [
+	                                         td( "paddedCell", null, [
 	                                             text( obj.bundleLocation )
 	                                         ])
 	                                     ])
@@ -415,10 +417,12 @@ var spanCounter = 0;
     } else { // Simple
         var textareaEl = createElement( "textarea", null, {
             name: prop,
-            style: { width: width }
+            style: { width: width },
+            rows: 1,
+            class: "minHeightTextarea"
         });
         addText(textareaEl, value.toString());
-        $(textareaEl).autosize();
+        autosize($(textareaEl));
         return textareaEl;
     }
 }
