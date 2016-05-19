@@ -38,3 +38,33 @@ span.default_value {
 }
 td.col_Exists_body div.ui-icon { margin-left:auto; margin-right: auto }
 input.placeholder-active { color: #AAA !important }
+
+.minHeightTextarea {
+	min-height: 1.22em;
+}
+
+.noPaddingLeft {
+	padding-left: 0em !important;
+}
+
+.configDescription {
+	padding: 0 0 1em 0 !important;
+}
+
+.minWidthCell {
+	padding-top: 0.5em !important;
+	min-width: 10em;
+}
+
+.paddedCell {
+	padding-top: 0.5em !important;
+	padding-bottom: 0.5em !important;
+}
+
+.topPaddedText {
+	padding-top: 0.4em !important;
+}
+
+.iconMarginTop {
+	margin-top: .25em;
+}
