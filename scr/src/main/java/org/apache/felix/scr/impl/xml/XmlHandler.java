@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.metadata;
+package org.apache.felix.scr.impl.xml;
 
 
 import java.io.IOException;
@@ -29,6 +29,11 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.felix.scr.impl.helper.Logger;
+import org.apache.felix.scr.impl.metadata.ComponentMetadata;
+import org.apache.felix.scr.impl.metadata.DSVersion;
+import org.apache.felix.scr.impl.metadata.PropertyMetadata;
+import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
+import org.apache.felix.scr.impl.metadata.ServiceMetadata;
 import org.apache.felix.scr.impl.parser.KXml2SAXHandler;
 import org.apache.felix.scr.impl.parser.KXml2SAXParser.Attributes;
 import org.apache.felix.scr.impl.parser.ParseException;

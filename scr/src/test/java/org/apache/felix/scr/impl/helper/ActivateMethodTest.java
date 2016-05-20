@@ -35,7 +35,7 @@ import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.manager.SingleComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.DSVersion;
-import org.apache.felix.scr.impl.metadata.XmlHandler;
+import org.apache.felix.scr.impl.xml.XmlHandler;
 import org.apache.felix.scr.impl.metadata.instances.AcceptMethod;
 import org.apache.felix.scr.impl.metadata.instances.BaseObject;
 import org.apache.felix.scr.impl.metadata.instances.Level1Object;
