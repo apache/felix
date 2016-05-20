@@ -21,6 +21,7 @@ package org.apache.felix.scr.impl.config;
 import java.io.InputStream;
 import java.util.ArrayList;
 
+import org.apache.felix.scr.impl.manager.ScrConfiguration;
 import org.osgi.service.metatype.AttributeDefinition;
 import org.osgi.service.metatype.MetaTypeProvider;
 import org.osgi.service.metatype.ObjectClassDefinition;
@@ -43,12 +44,12 @@ class ScrManagedServiceMetaTypeProvider extends ScrManagedService
     implements MetaTypeProvider
 {
 
-    static ScrManagedService create(final ScrConfiguration scrConfiguration)
+    static ScrManagedService create(final ScrConfigurationImpl scrConfiguration)
     {
         return new ScrManagedServiceMetaTypeProvider(scrConfiguration);
     }
 
-    private ScrManagedServiceMetaTypeProvider(final ScrConfiguration scrConfiguration)
+    private ScrManagedServiceMetaTypeProvider(final ScrConfigurationImpl scrConfiguration)
     {
         super(scrConfiguration);
     }

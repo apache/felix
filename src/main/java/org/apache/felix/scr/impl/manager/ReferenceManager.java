@@ -16,30 +16,34 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.config;
+package org.apache.felix.scr.impl.manager;
 
-import org.apache.felix.scr.impl.manager.SingleComponentManager;
-import org.apache.felix.scr.impl.metadata.ComponentMetadata;
+import java.util.List;
 
-public interface ComponentContainer<S>
-{
+import org.osgi.framework.ServiceReference;
 
-    /**
-     * Returns the {@link ComponentActivator} owning this component
-     * holder.  (overlaps ComponentHolder)
-     */
-    ComponentActivator getActivator();
+public interface ReferenceManager<S, T> {
 
-    /**
-     * Returns the {@link ComponentMetadata} describing and declaring this
-     * component. (overlaps ComponentHolder)
-     */
-    ComponentMetadata getComponentMetadata();
+	/**
+	 * Returns an array of <code>ServiceReference</code> instances of all
+	 * services this instance is bound to or <code>null</code> if no services
+	 * are actually bound.
+	 */
+	List<ServiceReference<?>> getServiceReferences();
 
-    /**
-     * Informs the holder that the component has been disposed as a result of
-     * calling the dispose method.
-     */
-    void disposed(SingleComponentManager<S> component);
+	/**
+	 * Returns the name of the service reference.
+	 */
+	String getName();
 
+	/**
+	 * Returns the target filter of this dependency as a string or
+	 * <code>null</code> if this dependency has no target filter set.
+	 *
+	 * @return The target filter of this dependency or <code>null</code> if
+	 *      none is set.
+	 */
+	String getTarget();
+
+    boolean isSatisfied();
 }

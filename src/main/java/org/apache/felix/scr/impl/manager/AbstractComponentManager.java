@@ -40,11 +40,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.apache.felix.scr.impl.config.ComponentActivator;
-import org.apache.felix.scr.impl.config.ComponentContainer;
-import org.apache.felix.scr.impl.config.ComponentManager;
-import org.apache.felix.scr.impl.config.ReferenceManager;
-import org.apache.felix.scr.impl.config.ScrConfiguration;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.helper.MethodResult;
 import org.apache.felix.scr.impl.helper.SimpleLogger;

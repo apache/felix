@@ -28,7 +28,7 @@ import java.util.Map;
 import junit.framework.TestCase;
 
 import org.apache.felix.scr.impl.BundleComponentActivator;
-import org.apache.felix.scr.impl.config.ComponentContainer;
+import org.apache.felix.scr.impl.manager.ComponentContainer;
 import org.apache.felix.scr.impl.helper.ActivateMethod;
 import org.apache.felix.scr.impl.helper.ActivatorParameter;
 import org.apache.felix.scr.impl.helper.ComponentMethods;

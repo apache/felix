@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.config;
+package org.apache.felix.scr.impl.metadata;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
@@ -138,15 +138,14 @@ public class TargetedPID
      * concurrently been unregistered and the registering bundle is now
      * <code>null</code>.
      *
-     * @param reference <code>ServiceReference</code> to the registered
+     * @param serviceBundle <code>Bundle</code> to the registered
      *      service
      * @return <code>true</code> if the referenced service matches the
      *      target of this PID.
      */
-    public boolean matchesTarget( ComponentHolder<?> holder )
+    public boolean matchesTarget( Bundle serviceBundle )
     {
         // already unregistered
-        final Bundle serviceBundle = holder.getActivator().getBundleContext().getBundle();
         if ( serviceBundle == null )
         {
             return false;

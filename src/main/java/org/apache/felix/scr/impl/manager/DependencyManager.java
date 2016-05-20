@@ -31,8 +31,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.felix.scr.impl.config.ComponentActivator;
-import org.apache.felix.scr.impl.config.ReferenceManager;
 import org.apache.felix.scr.impl.helper.BindParameters;
 import org.apache.felix.scr.impl.helper.Coercions;
 import org.apache.felix.scr.impl.helper.MethodResult;

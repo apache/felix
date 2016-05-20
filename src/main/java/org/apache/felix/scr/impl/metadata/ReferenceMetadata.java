@@ -599,7 +599,7 @@ public class ReferenceMetadata
      *  Method used to verify if the semantics of this metadata are correct
      *
      */
-    void validate( final ComponentMetadata componentMetadata, final Logger logger )
+    void validate(final ComponentMetadata componentMetadata, final Logger logger )
     {
         final DSVersion dsVersion = componentMetadata.getDSVersion();
 

@@ -27,9 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.felix.scr.impl.config.ComponentActivator;
-import org.apache.felix.scr.impl.config.ComponentContainer;
-import org.apache.felix.scr.impl.config.ReferenceManager;
 import org.apache.felix.scr.impl.helper.ActivatorParameter;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.helper.MethodResult;

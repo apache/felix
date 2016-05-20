@@ -26,9 +26,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.scr.impl.ComponentRegistry;
-import org.apache.felix.scr.impl.config.ComponentHolder;
-import org.apache.felix.scr.impl.config.ComponentManager;
-import org.apache.felix.scr.impl.config.ReferenceManager;
+import org.apache.felix.scr.impl.manager.ComponentHolder;
+import org.apache.felix.scr.impl.manager.ComponentManager;
+import org.apache.felix.scr.impl.manager.ReferenceManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.osgi.dto.DTO;

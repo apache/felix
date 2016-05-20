@@ -16,13 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.config;
+package org.apache.felix.scr.impl.manager;
 
 
 import java.util.Dictionary;
 import java.util.List;
 
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
+import org.apache.felix.scr.impl.metadata.TargetedPID;
 import org.osgi.util.promise.Promise;
 
 
@@ -58,7 +59,7 @@ public interface ComponentHolder<S>
      * @param pid The PID of the deleted configuration
      * @param factoryPid The factory PID of the deleted configuration
      */
-    void configurationDeleted( TargetedPID pid, TargetedPID factoryPid );
+    void configurationDeleted(TargetedPID pid, TargetedPID factoryPid );
 
 
     /**
@@ -116,4 +117,5 @@ public interface ComponentHolder<S>
      * @param reason
      */
     void disposeComponents( int reason );
+
 }

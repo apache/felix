@@ -16,8 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.config;
+package org.apache.felix.scr.impl.helper;
 
+import org.apache.felix.scr.impl.manager.ComponentActivator;
+import org.apache.felix.scr.impl.manager.RegionConfigurationSupport;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationAdmin;

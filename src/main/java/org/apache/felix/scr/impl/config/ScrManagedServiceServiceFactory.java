@@ -38,10 +38,10 @@ import org.osgi.service.log.LogService;
  */
 public class ScrManagedServiceServiceFactory implements ServiceFactory<ScrManagedService>
 {
-    private final ScrConfiguration scrConfiguration;
+    private final ScrConfigurationImpl scrConfiguration;
     private final SimpleLogger logger;
 
-    public ScrManagedServiceServiceFactory(final ScrConfiguration scrConfiguration, final SimpleLogger logger)
+    public ScrManagedServiceServiceFactory(final ScrConfigurationImpl scrConfiguration, final SimpleLogger logger)
     {
         this.scrConfiguration = scrConfiguration;
         this.logger = logger;
