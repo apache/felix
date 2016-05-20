@@ -29,9 +29,11 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.felix.scr.impl.config.ComponentActivator;
 import org.apache.felix.scr.impl.config.ComponentHolder;
 import org.apache.felix.scr.impl.config.ConfigurableComponentHolder;
 import org.apache.felix.scr.impl.config.RegionConfigurationSupport;
+import org.apache.felix.scr.impl.config.TargetedPID;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.apache.felix.scr.impl.manager.DependencyManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
@@ -108,7 +110,7 @@ public class ComponentRegistry
 
     private final Map<ServiceReference<?>, List<Entry<?, ?>>> m_missingDependencies = new HashMap<ServiceReference<?>, List<Entry<?, ?>>>( );
 
-    protected ComponentRegistry( )
+    public ComponentRegistry( )
     {
         m_componentHoldersByName = new HashMap<ComponentRegistryKey, ComponentHolder<?>>();
         m_componentHoldersByPid = new HashMap<String, Set<ComponentHolder<?>>>();
@@ -334,7 +336,7 @@ public class ComponentRegistry
         List<ComponentHolder<?>> holders = new ArrayList<ComponentHolder<?>>();
         for ( ComponentHolder<?> holder: all)
         {
-        	BundleComponentActivator activator = holder.getActivator();
+        	ComponentActivator activator = holder.getActivator();
         	if (activator != null)
         	{
         		Bundle holderBundle = activator.getBundleContext().getBundle();
@@ -406,7 +408,7 @@ public class ComponentRegistry
      * Factory method to issue {@link ComponentHolder} instances to manage
      * components described by the given component <code>metadata</code>.
      */
-    public <S> ComponentHolder<S> createComponentHolder( BundleComponentActivator activator, ComponentMetadata metadata )
+    public <S> ComponentHolder<S> createComponentHolder( ComponentActivator activator, ComponentMetadata metadata )
     {
         return new ConfigurableComponentHolder<S>(activator, metadata);
     }

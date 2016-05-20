@@ -35,16 +35,15 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.felix.scr.impl.config.ComponentActivator;
 import org.apache.felix.scr.impl.config.ComponentHolder;
 import org.apache.felix.scr.impl.config.ConfigAdminTracker;
 import org.apache.felix.scr.impl.config.RegionConfigurationSupport;
 import org.apache.felix.scr.impl.config.ScrConfiguration;
-import org.apache.felix.scr.impl.helper.Logger;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.apache.felix.scr.impl.manager.DependencyManager;
 import org.apache.felix.scr.impl.manager.ExtendedServiceEvent;
 import org.apache.felix.scr.impl.manager.ExtendedServiceListener;
-import org.apache.felix.scr.impl.manager.ExtendedServiceListenerContext;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.XmlHandler;
 import org.apache.felix.scr.impl.parser.KXml2SAXParser;
@@ -55,6 +54,7 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentException;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
@@ -64,7 +64,7 @@ import org.osgi.util.tracker.ServiceTracker;
  * a single bundle. It will read information from the metadata.xml file
  * descriptors and create the corresponding managers.
  */
-public class BundleComponentActivator implements Logger, ExtendedServiceListenerContext<ExtendedServiceEvent>
+public class BundleComponentActivator implements ComponentActivator
 {
 	
     // global component registration
@@ -245,7 +245,7 @@ public class BundleComponentActivator implements Logger, ExtendedServiceListener
      *
      * @throws ComponentException if any error occurrs initializing this class
      */
-    BundleComponentActivator(ComponentRegistry componentRegistry, ComponentActorThread componentActor, BundleContext context, ScrConfiguration configuration) throws ComponentException
+    public BundleComponentActivator(ComponentRegistry componentRegistry, ComponentActorThread componentActor, BundleContext context, ScrConfiguration configuration) throws ComponentException
     {
         // keep the parameters for later
         m_componentRegistry = componentRegistry;
@@ -277,7 +277,7 @@ public class BundleComponentActivator implements Logger, ExtendedServiceListener
         {
         	if (!holder.getComponentMetadata().isConfigurationIgnored())
         	{
-        		tracker = new ConfigAdminTracker(this, componentRegistry);
+        		tracker = new ConfigAdminTracker(this);
         		break;
         	}
         }
@@ -293,7 +293,7 @@ public class BundleComponentActivator implements Logger, ExtendedServiceListener
      *
      * @throws IllegalStateException If the bundle has already been uninstalled.
      */
-    private void initialize(String descriptorLocations)
+    protected void initialize(String descriptorLocations)
     {
         log(LogService.LOG_DEBUG,
             "BundleComponentActivator : Bundle [{0}] descriptor locations {1}",
@@ -848,14 +848,18 @@ public class BundleComponentActivator implements Logger, ExtendedServiceListener
             serviceReference, trackingCount);
     }
 
-	public void setRegionConfigurationSupport(RegionConfigurationSupport rcs) {
-		for (ComponentHolder<?> holder: m_holders)
-		{
-			rcs.configureComponentHolder(holder);
-		}		
-	}
+    public RegionConfigurationSupport setRegionConfigurationSupport(ServiceReference<ConfigurationAdmin> reference) {
+        RegionConfigurationSupport trialRcs = new RegionConfigurationSupport(reference, m_componentRegistry);
+        RegionConfigurationSupport rcs = m_componentRegistry.registerRegionConfigurationSupport(trialRcs);
+        for (ComponentHolder<?> holder: m_holders)
+        {
+            rcs.configureComponentHolder(holder);
+        }
+        return rcs;
+    }
 
-	public void unsetRegionConfigurationSupport(RegionConfigurationSupport rcs) {
-		// TODO anything needed?		
+    public void unsetRegionConfigurationSupport(RegionConfigurationSupport rcs) {
+        m_componentRegistry.unregisterRegionConfigurationSupport(rcs);
+		// TODO anything needed?
 	}
 }

@@ -31,7 +31,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.felix.scr.impl.BundleComponentActivator;
+import org.apache.felix.scr.impl.config.ComponentActivator;
 import org.apache.felix.scr.impl.config.ReferenceManager;
 import org.apache.felix.scr.impl.helper.BindParameters;
 import org.apache.felix.scr.impl.helper.Coercions;
@@ -1217,7 +1217,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         if ( hasGetPermission() )
         {
             // component activator may be null if disposed concurrently
-            BundleComponentActivator bca = m_componentManager.getActivator();
+            ComponentActivator bca = m_componentManager.getActivator();
             if ( bca == null )
             {
                 return null;

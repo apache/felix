@@ -30,8 +30,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.scr.impl.Activator;
-import org.apache.felix.scr.impl.BundleComponentActivator;
-import org.apache.felix.scr.impl.TargetedPID;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
@@ -71,7 +69,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
     /**
      * The activator owning the per-bundle components
      */
-    private final BundleComponentActivator m_activator;
+    private final ComponentActivator m_activator;
 
     /**
      * The {@link ComponentMetadata} describing the held component(s)
@@ -148,7 +146,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
 
     private final ComponentMethods m_componentMethods;
 
-    public ConfigurableComponentHolder( final BundleComponentActivator activator, final ComponentMetadata metadata )
+    public ConfigurableComponentHolder( final ComponentActivator activator, final ComponentMetadata metadata )
     {
         this.m_activator = activator;
         this.m_componentMetadata = metadata;
@@ -205,7 +203,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
     }
 
 
-    public final BundleComponentActivator getActivator()
+    public final ComponentActivator getActivator()
     {
         return m_activator;
     }
@@ -826,7 +824,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
 
     public void log( int level, String message, Throwable ex )
     {
-        BundleComponentActivator activator = getActivator();
+        ComponentActivator activator = getActivator();
         if ( activator != null )
         {
             activator.log( level, message, getComponentMetadata(), null, ex );
@@ -835,7 +833,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
 
     public void log( int level, String message, Object[] arguments, Throwable ex )
     {
-        BundleComponentActivator activator = getActivator();
+        ComponentActivator activator = getActivator();
         if ( activator != null )
         {
             activator.log( level, message, arguments, getComponentMetadata(), null, ex );

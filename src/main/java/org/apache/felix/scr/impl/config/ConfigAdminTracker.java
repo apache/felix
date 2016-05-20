@@ -18,10 +18,7 @@
  */
 package org.apache.felix.scr.impl.config;
 
-import org.apache.felix.scr.impl.BundleComponentActivator;
-import org.apache.felix.scr.impl.ComponentRegistry;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
@@ -33,7 +30,7 @@ public class ConfigAdminTracker
 	
 	private final ServiceTracker<ConfigurationAdmin, RegionConfigurationSupport> configAdminTracker;
 
-	static ConfigAdminTracker getRegionConfigurationSupport(final BundleComponentActivator bundleComponentActivator, final ComponentRegistry registry, final Bundle dsBundle)
+	static ConfigAdminTracker getRegionConfigurationSupport(final ComponentActivator componentActivator, final Bundle dsBundle)
 	{
 		Class<?> ourCA;
 		Class<?> theirCA;
@@ -47,7 +44,7 @@ public class ConfigAdminTracker
 		}
 		try
 		{
-			Bundle bundle = bundleComponentActivator.getBundleContext().getBundle();
+			Bundle bundle = componentActivator.getBundleContext().getBundle();
 			if ( bundle == null )
 			{
 				return null;
@@ -62,26 +59,23 @@ public class ConfigAdminTracker
 		{
 			return null;
 		}
-		ConfigAdminTracker tracker = new ConfigAdminTracker(bundleComponentActivator, registry);
+		ConfigAdminTracker tracker = new ConfigAdminTracker(componentActivator);
 		return tracker;
 	}
 
-	public ConfigAdminTracker(final BundleComponentActivator bundleComponentActivator, final ComponentRegistry registry)
+	public ConfigAdminTracker(final ComponentActivator componentActivator)
 	{
 		
 		//TODO this assumes that there is 0 or 1 ca service visible to the bundle being extended.
 		//Is this sure to be true?
-		configAdminTracker = new ServiceTracker<ConfigurationAdmin, RegionConfigurationSupport>(bundleComponentActivator.getBundleContext(), 
+		configAdminTracker = new ServiceTracker<ConfigurationAdmin, RegionConfigurationSupport>(componentActivator.getBundleContext(),
 				CONFIGURATION_ADMIN, 
 				new ServiceTrackerCustomizer<ConfigurationAdmin, RegionConfigurationSupport>() 
 				{
 
 			public RegionConfigurationSupport addingService(
 					ServiceReference<ConfigurationAdmin> reference) {
-				RegionConfigurationSupport trialRcs = new RegionConfigurationSupport(reference, registry);
-				RegionConfigurationSupport rcs = registry.registerRegionConfigurationSupport(trialRcs);
-				bundleComponentActivator.setRegionConfigurationSupport(rcs);
-				return rcs;
+				return componentActivator.setRegionConfigurationSupport(reference);
 			}
 
 			public void modifiedService(
@@ -92,8 +86,7 @@ public class ConfigAdminTracker
 			public void removedService(
 					ServiceReference<ConfigurationAdmin> reference,
 					RegionConfigurationSupport rcs) {
-				registry.unregisterRegionConfigurationSupport(rcs);
-				bundleComponentActivator.unsetRegionConfigurationSupport(rcs);
+				componentActivator.unsetRegionConfigurationSupport(rcs);
 			}
 				});
 

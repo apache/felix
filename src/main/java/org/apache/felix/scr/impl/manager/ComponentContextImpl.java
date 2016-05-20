@@ -24,7 +24,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.scr.component.ExtComponentContext;
-import org.apache.felix.scr.impl.BundleComponentActivator;
+import org.apache.felix.scr.impl.config.ComponentActivator;
 import org.apache.felix.scr.impl.helper.ComponentServiceObjectsHelper;
 import org.apache.felix.scr.impl.helper.ReadOnlyDictionary;
 import org.osgi.framework.Bundle;
@@ -189,7 +189,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
 
     public void enableComponent( String name )
     {
-        BundleComponentActivator activator = m_componentManager.getActivator();
+        ComponentActivator activator = m_componentManager.getActivator();
         if ( activator != null )
         {
             activator.enableComponent( name );
@@ -199,7 +199,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
 
     public void disableComponent( String name )
     {
-        BundleComponentActivator activator = m_componentManager.getActivator();
+        ComponentActivator activator = m_componentManager.getActivator();
         if ( activator != null )
         {
             activator.disableComponent( name );

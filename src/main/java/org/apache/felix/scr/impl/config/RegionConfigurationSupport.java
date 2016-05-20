@@ -29,9 +29,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.felix.scr.impl.Activator;
-import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.ComponentRegistry;
-import org.apache.felix.scr.impl.TargetedPID;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -44,7 +42,6 @@ import org.osgi.service.cm.ConfigurationEvent;
 import org.osgi.service.cm.ConfigurationListener;
 import org.osgi.service.cm.ConfigurationPermission;
 import org.osgi.service.log.LogService;
-import org.osgi.util.tracker.ServiceTracker;
 
 public class RegionConfigurationSupport implements ConfigurationListener
 {
@@ -278,7 +275,7 @@ public class RegionConfigurationSupport implements ConfigurationListener
 
                 case ConfigurationEvent.CM_UPDATED:
                 {
-                    final BundleComponentActivator activator = componentHolder.getActivator();
+                    final ComponentActivator activator = componentHolder.getActivator();
                     if (activator == null)
                     {
                         break;
@@ -317,7 +314,7 @@ public class RegionConfigurationSupport implements ConfigurationListener
                 case ConfigurationEvent.CM_LOCATION_CHANGED:
                 {
                     //TODO is this logic correct for factory pids????
-                    final BundleComponentActivator activator = componentHolder.getActivator();
+                    final ComponentActivator activator = componentHolder.getActivator();
                     if (activator == null)
                     {
                         break;

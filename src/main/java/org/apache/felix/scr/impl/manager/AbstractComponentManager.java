@@ -41,7 +41,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.felix.scr.impl.Activator;
-import org.apache.felix.scr.impl.BundleComponentActivator;
+import org.apache.felix.scr.impl.config.ComponentActivator;
 import org.apache.felix.scr.impl.config.ComponentContainer;
 import org.apache.felix.scr.impl.config.ComponentManager;
 import org.apache.felix.scr.impl.config.ReferenceManager;
@@ -180,7 +180,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
     final long getLockTimeout()
     {
-        BundleComponentActivator activator = getActivator();
+        ComponentActivator activator = getActivator();
         if ( activator != null )
         {
             return activator.getConfiguration().lockTimeout();
@@ -362,7 +362,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
     void registerComponentId()
     {
-        final BundleComponentActivator activator = getActivator();
+        final ComponentActivator activator = getActivator();
         if ( activator != null )
         {
             this.m_componentId = activator.registerComponentId( this );
@@ -374,7 +374,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     {
         if ( this.m_componentId >= 0 )
         {
-            final BundleComponentActivator activator = getActivator();
+            final ComponentActivator activator = getActivator();
             if ( activator != null )
             {
                 activator.unregisterComponentId( this );
@@ -552,7 +552,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
     <T> void registerMissingDependency( DependencyManager<S, T> dm, ServiceReference<T> ref, int trackingCount)
     {
-        BundleComponentActivator activator = getActivator();
+        ComponentActivator activator = getActivator();
         if ( activator != null )
         {
             activator.registerMissingDependency( dm, ref, trackingCount );
@@ -595,7 +595,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
     BundleContext getBundleContext()
     {
-        final BundleComponentActivator activator = getActivator();
+        final ComponentActivator activator = getActivator();
         if ( activator != null )
         {
             return activator.getBundleContext();
@@ -1001,7 +1001,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     abstract <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> oldRefPair, int trackingCount );
 
     //**********************************************************************************************************
-    public BundleComponentActivator getActivator()
+    public ComponentActivator getActivator()
     {
         return m_container.getActivator();
     }
@@ -1009,7 +1009,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
     boolean isActivatorActive()
     {
-        BundleComponentActivator activator = getActivator();
+        ComponentActivator activator = getActivator();
         return activator != null && activator.isActive();
     }
 
@@ -1034,7 +1034,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
     public void log( int level, String message, Throwable ex )
     {
-        BundleComponentActivator activator = getActivator();
+        ComponentActivator activator = getActivator();
         if ( activator != null )
         {
             activator.log( level, message, getComponentMetadata(), m_componentId, ex );
@@ -1043,7 +1043,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
     public void log( int level, String message, Object[] arguments, Throwable ex )
     {
-        BundleComponentActivator activator = getActivator();
+        ComponentActivator activator = getActivator();
         if ( activator != null )
         {
             activator.log( level, message, arguments, getComponentMetadata(), m_componentId, ex );
