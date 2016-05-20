@@ -18,7 +18,6 @@
  */
 package org.apache.felix.scr.impl.config;
 
-import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.manager.SingleComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 
@@ -26,10 +25,10 @@ public interface ComponentContainer<S>
 {
 
     /**
-     * Returns the {@link BundleComponentActivator} owning this component
+     * Returns the {@link ComponentActivator} owning this component
      * holder.  (overlaps ComponentHolder)
      */
-    BundleComponentActivator getActivator();
+    ComponentActivator getActivator();
 
     /**
      * Returns the {@link ComponentMetadata} describing and declaring this

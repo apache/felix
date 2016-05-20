@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.felix.scr.impl.BundleComponentActivator;
+import org.apache.felix.scr.impl.config.ComponentActivator;
 import org.apache.felix.scr.impl.config.ComponentContainer;
 import org.apache.felix.scr.impl.config.ReferenceManager;
 import org.apache.felix.scr.impl.helper.ActivatorParameter;
@@ -135,7 +135,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             log( LogService.LOG_DEBUG, "Set implementation object for component {0}", new Object[] { getName() },  null );
 
             //notify that component was successfully created so any optional circular dependencies can be retried
-            BundleComponentActivator activator = getActivator();
+            ComponentActivator activator = getActivator();
             if ( activator != null )
             {
                 activator.missingServicePresent( getServiceReference() );

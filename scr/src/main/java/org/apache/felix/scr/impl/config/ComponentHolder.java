@@ -22,8 +22,6 @@ package org.apache.felix.scr.impl.config;
 import java.util.Dictionary;
 import java.util.List;
 
-import org.apache.felix.scr.impl.BundleComponentActivator;
-import org.apache.felix.scr.impl.TargetedPID;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.osgi.util.promise.Promise;
 
@@ -42,10 +40,10 @@ public interface ComponentHolder<S>
 {
 
     /**
-     * Returns the {@link BundleComponentActivator} owning this component
+     * Returns the {@link ComponentActivator} owning this component
      * holder. (overlaps ComponentContaienr)
      */
-    BundleComponentActivator getActivator();
+    ComponentActivator getActivator();
 
     /**
      * Returns the {@link ComponentMetadata} describing and declaring this

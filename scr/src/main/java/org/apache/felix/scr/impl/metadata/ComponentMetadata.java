@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.felix.scr.impl.TargetedPID;
+import org.apache.felix.scr.impl.config.TargetedPID;
 import org.apache.felix.scr.impl.helper.Logger;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata.Scope;
 import org.osgi.service.component.ComponentException;
