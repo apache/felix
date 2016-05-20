@@ -40,7 +40,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.apache.felix.scr.impl.Activator;
 import org.apache.felix.scr.impl.config.ComponentActivator;
 import org.apache.felix.scr.impl.config.ComponentContainer;
 import org.apache.felix.scr.impl.config.ComponentManager;
@@ -1028,7 +1027,12 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
      */
     public boolean isLogEnabled( int level )
     {
-        return Activator.isLogEnabled( level );
+        ComponentActivator activator = getActivator();
+        if ( activator != null )
+        {
+            return activator.isLogEnabled( level );
+        }
+        return false;
     }
 
 
