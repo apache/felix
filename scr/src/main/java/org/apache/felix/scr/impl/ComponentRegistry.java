@@ -40,6 +40,7 @@ import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentException;
 import org.osgi.service.log.LogService;
@@ -51,9 +52,6 @@ import org.osgi.service.log.LogService;
  */
 public class ComponentRegistry
 {
-
-    // the name of the ConfigurationAdmin service
-    public static final String CONFIGURATION_ADMIN = "org.osgi.service.cm.ConfigurationAdmin";
 
     /**
      * The map of known components indexed by component name. The values are
@@ -526,7 +524,18 @@ public class ComponentRegistry
     
     private final ConcurrentMap<Long, RegionConfigurationSupport> bundleToRcsMap = new ConcurrentHashMap<Long, RegionConfigurationSupport>();
 
-	public RegionConfigurationSupport registerRegionConfigurationSupport(
+    public RegionConfigurationSupport registerRegionConfigurationSupport(
+            ServiceReference<ConfigurationAdmin> reference) {
+        RegionConfigurationSupport trialRcs = new RegionConfigurationSupport(reference) {
+            protected Collection<ComponentHolder<?>> getComponentHolders(TargetedPID pid)
+            {
+                return ComponentRegistry.this.getComponentHoldersByPid(pid);
+            }
+        };
+        return registerRegionConfigurationSupport(trialRcs);
+    }
+
+    public RegionConfigurationSupport registerRegionConfigurationSupport(
 			RegionConfigurationSupport trialRcs) {
 		Long bundleId = trialRcs.getBundleId();
 		RegionConfigurationSupport existing = null;

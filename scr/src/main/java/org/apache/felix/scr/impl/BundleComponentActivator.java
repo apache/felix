@@ -849,8 +849,7 @@ public class BundleComponentActivator implements ComponentActivator
     }
 
     public RegionConfigurationSupport setRegionConfigurationSupport(ServiceReference<ConfigurationAdmin> reference) {
-        RegionConfigurationSupport trialRcs = new RegionConfigurationSupport(reference, m_componentRegistry);
-        RegionConfigurationSupport rcs = m_componentRegistry.registerRegionConfigurationSupport(trialRcs);
+        RegionConfigurationSupport rcs = m_componentRegistry.registerRegionConfigurationSupport(reference);
         for (ComponentHolder<?> holder: m_holders)
         {
             rcs.configureComponentHolder(holder);

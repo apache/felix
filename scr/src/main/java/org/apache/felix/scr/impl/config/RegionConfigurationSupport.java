@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.felix.scr.impl.Activator;
-import org.apache.felix.scr.impl.ComponentRegistry;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -43,14 +42,14 @@ import org.osgi.service.cm.ConfigurationListener;
 import org.osgi.service.cm.ConfigurationPermission;
 import org.osgi.service.log.LogService;
 
-public class RegionConfigurationSupport implements ConfigurationListener
+public abstract class RegionConfigurationSupport implements ConfigurationListener
 {
+
+    // the name of the ConfigurationAdmin service
+    public static final String CONFIGURATION_ADMIN = "org.osgi.service.cm.ConfigurationAdmin";
 
     private final BundleContext caBundleContext;
     private final Long bundleId;
-    
-    // the registry of components to be configured
-    private final ComponentRegistry m_registry;
     
     private final AtomicInteger reference = new AtomicInteger(1);
 
@@ -63,9 +62,8 @@ public class RegionConfigurationSupport implements ConfigurationListener
      * @param bundleContext of the ConfigurationAdmin we are tracking
      * @param registry
      */
-    public RegionConfigurationSupport(ServiceReference<ConfigurationAdmin> reference, final ComponentRegistry registry)
+    public RegionConfigurationSupport(ServiceReference<ConfigurationAdmin> reference)
     {
-        this.m_registry = registry;
         Bundle bundle = reference.getBundle();
         this.bundleId = bundle.getBundleId();
         this.caBundleContext = bundle.getBundleContext();
@@ -124,7 +122,7 @@ public class RegionConfigurationSupport implements ConfigurationListener
             }
             final List<String> confPids = holder.getComponentMetadata().getConfigurationPid();
 
-            final ServiceReference<?> caRef = bundleContext.getServiceReference(ComponentRegistry.CONFIGURATION_ADMIN);
+            final ServiceReference<?> caRef = bundleContext.getServiceReference(CONFIGURATION_ADMIN);
             if (caRef != null)
             {
                 final Object cao = bundleContext.getService(caRef);
@@ -246,16 +244,7 @@ public class RegionConfigurationSupport implements ConfigurationListener
 
         // iterate over all components which must be configured with this pid
         // (since DS 1.2, components may specify a specific configuration PID (112.4.4 configuration-pid)
-        Collection<ComponentHolder<?>> holders;
-
-        if (factoryPid == null)
-        {
-            holders = this.m_registry.getComponentHoldersByPid(pid);
-        }
-        else
-        {
-            holders = this.m_registry.getComponentHoldersByPid(factoryPid);
-        }
+        Collection<ComponentHolder<?>> holders = getComponentHolders(factoryPid != null ? factoryPid : pid);
 
         Activator.log(LogService.LOG_DEBUG, null, "configurationEvent: Handling {0}  of Configuration PID={1} for component holders {2}",
                 new Object[] {getEventType(event), pid, holders},
@@ -402,6 +391,8 @@ public class RegionConfigurationSupport implements ConfigurationListener
         }
     }
 
+    protected abstract Collection<ComponentHolder<?>> getComponentHolders(TargetedPID pid);
+
 
     private String getEventType(ConfigurationEvent event)
     {
@@ -463,8 +454,7 @@ public class RegionConfigurationSupport implements ConfigurationListener
     private ConfigurationInfo getConfigurationInfo(final TargetedPID pid, TargetedPID targetedPid,
             ComponentHolder<?> componentHolder, final BundleContext bundleContext)
     {
-        final ServiceReference caRef = bundleContext
-            .getServiceReference(ComponentRegistry.CONFIGURATION_ADMIN);
+        final ServiceReference caRef = bundleContext.getServiceReference(CONFIGURATION_ADMIN);
         if (caRef != null)
         {
             try
