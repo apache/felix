@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.helper;
+package org.apache.felix.scr.impl.inject;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationHandler;
@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.felix.scr.impl.helper.Coercions;
 import org.osgi.framework.Bundle;
 import org.osgi.service.component.ComponentException;
 

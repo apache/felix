@@ -16,13 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.helper;
+package org.apache.felix.scr.impl.inject;
 
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentServiceObjects;

@@ -26,6 +26,7 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
+import org.apache.felix.scr.impl.inject.ComponentMethodsImpl;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.apache.felix.scr.impl.metadata.TargetedPID;
@@ -193,6 +194,10 @@ public class ConfiguredComponentHolderTest extends TestCase
         {
             return new MockImmediateComponentManager( this );
         }
+
+        protected ComponentMethods createComponentMethods() {
+            return new ComponentMethodsImpl();
+        }
     }
 
     private static class MockImmediateComponentManager<S> extends SingleComponentManager<S>
@@ -203,7 +208,7 @@ public class ConfiguredComponentHolderTest extends TestCase
 
         public MockImmediateComponentManager( ComponentContainer container )
         {
-            super( container, new ComponentMethods() );
+            super( container, new ComponentMethodsImpl() );
         }
 
 

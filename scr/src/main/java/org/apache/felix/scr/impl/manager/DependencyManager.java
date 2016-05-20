@@ -31,7 +31,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.felix.scr.impl.helper.BindParameters;
 import org.apache.felix.scr.impl.helper.Coercions;
 import org.apache.felix.scr.impl.helper.MethodResult;
 import org.apache.felix.scr.impl.helper.ReferenceMethod;
@@ -1654,8 +1653,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             return false;
 
         }
-        BindParameters bp = new BindParameters(componentContext, refPair);
-        MethodResult result = m_bindMethods.getBind().invoke( componentContext.getImplementationObject( false ), bp, MethodResult.VOID, m_componentManager );
+        MethodResult result = m_bindMethods.getBind().invoke( componentContext.getImplementationObject( false ), componentContext, refPair, MethodResult.VOID, m_componentManager );
         if ( result == null )
         {
             return false;
@@ -1700,8 +1698,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 return false;
 
             }
-            final BindParameters bp = new BindParameters(componentContext, refPair);
-            final MethodResult methodResult = m_bindMethods.getUpdated().invoke( componentContext.getImplementationObject( false ), bp, MethodResult.VOID, m_componentManager );
+            final MethodResult methodResult = m_bindMethods.getUpdated().invoke( componentContext.getImplementationObject( false ), componentContext, refPair, MethodResult.VOID, m_componentManager );
             if ( methodResult != null)
             {
                 m_componentManager.setServiceProperties( methodResult );
@@ -1768,8 +1765,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 return;
 
             }
-            BindParameters bp = new BindParameters(componentContext, refPair);
-            MethodResult methodResult = m_bindMethods.getUnbind().invoke( componentContext.getImplementationObject( false ), bp, MethodResult.VOID, m_componentManager );
+            MethodResult methodResult = m_bindMethods.getUnbind().invoke( componentContext.getImplementationObject( false ), componentContext, refPair, MethodResult.VOID, m_componentManager );
             if ( methodResult != null )
             {
                 m_componentManager.setServiceProperties( methodResult );

@@ -16,19 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.helper;
+package org.apache.felix.scr.impl.inject;
 
 import org.apache.felix.scr.impl.metadata.DSVersion;
 
 
 /**
- * Component method to be invoked on service unbinding.
+ * Component method to be invoked on service property update of a bound service.
  */
-public class UnbindMethod extends BindMethod
+public class UpdatedMethod extends BindMethod
 implements org.apache.felix.scr.impl.helper.ReferenceMethod
 {
 
-    public UnbindMethod( final String methodName,
+    public UpdatedMethod( final String methodName,
             final Class<?> componentClass, final String referenceClassName, final DSVersion dsVersion, final boolean configurableServiceProperties )
     {
         super( methodName, componentClass, referenceClassName, dsVersion, configurableServiceProperties );
@@ -38,7 +38,7 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
     @Override
     protected String getMethodNamePrefix()
     {
-        return "unbind";
+        return "update";
     }
 
 }

@@ -20,80 +20,21 @@
 
 package org.apache.felix.scr.impl.helper;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
-import org.apache.felix.scr.impl.metadata.DSVersion;
-import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 
 /**
  * @version $Rev$ $Date$
  */
-public class ComponentMethods
+public interface ComponentMethods
 {
-    private ActivateMethod m_activateMethod;
-    private ModifiedMethod m_modifiedMethod;
-    private DeactivateMethod m_deactivateMethod;
+    void initComponentMethods( ComponentMetadata componentMetadata, Class<?> implementationObjectClass );
 
-    private final Map<String, ReferenceMethods> bindMethodMap = new HashMap<String, ReferenceMethods>();
+    ComponentMethod getActivateMethod();
 
-    public synchronized void initComponentMethods( ComponentMetadata componentMetadata, Class<?> implementationObjectClass )
-    {
-        if (m_activateMethod != null)
-        {
-            return;
-        }
-        DSVersion dsVersion = componentMetadata.getDSVersion();
-        boolean configurableServiceProperties = componentMetadata.isConfigurableServiceProperties();
-        boolean supportsInterfaces = componentMetadata.isConfigureWithInterfaces();
-        m_activateMethod = new ActivateMethod( componentMetadata.getActivate(), componentMetadata
-                .isActivateDeclared(), implementationObjectClass, dsVersion, configurableServiceProperties, supportsInterfaces );
-        m_deactivateMethod = new DeactivateMethod( componentMetadata.getDeactivate(),
-                componentMetadata.isDeactivateDeclared(), implementationObjectClass, dsVersion, configurableServiceProperties, supportsInterfaces );
+    ComponentMethod getDeactivateMethod();
 
-        m_modifiedMethod = new ModifiedMethod( componentMetadata.getModified(), implementationObjectClass, dsVersion, configurableServiceProperties, supportsInterfaces );
+    ComponentMethod getModifiedMethod();
 
-        for ( ReferenceMetadata referenceMetadata: componentMetadata.getDependencies() )
-        {
-            final String refName = referenceMetadata.getName();
-            final ReferenceMethods methods;
-            if ( referenceMetadata.getField() != null && referenceMetadata.getBind() != null)
-            {
-                methods = new DuplexReferenceMethods(
-                        new FieldMethods( referenceMetadata, implementationObjectClass, dsVersion, configurableServiceProperties),
-                        new BindMethods( referenceMetadata, implementationObjectClass, dsVersion, configurableServiceProperties));
-            }
-            else if ( referenceMetadata.getField() != null )
-            {
-                methods = new FieldMethods( referenceMetadata, implementationObjectClass, dsVersion, configurableServiceProperties);
-            }
-            else
-            {
-                methods = new BindMethods( referenceMetadata, implementationObjectClass, dsVersion, configurableServiceProperties);
-            }
-            bindMethodMap.put( refName, methods );
-        }
-    }
-
-    public ActivateMethod getActivateMethod()
-    {
-        return m_activateMethod;
-    }
-
-    public DeactivateMethod getDeactivateMethod()
-    {
-        return m_deactivateMethod;
-    }
-
-    public ModifiedMethod getModifiedMethod()
-    {
-        return m_modifiedMethod;
-    }
-
-    public ReferenceMethods getBindMethods(String refName )
-    {
-        return bindMethodMap.get( refName );
-    }
+    ReferenceMethods getBindMethods(String refName );
 
 }

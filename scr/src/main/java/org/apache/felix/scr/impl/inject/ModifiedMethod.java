@@ -16,24 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.helper;
+package org.apache.felix.scr.impl.inject;
 
-import org.apache.felix.scr.impl.manager.ComponentContextImpl;
-import org.apache.felix.scr.impl.manager.RefPair;
-import org.osgi.framework.BundleContext;
+import org.apache.felix.scr.impl.metadata.DSVersion;
 
 
-
-
-/**
- * Component method to be invoked on service (un)binding.
- */
-public interface ReferenceMethod
+public class ModifiedMethod extends ActivateMethod
 {
-    MethodResult invoke( final Object componentInstance,
-                         final ComponentContextImpl<?> componentContext,
-                         final RefPair<?, ?> refPair,
-                         final MethodResult methodCallFailureResult, SimpleLogger logger );
 
-    <S, T> boolean getServiceObject( ComponentContextImpl<S> key, RefPair<S, T> refPair, BundleContext context, SimpleLogger logger );
+    public ModifiedMethod( final String methodName,
+            final Class<?> componentClass, final DSVersion dsVersion, final boolean configurableServiceProperties, boolean supportsInterfaces )
+    {
+        super( methodName, methodName != null, componentClass, dsVersion, configurableServiceProperties, supportsInterfaces );
+    }
+
+
+    protected boolean acceptEmpty()
+    {
+        return true;
+    }
+
+
+    protected String getMethodNamePrefix()
+    {
+        return "modified";
+    }
 }

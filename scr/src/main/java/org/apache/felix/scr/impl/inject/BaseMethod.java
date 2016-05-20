@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.helper;
+package org.apache.felix.scr.impl.inject;
 
 
 import java.lang.reflect.InvocationTargetException;
@@ -27,6 +27,8 @@ import java.security.PrivilegedAction;
 import java.util.Arrays;
 import java.util.Map;
 
+import org.apache.felix.scr.impl.helper.MethodResult;
+import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.osgi.service.log.LogService;
 
@@ -209,7 +211,7 @@ public abstract class BaseMethod<P>
             final boolean acceptPackage, SimpleLogger logger ) throws SuitableMethodNotAccessibleException, InvocationTargetException;
 
 
-    private MethodResult invokeMethod( final Object componentInstance, final P rawParameter, SimpleLogger logger )
+    private MethodResult invokeMethod(final Object componentInstance, final P rawParameter, SimpleLogger logger )
         throws InvocationTargetException
     {
         try

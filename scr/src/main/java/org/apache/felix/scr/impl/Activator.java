@@ -27,7 +27,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.scr.impl.config.ScrConfigurationImpl;
-import org.apache.felix.scr.impl.helper.ClassUtils;
+import org.apache.felix.scr.impl.inject.ClassUtils;
 import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.runtime.ServiceComponentRuntimeImpl;
 import org.apache.felix.utils.extender.AbstractExtender;

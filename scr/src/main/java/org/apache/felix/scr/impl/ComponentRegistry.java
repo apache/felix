@@ -29,6 +29,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.felix.scr.impl.helper.ComponentMethods;
+import org.apache.felix.scr.impl.inject.ComponentMethodsImpl;
 import org.apache.felix.scr.impl.manager.ComponentActivator;
 import org.apache.felix.scr.impl.manager.ComponentHolder;
 import org.apache.felix.scr.impl.manager.ConfigurableComponentHolder;
@@ -413,7 +415,14 @@ public class ComponentRegistry
      */
     public <S> ComponentHolder<S> createComponentHolder( ComponentActivator activator, ComponentMetadata metadata )
     {
-        return new ConfigurableComponentHolder<S>(activator, metadata);
+        return new ConfigurableComponentHolder<S>(activator, metadata)
+        {
+            @Override
+            protected ComponentMethods createComponentMethods()
+            {
+                return new ComponentMethodsImpl();
+            }
+        };
     }
 
 

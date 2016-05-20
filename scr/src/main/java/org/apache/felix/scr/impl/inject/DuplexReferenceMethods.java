@@ -16,8 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.helper;
+package org.apache.felix.scr.impl.inject;
 
+import org.apache.felix.scr.impl.helper.InitReferenceMethod;
+import org.apache.felix.scr.impl.helper.MethodResult;
+import org.apache.felix.scr.impl.helper.ReferenceMethod;
+import org.apache.felix.scr.impl.helper.ReferenceMethods;
+import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.RefPair;
 import org.osgi.framework.BundleContext;
@@ -93,12 +98,13 @@ public class DuplexReferenceMethods implements ReferenceMethods
         }
 
         public MethodResult invoke(Object componentInstance,
-                BindParameters rawParameter,
-                MethodResult methodCallFailureResult, SimpleLogger logger)
-        {
-            if ( first.invoke(componentInstance, rawParameter, methodCallFailureResult, logger) != null )
+                                   ComponentContextImpl<?> componentContext,
+                                   RefPair<?, ?> refPair,
+                                   MethodResult methodCallFailureResult,
+                                   SimpleLogger logger) {
+            if ( first.invoke(componentInstance, componentContext, refPair, methodCallFailureResult, logger) != null )
             {
-                return second.invoke(componentInstance, rawParameter, methodCallFailureResult, logger);
+                return second.invoke(componentInstance, componentContext, refPair, methodCallFailureResult, logger);
             }
             return null;
         }

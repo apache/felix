@@ -18,27 +18,12 @@
  */
 package org.apache.felix.scr.impl.helper;
 
-import org.apache.felix.scr.impl.metadata.DSVersion;
+import org.osgi.service.component.ComponentContext;
 
+public interface ComponentMethod {
 
-public class DeactivateMethod extends ActivateMethod
-{
-
-    @Override
-    boolean isDeactivate()
-    {
-        return true;
-    }
-
-    public DeactivateMethod( final String methodName,
-            final boolean methodRequired, final Class<?> componentClass, final DSVersion dsVersion, final boolean configurableServiceProperties, boolean supportsInterfaces )
-    {
-        super( methodName, methodRequired, componentClass, dsVersion, configurableServiceProperties, supportsInterfaces );
-    }
-
-    protected String getMethodNamePrefix()
-    {
-        return "deactivate";
-    }
+    MethodResult invoke(final Object componentInstance,
+                        final ComponentContext componentContext, final int reason,
+                        final MethodResult methodCallFailureResult, SimpleLogger logger );
 
 }

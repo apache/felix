@@ -35,9 +35,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.felix.scr.impl.helper.ConfigAdminTracker;
 import org.apache.felix.scr.impl.manager.ComponentActivator;
 import org.apache.felix.scr.impl.manager.ComponentHolder;
-import org.apache.felix.scr.impl.helper.ConfigAdminTracker;
 import org.apache.felix.scr.impl.manager.RegionConfigurationSupport;
 import org.apache.felix.scr.impl.manager.ScrConfiguration;
 import org.apache.felix.scr.impl.helper.SimpleLogger;

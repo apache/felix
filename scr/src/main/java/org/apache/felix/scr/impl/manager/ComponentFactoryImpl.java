@@ -89,9 +89,9 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     
     protected TargetedPID m_targetedPID;
 
-    public ComponentFactoryImpl( ComponentContainer<S> container )
+    public ComponentFactoryImpl( ComponentContainer<S> container, ComponentMethods componentMethods )
     {
-        super( container, new ComponentMethods() );
+        super( container, componentMethods );
         m_componentInstances = new IdentityHashMap<SingleComponentManager<S>, SingleComponentManager<S>>();
         m_configuration = new HashMap<String, Object>();
     }

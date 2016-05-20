@@ -16,13 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.helper;
+package org.apache.felix.scr.impl.inject;
 
 
 import junit.framework.TestCase;
 
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.MockBundle;
+import org.apache.felix.scr.impl.helper.ComponentMethods;
+import org.apache.felix.scr.impl.inject.BindMethod;
+import org.apache.felix.scr.impl.inject.BindParameters;
 import org.apache.felix.scr.impl.manager.ComponentContainer;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.RefPair;
@@ -36,7 +39,6 @@ import org.apache.felix.scr.impl.manager.components.T3;
 import org.apache.felix.scr.impl.manager.components2.T2;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.DSVersion;
-import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.easymock.EasyMock;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -448,7 +450,7 @@ public class BindMethodTest extends TestCase
         final String expectCallPerformed )
     {
         ComponentContainer container = newContainer();
-        SingleComponentManager icm = new SingleComponentManager( container, new ComponentMethods() );
+        SingleComponentManager icm = new SingleComponentManager( container, new ComponentMethodsImpl() );
         BindMethod bm = new BindMethod( methodName, component.getClass(),
                 FakeService.class.getName(), dsVersion, false );
         RefPair refPair = new SingleRefPair( m_serviceReference );

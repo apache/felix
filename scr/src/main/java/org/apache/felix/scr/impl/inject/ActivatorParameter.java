@@ -16,29 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.helper;
+package org.apache.felix.scr.impl.inject;
 
-import org.apache.felix.scr.impl.metadata.DSVersion;
+import org.osgi.service.component.ComponentContext;
 
-
-public class ModifiedMethod extends ActivateMethod
+public final class ActivatorParameter
 {
+    private final ComponentContext m_componentContext;
+    private final int m_reason;
 
-    public ModifiedMethod( final String methodName,
-            final Class<?> componentClass, final DSVersion dsVersion, final boolean configurableServiceProperties, boolean supportsInterfaces )
+    public ActivatorParameter( ComponentContext componentContext, int reason )
     {
-        super( methodName, methodName != null, componentClass, dsVersion, configurableServiceProperties, supportsInterfaces );
+        this.m_componentContext = componentContext;
+        this.m_reason = reason;
     }
 
 
-    protected boolean acceptEmpty()
+    public ComponentContext getComponentContext()
     {
-        return true;
+        return m_componentContext;
     }
 
 
-    protected String getMethodNamePrefix()
+    public int getReason()
     {
-        return "modified";
+        return m_reason;
     }
 }
