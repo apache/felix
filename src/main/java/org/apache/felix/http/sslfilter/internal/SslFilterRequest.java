@@ -114,7 +114,7 @@ class SslFilterRequest extends HttpServletRequestWrapper
         catch (Exception e)
         {
             // Use default port for the used protocol...
-            port = -1;
+            port = getRequest().getServerPort();
         }
         return port;
     }    
