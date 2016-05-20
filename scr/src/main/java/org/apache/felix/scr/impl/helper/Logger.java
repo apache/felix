@@ -59,7 +59,7 @@ public interface Logger
      * @param level The log level of the messages. This corresponds to the log
      *          levels defined by the OSGi LogService.
      * @param message The message to print
-     * @param metadata The {@link org.apache.felix.scr.impl.metadata.ComponentMetadata} whose processing caused
+     * @param metadata The {@link ComponentMetadata} whose processing caused
  *          the message. This may be <code>null</code> if the component
  *          metadata is not known or applicable.
      * @param componentId

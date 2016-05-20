@@ -26,7 +26,8 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.felix.scr.impl.config.ScrConfiguration;
+import org.apache.felix.scr.impl.config.ScrConfigurationImpl;
+import org.apache.felix.scr.impl.helper.ClassUtils;
 import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.runtime.ServiceComponentRuntimeImpl;
 import org.apache.felix.utils.extender.AbstractExtender;
@@ -54,14 +55,10 @@ public class Activator extends AbstractExtender implements SimpleLogger
     //  name of the LogService class (this is a string to not create a reference to the class)
     static final String LOGSERVICE_CLASS = "org.osgi.service.log.LogService";
 
-    // name of the PackageAdmin class (this is a string to not create a reference to the class)
-    static final String PACKAGEADMIN_CLASS = "org.osgi.service.packageadmin.PackageAdmin";
-
     // Our configuration from bundle context properties and Config Admin
-    private static ScrConfiguration m_configuration;
+    private ScrConfigurationImpl m_configuration;
 
-    // this bundle's context
-    private static BundleContext m_context;
+    private BundleContext m_context;
 
     //Either this bundle's context or the framework bundle context, depending on the globalExtender setting.
     private BundleContext m_globalContext;
@@ -71,9 +68,6 @@ public class Activator extends AbstractExtender implements SimpleLogger
 
     // the log service to log messages to
     private volatile ServiceTracker<LogService, LogService> m_logService;
-
-    // the package admin service (see BindMethod.getParameterClass)
-    private static volatile ServiceTracker<?, ?> m_packageAdmin;
 
     // map of BundleComponentActivator instances per Bundle indexed by Bundle id
     private Map<Long, BundleComponentActivator> m_componentBundles;
@@ -90,7 +84,7 @@ public class Activator extends AbstractExtender implements SimpleLogger
 
     public Activator()
     {
-        m_configuration = new ScrConfiguration(this);
+        m_configuration = new ScrConfigurationImpl( this );
         setSynchronous(true);
     }
 
@@ -112,6 +106,8 @@ public class Activator extends AbstractExtender implements SimpleLogger
         m_logService.open();
         // get the configuration
         m_configuration.start(m_context); //this will call restart, which calls super.start.
+        // set bundle context for PackageAdmin tracker
+        ClassUtils.setBundleContext( context );
     }
 
     public void restart(boolean globalExtender)
@@ -126,7 +122,7 @@ public class Activator extends AbstractExtender implements SimpleLogger
         {
             m_globalContext = m_context;
         }
-        if (m_packageAdmin != null)
+        if (ClassUtils.m_packageAdmin != null)
         {
             log(LogService.LOG_INFO, m_bundle,
                 "Stopping to restart with new globalExtender setting: " + globalExtender,
@@ -233,16 +229,7 @@ public class Activator extends AbstractExtender implements SimpleLogger
             m_logService.close();
             m_logService = null;
         }
-
-        // close the PackageAdmin tracker now
-        if (m_packageAdmin != null)
-        {
-            m_packageAdmin.close();
-            m_packageAdmin = null;
-        }
-
-        // remove the reference to the component context
-        m_context = null;
+        ClassUtils.close();
     }
 
     //---------- Component Management -----------------------------------------
@@ -587,21 +574,4 @@ public class Activator extends AbstractExtender implements SimpleLogger
         }
     }
 
-    public static Object getPackageAdmin()
-    {
-        if (m_packageAdmin == null)
-        {
-            synchronized (Activator.class)
-            {
-                if (m_packageAdmin == null)
-                {
-                    m_packageAdmin = new ServiceTracker(m_context, PACKAGEADMIN_CLASS,
-                        null);
-                    m_packageAdmin.open();
-                }
-            }
-        }
-
-        return m_packageAdmin.getService();
-    }
 }

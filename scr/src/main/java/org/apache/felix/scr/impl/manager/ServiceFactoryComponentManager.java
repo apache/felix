@@ -24,7 +24,6 @@ import java.util.Collection;
 import java.util.Dictionary;
 import java.util.IdentityHashMap;
 
-import org.apache.felix.scr.impl.config.ComponentContainer;
 import org.apache.felix.scr.impl.helper.ActivatorParameter;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.helper.MethodResult;

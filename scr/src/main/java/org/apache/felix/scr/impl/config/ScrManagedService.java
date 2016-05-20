@@ -38,14 +38,14 @@ import org.osgi.service.cm.ManagedService;
 public class ScrManagedService implements ManagedService
 {
 
-    private final ScrConfiguration scrConfiguration;
+    private final ScrConfigurationImpl scrConfiguration;
 
-    protected final ScrConfiguration getScrConfiguration()
+    protected final ScrConfigurationImpl getScrConfiguration()
     {
         return scrConfiguration;
     }
 
-    public ScrManagedService(final ScrConfiguration scrConfiguration)
+    public ScrManagedService(final ScrConfigurationImpl scrConfiguration)
     {
         this.scrConfiguration = scrConfiguration;
     }

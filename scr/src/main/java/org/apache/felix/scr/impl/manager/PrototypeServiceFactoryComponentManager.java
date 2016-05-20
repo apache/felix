@@ -18,7 +18,6 @@
  */
 package org.apache.felix.scr.impl.manager;
 
-import org.apache.felix.scr.impl.config.ComponentContainer;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.osgi.framework.PrototypeServiceFactory;
 

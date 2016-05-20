@@ -29,8 +29,6 @@ import java.util.Map;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.RefPair;
 import org.apache.felix.scr.impl.metadata.DSVersion;
-import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
-import org.apache.felix.scr.impl.metadata.ReferenceMetadata.ReferenceScope;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 

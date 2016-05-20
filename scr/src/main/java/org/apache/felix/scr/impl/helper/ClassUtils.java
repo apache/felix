@@ -23,12 +23,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.scr.impl.Activator;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
+import org.osgi.util.tracker.ServiceTracker;
 
 
 /**
@@ -36,6 +37,9 @@ import org.osgi.service.packageadmin.PackageAdmin;
  */
 public class ClassUtils
 {
+
+    // name of the PackageAdmin class (this is a string to not create a reference to the class)
+    private static final String PACKAGEADMIN_CLASS = "org.osgi.service.packageadmin.PackageAdmin";
 
     private static final Class<?> OBJECT_CLASS = Object.class;
 
@@ -48,6 +52,11 @@ public class ClassUtils
 
     public static final Class<?> COLLECTION_CLASS = Collection.class;
     public static final Class<?> LIST_CLASS = List.class;
+
+    // this bundle's context
+    private static BundleContext m_context;
+    // the package admin service (see BindMethod.getParameterClass)
+    public static volatile ServiceTracker<?, ?> m_packageAdmin;
 
     /**
      * Returns the class object representing the class of the field reference
@@ -105,7 +114,7 @@ public class ClassUtils
         }
 
         // try to load the class with the help of the PackageAdmin service
-        PackageAdmin pa = ( PackageAdmin ) Activator.getPackageAdmin();
+        PackageAdmin pa = ( PackageAdmin ) getPackageAdmin();
         if ( pa != null )
         {
             final String referenceClassPackage = className.substring( 0, className
@@ -159,5 +168,41 @@ public class ClassUtils
                 "getParameterClass: No class found, falling back to class Object", null );
         }
         return OBJECT_CLASS;
+    }
+
+    public static void setBundleContext( BundleContext bundleContext )
+    {
+        ClassUtils.m_context = bundleContext;
+    }
+
+    public static Object getPackageAdmin()
+    {
+        if (m_packageAdmin == null)
+        {
+            synchronized (ClassUtils.class)
+            {
+                if (m_packageAdmin == null)
+                {
+                    m_packageAdmin = new ServiceTracker(m_context, PACKAGEADMIN_CLASS,
+                        null);
+                    m_packageAdmin.open();
+                }
+            }
+        }
+
+        return m_packageAdmin.getService();
+    }
+
+    public static void close()
+    {
+        // close the PackageAdmin tracker now
+        if (m_packageAdmin != null)
+        {
+            m_packageAdmin.close();
+            m_packageAdmin = null;
+        }
+
+        // remove the reference to the component context
+        m_context = null;
     }
 }

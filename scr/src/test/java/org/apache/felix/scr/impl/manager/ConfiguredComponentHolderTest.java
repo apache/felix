@@ -16,23 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.config;
+package org.apache.felix.scr.impl.manager;
 
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
 import junit.framework.TestCase;
-
 import org.apache.felix.scr.impl.helper.ComponentMethods;
-import org.apache.felix.scr.impl.manager.SingleComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.DSVersion;
-import org.apache.felix.scr.impl.xml.XmlHandler;
+import org.apache.felix.scr.impl.metadata.TargetedPID;
 
 
 public class ConfiguredComponentHolderTest extends TestCase

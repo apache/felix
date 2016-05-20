@@ -27,11 +27,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.scr.component.ExtFactoryComponentInstance;
-import org.apache.felix.scr.impl.config.TargetedPID;
-import org.apache.felix.scr.impl.config.ComponentContainer;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
+import org.apache.felix.scr.impl.metadata.TargetedPID;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentException;

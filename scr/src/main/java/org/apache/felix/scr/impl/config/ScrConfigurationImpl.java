@@ -24,6 +24,7 @@ import java.util.Hashtable;
 
 import org.apache.felix.scr.impl.Activator;
 import org.apache.felix.scr.impl.ScrCommand;
+import org.apache.felix.scr.impl.manager.ScrConfiguration;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -53,28 +54,10 @@ import org.osgi.service.log.LogService;
  * <a href="http://felix.apache.org/site/apache-felix-service-component-runtime.html">Apache Felix Service Component Runtime</a>
  * documentation page for detailed information.
  */
-public class ScrConfiguration
+public class ScrConfigurationImpl implements ScrConfiguration
 {
 
     private static final String VALUE_TRUE = Boolean.TRUE.toString();
-
-    public static final String PID = "org.apache.felix.scr.ScrService";
-
-    public static final String PROP_FACTORY_ENABLED = "ds.factory.enabled";
-
-    public static final String PROP_DELAYED_KEEP_INSTANCES = "ds.delayed.keepInstances";
-
-    public static final String PROP_INFO_SERVICE = "ds.info.service";
-
-    public static final String PROP_LOCK_TIMEOUT = "ds.lock.timeout.milliseconds";
-
-    public static final String PROP_STOP_TIMEOUT = "ds.stop.timeout.milliseconds";
-
-    public static final long DEFAULT_LOCK_TIMEOUT_MILLISECONDS = 5000;
-
-    public static final long DEFAULT_STOP_TIMEOUT_MILLISECONDS = 60000;
-
-    public static final String PROP_LOGLEVEL = "ds.loglevel";
 
     private static final String LOG_LEVEL_DEBUG = "debug";
 
@@ -88,8 +71,6 @@ public class ScrConfiguration
 
     private static final String PROP_SHOWERRORS = "ds.showerrors";
 
-    public static final String PROP_GLOBAL_EXTENDER="ds.global.extender";
-
     private final Activator activator;
 
     private int logLevel;
@@ -97,9 +78,9 @@ public class ScrConfiguration
     private boolean factoryEnabled;
 
     private boolean keepInstances;
-    
+
     private boolean infoAsService;
-    
+
     private long lockTimeout = DEFAULT_LOCK_TIMEOUT_MILLISECONDS;
 
     private long stopTimeout = DEFAULT_STOP_TIMEOUT_MILLISECONDS;
@@ -109,10 +90,10 @@ public class ScrConfiguration
     private BundleContext bundleContext;
 
     private ServiceRegistration<ManagedService> managedService;
-    
+
     private ScrCommand scrCommand;
 
-    public ScrConfiguration( Activator activator )
+    public ScrConfigurationImpl(Activator activator )
     {
         this.activator = activator;
     }

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.config;
+package org.apache.felix.scr.impl.manager;
 
 
 import java.lang.reflect.InvocationTargetException;
@@ -31,13 +31,9 @@ import java.util.Map;
 
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.helper.SimpleLogger;
-import org.apache.felix.scr.impl.manager.AbstractComponentManager;
-import org.apache.felix.scr.impl.manager.ComponentFactoryImpl;
-import org.apache.felix.scr.impl.manager.PrototypeServiceFactoryComponentManager;
-import org.apache.felix.scr.impl.manager.ServiceFactoryComponentManager;
-import org.apache.felix.scr.impl.manager.SingleComponentManager;
-import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata.Scope;
+import org.apache.felix.scr.impl.metadata.ComponentMetadata;
+import org.apache.felix.scr.impl.metadata.TargetedPID;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.log.LogService;

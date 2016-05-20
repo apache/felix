@@ -23,7 +23,7 @@ import junit.framework.TestCase;
 
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.MockBundle;
-import org.apache.felix.scr.impl.config.ComponentContainer;
+import org.apache.felix.scr.impl.manager.ComponentContainer;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.RefPair;
 import org.apache.felix.scr.impl.manager.SingleComponentManager;

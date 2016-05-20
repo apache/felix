@@ -20,7 +20,6 @@ package org.apache.felix.scr.impl;
 
 import java.io.PrintWriter;
 import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -33,7 +32,8 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 
-import org.apache.felix.scr.impl.config.ScrConfiguration;
+import org.apache.felix.scr.impl.config.ScrConfigurationImpl;
+import org.apache.felix.scr.impl.manager.ScrConfiguration;
 import org.apache.felix.scr.info.ScrInfo;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -93,13 +93,13 @@ public class ScrCommand implements ScrInfo
 
     private final BundleContext bundleContext;
     private final ServiceComponentRuntime scrService;
-    private final ScrConfiguration scrConfiguration;
+    private final ScrConfigurationImpl scrConfiguration;
 
     private ServiceRegistration<ScrInfo> reg;
     private ServiceRegistration<?> gogoReg;
     private ServiceRegistration<?> shellReg;
 
-    static ScrCommand register(BundleContext bundleContext, ServiceComponentRuntime scrService, ScrConfiguration scrConfiguration)
+    static ScrCommand register(BundleContext bundleContext, ServiceComponentRuntime scrService, ScrConfigurationImpl scrConfiguration)
     {
         final ScrCommand cmd = new ScrCommand(bundleContext, scrService, scrConfiguration);
 
@@ -108,7 +108,7 @@ public class ScrCommand implements ScrInfo
     }
 
     //used by ComponentTestBase
-    protected ScrCommand(BundleContext bundleContext, ServiceComponentRuntime scrService, ScrConfiguration scrConfiguration)
+    protected ScrCommand(BundleContext bundleContext, ServiceComponentRuntime scrService, ScrConfigurationImpl scrConfiguration)
     {
         this.bundleContext = bundleContext;
         this.scrService = scrService;

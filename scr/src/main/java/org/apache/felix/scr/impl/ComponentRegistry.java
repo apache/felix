@@ -29,11 +29,11 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.felix.scr.impl.config.ComponentActivator;
-import org.apache.felix.scr.impl.config.ComponentHolder;
-import org.apache.felix.scr.impl.config.ConfigurableComponentHolder;
-import org.apache.felix.scr.impl.config.RegionConfigurationSupport;
-import org.apache.felix.scr.impl.config.TargetedPID;
+import org.apache.felix.scr.impl.manager.ComponentActivator;
+import org.apache.felix.scr.impl.manager.ComponentHolder;
+import org.apache.felix.scr.impl.manager.ConfigurableComponentHolder;
+import org.apache.felix.scr.impl.manager.RegionConfigurationSupport;
+import org.apache.felix.scr.impl.metadata.TargetedPID;
 import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.apache.felix.scr.impl.manager.DependencyManager;
@@ -306,7 +306,8 @@ public class ComponentRegistry
             {
                 for (ComponentHolder<?> holder: set)
                 {
-                    if (targetedPid.matchesTarget(holder))
+                    Bundle bundle = holder.getActivator().getBundleContext().getBundle();
+                    if (targetedPid.matchesTarget(bundle))
                     {
                         componentHoldersUsingPid.add( holder );
                     }
