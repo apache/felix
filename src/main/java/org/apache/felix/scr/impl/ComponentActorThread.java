@@ -21,6 +21,7 @@ package org.apache.felix.scr.impl;
 
 import java.util.LinkedList;
 
+import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.osgi.service.log.LogService;
 
 
@@ -48,10 +49,13 @@ class ComponentActorThread implements Runnable
     // the queue of Runnable instances  to be run
     private LinkedList<Runnable> tasks;
 
+    private SimpleLogger logger;
 
-    ComponentActorThread()
+
+    ComponentActorThread( SimpleLogger log )
     {
         tasks = new LinkedList<Runnable>();
+        logger = log;
     }
 
 
@@ -62,7 +66,7 @@ class ComponentActorThread implements Runnable
     // terminates.
     public void run()
     {
-        Activator.log( LogService.LOG_DEBUG, null, "Starting ComponentActorThread", null );
+        logger.log( LogService.LOG_DEBUG, "Starting ComponentActorThread", null );
 
         for ( ;; )
         {
@@ -90,17 +94,17 @@ class ComponentActorThread implements Runnable
                 // return if the task is this thread itself
                 if ( task == TERMINATION_TASK )
                 {
-                    Activator.log( LogService.LOG_DEBUG, null, "Shutting down ComponentActorThread", null );
+                    logger.log( LogService.LOG_DEBUG, "Shutting down ComponentActorThread", null );
                     return;
                 }
 
                 // otherwise execute the task, log any issues
-                Activator.log( LogService.LOG_DEBUG, null, "Running task: " + task, null );
+                logger.log( LogService.LOG_DEBUG, "Running task: " + task, null );
                 task.run();
             }
             catch ( Throwable t )
             {
-                Activator.log( LogService.LOG_ERROR, null, "Unexpected problem executing task " + task, t );
+                logger.log( LogService.LOG_ERROR, "Unexpected problem executing task " + task, t );
             }
             finally
             {
@@ -129,7 +133,7 @@ class ComponentActorThread implements Runnable
                 catch ( InterruptedException e )
                 {
                     Thread.currentThread().interrupt();
-                    Activator.log( LogService.LOG_ERROR, null, "Interrupted exception waiting for queue to empty", e );
+                    logger.log( LogService.LOG_ERROR, "Interrupted exception waiting for queue to empty", e );
                 }
             }
         }
@@ -144,7 +148,7 @@ class ComponentActorThread implements Runnable
             // append to the task queue
             tasks.add( task );
 
-            Activator.log( LogService.LOG_DEBUG, null, "Adding task [{0}] as #{1} in the queue" 
+            logger.log( LogService.LOG_DEBUG, "Adding task [{0}] as #{1} in the queue"
                     , new Object[] {task, tasks.size()}, null );
 
             // notify the waiting thread

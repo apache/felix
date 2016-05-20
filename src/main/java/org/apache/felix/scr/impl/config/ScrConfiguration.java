@@ -135,7 +135,7 @@ public class ScrConfiguration
         // configuration may be delivered asynchronously
         configure( null, false );
 
-        managedService = ( ServiceRegistration<ManagedService> ) bundleContext.registerService("org.osgi.service.cm.ManagedService", new ScrManagedServiceServiceFactory(this),
+        managedService = ( ServiceRegistration<ManagedService> ) bundleContext.registerService("org.osgi.service.cm.ManagedService", new ScrManagedServiceServiceFactory(this, activator),
             props);
     }
 

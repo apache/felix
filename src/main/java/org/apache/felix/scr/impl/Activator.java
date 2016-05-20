@@ -27,6 +27,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.scr.impl.config.ScrConfiguration;
+import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.runtime.ServiceComponentRuntimeImpl;
 import org.apache.felix.utils.extender.AbstractExtender;
 import org.apache.felix.utils.extender.Extension;
@@ -48,7 +49,7 @@ import org.osgi.util.tracker.ServiceTracker;
  * 37,202 @@ in active bundles.
  *
  */
-public class Activator extends AbstractExtender
+public class Activator extends AbstractExtender implements SimpleLogger
 {
     //  name of the LogService class (this is a string to not create a reference to the class)
     static final String LOGSERVICE_CLASS = "org.osgi.service.log.LogService";
@@ -69,7 +70,7 @@ public class Activator extends AbstractExtender
     private Bundle m_bundle;
 
     // the log service to log messages to
-    private static volatile ServiceTracker<LogService, LogService> m_logService;
+    private volatile ServiceTracker<LogService, LogService> m_logService;
 
     // the package admin service (see BindMethod.getParameterClass)
     private static volatile ServiceTracker<?, ?> m_packageAdmin;
@@ -161,7 +162,7 @@ public class Activator extends AbstractExtender
 
         // prepare component registry
         m_componentBundles = new HashMap<Long, BundleComponentActivator>();
-        m_componentRegistry = new ComponentRegistry();
+        m_componentRegistry = new ComponentRegistry( this );
 
         final ServiceComponentRuntime runtime = new ServiceComponentRuntimeImpl(
             m_globalContext, m_componentRegistry);
@@ -173,7 +174,7 @@ public class Activator extends AbstractExtender
             new Object[] { m_bundle.getHeaders().get(Constants.BUNDLE_VERSION) }, null);
 
         // create and start the component actor
-        m_componentActor = new ComponentActorThread();
+        m_componentActor = new ComponentActorThread( this );
         Thread t = new Thread(m_componentActor, "SCR Component Actor");
         t.setDaemon(true);
         t.start();
@@ -394,7 +395,7 @@ public class Activator extends AbstractExtender
 
         try
         {
-            BundleComponentActivator ga = new BundleComponentActivator(
+            BundleComponentActivator ga = new BundleComponentActivator( this,
                 m_componentRegistry, m_componentActor, context, m_configuration);
             ga.initialEnable();
 
@@ -480,8 +481,24 @@ public class Activator extends AbstractExtender
         log(LogService.LOG_DEBUG, m_bundle, msg, t);
     }
 
-    public static void log(int level, Bundle bundle, String pattern, Object[] arguments,
-        Throwable ex)
+    @Override
+    public void log(int level, String message, Throwable ex)
+    {
+        log(level, null, message, ex);
+    }
+
+    @Override
+    public void log(int level, String pattern, Object[] arguments, Throwable ex)
+    {
+        if (isLogEnabled(level))
+        {
+            final String message = MessageFormat.format(pattern, arguments);
+            log(level, null, message, ex);
+        }
+    }
+
+    public void log(int level, Bundle bundle, String pattern, Object[] arguments,
+                    Throwable ex)
     {
         if (isLogEnabled(level))
         {
@@ -493,7 +510,7 @@ public class Activator extends AbstractExtender
     /**
      * Returns <code>true</code> if logging for the given level is enabled.
      */
-    public static boolean isLogEnabled(int level)
+    public boolean isLogEnabled(int level)
     {
         return m_configuration == null || m_configuration.getLogLevel() >= level;
     }
@@ -508,7 +525,7 @@ public class Activator extends AbstractExtender
      * @param ex An optional <code>Throwable</code> whose stack trace is written,
      *      or <code>null</code> to not log a stack trace.
      */
-    public static void log(int level, Bundle bundle, String message, Throwable ex)
+    public void log(int level, Bundle bundle, String message, Throwable ex)
     {
         if (isLogEnabled(level))
         {

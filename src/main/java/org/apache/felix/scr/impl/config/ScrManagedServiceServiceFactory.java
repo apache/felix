@@ -18,7 +18,7 @@
  */
 package org.apache.felix.scr.impl.config;
 
-import org.apache.felix.scr.impl.Activator;
+import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
@@ -39,10 +39,12 @@ import org.osgi.service.log.LogService;
 public class ScrManagedServiceServiceFactory implements ServiceFactory<ScrManagedService>
 {
     private final ScrConfiguration scrConfiguration;
+    private final SimpleLogger logger;
 
-    public ScrManagedServiceServiceFactory(final ScrConfiguration scrConfiguration)
+    public ScrManagedServiceServiceFactory(final ScrConfiguration scrConfiguration, final SimpleLogger logger)
     {
         this.scrConfiguration = scrConfiguration;
+        this.logger = logger;
     }
 
     public ScrManagedService getService(Bundle bundle, ServiceRegistration<ScrManagedService> registration)
@@ -54,10 +56,9 @@ public class ScrManagedServiceServiceFactory implements ServiceFactory<ScrManage
         catch ( Throwable t )
         {
             // assume MetaType Service API not available
-            Activator
+            logger
                 .log(
                     LogService.LOG_ERROR,
-                    null,
                     "Cannot create MetaType providing ManagedService; not providing Metatype information but just accepting configuration",
                     null );
         }

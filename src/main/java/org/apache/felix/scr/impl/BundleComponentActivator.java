@@ -40,6 +40,7 @@ import org.apache.felix.scr.impl.config.ComponentHolder;
 import org.apache.felix.scr.impl.config.ConfigAdminTracker;
 import org.apache.felix.scr.impl.config.RegionConfigurationSupport;
 import org.apache.felix.scr.impl.config.ScrConfiguration;
+import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.apache.felix.scr.impl.manager.DependencyManager;
 import org.apache.felix.scr.impl.manager.ExtendedServiceEvent;
@@ -95,6 +96,8 @@ public class BundleComponentActivator implements ComponentActivator
     private final ConfigAdminTracker configAdminTracker;
 
     private final Map<String, ListenerInfo> listenerMap = new HashMap<String, ListenerInfo>();
+
+    private final SimpleLogger m_logger;
 
     private static class ListenerInfo implements ServiceListener
     {
@@ -245,9 +248,10 @@ public class BundleComponentActivator implements ComponentActivator
      *
      * @throws ComponentException if any error occurrs initializing this class
      */
-    public BundleComponentActivator(ComponentRegistry componentRegistry, ComponentActorThread componentActor, BundleContext context, ScrConfiguration configuration) throws ComponentException
+    public BundleComponentActivator(SimpleLogger logger, ComponentRegistry componentRegistry, ComponentActorThread componentActor, BundleContext context, ScrConfiguration configuration) throws ComponentException
     {
         // keep the parameters for later
+        m_logger = logger;
         m_componentRegistry = componentRegistry;
         m_componentActor = componentActor;
         m_context = context;
@@ -821,7 +825,7 @@ public class BundleComponentActivator implements ComponentActivator
                 LogService logger = logService.getService();
                 if (logger == null)
                 {
-                    Activator.log(level, m_bundle, message, ex);
+                    m_logger.log(level, message, ex);
                 }
                 else
                 {
@@ -831,17 +835,17 @@ public class BundleComponentActivator implements ComponentActivator
             else
             {
                 // BCA has been disposed off, bundle context is probably invalid. Try to log something.
-                Activator.log(level, null, message, ex);
+                m_logger.log(level, message, ex);
             }
         }
     }
 
-    public void missingServicePresent(ServiceReference<?> serviceReference)
+    public <T> void missingServicePresent(ServiceReference<T> serviceReference)
     {
         m_componentRegistry.missingServicePresent(serviceReference, m_componentActor);
     }
 
-    public <T> void registerMissingDependency(DependencyManager<?, T> dependencyManager,
+    public <S, T> void registerMissingDependency(DependencyManager<S, T> dependencyManager,
         ServiceReference<T> serviceReference, int trackingCount)
     {
         m_componentRegistry.registerMissingDependency(dependencyManager,
