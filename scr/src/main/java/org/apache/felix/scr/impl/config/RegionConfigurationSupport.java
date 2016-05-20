@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.felix.scr.impl.Activator;
+import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -48,6 +48,7 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
     // the name of the ConfigurationAdmin service
     public static final String CONFIGURATION_ADMIN = "org.osgi.service.cm.ConfigurationAdmin";
 
+    private final SimpleLogger logger;
     private final BundleContext caBundleContext;
     private final Long bundleId;
     
@@ -62,8 +63,9 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
      * @param bundleContext of the ConfigurationAdmin we are tracking
      * @param registry
      */
-    public RegionConfigurationSupport(ServiceReference<ConfigurationAdmin> reference)
+    public RegionConfigurationSupport(SimpleLogger logger, ServiceReference<ConfigurationAdmin> reference)
     {
+        this.logger = logger;
         Bundle bundle = reference.getBundle();
         this.bundleId = bundle.getBundleId();
         this.caBundleContext = bundle.getBundleContext();
@@ -142,7 +144,7 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
                                     boolean created = false;
                                     for ( Configuration config: factory )
                                     {
-                                        Activator.log( LogService.LOG_DEBUG, null,
+                                        logger.log( LogService.LOG_DEBUG,
                                                 "Configuring holder {0} with factory configuration {1}, change count {2}", new Object[] {
                                                         holder, config, config.getChangeCount() }, null );
                                         config = getConfiguration( ca, config.getPid() );
@@ -168,7 +170,7 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
                                     if ( singleton != null )
                                     {
                                         singleton = getConfiguration( ca, singleton.getPid() );
-                                        Activator.log( LogService.LOG_DEBUG, null,
+                                        logger.log( LogService.LOG_DEBUG,
                                                 "Configuring holder {0} with configuration {1}, change count {2}", new Object[] { holder,
                                                         singleton, singleton.getChangeCount() }, null );
                                         if ( singleton != null
@@ -193,9 +195,9 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
                         }
                         else
                         {
-                            Activator.log( LogService.LOG_WARNING, null, "Cannot configure component {0}",
+                            logger.log( LogService.LOG_WARNING, "Cannot configure component {0}",
                                  new Object[] {holder.getComponentMetadata().getName()}, null );
-                            Activator.log( LogService.LOG_WARNING, null,
+                            logger.log( LogService.LOG_WARNING,
                                 "Component Bundle's Configuration Admin is not compatible with "
                                     + "ours. This happens if multiple Configuration Admin API versions "
                                     + "are deployed and different bundles wire to different versions", null );
@@ -246,7 +248,7 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
         // (since DS 1.2, components may specify a specific configuration PID (112.4.4 configuration-pid)
         Collection<ComponentHolder<?>> holders = getComponentHolders(factoryPid != null ? factoryPid : pid);
 
-        Activator.log(LogService.LOG_DEBUG, null, "configurationEvent: Handling {0}  of Configuration PID={1} for component holders {2}",
+        logger.log(LogService.LOG_DEBUG, "configurationEvent: Handling {0}  of Configuration PID={1} for component holders {2}",
                 new Object[] {getEventType(event), pid, holders},
                 null);
 
@@ -324,7 +326,7 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
                         final ConfigurationInfo configInfo = getConfigurationInfo( pid, targetedPid, componentHolder, bundleContext );
                         if ( configInfo != null )
                         {
-                            Activator.log(LogService.LOG_DEBUG, null, "LocationChanged event, same targetedPID {0}, location now {1}, change count {2}",
+                            logger.log(LogService.LOG_DEBUG, "LocationChanged event, same targetedPID {0}, location now {1}, change count {2}",
                                     new Object[] {targetedPid, configInfo.getBundleLocation(), configInfo.getChangeCount()},
                                     null);
                             if (configInfo.getProps() == null)
@@ -353,7 +355,7 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
                         final ConfigurationInfo configInfo = getConfigurationInfo( pid, targetedPid, componentHolder, bundleContext );
                         if ( configInfo != null )
                         {
-                            Activator.log(LogService.LOG_DEBUG, null, "LocationChanged event, better targetedPID {0} compared to {1}, location now {2}, change count {3}",
+                            logger.log(LogService.LOG_DEBUG, "LocationChanged event, better targetedPID {0} compared to {1}, location now {2}, change count {3}",
                                     new Object[] {targetedPid, oldTargetedPID, configInfo.getBundleLocation(), configInfo.getChangeCount()},
                                     null);
                             if (configInfo.getProps() == null)
@@ -377,14 +379,14 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
                     //else worse match, do nothing
                     else
                     {
-                        Activator.log(LogService.LOG_DEBUG, null, "LocationChanged event, worse targetedPID {0} compared to {1}, do nothing",
+                        logger.log(LogService.LOG_DEBUG, "LocationChanged event, worse targetedPID {0} compared to {1}, do nothing",
                                 new Object[] {targetedPid, oldTargetedPID},
                                 null);
                     }
                     break;
                 }
                 default:
-                    Activator.log(LogService.LOG_WARNING, null, "Unknown ConfigurationEvent type {0}", new Object[] {event.getType()},
+                    logger.log(LogService.LOG_WARNING, "Unknown ConfigurationEvent type {0}", new Object[] {event.getType()},
                         null);
                 }
             }
@@ -473,9 +475,9 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
                         }
                         else
                         {
-                            Activator.log( LogService.LOG_WARNING, null, "Cannot reconfigure component {0}",
+                            logger.log( LogService.LOG_WARNING, "Cannot reconfigure component {0}",
                                 new Object[] {componentHolder.getComponentMetadata().getName()}, null );
-                            Activator.log( LogService.LOG_WARNING, null,
+                            logger.log( LogService.LOG_WARNING,
                                 "Component Bundle's Configuration Admin is not compatible with " +
                                 "ours. This happens if multiple Configuration Admin API versions " +
                                 "are deployed and different bundles wire to different versions",
@@ -491,7 +493,7 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
             catch (IllegalStateException ise)
             {
                 // If the bundle has been stopped concurrently
-                Activator.log(LogService.LOG_WARNING, null, "Bundle in unexpected state",
+                logger.log(LogService.LOG_WARNING, "Bundle in unexpected state",
                     ise);
             }
         }
@@ -506,7 +508,7 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
         }
         catch (IOException ioe)
         {
-            Activator.log(LogService.LOG_WARNING, null, "Failed reading configuration for pid={0}", new Object[] {pid}, ioe);
+            logger.log(LogService.LOG_WARNING, "Failed reading configuration for pid={0}", new Object[] {pid}, ioe);
         }
 
         return null;
@@ -620,11 +622,11 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
         }
         catch (IOException ioe)
         {
-            Activator.log(LogService.LOG_WARNING, null, "Problem listing configurations for filter={0}", new Object[] {filter}, ioe);
+            logger.log(LogService.LOG_WARNING, "Problem listing configurations for filter={0}", new Object[] {filter}, ioe);
         }
         catch (InvalidSyntaxException ise)
         {
-            Activator.log(LogService.LOG_ERROR, null, "Invalid Configuration selection filter {0}", new Object[] {filter}, ise);
+            logger.log(LogService.LOG_ERROR, "Invalid Configuration selection filter {0}", new Object[] {filter}, ise);
         }
 
         // no factories in case of problems

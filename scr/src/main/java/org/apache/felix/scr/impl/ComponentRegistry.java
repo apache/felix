@@ -34,6 +34,7 @@ import org.apache.felix.scr.impl.config.ComponentHolder;
 import org.apache.felix.scr.impl.config.ConfigurableComponentHolder;
 import org.apache.felix.scr.impl.config.RegionConfigurationSupport;
 import org.apache.felix.scr.impl.config.TargetedPID;
+import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.apache.felix.scr.impl.manager.DependencyManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
@@ -108,8 +109,11 @@ public class ComponentRegistry
 
     private final Map<ServiceReference<?>, List<Entry<?, ?>>> m_missingDependencies = new HashMap<ServiceReference<?>, List<Entry<?, ?>>>( );
 
-    public ComponentRegistry( )
+    private final SimpleLogger m_logger;
+
+    public ComponentRegistry( SimpleLogger logger )
     {
+        m_logger = logger;
         m_componentHoldersByName = new HashMap<ComponentRegistryKey, ComponentHolder<?>>();
         m_componentHoldersByPid = new HashMap<String, Set<ComponentHolder<?>>>();
         m_componentsById = new HashMap<Long, AbstractComponentManager<?>>();
@@ -233,7 +237,7 @@ public class ComponentRegistry
      */
     final void registerComponentHolder( final ComponentRegistryKey key, ComponentHolder<?> componentHolder )
     {
-        Activator.log(LogService.LOG_DEBUG, null,
+        m_logger.log(LogService.LOG_DEBUG,
                 "Registering component with pid {0} for bundle {1}",
                 new Object[] {componentHolder.getComponentMetadata().getConfigurationPid(), key.getBundleId()},
                 null);
@@ -378,7 +382,7 @@ public class ComponentRegistry
         }
 
         if (component != null) {
-            Activator.log(LogService.LOG_DEBUG, null,
+            m_logger.log(LogService.LOG_DEBUG,
                     "Unregistering component with pid {0} for bundle {1}",
                     new Object[] {component.getComponentMetadata().getConfigurationPid(), key.getBundleId()}, null);
             synchronized (m_componentHoldersByPid)
@@ -526,7 +530,7 @@ public class ComponentRegistry
 
     public RegionConfigurationSupport registerRegionConfigurationSupport(
             ServiceReference<ConfigurationAdmin> reference) {
-        RegionConfigurationSupport trialRcs = new RegionConfigurationSupport(reference) {
+        RegionConfigurationSupport trialRcs = new RegionConfigurationSupport(m_logger, reference) {
             protected Collection<ComponentHolder<?>> getComponentHolders(TargetedPID pid)
             {
                 return ComponentRegistry.this.getComponentHoldersByPid(pid);

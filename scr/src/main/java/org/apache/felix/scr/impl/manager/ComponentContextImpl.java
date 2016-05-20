@@ -112,7 +112,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         return m_serviceRegistration;
     }
 
-   protected SingleComponentManager<S> getComponentManager()
+    protected SingleComponentManager<S> getComponentManager()
     {
         return m_componentManager;
     }
