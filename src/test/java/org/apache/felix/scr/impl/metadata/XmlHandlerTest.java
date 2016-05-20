@@ -33,6 +33,7 @@ import org.apache.felix.scr.impl.MockBundle;
 import org.apache.felix.scr.impl.MockLogger;
 import org.apache.felix.scr.impl.parser.KXml2SAXParser;
 import org.apache.felix.scr.impl.parser.ParseException;
+import org.apache.felix.scr.impl.xml.XmlHandler;
 import org.osgi.service.component.ComponentException;
 import org.xmlpull.v1.XmlPullParserException;
 

@@ -32,7 +32,7 @@ import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.manager.SingleComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.DSVersion;
-import org.apache.felix.scr.impl.metadata.XmlHandler;
+import org.apache.felix.scr.impl.xml.XmlHandler;
 
 
 public class ConfiguredComponentHolderTest extends TestCase
