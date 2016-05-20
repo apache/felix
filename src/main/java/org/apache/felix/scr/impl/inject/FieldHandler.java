@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.helper;
+package org.apache.felix.scr.impl.inject;
 
 
 import java.lang.reflect.Field;
@@ -33,6 +33,11 @@ import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import org.apache.felix.scr.impl.helper.InitReferenceMethod;
+import org.apache.felix.scr.impl.helper.MethodResult;
+import org.apache.felix.scr.impl.helper.ReadOnlyDictionary;
+import org.apache.felix.scr.impl.helper.ReferenceMethod;
+import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.RefPair;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
@@ -556,10 +561,10 @@ public class FieldHandler
         return objects;
     }
 
-    private MethodResult updateField( final METHOD_TYPE mType,
-            final Object componentInstance,
-            final BindParameters bp,
-            final SimpleLogger logger )
+    private MethodResult updateField(final METHOD_TYPE mType,
+                                     final Object componentInstance,
+                                     final BindParameters bp,
+                                     final SimpleLogger logger )
         throws InvocationTargetException
     {
         final ComponentContextImpl key = bp.getComponentContext();
@@ -925,6 +930,17 @@ public class FieldHandler
         {
             this.methodType = mt;
             this.handler = handler;
+        }
+
+        public MethodResult invoke(Object componentInstance,
+                                   ComponentContextImpl<?> componentContext,
+                                   RefPair<?, ?> refPair,
+                                   MethodResult methodCallFailureResult,
+                                   SimpleLogger logger) {
+            return invoke(componentInstance,
+                    new BindParameters(componentContext, refPair),
+                    methodCallFailureResult,
+                    logger);
         }
 
         public MethodResult invoke(final Object componentInstance,

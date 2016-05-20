@@ -16,9 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.helper;
+package org.apache.felix.scr.impl.inject;
+
+import org.apache.felix.scr.impl.metadata.DSVersion;
 
 
-public class SuitableMethodNotAccessibleException extends Exception
+/**
+ * Component method to be invoked on service unbinding.
+ */
+public class UnbindMethod extends BindMethod
+implements org.apache.felix.scr.impl.helper.ReferenceMethod
 {
+
+    public UnbindMethod( final String methodName,
+            final Class<?> componentClass, final String referenceClassName, final DSVersion dsVersion, final boolean configurableServiceProperties )
+    {
+        super( methodName, componentClass, referenceClassName, dsVersion, configurableServiceProperties );
+    }
+
+
+    @Override
+    protected String getMethodNamePrefix()
+    {
+        return "unbind";
+    }
+
 }

@@ -27,10 +27,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.felix.scr.impl.helper.ActivatorParameter;
+import org.apache.felix.scr.impl.helper.ComponentMethod;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.helper.MethodResult;
-import org.apache.felix.scr.impl.helper.ModifiedMethod;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceFactory;
@@ -297,8 +296,8 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         }
 
         // 5. Call the activate method, if present
-        final MethodResult result = getComponentMethods().getActivateMethod().invoke( implementationObject, new ActivatorParameter(
-                componentContext, 1 ), null, this );
+        final MethodResult result = getComponentMethods().getActivateMethod().invoke( implementationObject,
+                componentContext, 1, null, this );
         if ( result == null )
         {
             // 112.5.8 If the activate method throws an exception, SCR must log an error message
@@ -338,7 +337,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             // method throws an exception, SCR must log an error message containing the
             // exception with the Log Service and continue) has already been logged
             final MethodResult result = getComponentMethods().getDeactivateMethod().invoke( implementationObject,
-                    new ActivatorParameter( componentContext, reason ), null, this );
+                    componentContext, reason, null, this );
             if ( result != null )
             {
                 setServiceProperties( result );
@@ -763,10 +762,10 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
     protected MethodResult invokeModifiedMethod()
     {
-        ModifiedMethod modifiedMethod = getComponentMethods().getModifiedMethod();
+        ComponentMethod modifiedMethod = getComponentMethods().getModifiedMethod();
         if ( getInstance() != null )
         {
-            return modifiedMethod.invoke( getInstance(), new ActivatorParameter( m_componentContext, -1 ),
+            return modifiedMethod.invoke( getInstance(), m_componentContext, -1,
                     MethodResult.VOID, this );
         }
         return MethodResult.VOID;

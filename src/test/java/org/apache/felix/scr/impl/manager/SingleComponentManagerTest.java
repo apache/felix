@@ -26,6 +26,7 @@ import java.lang.reflect.Field;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.felix.scr.impl.helper.ComponentMethods;
+import org.apache.felix.scr.impl.inject.ComponentMethodsImpl;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.junit.Test;
@@ -46,7 +47,7 @@ public class SingleComponentManagerTest
         ComponentContainer<Object> cc = Mockito.mock(ComponentContainer.class);
         Mockito.when(cc.getComponentMetadata()).thenReturn(cm);
 
-        SingleComponentManager<Object> scm = new SingleComponentManager<Object>(cc, new ComponentMethods()) {
+        SingleComponentManager<Object> scm = new SingleComponentManager<Object>(cc, new ComponentMethodsImpl()) {
             @Override
             boolean getServiceInternal(ServiceRegistration<Object> serviceRegistration)
             {
@@ -87,7 +88,7 @@ public class SingleComponentManagerTest
         ComponentContainer<Object> cc = Mockito.mock(ComponentContainer.class);
         Mockito.when(cc.getComponentMetadata()).thenReturn(cm);
 
-        SingleComponentManager<?> scm = new SingleComponentManager<Object>(cc, new ComponentMethods()) {
+        SingleComponentManager<?> scm = new SingleComponentManager<Object>(cc, new ComponentMethodsImpl()) {
             @Override
             boolean getServiceInternal(ServiceRegistration<Object> serviceRegistration)
             {

@@ -58,7 +58,7 @@ import org.osgi.util.promise.Promises;
  * <code>service.factoryPid</code> equals the component name.</li>
  * </ul>
  */
-public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, ComponentContainer<S>, SimpleLogger
+public abstract class ConfigurableComponentHolder<S> implements ComponentHolder<S>, ComponentContainer<S>, SimpleLogger
 {
 
     /**
@@ -150,9 +150,11 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
         this.m_configurations = new Dictionary[pidCount];
         this.m_changeCount = new Long[pidCount];
         this.m_components = new HashMap<String, AbstractComponentManager<S>>();
-        this.m_componentMethods = new ComponentMethods();
+        this.m_componentMethods = createComponentMethods();
         this.m_enabled = false;
     }
+
+    protected abstract ComponentMethods createComponentMethods();
 
     protected AbstractComponentManager<S> createComponentManager(boolean factoryConfiguration)
     {
@@ -163,7 +165,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
             //TODO is there any check to make sure factory component factories are enabled before creating them?
             if ( !m_componentMetadata.isObsoleteFactoryComponentFactory() || !factoryConfiguration )
             {
-                manager = new ComponentFactoryImpl<S>(this );
+                manager = new ComponentFactoryImpl<S>(this, m_componentMethods);
             }
             else
             {

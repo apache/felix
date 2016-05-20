@@ -50,7 +50,7 @@ public class MethodResult
 
     private final boolean hasResult;
 
-    MethodResult(final boolean hasResult, final Map<String, Object> result)
+    public MethodResult(final boolean hasResult, final Map<String, Object> result)
     {
         this.hasResult = hasResult;
         this.result = result;

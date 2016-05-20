@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.helper;
+package org.apache.felix.scr.impl.inject;
 
 
 import java.lang.reflect.InvocationTargetException;
@@ -27,13 +27,16 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.scr.impl.helper.ComponentMethod;
+import org.apache.felix.scr.impl.helper.MethodResult;
+import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
 
 
-public class ActivateMethod extends BaseMethod<ActivatorParameter>
+public class ActivateMethod extends BaseMethod<ActivatorParameter> implements ComponentMethod
 {
 
     protected static final Class<?> COMPONENT_CONTEXT_CLASS = ComponentContext.class;
@@ -285,6 +288,10 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter>
     protected String getMethodNamePrefix()
     {
         return "activate";
+    }
+
+    public MethodResult invoke(Object componentInstance, ComponentContext componentContext, int reason, MethodResult methodCallFailureResult, SimpleLogger logger) {
+        return invoke(componentInstance, new ActivatorParameter(componentContext, reason), methodCallFailureResult, logger);
     }
 
     @Override

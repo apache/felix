@@ -16,30 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.helper;
+package org.apache.felix.scr.impl.inject;
 
-import org.osgi.service.component.ComponentContext;
+import org.apache.felix.scr.impl.metadata.DSVersion;
 
-public final class ActivatorParameter
+
+public class DeactivateMethod extends ActivateMethod
 {
-    private final ComponentContext m_componentContext;
-    private final int m_reason;
 
-    public ActivatorParameter( ComponentContext componentContext, int reason )
+    @Override
+    boolean isDeactivate()
     {
-        this.m_componentContext = componentContext;
-        this.m_reason = reason;
+        return true;
     }
 
-
-    public ComponentContext getComponentContext()
+    public DeactivateMethod( final String methodName,
+            final boolean methodRequired, final Class<?> componentClass, final DSVersion dsVersion, final boolean configurableServiceProperties, boolean supportsInterfaces )
     {
-        return m_componentContext;
+        super( methodName, methodRequired, componentClass, dsVersion, configurableServiceProperties, supportsInterfaces );
     }
 
-
-    public int getReason()
+    protected String getMethodNamePrefix()
     {
-        return m_reason;
+        return "deactivate";
     }
+
 }

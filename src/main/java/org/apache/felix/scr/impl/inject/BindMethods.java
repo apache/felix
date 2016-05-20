@@ -18,9 +18,15 @@
  */
 
 
-package org.apache.felix.scr.impl.helper;
+package org.apache.felix.scr.impl.inject;
 
 
+import org.apache.felix.scr.impl.helper.InitReferenceMethod;
+import org.apache.felix.scr.impl.helper.ReferenceMethod;
+import org.apache.felix.scr.impl.helper.ReferenceMethods;
+import org.apache.felix.scr.impl.inject.BindMethod;
+import org.apache.felix.scr.impl.inject.UnbindMethod;
+import org.apache.felix.scr.impl.inject.UpdatedMethod;
 import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 
@@ -36,19 +42,19 @@ public class BindMethods implements ReferenceMethods
     public BindMethods( ReferenceMetadata m_dependencyMetadata, Class<?> instanceClass,
             final DSVersion dsVersion, final boolean configurableServiceProperties )
     {
-        m_bind = new org.apache.felix.scr.impl.helper.BindMethod(
+        m_bind = new BindMethod(
                 m_dependencyMetadata.getBind(),
                 instanceClass,
                 m_dependencyMetadata.getInterface(),
                 dsVersion, configurableServiceProperties
         );
-        m_updated = new org.apache.felix.scr.impl.helper.UpdatedMethod(
+        m_updated = new UpdatedMethod(
                 m_dependencyMetadata.getUpdated(),
                 instanceClass,
                 m_dependencyMetadata.getInterface(),
                 dsVersion, configurableServiceProperties
         );
-        m_unbind = new org.apache.felix.scr.impl.helper.UnbindMethod(
+        m_unbind = new UnbindMethod(
                 m_dependencyMetadata.getUnbind(),
                 instanceClass,
                 m_dependencyMetadata.getInterface(),

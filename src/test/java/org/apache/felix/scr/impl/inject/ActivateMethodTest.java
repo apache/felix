@@ -16,10 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.helper;
+package org.apache.felix.scr.impl.inject;
 
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Hashtable;
 import java.util.List;
@@ -29,19 +28,15 @@ import junit.framework.TestCase;
 
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.manager.ComponentContainer;
-import org.apache.felix.scr.impl.helper.ActivateMethod;
-import org.apache.felix.scr.impl.helper.ActivatorParameter;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.manager.SingleComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.DSVersion;
-import org.apache.felix.scr.impl.xml.XmlHandler;
 import org.apache.felix.scr.impl.metadata.instances.AcceptMethod;
 import org.apache.felix.scr.impl.metadata.instances.BaseObject;
 import org.apache.felix.scr.impl.metadata.instances.Level1Object;
 import org.apache.felix.scr.impl.metadata.instances.Level3Object;
 import org.apache.felix.scr.impl.metadata.instances2.Level2Object;
-import org.apache.felix.scr.integration.components.ActivatorComponent;
 import org.easymock.EasyMock;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -296,7 +291,7 @@ public class ActivateMethodTest extends TestCase
     private void checkMethod( BaseObject obj, String methodName, String methodDesc, DSVersion version )
     {
         ComponentContainer<?> container = newContainer();
-        SingleComponentManager<?> icm = new SingleComponentManager( container, new ComponentMethods() );
+        SingleComponentManager<?> icm = new SingleComponentManager( container, new ComponentMethodsImpl() );
         ActivateMethod am = new ActivateMethod( methodName, methodName != null, obj.getClass(), version, false, false );
         am.invoke( obj, new ActivatorParameter( m_ctx, -1 ), null, icm );
         Method m = am.getMethod();
@@ -367,7 +362,7 @@ public class ActivateMethodTest extends TestCase
     private void ensureMethodNotFoundMethod( BaseObject obj, String methodName, DSVersion version )
     {
         ComponentContainer container = newContainer();
-        SingleComponentManager icm = new SingleComponentManager( container, new ComponentMethods() );
+        SingleComponentManager icm = new SingleComponentManager( container, new ComponentMethodsImpl() );
         ActivateMethod am = new ActivateMethod( methodName, methodName != null, obj.getClass(), version, false, false );
         am.invoke( obj, new ActivatorParameter( m_ctx, -1 ), null, icm );
         Method m = am.getMethod();

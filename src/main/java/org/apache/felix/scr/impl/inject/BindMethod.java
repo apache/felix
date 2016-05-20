@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.helper;
+package org.apache.felix.scr.impl.inject;
 
 
 import java.lang.reflect.InvocationTargetException;
@@ -26,6 +26,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.scr.impl.helper.ComponentServiceObjectsHelper;
+import org.apache.felix.scr.impl.helper.MethodResult;
+import org.apache.felix.scr.impl.helper.ReadOnlyDictionary;
+import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.RefPair;
 import org.apache.felix.scr.impl.metadata.DSVersion;
@@ -645,6 +649,10 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
             }
         }
         return true;
+    }
+
+    public MethodResult invoke(Object componentInstance, ComponentContextImpl<?> componentContext, RefPair<?, ?> refPair, MethodResult methodCallFailureResult, SimpleLogger logger) {
+        return invoke(componentInstance, new BindParameters(componentContext, refPair), methodCallFailureResult, logger);
     }
 
     @Override
