@@ -732,8 +732,8 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             // this dynamic update and have the component be deactivated
             if ( !verifyDependencyManagers() )
             {
-                log( LogService.LOG_ERROR,
-                        "Updating the service references caused at least on reference to become unsatisfied, deactivating component",
+                log( LogService.LOG_DEBUG,
+                        "Updating the service references caused at least one reference to become unsatisfied, deactivating component",
                         null );
                 return false;
             }
