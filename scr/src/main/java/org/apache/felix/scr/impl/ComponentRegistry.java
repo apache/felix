@@ -471,21 +471,76 @@ public class ComponentRegistry
         // fall back: bundle is not considered active
         return false;
     }
+    
+    private final ThreadLocal<List<ServiceReference<?>>> circularInfos = new ThreadLocal<List<ServiceReference<?>>> (); 
+    
+    
+    public <T> boolean enterCreate(final ServiceReference<T> serviceReference)
+    {
+        List<ServiceReference<?>> info = circularInfos.get();
+        if (info == null) {
+            circularInfos.set(info = new ArrayList<ServiceReference<?>>());
+        }
+        if (info.contains(serviceReference))
+        {
+            m_logger.log(LogService.LOG_ERROR,
+                "Circular reference detected trying to get service {0}: stack of references: {1}",
+                new Object[] {serviceReference, info},
+                null);
+            return true;
+        }
+        m_logger.log(LogService.LOG_DEBUG,
+            "getService  {0}: stack of references: {1}",
+            new Object[] {serviceReference, info},
+            null);
+        info.add(serviceReference);
+        return false;
+    }
+    
+    public <T> void leaveCreate(final ServiceReference<T> serviceReference)
+    {
+        List<ServiceReference<?>> info = circularInfos.get();
+        if (info != null)
+        {
+            if (!info.isEmpty() && info.iterator().next().equals(serviceReference))
+            {
+                circularInfos.remove();
+            }
+            else
+            {
+                info.remove(serviceReference);
+            } 
+        }
+        
+    }
 
+    /**
+     * Schedule late binding of now-available reference on a different thread.  The late binding cannot occur on this thread
+     * due to service registry circular reference detection. We cannot wait for the late binding before returning from the initial
+     * getService call because of synchronization in the service registry.
+     * @param serviceReference
+     * @param actor
+     */
     public synchronized <T> void missingServicePresent( final ServiceReference<T> serviceReference, ComponentActorThread actor )
     {
         final List<Entry<?, ?>> dependencyManagers = m_missingDependencies.remove( serviceReference );
         if ( dependencyManagers != null )
         {
-            actor.schedule( new Runnable()
+            
+            Runnable runnable = new Runnable()
             {
 
+                @SuppressWarnings("unchecked")
                 public void run()
                 {
                     for ( Entry<?, ?> entry : dependencyManagers )
                     {
                         ((DependencyManager<?, T>)entry.getDm()).invokeBindMethodLate( serviceReference, entry.getTrackingCount() );
                     }
+                    m_logger.log(LogService.LOG_DEBUG,
+                        "Ran {0} asynchronously",
+                        new Object[] {this},
+                        null);
                 }
 
                 @Override
@@ -494,7 +549,12 @@ public class ComponentRegistry
                     return "Late binding task of reference " + serviceReference + " for dependencyManagers " + dependencyManagers;
                 }
 
-            } );
+            } ;
+            m_logger.log(LogService.LOG_DEBUG,
+                "Scheduling runnable {0} asynchronously",
+                new Object[] {runnable},
+                null);
+            actor.schedule( runnable );
         }
     }
 
@@ -503,6 +563,10 @@ public class ComponentRegistry
         //check that the service reference is from scr
         if ( serviceReference.getProperty( ComponentConstants.COMPONENT_NAME ) == null || serviceReference.getProperty( ComponentConstants.COMPONENT_ID ) == null )
         {
+            m_logger.log(LogService.LOG_DEBUG,
+                "Missing service {0} for dependency manager {1} is not a DS service, cannot resolve circular dependency",
+                new Object[] {serviceReference, dependencyManager},
+                null);
             return;
         }
         List<Entry<?, ?>> dependencyManagers = m_missingDependencies.get( serviceReference );
@@ -512,7 +576,11 @@ public class ComponentRegistry
             m_missingDependencies.put( serviceReference, dependencyManagers );
         }
         dependencyManagers.add( new Entry<S, T>( dependencyManager, trackingCount ) );
-    }
+        m_logger.log(LogService.LOG_DEBUG,
+            "Dependency managers {0} waiting for missing service {1}",
+            new Object[] {dependencyManagers, serviceReference},
+            null);
+        }
 
     private static class Entry<S,T>
     {
@@ -533,6 +601,12 @@ public class ComponentRegistry
         public int getTrackingCount()
         {
             return trackingCount;
+        }
+        
+        @Override
+        public String toString() 
+        {
+            return dm.toString() + "@" + trackingCount;
         }
     }
     

@@ -37,6 +37,10 @@ public interface ComponentActivator extends Logger, ExtendedServiceListenerConte
 
     void unregisterComponentId(AbstractComponentManager<?> sAbstractComponentManager);
 
+    <T> boolean enterCreate(ServiceReference<T> reference);
+
+    <T> void leaveCreate(ServiceReference<T> reference);
+
     <S, T> void registerMissingDependency(DependencyManager<S, T> dependencyManager,
                                               ServiceReference<T> serviceReference, int trackingCount);
 

@@ -839,6 +839,16 @@ public class BundleComponentActivator implements ComponentActivator
             }
         }
     }
+    
+    public <T> boolean enterCreate(ServiceReference<T> serviceReference)
+    {
+        return m_componentRegistry.enterCreate(serviceReference);
+    }
+    
+    public <T> void leaveCreate(ServiceReference<T> serviceReference)
+    {
+        m_componentRegistry.leaveCreate(serviceReference);
+    }
 
     public <T> void missingServicePresent(ServiceReference<T> serviceReference)
     {
