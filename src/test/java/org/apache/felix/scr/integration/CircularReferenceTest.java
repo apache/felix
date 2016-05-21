@@ -290,9 +290,9 @@ public class CircularReferenceTest extends ComponentTestBase
         A a = bundleContext.getService( serviceReferenceA );
         assertNotNull( a );
         assertEquals( 1, a.getBs().size());
-  //test currently does not show desired result.              
-//        assertEquals( 1, b.getAs().size() );
-//        assertNotNull( b.getAs().get(0) );
+        delay();
+        assertEquals( 1, b.getAs().size() );
+        assertNotNull( b.getAs().get(0) );
 
     }
 }

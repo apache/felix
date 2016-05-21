@@ -67,8 +67,6 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     // null if properties are not to be overwritten
     private Dictionary<String, Object> m_serviceProperties;
 
-    private final ThreadLocal<Boolean> m_circularReferences = new ThreadLocal<Boolean>();
-
    /**
      * The constructor receives both the activator and the metadata
      * @param componentMethods
@@ -315,7 +313,6 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         else
         {
             componentContext.setImplementationAccessible( true );
-            m_circularReferences.remove();
             //this may cause a getService as properties now match a filter.
             setServiceProperties( result );
         }
@@ -835,13 +832,10 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     @Override
     boolean getServiceInternal(ServiceRegistration<S> serviceRegistration)
     {
-        if (m_circularReferences.get() != null)
+        if ( serviceRegistration != null && getActivator().enterCreate(serviceRegistration.getReference()))
         {
-            log( LogService.LOG_ERROR,  "Circular reference detected, getService returning null", null );
-            dumpThreads();
             return false;
         }
-        m_circularReferences.set( Boolean.TRUE );
         try
         {
             boolean success = true;
@@ -850,15 +844,13 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 ComponentContextImpl<S> componentContext = new ComponentContextImpl<S>(this, this.getBundle(), serviceRegistration);
                 if ( collectDependencies(componentContext))
                 {
-                        log(
-                                LogService.LOG_DEBUG,
-                                "getService (single component manager) dependencies collected.",
-                                null );
+                    log( LogService.LOG_DEBUG,
+                        "getService (single component manager) dependencies collected.",
+                        null );
                 }
                 else
                 {
-                    log(
-                            LogService.LOG_INFO,
+                    log( LogService.LOG_INFO,
                             "Could not obtain all required dependencies, getService returning null",
                             null );
                     success = false;
@@ -889,8 +881,10 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         }
         finally
         {
-            //normally this will have been done after object becomes accessible.  This is double-checking.
-            m_circularReferences.remove();
+            if (serviceRegistration != null)
+            {
+                getActivator().leaveCreate(serviceRegistration.getReference());
+            }
         }
     }
 
