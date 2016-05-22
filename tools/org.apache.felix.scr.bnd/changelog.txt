@@ -1,6 +1,7 @@
 Changes from 1.5.0 to 1.4.0
 ---------------------------
 ** Improvement
+	* [FELIX-5108] - scr bnd plugin: Add option to suppress writing log to filesystem
 ** Bug
     * [FELIX-5074] - Using org.apache.felix.scr.bnd together with maven-bundle-plugin leads to using the wrong bnd version
 
