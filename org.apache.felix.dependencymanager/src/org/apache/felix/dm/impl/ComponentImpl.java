@@ -1313,7 +1313,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     private void unregisterService() {
         if (m_serviceName != null && m_registration != null) {
             try {
-                if (m_bundle != null && (m_bundle.getState() == Bundle.ACTIVE || m_bundle.getState() == Bundle.STOPPING)) {
+                if (m_bundle != null && (m_bundle.getState() == Bundle.STARTING || m_bundle.getState() == Bundle.ACTIVE || m_bundle.getState() == Bundle.STOPPING)) {
                     m_registration.unregister();
                 }
             } catch (IllegalStateException e) { /* Should we really log this ? */}
