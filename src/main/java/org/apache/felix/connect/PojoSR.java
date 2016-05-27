@@ -83,7 +83,7 @@ public class PojoSR implements PojoServiceRegistry
     private final Map<Long, Bundle> m_bundles = new HashMap<Long, Bundle>();
     private final Map<String, Object> bundleConfig;
     private final boolean m_hasVFS;
-    
+
     public static BundleDescriptor createSystemBundle() {
         final Map<String, String> headers = new HashMap<String, String>();
         headers.put(Constants.BUNDLE_SYMBOLICNAME, "org.apache.felix.connect");
@@ -250,7 +250,7 @@ public class PojoSR implements PojoServiceRegistry
             hasVFS = false;
         }
         m_hasVFS = hasVFS;
-        
+
         Collection<BundleDescriptor> scan = (Collection<BundleDescriptor>) config.get(PojoServiceRegistryFactory.BUNDLE_DESCRIPTORS);
 
         if (scan != null)
@@ -327,7 +327,7 @@ public class PojoSR implements PojoServiceRegistry
         Revision r;
         URL url = new URL(desc.getUrl());
         URL u = new URL(desc.getUrl() + "META-INF/MANIFEST.MF");
-        String extF = u.toExternalForm(); 
+        String extF = u.toExternalForm();
         if (extF.startsWith("file:"))
         {
             File root = new File(URLDecoder.decode(url.getFile(), "UTF-8"));
@@ -340,8 +340,9 @@ public class PojoSR implements PojoServiceRegistry
             {
                 String target = ((JarURLConnection) uc).getJarFileURL().toExternalForm();
                 String prefix = null;
-                if (!("jar:" + target + "!/").equals(desc.getUrl()))
+                if (!("jar:" + target + "!/").equals(desc.getUrl()) && desc.getUrl().startsWith("jar:" + target + "!/"))
                 {
+                    System.out.println(desc.getUrl() + " " + target);
                     prefix = desc.getUrl().substring(("jar:" + target + "!/").length());
                 }
                 r = new JarRevision(
@@ -350,7 +351,7 @@ public class PojoSR implements PojoServiceRegistry
                         prefix,
                         uc.getLastModified());
             }
-            else if (m_hasVFS && extF.startsWith("vfs")) 
+            else if (m_hasVFS && extF.startsWith("vfs"))
             {
                 r = new VFSRevision(url, url.openConnection().getLastModified());
             }
