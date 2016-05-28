@@ -1,0 +1,3 @@
+Private-Package: org.apache.felix.dm.itest.bundle2
+Bundle-Activator: org.apache.felix.dm.itest.bundle2.Activator
+Export-Package: org.apache.felix.dm.itest.bundle2
