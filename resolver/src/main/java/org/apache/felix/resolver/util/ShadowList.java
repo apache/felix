@@ -18,23 +18,52 @@
  */
 package org.apache.felix.resolver.util;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.felix.resolver.util.CopyOnWriteList;
+import org.osgi.resource.Capability;
+import org.osgi.service.resolver.HostedCapability;
+import org.osgi.service.resolver.ResolveContext;
 
-public class ShadowList<T> extends CopyOnWriteList<T>
+public class ShadowList extends CandidateSelector
 {
-    private final List<T> m_original;
+    public static  ShadowList createShadowList(CandidateSelector original) {
+        return new ShadowList(original);
+    }
 
-    public ShadowList(List<T> original)
+    private final List<Capability> m_original;
+
+    private ShadowList(CandidateSelector original)
     {
         super(original);
+        m_original = new ArrayList<Capability>(original.getRemainingCandidates());
+    }
+
+    private ShadowList(CandidateSelector shadow, List<Capability> original)
+    {
+        super(shadow);
         m_original = original;
     }
 
-    public List<T> getOriginal()
-    {
-        return m_original;
+    public ShadowList copy() {
+        return new ShadowList(this, m_original);
     }
 
+    public void insertHostedCapability(ResolveContext context, HostedCapability wrappedCapability, HostedCapability toInsertCapability) {
+        checkModifiable();
+        int removeIdx = m_original.indexOf(toInsertCapability.getDeclaredCapability());
+        if (removeIdx != -1)
+        {
+            m_original.remove(removeIdx);
+            unmodifiable.remove(removeIdx);
+        }
+        int insertIdx = context.insertHostedCapability(m_original, toInsertCapability);
+        unmodifiable.add(insertIdx, wrappedCapability);
+    }
+
+    public void replace(Capability origCap, Capability c) {
+        checkModifiable();
+        int idx = unmodifiable.indexOf(origCap);
+        unmodifiable.set(idx, c);
+    }
 }
