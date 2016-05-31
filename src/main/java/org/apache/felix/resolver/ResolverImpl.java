@@ -24,6 +24,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.felix.resolver.util.ArrayMap;
+import org.apache.felix.resolver.util.CandidateSelector;
 import org.apache.felix.resolver.util.OpenHashMap;
 import org.osgi.framework.namespace.*;
 import org.osgi.resource.*;
@@ -219,7 +220,7 @@ public class ResolverImpl implements Resolver
         {
             // Check the root requirement to see if it is a multiple cardinality
             // requirement.
-            List<Capability> candidates = null;
+            CandidateSelector candidates = null;
             Requirement req = usedBlame.m_reqs.get(0);
             if (Util.isMultiple(req))
             {
@@ -231,7 +232,7 @@ public class ResolverImpl implements Resolver
                 }
                 // Get the current candidate list and remove all the offending root
                 // cause candidates from a copy of the current permutation.
-                candidates = m_multipleCardCandidates.clearCandidates(req, usedBlames.getRootCauses(req));
+                candidates = m_multipleCardCandidates.clearMultipleCardinalityCandidates(req, usedBlames.getRootCauses(req));
             }
             // We only are successful if there is at least one candidate left
             // for the requirement

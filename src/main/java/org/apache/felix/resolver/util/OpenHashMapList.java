@@ -18,7 +18,9 @@
  */
 package org.apache.felix.resolver.util;
 
-public class OpenHashMapList<K, V> extends OpenHashMap<K, CopyOnWriteList<V>> {
+import org.osgi.resource.Requirement;
+
+public class OpenHashMapList extends OpenHashMap<Requirement, CandidateSelector> {
 
     public OpenHashMapList() {
         super();
@@ -28,21 +30,15 @@ public class OpenHashMapList<K, V> extends OpenHashMap<K, CopyOnWriteList<V>> {
         super(initialCapacity);
     }
 
-    @SuppressWarnings("unchecked")
-    public OpenHashMapList<K, V> deepClone() {
-        OpenHashMapList<K, V> copy = (OpenHashMapList<K, V>) super.clone();
+    public OpenHashMapList deepClone() {
+        OpenHashMapList copy = (OpenHashMapList) super.clone();
         Object[] values = copy.value;
         for (int i = values.length; i-- > 0;) {
             if (values[i] != null) {
-                values[i] = new CopyOnWriteList<V>((CopyOnWriteList<V>) values[i]);
+                values[i] = ((CandidateSelector) values[i]).copy();
             }
         }
         return copy;
-    }
-
-    @Override
-    protected CopyOnWriteList<V> compute(K key) {
-        return new CopyOnWriteList<V>();
     }
 
 }
