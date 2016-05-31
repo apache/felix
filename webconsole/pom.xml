@@ -116,7 +116,7 @@
                         </Export-Package>
                         <Import-Package>
                             org.json.*;version=0,
-                            javax.servlet.*;version=2.4,
+                            javax.servlet.*;version="[2.4,4)",
                             org.apache.commons.io; version="[1.4,3)",
                             *
                         </Import-Package>
