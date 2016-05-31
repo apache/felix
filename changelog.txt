@@ -1,3 +1,11 @@
+Changes from 4.2.14 to 4.2.16
+-----------------------------
+** Bug
+    * [FELIX-4941] - Configuration Properties not defined in Metatype are lost after update
+    * [FELIX-4795] - Servlet API 3.x not supported 
+    * [FELIX-5223] - [IE11][Edge]: Fields in OSGI Configuration Manager are not editable 
+
+
 Changes from 4.2.12 to 4.2.14
 -----------------------------
 ** Bug
