@@ -20,7 +20,9 @@ package org.apache.felix.webconsole.internal.configuration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Dictionary;
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -273,7 +275,8 @@ class MetaTypeServiceSupport extends MetaTypeSupport
 
         AttributeDefinition[] ad = ocd.getAttributeDefinitions( ObjectClassDefinition.ALL );
         AttributeDefinition[] optionalArray = ocd.getAttributeDefinitions( ObjectClassDefinition.OPTIONAL );
-        List/*<AttributeDefinition>*/ optional = optionalArray == null ? Collections.EMPTY_LIST : Arrays.asList( optionalArray ); 
+        List/*<AttributeDefinition>*/ optional = optionalArray == null ? Collections.EMPTY_LIST : Arrays.asList( optionalArray );
+        final Set metatypeAttributes = new HashSet(ignoreAttrIds);
         if ( ad != null )
         {
             json.key( "properties" ).object(); //$NON-NLS-1$
@@ -286,8 +289,26 @@ class MetaTypeServiceSupport extends MetaTypeSupport
                     boolean isOptional = optional.contains( adi );
                     attributeToJson( json, new MetatypePropertyDescriptor( adi, isOptional ), props.get( attrId ) );
                 }
+                metatypeAttributes.add( attrId );
             }
             json.endObject();
+        }
+        final StringBuffer sb = new StringBuffer();
+        final Enumeration e = props.keys();
+        while ( e.hasMoreElements() )
+        {
+            String key = (String)e.nextElement();
+            if ( !metatypeAttributes.contains(key) ) {
+                if ( sb.length() > 0 )
+                {
+                    sb.append(',');
+                }
+                sb.append(key);
+            }
+        }
+        if ( sb.length() > 0 )
+        {
+            json.key("additionalProperties").value(sb.toString());
         }
     }
 

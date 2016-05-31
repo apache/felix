@@ -122,7 +122,7 @@ function displayConfigForm(obj) {
     
     if (obj.properties)
     {
-        printForm(bodyEl, obj.properties);
+        printForm(bodyEl, obj.properties, obj.additionalProperties);
     }
 
     printConfigurationInfo(parent, obj);
@@ -155,8 +155,11 @@ function displayConfigForm(obj) {
 	return element;
 }
 
-function printForm( /* Element */ parent, /* Object */ properties ) {
+function printForm( /* Element */ parent, /* Object */ properties, additionalProperties ) {
     var propList;
+    if ( additionalProperties != undefined ) {
+    	propList = additionalProperties;
+    }
     for (var prop in properties)
     {
         var attr = properties[prop];

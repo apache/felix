@@ -68,6 +68,9 @@ class ConfigAdminSupport
     private static final Set CONFIG_PROPERTIES_HIDE = new HashSet();
     static {
         CONFIG_PROPERTIES_HIDE.add(PROPERTY_FACTORYCONFIG_NAMEHINT);
+        CONFIG_PROPERTIES_HIDE.add(ConfigurationAdmin.SERVICE_BUNDLELOCATION);
+        CONFIG_PROPERTIES_HIDE.add(ConfigurationAdmin.SERVICE_FACTORYPID);
+        CONFIG_PROPERTIES_HIDE.add(Constants.SERVICE_PID);
     }
     private static final Pattern NAMEHINT_PLACEHOLER_REGEXP = Pattern.compile("\\{([^\\{\\}]*)}");
 
