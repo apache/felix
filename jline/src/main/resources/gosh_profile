@@ -46,6 +46,7 @@ try {
   # set prompt
   prompt = 'g! '
   \#rprompt = { (new java.text.SimpleDateFormat \'$'\u001B\\[90m'\'HH:mm:ss) format (new Date) }
+  secondary-prompt-pattern = '%M%P > '
   # could also be written
   #  \#rprompt = { ${(qq)$(date +$'\u001B\[90m%T')} }
 
