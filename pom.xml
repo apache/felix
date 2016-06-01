@@ -226,6 +226,12 @@
 			<version>1.9</version>
 			<scope>compile</scope>
 		</dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-debug-all</artifactId>
+            <version>5.0.4</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <build>
         <directory>${bundle.build.name}</directory>
