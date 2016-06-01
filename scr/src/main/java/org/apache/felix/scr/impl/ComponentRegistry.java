@@ -415,14 +415,21 @@ public class ComponentRegistry
      */
     public <S> ComponentHolder<S> createComponentHolder( ComponentActivator activator, ComponentMetadata metadata )
     {
-        return new ConfigurableComponentHolder<S>(activator, metadata)
+        return new DefaultConfigurableComponentHolder<S>(activator, metadata);
+    }
+
+    static class DefaultConfigurableComponentHolder<S> extends ConfigurableComponentHolder<S>
+    {
+        public DefaultConfigurableComponentHolder(ComponentActivator activator, ComponentMetadata metadata)
         {
-            @Override
-            protected ComponentMethods createComponentMethods()
-            {
-                return new ComponentMethodsImpl();
-            }
-        };
+            super(activator, metadata);
+        }
+
+        @Override
+        protected ComponentMethods createComponentMethods()
+        {
+            return new ComponentMethodsImpl();
+        }
     }
 
 
