@@ -557,10 +557,10 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         if (logIfNotFound && ! callbackFound && ! (getInstance() instanceof AbstractDecorator)) {
             if (m_logger == null) {
                 System.out.println("\"" + methodName + "\" callback not found on component instances "
-                    + Arrays.toString(getInstances()));
+                    + Arrays.toString(instances));
             } else {
                 m_logger.log(LogService.LOG_ERROR, "\"" + methodName + "\" callback not found on component instances "
-                    + Arrays.toString(getInstances()));
+                    + Arrays.toString(instances));
             }
 
         }
