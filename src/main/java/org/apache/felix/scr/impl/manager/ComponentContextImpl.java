@@ -91,7 +91,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     }
 
 
-    void setImplementationAccessible(boolean implementationAccessible)
+    public void setImplementationAccessible(boolean implementationAccessible)
     {
         this.m_implementationAccessible = implementationAccessible;
         if (implementationAccessible)
