@@ -296,6 +296,7 @@ public class Shell {
                     .parser(new Parser())
                     .expander(new Expander(newSession))
                     .build();
+            reader.setOpt(LineReader.Option.AUTO_FRESH_LINE);
             newSession.put(Shell.VAR_READER, reader);
             newSession.put(Shell.VAR_COMPLETIONS, new HashMap());
         } else {
