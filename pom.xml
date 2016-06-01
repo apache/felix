@@ -33,39 +33,6 @@
         <animal.sniffer.skip>true</animal.sniffer.skip>
         <felix.java.version>8</felix.java.version>
     </properties>
-    <repositories>
-        <repository>
-            <id>temp-sshd</id>
-            <url>https://repository.apache.org/content/repositories/orgapachemina-1021/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>ossrh.sonatype.snapshots.deploy</id>
-            <name>OSSRH snapshot repository</name>
-            <url>https://oss.sonatype.org/content/groups/public/</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>fusesource.snapshots</id>
-            <url>https://repository.jboss.org/nexus/content/repositories/fs-snapshots</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
@@ -87,7 +54,7 @@
         <dependency>
             <groupId>jline</groupId>
             <artifactId>jline</artifactId>
-            <version>3.0.0-SNAPSHOT</version>
+            <version>3.0.0.M1</version>
             <optional>true</optional>
         </dependency>
         <dependency>
