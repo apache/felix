@@ -156,6 +156,10 @@ public abstract class ConfigurableComponentHolder<S> implements ComponentHolder<
 
     protected abstract ComponentMethods createComponentMethods();
 
+    protected ComponentMethods getComponentMethods() {
+        return m_componentMethods;
+    }
+
     protected AbstractComponentManager<S> createComponentManager(boolean factoryConfiguration)
     {
 
