@@ -71,10 +71,11 @@ public class CircularReferenceTest extends ComponentTestBase
     public void test_A11_B0n_immediate_A_first() throws InvalidSyntaxException
     {
         String componentNameA = "2.A.1.1.dynamic";
-        final ComponentConfigurationDTO componentA = findComponentConfigurationByName( componentNameA, ComponentConfigurationDTO.ACTIVE );
+        final ComponentConfigurationDTO componentA = findComponentConfigurationByName( componentNameA, ComponentConfigurationDTO.SATISFIED | ComponentConfigurationDTO.ACTIVE );
         A a = getServiceFromConfiguration(componentA, A.class);
         assertEquals( 1, a.getBs().size());
 
+        delay();
         String componentNameB = "2.B.0.n.dynamic";
         final ComponentConfigurationDTO componentB = findComponentConfigurationByName( componentNameB, ComponentConfigurationDTO.ACTIVE );
         B b = getServiceFromConfiguration(componentB, B.class);
@@ -92,6 +93,7 @@ public class CircularReferenceTest extends ComponentTestBase
         A a = getServiceFromConfiguration(componentA, A.class);
         assertEquals( 1, a.getBs().size());
 
+        delay();
         String componentNameB = "3.B.0.n.dynamic";
         final ComponentConfigurationDTO componentB = findComponentConfigurationByName( componentNameB, ComponentConfigurationDTO.ACTIVE );
         B b = getServiceFromConfiguration(componentB, B.class);
@@ -171,7 +173,7 @@ public class CircularReferenceTest extends ComponentTestBase
     public void test_A11_B01_immediate_A_first() throws InvalidSyntaxException
     {
         String componentNameA = "5.A.1.1.dynamic";
-        final ComponentConfigurationDTO componentA = findComponentConfigurationByName( componentNameA, ComponentConfigurationDTO.ACTIVE );
+        final ComponentConfigurationDTO componentA = findComponentConfigurationByName( componentNameA, ComponentConfigurationDTO.SATISFIED | ComponentConfigurationDTO.ACTIVE );
         A a = getServiceFromConfiguration(componentA, A.class);
         assertEquals( 1, a.getBs().size());
 
@@ -276,14 +278,14 @@ public class CircularReferenceTest extends ComponentTestBase
     public void test_A11_immediate_B0n_delayed_B_first() throws InvalidSyntaxException
     {
     	String componentNameB = "8.B.0.n.dynamic";
-        final ComponentConfigurationDTO componentB = findComponentConfigurationByName( componentNameB, ComponentConfigurationDTO.ACTIVE );
+        final ComponentConfigurationDTO componentB = findComponentConfigurationByName( componentNameB, ComponentConfigurationDTO.SATISFIED | ComponentConfigurationDTO.ACTIVE );
         ServiceReference[] serviceReferencesB = bundleContext.getServiceReferences( B.class.getName(), "(service.pid=" + componentNameB + ")" );
         TestCase.assertEquals( 1, serviceReferencesB.length );
         ServiceReference<B> serviceReferenceB = serviceReferencesB[0];
         B b = bundleContext.getService( serviceReferenceB );
 
         String componentNameA = "8.A.1.1.static";
-        ComponentConfigurationDTO componentA = findComponentConfigurationByName( componentNameA, ComponentConfigurationDTO.SATISFIED );
+        ComponentConfigurationDTO componentA = findComponentConfigurationByName( componentNameA, ComponentConfigurationDTO.SATISFIED | ComponentConfigurationDTO.ACTIVE );
         ServiceReference[] serviceReferencesA = bundleContext.getServiceReferences( A.class.getName(), "(service.pid=" + componentNameA + ")" );
         TestCase.assertEquals( 1, serviceReferencesA.length );
         ServiceReference<A> serviceReferenceA = serviceReferencesA[0];

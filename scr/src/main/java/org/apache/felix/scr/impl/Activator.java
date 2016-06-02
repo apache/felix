@@ -468,13 +468,13 @@ public class Activator extends AbstractExtender implements SimpleLogger
         log(LogService.LOG_DEBUG, m_bundle, msg, t);
     }
 
-    @Override
+//    @Override
     public void log(int level, String message, Throwable ex)
     {
         log(level, null, message, ex);
     }
 
-    @Override
+//    @Override
     public void log(int level, String pattern, Object[] arguments, Throwable ex)
     {
         if (isLogEnabled(level))

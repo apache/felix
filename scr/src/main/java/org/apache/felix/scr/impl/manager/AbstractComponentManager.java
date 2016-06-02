@@ -221,7 +221,8 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     final long getLockTimeout()
     {
         ComponentActivator activator = getActivator();
-        if ( activator != null )
+        //for tests....
+        if ( activator != null && activator.getConfiguration() != null )
         {
             return activator.getConfiguration().lockTimeout();
         }

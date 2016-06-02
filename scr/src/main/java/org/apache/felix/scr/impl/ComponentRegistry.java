@@ -479,21 +479,31 @@ public class ComponentRegistry
         return false;
     }
     
-    private final ThreadLocal<List<ServiceReference<?>>> circularInfos = new ThreadLocal<List<ServiceReference<?>>> (); 
+    private final ThreadLocal<List<ServiceReference<?>>> circularInfos = new ThreadLocal<List<ServiceReference<?>>> ()
+    {
+
+        @Override
+        protected List<ServiceReference<?>> initialValue()
+        {
+            return new ArrayList<ServiceReference<?>>();
+        }
+    }; 
     
     
+    /**
+     * Track getService calls by service reference.
+     * @param serviceReference
+     * @return true is we have encountered a circular dependency, false otherwise.
+     */
     public <T> boolean enterCreate(final ServiceReference<T> serviceReference)
     {
         List<ServiceReference<?>> info = circularInfos.get();
-        if (info == null) {
-            circularInfos.set(info = new ArrayList<ServiceReference<?>>());
-        }
         if (info.contains(serviceReference))
         {
             m_logger.log(LogService.LOG_ERROR,
-                "Circular reference detected trying to get service {0}: stack of references: {1}",
-                new Object[] {serviceReference, info},
-                null);
+                "Circular reference detected trying to get service {0}\n stack of references: {1}",
+                new Object[] {serviceReference, new Info(info)},
+                new Exception("stack trace"));
             return true;
         }
         m_logger.log(LogService.LOG_DEBUG,
@@ -504,6 +514,40 @@ public class ComponentRegistry
         return false;
     }
     
+
+    private class Info 
+    {
+        
+        private final List<ServiceReference<?>> info;
+        
+        
+        public Info(List<ServiceReference<?>> info)
+        {
+            this.info = info;
+        }
+
+
+        @Override
+        public String toString()
+        {
+            StringBuffer sb = new StringBuffer();
+            for (ServiceReference<?> sr: info)
+            {
+                sb.append("ServiceReference: ").append(sr).append("\n");
+                List<Entry<?, ?>> entries = m_missingDependencies.get(sr);
+                if (entries != null)
+                {
+                    for (Entry<?, ?> entry: entries)
+                    {
+                        sb.append("    Dependency: ").append(entry.getDm()).append("\n");
+                    }
+                }
+            }
+            return sb.toString();
+        }
+        
+    }
+        
     public <T> void leaveCreate(final ServiceReference<T> serviceReference)
     {
         List<ServiceReference<?>> info = circularInfos.get();

@@ -64,7 +64,7 @@ public class ActivateSignatureTest extends ComponentTestBase
             TestCase.assertTrue( "Expecting component " + component.name + " to be enabled", component
                 .defaultEnabled );
 
-            ComponentConfigurationDTO cc = findComponentConfigurationByName(component.name, -1);
+            ComponentConfigurationDTO cc = findComponentConfigurationByName(component.name, 0);
             TestCase.assertEquals( "Expecting component " + component.name + " to be active",
             		ComponentConfigurationDTO.ACTIVE, cc.state );
             

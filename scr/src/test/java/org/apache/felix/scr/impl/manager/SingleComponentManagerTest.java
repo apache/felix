@@ -25,6 +25,8 @@ import static org.junit.Assert.assertSame;
 import java.lang.reflect.Field;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.imageio.spi.ServiceRegistry;
+
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.inject.ComponentMethodsImpl;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager.State;
@@ -34,10 +36,138 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Filter;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.ConfigurationAdmin;
 
 public class SingleComponentManagerTest
 {
+    
+    private ServiceRegistration serviceRegistration = Mockito.mock(ServiceRegistration.class);
+    private ServiceReference serviceReference = Mockito.mock(ServiceReference.class);
+    private ComponentActivator componentActivator = new ComponentActivator() {
+
+        public boolean isLogEnabled(int level)
+        {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        public void log(int level, String pattern, Object[] arguments, ComponentMetadata metadata, Long componentId,
+            Throwable ex)
+        {
+            // TODO Auto-generated method stub
+            
+        }
+
+        public void log(int level, String message, ComponentMetadata metadata, Long componentId, Throwable ex)
+        {
+            // TODO Auto-generated method stub
+            
+        }
+
+        public void addServiceListener(String className, Filter filter,
+            ExtendedServiceListener<ExtendedServiceEvent> listener)
+        {
+            // TODO Auto-generated method stub
+            
+        }
+
+        public void removeServiceListener(String className, Filter filter,
+            ExtendedServiceListener<ExtendedServiceEvent> listener)
+        {
+            // TODO Auto-generated method stub
+            
+        }
+
+        public BundleContext getBundleContext()
+        {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        public boolean isActive()
+        {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        public ScrConfiguration getConfiguration()
+        {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        public void schedule(Runnable runnable)
+        {
+            // TODO Auto-generated method stub
+            
+        }
+
+        public long registerComponentId(AbstractComponentManager<?> sAbstractComponentManager)
+        {
+            // TODO Auto-generated method stub
+            return 0;
+        }
+
+        public void unregisterComponentId(AbstractComponentManager<?> sAbstractComponentManager)
+        {
+            // TODO Auto-generated method stub
+            
+        }
+
+        public <T> boolean enterCreate(ServiceReference<T> reference)
+        {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        public <T> void leaveCreate(ServiceReference<T> reference)
+        {
+            // TODO Auto-generated method stub
+            
+        }
+
+        public <S, T> void registerMissingDependency(DependencyManager<S, T> dependencyManager,
+            ServiceReference<T> serviceReference, int trackingCount)
+        {
+            // TODO Auto-generated method stub
+            
+        }
+
+        public <T> void missingServicePresent(ServiceReference<T> serviceReference)
+        {
+            // TODO Auto-generated method stub
+            
+        }
+
+        public void enableComponent(String name)
+        {
+            // TODO Auto-generated method stub
+            
+        }
+
+        public void disableComponent(String name)
+        {
+            // TODO Auto-generated method stub
+            
+        }
+
+        public RegionConfigurationSupport setRegionConfigurationSupport(ServiceReference<ConfigurationAdmin> reference)
+        {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        public void unsetRegionConfigurationSupport(RegionConfigurationSupport rcs)
+        {
+            // TODO Auto-generated method stub
+            
+        }
+        
+    };
+    
     @Test
     public void testGetService() throws Exception {
         ComponentMetadata cm = new ComponentMetadata(DSVersion.DS13);
@@ -47,6 +177,7 @@ public class SingleComponentManagerTest
         @SuppressWarnings("unchecked")
         ComponentContainer<Object> cc = Mockito.mock(ComponentContainer.class);
         Mockito.when(cc.getComponentMetadata()).thenReturn(cm);
+        Mockito.when(cc.getActivator()).thenReturn(componentActivator);
 
         SingleComponentManager<Object> scm = new SingleComponentManager<Object>(cc, new ComponentMethodsImpl()) {
             @Override
@@ -70,7 +201,7 @@ public class SingleComponentManagerTest
         f.set(scm, cci);
 
         scm.setState(scm.getState(), State.unsatisfiedReference);
-        assertSame(implObj, scm.getService(null, null));
+        assertSame(implObj, scm.getService(b, serviceRegistration));
 
         Field u = SingleComponentManager.class.getDeclaredField("m_useCount");
         u.setAccessible(true);
@@ -88,6 +219,7 @@ public class SingleComponentManagerTest
         @SuppressWarnings("unchecked")
         ComponentContainer<Object> cc = Mockito.mock(ComponentContainer.class);
         Mockito.when(cc.getComponentMetadata()).thenReturn(cm);
+        Mockito.when(cc.getActivator()).thenReturn(componentActivator);
 
         SingleComponentManager<?> scm = new SingleComponentManager<Object>(cc, new ComponentMethodsImpl()) {
             @Override
@@ -96,9 +228,13 @@ public class SingleComponentManagerTest
                 return true;
             }
         };
+        BundleContext bc = Mockito.mock(BundleContext.class);
+        Bundle b = Mockito.mock(Bundle.class);
+        Mockito.when(b.getBundleContext()).thenReturn(bc);
+
         scm.setState(scm.getState(), State.unsatisfiedReference);
         assertNull("m_componentContext is null, this should not cause an NPE",
-                scm.getService(null, null));
+                scm.getService(b, serviceRegistration));
 
         Field u = SingleComponentManager.class.getDeclaredField("m_useCount");
         u.setAccessible(true);
