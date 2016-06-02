@@ -118,7 +118,7 @@ public class PojoSR implements PojoServiceRegistry
         services.put(FrameworkStartLevel.class, new FrameworkStartLevelImpl());
         return new BundleDescriptor(
                 PojoSR.class.getClassLoader(),
-                "felix-connect",
+                "System Bundle",
                 headers,
                 revision,
                 services
