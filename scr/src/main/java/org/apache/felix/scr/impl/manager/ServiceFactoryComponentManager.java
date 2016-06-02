@@ -109,6 +109,7 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
             //cannot obtain service from a required reference
             return null;
         }
+        State previousState = getState();
         // private ComponentContext and implementation instances
         S service = createImplementationObject( bundle, new SetImplementationObject<S>()
         {
@@ -139,7 +140,7 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
         } 
         else 
         {
-            m_activated = true;
+             setState(previousState, State.active);
         }
 
         return service;
@@ -165,9 +166,10 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
         {
             serviceContexts.remove( service );
             // if this was the last use of the component, go back to REGISTERED state
-            if ( serviceContexts.isEmpty() && getState() == STATE_ACTIVE )
+            State previousState;
+            if ( serviceContexts.isEmpty() && (previousState = getState()) == State.active )
             {
-                m_activated = false;
+                setState(previousState, State.satisfied);
             }
         }
     }

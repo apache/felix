@@ -53,6 +53,7 @@ import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentConstants;
+import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 import org.osgi.service.log.LogService;
 import org.osgi.util.promise.Deferred;
 import org.osgi.util.promise.Promise;
@@ -73,6 +74,56 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         "Configuration deleted",
         "Component disabled",
         "Bundle stopped"};
+    
+    protected enum State {
+        //disposed is a final state, normally only for factory components
+        disposed(-1, false, false, false), 
+        //Since enable/disable on the component description are asynchronous, this tracks the component configuration state
+        //which may differ while the enable/disable is occurring.
+        disabled(-1, false, false, false), 
+        unsatisfiedReference(ComponentConfigurationDTO.UNSATISFIED_REFERENCE, true, false, false), 
+        satisfied(ComponentConfigurationDTO.SATISFIED, true, true, false), 
+        active(ComponentConfigurationDTO.ACTIVE, true, true, true);
+    
+        private final int specState;
+        
+        private final boolean enabled;
+
+        private final boolean satisfed;
+        
+        private final boolean actve;
+
+        private State(int specState, boolean enabled, boolean satisfied, boolean active)
+        {
+            this.specState = specState;
+            this.enabled = enabled;
+            this.satisfed = satisfied;
+            this.actve = active;
+        }
+
+        public int getSpecState()
+        {
+            return specState;
+        }
+
+        public boolean isEnabled()
+        {
+            return enabled;
+        }
+
+        public boolean isSatisfied()
+        {
+            return satisfed;
+        }
+
+        public boolean isActive()
+        {
+            return actve;
+        }
+        
+        
+                
+    }
 
     protected final ComponentContainer<S> m_container;
 
@@ -100,11 +151,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
      */
     private final AtomicReference< Deferred<Void>> m_enabledLatchRef = new AtomicReference<Deferred<Void>>( new Deferred<Void>() );
 
-    protected volatile boolean m_internalEnabled;
-
-	private volatile boolean m_satisfied;
-
-    protected volatile boolean m_disposed;
+    private final AtomicReference<State> state = new AtomicReference<State>(State.disabled);
 
     //service event tracking
     private int m_floor;
@@ -115,7 +162,6 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     private final Condition m_missingCondition = m_missingLock.newCondition();
     private final Set<Integer> m_missing = new TreeSet<Integer>( );
 
-    volatile boolean m_activated;
 
     protected final ReentrantReadWriteLock m_activationLock = new ReentrantReadWriteLock();
 
@@ -387,10 +433,9 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         try
         {
             enableLatch = enableLatchWait();
-            enableInternal();
             if ( !async )
             {
-                activateInternal( );
+                enableInternal();
             }
         }
         finally
@@ -413,7 +458,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
                 {
                     try
                     {
-                        activateInternal( );
+                        enableInternal();
                     }
                     finally
                     {
@@ -481,9 +526,8 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
             enableLatch = enableLatchWait();
             if ( !async )
             {
-                deactivateInternal( ComponentConstants.DEACTIVATION_REASON_DISABLED, true, false );
+                disableInternal();
             }
-            disableInternal();
         }
         finally
         {
@@ -505,7 +549,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
                 {
                     try
                     {
-                        deactivateInternal( ComponentConstants.DEACTIVATION_REASON_DISABLED, true, false );
+                        disableInternal();
                     }
                     finally
                     {
@@ -609,17 +653,13 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         return false;
     }
 
-    protected boolean isSatisfied()
-    {
-        return m_satisfied;
-    }
-
 
     //-------------- atomic transition methods -------------------------------
 
     final void enableInternal()
     {
-        if ( m_disposed )
+        State previousState;
+        if ( (previousState = getState()) == State.disposed )
         {
             throw new IllegalStateException( "enable: " + this );
         }
@@ -629,31 +669,39 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
                     null );
             return;
         }
+        if (previousState.isEnabled())
+        {
+            log( LogService.LOG_WARNING, "enable  called but component is already in state {0}", new Object[] {previousState},
+                    null );
+            return;
+        }
 
         registerComponentId();
         log( LogService.LOG_DEBUG, "Updating target filters", null );
         updateTargets( getProperties() );
 
-        m_internalEnabled = true;
+        setState(previousState, State.unsatisfiedReference);
         log( LogService.LOG_DEBUG, "Component enabled", null );
+        activateInternal( );
     }
 
     final void activateInternal( )
     {
         log( LogService.LOG_DEBUG, "ActivateInternal",
                 null );
-        if ( m_disposed )
+        State s = getState();
+        if ( s == State.disposed )
         {
             log( LogService.LOG_DEBUG, "ActivateInternal: disposed",
                     null );
             return;
         }
-        if ( m_activated ) {
+        if ( s == State.active ) {
             log( LogService.LOG_DEBUG, "ActivateInternal: already activated",
                     null );
             return;
         }
-        if ( !isInternalEnabled())
+        if ( !s.isEnabled())
         {
             log( LogService.LOG_DEBUG, "Component is not enabled; not activating component",
                     null );
@@ -681,18 +729,19 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         try
         {
             // Double check conditions now that we have obtained the lock
-            if ( m_disposed )
+            s = getState();
+            if ( s == State.disposed )
             {
                 log( LogService.LOG_DEBUG, "ActivateInternal: disposed",
                         null );
                 return;
             }
-            if ( m_activated ) {
+            if ( s == State.active ) {
                 log( LogService.LOG_DEBUG, "ActivateInternal: already activated",
                         null );
                 return;
             }
-            if ( !isInternalEnabled() )
+            if ( !s.isEnabled() )
             {
                 log( LogService.LOG_DEBUG, "Component is not enabled; not activating component",
                         null );
@@ -733,13 +782,18 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
      */
     final void deactivateInternal( int reason, boolean disable, boolean dispose )
     {
-        synchronized ( this )
+        if ( !getState().isEnabled() )
         {
-            if ( m_disposed )
-            {
-                return;
-            }
-            m_disposed = dispose;
+            return;
+        }
+        State nextState = State.unsatisfiedReference;
+        if (disable) 
+        {
+            nextState = State.disabled;
+        }
+        if (dispose)
+        {
+            nextState = State.disposed;
         }
         log( LogService.LOG_DEBUG, "Deactivating component", null );
 
@@ -748,7 +802,9 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         obtainActivationReadLock(  );
         try
         {
+            //doDeactivate may trigger a state change from active to satisfied as the registration is removed.
             doDeactivate( reason, disable || m_factoryInstance );
+            setState(getState(), nextState);
         }
         finally
         {
@@ -769,11 +825,10 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
             {
                 log( LogService.LOG_DEBUG, "Component deactivation occuring on another thread", null );
             }
-            obtainStateLock(  );
+            obtainStateLock( );
             try
             {
-            	m_satisfied = false;
-                m_activated = false;
+//              setState(previousState, State.unsatisfiedReference);
                 deleteComponent( reason );
                 deactivateDependencyManagers();
                 if ( disable )
@@ -794,11 +849,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
     final void disableInternal()
     {
-        m_internalEnabled = false;
-        if ( m_disposed )
-        {
-            throw new IllegalStateException( "Cannot disable a disposed component " + getName() );
-        }
+        deactivateInternal( ComponentConstants.DEACTIVATION_REASON_DISABLED, true, false );
         unregisterComponentId();
     }
 
@@ -850,15 +901,15 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
             }
             final Dictionary<String, Object> serviceProperties = getServiceProperties();
             try {
-				ServiceRegistration<S> serviceRegistration = (ServiceRegistration<S>) bundleContext
-						.registerService(services, getService(),
-								serviceProperties);
-				return serviceRegistration;
-			} catch (ServiceException e) {
-				log(LogService.LOG_ERROR, "Unexpected error registering component service with properties {0}",
-						new Object[] {serviceProperties}, e);
-				return null;
-			}
+                ServiceRegistration<S> serviceRegistration = (ServiceRegistration<S>) bundleContext
+                        .registerService(services, getService(),
+                                serviceProperties);
+                return serviceRegistration;
+            } catch (ServiceException e) {
+                log(LogService.LOG_ERROR, "Unexpected error registering component service with properties {0}",
+                        new Object[] {serviceProperties}, e);
+                return null;
+            }
         }
 
         @Override
@@ -1117,6 +1168,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
     protected boolean verifyDependencyManagers()
     {
+        State previousState = getState();
         // indicates whether all dependencies are satisfied
         boolean satisfied = true;
 
@@ -1149,7 +1201,12 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
             }
         }
 
-        m_satisfied = satisfied;
+        //Only try to change the state if the satisfied attribute is different.
+        //We only succeed if no one else has changed the state meanwhile.
+        if (satisfied != previousState.isSatisfied())
+        {
+            setState(previousState, satisfied ? State.satisfied : State.unsatisfiedReference);
+        }
         return satisfied;
     }
 
@@ -1164,7 +1221,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
     public List<? extends ReferenceManager<S, ?>> getReferenceManagers()
     {
-    	return m_dependencyManagers;
+        return m_dependencyManagers;
     }
 
     /**
@@ -1213,8 +1270,8 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     }
 
     /* (non-Javadoc)
-	 * @see org.apache.felix.scr.impl.manager.ComponentManager#getProperties()
-	 */
+     * @see org.apache.felix.scr.impl.manager.ComponentManager#getProperties()
+     */
     public abstract Map<String, Object> getProperties();
 
     public abstract void setServiceProperties( Dictionary<String, ?> serviceProperties );
@@ -1336,30 +1393,31 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         return m_container.getComponentMetadata();
     }
 
-    /**
-     * TODO now returning bizarre mix of values!!
-     */
-    public int getState()
+    public int getSpecState()
     {
-        if (m_disposed)
-        {
-            return STATE_DISPOSED;
-        }
-        if ( !m_internalEnabled)
-        {
-            return STATE_DISABLED;
-        }
-        if ( !m_satisfied )
-        {
-            return STATE_UNSATISFIED_REFERENCE;
-        }
-        if ( hasInstance() )
-        {
-            return STATE_ACTIVE;
-        }
-        return STATE_SATISFIED;
+        return getState().getSpecState();
     }
+    
+    State getState()
+    {
+        State s = state.get();
+        log( LogService.LOG_DEBUG, "Querying state {0}", new Object[] {s}, null);
+        return s;
+    }
+    
+    void setState(State previousState, State newState)
+    {
+        if (state.compareAndSet(previousState, newState))
+        {
+            log( LogService.LOG_DEBUG, "Changed state from {0} to {1}", new Object[] {previousState, newState}, null);
+        }
+        else
+        {
+            log( LogService.LOG_DEBUG, "Did not change state from {0} to {1}: current state {2}", new Object[] {previousState, newState, state.get()}, null);
+        }
 
+    }
+    
     abstract boolean hasInstance();
 
     public void setServiceProperties( MethodResult methodResult )
@@ -1375,13 +1433,8 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
     abstract void preDeregister();
 
-    boolean isInternalEnabled()
-    {
-        return m_internalEnabled;
-    }
+    public abstract void reconfigure(Map<String, Object> configuration, boolean configurationDeleted);
 
-	public abstract void reconfigure(Map<String, Object> configuration, boolean configurationDeleted);
-
-	public abstract void getComponentManagers(List<AbstractComponentManager<S>> cms);
+    public abstract void getComponentManagers(List<AbstractComponentManager<S>> cms);
 
 }

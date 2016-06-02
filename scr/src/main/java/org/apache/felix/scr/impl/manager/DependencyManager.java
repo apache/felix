@@ -267,7 +267,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             refPair.markDeleted();
             if ( !cardinalitySatisfied( getTracker().getServiceCount() ) )
             {
-                m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, false );
+                deactivateComponentManager();
             }
         }
 
@@ -368,7 +368,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 lastRefPair = refPair;
                 lastRefPairTrackingCount = trackingCount;
                 tracked( trackingCount );
-                m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, false );
+                deactivateComponentManager();
                 lastRefPair = null;
                 m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic removed (deactivate) {2}", new Object[] {getName(), trackingCount, serviceReference}, null );
             }
@@ -451,7 +451,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 m_componentManager.log( LogService.LOG_DEBUG,
                         "Dependency Manager: Static dependency on {0}/{1} is broken", new Object[]
                         {getName(), m_dependencyMetadata.getInterface()}, null );
-                m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, false );
+                deactivateComponentManager();
                 //event may be null during initial operations.
                 if (event != null)
                 {
@@ -477,7 +477,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             tracked( trackingCount );
             if ( reactivate )
             {
-                m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, false );
+                deactivateComponentManager();
                 if (event != null)
                 {
                     event.addComponentManager(m_componentManager);
@@ -497,7 +497,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 m_componentManager.log( LogService.LOG_DEBUG,
                         "Dependency Manager: Static dependency on {0}/{1} is broken", new Object[]
                         {getName(), m_dependencyMetadata.getInterface()}, null );
-                m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, false );
+                deactivateComponentManager();
                 //try to reactivate after ref is no longer tracked.
                 if (event != null)
                 {
@@ -509,7 +509,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 m_componentManager.log( LogService.LOG_DEBUG,
                         "Dependency Manager: Static dependency on {0}/{1} is broken", new Object[]
                         {getName(), m_dependencyMetadata.getInterface()}, null );
-                m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, false );
+                deactivateComponentManager();
             }
             //This is unlikely
             ungetService( refPair );
@@ -586,7 +586,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             tracked( trackingCount );
             if ( reactivate )
             {
-                m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, false );
+                deactivateComponentManager();
                 if (event != null)
                 {
                     event.addComponentManager(m_componentManager);
@@ -609,7 +609,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                     m_componentManager.log( LogService.LOG_DEBUG,
                         "Dependency Manager: Static dependency on {0}/{1} is broken", new Object[]
                             { getName(), m_dependencyMetadata.getInterface() }, null );
-                    m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, false );
+                    deactivateComponentManager();
 
                     // FELIX-2368: immediately try to reactivate
                     if (event != null)
@@ -624,7 +624,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 m_componentManager.log( LogService.LOG_DEBUG,
                         "Dependency Manager: Static dependency on {0}/{1} is broken", new Object[]
                         {getName(), m_dependencyMetadata.getInterface()}, null );
-                m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, false );
+                deactivateComponentManager();
             }
             ungetService( refPair );
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticReluctant removed {2} (exit)", new Object[] {getName(), trackingCount, serviceReference}, null );
@@ -833,7 +833,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 this.trackingCount = trackingCount;
                 tracked( trackingCount );
                 untracked = false;
-                m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, false );
+                deactivateComponentManager();
             }
             if ( oldRefPair != null )
             {
@@ -935,7 +935,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 }
                 if ( reactivate )
                 {
-                    m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, false );
+                    deactivateComponentManager();
                     if (event != null)
                     {
                         event.addComponentManager(m_componentManager);
@@ -975,7 +975,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             tracked( trackingCount );
             if ( reactivate )
             {
-                m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, false );
+                deactivateComponentManager();
                 synchronized ( sync )
                 {
                     if (refPair == this.refPair)
@@ -1008,7 +1008,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             }
             if ( reactivate )
             {
-                m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, false );
+                deactivateComponentManager();
                 synchronized ( sync )
                 {
                     if (refPair == this.refPair)
@@ -2148,6 +2148,11 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             return new SinglePrototypeRefPair<S, T>(m_componentManager.getBundleContext(), serviceReference);
         }
         return new MultiplePrototypeRefPair<S, T>(m_componentManager.getBundleContext(), serviceReference);
+    }
+
+    private void deactivateComponentManager()
+    {
+        m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, false );
     }
 
 }

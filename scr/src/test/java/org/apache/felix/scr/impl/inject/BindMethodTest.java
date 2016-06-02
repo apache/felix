@@ -480,6 +480,11 @@ public class BindMethodTest extends TestCase
             {
             }
 
+            public boolean isEnabled()
+            {
+                return false;
+            }
+
         };
         return container;
     }

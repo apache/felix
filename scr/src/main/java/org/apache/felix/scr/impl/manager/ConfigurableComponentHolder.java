@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.helper.SimpleLogger;
@@ -70,7 +71,7 @@ public abstract class ConfigurableComponentHolder<S> implements ComponentHolder<
      * The {@link ComponentMetadata} describing the held component(s)
      */
     private final ComponentMetadata m_componentMetadata;
-
+    
     /** the targeted pids corresponding to the pids specified in the config metadata, except possibly for the single
      * factory pid
      */
