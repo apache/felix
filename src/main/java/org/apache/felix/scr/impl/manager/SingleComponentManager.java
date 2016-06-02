@@ -313,6 +313,13 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         else
         {
             componentContext.setImplementationAccessible( true );
+            ComponentActivator activator = getActivator();
+            if ( activator != null )
+            {
+                //call to leaveCreate must be done here since the change in service properties may cause a getService,
+                //so the threadLocal must be cleared first.
+                activator.leaveCreate(getServiceReference());
+            }
             //this may cause a getService as properties now match a filter.
             setServiceProperties( result );
         }
@@ -807,17 +814,30 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         }
         boolean decrement = true;
         try {
-            boolean success = getServiceInternal(serviceRegistration);
-            ComponentContextImpl<S> componentContext = m_componentContext;
-            if ( success && componentContext != null)
-            {
-                decrement = false;
-                return componentContext.getImplementationObject( true );
-            }
-            else
+            if ( getActivator().enterCreate(serviceRegistration.getReference()))
             {
                 return null;
             }
+            try
+            {
+                boolean success = getServiceInternal(serviceRegistration);
+                ComponentContextImpl<S> componentContext = m_componentContext;
+                if ( success && componentContext != null)
+                {
+                    decrement = false;
+                    return componentContext.getImplementationObject( true );
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            finally
+            {
+                //This is backup.  Normally done in createComponent.
+                getActivator().leaveCreate(serviceRegistration.getReference());
+            }
+            
         }
         finally
         {
@@ -832,61 +852,47 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     @Override
     boolean getServiceInternal(ServiceRegistration<S> serviceRegistration)
     {
-        if ( serviceRegistration != null && getActivator().enterCreate(serviceRegistration.getReference()))
+        boolean success = true;
+        if ( m_componentContext == null )
         {
-            return false;
-        }
-        try
-        {
-            boolean success = true;
-            if ( m_componentContext == null )
+            ComponentContextImpl<S> componentContext = new ComponentContextImpl<S>(this, this.getBundle(), serviceRegistration);
+            if ( collectDependencies(componentContext))
             {
-                ComponentContextImpl<S> componentContext = new ComponentContextImpl<S>(this, this.getBundle(), serviceRegistration);
-                if ( collectDependencies(componentContext))
+                log( LogService.LOG_DEBUG,
+                    "getService (single component manager) dependencies collected.",
+                    null );
+            }
+            else
+            {
+                log( LogService.LOG_INFO,
+                    "Could not obtain all required dependencies, getService returning null",
+                    null );
+                success = false;
+            }
+            obtainStateLock(  );
+            try
+            {
+                if ( m_componentContext == null )
                 {
-                    log( LogService.LOG_DEBUG,
-                        "getService (single component manager) dependencies collected.",
-                        null );
-                }
-                else
-                {
-                    log( LogService.LOG_INFO,
-                            "Could not obtain all required dependencies, getService returning null",
-                            null );
-                    success = false;
-                }
-                obtainStateLock(  );
-                try
-                {
-                    if ( m_componentContext == null )
+                    State previousState = getState();
+                    //state should be "Registered"
+                    S result = getService(componentContext );
+                    if ( result == null )
                     {
-                        State previousState = getState();
-                        //state should be "Registered"
-                        S result = getService(componentContext );
-                        if ( result == null )
-                        {
-                            success = false;;
-                        }
-                        else
-                        {
-                            setState(previousState, State.active);
-                        }
+                        success = false;;
+                    }
+                    else
+                    {
+                        setState(previousState, State.active);
                     }
                 }
-                finally
-                {
-                    releaseStateLock(  );
-                }
             }
-            return success;
-        }
-        finally
-        {
-            if (serviceRegistration != null)
+            finally
             {
-                getActivator().leaveCreate(serviceRegistration.getReference());
+                releaseStateLock(  );
             }
         }
+        return success;
     }
 
     private S getService(ComponentContextImpl<S> componentContext)

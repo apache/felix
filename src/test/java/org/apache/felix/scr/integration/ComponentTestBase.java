@@ -43,6 +43,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -51,6 +52,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.inject.Inject;
@@ -118,7 +120,7 @@ public abstract class ComponentTestBase
     protected static String paxRunnerVmOption = null;
 
     //To investigate any problems at all set to "debug"
-    protected static String DS_LOGLEVEL = "warn";
+    protected static String DS_LOGLEVEL = "debug";
 
     protected static String bsnVersionUniqueness = "single";
 
@@ -264,11 +266,24 @@ public abstract class ComponentTestBase
         }
         ComponentDescriptionDTO cd = scr.getComponentDescriptionDTO(b, name);
         Collection<ComponentConfigurationDTO> ccs = scr.getComponentConfigurationDTOs(cd);
-        if (expected != -1)
+        
+        if (expected != 0)
         {
+            String sep = "[";
+            StringBuffer sb = new StringBuffer();
+            for (Map.Entry<Integer, String> entry: STATES.entrySet()) 
+            {
+                if ((expected & entry.getKey()) != 0)
+                {
+                    sb.append(sep).append(entry.getValue());
+                    sep = ", ";
+                }
+            }
+            sb.append("]");
         	for (ComponentConfigurationDTO cc: ccs)
         	{
-        		Assert.assertEquals( "for ComponentConfiguration name: " + cc.description.name + " properties" + cc.properties + "Expected state " + STATES.get(expected) + " but was " + STATES.get(cc.state), expected, cc.state);
+        		Assert.assertTrue( "for ComponentConfiguration name: " + cc.description.name + " properties" + cc.properties + "Expected one of state " + sb.toString() + " but was " + STATES.get(cc.state), 
+        		    (expected & cc.state) == cc.state);
         	}
         }
         return ccs;
