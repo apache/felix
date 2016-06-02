@@ -126,8 +126,6 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         cm.reconfigure( m_configuration, false );
         // enable
         cm.enableInternal();
-        //activate immediately
-        cm.activateInternal( );
 
         ComponentInstance instance;
         if ( getComponentMetadata().isPersistentFactoryComponent() ) 

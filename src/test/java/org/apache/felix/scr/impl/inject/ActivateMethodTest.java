@@ -319,6 +319,11 @@ public class ActivateMethodTest extends TestCase
             public void disposed(SingleComponentManager component)
             {
             }
+
+            public boolean isEnabled()
+            {
+                return false;
+            }
             
         };
         return container;

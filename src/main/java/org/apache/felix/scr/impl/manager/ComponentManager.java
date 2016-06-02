@@ -37,7 +37,7 @@ public interface ComponentManager<S> {
 
 	long getId();
 
-	int getState();
+	int getSpecState();
 	
 	List<? extends ReferenceManager<S, ?>> getReferenceManagers();
 	

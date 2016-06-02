@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.inject.ComponentMethodsImpl;
+import org.apache.felix.scr.impl.manager.AbstractComponentManager.State;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.junit.Test;
@@ -68,7 +69,7 @@ public class SingleComponentManagerTest
         f.setAccessible(true);
         f.set(scm, cci);
 
-        scm.m_internalEnabled = true;
+        scm.setState(scm.getState(), State.unsatisfiedReference);
         assertSame(implObj, scm.getService(null, null));
 
         Field u = SingleComponentManager.class.getDeclaredField("m_useCount");
@@ -95,7 +96,7 @@ public class SingleComponentManagerTest
                 return true;
             }
         };
-        scm.m_internalEnabled = true;
+        scm.setState(scm.getState(), State.unsatisfiedReference);
         assertNull("m_componentContext is null, this should not cause an NPE",
                 scm.getService(null, null));
 

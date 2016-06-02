@@ -138,7 +138,7 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
 		dto.description = description;
 		dto.id = manager.getId();
 		dto.properties = new HashMap<String, Object>(manager.getProperties());//TODO deep copy?
-		dto.state = manager.getState();
+		dto.state = manager.getSpecState();
 		return dto;
 	}
 

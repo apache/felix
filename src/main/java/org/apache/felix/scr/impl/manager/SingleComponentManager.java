@@ -438,29 +438,29 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 props.putAll(m_factoryProperties);
                 if (getComponentMetadata().getDSVersion().isDS13() && m_factoryProperties.containsKey(Constants.SERVICE_PID))
                 {
-                	final List<String> servicePids = new ArrayList<String>();
-                	final Object configPropServicePids = m_configurationProperties.get(Constants.SERVICE_PID);
-                	if ( configPropServicePids instanceof List )
-                	{
-                		servicePids.addAll((List)configPropServicePids);
-                	}
-                	else
-                	{
-                		servicePids.add(configPropServicePids.toString());
-                	}
+                    final List<String> servicePids = new ArrayList<String>();
+                    final Object configPropServicePids = m_configurationProperties.get(Constants.SERVICE_PID);
+                    if ( configPropServicePids instanceof List )
+                    {
+                        servicePids.addAll((List)configPropServicePids);
+                    }
+                    else
+                    {
+                        servicePids.add(configPropServicePids.toString());
+                    }
                     if (m_factoryProperties.get(Constants.SERVICE_PID) instanceof String)
                     {
                         servicePids.add((String)m_factoryProperties.get(Constants.SERVICE_PID));
                     }
 
-                	if ( servicePids.size() == 1 )
-                	{
-                		props.put(Constants.SERVICE_PID, servicePids.get(0));
-                	}
-                	else
-                	{
-                		props.put(Constants.SERVICE_PID, servicePids);
-                	}
+                    if ( servicePids.size() == 1 )
+                    {
+                        props.put(Constants.SERVICE_PID, servicePids.get(0));
+                    }
+                    else
+                    {
+                        props.put(Constants.SERVICE_PID, servicePids);
+                    }
                 }
             }
 
@@ -613,7 +613,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
             // reactivate the component to ensure it is provided with the
             // configuration data
-            if ( m_disposed || !m_internalEnabled )
+            if ( !getState().isEnabled() )
             {
                 // nothing to do for inactive components, leave this method
                 log( LogService.LOG_DEBUG, "Component can not be activated since it is in state {0}", new Object[] { getState() }, null );
@@ -626,7 +626,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             obtainActivationWriteLock( );
             try
             {
-                if ( !isSatisfied() && !getComponentMetadata().isConfigurationIgnored() )
+                if ( !getState().isSatisfied() && !getComponentMetadata().isConfigurationIgnored() )
                 {
                     log( LogService.LOG_DEBUG, "Attempting to activate unsatisfied component", null );
                     updateTargets( getProperties() );
@@ -678,11 +678,11 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
     private boolean modify(boolean configurationDeleted)
     {
-    	//0 SCR 112.7.1 If configuration is deleted, and version is < 1.3 and no flag set, then deactivate unconditionally.
-    	// For version 1.3 and later, or with a flag, more sensible behavior is allowed.
-    	if ( configurationDeleted && !getComponentMetadata().isDeleteCallsModify()){
-    		return false;
-    	}
+        //0 SCR 112.7.1 If configuration is deleted, and version is < 1.3 and no flag set, then deactivate unconditionally.
+        // For version 1.3 and later, or with a flag, more sensible behavior is allowed.
+        if ( configurationDeleted && !getComponentMetadata().isDeleteCallsModify()){
+            return false;
+        }
 
         // 1. no live update if there is no declared method
         if ( getComponentMetadata().getModified() == null )
@@ -860,6 +860,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 {
                     if ( m_componentContext == null )
                     {
+                        State previousState = getState();
                         //state should be "Registered"
                         S result = getService(componentContext );
                         if ( result == null )
@@ -868,7 +869,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                         }
                         else
                         {
-                            m_activated = true;
+                            setState(previousState, State.active);
                         }
                     }
                 }
@@ -891,7 +892,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     private S getService(ComponentContextImpl<S> componentContext)
     {
         //should be write locked
-        if (!isInternalEnabled())
+        if (!getState().isEnabled())
         {
             return null;
         }
@@ -932,18 +933,15 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             // be kept (FELIX-3039)
             if (  m_useCount.decrementAndGet() == 0 && !isImmediate() && !keepInstances() )
             {
-                ungetService( );
+                State previousState = getState();
+                deleteComponent( ComponentConstants.DEACTIVATION_REASON_UNSPECIFIED );
+                setState(previousState, State.satisfied);
             }
         }
         finally
         {
             releaseStateLock(  );
         }
-    }
-
-    private void ungetService( )
-    {
-        deleteComponent( ComponentConstants.DEACTIVATION_REASON_UNSPECIFIED );
     }
 
     private boolean keepInstances()
