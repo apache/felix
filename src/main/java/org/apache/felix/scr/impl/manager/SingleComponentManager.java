@@ -321,7 +321,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 activator.leaveCreate(getServiceReference());
             }
             //this may cause a getService as properties now match a filter.
-            setServiceProperties( result );
+            setServiceProperties( result, null );
         }
 
         return implementationObject;
@@ -344,7 +344,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                     componentContext, reason, null, this );
             if ( result != null )
             {
-                setServiceProperties( result );
+                setServiceProperties( result, null );
             }
             // 2. Unbind any bound services
             for ( DependencyManager<S, ?> md: getReversedDependencyManagers() )
@@ -748,7 +748,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             // 6. update service registration properties if we didn't just do it
             if ( result.hasResult() )
             {
-                setServiceProperties( result );
+                setServiceProperties( result, null );
             }
             else
             {
