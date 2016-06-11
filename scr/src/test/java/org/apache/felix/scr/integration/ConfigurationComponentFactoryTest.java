@@ -18,24 +18,17 @@
  */
 package org.apache.felix.scr.integration;
 
-
-import java.io.IOException;
 import java.util.Dictionary;
 
-import junit.framework.TestCase;
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
-import org.osgi.service.component.ComponentConstants;
-import org.osgi.service.component.ComponentException;
 import org.osgi.service.component.ComponentFactory;
-import org.osgi.service.component.ComponentInstance;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
+import junit.framework.TestCase;
 
 /**
  * Tests of nonstandard ComponentFactory behavior
@@ -55,8 +48,6 @@ public class ConfigurationComponentFactoryTest extends ComponentTestBase
         // paxRunnerVmOption = DEBUG_VM_OPTION;
     }
 
-
-
     @Test
     public void test_non_spec_component_factory_with_factory_configuration() throws Exception
     {
@@ -65,23 +56,23 @@ public class ConfigurationComponentFactoryTest extends ComponentTestBase
         final String componentname = "factory.component";
         final String componentfactory = "factory.component.factory";
 
-        getConfigurationsDisabledThenEnable(componentname, 0, -1);
+        getConfigurationsDisabledThenEnable( componentname, 0, -1 );
 
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
-        final ComponentFactory factory = getComponentFactory(componentfactory);
+        final ComponentFactory factory = getComponentFactory( componentfactory );
 
-        final String factoryConfigPid = createFactoryConfiguration( componentname );
+        final String factoryConfigPid = createFactoryConfiguration( componentname, "?" );
         delay();
 
         TestCase.assertNotNull( SimpleComponent.INSTANCE );
         TestCase.assertEquals( PROP_NAME, SimpleComponent.INSTANCE.getProperty( PROP_NAME ) );
 
         // check registered components
-        checkConfigurationCount(componentname, 1, ComponentConfigurationDTO.ACTIVE);
+        checkConfigurationCount( componentname, 1, ComponentConfigurationDTO.ACTIVE );
 
         // modify the configuration
-        Configuration config = getConfigurationAdmin().getConfiguration( factoryConfigPid );
+        Configuration config = getConfigurationAdmin().getConfiguration( factoryConfigPid, "?" );
         Dictionary<String, Object> props = config.getProperties();
         props.put( PROP_NAME, PROP_NAME_FACTORY );
         config.update( props );
@@ -92,15 +83,14 @@ public class ConfigurationComponentFactoryTest extends ComponentTestBase
         TestCase.assertEquals( PROP_NAME_FACTORY, SimpleComponent.INSTANCE.getProperty( PROP_NAME ) );
 
         // check registered components
-        checkConfigurationCount(componentname, 1, ComponentConfigurationDTO.ACTIVE);
+        checkConfigurationCount( componentname, 1, ComponentConfigurationDTO.ACTIVE );
 
         // disable the factory
-        disableAndCheck(componentname);
+        disableAndCheck( componentname );
         delay();
 
         // enabled the factory, factory configuration results in component instance
-        getConfigurationsDisabledThenEnable(componentname, 1, ComponentConfigurationDTO.ACTIVE);
-
+        getConfigurationsDisabledThenEnable( componentname, 1, ComponentConfigurationDTO.ACTIVE );
 
         // delete the configuration
         getConfigurationAdmin().getConfiguration( factoryConfigPid ).delete();
@@ -109,7 +99,7 @@ public class ConfigurationComponentFactoryTest extends ComponentTestBase
         // factory is enabled but instance has been removed
 
         // check registered components
-        checkConfigurationCount(componentname, 0, ComponentConfigurationDTO.ACTIVE);
+        checkConfigurationCount( componentname, 0, ComponentConfigurationDTO.ACTIVE );
     }
 
 }
