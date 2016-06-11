@@ -55,8 +55,8 @@ public class ComponentDisposeTest extends ComponentTestBase
         getConfigurationsDisabledThenEnable(factoryPid, 0, ComponentConfigurationDTO.ACTIVE);//there should be none
 
         // create two factory configurations expecting two components
-        final String pid0 = createFactoryConfiguration( factoryPid );
-        final String pid1 = createFactoryConfiguration( factoryPid );
+        final String pid0 = createFactoryConfiguration( factoryPid, "?" );
+        final String pid1 = createFactoryConfiguration( factoryPid, "?" );
         delay();
 
         Collection<ComponentConfigurationDTO> ccs = findComponentConfigurationsByName(factoryPid, ComponentConfigurationDTO.ACTIVE);

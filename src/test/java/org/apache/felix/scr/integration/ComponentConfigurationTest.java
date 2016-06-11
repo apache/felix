@@ -506,8 +506,8 @@ public class ComponentConfigurationTest extends ComponentTestBase
         TestCase.assertTrue( SimpleComponent.INSTANCES.isEmpty() );
 
         // create two factory configurations expecting two components
-        final String pid0 = createFactoryConfiguration( factoryPid );
-        final String pid1 = createFactoryConfiguration( factoryPid );
+        final String pid0 = createFactoryConfiguration( factoryPid, "?" );
+        final String pid1 = createFactoryConfiguration( factoryPid, "?" );
         delay();
 
         // expect two active components, //TODO WTF?? only first is active, second is disabled
@@ -538,8 +538,8 @@ public class ComponentConfigurationTest extends ComponentTestBase
         deleteFactoryConfigurations( factoryPid );
 
         // create two factory configurations expecting two components
-        final String pid0 = createFactoryConfiguration( factoryPid );
-        final String pid1 = createFactoryConfiguration( factoryPid );
+        final String pid0 = createFactoryConfiguration( factoryPid, "?" );
+        final String pid1 = createFactoryConfiguration( factoryPid, "?" );
         delay();
 
         getConfigurationsDisabledThenEnable(factoryPid, 2, ComponentConfigurationDTO.ACTIVE);
@@ -570,8 +570,8 @@ public class ComponentConfigurationTest extends ComponentTestBase
         // no component config exists without configuration
 
         // create two factory configurations expecting two components
-        final String pid0 = createFactoryConfiguration( factoryPid );
-        final String pid1 = createFactoryConfiguration( factoryPid );
+        final String pid0 = createFactoryConfiguration( factoryPid, "?" );
+        final String pid1 = createFactoryConfiguration( factoryPid, "?" );
         delay();
 
         // expect two components, all active
@@ -583,7 +583,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
 
 
         // create a configuration
-        final String pid3 = createFactoryConfiguration( factoryPid );
+        final String pid3 = createFactoryConfiguration( factoryPid, "?" );
         delay();
 
         getConfigurationsDisabledThenEnable(factoryPid, 3, ComponentConfigurationDTO.ACTIVE);

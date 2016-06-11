@@ -535,7 +535,7 @@ public abstract class ComponentTestBase
         }
     }
 
-    protected String createFactoryConfiguration(String factoryPid)
+    protected String createFactoryConfiguration(String factoryPid, String bundleLocation)
     {
         ConfigurationAdmin ca = getConfigurationAdmin();
         try
