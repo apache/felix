@@ -483,10 +483,6 @@ public class OsgiManager extends GenericServlet
                 throw new IOException(x.toString());
             }
         }
-
-        // ensure response has been sent back and response is committed
-        // (we are authorative for our URL space and no other servlet should interfere)
-        res.flushBuffer();
     }
 
     private void ensureLocaleCookieSet(HttpServletRequest request, HttpServletResponse response, Locale locale) {
