@@ -266,18 +266,54 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 "Whether TLS renegotiation is allowed (true by default)",
                 false,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_RENEGOTIATION_ALLOWED)));
-        
+
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_SESSION_COOKIE_HTTP_ONLY,
                 "Session Cookie httpOnly",
                 "Session Cookie httpOnly (true by default)",
                 true,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_SESSION_COOKIE_HTTP_ONLY)));
-        
+
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_SESSION_COOKIE_SECURE,
                 "Session Cookie secure",
                 "Session Cookie secure (false by default)",
                 false,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_SESSION_COOKIE_SECURE)));
+
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_SERVLET_SESSION_ID_PATH_PARAMETER_NAME,
+                "Session Id path parameter",
+                "Defaults to jsessionid. If set to null or \"none\" no URL rewriting will be done.",
+                "jsessionid",
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_SERVLET_SESSION_ID_PATH_PARAMETER_NAME)));
+
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_SERVLET_CHECK_REMOTE_SESSION_ENCODING,
+                "Check remote session encoding",
+                "If true, Jetty will add JSESSIONID parameter even when encoding external urls with calls to encodeURL() (true by default)",
+                true,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_SERVLET_CHECK_REMOTE_SESSION_ENCODING)));
+
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_SERVLET_SESSION_COOKIE_NAME,
+                "Session Cookie Name",
+                "Session Cookie Name",
+                "JSESSIONID",
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_SERVLET_SESSION_COOKIE_NAME)));
+
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_SERVLET_SESSION_DOMAIN,
+                "Session Domain",
+                "If this property is set, then it is used as the domain for session cookies. If it is not set, then no domain is specified for the session cookie. Default is none.",
+                null,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_SERVLET_SESSION_DOMAIN)));
+
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_SERVLET_SESSION_PATH,
+                "Session Path",
+                "If this property is set, then it is used as the path for the session cookie. Default is context path.",
+                null,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_SERVLET_SESSION_DOMAIN)));
+
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_SERVLET_SESSION_MAX_AGE,
+                "Session Max Age",
+                "Max age for the session cookie. Default is -1.",
+                -1,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_SERVLET_SESSION_MAX_AGE)));
 
         return new ObjectClassDefinition()
         {
