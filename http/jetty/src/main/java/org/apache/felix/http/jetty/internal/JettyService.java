@@ -510,15 +510,15 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         final SessionManager manager = context.getSessionHandler().getSessionManager();
 
         manager.setMaxInactiveInterval(this.config.getSessionTimeout() * 60);
-        manager.setSessionIdPathParameterName(this.config.getProperty(SessionManager.__SessionIdPathParameterNameProperty, SessionManager.__DefaultSessionIdPathParameterName));
-        manager.setCheckingRemoteSessionIdEncoding(this.config.getBooleanProperty(SessionManager.__CheckRemoteSessionEncoding, true));
+        manager.setSessionIdPathParameterName(this.config.getProperty(JettyConfig.FELIX_JETTY_SERVLET_SESSION_ID_PATH_PARAMETER_NAME, SessionManager.__DefaultSessionIdPathParameterName));
+        manager.setCheckingRemoteSessionIdEncoding(this.config.getBooleanProperty(JettyConfig.FELIX_JETTY_SERVLET_CHECK_REMOTE_SESSION_ENCODING, true));
         manager.setSessionTrackingModes(Collections.singleton(SessionTrackingMode.COOKIE));
 
         SessionCookieConfig cookieConfig = manager.getSessionCookieConfig();
-        cookieConfig.setName(this.config.getProperty(SessionManager.__SessionCookieProperty, SessionManager.__DefaultSessionCookie));
-        cookieConfig.setDomain(this.config.getProperty(SessionManager.__SessionDomainProperty, SessionManager.__DefaultSessionDomain));
-        cookieConfig.setPath(this.config.getProperty(SessionManager.__SessionPathProperty, context.getContextPath()));
-        cookieConfig.setMaxAge(this.config.getIntProperty(SessionManager.__MaxAgeProperty, -1));
+        cookieConfig.setName(this.config.getProperty(JettyConfig.FELIX_JETTY_SERVLET_SESSION_COOKIE_NAME, SessionManager.__DefaultSessionCookie));
+        cookieConfig.setDomain(this.config.getProperty(JettyConfig.FELIX_JETTY_SERVLET_SESSION_DOMAIN, SessionManager.__DefaultSessionDomain));
+        cookieConfig.setPath(this.config.getProperty(JettyConfig.FELIX_JETTY_SERVLET_SESSION_PATH, context.getContextPath()));
+        cookieConfig.setMaxAge(this.config.getIntProperty(JettyConfig.FELIX_JETTY_SERVLET_SESSION_MAX_AGE, -1));
         cookieConfig.setHttpOnly(this.config.getBooleanProperty(JettyConfig.FELIX_JETTY_SESSION_COOKIE_HTTP_ONLY, true));
         cookieConfig.setSecure(this.config.getBooleanProperty(JettyConfig.FELIX_JETTY_SESSION_COOKIE_SECURE, false));
     }

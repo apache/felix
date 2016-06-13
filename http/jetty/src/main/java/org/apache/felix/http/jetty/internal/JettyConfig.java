@@ -143,6 +143,24 @@ public final class JettyConfig
     
     /** Felix specific property to configure the session cookie secure flag */
     public static final String FELIX_JETTY_SESSION_COOKIE_SECURE = "org.apache.felix.https.jetty.session.cookie.secure";
+    
+    /** Felix specific property to configure session id path parameter*/
+    public static final String FELIX_JETTY_SERVLET_SESSION_ID_PATH_PARAMETER_NAME = "org.eclipse.jetty.servlet.SessionIdPathParameterName";
+
+    /** Felix specific property to configure whether JSESSIONID parameter will be added when encoding external URLs */
+    public static final String FELIX_JETTY_SERVLET_CHECK_REMOTE_SESSION_ENCODING = "org.eclipse.jetty.servlet.CheckingRemoteSessionIdEncoding";
+
+    /** Felix specific property to configure session cookie name */
+    public static final String FELIX_JETTY_SERVLET_SESSION_COOKIE_NAME = "org.eclipse.jetty.servlet.SessionCookie";
+
+    /** Felix specific property to configure session domain */
+    public static final String FELIX_JETTY_SERVLET_SESSION_DOMAIN = "org.eclipse.jetty.servlet.SessionDomain";
+
+    /**  Felix specific property to configure session path */
+    public static final String FELIX_JETTY_SERVLET_SESSION_PATH = "org.eclipse.jetty.servlet.SessionPath";
+
+    /**  Felix specific property to configure session max age */
+    public static final String FELIX_JETTY_SERVLET_SESSION_MAX_AGE = "org.eclipse.jetty.servlet.MaxAge";
 
     private static String validateContextPath(String ctxPath)
     {
