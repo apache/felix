@@ -18,8 +18,12 @@ package org.apache.felix.converter.impl;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Array;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -56,6 +60,7 @@ public class JsonEncodingImpl implements Encoding {
         return encode(object);
     }
 
+    @SuppressWarnings("rawtypes")
     public String encode(Object obj) {
         if (obj == null) {
             return ignoreNull() ? "" : "null";
@@ -63,6 +68,10 @@ public class JsonEncodingImpl implements Encoding {
 
         if (obj instanceof Map) {
             return encodeMap((Map) obj);
+        } else if (obj instanceof Collection) {
+            return encodeCollection((Collection) obj);
+        } else if (obj.getClass().isArray()) {
+            return encodeCollection(asCollection(obj));
         } else if (obj instanceof Number) {
             return obj.toString();
         } else if (obj instanceof Boolean) {
@@ -72,6 +81,34 @@ public class JsonEncodingImpl implements Encoding {
         return "\"" + converter.convert(obj).to(String.class) + "\"";
     }
 
+    private Collection<?> asCollection(Object arr) {
+        // Arrays.asList() doesn't work for primitive arrays
+        int len = Array.getLength(arr);
+        List<Object> l = new ArrayList<>(len);
+        for (int i=0; i<len; i++) {
+            l.add(Array.get(arr, i));
+        }
+        return l;
+    }
+
+    private String encodeCollection(Collection<?> collection) {
+        StringBuilder sb = new StringBuilder("[");
+
+        boolean first = true;
+        for (Object o : collection) {
+            if (first)
+                first = false;
+            else
+                sb.append(',');
+
+            sb.append(encode(o));
+        }
+
+        sb.append("]");
+        return sb.toString();
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private String encodeMap(Map m) {
         StringBuilder sb = new StringBuilder("{");
         for (Entry<?,?> entry : (Set<Entry>) m.entrySet()) {

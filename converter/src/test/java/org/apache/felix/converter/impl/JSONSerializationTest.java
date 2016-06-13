@@ -23,7 +23,9 @@ import java.util.Map;
 
 import org.junit.Test;
 
-public class SerializationTest {
+import static org.junit.Assert.assertEquals;
+
+public class JSONSerializationTest {
     @Test
     public void testComplexMapSerialization() {
         Map<String, Object> m = new HashMap<>();
@@ -38,6 +40,17 @@ public class SerializationTest {
         m1.put("b", "hello");
         m.put("simpleObject", m1);
 
+        String expected = "{\"bKey\":true,"
+                + "\"simpleArray\":[1,2,3],"
+                + "\"iKey\":42,"
+                + "\"sKey\":\"a string\","
+                + "\"simpleObject\":{\"a\":1,\"b\":\"hello\"},"
+                + "\"noKey\":null}";
+        assertEquals(expected, new JsonCodecImpl().encode(m).toString());
+    }
+
+    @Test
+    public void testComplexMapSerialization2() {
         Map<String, Object> m2 = new HashMap<>();
         m2.put("yes", Boolean.TRUE);
         m2.put("no", Collections.singletonMap("maybe", false));
@@ -47,5 +60,10 @@ public class SerializationTest {
                 Collections.singletonMap("x", "y"),
                 Collections.singletonMap("x", "b")));
         cm.put("embedded", m2);
+
+        String expected = "{\"list\":[{\"x\":\"y\"},{\"x\":\"b\"}],"
+                + "\"embedded\":"
+                + "{\"no\":{\"maybe\":false},\"yes\":true}}";
+        assertEquals(expected, new JsonCodecImpl().encode(cm).toString());
     }
 }
