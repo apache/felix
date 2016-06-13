@@ -154,8 +154,9 @@ public abstract class ComponentTestBase
                 + "org.apache.felix.scr.integration.components.concurrency,"
                 + "org.apache.felix.scr.integration.components.deadlock,"
                 + "org.apache.felix.scr.integration.components.felix3680,"
-                + "org.apache.felix.scr.integration.components.felix4984,"
                 + "org.apache.felix.scr.integration.components.felix3680_2,"
+                + "org.apache.felix.scr.integration.components.felix4984,"
+                + "org.apache.felix.scr.integration.components.felix5248,"
                 + "org.apache.felix.scr.integration.components.felix5276" );
         builder.setHeader( "Import-Package", "org.apache.felix.scr.component" );
         builder.setHeader( "Bundle-ManifestVersion", "2" );
