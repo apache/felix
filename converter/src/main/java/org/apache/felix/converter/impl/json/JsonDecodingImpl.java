@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.converter.impl;
+package org.apache.felix.converter.impl.json;
 
 import java.io.InputStream;
 import java.lang.reflect.Method;

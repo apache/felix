@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.converter.impl;
+package org.apache.felix.converter.impl.json;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -24,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.felix.converter.impl.ConverterImpl;
 import org.osgi.service.converter.Codec;
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.Decoding;

@@ -14,11 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.converter.impl;
+package org.apache.felix.converter.impl.json;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.felix.converter.impl.ConverterImpl;
+import org.apache.felix.converter.impl.json.JsonCodecImpl;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.junit.After;
@@ -30,7 +32,7 @@ import org.osgi.service.converter.Converter;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class JsonCodecTest {
+public class JSONCodecTest {
     private Converter converter;
 
     @Before

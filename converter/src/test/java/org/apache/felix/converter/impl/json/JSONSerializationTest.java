@@ -14,13 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.converter.impl;
+package org.apache.felix.converter.impl.json;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.felix.converter.impl.json.JsonCodecImpl;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
