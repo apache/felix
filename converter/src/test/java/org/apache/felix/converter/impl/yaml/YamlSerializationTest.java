@@ -16,6 +16,8 @@
  */
 package org.apache.felix.converter.impl.yaml;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -50,5 +52,29 @@ public class YamlSerializationTest {
                 "  a: 1\n" +
                 "  b: 'hello'";
         assertEquals(expected, new YamlCodecImpl().encode(m).toString().trim());
+    }
+
+    @Test
+    public void testComplexMapSerialization2() {
+        Map<String, Object> m2 = new LinkedHashMap<>();
+        m2.put("yes", Boolean.TRUE);
+        m2.put("no", Collections.singletonMap("maybe", false));
+
+        Map<String, Object> cm = new LinkedHashMap<>();
+        cm.put("list", Arrays.asList(
+                Collections.singletonMap("x", "y"),
+                Collections.singletonMap("x", "b")));
+        cm.put("embedded", m2);
+
+        String expected = "list: \n" +
+                "  - \n" +
+                "    x: 'y'\n" +
+                "  - \n" +
+                "    x: 'b'\n" +
+                "embedded: \n" +
+                "  yes: true\n" +
+                "  no: \n" +
+                "    maybe: false";
+        assertEquals(expected, new YamlCodecImpl().encode(cm).toString().trim());
     }
 }

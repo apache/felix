@@ -108,7 +108,7 @@ public class YamlEncodingImpl implements Encoding {
             sb.append("\n");
             sb.append(getIdentPrefix(level));
             sb.append("- ");
-            sb.append(encode(o));
+            sb.append(encode(o, level + 1));
         }
         return sb.toString();
     }
@@ -117,22 +117,14 @@ public class YamlEncodingImpl implements Encoding {
     private String encodeMap(Map m, int level) {
         StringBuilder sb = new StringBuilder();
         for (Entry entry : (Set<Entry>) m.entrySet()) {
+            sb.append("\n");
             sb.append(getIdentPrefix(level));
             sb.append(entry.getKey().toString());
             sb.append(": ");
-            sb.append(needsNewlineBefore(entry.getValue()));
             sb.append(encode(entry.getValue(), level + 1));
-            sb.append("\n");
         }
 
         return sb.toString();
-    }
-
-    private Object needsNewlineBefore(Object value) {
-        if (value instanceof Map)
-            return "\n";
-
-        return "";
     }
 
     private String getIdentPrefix(int level) {
