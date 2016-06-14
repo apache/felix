@@ -18,7 +18,11 @@ package org.apache.felix.converter.impl.yaml;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Array;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -75,6 +79,10 @@ public class YamlEncodingImpl implements Encoding {
 
         if (obj instanceof Map) {
             return encodeMap((Map) obj, level);
+        } else if (obj instanceof Collection) {
+            return encodeCollection((Collection) obj, level);
+        } else if (obj.getClass().isArray()) {
+            return encodeCollection(asCollection(obj), level);
         } else if (obj instanceof Number)  {
             return obj.toString();
         } else if (obj instanceof Boolean) {
@@ -82,6 +90,27 @@ public class YamlEncodingImpl implements Encoding {
         }
 
         return "'" + converter.convert(obj).to(String.class) + "'";
+    }
+
+    private Collection<?> asCollection(Object arr) {
+        // Arrays.asList() doesn't work for primitive arrays
+        int len = Array.getLength(arr);
+        List<Object> l = new ArrayList<>(len);
+        for (int i=0; i<len; i++) {
+            l.add(Array.get(arr, i));
+        }
+        return l;
+    }
+
+    private String encodeCollection(Collection<?> collection, int level) {
+        StringBuilder sb = new StringBuilder();
+        for (Object o : collection) {
+            sb.append("\n");
+            sb.append(getIdentPrefix(level));
+            sb.append("- ");
+            sb.append(encode(o));
+        }
+        return sb.toString();
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })

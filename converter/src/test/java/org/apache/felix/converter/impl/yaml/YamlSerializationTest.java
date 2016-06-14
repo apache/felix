@@ -16,7 +16,6 @@
  */
 package org.apache.felix.converter.impl.yaml;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -34,12 +33,22 @@ public class YamlSerializationTest {
         m.put("noKey", null);
         m.put("simpleArray", new int[] {1,2,3});
 
-        Map<String, Object> m1 = new HashMap<>();
+        Map<String, Object> m1 = new LinkedHashMap<>();
         m1.put("a", 1L);
         m1.put("b", "hello");
         m.put("simpleObject", m1);
 
-        String expected = "";
-        assertEquals(expected, new YamlCodecImpl().encode(m).toString());
+        String expected = "sKey: 'a string'\n" +
+                "iKey: 42\n" +
+                "bKey: true\n" +
+                "noKey: \n" +
+                "simpleArray: \n" +
+                "  - 1\n" +
+                "  - 2\n" +
+                "  - 3\n" +
+                "simpleObject: \n" +
+                "  a: 1\n" +
+                "  b: 'hello'";
+        assertEquals(expected, new YamlCodecImpl().encode(m).toString().trim());
     }
 }

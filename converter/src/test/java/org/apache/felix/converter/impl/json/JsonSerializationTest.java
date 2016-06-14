@@ -18,10 +18,9 @@ package org.apache.felix.converter.impl.json;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.apache.felix.converter.impl.json.JsonCodecImpl;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -29,34 +28,34 @@ import static org.junit.Assert.assertEquals;
 public class JsonSerializationTest {
     @Test
     public void testComplexMapSerialization() {
-        Map<String, Object> m = new HashMap<>();
+        Map<String, Object> m = new LinkedHashMap<>();
         m.put("sKey", "a string");
         m.put("iKey", 42);
         m.put("bKey",  true);
         m.put("noKey", null);
         m.put("simpleArray", new int[] {1,2,3});
 
-        Map<String, Object> m1 = new HashMap<>();
+        Map<String, Object> m1 = new LinkedHashMap<>();
         m1.put("a", 1L);
         m1.put("b", "hello");
         m.put("simpleObject", m1);
 
-        String expected = "{\"bKey\":true,"
-                + "\"simpleArray\":[1,2,3],"
+        String expected = "{\"sKey\":\"a string\","
                 + "\"iKey\":42,"
-                + "\"sKey\":\"a string\","
-                + "\"simpleObject\":{\"a\":1,\"b\":\"hello\"},"
-                + "\"noKey\":null}";
+                + "\"bKey\":true,"
+                + "\"noKey\":null,"
+                + "\"simpleArray\":[1,2,3],"
+                + "\"simpleObject\":{\"a\":1,\"b\":\"hello\"}}";
         assertEquals(expected, new JsonCodecImpl().encode(m).toString());
     }
 
     @Test
     public void testComplexMapSerialization2() {
-        Map<String, Object> m2 = new HashMap<>();
+        Map<String, Object> m2 = new LinkedHashMap<>();
         m2.put("yes", Boolean.TRUE);
         m2.put("no", Collections.singletonMap("maybe", false));
 
-        Map<String, Object> cm = new HashMap<>();
+        Map<String, Object> cm = new LinkedHashMap<>();
         cm.put("list", Arrays.asList(
                 Collections.singletonMap("x", "y"),
                 Collections.singletonMap("x", "b")));
@@ -64,7 +63,7 @@ public class JsonSerializationTest {
 
         String expected = "{\"list\":[{\"x\":\"y\"},{\"x\":\"b\"}],"
                 + "\"embedded\":"
-                + "{\"no\":{\"maybe\":false},\"yes\":true}}";
+                + "{\"yes\":true,\"no\":{\"maybe\":false}}}";
         assertEquals(expected, new JsonCodecImpl().encode(cm).toString());
     }
 }
