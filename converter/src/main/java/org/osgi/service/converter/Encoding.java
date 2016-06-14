@@ -17,6 +17,7 @@ package org.osgi.service.converter;
 
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Interface to specify the target of the encoding operation.
@@ -39,7 +40,9 @@ public interface Encoding {
 	 *
 	 * @param out The output stream to use.
 	 */
-	void to(OutputStream out);
+    default void to(OutputStream os) {
+        to(os, StandardCharsets.UTF_8);
+    }
 
 	/**
 	 * Use an output stream as the target of the encoding operation.

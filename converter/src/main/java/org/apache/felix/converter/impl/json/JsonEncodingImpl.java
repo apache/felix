@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -47,9 +46,9 @@ public class JsonEncodingImpl implements Encoding {
     }
 
     @Override
-    public void to(OutputStream os) {
+    public void to(OutputStream os, Charset charset) {
         try {
-            os.write(encode(object).getBytes(StandardCharsets.UTF_8));
+            os.write(encode(object).getBytes(charset));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -61,7 +60,7 @@ public class JsonEncodingImpl implements Encoding {
     }
 
     @SuppressWarnings("rawtypes")
-    public String encode(Object obj) {
+    private String encode(Object obj) {
         if (obj == null) {
             return ignoreNull() ? "" : "null";
         }
@@ -111,7 +110,7 @@ public class JsonEncodingImpl implements Encoding {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private String encodeMap(Map m) {
         StringBuilder sb = new StringBuilder("{");
-        for (Entry<?,?> entry : (Set<Entry>) m.entrySet()) {
+        for (Entry entry : (Set<Entry>) m.entrySet()) {
             if (entry.getKey() == null || entry.getValue() == null)
                 if (ignoreNull())
                     continue;
@@ -132,12 +131,6 @@ public class JsonEncodingImpl implements Encoding {
     public Encoding pretty() {
         // TODO Auto-generated method stub
         return null;
-    }
-
-    @Override
-    public void to(OutputStream out, Charset charset) {
-        // TODO Auto-generated method stub
-
     }
 
     @Override

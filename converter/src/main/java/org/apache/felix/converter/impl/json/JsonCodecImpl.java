@@ -34,7 +34,7 @@ import org.osgi.service.converter.TypeReference;
 public class JsonCodecImpl implements Codec {
     private Map<String, Object> configuration = new ConcurrentHashMap<>();
     private ThreadLocal<Boolean> threadLocal = new ThreadLocal<>();
-    private Converter converter = new ConverterImpl(); // TODO inject?
+    private Converter converter = new ConverterImpl();
 
     @Override
     public Codec with(Converter c) {
