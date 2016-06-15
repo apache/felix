@@ -39,7 +39,8 @@ public interface LoadBalancerCustomizerFactory
      * Creates new Jetty {@code Customizer} instances.
      *
      * <p>
-     * @return A configured Jetty {@code Customizer} instance.
+     * @return A configured Jetty {@code Customizer} instance or {@code null}
+     *         if the customizer can't be created.
      */
     Customizer createCustomizer();
 

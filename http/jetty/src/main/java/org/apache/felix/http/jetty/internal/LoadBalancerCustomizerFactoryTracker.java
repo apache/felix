@@ -37,15 +37,13 @@ public class LoadBalancerCustomizerFactoryTracker extends ServiceTracker<LoadBal
     public LoadBalancerCustomizerFactoryTracker(final BundleContext context, final CustomizerWrapper customizerWrapper)
     {
         super(context, LoadBalancerCustomizerFactory.class.getName(), null);
-        this.bundleContext =context;
+        this.bundleContext = context;
         this.customizerWrapper = customizerWrapper;
     }
 
     @Override
     public ServiceReference<LoadBalancerCustomizerFactory> addingService(final ServiceReference<LoadBalancerCustomizerFactory> reference)
     {
-        super.addingService(reference);
-
         final ServiceReference<LoadBalancerCustomizerFactory> highestReference;
         synchronized (set)
         {
@@ -53,61 +51,96 @@ public class LoadBalancerCustomizerFactoryTracker extends ServiceTracker<LoadBal
             highestReference = set.last();
         }
 
-        boolean updated = false;
-        if (highestReference != null)
+        // only change if service is higher
+        if ( highestReference.compareTo(reference) == 0 )
         {
-            final LoadBalancerCustomizerFactory factory = bundleContext.getService(highestReference);
+            boolean updated = false;
+            final LoadBalancerCustomizerFactory factory = bundleContext.getService(reference);
             if (factory != null)
             {
                 final Customizer customizer = factory.createCustomizer();
-                customizerWrapper.setCustomizer(customizer);
-                updated = true;
+                if ( customizer != null )
+                {
+                    customizerWrapper.setCustomizer(customizer);
+                    updated = true;
+                }
+                else
+                {
+                    bundleContext.ungetService(reference);
+                }
+            }
+            if ( !updated)
+            {
+                // we can't get the service, remove reference
+                synchronized (set)
+                {
+                    set.remove(reference);
+                }
+                return null;
             }
         }
-        // something went wrong, null out wrapper
-        if ( !updated )
-        {
-            customizerWrapper.setCustomizer(null);
-        }
-
         return reference;
     }
 
     @Override
     public void removedService(final ServiceReference<LoadBalancerCustomizerFactory> reference, final ServiceReference<LoadBalancerCustomizerFactory> service)
     {
-        super.removedService(reference, service);
-
-        final ServiceReference<LoadBalancerCustomizerFactory> highestReference;
+        final boolean change;
+        ServiceReference<LoadBalancerCustomizerFactory> highestReference = null;
         synchronized (set)
         {
-            set.remove(reference);
             if (set.isEmpty())
             {
-                highestReference = null;
+                change = false;
             }
             else
             {
-                highestReference = set.last();
+                change = set.last().compareTo(reference) == 0;
             }
+            set.remove(reference);
+            highestReference = (set.isEmpty() ? null : set.last());
         }
 
-        boolean updated = false;
-        if (highestReference != null)
+        if (change)
         {
-            //update the customizer Wrapper
-            final LoadBalancerCustomizerFactory factory = bundleContext.getService(highestReference);
-            if (factory != null)
+            boolean done = false;
+
+            do
             {
-                final Customizer customizer = factory.createCustomizer();
-                customizerWrapper.setCustomizer(customizer);
-                updated = true;
-            }
-        }
-        // something went wrong / or no service registered anymore, null out wrapper
-        if ( !updated )
-        {
-            customizerWrapper.setCustomizer(null);
+                // update the customizer Wrapper
+                if ( highestReference == null )
+                {
+                    customizerWrapper.setCustomizer(null);
+                    done = true;
+                }
+                else
+                {
+                    final LoadBalancerCustomizerFactory factory = bundleContext.getService(highestReference);
+                    if (factory != null)
+                    {
+                        final Customizer customizer = factory.createCustomizer();
+                        if ( customizer != null )
+                        {
+                            customizerWrapper.setCustomizer(customizer);
+                            done = true;
+                        }
+                        else
+                        {
+                            bundleContext.ungetService(highestReference);
+                        }
+                    }
+
+                    if ( !done )
+                    {
+                        synchronized ( set )
+                        {
+                            set.remove(highestReference);
+                            highestReference = (set.isEmpty() ? null : set.last());
+                        }
+                    }
+                }
+            } while ( !done);
+            bundleContext.ungetService(reference);
         }
     }
 }
