@@ -16,6 +16,8 @@
  */
 package org.apache.felix.http.jetty.internal;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -40,14 +42,15 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-import junit.framework.TestCase;
-
 import org.apache.felix.http.base.internal.DispatcherServlet;
 import org.apache.felix.http.base.internal.EventDispatcher;
 import org.apache.felix.http.base.internal.HttpServiceController;
 import org.apache.felix.http.jetty.internal.JettyService.Deployment;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.mockito.Matchers;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -59,7 +62,7 @@ import org.osgi.framework.Version;
 import org.osgi.service.http.context.ServletContextHelper;
 import org.osgi.service.http.runtime.HttpServiceRuntime;
 
-public class JettyServiceTest extends TestCase
+public class JettyServiceTest
 {
 
     private static final String OSGI_BUNDLECONTEXT = "osgi-bundlecontext";
@@ -76,7 +79,7 @@ public class JettyServiceTest extends TestCase
 
     private Bundle mockBundle;
 
-    @Override
+    @Before
     public void setUp() throws Exception
     {
         //Setup Mocks
@@ -113,8 +116,8 @@ public class JettyServiceTest extends TestCase
         jettyService.start();
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         jettyService.stop();
     }
 
@@ -125,7 +128,7 @@ public class JettyServiceTest extends TestCase
      * @throws MalformedURLException
      * @throws InterruptedException
      */
-    public void testInitBundleContextDeployIT() throws Exception
+    @Test public void testInitBundleContextDeployIT() throws Exception
     {
         //Setup mocks
         Deployment mockDeployment = mock(Deployment.class);
