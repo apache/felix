@@ -221,7 +221,7 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
         Collection<ComponentHolder<?>> holders = getComponentHolders( factoryPid != null? factoryPid: pid );
 
         logger.log( LogService.LOG_DEBUG,
-            "configurationEvent: Handling {0}  of Configuration PID={1} for component holders {2}",
+            "configurationEvent: Handling {0} of Configuration PID={1} for component holders {2}",
             new Object[] { getEventType( event ), pid, holders }, null );
 
         for ( ComponentHolder<?> componentHolder : holders )
@@ -567,17 +567,24 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
 
     private boolean checkBundleLocation(String configBundleLocation, Bundle bundle)
     {
+        boolean result;
         if ( configBundleLocation == null )
         {
-            return true;
+            result = true;
         }
-        if ( configBundleLocation.startsWith( "?" ) )
+        else if ( configBundleLocation.startsWith( "?" ) )
         {
             //multilocation
-            return bundle.hasPermission(
+            result = bundle.hasPermission(
                 new ConfigurationPermission( configBundleLocation, ConfigurationPermission.TARGET ) );
         }
-        return configBundleLocation.equals( bundle.getLocation() );
+        else
+        {
+            result = configBundleLocation.equals( bundle.getLocation() );
+        }
+        logger.log( LogService.LOG_DEBUG, "checkBundleLocation: location {0}, returning {1}",
+            new Object[] { configBundleLocation, result }, null );
+        return result;
     }
 
     private Configuration[] findConfigurations(final ConfigurationAdmin ca, final String filter)
