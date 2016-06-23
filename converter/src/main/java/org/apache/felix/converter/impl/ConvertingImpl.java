@@ -69,8 +69,9 @@ public class ConvertingImpl implements Converting {
         interfaceImplementations = Collections.unmodifiableMap(m);
     }
 
-    private Converter converter;
-    private final Object object;
+    private volatile Converter converter;
+    private volatile Object object;
+    private volatile Object defaultValue;
 
     ConvertingImpl(Converter c, Object obj) {
         converter = c;
@@ -79,7 +80,11 @@ public class ConvertingImpl implements Converting {
 
     @Override
     public Converting defaultValue(Object defVal) {
-        // TODO Auto-generated method stub
+        if (object == null)
+            object = defVal;
+        else
+            defaultValue = defVal;
+
         return this;
     }
 
@@ -148,7 +153,10 @@ public class ConvertingImpl implements Converting {
         if (res2 != null) {
             return res2;
         } else {
-            return null;
+            if (defaultValue != null)
+                return converter.convert(defaultValue).to(targetCls);
+            else
+                return null;
         }
     }
 

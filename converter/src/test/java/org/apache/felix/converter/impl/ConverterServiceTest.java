@@ -332,6 +332,12 @@ public class ConverterServiceTest {
         assertEquals(zdt, zdt2);
     }
 
+    @Test
+    public void testDefaultValue() {
+        long l = converter.convert(null).defaultValue("12").to(Long.class);
+        assertEquals(12L, l);
+    }
+
     static class MyClass2 {
         private final String value;
         public MyClass2(String v) {

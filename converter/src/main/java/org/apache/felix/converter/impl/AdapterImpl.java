@@ -89,7 +89,7 @@ public class AdapterImpl implements Adapter {
 
         @Override
         public Converting defaultValue(Object defVal) {
-            // TODO Auto-generated method stub
+            del.defaultValue(defVal);
             return this;
         }
 
