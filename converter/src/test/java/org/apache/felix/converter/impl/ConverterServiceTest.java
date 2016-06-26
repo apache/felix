@@ -104,7 +104,9 @@ public class ConverterServiceTest {
 
         assertEquals(Integer.valueOf(123), converter.convert("123").to(Integer.class));
         assertEquals(Long.valueOf(123), converter.convert("123").to(Long.class));
-//        assertEquals(Character.valueOf(123), c.convert("123").to(Character.class));
+        assertEquals('1', (char) converter.convert("123").to(Character.class));
+        assertEquals('Q', (char) converter.convert(null).defaultValue('Q').to(Character.class));
+        assertEquals((char) 123, (char) converter.convert(123L).to(Character.class));
         assertEquals(Byte.valueOf((byte) 123), converter.convert("123").to(Byte.class));
         assertEquals(Float.valueOf("12.3"), converter.convert("12.3").to(Float.class));
         assertEquals(Double.valueOf("12.3"), converter.convert("12.3").to(Double.class));

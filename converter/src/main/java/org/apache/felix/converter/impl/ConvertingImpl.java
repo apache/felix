@@ -352,6 +352,14 @@ public class ConvertingImpl implements Converting {
         } else if (Character.class.equals(targetCls)) {
             if (object instanceof Boolean) {
                 return ((Boolean) object).booleanValue() ? Character.valueOf((char) 1) : Character.valueOf((char) 0);
+            } else if (object instanceof Number) {
+                return Character.valueOf((char) ((Number) object).intValue());
+            } else {
+                String v = converter.convert(object).toString();
+                if (v == null)
+                    return 0;
+                else
+                    return v.length() > 0 ? v.charAt(0) : 0;
             }
         } else if (Integer.class.equals(targetCls)) {
             if (object instanceof Boolean) {
