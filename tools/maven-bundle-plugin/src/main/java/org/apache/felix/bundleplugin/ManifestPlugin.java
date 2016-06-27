@@ -81,19 +81,19 @@ public class ManifestPlugin extends BundlePlugin
 
     @Component
     private BuildContext buildContext;
-    
+
     @Override
     protected void execute( MavenProject project, DependencyNode dependencyGraph, Map<String, String> instructions, Properties properties, Jar[] classpath )
         throws MojoExecutionException
     {
-        
+
         // in incremental build execute manifest generation only when explicitly activated
         // and when any java file was touched since last build
         if (buildContext.isIncremental() && !(supportIncrementalBuild && anyJavaSourceFileTouchedSinceLastBuild())) {
             getLog().debug("Skipping manifest generation because no java source file was added, updated or removed since last build.");
             return;
         }
-        
+
         Analyzer analyzer;
         try
         {
@@ -131,7 +131,7 @@ public class ManifestPlugin extends BundlePlugin
         }
         finally
         {
-            try 
+            try
             {
                 analyzer.close();
             }
@@ -141,7 +141,7 @@ public class ManifestPlugin extends BundlePlugin
             }
         }
     }
-    
+
     /**
      * Checks if any *.java file was added, updated or removed since last build in any source directory.
      */
@@ -190,34 +190,19 @@ public class ManifestPlugin extends BundlePlugin
 
         return manifest;
     }
-    
+
     private static void exportScr(Analyzer analyzer, Jar jar, File scrLocation, BuildContext buildContext, Log log ) throws Exception {
         log.debug("Export SCR metadata to: " + scrLocation.getPath());
         scrLocation.mkdirs();
 
-        // export SCR metadata files from OSGI-INF/
-        String bpHeader = analyzer.getProperty(Analyzer.SERVICE_COMPONENT);
-        Parameters map = Processor.parseHeader(bpHeader, null);
-        for (String root : map.keySet())
-        {
-            Map<String, Resource> dir = jar.getDirectories().get(root);
-            File location = new File(scrLocation, root);
-            if (dir == null || dir.isEmpty())
-            {
-                Resource resource = jar.getResource(root);
-                if (resource != null)
-                {
-                    writeSCR(resource, location, buildContext, log);
-                }
-            }
-            else
-            {
-                for (Map.Entry<String, Resource> entry : dir.entrySet())
-                {
-                    String path = entry.getKey();
-                    Resource resource = entry.getValue();
-                    writeSCR(resource, new File(location, path), buildContext, log);
-                }
+     // export SCR metadata files from OSGI-INF/
+        Map<String, Resource> scrDir = jar.getDirectories().get("OSGI-INF");
+        if (scrDir != null) {
+            for (Map.Entry<String, Resource> entry : scrDir.entrySet()) {
+                String path = entry.getKey();
+                Resource resource = entry.getValue();
+                writeSCR(resource, new File(scrLocation, path), buildContext,
+                        log);
             }
         }
 
@@ -375,10 +360,10 @@ public class ManifestPlugin extends BundlePlugin
             parentFile.mkdirs();
         }
         writeManifest( manifest, outputFile, niceManifest, buildContext, log );
-        
+
         if (exportScr)
         {
-            exportScr(analyzer, jar, scrLocation, buildContext, log);            
+            exportScr(analyzer, jar, scrLocation, buildContext, log);
         }
     }
 
