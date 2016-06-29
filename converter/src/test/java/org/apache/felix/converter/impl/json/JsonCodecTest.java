@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.felix.converter.impl.ConverterImpl;
-import org.apache.felix.converter.impl.json.JsonCodecImpl;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.junit.After;

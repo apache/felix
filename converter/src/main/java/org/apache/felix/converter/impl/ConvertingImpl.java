@@ -67,11 +67,7 @@ public class ConvertingImpl implements Converting {
 
     @Override
     public Converting defaultValue(Object defVal) {
-        if (object == null)
-            object = defVal; // TODO do we need this???
-        else
-            defaultValue = defVal;
-
+        defaultValue = defVal;
         hasDefault = true;
 
         return this;
@@ -298,6 +294,9 @@ public class ConvertingImpl implements Converting {
     }
 
     private Object handleNull(Class<?> cls) {
+        if (hasDefault)
+            return converter.convert(defaultValue).to(cls);
+
         Class<?> boxed = Util.primitiveToBoxed(cls);
         if (boxed.equals(cls)) {
             // This is not a primitive, just return null
@@ -324,38 +323,23 @@ public class ConvertingImpl implements Converting {
         // TODO some of these can probably be implemented as an adapter
 
         if (Boolean.class.equals(targetCls)) {
-            if (object instanceof Character) {
-                return ((Character) object).charValue() != (char) 0;
-            } else if (object instanceof Number) {
+            if (object instanceof Number) {
                 return ((Number) object).longValue() != 0;
             } else if (object instanceof Collection && ((Collection<?>) object).size() == 0) {
+                // TODO What about arrays?
                 return Boolean.FALSE;
             }
         } else if (Character.class.equals(targetCls)) {
-            if (object instanceof Boolean) {
-                return ((Boolean) object).booleanValue() ? Character.valueOf((char) 1) : Character.valueOf((char) 0);
-            } else if (object instanceof Number) {
+            if (object instanceof Number) {
                 return Character.valueOf((char) ((Number) object).intValue());
-            } else {
-                String v = converter.convert(object).toString();
-                if (v == null)
-                    return 0;
-                else
-                    return v.length() > 0 ? v.charAt(0) : 0;
             }
-        } else if (Integer.class.equals(targetCls)) {
+        } else if (Number.class.isAssignableFrom(targetCls)) {
             if (object instanceof Boolean) {
-                return ((Boolean) object).booleanValue() ? Integer.valueOf(1) : Integer.valueOf(0);
+                return ((Boolean) object).booleanValue() ? 1 : 0;
             }
         } else if (Class.class.equals(targetCls)) {
             if (object instanceof Collection && ((Collection<?>) object).size() == 0) {
                 return null;
-            } else {
-                try {
-                    return getClass().getClassLoader().loadClass(converter.convert(object).toString());
-                } catch (ClassNotFoundException e) {
-                    throw new RuntimeException(e);
-                }
             }
         } else if (Enum.class.isAssignableFrom(targetCls)) {
             if (object instanceof Boolean) {

@@ -34,15 +34,21 @@ public class ConverterService implements Converter {
 
     public ConverterService() {
         Adapter a = new ConverterImpl().getAdapter();
-        a.rule(UUID.class, String.class, UUID::toString, UUID::fromString);
-        a.rule(Pattern.class, String.class, Pattern::toString, Pattern::compile);
+        a.rule(Character.class, Boolean.class, v -> v.charValue() != 0,
+                v -> v.booleanValue() ? (char) 1 : (char) 0);
+        a.rule(Character.class, String.class, v -> v.toString(),
+                v -> v.length() > 0 ? v.charAt(0) : 0);
+        a.rule(Class.class, String.class, Class::toString,
+                v -> getClass().getClassLoader().loadClass(v));
+        a.rule(Integer.class, String.class, v -> v.toString(), Integer::parseInt);
         a.rule(LocalDateTime.class, String.class, LocalDateTime::toString, LocalDateTime::parse);
         a.rule(LocalDate.class, String.class, LocalDate::toString, LocalDate::parse);
         a.rule(LocalTime.class, String.class, LocalTime::toString, LocalTime::parse);
         a.rule(OffsetDateTime.class, String.class, OffsetDateTime::toString, OffsetDateTime::parse);
         a.rule(OffsetTime.class, String.class, OffsetTime::toString, OffsetTime::parse);
+        a.rule(Pattern.class, String.class, Pattern::toString, Pattern::compile);
+        a.rule(UUID.class, String.class, UUID::toString, UUID::fromString);
         a.rule(ZonedDateTime.class, String.class, ZonedDateTime::toString, ZonedDateTime::parse);
-        a.rule(Integer.class, String.class, v -> v.toString(), Integer::parseInt);
         adapter = a;
     }
 

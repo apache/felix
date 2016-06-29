@@ -16,7 +16,6 @@
 package org.osgi.service.converter;
 
 import java.lang.reflect.Type;
-import java.util.function.Function;
 
 /**
  * An {@link Adapter} is used to modify the behaviour of the Converter service,
@@ -54,11 +53,11 @@ public interface Adapter extends Converter {
 	 * @return The current adapter, can be used to chain invocations.
 	 */
     <F, T> Adapter rule(Class<F> fromCls, Class<T> toCls,
-            Function<F, T> toFun, Function<T, F> fromFun);
+            FunctionThrowsException<F, T> toFun, FunctionThrowsException<T, F> fromFun);
 
     <F, T> Adapter rule(TypeReference<F> fromRef, TypeReference<T> toRef,
-            Function<F, T> toFun, Function<T, F> fromFun);
+            FunctionThrowsException<F, T> toFun, FunctionThrowsException<T, F> fromFun);
 
     <F, T> Adapter rule(Type fromType, Type toType,
-            Function<F, T> toFun, Function<T, F> fromFun);
+            FunctionThrowsException<F, T> toFun, FunctionThrowsException<T, F> fromFun);
 }

@@ -20,18 +20,18 @@ import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 
 import org.osgi.service.converter.Adapter;
 import org.osgi.service.converter.ConversionException;
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.Converting;
+import org.osgi.service.converter.FunctionThrowsException;
 import org.osgi.service.converter.Rule;
 import org.osgi.service.converter.TypeReference;
 
 public class AdapterImpl implements Adapter {
     private final Converter delegate;
-    private final Map<TypePair, Function<Object, Object>> classRules =
+    private final Map<TypePair, FunctionThrowsException<Object, Object>> classRules =
             new ConcurrentHashMap<>();
 
     public AdapterImpl(Converter converter) {
@@ -52,23 +52,25 @@ public class AdapterImpl implements Adapter {
     @SuppressWarnings("unchecked")
     @Override
     public <F, T> Adapter rule(Class<F> fromCls, Class<T> toCls,
-            Function<F, T> toFun, Function<T, F> fromFun) {
+            FunctionThrowsException<F, T> toFun, FunctionThrowsException<T, F> fromFun) {
         if (fromCls.equals(toCls))
             throw new IllegalArgumentException();
 
-        classRules.put(new TypePair(fromCls, toCls), (Function<Object, Object>) toFun);
-        classRules.put(new TypePair(toCls, fromCls), (Function<Object, Object>) fromFun);
+        classRules.put(new TypePair(fromCls, toCls), (FunctionThrowsException<Object, Object>) toFun);
+        classRules.put(new TypePair(toCls, fromCls), (FunctionThrowsException<Object, Object>) fromFun);
         return this;
     }
 
     @Override
-    public <F, T> Adapter rule(TypeReference<F> fromRef, TypeReference<T> toRef, Function<F, T> toFun, Function<T, F> fromFun) {
+    public <F, T> Adapter rule(TypeReference<F> fromRef, TypeReference<T> toRef,
+            FunctionThrowsException<F, T> toFun, FunctionThrowsException<T, F> fromFun) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public <F, T> Adapter rule(Type fromType, Type toType, Function<F, T> toFun, Function<T, F> fromFun) {
+    public <F, T> Adapter rule(Type fromType, Type toType,
+            FunctionThrowsException<F, T> toFun, FunctionThrowsException<T, F> fromFun) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -114,7 +116,7 @@ public class AdapterImpl implements Adapter {
         @Override
         public Object to(Type type) {
             if (object != null) {
-                Function<Object, Object> f = classRules.get(
+                FunctionThrowsException<Object, Object> f = classRules.get(
                     new TypePair(object.getClass(), Util.primitiveToBoxed(type)));
                 if (f != null) {
                     try {
