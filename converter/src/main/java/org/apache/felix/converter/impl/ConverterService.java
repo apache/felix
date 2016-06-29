@@ -42,6 +42,7 @@ public class ConverterService implements Converter {
         a.rule(OffsetDateTime.class, String.class, OffsetDateTime::toString, OffsetDateTime::parse);
         a.rule(OffsetTime.class, String.class, OffsetTime::toString, OffsetTime::parse);
         a.rule(ZonedDateTime.class, String.class, ZonedDateTime::toString, ZonedDateTime::parse);
+        a.rule(Integer.class, String.class, v -> v.toString(), Integer::parseInt);
         adapter = a;
     }
 

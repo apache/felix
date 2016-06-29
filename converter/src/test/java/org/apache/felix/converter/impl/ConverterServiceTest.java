@@ -42,6 +42,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.service.converter.Adapter;
+import org.osgi.service.converter.ConversionException;
 import org.osgi.service.converter.TypeReference;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -51,6 +52,7 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class ConverterServiceTest {
     private ConverterService converter;
@@ -266,6 +268,18 @@ public class ConverterServiceTest {
         List<Long> ll2 = converter.convert(Arrays.asList(123, 345)).to(new TypeReference<List<Long>>() {});
         assertEquals(Arrays.asList(123L, 345L), ll2);
 
+    }
+
+    @Test
+    public void testExceptionDefaultValue() {
+        assertEquals(42, (int) converter.convert("haha").defaultValue(42).to(int.class));
+        assertNull(converter.convert("haha").defaultValue(null).to(int.class));
+        try {
+            converter.convert("haha").to(int.class);
+            fail("Should have thrown an exception");
+        } catch (ConversionException ex) {
+            // good
+        }
     }
 
     @Test

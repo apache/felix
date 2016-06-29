@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import org.osgi.service.converter.Adapter;
+import org.osgi.service.converter.ConversionException;
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.Converting;
 import org.osgi.service.converter.Rule;
@@ -81,6 +82,8 @@ public class AdapterImpl implements Adapter {
     private class ConvertingWrapper implements Converting {
         private final Converting del;
         private final Object object;
+        private volatile Object defaultValue;
+        private volatile boolean hasDefault;
 
         ConvertingWrapper(Object obj, Converting c) {
             object = obj;
@@ -90,6 +93,8 @@ public class AdapterImpl implements Adapter {
         @Override
         public Converting defaultValue(Object defVal) {
             del.defaultValue(defVal);
+            defaultValue = defVal;
+            hasDefault = true;
             return this;
         }
 
@@ -109,9 +114,18 @@ public class AdapterImpl implements Adapter {
         @Override
         public Object to(Type type) {
             if (object != null) {
-                Function<Object, Object> f = classRules.get(new TypePair(object.getClass(), type));
-                if (f != null)
-                    return f.apply(object);
+                Function<Object, Object> f = classRules.get(
+                    new TypePair(object.getClass(), Util.primitiveToBoxed(type)));
+                if (f != null) {
+                    try {
+                        return f.apply(object);
+                    } catch (Exception ex) {
+                        if (hasDefault)
+                            return defaultValue;
+                        else
+                            throw new ConversionException("Cannot convert " + object + " to " + type, ex);
+                    }
+                }
             }
 
             return del.to(type);

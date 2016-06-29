@@ -45,20 +45,6 @@ import org.osgi.service.converter.Converting;
 import org.osgi.service.converter.TypeReference;
 
 public class ConvertingImpl implements Converting {
-    private static final Map<Class<?>, Class<?>> boxedClasses;
-    static {
-        Map<Class<?>, Class<?>> m = new HashMap<>();
-        m.put(int.class, Integer.class);
-        m.put(long.class, Long.class);
-        m.put(double.class, Double.class);
-        m.put(float.class, Float.class);
-        m.put(boolean.class, Boolean.class);
-        m.put(char.class, Character.class);
-        m.put(byte.class, Byte.class);
-        m.put(void.class, Void.class);
-        m.put(short.class, Short.class);
-        boxedClasses = Collections.unmodifiableMap(m);
-    }
     private static final Map<Class<?>, Class<?>> interfaceImplementations;
     static {
         Map<Class<?>, Class<?>> m = new HashMap<>();
@@ -72,6 +58,7 @@ public class ConvertingImpl implements Converting {
     private volatile Converter converter;
     private volatile Object object;
     private volatile Object defaultValue;
+    private volatile boolean hasDefault;
 
     ConvertingImpl(Converter c, Object obj) {
         converter = c;
@@ -81,9 +68,11 @@ public class ConvertingImpl implements Converting {
     @Override
     public Converting defaultValue(Object defVal) {
         if (object == null)
-            object = defVal;
+            object = defVal; // TODO do we need this???
         else
             defaultValue = defVal;
+
+        hasDefault = true;
 
         return this;
     }
@@ -121,7 +110,7 @@ public class ConvertingImpl implements Converting {
         if (object == null)
             return handleNull(cls);
 
-        Class<?> targetCls = primitiveToBoxed(cls);
+        Class<?> targetCls = Util.primitiveToBoxed(cls);
 
         if (!Map.class.isAssignableFrom(targetCls) &&
                 !Collection.class.isAssignableFrom(targetCls) &&
@@ -309,8 +298,8 @@ public class ConvertingImpl implements Converting {
     }
 
     private Object handleNull(Class<?> cls) {
-        Class<?> boxed = boxedClasses.get(cls);
-        if (boxed == null) {
+        Class<?> boxed = Util.primitiveToBoxed(cls);
+        if (boxed.equals(cls)) {
             // This is not a primitive, just return null
             return null;
         }
@@ -329,14 +318,6 @@ public class ConvertingImpl implements Converting {
             return true;
         else
             return Dictionary.class.isAssignableFrom(targetCls);
-    }
-
-    private Class<?> primitiveToBoxed(Class<?> cls) {
-        Class<?> boxed = boxedClasses.get(cls);
-        if (boxed != null)
-            return boxed;
-        else
-            return cls;
     }
 
     private Object trySpecialCases(Class<?> targetCls) {
@@ -441,7 +422,7 @@ public class ConvertingImpl implements Converting {
             return obj;
 
         int len = Array.getLength(obj);
-        Object arr = Array.newInstance(Object.class, len);
+        Object arr = Array.newInstance(Util.primitiveToBoxed(objClass.getComponentType()), len);
         for (int i=0; i<len; i++) {
             Object val = Array.get(obj, i);
             Array.set(arr, i, val);
