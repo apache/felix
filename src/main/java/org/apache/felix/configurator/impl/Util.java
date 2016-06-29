@@ -56,7 +56,7 @@ public class Util {
     public static volatile File binDirectory;
 
     /**
-     * Check if the bundle contains configurations for the configurer
+     * Check if the bundle contains configurations for the configurator
      * @param bundle The bundle
      * @return Set of locations or {@code null}
      */

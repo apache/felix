@@ -18,9 +18,11 @@
  */
 package org.apache.felix.configurator.impl;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Map;
@@ -30,6 +32,77 @@ import org.apache.felix.configurator.impl.yaml.YAMLUtilTest;
 import org.junit.Test;
 
 public class TypeConverterTest {
+
+    @Test public void testStringConversionNoTypeInfo() throws IOException {
+        final String v_String = "world";
+        final TypeConverter converter = new TypeConverter(null);
+        final Object result = converter.convert(v_String, null, null);
+        assertTrue(result instanceof String);
+        assertEquals(v_String, result);
+    }
+
+    @Test public void testLongConversionNoTypeInfo() throws IOException {
+        final long v_long = 3;
+        final TypeConverter converter = new TypeConverter(null);
+        final Object result = converter.convert(v_long, null, null);
+        assertTrue(result instanceof Long);
+        assertEquals(v_long, result);
+    }
+
+    @Test public void testIntegerConversionNoTypeInfo() throws IOException {
+        final int v_int = 3;
+        final TypeConverter converter = new TypeConverter(null);
+        final Object result = converter.convert(v_int, null, null);
+        assertTrue(result instanceof Long);
+        assertEquals(3L, result);
+    }
+
+    @Test public void testShortConversionNoTypeInfo() throws IOException {
+        final short v_short = 3;
+        final TypeConverter converter = new TypeConverter(null);
+        final Object result = converter.convert(v_short, null, null);
+        assertTrue(result instanceof Long);
+        assertEquals(3L, result);
+    }
+
+    @Test public void testByteConversionNoTypeInfo() throws IOException {
+        final byte v_byte = 3;
+        final TypeConverter converter = new TypeConverter(null);
+        final Object result = converter.convert(v_byte, null, null);
+        assertTrue(result instanceof Long);
+        assertEquals(3L, result);
+    }
+
+    @Test public void testCharConversionNoTypeInfo() throws IOException {
+        final char v_char = 'a';
+        final TypeConverter converter = new TypeConverter(null);
+        final Object result = converter.convert(v_char, "a", null);
+        assertTrue(result instanceof String);
+        assertEquals("a", result);
+    }
+
+    @Test public void testCharacterConversionNoTypeInfo() throws IOException {
+        final Character v_Character = new Character('a');
+        final TypeConverter converter = new TypeConverter(null);
+        final Object result = converter.convert(v_Character, "a", null);
+        assertTrue(result instanceof String);
+        assertEquals("a", result);
+    }
+
+    @Test public void testFloatConversionNoTypeInfo() throws IOException {
+        final float v_float = 3.1f;
+        final TypeConverter converter = new TypeConverter(null);
+        final Object result = converter.convert(v_float, null, null);
+        assertTrue(result instanceof Double);
+    }
+
+    @Test public void testDoubleConversionNoTypeInfo() throws IOException {
+        final double v_double = 3.0;
+        final TypeConverter converter = new TypeConverter(null);
+        final Object result = converter.convert(v_double, null, null);
+        assertTrue(result instanceof Double);
+        assertEquals(v_double, result);
+    }
 
     @Test public void testSimpleTypeConversions() throws Exception {
         final TypeConverter converter = new TypeConverter(null);

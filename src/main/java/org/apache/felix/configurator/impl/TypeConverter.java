@@ -65,6 +65,10 @@ public class TypeConverter {
                 return value;
             } else if ( value instanceof Integer ) {
                 return ((Integer)value).longValue();
+            } else if ( value instanceof Short ) {
+                return ((Short)value).longValue();
+            } else if ( value instanceof Byte ) {
+                return ((Byte)value).longValue();
             } else if ( value instanceof Float ) {
                 return ((Float)value).doubleValue();
             }

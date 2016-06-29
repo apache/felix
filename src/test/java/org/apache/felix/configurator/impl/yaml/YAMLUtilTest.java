@@ -20,12 +20,15 @@ package org.apache.felix.configurator.impl.yaml;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URL;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.felix.configurator.impl.TypeConverter;
 import org.apache.felix.configurator.impl.model.ConfigurationFile;
@@ -56,4 +59,32 @@ public class YAMLUtilTest {
         assertEquals(2, cg.getConfigurations().size());
     }
 
+    @SuppressWarnings("unchecked")
+    @Test public void testTypes() throws Exception {
+        final Object obj = YAMLUtil.parseYAML("a", YAMLUtilTest.readYAML("yaml/simple-types.yaml"));
+        final Map<String, Object> config = (Map<String, Object>)obj;
+        final Map<String, Object> properties = (Map<String, Object>)config.get("config");
+
+        assertTrue(properties.get("string") instanceof String);
+        assertTrue(properties.get("boolean") instanceof Boolean);
+        assertTrue(properties.get("number") instanceof Integer);
+        assertTrue(properties.get("float") instanceof Double);
+
+        // arrays
+        assertTrue(properties.get("string.array") instanceof List<?>);
+        assertTrue(((List<Object>)properties.get("string.array")).get(0) instanceof String);
+        assertTrue(((List<Object>)properties.get("string.array")).get(1) instanceof String);
+
+        assertTrue((List<Object>)properties.get("boolean.array") instanceof List<?>);
+        assertTrue(((List<Object>)properties.get("boolean.array")).get(0) instanceof Boolean);
+        assertTrue(((List<Object>)properties.get("boolean.array")).get(1) instanceof Boolean);
+
+        assertTrue((List<Object>)properties.get("number.array") instanceof List<?>);
+        assertTrue(((List<Object>)properties.get("number.array")).get(0) instanceof Integer);
+        assertTrue(((List<Object>)properties.get("number.array")).get(1) instanceof Integer);
+
+        assertTrue((List<Object>)properties.get("float.array") instanceof List<?>);
+        assertTrue(((List<Object>)properties.get("float.array")).get(0) instanceof Double);
+        assertTrue(((List<Object>)properties.get("float.array")).get(1) instanceof Double);
+    }
 }
