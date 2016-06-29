@@ -47,6 +47,7 @@ import org.osgi.service.converter.TypeReference;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -236,6 +237,22 @@ public class ConverterServiceTest {
         Integer[] ia = converter.convert(sa).to(Integer[].class);
         assertEquals(3, ia.length);
         assertArrayEquals(new Integer[] {999, 111, -909}, ia);
+    }
+
+    @Test
+    public void testCharArrayConversion() {
+        char[] ca = converter.convert(new int[] {9,8,7}).to(char[].class);
+        assertArrayEquals(new char[] {9,8,7}, ca);
+        Character[] ca2 = converter.convert((long) 17).to(Character[].class);
+        assertArrayEquals(new Character[] {(char)17}, ca2);
+        char[] ca3 = converter.convert(new short[] {257}).to(char[].class);
+        assertArrayEquals(new char[] {257}, ca3);
+        char c = converter.convert(new char[] {'x', 'y'}).to(char.class);
+        assertEquals('x', c);
+        char[] ca4a = {'x', 'y'};
+        char[] ca4b = converter.convert(ca4a).to(char[].class);
+        assertArrayEquals(new char [] {'x', 'y'}, ca4b);
+        assertNotSame("Should have created a new instance", ca4a, ca4b);
     }
 
     @Test

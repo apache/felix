@@ -124,7 +124,8 @@ public class ConvertingImpl implements Converting {
         Class<?> targetCls = primitiveToBoxed(cls);
 
         if (!Map.class.isAssignableFrom(targetCls) &&
-                !Collections.class.isAssignableFrom(targetCls)) {
+                !Collections.class.isAssignableFrom(targetCls) &&
+                !targetCls.isArray()) {
             // For maps and collections we always want copies returned
             if (targetCls.isAssignableFrom(object.getClass()))
                 return object;
@@ -145,7 +146,7 @@ public class ConvertingImpl implements Converting {
         // At this point we know that the target is a 'singular' type: not a map, collection or array
         if (object instanceof Collection) {
             return convertCollectionToSingleValue(cls);
-        } else if (object instanceof Object[]) {
+        } else if ((object = asBoxedArray(object)) instanceof Object[]) {
             return convertArrayToSingleValue(cls);
         }
 
@@ -415,12 +416,37 @@ public class ConvertingImpl implements Converting {
     }
 
     private static Collection<?> collectionView(Object obj) {
+        if (obj == null)
+            return null;
+
+        Collection<?> c = asCollection(obj);
+        if (c == null)
+            return Collections.singleton(obj);
+        else
+            return c;
+    }
+
+    private static Collection<?> asCollection(Object obj) {
         if (obj instanceof Collection)
             return (Collection<?>) obj;
-        else if (obj instanceof Object[])
+        else if ((obj = asBoxedArray(obj)) instanceof Object[])
             return Arrays.asList((Object[]) obj);
         else
-            return Collections.singleton(obj);
+            return null;
+    }
+
+    private static Object asBoxedArray(Object obj) {
+        Class<?> objClass = obj.getClass();
+        if (!objClass.isArray())
+            return obj;
+
+        int len = Array.getLength(obj);
+        Object arr = Array.newInstance(Object.class, len);
+        for (int i=0; i<len; i++) {
+            Object val = Array.get(obj, i);
+            Array.set(arr, i, val);
+        }
+        return arr;
     }
 
     @SuppressWarnings("rawtypes")
