@@ -18,7 +18,6 @@
  */
 package org.apache.felix.configurator.impl.yaml;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URL;
@@ -31,15 +30,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.felix.configurator.impl.TypeConverter;
 import org.apache.felix.configurator.impl.Util;
 import org.apache.felix.configurator.impl.logger.SystemLogger;
 import org.apache.felix.configurator.impl.model.BundleState;
 import org.apache.felix.configurator.impl.model.Config;
 import org.apache.felix.configurator.impl.model.ConfigPolicy;
 import org.apache.felix.configurator.impl.model.ConfigurationFile;
-import org.apache.felix.converter.impl.ConverterService;
 import org.osgi.framework.Bundle;
-import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.TypeReference;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
@@ -56,10 +54,6 @@ public class YAMLUtil {
     private static final String PROP_RANKING = "ranking";
 
     private static final String PROP_POLICY = "policy";
-
-    public static Converter getConverter() {
-        return new ConverterService(); // TODO use OSGi service
-    }
 
     public static BundleState readConfigurationsFromBundle(final Bundle bundle, final Set<String> paths) {
         final BundleState config = new BundleState();
@@ -95,9 +89,18 @@ public class YAMLUtil {
 
                 final String contents = Util.getResource(name, url);
                 if ( contents != null ) {
-                    final ConfigurationFile file = readYAML(bundle, name, url, bundle.getBundleId(), contents);
-                    if ( file != null ) {
-                        result.add(file);
+                    boolean done = false;
+                    final TypeConverter converter = new TypeConverter(bundle);
+                    try {
+                        final ConfigurationFile file = readYAML(converter, name, url, bundle.getBundleId(), contents);
+                        if ( file != null ) {
+                            result.add(file);
+                            done = true;
+                        }
+                    } finally {
+                        if ( !done ) {
+                            converter.cleanupFiles();
+                        }
                     }
                 }
             }
@@ -110,7 +113,7 @@ public class YAMLUtil {
 
     /**
      * Read a single YAML file
-     * @param bundle Optional bundle, might be {@code null}
+     * @param converter type converter
      * @param name The name of the file
      * @param url The url to that file or {@code null}
      * @param bundleId The bundle id of the bundle containing the file
@@ -118,7 +121,7 @@ public class YAMLUtil {
      * @return The configuration file or {@code null}.
      */
     public static ConfigurationFile readYAML(
-            final Bundle bundle,
+            final TypeConverter converter,
             final String name,
             final URL url,
             final long bundleId,
@@ -168,19 +171,19 @@ public class YAMLUtil {
                                 if ( internalKey ) {
                                     // no need to do type conversion based on typeInfo for internal props, type conversion is done directly below
                                     if ( key.equals(PROP_ENVIRONMENTS) ) {
-                                        environments = YAMLUtil.getConverter().convert(value).defaultValue(null).to(new TypeReference<Set<String>>() {});
+                                        environments = TypeConverter.getConverter().convert(value).defaultValue(null).to(new TypeReference<Set<String>>() {});
                                         if ( environments == null ) {
                                             SystemLogger.warning("Invalid environments for configuration in '" + identifier + "' : " + pid + " - " + value);
                                         }
                                     } else if ( key.equals(PROP_RANKING) ) {
-                                        final Integer intObj = YAMLUtil.getConverter().convert(value).defaultValue(null).to(Integer.class);
+                                        final Integer intObj = TypeConverter.getConverter().convert(value).defaultValue(null).to(Integer.class);
                                         if ( intObj == null ) {
                                             SystemLogger.warning("Invalid ranking for configuration in '" + identifier + "' : " + pid + " - " + value);
                                         } else {
                                             ranking = intObj.intValue();
                                         }
                                     } else if ( key.equals(PROP_POLICY) ) {
-                                        final String stringVal = YAMLUtil.getConverter().convert(value).defaultValue(null).to(String.class);
+                                        final String stringVal = TypeConverter.getConverter().convert(value).defaultValue(null).to(String.class);
                                         if ( stringVal == null ) {
                                             SystemLogger.error("Invalid policy for configuration in '" + identifier + "' : " + pid + " - " + value);
                                         } else {
@@ -193,7 +196,7 @@ public class YAMLUtil {
                                     }
                                 } else {
                                     try {
-                                        properties.put(key, convert(bundle, value, typeInfo));
+                                        properties.put(key, converter.convert(value, createYAML(value), typeInfo));
                                     } catch ( final IOException io ) {
                                         SystemLogger.error("Invalid value/type for configuration in '" + identifier + "' : " + pid + " - " + entry.getKey());
                                         valid = false;
@@ -215,201 +218,6 @@ public class YAMLUtil {
             return file;
         }
         return null;
-    }
-
-    /**
-     * Convert a value to the given type
-     * @param bundle The bundle, might be {@code null}
-     * @param value The value
-     * @param typeInfo Optional type info, might be {@code null}
-     * @return The converted value (never returns null)
-     * @throws IOException If an error happens
-     */
-    public static Object convert(final Bundle bundle,
-            final Object value,
-            final String typeInfo) throws IOException {
-        final String yaml = createYAML(value);
-        if ( typeInfo == null ) {
-            if ( value instanceof String || value instanceof Boolean ) {
-                return value;
-            } else if ( value instanceof Long || value instanceof Double ) {
-                return value;
-            } else if ( value instanceof Integer ) {
-                return ((Integer)value).longValue();
-            } else if ( value instanceof Float ) {
-                return ((Float)value).doubleValue();
-            }
-            if ( value instanceof List ) {
-                @SuppressWarnings("unchecked")
-                final List<Object> list = (List<Object>)value;
-                if ( list.isEmpty() ) {
-                    return new String[0];
-                }
-                final Object firstObject = list.get(0);
-                if ( firstObject instanceof String ) {
-                    return getConverter().convert(list).defaultValue(yaml).to(String[].class);
-                } else if ( firstObject instanceof Boolean ) {
-                    return getConverter().convert(list).defaultValue(yaml).to(Boolean[].class);
-                } else if ( firstObject instanceof Long || firstObject instanceof Integer ) {
-                    return getConverter().convert(list).defaultValue(yaml).to(Long[].class);
-                } else if ( firstObject instanceof Double || firstObject instanceof Float ) {
-                    return getConverter().convert(list).defaultValue(yaml).to(Double[].class);
-                }
-            }
-            return yaml;
-        }
-
-        // binary
-        // TODO - keep track of files and delete them when configuration is UNINSTALLED/removed
-        if ( "binary".equals(typeInfo) ) {
-            if ( bundle == null ) {
-                throw new IOException("Binary files only allowed within a bundle");
-            }
-            final String path = getConverter().convert(value).defaultValue(null).to(String.class);
-            if ( path == null ) {
-                throw new IOException("Invalid path for binary property: " + value);
-            }
-            final File filePath = Util.extractFile(bundle, path);
-            if ( filePath == null ) {
-                throw new IOException("Invalid path for binary property: " + value);
-            }
-            return filePath.getAbsolutePath();
-
-        } else if ( "binary[]".equals(typeInfo) ) {
-            if ( bundle == null ) {
-                throw new IOException("Binary files only allowed within a bundle");
-            }
-            final String[] paths = getConverter().convert(value).defaultValue(null).to(String[].class);
-            if ( paths == null ) {
-                throw new IOException("Invalid paths for binary[] property: " + value);
-            }
-            final String[] filePaths = new String[paths.length];
-            int i = 0;
-            while ( i < paths.length ) {
-                final File filePath = Util.extractFile(bundle, paths[i]);
-                if ( filePath == null ) {
-                    throw new IOException("Invalid path for binary property: " + value);
-                }
-                filePaths[i] = filePath.getAbsolutePath();
-                i++;
-            }
-            return filePaths;
-        }
-
-        // scalar types and primitive types
-        if ( "String".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(yaml).to(String.class);
-
-        } else if ( "Integer".equals(typeInfo) || "int".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(yaml).to(Integer.class);
-
-        } else if ( "Long".equals(typeInfo) || "long".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(yaml).to(Long.class);
-
-        } else if ( "Float".equals(typeInfo) || "float".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(yaml).to(Float.class);
-
-        } else if ( "Double".equals(typeInfo) || "double".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(yaml).to(Double.class);
-
-        } else if ( "Byte".equals(typeInfo) || "byte".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(yaml).to(Byte.class);
-
-        } else if ( "Short".equals(typeInfo) || "short".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(yaml).to(Short.class);
-
-        } else if ( "Character".equals(typeInfo) || "char".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(yaml).to(Character.class);
-
-        } else if ( "Boolean".equals(typeInfo) || "boolean".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(yaml).to(Boolean.class);
-
-        }
-
-        // array of scalar types and primitive types
-        if ( "String[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(yaml).to(String[].class);
-
-        } else if ( "Integer[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(yaml).to(Integer[].class);
-
-        } else if ( "int[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(yaml).to(int[].class);
-
-        } else if ( "Long[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(yaml).to(Long[].class);
-
-        } else if ( "long[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(yaml).to(long[].class);
-
-        } else if ( "Float[]".equals(typeInfo)  ) {
-            return getConverter().convert(value).defaultValue(yaml).to(Float[].class);
-
-        } else if ( "float[]".equals(typeInfo)  ) {
-            return getConverter().convert(value).defaultValue(yaml).to(float[].class);
-
-        } else if ( "Double[]".equals(typeInfo)  ) {
-            return getConverter().convert(value).defaultValue(yaml).to(Double[].class);
-
-        } else if ( "double[]".equals(typeInfo)  ) {
-            return getConverter().convert(value).defaultValue(yaml).to(double[].class);
-
-        } else if ( "Byte[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(yaml).to(Byte[].class);
-
-        } else if ( "byte[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(yaml).to(byte[].class);
-
-        } else if ( "Short[]".equals(typeInfo)  ) {
-            return getConverter().convert(value).defaultValue(yaml).to(Short[].class);
-
-        } else if ( "short[]".equals(typeInfo)  ) {
-            return getConverter().convert(value).defaultValue(yaml).to(short[].class);
-
-        } else if ( "Character[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(yaml).to(Character[].class);
-
-        } else if ( "char[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(yaml).to(char[].class);
-
-        } else if ( "Boolean[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(yaml).to(Boolean[].class);
-
-        } else if ( "boolean[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(yaml).to(boolean[].class);
-        }
-
-        // Collections of scalar types
-        if ( "Collection<String>".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(yaml).to(new TypeReference<List<String>>() {});
-
-        } else if ( "Collection<Integer>".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(yaml).to(new TypeReference<List<Integer>>() {});
-
-        } else if ( "Collection<Long>".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(yaml).to(new TypeReference<List<Long>>() {});
-
-        } else if ( "Collection<Float>".equals(typeInfo)  ) {
-            return getConverter().convert(value).defaultValue(yaml).to(new TypeReference<List<Float>>() {});
-
-        } else if ( "Collection<Double>".equals(typeInfo)  ) {
-            return getConverter().convert(value).defaultValue(yaml).to(new TypeReference<List<Double>>() {});
-
-        } else if ( "Collection<Byte>".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(yaml).to(new TypeReference<List<Byte>>() {});
-
-        } else if ( "Collection<Short>".equals(typeInfo)  ) {
-            return getConverter().convert(value).defaultValue(yaml).to(new TypeReference<List<Short>>() {});
-
-        } else if ( "Collection<Character>".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(yaml).to(new TypeReference<List<Character>>() {});
-
-        } else if ( "Collection<Boolean>".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(yaml).to(new TypeReference<List<Boolean>>() {});
-        }
-
-        // unknown type - ignore configuration
-        throw new IOException("Invalid type information: " + typeInfo);
     }
 
     /**
@@ -461,7 +269,7 @@ public class YAMLUtil {
         final Object version = root.get(PROP_VERSION);
         if ( version != null ) {
 
-            final int v = getConverter().convert(version).defaultValue(-1).to(Integer.class);
+            final int v = TypeConverter.getConverter().convert(version).defaultValue(-1).to(Integer.class);
             if ( v == -1 ) {
                 SystemLogger.error("Invalid version information in " + name + " : " + version);
                 return null;
