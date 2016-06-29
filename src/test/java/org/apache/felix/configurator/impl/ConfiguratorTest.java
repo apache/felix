@@ -23,7 +23,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -48,9 +51,10 @@ public class ConfiguratorTest {
 
     private ConfigurationAdmin configurationAdmin;
 
-    @Before public void setup() {
+    @Before public void setup() throws IOException {
         bundleContext = mock(BundleContext.class);
         when(bundleContext.getBundles()).thenReturn(new Bundle[0]);
+        when(bundleContext.getDataFile("binaries" + File.separatorChar + ".check")).thenReturn(Files.createTempDirectory("test").toFile());
         configurationAdmin = mock(ConfigurationAdmin.class);
 
         configurator = new Configurator(bundleContext, configurationAdmin);

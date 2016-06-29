@@ -18,12 +18,10 @@
  */
 package org.apache.felix.configurator.impl.yaml;
 
-import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Dictionary;
@@ -33,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.felix.configurator.impl.Util;
 import org.apache.felix.configurator.impl.logger.SystemLogger;
 import org.apache.felix.configurator.impl.model.BundleState;
 import org.apache.felix.configurator.impl.model.Config;
@@ -46,7 +45,7 @@ import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.error.YAMLException;
 
-public class Util {
+public class YAMLUtil {
 
     private static final String INTERNAL_PREFIX = ":configurator:";
 
@@ -67,7 +66,7 @@ public class Util {
 
         final List<ConfigurationFile> allFiles = new ArrayList<>();
         for(final String path : paths) {
-            final List<ConfigurationFile> files = org.apache.felix.configurator.impl.yaml.Util.readYAML(bundle, path);
+            final List<ConfigurationFile> files = org.apache.felix.configurator.impl.yaml.YAMLUtil.readYAML(bundle, path);
             allFiles.addAll(files);
         }
         Collections.sort(allFiles);
@@ -94,9 +93,9 @@ public class Util {
                 final int pos = filePath.lastIndexOf('/');
                 final String name = path + filePath.substring(pos);
 
-                final String contents = getResource(name, url);
+                final String contents = Util.getResource(name, url);
                 if ( contents != null ) {
-                    final ConfigurationFile file = readYAML(name, url, bundle.getBundleId(), contents);
+                    final ConfigurationFile file = readYAML(bundle, name, url, bundle.getBundleId(), contents);
                     if ( file != null ) {
                         result.add(file);
                     }
@@ -111,13 +110,19 @@ public class Util {
 
     /**
      * Read a single YAML file
+     * @param bundle Optional bundle, might be {@code null}
      * @param name The name of the file
      * @param url The url to that file or {@code null}
      * @param bundleId The bundle id of the bundle containing the file
      * @param contents The contents of the file
      * @return The configuration file or {@code null}.
      */
-    public static ConfigurationFile readYAML(final String name, final URL url, final long bundleId, final String contents) {
+    public static ConfigurationFile readYAML(
+            final Bundle bundle,
+            final String name,
+            final URL url,
+            final long bundleId,
+            final String contents) {
         final String identifier = (url == null ? name : url.toString());
         final Map<String, Object> yaml = parseYAML(name, contents);
         final List<Object> configs = verifyYAML(name, yaml);
@@ -163,19 +168,19 @@ public class Util {
                                 if ( internalKey ) {
                                     // no need to do type conversion based on typeInfo for internal props, type conversion is done directly below
                                     if ( key.equals(PROP_ENVIRONMENTS) ) {
-                                        environments = Util.getConverter().convert(value).defaultValue(null).to(new TypeReference<Set<String>>() {});
+                                        environments = YAMLUtil.getConverter().convert(value).defaultValue(null).to(new TypeReference<Set<String>>() {});
                                         if ( environments == null ) {
                                             SystemLogger.warning("Invalid environments for configuration in '" + identifier + "' : " + pid + " - " + value);
                                         }
                                     } else if ( key.equals(PROP_RANKING) ) {
-                                        final Integer intObj = Util.getConverter().convert(value).defaultValue(null).to(Integer.class);
+                                        final Integer intObj = YAMLUtil.getConverter().convert(value).defaultValue(null).to(Integer.class);
                                         if ( intObj == null ) {
                                             SystemLogger.warning("Invalid ranking for configuration in '" + identifier + "' : " + pid + " - " + value);
                                         } else {
                                             ranking = intObj.intValue();
                                         }
                                     } else if ( key.equals(PROP_POLICY) ) {
-                                        final String stringVal = Util.getConverter().convert(value).defaultValue(null).to(String.class);
+                                        final String stringVal = YAMLUtil.getConverter().convert(value).defaultValue(null).to(String.class);
                                         if ( stringVal == null ) {
                                             SystemLogger.error("Invalid policy for configuration in '" + identifier + "' : " + pid + " - " + value);
                                         } else {
@@ -188,9 +193,9 @@ public class Util {
                                     }
                                 } else {
                                     try {
-                                        properties.put(key, convert(value, typeInfo));
+                                        properties.put(key, convert(bundle, value, typeInfo));
                                     } catch ( final IOException io ) {
-                                        SystemLogger.error("Invalid type for configuration in '" + identifier + "' : " + pid + " - " + entry.getKey());
+                                        SystemLogger.error("Invalid value/type for configuration in '" + identifier + "' : " + pid + " - " + entry.getKey());
                                         valid = false;
                                         break;
                                     }
@@ -212,8 +217,17 @@ public class Util {
         return null;
     }
 
-    public static Object convert(final Object value, final String typeInfo) throws IOException {
-        // TODO - binary
+    /**
+     * Convert a value to the given type
+     * @param bundle The bundle, might be {@code null}
+     * @param value The value
+     * @param typeInfo Optional type info, might be {@code null}
+     * @return The converted value (never returns null)
+     * @throws IOException If an error happens
+     */
+    public static Object convert(final Bundle bundle,
+            final Object value,
+            final String typeInfo) throws IOException {
         final String yaml = createYAML(value);
         if ( typeInfo == null ) {
             if ( value instanceof String || value instanceof Boolean ) {
@@ -243,6 +257,43 @@ public class Util {
                 }
             }
             return yaml;
+        }
+
+        // binary
+        // TODO - keep track of files and delete them when configuration is UNINSTALLED/removed
+        if ( "binary".equals(typeInfo) ) {
+            if ( bundle == null ) {
+                throw new IOException("Binary files only allowed within a bundle");
+            }
+            final String path = getConverter().convert(value).defaultValue(null).to(String.class);
+            if ( path == null ) {
+                throw new IOException("Invalid path for binary property: " + value);
+            }
+            final File filePath = Util.extractFile(bundle, path);
+            if ( filePath == null ) {
+                throw new IOException("Invalid path for binary property: " + value);
+            }
+            return filePath.getAbsolutePath();
+
+        } else if ( "binary[]".equals(typeInfo) ) {
+            if ( bundle == null ) {
+                throw new IOException("Binary files only allowed within a bundle");
+            }
+            final String[] paths = getConverter().convert(value).defaultValue(null).to(String[].class);
+            if ( paths == null ) {
+                throw new IOException("Invalid paths for binary[] property: " + value);
+            }
+            final String[] filePaths = new String[paths.length];
+            int i = 0;
+            while ( i < paths.length ) {
+                final File filePath = Util.extractFile(bundle, paths[i]);
+                if ( filePath == null ) {
+                    throw new IOException("Invalid path for binary property: " + value);
+                }
+                filePaths[i] = filePath.getAbsolutePath();
+                i++;
+            }
+            return filePaths;
         }
 
         // scalar types and primitive types
@@ -431,36 +482,5 @@ public class Util {
             return null;
         }
         return (List<Object>) configs;
-    }
-
-    /**
-     * Read the contents of a resource, encoded as UTF-8
-     * @param name The resource name
-     * @param url The resource URL
-     * @return The contents or {@code null}
-     */
-    public static String getResource(final String name, final URL url) {
-        URLConnection connection = null;
-        try {
-            connection = url.openConnection();
-
-            try(final BufferedReader in = new BufferedReader(
-                    new InputStreamReader(
-                        connection.getInputStream(), "UTF-8"))) {
-
-                final StringBuilder sb = new StringBuilder();
-                String line;
-
-                while ((line = in.readLine()) != null) {
-                    sb.append(line);
-                    sb.append('\n');
-                }
-
-                return sb.toString();
-            }
-        } catch ( final IOException ioe ) {
-            SystemLogger.error("Unable to read " + name, ioe);
-        }
-        return null;
     }
 }

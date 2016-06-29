@@ -18,6 +18,7 @@
  */
 package org.apache.felix.configurator.impl;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -52,6 +53,8 @@ import org.osgi.util.tracker.BundleTrackerCustomizer;
 public class Configurator {
 
     private static final String PROP_INITIAL = "configurator.initial";
+
+    private static final String PROP_DIRECTORY = "configurator.directory";
 
     private final BundleContext bundleContext;
 
@@ -129,6 +132,33 @@ public class Configurator {
      * Start the configurator.
      */
     private void start() {
+        // get the directory for storing binaries
+        String dirPath = this.bundleContext.getProperty(PROP_DIRECTORY);
+        if ( dirPath != null ) {
+            final File dir = new File(dirPath);
+            if ( dir.exists() && dir.isDirectory() ) {
+                Util.binDirectory = dir;
+            } else if ( dir.exists() ) {
+                SystemLogger.error("Directory property is pointing at a file not a dir: " + dirPath + ". Using default path.");
+            } else {
+                try {
+                    if ( dir.mkdirs() ) {
+                        Util.binDirectory = dir;
+                    }
+                } catch ( final SecurityException se ) {
+                    // ignore
+                }
+                if ( Util.binDirectory == null ) {
+                    SystemLogger.error("Unable to create a directory at: " + dirPath + ". Using default path.");
+                }
+            }
+        }
+        if ( Util.binDirectory == null ) {
+            Util.binDirectory = this.bundleContext.getDataFile("binaries" + File.separatorChar + ".check");
+            Util.binDirectory = Util.binDirectory.getParentFile();
+            Util.binDirectory.mkdirs();
+        }
+
         // before we start the tracker we process all available bundles and initial configuration
         final String initial = this.bundleContext.getProperty(PROP_INITIAL);
         if ( initial == null ) {
@@ -148,7 +178,7 @@ public class Configurator {
                     } catch (final MalformedURLException e) {
                     }
                     if ( url != null ) {
-                        final String contents = org.apache.felix.configurator.impl.yaml.Util.getResource(urlString, url);
+                        final String contents = Util.getResource(urlString, url);
                         if ( contents != null ) {
                             files.put(urlString, contents);
                             hashes.add(Util.getSHA256(contents.trim()));
@@ -170,7 +200,7 @@ public class Configurator {
                 }
                 final List<ConfigurationFile> allFiles = new ArrayList<>();
                 for(final Map.Entry<String, String> entry : files.entrySet()) {
-                    final ConfigurationFile file = org.apache.felix.configurator.impl.yaml.Util.readYAML(entry.getKey(), null, -1, entry.getValue());
+                    final ConfigurationFile file = org.apache.felix.configurator.impl.yaml.YAMLUtil.readYAML(null, entry.getKey(), null, -1, entry.getValue());
                     if ( file != null ) {
                         allFiles.add(file);
                     }
@@ -217,7 +247,7 @@ public class Configurator {
             }
             final Set<String> paths = Util.isConfigurerBundle(bundle);
             if ( paths != null ) {
-                final BundleState config = org.apache.felix.configurator.impl.yaml.Util.readConfigurationsFromBundle(bundle, paths);
+                final BundleState config = org.apache.felix.configurator.impl.yaml.YAMLUtil.readConfigurationsFromBundle(bundle, paths);
                 for(final String pid : config.getPids()) {
                     state.addAll(pid, config.getConfigurations(pid));
                 }

@@ -18,9 +18,16 @@
  */
 package org.apache.felix.configurator.impl;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
+import java.net.URL;
+import java.net.URLConnection;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
@@ -28,6 +35,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import org.apache.felix.configurator.impl.logger.SystemLogger;
 import org.osgi.framework.Bundle;
@@ -44,6 +52,8 @@ public class Util {
     public static final String PROP_CONFIGURATIONS = "configurations";
 
     private static final String DEFAULT_PATH = "OSGI-INF/configurator";
+
+    public static volatile File binDirectory;
 
     /**
      * Check if the bundle contains configurations for the configurer
@@ -161,5 +171,67 @@ public class Util {
         } catch ( final NoSuchAlgorithmException | UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Read the contents of a resource, encoded as UTF-8
+     * @param name The resource name
+     * @param url The resource URL
+     * @return The contents or {@code null}
+     */
+    public static String getResource(final String name, final URL url) {
+        URLConnection connection = null;
+        try {
+            connection = url.openConnection();
+
+            try(final BufferedReader in = new BufferedReader(
+                    new InputStreamReader(
+                        connection.getInputStream(), "UTF-8"))) {
+
+                final StringBuilder sb = new StringBuilder();
+                String line;
+
+                while ((line = in.readLine()) != null) {
+                    sb.append(line);
+                    sb.append('\n');
+                }
+
+                return sb.toString();
+            }
+        } catch ( final IOException ioe ) {
+            SystemLogger.error("Unable to read " + name, ioe);
+        }
+        return null;
+    }
+
+    public static File extractFile(final Bundle bundle, final String path) {
+        final URL url = bundle.getEntry(path);
+        if ( url == null ) {
+            SystemLogger.error("Entry " + path + " not found in bundle " + bundle);
+            return null;
+        }
+        final File newFile = new File(binDirectory, UUID.randomUUID().toString());
+        URLConnection connection = null;
+        try {
+            connection = url.openConnection();
+
+
+            try(final BufferedInputStream in = new BufferedInputStream(connection.getInputStream());
+                final FileOutputStream fos = new FileOutputStream(newFile)) {
+
+                int len = 0;
+                final byte[] buffer = new byte[16384];
+
+                while ( (len = in.read(buffer)) > 0 ) {
+                    fos.write(buffer, 0, len);
+                }
+            }
+
+            return newFile;
+        } catch ( final IOException ioe ) {
+            SystemLogger.error("Unable to read " + path + " in bundle " + bundle, ioe);
+        }
+
+        return null;
     }
 }
