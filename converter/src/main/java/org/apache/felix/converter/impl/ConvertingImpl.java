@@ -124,7 +124,7 @@ public class ConvertingImpl implements Converting {
         Class<?> targetCls = primitiveToBoxed(cls);
 
         if (!Map.class.isAssignableFrom(targetCls) &&
-                !Collections.class.isAssignableFrom(targetCls) &&
+                !Collection.class.isAssignableFrom(targetCls) &&
                 !targetCls.isArray()) {
             // For maps and collections we always want copies returned
             if (targetCls.isAssignableFrom(object.getClass()))

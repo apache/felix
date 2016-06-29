@@ -256,6 +256,19 @@ public class ConverterServiceTest {
     }
 
     @Test
+    public void testLongCollectionConversion() {
+        long[] l = converter.convert(Long.MAX_VALUE).to(long[].class);
+        assertArrayEquals(new long[] {Long.MAX_VALUE}, l);
+        Long[] l2 = converter.convert(Long.MAX_VALUE).to(Long[].class);
+        assertArrayEquals(new Long[] {Long.MAX_VALUE}, l2);
+        List<Long> ll = converter.convert(new long[] {Long.MIN_VALUE, Long.MAX_VALUE}).to(new TypeReference<List<Long>>() {});
+        assertEquals(Arrays.asList(Long.MIN_VALUE, Long.MAX_VALUE), ll);
+        List<Long> ll2 = converter.convert(Arrays.asList(123, 345)).to(new TypeReference<List<Long>>() {});
+        assertEquals(Arrays.asList(123L, 345L), ll2);
+
+    }
+
+    @Test
     public void testStandardStringArrayConversion() {
         String[] sa = {"A", "B"};
         assertEquals("A", converter.convert(sa).toString());
