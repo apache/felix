@@ -20,6 +20,7 @@ package org.apache.felix.configurator.impl;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.felix.converter.impl.ConverterService;
@@ -32,6 +33,10 @@ public class TypeConverter {
     public static Converter getConverter() {
         return new ConverterService(); // TODO use OSGi service
     }
+
+    private final List<File> allFiles = new ArrayList<File>();
+
+    private final List<File> files = new ArrayList<File>();
 
     private final Bundle bundle;
 
@@ -84,7 +89,6 @@ public class TypeConverter {
         }
 
         // binary
-        // TODO - keep track of files and delete them when configuration is UNINSTALLED/removed
         if ( "binary".equals(typeInfo) ) {
             if ( bundle == null ) {
                 throw new IOException("Binary files only allowed within a bundle");
@@ -97,6 +101,8 @@ public class TypeConverter {
             if ( filePath == null ) {
                 throw new IOException("Invalid path for binary property: " + value);
             }
+            files.add(filePath);
+            allFiles.add(filePath);
             return filePath.getAbsolutePath();
 
         } else if ( "binary[]".equals(typeInfo) ) {
@@ -114,6 +120,8 @@ public class TypeConverter {
                 if ( filePath == null ) {
                     throw new IOException("Invalid path for binary property: " + value);
                 }
+                files.add(filePath);
+                allFiles.add(filePath);
                 filePaths[i] = filePath.getAbsolutePath();
                 i++;
             }
@@ -237,6 +245,18 @@ public class TypeConverter {
     }
 
     public void cleanupFiles() {
-        // TODO
+        for(final File f : allFiles) {
+            f.delete();
+        }
+    }
+
+    public List<File> flushFiles() {
+        if ( this.files.isEmpty() ) {
+            return null;
+        } else {
+            final List<File> result = new ArrayList<>(this.files);
+            this.files.clear();
+            return result;
+        }
     }
 }

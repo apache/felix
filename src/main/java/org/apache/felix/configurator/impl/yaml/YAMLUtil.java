@@ -207,6 +207,7 @@ public class YAMLUtil {
 
                             if ( valid ) {
                                 final Config c = new Config(pid, environments, properties, bundleId, ranking, policy);
+                                c.setFiles(converter.flushFiles());
                                 configurations.add(c);
                             }
                         }

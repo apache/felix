@@ -362,6 +362,11 @@ public class Configurator {
         while ( iter.hasNext() ) {
             final Config cfg = iter.next();
             if ( cfg.getState() == ConfigState.UNINSTALL || cfg.getState() == ConfigState.UNINSTALLED ) {
+                if ( cfg.getFiles() != null ) {
+                    for(final File f : cfg.getFiles()) {
+                        f.delete();
+                    }
+                }
                 iter.remove();
             } else if ( cfg.getState() == ConfigState.INSTALLED ) {
                 if ( foundInstalled ) {

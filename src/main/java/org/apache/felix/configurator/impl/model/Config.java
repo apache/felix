@@ -18,9 +18,11 @@
  */
 package org.apache.felix.configurator.impl.model;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Dictionary;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.felix.configurator.impl.Util;
@@ -56,6 +58,8 @@ public class Config implements Serializable, Comparable<Config> {
     /** The configuration state. */
     private volatile ConfigState state = ConfigState.INSTALL;
 
+    private volatile List<File> files;
+
     public Config(final String pid,
             final Set<String> environments,
             final Dictionary<String, Object> properties,
@@ -88,6 +92,7 @@ public class Config implements Serializable, Comparable<Config> {
         out.writeInt(ranking);
         out.writeInt(index);
         out.writeObject(state.name());
+        out.writeObject(files);
     }
 
     /**
@@ -95,6 +100,7 @@ public class Config implements Serializable, Comparable<Config> {
      * - read version id
      * - deserialize fields
      */
+    @SuppressWarnings("unchecked")
     private void readObject(final java.io.ObjectInputStream in)
     throws IOException, ClassNotFoundException {
         final int version = in.readInt();
@@ -109,6 +115,7 @@ public class Config implements Serializable, Comparable<Config> {
         Util.setField(this, "ranking", in.readInt());
         this.index = in.readInt();
         this.state = ConfigState.valueOf((String)in.readObject());
+        this.files = (List<File>) in.readObject();
     }
 
     /**
@@ -190,6 +197,14 @@ public class Config implements Serializable, Comparable<Config> {
      */
     public Set<String> getEnvironments() {
         return this.environments;
+    }
+
+    public void setFiles(final List<File> f) {
+        this.files = f;
+    }
+
+    public List<File> getFiles() {
+        return this.files;
     }
 
     /**
