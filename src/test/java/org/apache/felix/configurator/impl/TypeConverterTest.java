@@ -18,10 +18,6 @@
  */
 package org.apache.felix.configurator.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.Collection;
@@ -30,6 +26,10 @@ import java.util.Map;
 import org.apache.felix.configurator.impl.yaml.YAMLUtil;
 import org.apache.felix.configurator.impl.yaml.YAMLUtilTest;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class TypeConverterTest {
 
@@ -233,27 +233,22 @@ public class TypeConverterTest {
         assertTrue(((Collection<Integer>)converter.convert(properties.get("number.array"), null, "Collection<Integer>")).iterator().next() instanceof Integer);
 
         assertTrue(converter.convert(properties.get("number.array"), null, "Collection<Long>") instanceof Collection<?>);
-        // TODO the following check is currently failing due to a bug in the converter
-//        assertTrue(((Collection<Long>)converter.convert(properties.get("number.array"), null, "Collection<Long>")).iterator().next() instanceof Long);
+        assertTrue(((Collection<Long>)converter.convert(properties.get("number.array"), null, "Collection<Long>")).iterator().next() instanceof Long);
 
         assertTrue(converter.convert(properties.get("float.array"), null, "Collection<Float>") instanceof Collection<?>);
-        // TODO the following check is currently failing due to a bug in the converter
-//        assertTrue(((Collection<Float>)converter.convert(properties.get("float.array"), null, "Collection<Float>")).iterator().next() instanceof Float);
+        assertTrue(((Collection<Float>)converter.convert(properties.get("float.array"), null, "Collection<Float>")).iterator().next() instanceof Float);
 
         assertTrue(converter.convert(properties.get("float.array"), null, "Collection<Double>") instanceof Collection<?>);
         assertTrue(((Collection<Double>)converter.convert(properties.get("float.array"), null, "Collection<Double>")).iterator().next() instanceof Double);
 
         assertTrue(converter.convert(properties.get("number.array"), null, "Collection<Short>") instanceof Collection<?>);
-        // TODO the following check is currently failing due to a bug in the converter
-//        assertTrue(((Collection<Short>)converter.convert(properties.get("number.array"), null, "Collection<Short>")).iterator().next() instanceof Short);
+        assertTrue(((Collection<Short>)converter.convert(properties.get("number.array"), null, "Collection<Short>")).iterator().next() instanceof Short);
 
         assertTrue(converter.convert(properties.get("number.array"), null, "Collection<Byte>") instanceof Collection<?>);
-        // TODO the following check is currently failing due to a bug in the converter
-//        assertTrue(((Collection<Byte>)converter.convert(properties.get("number.array"), null, "Collection<Byte>")).iterator().next() instanceof Byte);
+        assertTrue(((Collection<Byte>)converter.convert(properties.get("number.array"), null, "Collection<Byte>")).iterator().next() instanceof Byte);
 
         assertTrue(converter.convert(properties.get("string.array"), null, "Collection<Character>") instanceof Collection<?>);
-        // TODO the following check is currently failing due to a bug in the converter
-//        assertTrue(((Collection<Character>)converter.convert(properties.get("string.array"), null, "Collection<Character>")).iterator().next() instanceof Character);
+        assertTrue(((Collection<Character>)converter.convert(properties.get("string.array"), null, "Collection<Character>")).iterator().next() instanceof Character);
 
         assertTrue(converter.convert(properties.get("boolean.array"), null, "Collection<Boolean>") instanceof Collection<?>);
         assertTrue(((Collection<Boolean>)converter.convert(properties.get("boolean.array"), null, "Collection<Boolean>")).iterator().next() instanceof Boolean);
