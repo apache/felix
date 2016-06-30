@@ -30,12 +30,12 @@ import org.osgi.service.component.ComponentException;
  */
 public class Coercions
 {
-// Numbers are   AtomicInteger, AtomicLong, BigDecimal, BigInteger, Byte, Double, Float, Integer, Long, Short
-//annotation fields can be primitives, String, Class, enums, annotations, and arrays of the preceding types 
-//    input scalars
-//    String | Integer | Long | Float
-//    | Double | Byte | Short
-//| Character | Boolean
+    // Numbers are   AtomicInteger, AtomicLong, BigDecimal, BigInteger, Byte, Double, Float, Integer, Long, Short
+    //annotation fields can be primitives, String, Class, enums, annotations, and arrays of the preceding types 
+    //    input scalars
+    //    String | Integer | Long | Float
+    //    | Double | Byte | Short
+    //| Character | Boolean
     private static final byte byte0 = 0;
     private static final char char0 = 0;
     private static final double double0 = 0;
@@ -43,430 +43,432 @@ public class Coercions
     private static final int int0 = 0;
     private static final long long0 = 0;
     private static final short short0 = 0;
-    
-    public static Object coerce(Class<?> type, Object raw, Bundle bundle )
+
+    public static Object coerce(Class<?> type, Object raw, Bundle bundle)
     {
-        if (raw != null && raw.getClass() == type) {
-            return raw;
-        }
-        if (type == Byte.class || type == byte.class)
+        if ( type == Byte.class || type == byte.class )
         {
-            return coerceToByte(raw);
+            return coerceToByte( raw );
         }
-        if (type == Boolean.class || type == boolean.class)
+        if ( type == Boolean.class || type == boolean.class )
         {
-            return coerceToBoolean(raw);
+            return coerceToBoolean( raw );
         }
-        if (type == Character.class || type == char.class)
+        if ( type == Character.class || type == char.class )
         {
-            return coerceToChar(raw);
+            return coerceToChar( raw );
         }
-        if (type == Class.class)
+        if ( type == Class.class )
         {
-            return coerceToClass(raw, bundle);
+            return coerceToClass( raw, bundle );
         }
-        if (type == Double.class || type == double.class)
+        if ( type == Double.class || type == double.class )
         {
-            return coerceToDouble(raw);
+            return coerceToDouble( raw );
         }
-        if (type.isEnum())
+        if ( type.isEnum() )
         {
             Class clazz = type; //TODO is there a better way to do ? enum creation?
-            return coerceToEnum(raw, clazz);
+            return coerceToEnum( raw, clazz );
         }
-        if (type == Float.class || type == float.class)
+        if ( type == Float.class || type == float.class )
         {
-            return coerceToFloat(raw);
+            return coerceToFloat( raw );
         }
-        if (type == Integer.class || type == int.class)
+        if ( type == Integer.class || type == int.class )
         {
-            return coerceToInteger(raw);
+            return coerceToInteger( raw );
         }
-        if (type == Long.class || type == long.class)
+        if ( type == Long.class || type == long.class )
         {
-            return coerceToLong(raw);
+            return coerceToLong( raw );
         }
-        if (type == Short.class || type == short.class)
+        if ( type == Short.class || type == short.class )
         {
-            return coerceToShort(raw);
+            return coerceToShort( raw );
         }
-        if (type == String.class)
+        if ( type == String.class )
         {
-            return coerceToString(raw);
+            return coerceToString( raw );
         }
-        if (raw != null) 
+        if ( raw != null )
         {
-            raw = multipleToSingle(raw, null);
-            if (raw != null && type.isAssignableFrom(raw.getClass())) 
+            raw = multipleToSingle( raw, null );
+            if ( raw != null )
             {
-                return raw;
+                if ( type.isAssignableFrom( raw.getClass() ) )
+                {
+                    return raw;
+                }
+                throw new ComponentException( "unexpected output type " + type );
             }
         }
-        throw new ComponentException ("unexpected output type " + type);
+        return null;
     }
-    
+
     public static byte coerceToByte(Object o)
     {
         o = multipleToSingle( o, byte0 );
-        if (o instanceof Byte)
+        if ( o instanceof Byte )
         {
-            return (Byte)o;
+            return (Byte) o;
         }
-        if (o instanceof String)
+        if ( o instanceof String )
         {
             try
             {
-                return Byte.parseByte( (String)o );
+                return Byte.parseByte( (String) o );
             }
             catch ( NumberFormatException e )
             {
-                throw new ComponentException(e);
+                throw new ComponentException( e );
             }
         }
-        if (o instanceof Boolean)
+        if ( o instanceof Boolean )
         {
-            return (Boolean)o? 1: byte0;
+            return (Boolean) o? 1: byte0;
         }
-        if (o instanceof Character)
+        if ( o instanceof Character )
         {
-            return ( byte ) ((Character)o).charValue();
+            return (byte) ( (Character) o ).charValue();
         }
-        if (o instanceof Number)
+        if ( o instanceof Number )
         {
-            return ((Number)o).byteValue();
+            return ( (Number) o ).byteValue();
         }
-        if (o == null) 
+        if ( o == null )
         {
             return 0;
         }
-        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass());
+        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass() );
     }
-    
+
     public static char coerceToChar(Object o)
     {
         o = multipleToSingle( o, byte0 );
-        if (o instanceof Character)
+        if ( o instanceof Character )
         {
-            return (Character)o;
+            return (Character) o;
         }
-        if (o instanceof String)
+        if ( o instanceof String )
         {
-            if (((String)o).length() > 0) 
+            if ( ( (String) o ).length() > 0 )
             {
-                return ((String)o).charAt(0);
+                return ( (String) o ).charAt( 0 );
             }
             return char0;
         }
-        if (o instanceof Boolean)
+        if ( o instanceof Boolean )
         {
-            return (Boolean)o? 1: char0;
+            return (Boolean) o? 1: char0;
         }
-        if (o instanceof Number)
+        if ( o instanceof Number )
         {
-            return (char)((Number)o).intValue();
+            return (char) ( (Number) o ).intValue();
         }
-        if (o == null) 
+        if ( o == null )
         {
             return char0;
         }
-        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass());
+        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass() );
     }
-    
+
     public static double coerceToDouble(Object o)
     {
         o = multipleToSingle( o, double0 );
-        if (o instanceof Double)
+        if ( o instanceof Double )
         {
-            return (Double)o;
+            return (Double) o;
         }
-        if (o instanceof String)
+        if ( o instanceof String )
         {
             try
             {
-                return Double.parseDouble((String)o );
+                return Double.parseDouble( (String) o );
             }
             catch ( NumberFormatException e )
             {
-                throw new ComponentException(e);
+                throw new ComponentException( e );
             }
         }
-        if (o instanceof Boolean)
+        if ( o instanceof Boolean )
         {
-            return (Boolean)o? 1: 0;
+            return (Boolean) o? 1: 0;
         }
-        if (o instanceof Character)
+        if ( o instanceof Character )
         {
-            return ( double ) ((Character)o).charValue();
+            return (double) ( (Character) o ).charValue();
         }
-        if (o instanceof Number)
+        if ( o instanceof Number )
         {
-            return ((Number)o).doubleValue();
+            return ( (Number) o ).doubleValue();
         }
-        if (o == null) 
+        if ( o == null )
         {
             return 0;
         }
-        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass());
+        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass() );
     }
-    
+
     public static float coerceToFloat(Object o)
     {
         o = multipleToSingle( o, float0 );
-        if (o instanceof Float)
+        if ( o instanceof Float )
         {
-            return (Float)o;
+            return (Float) o;
         }
-        if (o instanceof String)
+        if ( o instanceof String )
         {
             try
             {
-                return Float.parseFloat((String)o );
+                return Float.parseFloat( (String) o );
             }
             catch ( NumberFormatException e )
             {
-                throw new ComponentException(e);
+                throw new ComponentException( e );
             }
         }
-        if (o instanceof Boolean)
+        if ( o instanceof Boolean )
         {
-            return (Boolean)o? 1: 0;
+            return (Boolean) o? 1: 0;
         }
-        if (o instanceof Character)
+        if ( o instanceof Character )
         {
-            return ( float ) ((Character)o).charValue();
+            return (float) ( (Character) o ).charValue();
         }
-        if (o instanceof Number)
+        if ( o instanceof Number )
         {
-            return ((Number)o).floatValue();
+            return ( (Number) o ).floatValue();
         }
-        if (o == null) 
+        if ( o == null )
         {
             return 0;
         }
-        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass());
+        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass() );
     }
-    
+
     public static int coerceToInteger(Object o)
     {
         o = multipleToSingle( o, int0 );
-        if (o instanceof Integer)
+        if ( o instanceof Integer )
         {
-            return (Integer)o;
+            return (Integer) o;
         }
-        if (o instanceof String)
+        if ( o instanceof String )
         {
             try
             {
-                return Integer.parseInt( (String)o );
+                return Integer.parseInt( (String) o );
             }
             catch ( NumberFormatException e )
             {
-                throw new ComponentException(e);
+                throw new ComponentException( e );
             }
         }
-        if (o instanceof Boolean)
+        if ( o instanceof Boolean )
         {
-            return (Boolean)o? 1: 0;
+            return (Boolean) o? 1: 0;
         }
-        if (o instanceof Character)
+        if ( o instanceof Character )
         {
-            return ( int ) ((Character)o).charValue();
+            return (int) ( (Character) o ).charValue();
         }
-        if (o instanceof Number)
+        if ( o instanceof Number )
         {
-            return ((Number)o).intValue();
+            return ( (Number) o ).intValue();
         }
-        if (o == null) 
+        if ( o == null )
         {
             return 0;
         }
-        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass());
+        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass() );
     }
-    
+
     public static long coerceToLong(Object o)
     {
         o = multipleToSingle( o, long0 );
-        if (o instanceof Long)
+        if ( o instanceof Long )
         {
-            return (Long)o;
+            return (Long) o;
         }
-        if (o instanceof String)
+        if ( o instanceof String )
         {
             try
             {
-                return Long.parseLong( (String)o );
+                return Long.parseLong( (String) o );
             }
             catch ( NumberFormatException e )
             {
-                throw new ComponentException(e);
+                throw new ComponentException( e );
             }
         }
-        if (o instanceof Boolean)
+        if ( o instanceof Boolean )
         {
-            return (Boolean)o? 1: 0;
+            return (Boolean) o? 1: 0;
         }
-        if (o instanceof Character)
+        if ( o instanceof Character )
         {
-            return ( long ) ((Character)o).charValue();
+            return (long) ( (Character) o ).charValue();
         }
-        if (o instanceof Number)
+        if ( o instanceof Number )
         {
-            return ((Number)o).longValue();
+            return ( (Number) o ).longValue();
         }
-        if (o == null) 
+        if ( o == null )
         {
             return 0;
         }
-        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass());
+        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass() );
     }
-    
+
     public static short coerceToShort(Object o)
     {
         o = multipleToSingle( o, short0 );
-        if (o instanceof Short)
+        if ( o instanceof Short )
         {
-            return (Short)o;
+            return (Short) o;
         }
-        if (o instanceof String)
+        if ( o instanceof String )
         {
             try
             {
-                return Short.parseShort( (String)o );
+                return Short.parseShort( (String) o );
             }
             catch ( NumberFormatException e )
             {
-                throw new ComponentException(e);
+                throw new ComponentException( e );
             }
         }
-        if (o instanceof Boolean)
+        if ( o instanceof Boolean )
         {
-            return (Boolean)o? 1: short0;
+            return (Boolean) o? 1: short0;
         }
-        if (o instanceof Character)
+        if ( o instanceof Character )
         {
-            return ( short ) ((Character)o).charValue();
+            return (short) ( (Character) o ).charValue();
         }
-        if (o instanceof Number)
+        if ( o instanceof Number )
         {
-            return ((Number)o).shortValue();
+            return ( (Number) o ).shortValue();
         }
-        if (o == null) 
+        if ( o == null )
         {
             return 0;
         }
-        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass());
+        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass() );
     }
-    
+
     public static String coerceToString(Object o)
     {
         o = multipleToSingle( o, null );
-        if (o instanceof String)
+        if ( o instanceof String )
         {
-            return (String)o;
+            return (String) o;
         }
-        if (o == null)
+        if ( o == null )
         {
             return null;
         }
-        
+
         return o.toString();
     }
-    
+
     public static boolean coerceToBoolean(Object o)
     {
         o = multipleToSingle( o, false );
-        if (o instanceof Boolean)
+        if ( o instanceof Boolean )
         {
-            return (Boolean)o;
+            return (Boolean) o;
         }
-        if (o instanceof String)
+        if ( o instanceof String )
         {
             try
             {
-                return Boolean.parseBoolean( (String)o );
+                return Boolean.parseBoolean( (String) o );
             }
             catch ( NumberFormatException e )
             {
-                throw new ComponentException(e);
+                throw new ComponentException( e );
             }
         }
-        if (o instanceof Character)
+        if ( o instanceof Character )
         {
-            return ((Character)o).charValue() != 0;
+            return ( (Character) o ).charValue() != 0;
         }
-        if (o instanceof Number)
+        if ( o instanceof Number )
         {
-            return ((Number)o).doubleValue() != 0D;
+            return ( (Number) o ).doubleValue() != 0D;
         }
-        if (o == null) 
+        if ( o == null )
         {
             return false;
         }
-        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass());
+        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass() );
     }
-    
+
     public static Class<?> coerceToClass(Object o, Bundle b)
     {
         o = multipleToSingle( o, null );
-        if (o == null)
+        if ( o == null )
         {
             return null;
         }
-        if (o instanceof String)
+        if ( o instanceof String )
         {
             try
             {
-                return b.loadClass( (String)o );
+                return b.loadClass( (String) o );
             }
             catch ( ClassNotFoundException e )
             {
-                throw new ComponentException(e);
+                throw new ComponentException( e );
             }
         }
-        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass());
+        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass() );
     }
-    
+
     public static <T extends Enum<T>> T coerceToEnum(Object o, Class<T> clazz)
     {
         o = multipleToSingle( o, null );
-        if (o instanceof String)
+        if ( o instanceof String )
         {
             try
             {
-            return Enum.valueOf( clazz, (String)o );
+                return Enum.valueOf( clazz, (String) o );
             }
             catch ( IllegalArgumentException e )
             {
-                throw new ComponentException(e);
+                throw new ComponentException( e );
             }
         }
-        if (o == null) 
+        if ( o == null )
         {
             return null;
         }
-        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass());
+        throw new ComponentException( "Unrecognized input value: " + o + " of type: " + o.getClass() );
     }
-    
+
     private static Object multipleToSingle(Object o, Object defaultValue)
     {
-        if (o instanceof Collection)
+        if ( o instanceof Collection )
         {
             return firstCollectionElement( o, defaultValue );
         }
-        if (o != null && o.getClass().isArray()) {
-            return firstArrayElement( o, defaultValue);
+        if ( o != null && o.getClass().isArray() )
+        {
+            return firstArrayElement( o, defaultValue );
         }
         return o;
     }
-    
-    private static Object firstCollectionElement( Object raw, Object defaultValue )
+
+    private static Object firstCollectionElement(Object raw, Object defaultValue)
     {
-        if (!(raw instanceof Collection)) 
+        if ( !( raw instanceof Collection ) )
         {
-            throw new ComponentException("Not a collection: " + raw);
+            throw new ComponentException( "Not a collection: " + raw );
         }
-        Collection<?> c = ( Collection<?> ) raw;
-        if (c.isEmpty())
+        Collection<?> c = (Collection<?>) raw;
+        if ( c.isEmpty() )
         {
             return defaultValue;
         }
@@ -475,10 +477,11 @@ public class Coercions
 
     private static Object firstArrayElement(Object o, Object defaultValue)
     {
-        if (o == null || !o.getClass().isArray()) {
-            throw new ComponentException("Not an array: " + o);
+        if ( o == null || !o.getClass().isArray() )
+        {
+            throw new ComponentException( "Not an array: " + o );
         }
-        if (Array.getLength( o ) == 0)
+        if ( Array.getLength( o ) == 0 )
         {
             return defaultValue;
         }
