@@ -15,16 +15,29 @@
  */
 package org.osgi.service.converter;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Interface to specify the target of the encoding operation.
  *
- * @author $Id:$
+ * @author $Id: 244b81b5e2276d97ac90d3e157ebaa613b424d05 $
+ * @ThreadSafe
  */
+@ProviderType
 public interface Encoding {
+	/**
+	 * Specify that keys with a {@code null} value must not appear in the
+	 * result. If not specified {@code null} values will be included in the
+	 * result.
+	 * 
+	 * @return This Encoding object to allow further invocations on it.
+	 */
+	Encoding ignoreNull();
+
 	/**
 	 * Specify that the encoded output should be formatted to look 'pretty',
 	 * which may make it easier for humans to read. If not specified, the
@@ -36,21 +49,23 @@ public interface Encoding {
 
 	/**
 	 * Use an output stream as the target of the encoding operation. UTF-8 will
-	 * be used, if applicable.
+	 * be used if applicable, the character set may not apply to binary
+	 * encodings.
 	 *
 	 * @param out The output stream to use.
+	 * @throws IOException If an I/O error occurred.
 	 */
-    default void to(OutputStream os) {
-        to(os, StandardCharsets.UTF_8);
-    }
+	void to(OutputStream out) throws IOException;
 
 	/**
 	 * Use an output stream as the target of the encoding operation.
 	 *
 	 * @param out The output stream to use.
-	 * @param charset The character set to use.
+	 * @param charset The character set to use, if applicable, the character set
+	 *            may not apply to binary encodings.
+	 * @throws IOException If an I/O error occurred.
 	 */
-	void to(OutputStream out, Charset charset);
+	void to(OutputStream out, Charset charset) throws IOException;
 
 	/**
 	 * Encode the object and append the result to an appendable.

@@ -17,6 +17,8 @@ package org.osgi.service.converter;
 
 import java.lang.reflect.Type;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * The Codec service can be used to encode a given object in a certain
  * representation, for example JSON, YAML or XML. The Codec service can also
@@ -24,8 +26,10 @@ import java.lang.reflect.Type;
  * encode/decode only a single format. To support multiple encoding formats
  * register multiple services.
  * 
- * @author $Id:$
+ * @author $Id: 66e40c74252c1c5c72db50e784d1efb7ab5863c3 $
+ * @ThreadSafe
  */
+@ProviderType
 public interface Codec {
 	/**
 	 * Start specifying a decode operation.
@@ -35,7 +39,7 @@ public interface Codec {
 	 * @return A {@link Decoding} object to specify the source for the decode
 	 *         operation.
 	 */
-    <T> Decoding<T> decode(Class<T> cls);
+	<T> Decoding<T> decode(Class<T> cls);
 
 	/**
 	 * Start specifying a decode operation.
@@ -54,23 +58,23 @@ public interface Codec {
 	 * @return A {@link Decoding} object to specify the source for the decode
 	 *         operation.
 	 */
-	Decoding<?> decode(Type type);
+	Decoding< ? > decode(Type type);
 
-    /**
-	 * Start specifying an encode opertation.
+	/**
+	 * Start specifying an encode operation.
 	 * 
 	 * @param obj The object to encode.
 	 * @return an Encoding object to specify the target for the decode
 	 *         operation.
 	 */
-    Encoding encode(Object obj);
+	Encoding encode(Object obj);
 
-    /**
+	/**
 	 * Specify the converter to be used by the code, if an alternative, adapted,
 	 * converter is to be used.
 	 * 
 	 * @param converter The converter to use.
 	 * @return A codec that uses the converter as specified.
 	 */
-    Codec with(Converter converter);
+	Codec with(Converter converter);
 }

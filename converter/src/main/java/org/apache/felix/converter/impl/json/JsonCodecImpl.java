@@ -96,6 +96,12 @@ public class JsonCodecImpl implements Codec {
         }
 
         @Override
+        public Encoding ignoreNull() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
         public Encoding pretty() {
             // TODO Auto-generated method stub
             return null;

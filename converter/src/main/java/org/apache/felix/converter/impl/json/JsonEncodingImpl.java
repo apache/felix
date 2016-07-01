@@ -34,15 +34,13 @@ public class JsonEncodingImpl implements Encoding {
     private final Converter converter;
     private final Map<String, Object> configuration;
     private final Object object;
+    private final boolean ignoreNull;
 
     JsonEncodingImpl(Converter c, Map<String, Object> cfg, Object obj) {
         converter = c;
         configuration = cfg;
+        ignoreNull = Boolean.TRUE.equals(Boolean.parseBoolean((String) configuration.get("ignoreNull")));
         object = obj;
-    }
-
-    private boolean ignoreNull() {
-        return Boolean.TRUE.equals(Boolean.parseBoolean((String) configuration.get("ignoreNull")));
     }
 
     @Override
@@ -62,7 +60,7 @@ public class JsonEncodingImpl implements Encoding {
     @SuppressWarnings("rawtypes")
     private String encode(Object obj) {
         if (obj == null) {
-            return ignoreNull() ? "" : "null";
+            return ignoreNull ? "" : "null";
         }
 
         if (obj instanceof Map) {
@@ -112,7 +110,7 @@ public class JsonEncodingImpl implements Encoding {
         StringBuilder sb = new StringBuilder("{");
         for (Entry entry : (Set<Entry>) m.entrySet()) {
             if (entry.getKey() == null || entry.getValue() == null)
-                if (ignoreNull())
+                if (ignoreNull)
                     continue;
 
             if (sb.length() > 1)
@@ -128,6 +126,12 @@ public class JsonEncodingImpl implements Encoding {
     }
 
     @Override
+    public Encoding ignoreNull() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
     public Encoding pretty() {
         // TODO Auto-generated method stub
         return null;
@@ -137,5 +141,11 @@ public class JsonEncodingImpl implements Encoding {
     public Appendable to(Appendable out) {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    @Override
+    public void to(OutputStream out) throws IOException {
+        // TODO Auto-generated method stub
+
     }
 }

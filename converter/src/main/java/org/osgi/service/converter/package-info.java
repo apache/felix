@@ -15,10 +15,24 @@
  */
 
 /**
- * Converter Package.
+ * Converter Package Version 1.0.
+ * <p>
+ * Bundles wishing to use this package must list the package in the
+ * Import-Package header of the bundle's manifest. This package has two types of
+ * users: the consumers that use the API in this package and the providers that
+ * implement the API in this package.
+ * <p>
+ * Example import for consumers using the API in this package:
+ * <p>
+ * {@code  Import-Package: org.osgi.service.converter; version="[1.0,2.0)"}
+ * <p>
+ * Example import for providers implementing the API in this package:
+ * <p>
+ * {@code  Import-Package: org.osgi.service.converter; version="[1.0,1.1)"}
  * 
- * @author $Id:$
+ * @author $Id: 1b82a2a1db1431c5e4398f368662b5b6fb5f8547 $
  */
-@org.osgi.annotation.versioning.Version("1.0")
+@Version("1.0")
 package org.osgi.service.converter;
 
+import org.osgi.annotation.versioning.Version;

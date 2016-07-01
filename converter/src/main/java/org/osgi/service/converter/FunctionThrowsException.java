@@ -24,10 +24,11 @@ package org.osgi.service.converter;
 @FunctionalInterface
 public interface FunctionThrowsException<T, R> {
     /**
-     * Applies this function to the argument.
-     * @param t The function argument
-     * @return The function result
-     * @throws Exception An exception can be thrown by the function.
-     */
+	 * Applies this function to the argument.
+	 *
+	 * @param t The function argument
+	 * @return The function result
+	 * @throws Exception An exception can be thrown by the function.
+	 */
     R apply(T t) throws Exception;
 }

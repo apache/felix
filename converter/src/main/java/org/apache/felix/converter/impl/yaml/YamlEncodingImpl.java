@@ -49,6 +49,17 @@ public class YamlEncodingImpl implements Encoding {
     }
 
     @Override
+    public Encoding ignoreNull() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void to(OutputStream out) throws IOException {
+        // TODO Auto-generated method stub
+
+    }
+    @Override
     public void to(OutputStream os, Charset charset) {
         try {
             os.write(encode(object).getBytes(charset));

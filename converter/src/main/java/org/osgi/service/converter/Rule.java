@@ -15,46 +15,45 @@
  */
 package org.osgi.service.converter;
 
-import java.util.function.Function;
-
 /**
  * A rule is a data entity can hold all the information needed to specify a
  * custom conversion for use by an @{link Adapter}.
  *
  * @param <F> The type to convert from.
  * @param <T> The type to convert to.
- * @author $Id:$
+ * @author $Id: 7f624253be48fc23d8a793b38673305dbfd5ff9a $
+ * @Immutable
  */
 public class Rule<F, T> {
-    private final Function<F, T> toFun;
-    private final Function<T, F> fromFun;
+	private final FunctionThrowsException<F,T>	toFun;
+	private final FunctionThrowsException<T,F>	fromFun;
 
 	/**
 	 * Specify the functions to do the conversions in both directions.
-	 * 
+	 *
 	 * @param to The function that performs the conversion.
 	 * @param from The function that performs the reverse conversion.
 	 */
-    public Rule(Function<F, T> to, Function<T, F> from) {
-        toFun = to;
-        fromFun = from;
-    }
+	public Rule(FunctionThrowsException<F,T> to, FunctionThrowsException<T,F> from) {
+		toFun = to;
+		fromFun = from;
+	}
 
 	/**
 	 * Obtain the conversion function.
-	 * 
+	 *
 	 * @return The conversion function.
 	 */
-    public Function<F, T> getToFunction() {
-        return toFun;
-    }
+	public FunctionThrowsException<F,T> getToFunction() {
+		return toFun;
+	}
 
 	/**
 	 * Obtain the reverse conversion function.
-	 * 
+	 *
 	 * @return The reverse conversion function.
 	 */
-    public Function<T, F> getFromFunction() {
-        return fromFun;
-    }
+	public FunctionThrowsException<T,F> getFromFunction() {
+		return fromFun;
+	}
 }

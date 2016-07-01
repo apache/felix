@@ -76,6 +76,12 @@ public class AdapterImpl implements Adapter {
     }
 
     @Override
+    public <F, T> Adapter rule(FunctionThrowsException<F, T> toFun, FunctionThrowsException<T, F> fromFun) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
     public <F, T> Adapter rule(Rule<F, T> rule) {
         // TODO Auto-generated method stub
         return null;

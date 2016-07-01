@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 package org.osgi.service.converter;
+
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
@@ -26,29 +27,28 @@ import java.lang.reflect.Type;
  * this reference up and return it with the getType() call.
  *
  * <pre>
- *  List<String> result =
- *      converter.convert(Arrays.asList(1,2,3)).
- *          to(new TypeReference&lt;List&lt;String&gt;&gt;() {});
+ * List&lt;String&gt; result = converter.convert(Arrays.asList(1, 2, 3))
+ * 		.to(new TypeReference&lt;List&lt;String&gt;&gt;() {});
  * </pre>
  *
  * @param <T> The target type for the conversion.
- * @author $Id:$
+ * @author $Id: 8c84f9cc11f7d5b063de7b03664db7a3703f2e8f $
+ * @Immutable
  */
 public class TypeReference<T> {
 	/**
-	 * A {@link TypeReference} cannot be directly instantiated. To use it it has
-	 * to be extended, typically as an anonymous inner class.
+	 * A {@link TypeReference} cannot be directly instantiated. To use it, it
+	 * has to be extended, typically as an anonymous inner class.
 	 */
-	protected TypeReference() {
-	}
+	protected TypeReference() {}
 
-    /**
-     * Return the actual type of this Type Reference
-     *
-     * @return the type of this reference.
-     */
-    public Type getType() {
-        return ((ParameterizedType) getClass().
-            getGenericSuperclass()).getActualTypeArguments()[0];
-    }
+	/**
+	 * Return the actual type of this Type Reference
+	 *
+	 * @return the type of this reference.
+	 */
+	public Type getType() {
+		return ((ParameterizedType) getClass().getGenericSuperclass())
+				.getActualTypeArguments()[0];
+	}
 }

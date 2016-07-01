@@ -15,13 +15,17 @@
  */
 package org.osgi.service.converter;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * The Converter service is used to start a conversion. The service is obtained
  * from the service registry. The conversion is then completed via the
  * Converting interface that has methods to specify the target type.
  * 
- * @author $Id:$
+ * @author $Id: f4fc5fc8137df578658ca9b33146f0f5daa22436 $
+ * @ThreadSafe
  */
+@ProviderType
 public interface Converter {
 	/**
 	 * Start a conversion for the given object.
@@ -29,7 +33,7 @@ public interface Converter {
 	 * @param obj The object that should be converted.
 	 * @return A {@link Converting} object to complete the conversion.
 	 */
-    Converting convert(Object obj);
+	Converting convert(Object obj);
 
 	/**
 	 * Obtain an adapter to this converter. The adapter behaves just like the
@@ -38,5 +42,5 @@ public interface Converter {
 	 * 
 	 * @return An adapter to this converter.
 	 */
-    Adapter getAdapter();
+	Adapter getAdapter();
 }

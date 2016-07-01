@@ -18,12 +18,16 @@ package org.osgi.service.converter;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * Interface to specify the source of the decoding operation
  *
  * @param <T> The target type for the decoding operation.
- * @author $Id:$
+ * @author $Id: 19d4ee85851deff4e067be88c7f93076b3db340b $
+ * @ThreadSafe
  */
+@ProviderType
 public interface Decoding<T> {
 	/**
 	 * Use an input stream as the source of the decoding operation. As encoding
@@ -57,5 +61,5 @@ public interface Decoding<T> {
 	 * @param in The char sequence to use.
 	 * @return the decoded object.
 	 */
-    T from(CharSequence in);
+	T from(CharSequence in);
 }
