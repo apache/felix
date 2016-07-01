@@ -28,7 +28,7 @@ public class ConverterFactory {
 	 *
 	 * @return The converter.
 	 */
-	Converter standardConverter() {
+    public static Converter standardConverter() {
         // Implementations must replace this class to return the actual
         // implementation.
 	    return new ConverterService();
