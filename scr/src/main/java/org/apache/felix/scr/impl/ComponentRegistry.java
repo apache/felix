@@ -30,16 +30,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.felix.scr.impl.helper.ComponentMethods;
+import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.inject.ComponentMethodsImpl;
+import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.apache.felix.scr.impl.manager.ComponentActivator;
 import org.apache.felix.scr.impl.manager.ComponentHolder;
 import org.apache.felix.scr.impl.manager.ConfigurableComponentHolder;
-import org.apache.felix.scr.impl.manager.RegionConfigurationSupport;
-import org.apache.felix.scr.impl.metadata.TargetedPID;
-import org.apache.felix.scr.impl.helper.SimpleLogger;
-import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.apache.felix.scr.impl.manager.DependencyManager;
+import org.apache.felix.scr.impl.manager.RegionConfigurationSupport;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
+import org.apache.felix.scr.impl.metadata.TargetedPID;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -344,14 +344,21 @@ public class ComponentRegistry
         	ComponentActivator activator = holder.getActivator();
         	if (activator != null)
         	{
-        		Bundle holderBundle = activator.getBundleContext().getBundle();
-        		for (Bundle b: bundles)
-        		{
-        			if (b == holderBundle)
-        			{
-        				holders.add(holder);
-        			}
-        		}
+        	    try
+        	    {
+            		Bundle holderBundle = activator.getBundleContext().getBundle();
+            		for (Bundle b: bundles)
+            		{
+            			if (b == holderBundle)
+            			{
+            				holders.add(holder);
+            			}
+            		}
+        	    }
+        	    catch ( IllegalStateException ise)
+        	    {
+        	        // ignore inactive bundles
+        	    }
         	}
         }
         return holders;
@@ -478,7 +485,7 @@ public class ComponentRegistry
         // fall back: bundle is not considered active
         return false;
     }
-    
+
     private final ThreadLocal<List<ServiceReference<?>>> circularInfos = new ThreadLocal<List<ServiceReference<?>>> ()
     {
 
@@ -487,9 +494,9 @@ public class ComponentRegistry
         {
             return new ArrayList<ServiceReference<?>>();
         }
-    }; 
-    
-    
+    };
+
+
     /**
      * Track getService calls by service reference.
      * @param serviceReference
@@ -513,14 +520,14 @@ public class ComponentRegistry
         info.add(serviceReference);
         return false;
     }
-    
 
-    private class Info 
+
+    private class Info
     {
-        
+
         private final List<ServiceReference<?>> info;
-        
-        
+
+
         public Info(List<ServiceReference<?>> info)
         {
             this.info = info;
@@ -545,9 +552,9 @@ public class ComponentRegistry
             }
             return sb.toString();
         }
-        
+
     }
-        
+
     public <T> void leaveCreate(final ServiceReference<T> serviceReference)
     {
         List<ServiceReference<?>> info = circularInfos.get();
@@ -560,9 +567,9 @@ public class ComponentRegistry
             else
             {
                 info.remove(serviceReference);
-            } 
+            }
         }
-        
+
     }
 
     /**
@@ -577,7 +584,7 @@ public class ComponentRegistry
         final List<Entry<?, ?>> dependencyManagers = m_missingDependencies.remove( serviceReference );
         if ( dependencyManagers != null )
         {
-            
+
             Runnable runnable = new Runnable()
             {
 
@@ -653,19 +660,20 @@ public class ComponentRegistry
         {
             return trackingCount;
         }
-        
+
         @Override
-        public String toString() 
+        public String toString()
         {
             return dm.toString() + "@" + trackingCount;
         }
     }
-    
+
     private final ConcurrentMap<Long, RegionConfigurationSupport> bundleToRcsMap = new ConcurrentHashMap<Long, RegionConfigurationSupport>();
 
     public RegionConfigurationSupport registerRegionConfigurationSupport(
             ServiceReference<ConfigurationAdmin> reference) {
         RegionConfigurationSupport trialRcs = new RegionConfigurationSupport(m_logger, reference) {
+            @Override
             protected Collection<ComponentHolder<?>> getComponentHolders(TargetedPID pid)
             {
                 return ComponentRegistry.this.getComponentHoldersByPid(pid);
@@ -682,7 +690,7 @@ public class ComponentRegistry
 		while (true)
 		{
 			existing = bundleToRcsMap.putIfAbsent(bundleId, trialRcs);
-			if (existing == null) 
+			if (existing == null)
 			{
 				trialRcs.start();
 				return trialRcs;
@@ -711,6 +719,6 @@ public class ComponentRegistry
 		{
 			bundleToRcsMap.remove(rcs.getBundleId());
 		}
-		
+
 	}
 }
