@@ -45,6 +45,7 @@ import org.osgi.service.component.runtime.dto.ReferenceDTO;
 import org.osgi.service.component.runtime.dto.SatisfiedReferenceDTO;
 import org.osgi.service.component.runtime.dto.UnsatisfiedReferenceDTO;
 import org.osgi.util.promise.Promise;
+import org.osgi.util.promise.Promises;
 
 public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
 {
@@ -61,6 +62,9 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
 		this.componentRegistry = componentRegistry;
 	}
 
+	/**
+	 * @see org.osgi.service.component.runtime.ServiceComponentRuntime#getComponentDescriptionDTOs(org.osgi.framework.Bundle[])
+	 */
 	public Collection<ComponentDescriptionDTO> getComponentDescriptionDTOs(Bundle... bundles)
 	{
 		List<ComponentHolder<?>> holders;
@@ -76,11 +80,18 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
 		List<ComponentDescriptionDTO> result = new ArrayList<ComponentDescriptionDTO>(holders.size());
 		for (ComponentHolder<?> holder: holders)
 		{
-			result.add(holderToDescription(holder));
+		    ComponentDescriptionDTO dto = holderToDescription(holder);
+		    if ( dto != null )
+		    {
+		        result.add(dto);
+		    }
 		}
 		return result;
 	}
 
+	/**
+	 * @see org.osgi.service.component.runtime.ServiceComponentRuntime#getComponentDescriptionDTO(org.osgi.framework.Bundle, java.lang.String)
+	 */
 	public ComponentDescriptionDTO getComponentDescriptionDTO(Bundle bundle, String name)
 	{
 	    ComponentHolder<?> holder = componentRegistry.getComponentHolder(bundle, name);
@@ -94,40 +105,84 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
 		}
 	}
 
+	/**
+	 * @see org.osgi.service.component.runtime.ServiceComponentRuntime#getComponentConfigurationDTOs(org.osgi.service.component.runtime.dto.ComponentDescriptionDTO)
+	 */
 	public Collection<ComponentConfigurationDTO> getComponentConfigurationDTOs(ComponentDescriptionDTO description)
 	{
 		if ( description == null)
 		{
 			return Collections.emptyList();
 		}
-		ComponentHolder<?> holder = getHolderFromDescription( description);
-		//Get a fully filled out valid description DTO
-		description = holderToDescription(holder);
-		List<? extends ComponentManager<?>> managers = holder.getComponents();
-		List<ComponentConfigurationDTO> result = new ArrayList<ComponentConfigurationDTO>(managers.size());
-		for (ComponentManager<?> manager: managers)
+		try
 		{
-			result.add(managerToConfiguration(manager, description));
+    		ComponentHolder<?> holder = getHolderFromDescription( description);
+    		// Get a fully filled out valid description DTO
+    		description = holderToDescription(holder);
+            if ( description == null)
+            {
+                return Collections.emptyList();
+            }
+    		List<? extends ComponentManager<?>> managers = holder.getComponents();
+    		List<ComponentConfigurationDTO> result = new ArrayList<ComponentConfigurationDTO>(managers.size());
+    		for (ComponentManager<?> manager: managers)
+    		{
+    			result.add(managerToConfiguration(manager, description));
+    		}
+    		return result;
 		}
-		return result;
+		catch ( IllegalStateException ise)
+		{
+		    return Collections.emptyList();
+		}
 	}
 
+	/**
+	 * @see org.osgi.service.component.runtime.ServiceComponentRuntime#isComponentEnabled(org.osgi.service.component.runtime.dto.ComponentDescriptionDTO)
+	 */
 	public boolean isComponentEnabled(ComponentDescriptionDTO description)
 	{
-		ComponentHolder<?> holder = getHolderFromDescription( description);
-		return holder.isEnabled();
+        try
+        {
+    		ComponentHolder<?> holder = getHolderFromDescription( description);
+	    	return holder.isEnabled();
+        }
+        catch ( IllegalStateException ise)
+        {
+            return false;
+        }
 	}
 
+	/**
+	 * @see org.osgi.service.component.runtime.ServiceComponentRuntime#enableComponent(org.osgi.service.component.runtime.dto.ComponentDescriptionDTO)
+	 */
 	public Promise<Void> enableComponent(ComponentDescriptionDTO description)
 	{
-		ComponentHolder<?> holder = getHolderFromDescription( description);
-		return holder.enableComponents(true);
+        try
+        {
+            ComponentHolder<?> holder = getHolderFromDescription( description);
+            return holder.enableComponents(true);
+        }
+        catch ( IllegalStateException ise)
+        {
+            return Promises.failed(ise);
+        }
 	}
 
+	/**
+	 * @see org.osgi.service.component.runtime.ServiceComponentRuntime#disableComponent(org.osgi.service.component.runtime.dto.ComponentDescriptionDTO)
+	 */
 	public Promise<Void> disableComponent(ComponentDescriptionDTO description)
 	{
-		ComponentHolder<?> holder = getHolderFromDescription( description);
-		return holder.disableComponents(true); //synchronous
+        try
+        {
+            ComponentHolder<?> holder = getHolderFromDescription( description);
+            return holder.disableComponents(true); //synchronous
+        }
+        catch ( IllegalStateException ise)
+        {
+            return Promises.failed(ise);
+        }
 	}
 
 	private ComponentConfigurationDTO managerToConfiguration(ComponentManager<?> manager, ComponentDescriptionDTO description)
@@ -221,6 +276,12 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
         return dto;
 	}
 
+	/**
+	 * Return the component holder
+	 * @param description Component description DTO
+	 * @return The component holder
+	 * @throws IllegalStateException If the bundle is not active anymore
+	 */
 	private ComponentHolder<?> getHolderFromDescription(ComponentDescriptionDTO description)
 	{
 		if (description.bundle == null)
@@ -239,6 +300,11 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
 		ComponentMetadata m = holder.getComponentMetadata();
 		dto.activate = m.getActivate();
 		dto.bundle = bundleToDTO(holder.getActivator().getBundleContext());
+		// immediately return if bundle is not active anymore
+		if ( dto.bundle == null )
+		{
+		    return null;
+		}
 		dto.configurationPid = m.getConfigurationPid().toArray(new String[m.getConfigurationPid().size()]);
 		dto.configurationPolicy = m.getConfigurationPolicy();
 		dto.deactivate = m.getDeactivate();
