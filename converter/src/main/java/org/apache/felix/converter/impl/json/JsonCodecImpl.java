@@ -56,6 +56,7 @@ public class JsonCodecImpl implements Codec {
             if (top == null) {
                 threadLocal.set(Boolean.TRUE);
 
+                // TODO implement this properly
                 encoding = new EncodingWrapper("{}{}{}{}{}", encoding, "{}{}{}{}{}");
             }
         }

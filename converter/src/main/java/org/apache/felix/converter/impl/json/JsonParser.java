@@ -73,9 +73,10 @@ public class JsonParser {
 
     private final Map<String, Object> parsed;
 
-    public JsonParser(String json) {
-        json = json.trim().replace('\n', ' ');
-        parsed = parseObject(json);
+    public JsonParser(CharSequence json) {
+        String str = json.toString();
+        str = str.trim().replace('\n', ' ');
+        parsed = parseObject(str);
     }
 
     public JsonParser(InputStream is) throws IOException {

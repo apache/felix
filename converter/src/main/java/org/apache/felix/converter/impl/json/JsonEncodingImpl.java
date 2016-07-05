@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -27,6 +28,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.osgi.service.converter.ConversionException;
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.Encoding;
 
@@ -44,12 +46,28 @@ public class JsonEncodingImpl implements Encoding {
     }
 
     @Override
+    public Appendable to(Appendable out) {
+        try {
+            out.append(encode(object));
+        } catch (IOException e) {
+            throw new ConversionException("Problem converting to JSON", e);
+        }
+
+        return out;
+    }
+
+    @Override
     public void to(OutputStream os, Charset charset) {
         try {
             os.write(encode(object).getBytes(charset));
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new ConversionException("Problem converting to JSON", e);
         }
+    }
+
+    @Override
+    public void to(OutputStream out) throws IOException {
+        to(out, StandardCharsets.UTF_8);
     }
 
     @Override
@@ -137,15 +155,4 @@ public class JsonEncodingImpl implements Encoding {
         return null;
     }
 
-    @Override
-    public Appendable to(Appendable out) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public void to(OutputStream out) throws IOException {
-        // TODO Auto-generated method stub
-
-    }
 }

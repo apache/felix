@@ -16,11 +16,15 @@
  */
 package org.apache.felix.converter.impl.json;
 
+import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Method;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Scanner;
 
+import org.apache.felix.converter.impl.Util;
+import org.osgi.service.converter.ConversionException;
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.Decoding;
 
@@ -34,47 +38,37 @@ public class JsonDecodingImpl<T> implements Decoding<T> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public T from(CharSequence in) {
-        if (Map.class.isAssignableFrom(clazz)) {
-            return createMapFromJSONString(in);
-        }
-        return deserializeSingleJSONValue(clazz, in);
-    }
+        JsonParser jp = new JsonParser(in);
+        Map<?,?> m = jp.getParsed();
+        if (Map.class.isAssignableFrom(clazz))
+            return (T) m;
 
-    @SuppressWarnings("unchecked")
-    private T createMapFromJSONString(CharSequence in) {
-        JsonParser jp = new JsonParser((String) in);
-        return (T) jp.getParsed();
-    }
-
-    @SuppressWarnings("unchecked")
-    private T deserializeSingleJSONValue(Class<T> cls, CharSequence cs) {
-        try {
-            Method m = cls.getDeclaredMethod("valueOf", String.class);
-            if (m != null) {
-                return (T) m.invoke(null, cs);
-            }
-        } catch (Exception e) {
-            return null;
-        }
-        return null;
+        return converter.convert(m).to(clazz);
     }
 
     @Override
     public T from(InputStream in) {
-        // TODO Auto-generated method stub
-        return null;
+        return from(in, StandardCharsets.UTF_8);
     }
 
     @Override
     public T from(InputStream in, Charset charset) {
-        // TODO Auto-generated method stub
-        return null;
+        try {
+            byte[] bytes = Util.readStream(in);
+            String s = new String(bytes, charset);
+            return from(s);
+        } catch (IOException e) {
+            throw new ConversionException("Error reading inputstream", e);
+        }
     }
 
     @Override
     public T from(Readable in) {
-        // TODO Auto-generated method stub
-        return null;
+        try (Scanner s = new Scanner(in)) {
+            s.useDelimiter("\\Z");
+            return from(s.next());
+        }
     }
 }
