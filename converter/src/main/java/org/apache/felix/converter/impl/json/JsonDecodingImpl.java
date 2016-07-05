@@ -42,7 +42,7 @@ public class JsonDecodingImpl<T> implements Decoding<T> {
     public T from(CharSequence in) {
         JsonParser jp = new JsonParser(in);
         Map<?,?> m = jp.getParsed();
-        if (Map.class.isAssignableFrom(clazz))
+        if (m.getClass().isAssignableFrom(clazz))
             return (T) m;
 
         return converter.convert(m).to(clazz);

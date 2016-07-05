@@ -16,9 +16,14 @@
  */
 package org.apache.felix.converter.impl.yaml;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.Scanner;
 
+import org.apache.felix.converter.impl.Util;
+import org.osgi.service.converter.ConversionException;
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.Decoding;
 import org.yaml.snakeyaml.Yaml;
@@ -34,28 +39,37 @@ public class YamlDecodingImpl<T> implements Decoding<T> {
 
     @Override
     public T from(InputStream in) {
-
-        // TODO Auto-generated method stub
-        return null;
+        return from(in, StandardCharsets.UTF_8);
     }
 
     @Override
     public T from(InputStream in, Charset charset) {
-        // TODO Auto-generated method stub
-        return null;
+        try {
+            byte[] bytes = Util.readStream(in);
+            String s = new String(bytes, charset);
+            return from(s);
+        } catch (IOException e) {
+            throw new ConversionException("Error reading inputstream", e);
+        }
     }
 
     @Override
     public T from(Readable in) {
-        // TODO Auto-generated method stub
-        return null;
+        try (Scanner s = new Scanner(in)) {
+            s.useDelimiter("\\Z");
+            return from(s.next());
+        }
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public T from(CharSequence in) {
         Yaml yaml = new Yaml();
         Object res = yaml.load(in.toString());
-        return (T) res;
-    }
 
+        if (res.getClass().isAssignableFrom(clazz))
+            return (T) res;
+
+        return converter.convert(res).to(clazz);
+    }
 }

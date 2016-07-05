@@ -49,11 +49,10 @@ public class JsonEncodingImpl implements Encoding {
     public Appendable to(Appendable out) {
         try {
             out.append(encode(object));
+            return out;
         } catch (IOException e) {
             throw new ConversionException("Problem converting to JSON", e);
         }
-
-        return out;
     }
 
     @Override
