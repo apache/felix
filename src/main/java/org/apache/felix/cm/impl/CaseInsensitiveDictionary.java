@@ -134,6 +134,7 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
      *
      * @see java.util.Dictionary#elements()
      */
+    @Override
     public Enumeration<Object> elements()
     {
         return Collections.enumeration( internalMap.values() );
@@ -145,6 +146,7 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
      *
      * @see java.util.Dictionary#get(java.lang.Object)
      */
+    @Override
     public Object get( Object key )
     {
         if ( key == null )
@@ -161,6 +163,7 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
      *
      * @see java.util.Dictionary#isEmpty()
      */
+    @Override
     public boolean isEmpty()
     {
         return internalMap.isEmpty();
@@ -172,6 +175,7 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
      *
      * @see java.util.Dictionary#keys()
      */
+    @Override
     public Enumeration<String> keys()
     {
         return Collections.enumeration( internalMap.keySet() );
@@ -183,6 +187,7 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
      *
      * @see java.util.Dictionary#put(java.lang.String, java.lang.Object)
      */
+    @Override
     public Object put( String key, Object value )
     {
         if ( key == null || value == null )
@@ -202,6 +207,7 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
      *
      * @see java.util.Dictionary#remove(java.lang.Object)
      */
+    @Override
     public Object remove( Object key )
     {
         if ( key == null )
@@ -218,6 +224,7 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
      *
      * @see java.util.Dictionary#size()
      */
+    @Override
     public int size()
     {
         return internalMap.size();
@@ -349,9 +356,62 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
 
     // ---------- Object Overwrites --------------------------------------------
 
+    @Override
     public String toString()
     {
         return internalMap.toString();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return internalMap.hashCode();
+    }
+
+    @Override
+    public synchronized boolean equals(final Object o)
+    {
+        if (o == this)
+        {
+            return true;
+        }
+
+        if (!(o instanceof Dictionary))
+        {
+            return false;
+        }
+
+        @SuppressWarnings("unchecked")
+        final Dictionary<String,Object> t = (Dictionary<String,Object>) o;
+        if (t.size() != size())
+        {
+            return false;
+        }
+
+        try
+        {
+            final Enumeration<String> keys = keys();
+            while ( keys.hasMoreElements() )
+            {
+                final String key = keys.nextElement();
+                final Object value = get(key);
+
+                if (!value.equals(t.get(key)))
+                {
+                        return false;
+                }
+            }
+        }
+        catch (ClassCastException unused)
+        {
+            return false;
+        }
+        catch (NullPointerException unused)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     public static final Comparator<String> CASE_INSENSITIVE_ORDER = new CaseInsensitiveComparator();
