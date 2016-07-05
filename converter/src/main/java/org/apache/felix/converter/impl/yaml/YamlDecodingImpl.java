@@ -16,46 +16,46 @@
  */
 package org.apache.felix.converter.impl.yaml;
 
-import java.lang.reflect.Type;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.io.InputStream;
+import java.nio.charset.Charset;
 
-import org.apache.felix.converter.impl.ConverterImpl;
-import org.osgi.service.converter.Codec;
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.Decoding;
-import org.osgi.service.converter.Encoding;
-import org.osgi.service.converter.TypeReference;
+import org.yaml.snakeyaml.Yaml;
 
-public class YamlCodecImpl implements Codec {
-    private Map<String, Object> configuration = new ConcurrentHashMap<>();
-    private Converter converter = new ConverterImpl();
+public class YamlDecodingImpl<T> implements Decoding<T> {
+    private final Converter converter;
+    private final Class<T> clazz;
 
-    @Override
-    public Codec with(Converter c) {
+    public YamlDecodingImpl(Converter c, Class<T> cls) {
         converter = c;
-        return this;
+        clazz = cls;
     }
 
     @Override
-    public <T> Decoding<T> decode(Class<T> cls) {
-        return new YamlDecodingImpl<T>(converter, cls);
-    }
+    public T from(InputStream in) {
 
-    @Override
-    public <T> Decoding<T> decode(TypeReference<T> ref) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public Decoding<?> decode(Type type) {
+    public T from(InputStream in, Charset charset) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public Encoding encode(Object obj) {
-        return new YamlEncodingImpl(converter, configuration, obj);
+    public T from(Readable in) {
+        // TODO Auto-generated method stub
+        return null;
     }
+
+    @Override
+    public T from(CharSequence in) {
+        Yaml yaml = new Yaml();
+        Object res = yaml.load(in.toString());
+        return (T) res;
+    }
+
 }

@@ -27,6 +27,7 @@ import static org.junit.Assert.assertEquals;
 
 public class YamlSerializationTest {
     @Test
+    @SuppressWarnings("unchecked")
     public void testComplexMapSerialization() {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("sKey", "a string");
@@ -52,6 +53,20 @@ public class YamlSerializationTest {
                 "  a: 1\n" +
                 "  b: 'hello'";
         assertEquals(expected, new YamlCodecImpl().encode(m).toString().trim());
+
+        Map<String, Object> dm = new YamlCodecImpl().decode(Map.class).from(expected);
+        Map<String, Object> expected2 = new LinkedHashMap<>();
+        expected2.put("sKey", "a string");
+        expected2.put("iKey", 42);
+        expected2.put("bKey",  true);
+        expected2.put("noKey", null);
+        expected2.put("simpleArray", Arrays.asList(1,2,3));
+
+        Map<String, Object> m2 = new LinkedHashMap<>();
+        m2.put("a", 1);
+        m2.put("b", "hello");
+        expected2.put("simpleObject", m2);
+        assertEquals(expected2, dm);
     }
 
     @Test
