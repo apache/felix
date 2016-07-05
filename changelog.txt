@@ -1,3 +1,13 @@
+Changes from 1.8.8 to 1.8.10
+----------------------------
+
+** Improvement
+    * [FELIX-5088] - CaseSensitiveDictionary should implement equals()
+
+** Bug
+    * [FELIX-5301] - ConfigurationPlugin support is not spec compliant
+
+
 Changes from 1.8.6 to 1.8.8
 ---------------------------
 

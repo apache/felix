@@ -818,7 +818,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             List pmList = new ArrayList();
             CachingPersistenceManagerProxy[] pm;
 
-            ServiceReference[] refs = persistenceManagerTracker.getServiceReferences();
+            ServiceReference<?>[] refs = persistenceManagerTracker.getServiceReferences();
             if ( refs == null || refs.length == 0 )
             {
                 pm = new CachingPersistenceManagerProxy[0];
@@ -1110,7 +1110,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     public void callPlugins( final Dictionary props, final ServiceReference sr, final String configPid,
         final String factoryPid )
     {
-        ServiceReference[] plugins = null;
+        ServiceReference<?>[] plugins = null;
         try
         {
             final String targetPid = (factoryPid == null) ? configPid : factoryPid;
@@ -1137,13 +1137,22 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         // call the plugins in order
         for ( int i = 0; i < plugins.length; i++ )
         {
-            ServiceReference pluginRef = plugins[i];
+            ServiceReference<?> pluginRef = plugins[i];
             ConfigurationPlugin plugin = ( ConfigurationPlugin ) bundleContext.getService( pluginRef );
             if ( plugin != null )
             {
+                // if cmRanking is below 0 or above 1000, ignore modifications from the plugin
+                boolean ignore = false;
+                Object rankObj = pluginRef.getProperty( ConfigurationPlugin.CM_RANKING );
+                if ( rankObj instanceof Integer )
+                {
+                    final int ranking = ( ( Integer ) rankObj ).intValue();
+                    ignore = (ranking < 0 ) || (ranking > 1000);
+                }
+
                 try
                 {
-                    plugin.modifyConfiguration( sr, props );
+                    plugin.modifyConfiguration( sr, ignore ? CaseInsensitiveDictionary.unmodifiable(props) : props );
                 }
                 catch ( Throwable t )
                 {

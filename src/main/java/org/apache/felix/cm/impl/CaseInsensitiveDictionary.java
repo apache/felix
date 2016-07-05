@@ -414,6 +414,82 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
         return true;
     }
 
+    public static Dictionary<String, Object> unmodifiable(Dictionary<String, Object> dict) {
+        return new UnmodifiableDictionary(dict);
+    }
+
+    public static final class UnmodifiableDictionary extends Dictionary<String, Object>
+    {
+        private final Dictionary<String, Object> delegatee;
+
+        public UnmodifiableDictionary(final Dictionary<String, Object> delegatee)
+        {
+            this.delegatee = delegatee;
+        }
+
+        @Override
+        public Object put(String key, Object value)
+        {
+            // prevent put
+            return null;
+        }
+
+        @Override
+        public Object remove(Object key)
+        {
+            // prevent remove
+            return null;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return delegatee.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            return delegatee.equals(obj);
+        }
+
+        @Override
+        public String toString()
+        {
+            return delegatee.toString();
+        }
+
+        @Override
+        public int size()
+        {
+            return delegatee.size();
+        }
+
+        @Override
+        public boolean isEmpty()
+        {
+            return delegatee.isEmpty();
+        }
+
+        @Override
+        public Enumeration<String> keys()
+        {
+            return delegatee.keys();
+        }
+
+        @Override
+        public Enumeration<Object> elements()
+        {
+            return delegatee.elements();
+        }
+
+        @Override
+        public Object get(Object key)
+        {
+            return delegatee.get(key);
+        }
+    }
+
     public static final Comparator<String> CASE_INSENSITIVE_ORDER = new CaseInsensitiveComparator();
 
     private static class CaseInsensitiveComparator implements Comparator<String>
