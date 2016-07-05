@@ -1,10 +1,32 @@
 Changes from 2.0.2 to 2.0.4
 ---------------------------
 ** Improvement
-    * [FELIX-5040] When global extender is turned on, get framework bundle using location not id.
+    * [FELIX-5257] Improve formatting of command list output
+    * [FELIX-5243] Make the code more reusable
+    * [FELIX-5194] Pay attention if configuration change count doesn't change
+    * [FELIX-5174] Logging involving Configuration should show change count
+    * [FELIX-5129] ScrInfo info should more explicitly indicatte there are no component configurations
+    * [FELIX-4607] Configure with nested annotations/interfaces
 
 ** Bug
-    * [FELIX-5044] (felix mutable service properties) Make sure service property changes eventually get shown.
+    * [FELIX-5300] ServiceComponentRuntime should not throw IllegalStateException
+    * [FELIX-5276] Possible hang when unbind method alters service properties
+    * [FELIX-5270] Configuration race between update and delete
+    * [FELIX-5264] Configuration updates may be missed
+    * [FELIX-5256] Object conversion should pass through unrecognized classes of the same type
+    * [FELIX-5220] Alarmist logging when bundle stops before we've activated it
+    * [FELIX-5213] ComponentContext.getServiceReference returns null though service registered
+    * [FELIX-5202] ServiceComponentRuntimeImpl NPE with subsystems/regions
+    * [FELIX-5186] Alarmist logging on asynchronous service changes
+    * [FELIX-5080] gogo info command left out Implementation-Class
+    * [FELIX-5079] Not enough configuration listeners to deal with regions
+    * [FELIX-5044] (felix-extensions) Service property changes during service registration get ignored
+    * [FELIX-5040] Get system bundle by location, not number, for global extender true
+    * [FELIX-5032] IndexOutOfBoundsException in SCR ComponentTestBase class
+    * [FELIX-4538] Problem with stale references with "triangle" of static references
+    * [FELIX-4417] Circular references detected but not resolved if one of the references in the cycle has optional cardinality
+    * [FELIX-4237] Updating a configuration may deactivate/active component multiple times
+    * [FELIX-1824] Cirular References are not currently explicitly checked and detected
 
 
 Changes from 2.0.0 to 2.0.2
