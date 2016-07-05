@@ -16,6 +16,7 @@
  */
 package org.apache.felix.converter.impl.json;
 
+import java.util.Arrays;
 import java.util.Map;
 
 import org.junit.Test;
@@ -25,7 +26,7 @@ import static org.junit.Assert.assertTrue;
 
 public class JsonParserTest {
     @Test
-    public void testJSON() {
+    public void testJsonSimple() {
         String json = "{\"hi\": \"ho\", \"ha\": true}";
         JsonParser jp = new JsonParser(json);
         Map<String, Object> m = jp.getParsed();
@@ -36,11 +37,12 @@ public class JsonParserTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void testJSON2() {
-        String json = "{\"b\": {\"x\": 12, \"y\": 42, \"z\": {\"test test\": \"hello hello\"}}}";
+    public void testJsonComplex() {
+        String json = "{\"a\": [1,2,3,4,5], \"b\": {\"x\": 12, \"y\": 42, \"z\": {\"test test\": \"hello hello\"}}}";
         JsonParser jp = new JsonParser(json);
         Map<String, Object> m = jp.getParsed();
-        assertEquals(1, m.size());
+        assertEquals(2, m.size());
+        assertEquals(Arrays.asList(1L, 2L, 3L, 4L, 5L), m.get("a"));
         Map<String, Object> mb = (Map<String, Object>) m.get("b");
         assertEquals(3, mb.size());
         assertEquals(12L, mb.get("x"));
@@ -48,5 +50,14 @@ public class JsonParserTest {
         Map<String, Object> mz = (Map<String, Object>) mb.get("z");
         assertEquals(1, mz.size());
         assertEquals("hello hello", mz.get("test test"));
+    }
+
+    @Test
+    public void testJsonArray() {
+        String json = "{\"abc\": [\"x\", \"y\", \"z\"]}";
+        JsonParser jp = new JsonParser(json);
+        Map<String, Object> m = jp.getParsed();
+        assertEquals(1, m.size());
+        assertEquals(Arrays.asList("x", "y", "z"), m.get("abc"));
     }
 }

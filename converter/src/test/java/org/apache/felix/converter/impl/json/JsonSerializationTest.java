@@ -27,6 +27,7 @@ import static org.junit.Assert.assertEquals;
 
 public class JsonSerializationTest {
     @Test
+    @SuppressWarnings("unchecked")
     public void testComplexMapSerialization() {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("sKey", "a string");
@@ -47,6 +48,16 @@ public class JsonSerializationTest {
                 + "\"simpleArray\":[1,2,3],"
                 + "\"simpleObject\":{\"a\":1,\"b\":\"hello\"}}";
         assertEquals(expected, new JsonCodecImpl().encode(m).toString());
+
+        Map<String, Object> dm = new JsonCodecImpl().decode(Map.class).from(expected);
+        Map<String, Object> expected2 = new LinkedHashMap<>();
+        expected2.put("sKey", "a string");
+        expected2.put("iKey", 42L);
+        expected2.put("bKey",  true);
+        expected2.put("noKey", null);
+        expected2.put("simpleArray", Arrays.asList(1L,2L,3L));
+        expected2.put("simpleObject", m1);
+        assertEquals(expected2, dm);
     }
 
     @Test

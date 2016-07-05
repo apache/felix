@@ -40,8 +40,6 @@ import org.apache.felix.converter.impl.Util;
  * <li>Nested JSON objects are parsed into a {@link java.util.Map Map&lt;String, Object&gt;}.
  * <li>JSON lists are parsed into a {@link java.util.List} which may contain any of the above values.
  * </ul>
- *
- * @author David Bosschaert
  */
 public class JsonParser {
     private static final Pattern KEY_VALUE_PATTERN = Pattern.compile("^\\s*[\"](.+?)[\"]\\s*[:]\\s*(.+)$");
@@ -119,6 +117,9 @@ public class JsonParser {
         case 'f':
         case 'F':
             return Boolean.parseBoolean(jsonValue);
+        case 'n':
+        case 'N':
+            return null;
         default:
             return Long.parseLong(jsonValue);
         }
