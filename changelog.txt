@@ -3,6 +3,7 @@ Changes from 1.8.8 to 1.8.10
 
 ** Improvement
     * [FELIX-5088] - CaseSensitiveDictionary should implement equals()
+    * [FELIX-5211] - Use provide/require capabilities instead of obsolete and meaningless import-export service headers
 
 ** Bug
     * [FELIX-5301] - ConfigurationPlugin support is not spec compliant
