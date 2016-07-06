@@ -52,11 +52,10 @@ public class TypeConverter {
      * Convert a value to the given type
      * @param value The value
      * @param typeInfo Optional type info, might be {@code null}
-     * @return The converted value (never returns null)
+     * @return The converted value or {@code null} if the conversion failed.
      * @throws IOException If an error happens
      */
     public Object convert(final Object value,
-            final Object defaultValue,
             final String typeInfo) throws IOException {
         if ( typeInfo == null ) {
             if ( value instanceof String || value instanceof Boolean ) {
@@ -80,16 +79,16 @@ public class TypeConverter {
                 }
                 final Object firstObject = list.get(0);
                 if ( firstObject instanceof String ) {
-                    return getConverter().convert(list).defaultValue(defaultValue).to(String[].class);
+                    return getConverter().convert(list).defaultValue(null).to(String[].class);
                 } else if ( firstObject instanceof Boolean ) {
-                    return getConverter().convert(list).defaultValue(defaultValue).to(Boolean[].class);
+                    return getConverter().convert(list).defaultValue(null).to(Boolean[].class);
                 } else if ( firstObject instanceof Long || firstObject instanceof Integer ) {
-                    return getConverter().convert(list).defaultValue(defaultValue).to(Long[].class);
+                    return getConverter().convert(list).defaultValue(null).to(Long[].class);
                 } else if ( firstObject instanceof Double || firstObject instanceof Float ) {
-                    return getConverter().convert(list).defaultValue(defaultValue).to(Double[].class);
+                    return getConverter().convert(list).defaultValue(null).to(Double[].class);
                 }
             }
-            return defaultValue;
+            return null;
         }
 
         // binary
@@ -134,114 +133,114 @@ public class TypeConverter {
 
         // scalar types and primitive types
         if ( "String".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(String.class);
+            return getConverter().convert(value).defaultValue(null).to(String.class);
 
         } else if ( "Integer".equals(typeInfo) || "int".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(Integer.class);
+            return getConverter().convert(value).defaultValue(null).to(Integer.class);
 
         } else if ( "Long".equals(typeInfo) || "long".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(Long.class);
+            return getConverter().convert(value).defaultValue(null).to(Long.class);
 
         } else if ( "Float".equals(typeInfo) || "float".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(Float.class);
+            return getConverter().convert(value).defaultValue(null).to(Float.class);
 
         } else if ( "Double".equals(typeInfo) || "double".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(Double.class);
+            return getConverter().convert(value).defaultValue(null).to(Double.class);
 
         } else if ( "Byte".equals(typeInfo) || "byte".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(Byte.class);
+            return getConverter().convert(value).defaultValue(null).to(Byte.class);
 
         } else if ( "Short".equals(typeInfo) || "short".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(Short.class);
+            return getConverter().convert(value).defaultValue(null).to(Short.class);
 
         } else if ( "Character".equals(typeInfo) || "char".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(Character.class);
+            return getConverter().convert(value).defaultValue(null).to(Character.class);
 
         } else if ( "Boolean".equals(typeInfo) || "boolean".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(Boolean.class);
+            return getConverter().convert(value).defaultValue(null).to(Boolean.class);
 
         }
 
         // array of scalar types and primitive types
         if ( "String[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(String[].class);
+            return getConverter().convert(value).defaultValue(null).to(String[].class);
 
         } else if ( "Integer[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(Integer[].class);
+            return getConverter().convert(value).defaultValue(null).to(Integer[].class);
 
         } else if ( "int[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(int[].class);
+            return getConverter().convert(value).defaultValue(null).to(int[].class);
 
         } else if ( "Long[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(Long[].class);
+            return getConverter().convert(value).defaultValue(null).to(Long[].class);
 
         } else if ( "long[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(long[].class);
+            return getConverter().convert(value).defaultValue(null).to(long[].class);
 
         } else if ( "Float[]".equals(typeInfo)  ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(Float[].class);
+            return getConverter().convert(value).defaultValue(null).to(Float[].class);
 
         } else if ( "float[]".equals(typeInfo)  ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(float[].class);
+            return getConverter().convert(value).defaultValue(null).to(float[].class);
 
         } else if ( "Double[]".equals(typeInfo)  ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(Double[].class);
+            return getConverter().convert(value).defaultValue(null).to(Double[].class);
 
         } else if ( "double[]".equals(typeInfo)  ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(double[].class);
+            return getConverter().convert(value).defaultValue(null).to(double[].class);
 
         } else if ( "Byte[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(Byte[].class);
+            return getConverter().convert(value).defaultValue(null).to(Byte[].class);
 
         } else if ( "byte[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(byte[].class);
+            return getConverter().convert(value).defaultValue(null).to(byte[].class);
 
         } else if ( "Short[]".equals(typeInfo)  ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(Short[].class);
+            return getConverter().convert(value).defaultValue(null).to(Short[].class);
 
         } else if ( "short[]".equals(typeInfo)  ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(short[].class);
+            return getConverter().convert(value).defaultValue(null).to(short[].class);
 
         } else if ( "Character[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(Character[].class);
+            return getConverter().convert(value).defaultValue(null).to(Character[].class);
 
         } else if ( "char[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(char[].class);
+            return getConverter().convert(value).defaultValue(null).to(char[].class);
 
         } else if ( "Boolean[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(Boolean[].class);
+            return getConverter().convert(value).defaultValue(null).to(Boolean[].class);
 
         } else if ( "boolean[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(boolean[].class);
+            return getConverter().convert(value).defaultValue(null).to(boolean[].class);
         }
 
         // Collections of scalar types
         if ( "Collection<String>".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(new TypeReference<List<String>>() {});
+            return getConverter().convert(value).defaultValue(null).to(new TypeReference<List<String>>() {});
 
         } else if ( "Collection<Integer>".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(new TypeReference<List<Integer>>() {});
+            return getConverter().convert(value).defaultValue(null).to(new TypeReference<List<Integer>>() {});
 
         } else if ( "Collection<Long>".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(new TypeReference<List<Long>>() {});
+            return getConverter().convert(value).defaultValue(null).to(new TypeReference<List<Long>>() {});
 
         } else if ( "Collection<Float>".equals(typeInfo)  ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(new TypeReference<List<Float>>() {});
+            return getConverter().convert(value).defaultValue(null).to(new TypeReference<List<Float>>() {});
 
         } else if ( "Collection<Double>".equals(typeInfo)  ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(new TypeReference<List<Double>>() {});
+            return getConverter().convert(value).defaultValue(null).to(new TypeReference<List<Double>>() {});
 
         } else if ( "Collection<Byte>".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(new TypeReference<List<Byte>>() {});
+            return getConverter().convert(value).defaultValue(null).to(new TypeReference<List<Byte>>() {});
 
         } else if ( "Collection<Short>".equals(typeInfo)  ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(new TypeReference<List<Short>>() {});
+            return getConverter().convert(value).defaultValue(null).to(new TypeReference<List<Short>>() {});
 
         } else if ( "Collection<Character>".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(new TypeReference<List<Character>>() {});
+            return getConverter().convert(value).defaultValue(null).to(new TypeReference<List<Character>>() {});
 
         } else if ( "Collection<Boolean>".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(defaultValue).to(new TypeReference<List<Boolean>>() {});
+            return getConverter().convert(value).defaultValue(null).to(new TypeReference<List<Boolean>>() {});
         }
 
         // unknown type - ignore configuration

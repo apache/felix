@@ -196,7 +196,11 @@ public class YAMLUtil {
                                     }
                                 } else {
                                     try {
-                                        properties.put(key, converter.convert(value, createYAML(value), typeInfo));
+                                        Object convertedVal = converter.convert(value, typeInfo);
+                                        if ( convertedVal == null ) {
+                                            convertedVal = createYAML(value);
+                                        }
+                                        properties.put(key, convertedVal);
                                     } catch ( final IOException io ) {
                                         SystemLogger.error("Invalid value/type for configuration in '" + identifier + "' : " + pid + " - " + entry.getKey());
                                         valid = false;
