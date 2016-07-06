@@ -26,16 +26,16 @@
         <relativePath />
     </parent>
   <artifactId>org.apache.felix.scr.ext.anno</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1-SNAPSHOT</version>
     <name>Apache Felix Declarative Services Extensions BND annotation</name>
     <description>
         BND meta-annotation for adding felix ds extension attributes
 	to generated xml component descriptors
     </description>
      <scm>
-        <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.scr.ext.anno-1.0.0</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.scr.ext.anno-1.0.0</developerConnection>
-        <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.scr.ext.anno-1.0.0</url>
+        <connection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/scr-ext-anno</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/scr-ext-anno</developerConnection>
+        <url>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/scr-ext-anno</url>
     </scm>
  <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
