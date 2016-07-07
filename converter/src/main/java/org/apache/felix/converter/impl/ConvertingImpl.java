@@ -44,7 +44,7 @@ import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.Converting;
 import org.osgi.service.converter.TypeReference;
 
-public class ConvertingImpl implements Converting {
+public class ConvertingImpl implements Converting, InternalConverting {
     private static final Map<Class<?>, Class<?>> interfaceImplementations;
     static {
         Map<Class<?>, Class<?>> m = new HashMap<>();
@@ -71,6 +71,11 @@ public class ConvertingImpl implements Converting {
         hasDefault = true;
 
         return this;
+    }
+
+    @Override
+    public void setConverter(Converter c) {
+        converter = c;
     }
 
     @SuppressWarnings("unchecked")

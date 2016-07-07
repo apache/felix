@@ -16,16 +16,8 @@
  */
 package org.apache.felix.converter.impl;
 
-import org.osgi.service.converter.Adapter;
+import org.osgi.service.converter.Converter;
 
-public class ConverterImpl implements InternalConverter {
-    @Override
-    public Adapter getAdapter() {
-        return new AdapterImpl(this);
-    }
-
-    @Override
-    public InternalConverting convert(Object obj) {
-        return new ConvertingImpl(this, obj);
-    }
+public interface InternalConverter extends Converter {
+    public InternalConverting convert(Object obj);
 }

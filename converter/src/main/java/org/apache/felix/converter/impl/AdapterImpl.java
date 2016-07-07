@@ -29,18 +29,19 @@ import org.osgi.service.converter.FunctionThrowsException;
 import org.osgi.service.converter.Rule;
 import org.osgi.service.converter.TypeReference;
 
-public class AdapterImpl implements Adapter {
-    private final Converter delegate;
+public class AdapterImpl implements Adapter, InternalConverter {
+    private final InternalConverter delegate;
     private final Map<TypePair, FunctionThrowsException<Object, Object>> classRules =
             new ConcurrentHashMap<>();
 
-    public AdapterImpl(Converter converter) {
+    AdapterImpl(InternalConverter converter) {
         this.delegate = converter;
     }
 
     @Override
-    public Converting convert(Object obj) {
-        Converting converting = delegate.convert(obj);
+    public InternalConverting convert(Object obj) {
+        InternalConverting converting = delegate.convert(obj);
+        converting.setConverter(this);
         return new ConvertingWrapper(obj, converting);
     }
 
@@ -87,13 +88,13 @@ public class AdapterImpl implements Adapter {
         return null;
     }
 
-    private class ConvertingWrapper implements Converting {
-        private final Converting del;
+    private class ConvertingWrapper implements InternalConverting {
+        private final InternalConverting del;
         private final Object object;
         private volatile Object defaultValue;
         private volatile boolean hasDefault;
 
-        ConvertingWrapper(Object obj, Converting c) {
+        ConvertingWrapper(Object obj, InternalConverting c) {
             object = obj;
             del = c;
         }
@@ -104,6 +105,11 @@ public class AdapterImpl implements Adapter {
             defaultValue = defVal;
             hasDefault = true;
             return this;
+        }
+
+        @Override
+        public void setConverter(Converter c) {
+            del.setConverter(c);
         }
 
         @SuppressWarnings("unchecked")
