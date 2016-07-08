@@ -88,11 +88,17 @@ import org.osgi.util.tracker.ServiceTracker;
 
 public final class WhiteboardManager
 {
+    /** The bundle context of the http bundle. */
     private final BundleContext httpBundleContext;
 
+    /** The http service factory. */
     private final HttpServiceFactory httpServiceFactory;
 
     private final HttpServiceRuntimeImpl serviceRuntime;
+
+    private final List<ServiceTracker<?, ?>> trackers = new ArrayList<ServiceTracker<?, ?>>();
+
+    private final HttpServicePlugin plugin;
 
     /** A map containing all servlet context registrations. Mapped by context name */
     private final Map<String, List<WhiteboardContextHandler>> contextMap = new HashMap<String, List<WhiteboardContextHandler>>();
@@ -108,17 +114,14 @@ public final class WhiteboardManager
 
     private volatile ServiceRegistration<ServletContextHelper> defaultContextRegistration;
 
-    private final List<ServiceTracker<?, ?>> trackers = new ArrayList<ServiceTracker<?, ?>>();
-
     private volatile ServiceRegistration<HttpServiceRuntime> runtimeServiceReg;
-
-    private final HttpServicePlugin plugin;
 
     /**
      * Create a new whiteboard http manager
-     * @param bundleContext
-     * @param httpServiceFactory
-     * @param registry
+     *
+     * @param bundleContext The bundle context of the http bundle
+     * @param httpServiceFactory The http service factory
+     * @param registry The handler registry
      */
     public WhiteboardManager(final BundleContext bundleContext,
             final HttpServiceFactory httpServiceFactory,
@@ -131,6 +134,10 @@ public final class WhiteboardManager
         this.plugin = new HttpServicePlugin(bundleContext, this.serviceRuntime);
     }
 
+    /**
+     * Start the whiteboard manager
+     * @param containerContext The servlet context
+     */
     public void start(final ServletContext containerContext)
     {
         this.serviceRuntime.setAttribute(HttpServiceRuntimeConstants.HTTP_SERVICE_ID,
@@ -190,6 +197,10 @@ public final class WhiteboardManager
         this.plugin.register();
     }
 
+    /**
+     * Add a tracker and start it
+     * @param tracker The tracker instance
+     */
     private void addTracker(ServiceTracker<?, ?> tracker)
     {
         this.trackers.add(tracker);
@@ -210,6 +221,11 @@ public final class WhiteboardManager
 
         this.serviceRuntime.setServiceReference(null);
 
+        this.contextMap.clear();
+        this.servicesMap.clear();
+        this.failureStateHandler.clear();
+        this.registry.reset();
+
         if (this.defaultContextRegistration != null)
         {
             this.defaultContextRegistration.unregister();
@@ -221,6 +237,7 @@ public final class WhiteboardManager
             this.runtimeServiceReg.unregister();
             this.runtimeServiceReg = null;
         }
+        this.webContext = null;
     }
 
     public void setProperties(final Hashtable<String, Object> props)

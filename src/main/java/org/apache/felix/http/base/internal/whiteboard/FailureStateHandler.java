@@ -34,6 +34,14 @@ public class FailureStateHandler {
 
     private final Map<AbstractInfo<?>, FailureStatus> serviceFailures = new ConcurrentHashMap<AbstractInfo<?>, FailureStatus>();
 
+    /**
+     * Remove all failures.
+     */
+    public void clear()
+    {
+        this.serviceFailures.clear();
+    }
+
     public void add(final AbstractInfo<?> info, final int reason)
     {
         this.add(info, 0, reason);
