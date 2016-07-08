@@ -53,6 +53,15 @@ public final class HandlerRegistry
     }
 
     /**
+     * Reset to initial state
+     */
+    public void reset()
+    {
+        this.registrations.clear();
+        this.init();
+    }
+
+    /**
      * Shutdown
      */
     public void shutdown()
