@@ -44,6 +44,7 @@ public class SlingAnnotationProcessor implements AnnotationProcessor {
     /**
      * @see org.apache.felix.scrplugin.annotations.AnnotationProcessor#getName()
      */
+    @Override
     public String getName() {
         return "Apache Sling Annotation Processor";
     }
@@ -51,6 +52,7 @@ public class SlingAnnotationProcessor implements AnnotationProcessor {
     /**
      * @see org.apache.felix.scrplugin.annotations.AnnotationProcessor#process(org.apache.felix.scrplugin.annotations.ScannedClass, org.apache.felix.scrplugin.description.ClassDescription)
      */
+    @Override
     public void process(final ScannedClass scannedClass,
                         final ClassDescription describedClass)
     throws SCRDescriptorFailureException, SCRDescriptorException {
@@ -74,6 +76,7 @@ public class SlingAnnotationProcessor implements AnnotationProcessor {
     /**
      * @see org.apache.felix.scrplugin.annotations.AnnotationProcessor#getRanking()
      */
+    @Override
     public int getRanking() {
         return 500;
     }
@@ -95,6 +98,8 @@ public class SlingAnnotationProcessor implements AnnotationProcessor {
             cd.setDescription(cad.getStringValue("description", null));
 
             cd.setCreateMetatype(metatype);
+
+            cd.setCreatePid(false); // always set to false
 
             classDescription.add(cd);
         }
@@ -198,9 +203,9 @@ public class SlingAnnotationProcessor implements AnnotationProcessor {
             if (metatype) {
             	pdPattern.setPrivate(true);
             }
-            classDescription.add(pdPattern);        	
+            classDescription.add(pdPattern);
         }
-        
+
         // property scope
         final String[] scopes;
         final Object val = cad.getValue("scope");

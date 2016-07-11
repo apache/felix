@@ -65,6 +65,7 @@ public class SCRAnnotationProcessor implements AnnotationProcessor {
     /**
      * @see org.apache.felix.scrplugin.annotations.AnnotationProcessor#getName()
      */
+    @Override
     public String getName() {
         return "Apache Felix SCR Annotation Processor";
     }
@@ -74,6 +75,7 @@ public class SCRAnnotationProcessor implements AnnotationProcessor {
      * @throws SCRDescriptorFailureException
      * @see org.apache.felix.scrplugin.annotations.AnnotationProcessor#process(org.apache.felix.scrplugin.annotations.ScannedClass, org.apache.felix.scrplugin.description.ClassDescription)
      */
+    @Override
     public void process(final ScannedClass scannedClass, final ClassDescription describedClass)
                     throws SCRDescriptorFailureException, SCRDescriptorException {
 
@@ -177,6 +179,7 @@ public class SCRAnnotationProcessor implements AnnotationProcessor {
     /**
      * @see org.apache.felix.scrplugin.annotations.AnnotationProcessor#getRanking()
      */
+    @Override
     public int getRanking() {
         return 1000;
     }
@@ -194,7 +197,7 @@ public class SCRAnnotationProcessor implements AnnotationProcessor {
         final boolean classIsAbstract = Modifier.isAbstract(scannedClass.getScannedClass().getModifiers());
         component.setAbstract(cad.getBooleanValue("componentAbstract", classIsAbstract));
 
-        component.setCreatePid(cad.getBooleanValue("createPid", true));
+        component.setCreatePid(false); // always set to false
 
         component.setName(cad.getStringValue("name", scannedClass.getScannedClass().getName()));
 

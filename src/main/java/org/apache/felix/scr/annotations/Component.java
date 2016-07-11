@@ -124,8 +124,10 @@ public @interface Component {
     /**
      * Generated <code>service.pid</code> property by default, if none declared
      * explicitly.
+     * @deprecated This property is handled by the Declarative Service Implementation
+     *             therefore it should never be created by hand.
      */
-    boolean createPid() default true;
+    boolean createPid() default false;
 
     /**
      * Set the metatype factory pid property (only for non factory components).
