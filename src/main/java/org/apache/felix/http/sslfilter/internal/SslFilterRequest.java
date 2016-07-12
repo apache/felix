@@ -49,7 +49,7 @@ class SslFilterRequest extends HttpServletRequestWrapper
     SslFilterRequest(HttpServletRequest request, String clientCertHeader) throws CertificateException
     {
         super(request);
-        
+
         // TODO jawi: perhaps we should make this class a little smarter wrt the given request:
         // it now always assumes it should rewrite its URL, while this might not always be the
         // case...
@@ -80,20 +80,23 @@ class SslFilterRequest extends HttpServletRequestWrapper
         getRequest().removeAttribute(ATTR_SSL_CERTIFICATE);
     }
 
+    @Override
     public String getScheme()
     {
         return HTTPS;
     }
 
+    @Override
     public boolean isSecure()
     {
         return true;
     }
 
+    @Override
     public StringBuffer getRequestURL()
     {
         StringBuffer tmp = new StringBuffer(super.getRequestURL());
-        // In case the request happened over http, simply insert an additional 's' 
+        // In case the request happened over http, simply insert an additional 's'
         // to make the request appear to be done over https...
         if (tmp.indexOf(HTTP_SCHEME_PREFIX) == 0)
         {
@@ -101,15 +104,16 @@ class SslFilterRequest extends HttpServletRequestWrapper
         }
         return tmp;
     }
-    
-    public int getServerPort() 
+
+    @Override
+    public int getServerPort()
     {
         int port;
-        
+
         try
-        {            
+        {
             String fwdPort = getHeader(HDR_X_FORWARDED_PORT);
-            port = Integer.valueOf(fwdPort);
+            port = Integer.parseInt(fwdPort);
         }
         catch (Exception e)
         {
@@ -117,5 +121,5 @@ class SslFilterRequest extends HttpServletRequestWrapper
             port = getRequest().getServerPort();
         }
         return port;
-    }    
+    }
 }
