@@ -38,7 +38,7 @@ import org.apache.felix.scrplugin.annotations.ScannedAnnotation;
  * <li>isAbstract : false</li>
  * <li>isInherit : true</li>
  * <li>createDs : true</li>
- * <li>createPid : true</li>
+ * <li>createPid : false (deprecated)</li>
  * <li>createMetatype : false</li>
  * <li>enabled : null</li>
  * <li>immediate : null</li>
@@ -74,9 +74,6 @@ public class ComponentDescription extends AbstractDescription {
 
     /** Create ds info */
     private boolean createDs = true;
-
-    /** Create pid */
-    private boolean createPid = true;
 
     /** Create metatype info. */
     private boolean createMetatype = false;
@@ -192,12 +189,25 @@ public class ComponentDescription extends AbstractDescription {
         this.createDs = createDs;
     }
 
+    /**
+     * Deprecated - this will always return {@code false} as
+     * the pid property is handled by DS
+     * @return {@code false}
+     * @deprecated Do not use this anymore
+     */
+    @Deprecated
     public boolean isCreatePid() {
-        return createPid;
+        return false;
     }
 
+    /**
+     * This will ignore the value provided.
+     * @param createPid Flag
+     * @deprecated Do not use this anymore
+     */
+    @Deprecated
     public void setCreatePid(boolean createPid) {
-        this.createPid = createPid;
+        // do nothing
     }
 
     public boolean isCreateMetatype() {
@@ -262,7 +272,7 @@ public class ComponentDescription extends AbstractDescription {
     public String toString() {
         return "ComponentDescription [name=" + name + ", label=" + label + ", description=" + description
                         + ", configurationPolicy=" + configurationPolicy + ", isAbstract=" + isAbstract + ", isInherit="
-                        + isInherit + ", createDs=" + createDs + ", createPid=" + createPid + ", createMetatype="
+                        + isInherit + ", createDs=" + createDs + ", createMetatype="
                         + createMetatype + ", enabled=" + enabled + ", immediate=" + immediate + ", factory=" + factory
                         + ", isSetMetatypeFactoryPid=" + isSetMetatypeFactoryPid + ", activate=" + activate + ", deactivate="
                         + deactivate + ", modified=" + modified + ", specVersion=" + specVersion + ", configurationPid="
@@ -280,7 +290,6 @@ public class ComponentDescription extends AbstractDescription {
         cd.setInherit(this.isInherit);
         cd.setCreateDs(this.isCreateDs());
         cd.setCreateMetatype(this.isCreateMetatype());
-        cd.setCreatePid(this.isCreatePid());
         cd.setEnabled(this.getEnabled());
         cd.setImmediate(this.getImmediate());
         cd.setFactory(this.getFactory());

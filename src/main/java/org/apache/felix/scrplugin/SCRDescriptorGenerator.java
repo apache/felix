@@ -431,16 +431,6 @@ public class SCRDescriptorGenerator {
         // global properties
         this.processGlobalProperties(desc, container.getProperties());
 
-        // PID handling
-        if ( componentDesc.isCreatePid() && !container.getProperties().containsKey(org.osgi.framework.Constants.SERVICE_PID)) {
-            final PropertyDescription pid = new PropertyDescription(null);
-            pid.setName( org.osgi.framework.Constants.SERVICE_PID );
-            pid.setValue( componentDesc.getName() );
-            pid.setType(PropertyType.String);
-
-            container.getProperties().put(org.osgi.framework.Constants.SERVICE_PID, pid);
-        }
-
         // check lifecycle methods
         if ( componentDesc.getActivate() == null ) {
             final Validator.MethodResult result = Validator.findLifecycleMethod(project, container, "activate", true);
