@@ -30,9 +30,15 @@ import java.util.Map;
 
 import org.apache.felix.configurator.impl.yaml.YAMLUtil;
 import org.apache.felix.configurator.impl.yaml.YAMLUtilTest;
+import org.apache.felix.converter.impl.ConverterImpl;
+import org.junit.Before;
 import org.junit.Test;
 
 public class TypeConverterTest {
+
+    @Before public void setup() {
+        TypeConverter.setConverter(new ConverterImpl());
+    }
 
     @Test public void testStringConversionNoTypeInfo() throws IOException {
         final String v_String = "world";

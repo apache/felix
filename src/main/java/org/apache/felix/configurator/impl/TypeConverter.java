@@ -23,15 +23,20 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.felix.converter.impl.ConverterService;
 import org.osgi.framework.Bundle;
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.TypeReference;
 
 public class TypeConverter {
 
+    private static volatile Converter converter;
+
+    public static void setConverter(final Converter c) {
+        converter = c;
+    }
+
     public static Converter getConverter() {
-        return new ConverterService(); // TODO use OSGi service
+        return converter;
     }
 
     private final List<File> allFiles = new ArrayList<File>();

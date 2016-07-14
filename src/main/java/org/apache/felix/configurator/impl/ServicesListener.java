@@ -25,6 +25,7 @@ import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.converter.Converter;
 
 /**
  * The {@code ServicesListener} listens for the required services
@@ -39,6 +40,9 @@ public class ServicesListener {
     /** The listener for the config admin. */
     private final Listener caListener;
 
+    /** The listener for the converter. */
+    private final Listener converterListener;
+
     /** The listener for the coordinator. */
     private final Listener coordinatorListener;
 
@@ -52,6 +56,8 @@ public class ServicesListener {
         this.bundleContext = bundleContext;
         this.caListener = new Listener(ConfigurationAdmin.class.getName());
         this.caListener.start();
+        this.converterListener = new Listener(Converter.class.getName());
+        this.converterListener.start();
         this.coordinatorListener = new Listener("org.osgi.service.coordinator.Coordinator");
         this.coordinatorListener.start();
     }
@@ -63,11 +69,13 @@ public class ServicesListener {
     public synchronized void notifyChange() {
         // check if all services are available
         final ConfigurationAdmin ca = (ConfigurationAdmin)this.caListener.getService();
+        final Converter converter = (Converter)this.converterListener.getService();
         final Object coordinator = this.coordinatorListener.getService();
-        if ( ca != null ) {
+        if ( ca != null && converter != null ) {
             if ( configurator == null ) {
                 configurator = new Configurator(this.bundleContext, ca);
             }
+            TypeConverter.setConverter(converter);
             configurator.setCoordinator(coordinator);
         } else {
             if ( configurator != null ) {
@@ -83,6 +91,7 @@ public class ServicesListener {
     public void deactivate() {
         this.caListener.deactivate();
         this.coordinatorListener.deactivate();
+        this.converterListener.deactivate();
         if ( configurator != null ) {
             configurator.shutdown();
             configurator = null;
