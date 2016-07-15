@@ -54,7 +54,7 @@
   </distributionManagement>
 
  <properties>
-   <felix.java.version>6</felix.java.version>
+   <felix.java.version>7</felix.java.version>
    <maven.site.path>bundle-plugin-archives/bundle-plugin-LATEST</maven.site.path>
  </properties>
 
