@@ -18,6 +18,7 @@
  */
 package org.apache.felix.configurator.impl;
 
+import org.apache.felix.configurator.impl.logger.SystemLogger;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
@@ -55,11 +56,12 @@ public class ServicesListener {
     public ServicesListener(final BundleContext bundleContext) {
         this.bundleContext = bundleContext;
         this.caListener = new Listener(ConfigurationAdmin.class.getName());
-        this.caListener.start();
         this.converterListener = new Listener(Converter.class.getName());
-        this.converterListener.start();
         this.coordinatorListener = new Listener("org.osgi.service.coordinator.Coordinator");
+        this.caListener.start();
+        this.converterListener.start();
         this.coordinatorListener.start();
+        SystemLogger.debug("Started services listener for configurator.");
     }
 
     /**
@@ -71,14 +73,23 @@ public class ServicesListener {
         final ConfigurationAdmin ca = (ConfigurationAdmin)this.caListener.getService();
         final Converter converter = (Converter)this.converterListener.getService();
         final Object coordinator = this.coordinatorListener.getService();
+        SystemLogger.debug("Services updated for configurator: " + ca + " - " + converter + " - " + coordinator);
+
         if ( ca != null && converter != null ) {
-            if ( configurator == null ) {
+            boolean isNew = configurator == null;
+            if ( isNew ) {
+                TypeConverter.setConverter(converter);
+
+                SystemLogger.debug("Starting new configurator");
                 configurator = new Configurator(this.bundleContext, ca);
             }
-            TypeConverter.setConverter(converter);
             configurator.setCoordinator(coordinator);
+            if ( isNew ) {
+                configurator.start();
+            }
         } else {
             if ( configurator != null ) {
+                SystemLogger.debug("Stopping configurator");
                 configurator.shutdown();
                 configurator = null;
             }

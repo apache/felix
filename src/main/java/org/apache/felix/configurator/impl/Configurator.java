@@ -117,7 +117,6 @@ public class Configurator {
                     }
 
         });
-        this.start();
     }
 
     /**
@@ -131,7 +130,7 @@ public class Configurator {
     /**
      * Start the configurator.
      */
-    private void start() {
+    public void start() {
         // get the directory for storing binaries
         String dirPath = this.bundleContext.getProperty(PROP_DIRECTORY);
         if ( dirPath != null ) {

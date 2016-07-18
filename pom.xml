@@ -54,6 +54,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Bundle-Activator>org.apache.felix.configurator.impl.Activator</Bundle-Activator>
                         <Bundle-Category>osgi</Bundle-Category>
                         <Bundle-SymbolicName>
                             ${project.artifactId}
