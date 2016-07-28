@@ -507,7 +507,7 @@ public class Builtin {
             process.error(2);
             return;
         }
-        List<Job> jobs = session.jobs();
+        List<Job> jobs = new ArrayList<>(session.jobs());
         Collections.reverse(jobs);
         Job current = Job.current();
         if (argv.length == 0) {
@@ -548,7 +548,7 @@ public class Builtin {
             process.error(2);
             return;
         }
-        List<Job> jobs = session.jobs();
+        List<Job> jobs = new ArrayList<>(session.jobs());
         Collections.reverse(jobs);
         Job current = Job.current();
         if (argv.length == 0) {
