@@ -67,7 +67,7 @@
                     <instructions>
                         <Bundle-Activator>org.apache.felix.converter.impl.Activator</Bundle-Activator>
                         <Private-Package>org.apache.felix.converter.*,org.yaml.snakeyaml.*</Private-Package>
-                        <Export-Package>org.osgi.service.converter</Export-Package>
+                        <Export-Package>org.osgi.service.converter, org.osgi.service.converter.util</Export-Package>
                         <Import-Package>*</Import-Package>
                     </instructions>
                 </configuration>
