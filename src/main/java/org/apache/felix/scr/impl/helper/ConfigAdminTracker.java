@@ -20,7 +20,6 @@ package org.apache.felix.scr.impl.helper;
 
 import org.apache.felix.scr.impl.manager.ComponentActivator;
 import org.apache.felix.scr.impl.manager.RegionConfigurationSupport;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
@@ -28,76 +27,43 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 public class ConfigAdminTracker
 {
-	public static final String CONFIGURATION_ADMIN = "org.osgi.service.cm.ConfigurationAdmin";
-	
-	private final ServiceTracker<ConfigurationAdmin, RegionConfigurationSupport> configAdminTracker;
+    public static final String CONFIGURATION_ADMIN = "org.osgi.service.cm.ConfigurationAdmin";
 
-	static ConfigAdminTracker getRegionConfigurationSupport(final ComponentActivator componentActivator, final Bundle dsBundle)
-	{
-		Class<?> ourCA;
-		Class<?> theirCA;
-		try
-		{
-			ourCA = dsBundle.loadClass(CONFIGURATION_ADMIN);
-		}
-		catch (ClassNotFoundException e)
-		{
-			return null;
-		}
-		try
-		{
-			Bundle bundle = componentActivator.getBundleContext().getBundle();
-			if ( bundle == null )
-			{
-				return null;
-			}
-			theirCA = dsBundle.loadClass(CONFIGURATION_ADMIN);
-		}
-		catch (ClassNotFoundException e)
-		{
-			return null;
-		}
-		if ( ourCA != theirCA )
-		{
-			return null;
-		}
-		ConfigAdminTracker tracker = new ConfigAdminTracker(componentActivator);
-		return tracker;
-	}
+    private final ServiceTracker<ConfigurationAdmin, RegionConfigurationSupport> configAdminTracker;
 
-	public ConfigAdminTracker(final ComponentActivator componentActivator)
-	{
-		
-		//TODO this assumes that there is 0 or 1 ca service visible to the bundle being extended.
-		//Is this sure to be true?
-		configAdminTracker = new ServiceTracker<ConfigurationAdmin, RegionConfigurationSupport>(componentActivator.getBundleContext(),
-				CONFIGURATION_ADMIN, 
-				new ServiceTrackerCustomizer<ConfigurationAdmin, RegionConfigurationSupport>() 
-				{
+    public ConfigAdminTracker(final ComponentActivator componentActivator)
+    {
 
-			public RegionConfigurationSupport addingService(
-					ServiceReference<ConfigurationAdmin> reference) {
-				return componentActivator.setRegionConfigurationSupport(reference);
-			}
+        //TODO this assumes that there is 0 or 1 ca service visible to the bundle being extended.
+        //Is this sure to be true?
+        configAdminTracker = new ServiceTracker<ConfigurationAdmin, RegionConfigurationSupport>(
+            componentActivator.getBundleContext(), CONFIGURATION_ADMIN,
+            new ServiceTrackerCustomizer<ConfigurationAdmin, RegionConfigurationSupport>()
+            {
 
-			public void modifiedService(
-					ServiceReference<ConfigurationAdmin> reference,
-					RegionConfigurationSupport service) {
-			}
+                public RegionConfigurationSupport addingService(ServiceReference<ConfigurationAdmin> reference)
+                {
+                    return componentActivator.setRegionConfigurationSupport( reference );
+                }
 
-			public void removedService(
-					ServiceReference<ConfigurationAdmin> reference,
-					RegionConfigurationSupport rcs) {
-				componentActivator.unsetRegionConfigurationSupport(rcs);
-			}
-				});
+                public void modifiedService(ServiceReference<ConfigurationAdmin> reference,
+                    RegionConfigurationSupport service)
+                {
+                }
 
-		configAdminTracker.open();
-	}
+                public void removedService(ServiceReference<ConfigurationAdmin> reference,
+                    RegionConfigurationSupport rcs)
+                {
+                    componentActivator.unsetRegionConfigurationSupport( rcs );
+                }
+            } );
 
-	public void dispose()
-	{
-		configAdminTracker.close();
-	}
-	
+        configAdminTracker.open();
+    }
+
+    public void dispose()
+    {
+        configAdminTracker.close();
+    }
+
 }

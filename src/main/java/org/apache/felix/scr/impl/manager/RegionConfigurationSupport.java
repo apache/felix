@@ -124,7 +124,7 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
             }
             final List<String> confPids = holder.getComponentMetadata().getConfigurationPid();
 
-            final ConfigurationAdmin ca = getConfigAdmin();
+            final ConfigurationAdmin ca = getConfigAdmin( bundleContext );
             try
             {
                 for ( final String confPid : confPids )
@@ -439,7 +439,7 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
     {
         try
         {
-            final ConfigurationAdmin ca = getConfigAdmin();
+            final ConfigurationAdmin ca = getConfigAdmin( bundleContext );
             try
             {
                 Configuration[] configs = ca.listConfigurations( filter( pid.getRawPid() ) );
@@ -628,9 +628,9 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
         return value.replaceAll( "([\\\\\\*\\(\\)])", "\\\\$1" );
     }
 
-    private ConfigurationAdmin getConfigAdmin()
+    private ConfigurationAdmin getConfigAdmin(BundleContext bundleContext)
     {
-        return caBundleContext.getService( caReference );
+        return bundleContext.getService( caReference );
     }
 
 }
