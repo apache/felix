@@ -21,6 +21,7 @@ package org.apache.felix.http.sslfilter.internal;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HDR_LOCATION;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HDR_X_FORWARDED_PORT;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HDR_X_FORWARDED_PROTO;
+import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HDR_X_FORWARDED_SSL;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HTTP;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HTTPS;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HTTPS_PORT;
@@ -36,6 +37,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
+import org.apache.felix.http.sslfilter.internal.SslFilter.ConfigHolder;
+
 /**
  * Provides a custom {@link HttpServletResponse} for use in SSL filter.
  */
@@ -48,7 +51,7 @@ class SslFilterResponse extends HttpServletResponseWrapper
     private final String clientProto;
     private final int clientPort;
 
-    public SslFilterResponse(HttpServletResponse response, HttpServletRequest request) throws MalformedURLException
+    public SslFilterResponse(HttpServletResponse response, HttpServletRequest request, ConfigHolder config) throws MalformedURLException
     {
         super(response);
 
@@ -58,8 +61,10 @@ class SslFilterResponse extends HttpServletResponseWrapper
         this.serverName = request.getServerName();
         this.serverPort = request.getServerPort();
 
-        String proto = request.getHeader(HDR_X_FORWARDED_PROTO);
-        if (HTTP.equalsIgnoreCase(proto))
+        String value = request.getHeader(config.sslHeader);
+        
+        if ((HDR_X_FORWARDED_PROTO.equalsIgnoreCase(config.sslHeader) && HTTP.equalsIgnoreCase(value)) ||
+                (HDR_X_FORWARDED_SSL.equalsIgnoreCase(config.sslHeader) && !config.sslValue.equalsIgnoreCase(value)))
         {
             // Not really a useful scenario: client is talking HTTP to proxy, and we should rewrite all HTTPS-based URLs...
             this.clientProto = HTTP;
@@ -164,13 +169,6 @@ class SslFilterResponse extends HttpServletResponseWrapper
             }
 
             String actualProto = uri.getScheme();
-
-
-            if (!this.serverProto.equalsIgnoreCase(actualProto))
-            {
-                // protocol is already correct
-                return null;
-            }
 
             if (!this.serverName.equals(uri.getHost()))
             {
