@@ -73,7 +73,7 @@ public class SslFilter implements Filter
         {
             try
             {
-                httpResp = new SslFilterResponse(httpResp, httpReq);
+                httpResp = new SslFilterResponse(httpResp, httpReq, cfg);
                 // In case this fails, we fall back to the original HTTP request, which is better than nothing...
                 httpReq = new SslFilterRequest(httpReq, httpReq.getHeader(cfg.certHeader));
             }
