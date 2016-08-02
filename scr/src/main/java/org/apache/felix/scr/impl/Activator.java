@@ -27,8 +27,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.scr.impl.config.ScrConfigurationImpl;
-import org.apache.felix.scr.impl.inject.ClassUtils;
 import org.apache.felix.scr.impl.helper.SimpleLogger;
+import org.apache.felix.scr.impl.inject.ClassUtils;
 import org.apache.felix.scr.impl.runtime.ServiceComponentRuntimeImpl;
 import org.apache.felix.utils.extender.AbstractExtender;
 import org.apache.felix.utils.extender.Extension;
@@ -85,7 +85,7 @@ public class Activator extends AbstractExtender implements SimpleLogger
     public Activator()
     {
         m_configuration = new ScrConfigurationImpl( this );
-        setSynchronous(true);
+        setSynchronous( true );
     }
 
     /**
@@ -101,53 +101,48 @@ public class Activator extends AbstractExtender implements SimpleLogger
         m_context = context;
         m_bundle = context.getBundle();
         // require the log service
-        m_logService = new ServiceTracker<LogService, LogService>(m_context,
-            LOGSERVICE_CLASS, null);
+        m_logService = new ServiceTracker<LogService, LogService>( m_context, LOGSERVICE_CLASS, null );
         m_logService.open();
-        // get the configuration
-        m_configuration.start(m_context); //this will call restart, which calls super.start.
         // set bundle context for PackageAdmin tracker
         ClassUtils.setBundleContext( context );
+        // get the configuration
+        m_configuration.start( m_context ); //this will call restart, which calls super.start.
     }
 
     public void restart(boolean globalExtender)
     {
         BundleContext context = m_globalContext;
-        if (globalExtender)
+        if ( globalExtender )
         {
-            m_globalContext = m_context.getBundle(
-                Constants.SYSTEM_BUNDLE_LOCATION).getBundleContext();
+            m_globalContext = m_context.getBundle( Constants.SYSTEM_BUNDLE_LOCATION ).getBundleContext();
         }
         else
         {
             m_globalContext = m_context;
         }
-        if (ClassUtils.m_packageAdmin != null)
+        if ( ClassUtils.m_packageAdmin != null )
         {
-            log(LogService.LOG_INFO, m_bundle,
-                "Stopping to restart with new globalExtender setting: " + globalExtender,
-                null);
+            log( LogService.LOG_INFO, m_bundle,
+                "Stopping to restart with new globalExtender setting: " + globalExtender, null );
             //this really is a restart, not the initial start
             // the initial start where m_globalContext is null should skip this as m_packageAdmin should not yet be set.
             try
             {
-                super.stop(context);
+                super.stop( context );
             }
-            catch (Exception e)
+            catch ( Exception e )
             {
-                log(LogService.LOG_ERROR, m_bundle, "Exception stopping during restart",
-                    e);
+                log( LogService.LOG_ERROR, m_bundle, "Exception stopping during restart", e );
             }
         }
         try
         {
-            log(LogService.LOG_INFO, m_bundle,
-                "Starting with globalExtender setting: " + globalExtender, null);
-            super.start(m_globalContext);
+            log( LogService.LOG_INFO, m_bundle, "Starting with globalExtender setting: " + globalExtender, null );
+            super.start( m_globalContext );
         }
-        catch (Exception e)
+        catch ( Exception e )
         {
-            log(LogService.LOG_ERROR, m_bundle, "Exception starting during restart", e);
+            log( LogService.LOG_ERROR, m_bundle, "Exception starting during restart", e );
         }
 
     }
@@ -160,31 +155,29 @@ public class Activator extends AbstractExtender implements SimpleLogger
         m_componentBundles = new HashMap<Long, BundleComponentActivator>();
         m_componentRegistry = new ComponentRegistry( this );
 
-        final ServiceComponentRuntime runtime = new ServiceComponentRuntimeImpl(
-            m_globalContext, m_componentRegistry);
-        m_runtime_reg = m_context.registerService(ServiceComponentRuntime.class, runtime,
-            null);
+        final ServiceComponentRuntime runtime = new ServiceComponentRuntimeImpl( m_globalContext, m_componentRegistry );
+        m_runtime_reg = m_context.registerService( ServiceComponentRuntime.class, runtime, null );
 
         // log SCR startup
-        log(LogService.LOG_INFO, m_bundle, " Version = {0}",
-            new Object[] { m_bundle.getHeaders().get(Constants.BUNDLE_VERSION) }, null);
+        log( LogService.LOG_INFO, m_bundle, " Version = {0}",
+            new Object[] { m_bundle.getHeaders().get( Constants.BUNDLE_VERSION ) }, null );
 
         // create and start the component actor
         m_componentActor = new ComponentActorThread( this );
-        Thread t = new Thread(m_componentActor, "SCR Component Actor");
-        t.setDaemon(true);
+        Thread t = new Thread( m_componentActor, "SCR Component Actor" );
+        t.setDaemon( true );
         t.start();
 
         super.doStart();
 
-        m_scrCommand = ScrCommand.register(m_context, runtime, m_configuration);
-        m_configuration.setScrCommand(m_scrCommand);
+        m_scrCommand = ScrCommand.register( m_context, runtime, m_configuration );
+        m_configuration.setScrCommand( m_scrCommand );
     }
 
     @Override
     public void stop(BundleContext context) throws Exception
     {
-        super.stop(context);
+        super.stop( context );
         m_configuration.stop();
         m_configuration = null;
     }
@@ -200,31 +193,31 @@ public class Activator extends AbstractExtender implements SimpleLogger
         // stop tracking
         super.doStop();
 
-        if (m_scrCommand != null)
+        if ( m_scrCommand != null )
         {
             m_scrCommand.unregister();
             m_scrCommand = null;
         }
-        if (m_runtime_reg != null)
+        if ( m_runtime_reg != null )
         {
             m_runtime_reg.unregister();
             m_runtime_reg = null;
         }
         // dispose component registry
-        if (m_componentRegistry != null)
+        if ( m_componentRegistry != null )
         {
             m_componentRegistry = null;
         }
 
         // terminate the actor thread
-        if (m_componentActor != null)
+        if ( m_componentActor != null )
         {
             m_componentActor.terminate();
             m_componentActor = null;
         }
 
         // close the LogService tracker now
-        if (m_logService != null)
+        if ( m_logService != null )
         {
             m_logService.close();
             m_logService = null;
@@ -239,18 +232,18 @@ public class Activator extends AbstractExtender implements SimpleLogger
     @Override
     protected Extension doCreateExtension(final Bundle bundle) throws Exception
     {
-        if (gogoMissing)
+        if ( gogoMissing )
         {
             try
             {
-                bundle.loadClass("org.apache.felix.service.command.Descriptor");
+                bundle.loadClass( "org.apache.felix.service.command.Descriptor" );
                 gogoMissing = false;
             }
-            catch (Throwable e)
+            catch ( Throwable e )
             {
             }
         }
-        return new ScrExtension(bundle);
+        return new ScrExtension( bundle );
     }
 
     protected class ScrExtension implements Extension
@@ -262,14 +255,14 @@ public class Activator extends AbstractExtender implements SimpleLogger
         public ScrExtension(Bundle bundle)
         {
             this.bundle = bundle;
-            this.started = new CountDownLatch(1);
+            this.started = new CountDownLatch( 1 );
         }
 
         public void start()
         {
             try
             {
-                loadComponents(ScrExtension.this.bundle);
+                loadComponents( ScrExtension.this.bundle );
             }
             finally
             {
@@ -281,15 +274,15 @@ public class Activator extends AbstractExtender implements SimpleLogger
         {
             try
             {
-                this.started.await(m_configuration.stopTimeout(), TimeUnit.MILLISECONDS);
+                this.started.await( m_configuration.stopTimeout(), TimeUnit.MILLISECONDS );
             }
-            catch (InterruptedException e)
+            catch ( InterruptedException e )
             {
-                log(LogService.LOG_WARNING, m_bundle,
+                log( LogService.LOG_WARNING, m_bundle,
                     "The wait for bundle {0}/{1} being started before destruction has been interrupted.",
-                    new Object[] { bundle.getSymbolicName(), bundle.getBundleId() }, e);
+                    new Object[] { bundle.getSymbolicName(), bundle.getBundleId() }, e );
             }
-            disposeComponents(this.bundle);
+            disposeComponents( this.bundle );
         }
     }
 
@@ -304,7 +297,7 @@ public class Activator extends AbstractExtender implements SimpleLogger
      */
     private void loadComponents(Bundle bundle)
     {
-        if (bundle.getHeaders().get(ComponentConstants.SERVICE_COMPONENT) == null)
+        if ( bundle.getHeaders().get( ComponentConstants.SERVICE_COMPONENT ) == null )
         {
             // no components in the bundle, abandon
             return;
@@ -312,43 +305,38 @@ public class Activator extends AbstractExtender implements SimpleLogger
 
         // there should be components, load them with a bundle context
         BundleContext context = bundle.getBundleContext();
-        if (context == null)
+        if ( context == null )
         {
-            log(LogService.LOG_DEBUG, m_bundle,
-                "Cannot get BundleContext of bundle {0}/{1}",
-                new Object[] { bundle.getSymbolicName(), bundle.getBundleId() }, null);
+            log( LogService.LOG_DEBUG, m_bundle, "Cannot get BundleContext of bundle {0}/{1}",
+                new Object[] { bundle.getSymbolicName(), bundle.getBundleId() }, null );
             return;
         }
 
         //Examine bundle for extender requirement; if present check if bundle is wired to us.
-        BundleWiring wiring = bundle.adapt(BundleWiring.class);
-        List<BundleWire> extenderWires = wiring.getRequiredWires(
-            ExtenderNamespace.EXTENDER_NAMESPACE);
+        BundleWiring wiring = bundle.adapt( BundleWiring.class );
+        List<BundleWire> extenderWires = wiring.getRequiredWires( ExtenderNamespace.EXTENDER_NAMESPACE );
         try
         {
-            for (BundleWire wire : extenderWires)
+            for ( BundleWire wire : extenderWires )
             {
-                if (ComponentConstants.COMPONENT_CAPABILITY_NAME.equals(
-                    wire.getCapability().getAttributes().get(
-                        ExtenderNamespace.EXTENDER_NAMESPACE)))
+                if ( ComponentConstants.COMPONENT_CAPABILITY_NAME.equals(
+                    wire.getCapability().getAttributes().get( ExtenderNamespace.EXTENDER_NAMESPACE ) ) )
                 {
-                    if (!m_bundle.adapt(BundleRevision.class).equals(wire.getProvider()))
+                    if ( !m_bundle.adapt( BundleRevision.class ).equals( wire.getProvider() ) )
                     {
-                        log(LogService.LOG_DEBUG, m_bundle,
-                            "Bundle {0}/{1} wired to a different extender: {2}",
+                        log( LogService.LOG_DEBUG, m_bundle, "Bundle {0}/{1} wired to a different extender: {2}",
                             new Object[] { bundle.getSymbolicName(), bundle.getBundleId(),
                                     wire.getProvider().getSymbolicName() },
-                            null);
+                            null );
                         return;
                     }
                     break;
                 }
             }
         }
-        catch (NoSuchMethodError e)
+        catch ( NoSuchMethodError e )
         {
-            log(LogService.LOG_DEBUG, m_bundle,
-                "Cannot determine bundle wiring on pre R6 framework", null, null);
+            log( LogService.LOG_DEBUG, m_bundle, "Cannot determine bundle wiring on pre R6 framework", null, null );
         }
 
         // FELIX-1666 method is called for the LAZY_ACTIVATION event and
@@ -358,60 +346,58 @@ public class Activator extends AbstractExtender implements SimpleLogger
         // if LAZY_ACTIVATION and STARTED event are fired at the same time
         final boolean loaded;
         final Long bundleId = bundle.getBundleId();
-        synchronized (m_componentBundles)
+        synchronized ( m_componentBundles )
         {
-            if (m_componentBundles.containsKey(bundleId))
+            if ( m_componentBundles.containsKey( bundleId ) )
             {
                 loaded = true;
             }
             else
             {
-                m_componentBundles.put(bundleId, null);
+                m_componentBundles.put( bundleId, null );
                 loaded = false;
             }
         }
 
         // terminate if already loaded (or currently being loaded)
-        if (loaded)
+        if ( loaded )
         {
-            log(LogService.LOG_DEBUG, m_bundle,
-                "Components for bundle {0}/{1} already loaded. Nothing to do.",
-                new Object[] { bundle.getSymbolicName(), bundle.getBundleId() }, null);
+            log( LogService.LOG_DEBUG, m_bundle, "Components for bundle {0}/{1} already loaded. Nothing to do.",
+                new Object[] { bundle.getSymbolicName(), bundle.getBundleId() }, null );
             return;
         }
 
         try
         {
-            BundleComponentActivator ga = new BundleComponentActivator( this,
-                m_componentRegistry, m_componentActor, context, m_configuration);
+            BundleComponentActivator ga = new BundleComponentActivator( this, m_componentRegistry, m_componentActor,
+                context, m_configuration );
             ga.initialEnable();
 
             // replace bundle activator in the map
-            synchronized (m_componentBundles)
+            synchronized ( m_componentBundles )
             {
-                m_componentBundles.put(bundleId, ga);
+                m_componentBundles.put( bundleId, ga );
             }
         }
-        catch (Exception e)
+        catch ( Exception e )
         {
             // remove the bundle id from the bundles map to ensure it is
             // not marked as being loaded
-            synchronized (m_componentBundles)
+            synchronized ( m_componentBundles )
             {
-                m_componentBundles.remove(bundleId);
+                m_componentBundles.remove( bundleId );
             }
 
-            if (e instanceof IllegalStateException && bundle.getState() != Bundle.ACTIVE)
+            if ( e instanceof IllegalStateException && bundle.getState() != Bundle.ACTIVE )
             {
-                log(LogService.LOG_DEBUG, m_bundle,
+                log( LogService.LOG_DEBUG, m_bundle,
                     "Bundle {0}/{1} has been stopped while trying to activate its components. Trying again when the bundles gets started again.",
-                    new Object[] { bundle.getSymbolicName(), bundle.getBundleId() }, e);
+                    new Object[] { bundle.getSymbolicName(), bundle.getBundleId() }, e );
             }
             else
             {
-                log(LogService.LOG_ERROR, m_bundle,
-                    "Error while loading components of bundle {0}/{1}",
-                    new Object[] { bundle.getSymbolicName(), bundle.getBundleId() }, e);
+                log( LogService.LOG_ERROR, m_bundle, "Error while loading components of bundle {0}/{1}",
+                    new Object[] { bundle.getSymbolicName(), bundle.getBundleId() }, e );
             }
         }
     }
@@ -423,25 +409,23 @@ public class Activator extends AbstractExtender implements SimpleLogger
     private void disposeComponents(Bundle bundle)
     {
         final Object ga;
-        synchronized (m_componentBundles)
+        synchronized ( m_componentBundles )
         {
-            ga = m_componentBundles.remove(bundle.getBundleId());
+            ga = m_componentBundles.remove( bundle.getBundleId() );
         }
 
-        if (ga != null)
+        if ( ga != null )
         {
             try
             {
-                int reason = isStopping()
-                    ? ComponentConstants.DEACTIVATION_REASON_DISPOSED
+                int reason = isStopping()? ComponentConstants.DEACTIVATION_REASON_DISPOSED
                     : ComponentConstants.DEACTIVATION_REASON_BUNDLE_STOPPED;
-                ((BundleComponentActivator) ga).dispose(reason);
+                ( (BundleComponentActivator) ga ).dispose( reason );
             }
-            catch (Exception e)
+            catch ( Exception e )
             {
-                log(LogService.LOG_ERROR, m_bundle,
-                    "Error while disposing components of bundle {0}/{1}",
-                    new Object[] { bundle.getSymbolicName(), bundle.getBundleId() }, e);
+                log( LogService.LOG_ERROR, m_bundle, "Error while disposing components of bundle {0}/{1}",
+                    new Object[] { bundle.getSymbolicName(), bundle.getBundleId() }, e );
             }
         }
     }
@@ -449,48 +433,47 @@ public class Activator extends AbstractExtender implements SimpleLogger
     @Override
     protected void debug(Bundle bundle, String msg)
     {
-        final String message = MessageFormat.format(msg + " bundle: {0}/{1}",
-            bundle.getSymbolicName(), bundle.getBundleId());
-        log(LogService.LOG_DEBUG, bundle, message, null);
+        final String message = MessageFormat.format( msg + " bundle: {0}/{1}", bundle.getSymbolicName(),
+            bundle.getBundleId() );
+        log( LogService.LOG_DEBUG, bundle, message, null );
     }
 
     @Override
     protected void warn(Bundle bundle, String msg, Throwable t)
     {
-        final String message = MessageFormat.format(msg + " bundle: {0}/{1}",
-            bundle.getSymbolicName(), bundle.getBundleId());
-        log(LogService.LOG_WARNING, bundle, message, t);
+        final String message = MessageFormat.format( msg + " bundle: {0}/{1}", bundle.getSymbolicName(),
+            bundle.getBundleId() );
+        log( LogService.LOG_WARNING, bundle, message, t );
     }
 
     @Override
     protected void error(String msg, Throwable t)
     {
-        log(LogService.LOG_DEBUG, m_bundle, msg, t);
+        log( LogService.LOG_DEBUG, m_bundle, msg, t );
     }
 
-//    @Override
+    //    @Override
     public void log(int level, String message, Throwable ex)
     {
-        log(level, null, message, ex);
+        log( level, null, message, ex );
     }
 
-//    @Override
+    //    @Override
     public void log(int level, String pattern, Object[] arguments, Throwable ex)
     {
-        if (isLogEnabled(level))
+        if ( isLogEnabled( level ) )
         {
-            final String message = MessageFormat.format(pattern, arguments);
-            log(level, null, message, ex);
+            final String message = MessageFormat.format( pattern, arguments );
+            log( level, null, message, ex );
         }
     }
 
-    public void log(int level, Bundle bundle, String pattern, Object[] arguments,
-                    Throwable ex)
+    public void log(int level, Bundle bundle, String pattern, Object[] arguments, Throwable ex)
     {
-        if (isLogEnabled(level))
+        if ( isLogEnabled( level ) )
         {
-            final String message = MessageFormat.format(pattern, arguments);
-            log(level, bundle, message, ex);
+            final String message = MessageFormat.format( pattern, arguments );
+            log( level, bundle, message, ex );
         }
     }
 
@@ -514,62 +497,61 @@ public class Activator extends AbstractExtender implements SimpleLogger
      */
     public void log(int level, Bundle bundle, String message, Throwable ex)
     {
-        if (isLogEnabled(level))
+        if ( isLogEnabled( level ) )
         {
             ServiceTracker<LogService, LogService> t = m_logService;
-            LogService logger = (t != null) ? t.getService() : null;
-            if (logger == null)
+            LogService logger = ( t != null )? t.getService(): null;
+            if ( logger == null )
             {
                 // output depending on level
-                PrintStream out = (level == LogService.LOG_ERROR) ? System.err
-                    : System.out;
+                PrintStream out = ( level == LogService.LOG_ERROR )? System.err: System.out;
 
                 // level as a string
                 StringBuffer buf = new StringBuffer();
                 switch (level)
                 {
-                    case (LogService.LOG_DEBUG):
-                        buf.append("DEBUG: ");
+                    case ( LogService.LOG_DEBUG ):
+                        buf.append( "DEBUG: " );
                         break;
-                    case (LogService.LOG_INFO):
-                        buf.append("INFO : ");
+                    case ( LogService.LOG_INFO ):
+                        buf.append( "INFO : " );
                         break;
-                    case (LogService.LOG_WARNING):
-                        buf.append("WARN : ");
+                    case ( LogService.LOG_WARNING ):
+                        buf.append( "WARN : " );
                         break;
-                    case (LogService.LOG_ERROR):
-                        buf.append("ERROR: ");
+                    case ( LogService.LOG_ERROR ):
+                        buf.append( "ERROR: " );
                         break;
                     default:
-                        buf.append("UNK  : ");
+                        buf.append( "UNK  : " );
                         break;
                 }
 
                 // bundle information
-                if (bundle != null)
+                if ( bundle != null )
                 {
-                    buf.append(bundle.getSymbolicName());
-                    buf.append(" (");
-                    buf.append(bundle.getBundleId());
-                    buf.append("): ");
+                    buf.append( bundle.getSymbolicName() );
+                    buf.append( " (" );
+                    buf.append( bundle.getBundleId() );
+                    buf.append( "): " );
                 }
 
                 // the message
-                buf.append(message);
+                buf.append( message );
 
                 // keep the message and the stacktrace together
-                synchronized (out)
+                synchronized ( out )
                 {
-                    out.println(buf);
-                    if (ex != null)
+                    out.println( buf );
+                    if ( ex != null )
                     {
-                        ex.printStackTrace(out);
+                        ex.printStackTrace( out );
                     }
                 }
             }
             else
             {
-                logger.log(level, message, ex);
+                logger.log( level, message, ex );
             }
         }
     }
